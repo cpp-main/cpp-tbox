@@ -5,12 +5,12 @@
 #include <stdlib.h>
 
 //! Define log levels
-#define LOG_LEVEL_FATAL     0
-#define LOG_LEVEL_ERROR     1
-#define LOG_LEVEL_WARN      2
-#define LOG_LEVEL_INFO      3
-#define LOG_LEVEL_DEBUG     4
-#define LOG_LEVEL_TRACE     5
+#define LOG_LEVEL_FATAL     0   //!< Program will crash
+#define LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle
+#define LOG_LEVEL_WARN      2   //!< Got abnormal situation, but program can handle it
+#define LOG_LEVEL_INFO      3   //!< Normal message exchange with other program
+#define LOG_LEVEL_DEBUG     4   //!< Normal process inside program
+#define LOG_LEVEL_TRACE     5   //!< Temporary debugging log
 
 //! Module ID
 #ifndef LOG_MODULE_ID
@@ -35,8 +35,16 @@
 
 #if !defined(BUILD_LOG_LEVEL) || (BUILD_LOG_LEVEL >= LOG_LEVEL_TRACE)
     #define LogTrace(fmt, ...)  LogPrintf(LOG_LEVEL_TRACE, fmt, ## __VA_ARGS__)
+    #define LogTag()            LogTrace("==> Run Here <==")
 #else
     #define LogTrace(fmt, ...)
+    #define LogTag()
+#endif
+
+#define LogUndo()           LogWarn("!!! Undo !!!")
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 //!
@@ -54,5 +62,9 @@
 //!
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                    int line, int level, const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //TBOX_LOG_H_20170512
