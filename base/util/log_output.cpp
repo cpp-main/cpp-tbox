@@ -64,10 +64,11 @@ namespace {
 
     const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
 
+    //! syslogd
     void _PrintLogToSyslog(const char *module_id, const char *func_name, const char *file_name,
                            int line, int level, const char *fmt, va_list args)
     {
-        const int buff_size = 1024;
+        const int buff_size = 2048;
         char buff[buff_size];
 
         int write_size = buff_size;
@@ -105,6 +106,10 @@ namespace {
     }
 }
 
+//! Declare log filte function as weak reference
+//! Even if user did't implement their own filter function, it stall works.
+bool __attribute((weak)) LogOutput_FilterFunc(const char *module_id, const char *func_name, const char *file_name, int level);
+
 extern "C" {
     void LogOutput_Initialize(const char *proc_name)
     {
@@ -126,6 +131,10 @@ extern "C" {
     {
         if (level < 0) level = 0;
         if (level > 5) level = 5;
+
+        if ((LogOutput_FilterFunc != NULL) &&
+            !LogOutput_FilterFunc(module_id, func_name, file_name, level))
+            return;
 
         const char *module_id_be_print = (module_id != NULL) ? module_id : "???";
 
