@@ -1,5 +1,6 @@
 *.a
 *.o
+*.oT
 tags
 test
 cscope.*
