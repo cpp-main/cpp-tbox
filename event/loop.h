@@ -3,6 +3,7 @@
 
 #include <functional>
 #include "forward.h"
+#include "timespan.h"
 
 namespace tbox {
 namespace event {

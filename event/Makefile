@@ -14,7 +14,7 @@ SRC_FILES = \
 	engins/libevent/timer_item.cpp \
 	engins/libevent/signal_item.cpp
 
-CCXXFLAGS += -DLOG_MODULE_ID='"event"' $(CXXFLAGS)
+CXXFLAGS += -DLOG_MODULE_ID='"event"'
 
 TEST_LDFLAGS := $(LDFLAGS) -levent_core
 
