@@ -52,7 +52,7 @@ distclean: clean
 ################################################################
 # install and uninstall
 ################################################################
-install:
+install: $(STATIC_LIB)
 	mkdir -p $(STAGING_DIR)/include/tbox/$(LIB_NAME)
 	cp -dr $(HEAD_FILES) $(STAGING_DIR)/include/tbox/$(LIB_NAME)
 	cp $(STATIC_LIB) $(STAGING_DIR)/lib/
