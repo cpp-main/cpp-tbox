@@ -12,13 +12,15 @@ namespace event {
 
 LibeventSignalItem::LibeventSignalItem(LibeventLoop *wp_loop) :
     wp_loop_(wp_loop),
-    is_inited_(false)
+    is_inited_(false),
+    cb_level_(0)
 {
-    event_assign(&event_, NULL, 0, 0, NULL, NULL);
+    event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }
 
 LibeventSignalItem::~LibeventSignalItem()
 {
+    assert(cb_level_ == 0);
     disable();
 }
 
@@ -28,16 +30,18 @@ bool LibeventSignalItem::initialize(int signum, Mode mode)
 
     short libevent_events = 0;
     if (mode == Mode::kPersist)
-        libevent_events = EV_PERSIST;
+        libevent_events |= EV_PERSIST;
 
-    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), signum, libevent_events | EV_SIGNAL,
-                           LibeventSignalItem::OnEventCallback, this);
+    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), signum,
+                           libevent_events | EV_SIGNAL,
+                           LibeventSignalItem::OnEventCallback,
+                           this);
     if (ret == 0) {
         is_inited_ = true;
         return true;
     }
 
-    LogWarn("event_assign fail");
+    LogErr("event_assign() fail");
     return false;
 }
 
@@ -56,8 +60,10 @@ bool LibeventSignalItem::isEnabled() const
 
 bool LibeventSignalItem::enable()
 {
-    if (!is_inited_)
+    if (!is_inited_) {
+        LogErr("can't enable() before initialize()");
         return false;
+    }
 
     if (isEnabled())
         return true;
@@ -80,8 +86,10 @@ bool LibeventSignalItem::disable()
         return true;
 
     int ret = event_del(&event_);
-    if (ret != 0)
+    if (ret != 0) {
+        LogErr("event_del() fail");
         return false;
+    }
 
     return true;
 }
@@ -94,7 +102,13 @@ void LibeventSignalItem::OnEventCallback(int, short, void *args)
 
 void LibeventSignalItem::onEvent()
 {
-    if (cb_) cb_();
+    if (cb_) {
+        ++cb_level_;
+        cb_();
+        --cb_level_;
+    } else {
+        LogWarn("you should specify event callback by setCallback()");
+    }
 }
 
 }

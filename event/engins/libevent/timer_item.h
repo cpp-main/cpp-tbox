@@ -32,6 +32,8 @@ class LibeventTimerItem : public TimerItem {
     bool is_inited_;
     Timespan interval_;
     CallbackFunc cb_;
+
+    int cb_level_ = 0;
 };
 
 }

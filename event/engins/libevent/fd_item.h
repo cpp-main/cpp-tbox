@@ -33,6 +33,8 @@ class LibeventFdItem : public FdItem {
     bool is_inited_;
     short events_;
     CallbackFunc cb_;
+
+    int cb_level_ = 0;
 };
 
 }

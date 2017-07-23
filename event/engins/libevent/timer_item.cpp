@@ -12,13 +12,15 @@ namespace event {
 
 LibeventTimerItem::LibeventTimerItem(LibeventLoop *wp_loop) :
     wp_loop_(wp_loop),
-    is_inited_(false)
+    is_inited_(false),
+    cb_level_(0)
 {
     event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }
 
 LibeventTimerItem::~LibeventTimerItem()
 {
+    assert(cb_level_ == 0);
     disable();
 }
 
@@ -30,7 +32,7 @@ bool LibeventTimerItem::initialize(const Timespan &interval, Mode mode)
 
     short libevent_events = 0;
     if (mode == Mode::kPersist)
-        libevent_events = EV_PERSIST;
+        libevent_events |= EV_PERSIST;
 
     int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), -1, libevent_events, LibeventTimerItem::OnEventCallback, this);
     if (ret == 0) {
@@ -57,8 +59,10 @@ bool LibeventTimerItem::isEnabled() const
 
 bool LibeventTimerItem::enable()
 {
-    if (!is_inited_)
+    if (!is_inited_) {
+        LogErr("can't enable() before initialize()");
         return false;
+    }
 
     if (isEnabled())
         return true;
@@ -98,7 +102,13 @@ void LibeventTimerItem::OnEventCallback(int, short, void *args)
 
 void LibeventTimerItem::onEvent()
 {
-    if (cb_) cb_();
+    if (cb_) {
+        ++cb_level_;
+        cb_();
+        --cb_level_;
+    } else {
+        LogWarn("you should specify event callback by setCallback()");
+    }
 }
 
 }

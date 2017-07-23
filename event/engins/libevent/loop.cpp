@@ -23,7 +23,7 @@ void LibeventLoop::runLoop(Mode mode)
 {
     int flags = 0;
     if (mode == Mode::kOnce)
-        flags = EVLOOP_ONCE;
+        flags |= EVLOOP_ONCE;
 
     runThisBeforeLoop();
     event_base_loop(sp_event_base_, flags);

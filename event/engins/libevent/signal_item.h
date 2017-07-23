@@ -32,6 +32,8 @@ class LibeventSignalItem : public SignalItem {
     struct event event_;
     bool is_inited_;
     CallbackFunc cb_;
+
+    int cb_level_ = 0;
 };
 
 }
