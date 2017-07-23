@@ -22,6 +22,7 @@ CommonLoop::CommonLoop() :
 
 CommonLoop::~CommonLoop()
 {
+    assert(cb_level_ == 0);
 }
 
 bool CommonLoop::isInLoopThread()
@@ -95,8 +96,10 @@ void CommonLoop::onGotRunInLoopFunc(short)
     std::lock_guard<std::mutex> g(lock_);
     while (!func_list_.empty()) {
         RunInLoopFunc func = func_list_.front();
+        ++cb_level_;
         if (func)
             func();
+        --cb_level_;
         func_list_.pop_front();
     }
 }

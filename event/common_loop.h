@@ -37,6 +37,8 @@ class CommonLoop : public Loop {
     int read_fd_, write_fd_;
     FdItem *sp_read_item_;
     std::list<RunInLoopFunc> func_list_;
+
+    int cb_level_ = 0;
 };
 
 }
