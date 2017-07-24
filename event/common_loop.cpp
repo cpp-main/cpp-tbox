@@ -93,14 +93,20 @@ void CommonLoop::runInLoop(const RunInLoopFunc &func)
 
 void CommonLoop::onGotRunInLoopFunc(short)
 {
-    std::lock_guard<std::mutex> g(lock_);
-    while (!func_list_.empty()) {
-        RunInLoopFunc func = func_list_.front();
+    std::list<RunInLoopFunc> tmp;
+    {
+        std::lock_guard<std::mutex> g(lock_);
+        func_list_.swap(tmp);
+        finishRequest();
+    }
+
+    while (!tmp.empty()) {
+        RunInLoopFunc func = tmp.front();
         ++cb_level_;
         if (func)
             func();
         --cb_level_;
-        func_list_.pop_front();
+        tmp.pop_front();
     }
 }
 
