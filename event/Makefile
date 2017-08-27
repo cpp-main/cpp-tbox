@@ -5,10 +5,11 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	forward.h loop.h item.h timespan.h \
-	fd_item.h timer_item.h signal_item.h
+	fd_item.h timer_item.h signal_item.h \
+	version.h
 
 SRC_FILES = \
-	loop.cpp common_loop.cpp \
+	loop.cpp common_loop.cpp version.cpp \
 	engins/libevent/loop.cpp \
 	engins/libevent/fd_item.cpp \
 	engins/libevent/timer_item.cpp \
