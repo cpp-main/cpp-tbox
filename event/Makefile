@@ -1,7 +1,10 @@
+include config.mk
+
 LIB_NAME = event
+LIB_NAME_EXT = -
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	forward.h loop.h item.h timespan.h \
@@ -9,14 +12,41 @@ HEAD_FILES = \
 	version.h
 
 SRC_FILES = \
-	loop.cpp common_loop.cpp version.cpp \
+	loop.cpp common_loop.cpp \
+	version.cpp
+
+ifeq ($(ENABLE_LIBEVENT), yes)
+SRC_FILES += \
 	engins/libevent/loop.cpp \
 	engins/libevent/fd_item.cpp \
 	engins/libevent/timer_item.cpp \
 	engins/libevent/signal_item.cpp
+CCXXFLAGS += -DENABLE_LIBEVENT=1
+LIB_NAME_EXT := $(LIB_NAME_EXT)n
+endif
 
-CXXFLAGS += -DLOG_MODULE_ID='"event"'
+ifeq ($(ENABLE_LIBEV), yes)
+SRC_FILES += \
+	engins/libev/loop.cpp \
+	engins/libev/fd_item.cpp \
+	engins/libev/signal_item.cpp \
+	engins/libev/timer_item.cpp
+CCXXFLAGS += -DENABLE_LIBEV=1
+LIB_NAME_EXT := $(LIB_NAME_EXT)e
+endif
 
-TEST_LDFLAGS := $(LDFLAGS) -levent_core
+CCXXFLAGS += -DLOG_MODULE_ID='"event"' $(CXXFLAGS)
+
+TEST_LDFLAGS := $(LDFLAGS)
+
+ifeq ($(ENABLE_LIBEVENT), yes)
+	TEST_LDFLAGS += -levent_core
+endif
+
+ifeq ($(ENABLE_LIBEV), yes)
+	TEST_LDFLAGS += -lev
+endif
+
+ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

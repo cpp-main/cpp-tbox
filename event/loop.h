@@ -2,8 +2,8 @@
 #define TBOX_EVENT_LOOP_H_20170627
 
 #include <functional>
-#include "forward.h"
 #include "timespan.h"
+#include "forward.h"
 
 namespace tbox {
 namespace event {
@@ -15,8 +15,9 @@ class Loop {
         kLibev,
         kLibuv,
     };
-    static Loop* New(Engine type);
+
     static Loop* New();
+    static Loop* New(Engine type);
 
     enum class Mode {
         kOnce,
