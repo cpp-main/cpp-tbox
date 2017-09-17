@@ -1,5 +1,5 @@
-#ifndef TBOX_EVENT_TIMESPAN_H_20170709
-#define TBOX_EVENT_TIMESPAN_H_20170709
+#ifndef TBOX_EVENT_TIMESPAN_H
+#define TBOX_EVENT_TIMESPAN_H
 
 #include <time.h>
 
@@ -18,7 +18,13 @@ class Timespan {
         val_.tv_usec = msec * 1000;
     }
 
+    Timespan(const struct timeval &val) {
+        val_ = val;
+    }
+
     operator struct timeval () const { return val_; }
+
+    bool isZero() const { return val_.tv_sec == 0 && val_.tv_usec == 0; }
 
     static Timespan Zero() { return Timespan(); }
     static Timespan Millisecond(int msec) { return Timespan(msec/1000, msec%1000); }
@@ -34,4 +40,4 @@ class Timespan {
 }
 }
 
-#endif //TBOX_EVENT_TIMESPAN_H_20170709
+#endif //TBOX_EVENT_TIMESPAN_H

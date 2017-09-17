@@ -1,5 +1,5 @@
-#ifndef TBOX_EVENT_LOOP_H_20170627
-#define TBOX_EVENT_LOOP_H_20170627
+#ifndef TBOX_EVENT_LOOP_H
+#define TBOX_EVENT_LOOP_H
 
 #include <functional>
 #include "timespan.h"
@@ -44,4 +44,4 @@ class Loop {
 }
 }
 
-#endif //TBOX_EVENT_LOOP_H_20170627
+#endif //TBOX_EVENT_LOOP_H
