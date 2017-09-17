@@ -1,13 +1,13 @@
 include ../build_env.mk
 
-TARGETS=io_example timer_example signal_example run_in_loop_demo stdin_timer_signal
+TARGETS=io_example timer_example signal_example run_in_loop_demo stdin_timer_signal_demo
 
 CXXFLAGS += -ggdb
-LDFLAGS += -levent -lpthread
+LDFLAGS += -ltbox_event-ne -levent_core -lev -lpthread
 
 all: $(TARGETS)
 
-stdin_timer_signal : stdin_timer_signal.o log_output.o
+stdin_timer_signal_demo : stdin_timer_signal_demo.o log_output.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 run_in_loop_demo : run_in_loop_demo.o log_output.o
@@ -24,3 +24,10 @@ io_example : io_example.o log_output.o
 
 clean:
 	rm -rf *.o
+
+distclean : clean
+	rm $(TARGETS)
+
+install:
+
+uninstall:
