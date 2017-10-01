@@ -6,6 +6,7 @@
 #include <tbox/event/fd_item.h>
 #include <tbox/event/timer_item.h>
 #include <tbox/event/signal_item.h>
+#include <tbox/event/stat.h>
 
 using namespace std;
 using namespace tbox;
@@ -24,6 +25,17 @@ void TimerCallback2()
 void OneshotTimerCallback()
 {
     cout << "#" << flush;
+}
+
+void printStat(Loop *wp_loop)
+{
+    Stat stat = wp_loop->getStat();
+    cout << "stat_time: " << stat.stat_time_us << endl
+         << "time_cost: " << stat.time_cost_us << endl
+         << "event_count: " << stat.event_count << endl
+         << "max_cost_us: " << stat.max_cost_us << endl
+         << "time use rate: " << stat.time_cost_us * 100.0 / stat.stat_time_us << "%" << endl
+         << "us/event: " << stat.time_cost_us / stat.event_count << endl;
 }
 
 void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
@@ -46,6 +58,8 @@ void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
             wp_timer->setCallback(TimerCallback2);
         } else if (cmd == "cb1") {
             wp_timer->setCallback(TimerCallback);
+        } else if (cmd == "stat") {
+            printStat(wp_loop);
         } else {
             cout << "Unknown command" << endl;
         }
@@ -115,6 +129,7 @@ int main(int argc, char *argv[])
          << "cb1   -- set callback function" << endl
          << "cb2   -- set another callback function" << endl
          << "quit  -- exit test" << endl
+         << "stat  -- print stat" << endl
          << "Press Ctrl+C to exit" << endl;
 
     sp_loop->runLoop(Loop::Mode::kForever);
