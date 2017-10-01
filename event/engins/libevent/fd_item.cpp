@@ -126,6 +126,11 @@ void LibeventFdItem::OnEventCallback(int /*fd*/, short events, void *args)
 
 void LibeventFdItem::onEvent(short events)
 {
+#ifdef  ENABLE_STAT
+    using namespace std::chrono;
+    auto start = steady_clock::now();
+#endif
+
     if (cb_) {
         short local_events = LibeventEventsToLocal(events);
         ++cb_level_;
@@ -134,6 +139,11 @@ void LibeventFdItem::onEvent(short events)
     } else {
         LogWarn("you should specify event callback by setCallback()");
     }
+
+#ifdef  ENABLE_STAT
+    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
+    wp_loop_->recordTimeCost(cost_us);
+#endif
 }
 
 }

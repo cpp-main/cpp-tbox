@@ -4,6 +4,7 @@
 #include <functional>
 #include "timespan.h"
 #include "forward.h"
+#include "stat.h"
 
 namespace tbox {
 namespace event {
@@ -36,6 +37,9 @@ class Loop {
     virtual FdItem* newFdItem() = 0;
     virtual TimerItem* newTimerItem() = 0;
     virtual SignalItem* newSignalItem() = 0;
+
+    virtual Stat getStat() const = 0;
+    virtual void resetStat() = 0;
 
   public:
     virtual ~Loop() { }

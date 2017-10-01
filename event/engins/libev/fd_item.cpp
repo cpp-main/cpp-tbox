@@ -120,6 +120,11 @@ void LibevFdItem::OnEventCallback(struct ev_loop*, ev_io *p_w, int events)
 
 void LibevFdItem::onEvent(short events)
 {
+#ifdef  ENABLE_STAT
+    using namespace std::chrono;
+    auto start = steady_clock::now();
+#endif
+
     if (cb_) {
         short local_events = LibevEventsToLocal(events);
 
@@ -133,6 +138,11 @@ void LibevFdItem::onEvent(short events)
     } else {
         LogWarn("WARN: you should specify event callback by setCallback()");
     }
+
+#ifdef  ENABLE_STAT
+    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
+    wp_loop_->recordTimeCost(cost_us);
+#endif
 }
 
 }

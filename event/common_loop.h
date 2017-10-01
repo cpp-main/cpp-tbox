@@ -7,6 +7,11 @@
 
 #include "loop.h"
 
+#ifdef ENABLE_STAT
+#include <chrono>
+using std::chrono::steady_clock;
+#endif
+
 namespace tbox {
 namespace event {
 
@@ -18,6 +23,14 @@ class CommonLoop : public Loop {
   public:
     virtual bool isInLoopThread();
     virtual void runInLoop(const RunInLoopFunc &func);
+
+    virtual Stat getStat() const;
+    virtual void resetStat();
+
+  public:
+#ifdef ENABLE_STAT
+    void recordTimeCost(uint64_t cost_us);
+#endif  //ENABLE_STAT
 
   protected:
     void runThisBeforeLoop();
@@ -38,7 +51,14 @@ class CommonLoop : public Loop {
     FdItem *sp_read_item_;
     std::list<RunInLoopFunc> func_list_;
 
-    int cb_level_ = 0;
+#ifdef ENABLE_STAT
+    steady_clock::time_point stat_start_;
+    uint64_t time_cost_us_ = 0;
+    uint32_t event_count_ = 0;
+    uint32_t max_cost_us_ = 0;
+#endif  //ENABLE_STAT
+
+    int cb_level_;
 };
 
 }

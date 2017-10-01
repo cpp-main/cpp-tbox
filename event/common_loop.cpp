@@ -10,6 +10,7 @@
 #include <tbox/log.h>
 
 #include "fd_item.h"
+#include "stat.h"
 
 namespace tbox {
 namespace event {
@@ -17,7 +18,8 @@ namespace event {
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
     read_fd_(-1), write_fd_(-1),
-    sp_read_item_(NULL)
+    sp_read_item_(NULL),
+    cb_level_(0)
 { }
 
 CommonLoop::~CommonLoop()
@@ -62,6 +64,10 @@ void CommonLoop::runThisBeforeLoop()
 
     if (!func_list_.empty())
         commitRequest();
+
+#ifdef  ENABLE_STAT
+    resetStat();
+#endif
 }
 
 void CommonLoop::runThisAfterLoop()
@@ -114,7 +120,9 @@ void CommonLoop::commitRequest()
 {
     if (!has_unhandle_req_) {
         char ch = 0;
-        write(write_fd_, &ch, 1);
+        ssize_t wsize = write(write_fd_, &ch, 1);
+        (void)wsize;
+
         has_unhandle_req_ = true;
     }
 }
@@ -122,10 +130,42 @@ void CommonLoop::commitRequest()
 void CommonLoop::finishRequest()
 {
     char ch = 0;
-    read(read_fd_, &ch, 1);
+    ssize_t rsize = read(read_fd_, &ch, 1);
+    (void)rsize;
 
     has_unhandle_req_ = false;
 }
+
+Stat CommonLoop::getStat() const
+{
+    Stat stat;
+#ifdef  ENABLE_STAT
+    using namespace std::chrono;
+    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - stat_start_).count();
+    stat.time_cost_us = time_cost_us_;
+    stat.max_cost_us = max_cost_us_;
+    stat.event_count = event_count_;
+#endif
+    return stat;
+}
+
+void CommonLoop::resetStat()
+{
+#ifdef  ENABLE_STAT
+    time_cost_us_ = max_cost_us_ = event_count_ = 0;
+    stat_start_ = steady_clock::now();
+#endif
+}
+
+#ifdef  ENABLE_STAT
+void CommonLoop::recordTimeCost(uint64_t cost_us)
+{
+    ++event_count_;
+    time_cost_us_ += cost_us;
+    if (max_cost_us_ < cost_us)
+        max_cost_us_ = cost_us;
+}
+#endif  //ENABLE_STAT
 
 }
 }

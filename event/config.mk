@@ -1,2 +1,4 @@
 ENABLE_LIBEVENT = yes
 ENABLE_LIBEV = yes
+
+ENABLE_STAT = yes
