@@ -11,7 +11,7 @@ export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
 
 app_y += base
 app_y += event
-app_y += thread_pool
+app_y += eventx
 
 all test: $(STAGING_DIR)
 	@for i in $(app_y); do \
