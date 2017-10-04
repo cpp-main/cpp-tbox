@@ -57,7 +57,7 @@ $(TEST_OBJECTS) : %.oT:%.cpp
 	$(CXX) $(TEST_CXXFLAGS) -o $@ -c $^
 
 test: $(TEST_OBJECTS)
-	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgtest -lpthread
+	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgtest_main -lgtest -lpthread
 
 ################################################################
 # clean and distclean
