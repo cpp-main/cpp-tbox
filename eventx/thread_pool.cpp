@@ -182,15 +182,18 @@ TEST(ThreadPool, prio) {
     auto backend_func = \
         [&task_ids](int id) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            LogDbg("task id: %d", id);
             task_ids.push_back(id);
         };
 
+    tp->execute([] { std::this_thread::sleep_for(std::chrono::seconds(1)); });
     for (int i = 0; i < 5; ++i)
         tp->execute(std::bind(backend_func, i), 2-i);
 
-    loop->exitLoop(Timespan::Second(1));
+    loop->exitLoop(Timespan::Second(2));
     loop->runLoop();
 
+    ASSERT_EQ(task_ids.size(), 5);
     EXPECT_EQ(task_ids[0], 4);
     EXPECT_EQ(task_ids[1], 3);
     EXPECT_EQ(task_ids[2], 2);
