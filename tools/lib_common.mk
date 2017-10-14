@@ -1,4 +1,17 @@
-.PHONY: all clean distclean install uninstall
+################################################################
+# ABOUT:
+# This C++ library project Makefile's common part, which can be included
+# into project's Makefile, to make Makefile is easy to maintain.
+#
+# HOW TO USE:
+# before include this file. those variables need be specified.
+# LIB_VERSION_X, LIB_VERSION_Y, LIB_VERSION_Z, SRC_FILES, CCXXFLAGS, TEST_LDFLAGS
+#
+# TARGETS:
+# all, libxxx.a, libxxx.so.x.x.x, test, clean, distclean, install, uninstall
+################################################################
+
+.PHONY: all print_vars print_static_vars print_shared_vars print_test_vars clean distclean install uninstall
 
 LIB_BASENAME=libtbox_$(LIB_NAME)$(LIB_NAME_EXT)
 
@@ -8,7 +21,7 @@ SHARED_LIB := $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y).$(LIB_VERSION
 ENABLE_STATIC_LIB ?= yes
 ENABLE_SHARED_LIB ?= yes
 
-TARGETS :=
+TARGETS := print_vars
 
 ifeq ($(ENABLE_STATIC_LIB),yes)
 	TARGETS += $(STATIC_LIB)
@@ -20,16 +33,24 @@ endif
 
 all: $(TARGETS) install
 
+print_vars:
+	@echo CXX=$(CXX)
+
 ################################################################
 # static library
 ################################################################
 STATIC_OBJECTS := $(subst .cpp,.o,$(SRC_FILES))
 STATIC_CXXFLAGS := $(CCXXFLAGS)
 
-$(STATIC_OBJECTS) : %.o:%.cpp
-	$(CXX) $(STATIC_CXXFLAGS) -o $@ -c $^
+print_static_vars :
+	@echo STATIC_LIB=$(STATIC_LIB)
+	@echo STATIC_CXXFLAGS=$(STATIC_CXXFLAGS)
 
-$(STATIC_LIB) : $(STATIC_OBJECTS)
+$(STATIC_OBJECTS) : %.o:%.cpp
+	@echo "\033[32mCXX $^\033[0m"
+	@$(CXX) $(STATIC_CXXFLAGS) -o $@ -c $^
+
+$(STATIC_LIB) : print_static_vars $(STATIC_OBJECTS)
 	$(AR) rc $@ $(STATIC_OBJECTS)
 
 ################################################################
@@ -38,10 +59,15 @@ $(STATIC_LIB) : $(STATIC_OBJECTS)
 SHARED_OBJECTS := $(subst .cpp,.oS,$(SRC_FILES))
 SHARED_CXXFLAGS := $(CCXXFLAGS) -fPIC
 
-$(SHARED_OBJECTS) : %.oS:%.cpp
-	$(CXX) $(SHARED_CXXFLAGS) -o $@ -c $^
+print_shared_vars :
+	@echo SHARED_LIB=$(SHARED_LIB)
+	@echo SHARED_CXXFLAGS=$(SHARED_CXXFLAGS)
 
-$(SHARED_LIB) : $(SHARED_OBJECTS)
+$(SHARED_OBJECTS) : %.oS:%.cpp
+	@echo "\033[32mCXX $^\033[0m"
+	@$(CXX) $(SHARED_CXXFLAGS) -o $@ -c $^
+
+$(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 	-rm -f $(LIB_BASENAME).so*
 	$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
 	-ln -s $@ $(LIB_BASENAME).so
@@ -53,11 +79,15 @@ $(SHARED_LIB) : $(SHARED_OBJECTS)
 TEST_OBJECTS := $(subst .cpp,.oT,$(SRC_FILES)) $(APPS_DIR)/base/util/log_output.oT
 TEST_CXXFLAGS := $(CCXXFLAGS) -DENABLE_TEST
 
-$(TEST_OBJECTS) : %.oT:%.cpp
-	$(CXX) $(TEST_CXXFLAGS) -o $@ -c $^
+print_test_vars :
+	@echo TEST_CXXFLAGS=$(TEST_CXXFLAGS)
 
-test: $(TEST_OBJECTS)
-	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgtest_main -lgtest -lpthread
+$(TEST_OBJECTS) : %.oT:%.cpp
+	@echo "\033[32mCXX $^\033[0m"
+	@$(CXX) $(TEST_CXXFLAGS) -o $@ -c $^
+
+test: print_test_vars $(TEST_OBJECTS)
+	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 ################################################################
 # clean and distclean
