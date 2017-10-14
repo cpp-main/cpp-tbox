@@ -1,4 +1,4 @@
-//! tbox/log.h
+//! tbox/base/log.h
 #ifndef TBOX_LOG_H_20170512
 #define TBOX_LOG_H_20170512
 

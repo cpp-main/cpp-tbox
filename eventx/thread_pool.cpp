@@ -44,7 +44,7 @@ void ThreadPool::cleanup()
 #ifdef ENABLE_TEST
 #include <gtest/gtest.h>
 
-#include <tbox/log.h>
+#include <tbox/base/log.h>
 #include <tbox/event/loop.h>
 
 using namespace std;

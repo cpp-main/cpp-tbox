@@ -1,5 +1,7 @@
+#ifdef ENABLE_TEST
+
 #include <gtest/gtest.h>
-#include <tbox/log.h>
+#include <tbox/base/log.h>
 
 TEST(log, output) {
     LogFatal("fatal");
@@ -11,3 +13,5 @@ TEST(log, output) {
     LogUndo();
     LogTag();
 }
+
+#endif //ENABLE_TEST

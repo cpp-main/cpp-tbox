@@ -1,33 +1,22 @@
-.PHONY: test
+LIB_NAME = base
+LIB_NAME_EXT =
 
-all: install
+LIB_VERSION_X = 1
+LIB_VERSION_Y = 0
+LIB_VERSION_Z = 0
 
-install:
-	cp -r include/tbox $(STAGING_DIR)/include/
+HEAD_FILES = \
+	log.h \
+	log_output.h
 
-uninstall:
-	rm -rf $(STAGING_DIR)/include/tbox
+SRC_FILES = \
+	log_output.cpp \
+	test.cpp
 
-CCFLAGS += -ggdb -I. -Wall -DENABLE_TEST -DLOG_MODULE_ID='"test"' -DBUILD_LOG_LEVEL=4
-CXXFLAGS += $(CCFLAGS)
-LDFLAGS += \
-	-lgtest_main -lgtest \
-	-lpthread
+CCXXFLAGS +=
 
-SRC_FILES= \
-	util/log_output \
-	util/test
+TEST_LDFLAGS +=
 
-TEST_OBJECTS=$(addsuffix .oT,$(SRC_FILES))
+ENABLE_SHARED_LIB = no
 
-test : $(TEST_OBJECTS)
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-$(TEST_OBJECTS) : %.oT:%.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $^
-
-clean:
-	find \( -name '*.o' -or -name '*.oT' \) -exec rm -f {} \;
-
-distclean: clean
-	-rm -f test
+include ../tools/lib_common.mk
