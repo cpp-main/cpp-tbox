@@ -15,7 +15,7 @@ class LibevLoop : public CommonLoop {
 
   public:
     virtual void runLoop(Mode mode);
-    virtual void exitLoop(const Timespan &wait_time);
+    virtual void exitLoop(const std::chrono::milliseconds &wait_time);
 
     virtual FdItem* newFdItem();
     virtual TimerItem* newTimerItem();

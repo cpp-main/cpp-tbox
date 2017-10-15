@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     }
 
     TimerItem* sp_timer = sp_loop->newTimerItem();
-    sp_timer->initialize(Timespan::Millisecond(200), Item::Mode::kPersist);
+    sp_timer->initialize(std::chrono::milliseconds(200), Item::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();
 

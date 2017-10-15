@@ -7,7 +7,7 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 0
 
 HEAD_FILES = \
-	forward.h loop.h item.h timespan.h \
+	forward.h loop.h item.h \
 	fd_item.h timer_item.h signal_item.h \
 	stat.h version.h
 
@@ -20,7 +20,8 @@ SRC_FILES += \
 	engins/libevent/loop.cpp \
 	engins/libevent/fd_item.cpp \
 	engins/libevent/timer_item.cpp \
-	engins/libevent/signal_item.cpp
+	engins/libevent/signal_item.cpp \
+	engins/libevent/common.cpp
 CCXXFLAGS += -DENABLE_LIBEVENT=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)n
 endif
@@ -41,7 +42,7 @@ ifeq ($(ENABLE_STAT), yes)
 CCXXFLAGS += -DENABLE_STAT=1
 endif
 
-TEST_LDFLAGS := $(LDFLAGS)
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 
 ifeq ($(ENABLE_LIBEVENT), yes)
 	TEST_LDFLAGS += -levent_core

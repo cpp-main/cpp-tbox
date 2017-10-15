@@ -16,7 +16,7 @@ class LibevTimerItem : public TimerItem {
     virtual ~LibevTimerItem();
 
   public:
-    virtual bool initialize(const Timespan &interval, Mode mode);
+    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);
     virtual void setCallback(const CallbackFunc &cb);
 
     virtual bool isEnabled() const;
@@ -32,7 +32,7 @@ class LibevTimerItem : public TimerItem {
     ev_timer timer_ev_;
     bool is_inited_;
 
-    Timespan interval_;
+    std::chrono::milliseconds interval_;
     Mode mode_;
 
     CallbackFunc cb_;

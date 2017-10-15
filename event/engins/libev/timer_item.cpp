@@ -24,16 +24,7 @@ LibevTimerItem::~LibevTimerItem()
     disable();
 }
 
-namespace {
-double TimevalToDouble(const Timespan &v)
-{
-    struct timeval tv = v;
-    return double(tv.tv_sec) + tv.tv_usec * 0.000001;
-}
-
-}
-
-bool LibevTimerItem::initialize(const Timespan &interval, Mode mode)
+bool LibevTimerItem::initialize(const std::chrono::milliseconds &interval, Mode mode)
 {
     disable();
 
@@ -73,7 +64,7 @@ bool LibevTimerItem::enable()
     if (isEnabled())
         return true;
 
-    double d_interval = TimevalToDouble(interval_);
+    double d_interval = interval_.count() * 0.001;
     if (mode_ == Mode::kOneshot) {
         timer_ev_.repeat = 0;
         timer_ev_.at = d_interval;

@@ -33,16 +33,16 @@ void Game::init(Loop *wp_loop)
     sp_10sec_timer_ = wp_loop_->newTimerItem();
     sp_stdin_read_ev_ = wp_loop_->newFdItem();
 
-    sp_start_timer_->initialize(Timespan::Second(1), Item::Mode::kPersist);
+    sp_start_timer_->initialize(std::chrono::seconds(1), Item::Mode::kPersist);
     sp_start_timer_->setCallback(std::bind(&Game::onStartGame, this));
 
-    sp_30sec_timer_->initialize(Timespan::Second(30), Item::Mode::kOneshot);
+    sp_30sec_timer_->initialize(std::chrono::seconds(30), Item::Mode::kOneshot);
     sp_30sec_timer_->setCallback(std::bind(&Game::on30SecReach, this));
 
-    sp_20sec_timer_->initialize(Timespan::Second(20), Item::Mode::kOneshot);
+    sp_20sec_timer_->initialize(std::chrono::seconds(20), Item::Mode::kOneshot);
     sp_20sec_timer_->setCallback(std::bind(&Game::on20SecReach, this));
 
-    sp_10sec_timer_->initialize(Timespan::Second(10), Item::Mode::kOneshot);
+    sp_10sec_timer_->initialize(std::chrono::seconds(10), Item::Mode::kOneshot);
     sp_10sec_timer_->setCallback(std::bind(&Game::on10SecReach, this));
 
     using std::placeholders::_1;
@@ -100,7 +100,7 @@ void Game::askQuestion()
 void Game::on30SecReach()
 {
     cout << endl << "time is up, you fail!" << endl;
-    wp_loop_->exitLoop(Timespan::Zero());
+    wp_loop_->exitLoop();
 }
 
 void Game::on20SecReach()
@@ -111,7 +111,7 @@ void Game::on20SecReach()
 void Game::on10SecReach()
 {
     cout << endl << "timeout. You fail!" << endl;
-    wp_loop_->exitLoop(Timespan::Zero());
+    wp_loop_->exitLoop();
 }
 
 void Game::onStdinReadable(short event)
@@ -134,13 +134,13 @@ void Game::onStdinReadable(short event)
             time_t now = time(NULL);
             cout << "You cast " << now - start_tstamp_ << " sec." << endl;
 
-            wp_loop_->exitLoop(Timespan::Zero());
+            wp_loop_->exitLoop();
 
         } else {
             askQuestion();
         }
     } else {
         cout << "wrong answer. You fail!" << endl;
-        wp_loop_->exitLoop(Timespan::Zero());
+        wp_loop_->exitLoop();
     }
 }

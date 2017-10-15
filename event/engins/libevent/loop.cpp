@@ -1,10 +1,12 @@
 #include "loop.h"
 
+#include <chrono>
 #include <event2/event.h>
 
 #include "fd_item.h"
 #include "timer_item.h"
 #include "signal_item.h"
+#include "common.h"
 
 namespace tbox {
 namespace event {
@@ -30,9 +32,9 @@ void LibeventLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-void LibeventLoop::exitLoop(const Timespan &wait_time)
+void LibeventLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
-    struct timeval tv = wait_time;
+    struct timeval tv = Chrono2Timeval(wait_time);
     event_base_loopexit(sp_event_base_, &tv);
 }
 

@@ -29,13 +29,13 @@ void GameLite::init(Loop *wp_loop)
     sp_10sec_timer_ = wp_loop_->newTimerItem();
     sp_stdin_read_ev_ = wp_loop_->newFdItem();
 
-    sp_30sec_timer_->initialize(Timespan::Second(30), Item::Mode::kOneshot);
+    sp_30sec_timer_->initialize(std::chrono::seconds(30), Item::Mode::kOneshot);
     sp_30sec_timer_->setCallback(std::bind(&GameLite::on30SecReach, this));
 
-    sp_20sec_timer_->initialize(Timespan::Second(20), Item::Mode::kOneshot);
+    sp_20sec_timer_->initialize(std::chrono::seconds(20), Item::Mode::kOneshot);
     sp_20sec_timer_->setCallback(std::bind(&GameLite::on20SecReach, this));
 
-    sp_10sec_timer_->initialize(Timespan::Second(10), Item::Mode::kOneshot);
+    sp_10sec_timer_->initialize(std::chrono::seconds(10), Item::Mode::kOneshot);
     sp_10sec_timer_->setCallback(std::bind(&GameLite::on10SecReach, this));
 
     using std::placeholders::_1;
@@ -78,7 +78,7 @@ void GameLite::askQuestion()
 void GameLite::on30SecReach()
 {
     cout << endl << "time is up, you fail!" << endl;
-    wp_loop_->exitLoop(Timespan::Zero());
+    wp_loop_->exitLoop();
 }
 
 void GameLite::on20SecReach()
@@ -89,7 +89,7 @@ void GameLite::on20SecReach()
 void GameLite::on10SecReach()
 {
     cout << endl << "timeout. You fail!" << endl;
-    wp_loop_->exitLoop(Timespan::Zero());
+    wp_loop_->exitLoop();
 }
 
 void GameLite::onStdinReadable(short event)
@@ -103,13 +103,13 @@ void GameLite::onStdinReadable(short event)
         if (remain_question_number_ == 0) {
             cout << "Congratulation! You win." << endl;
 
-            wp_loop_->exitLoop(Timespan::Zero());
+            wp_loop_->exitLoop();
 
         } else {
             askQuestion();
         }
     } else {
         cout << "wrong answer. You fail!" << endl;
-        wp_loop_->exitLoop(Timespan::Zero());
+        wp_loop_->exitLoop();
     }
 }

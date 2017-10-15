@@ -31,9 +31,9 @@ void LibevLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-void LibevLoop::exitLoop(const Timespan &wait_time)
+void LibevLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
-    if (wait_time.isZero()) {
+    if (wait_time.count() == 0) {
         ev_break(sp_ev_loop_, EVBREAK_ALL);
     } else {
         sp_exit_timer_ = newTimerItem();

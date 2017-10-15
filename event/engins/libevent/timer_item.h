@@ -15,7 +15,7 @@ class LibeventTimerItem : public TimerItem {
     virtual ~LibeventTimerItem();
 
   public:
-    virtual bool initialize(const Timespan &interval, Mode mode);
+    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);
     virtual void setCallback(const CallbackFunc &cb);
 
     virtual bool isEnabled() const;
@@ -30,7 +30,7 @@ class LibeventTimerItem : public TimerItem {
     LibeventLoop *wp_loop_;
     struct event event_;
     bool is_inited_;
-    Timespan interval_;
+    struct timeval interval_;
     CallbackFunc cb_;
     int cb_level_;
 };

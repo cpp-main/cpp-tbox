@@ -4,11 +4,7 @@
 namespace tbox {
 namespace event {
 
-class Timespan;
-
 class Loop;
-class Item;
-
 class FdItem;
 class TimerItem;
 class SignalItem;

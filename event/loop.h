@@ -2,7 +2,8 @@
 #define TBOX_EVENT_LOOP_H
 
 #include <functional>
-#include "timespan.h"
+#include <chrono>
+
 #include "forward.h"
 #include "stat.h"
 
@@ -27,7 +28,7 @@ class Loop {
 
     virtual void runLoop(Mode mode = Mode::kForever) = 0;
 
-    virtual void exitLoop(const Timespan &wait_time = Timespan::Zero()) = 0;
+    virtual void exitLoop(const std::chrono::milliseconds &wait_time = std::chrono::milliseconds::zero()) = 0;
 
     virtual bool isInLoopThread() = 0;
 

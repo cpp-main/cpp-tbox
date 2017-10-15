@@ -2,10 +2,10 @@
 
 #include <cassert>
 #include <event2/event.h>
+#include <tbox/base/log.h>
 
 #include "loop.h"
-
-#include <tbox/base/log.h>
+#include "common.h"
 
 namespace tbox {
 namespace event {
@@ -24,11 +24,11 @@ LibeventTimerItem::~LibeventTimerItem()
     disable();
 }
 
-bool LibeventTimerItem::initialize(const Timespan &interval, Mode mode)
+bool LibeventTimerItem::initialize(const std::chrono::milliseconds &interval, Mode mode)
 {
     disable();
 
-    interval_ = interval;
+    interval_ = Chrono2Timeval(interval);
 
     short libevent_events = 0;
     if (mode == Mode::kPersist)
@@ -67,8 +67,7 @@ bool LibeventTimerItem::enable()
     if (isEnabled())
         return true;
 
-    struct timeval tv = interval_;
-    int ret = event_add(&event_, &tv);
+    int ret = event_add(&event_, &interval_);
     if (ret != 0) {
         LogErr("event_add() fail");
         return false;

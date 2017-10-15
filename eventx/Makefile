@@ -11,7 +11,7 @@ SRC_FILES = \
 	impl/thread_pool.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"eventx"' -Wall -Werror $(CXXFLAGS) -ggdb
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

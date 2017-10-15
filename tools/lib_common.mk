@@ -76,7 +76,7 @@ $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 ################################################################
 # test
 ################################################################
-TEST_OBJECTS := $(subst .cpp,.oT,$(SRC_FILES)) $(APPS_DIR)/base/util/log_output.oT
+TEST_OBJECTS := $(subst .cpp,.oT,$(SRC_FILES))
 TEST_CXXFLAGS := $(CCXXFLAGS) -DENABLE_TEST
 
 print_test_vars :

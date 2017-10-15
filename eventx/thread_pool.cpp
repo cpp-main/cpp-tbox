@@ -75,7 +75,7 @@ TEST(ThreadPool, min2_max5) {
     }
 
     LogDbg("run in main");
-    loop->exitLoop(Timespan::Second(4));
+    loop->exitLoop(std::chrono::seconds(4));
     loop->runLoop();
 
     tp->cleanup();
@@ -98,7 +98,7 @@ TEST(ThreadPool, min0_max5) {
     }
 
     LogDbg("run in main");
-    loop->exitLoop(Timespan::Second(4));
+    loop->exitLoop(std::chrono::seconds(4));
     loop->runLoop();
 
     tp->cleanup();
@@ -123,7 +123,7 @@ TEST(ThreadPool, exit_before_finish) {
     }
 
     LogDbg("run in main");
-    loop->exitLoop(Timespan::Second(1));
+    loop->exitLoop(std::chrono::seconds(1));
     loop->runLoop();
 
     tp->cleanup();
@@ -157,7 +157,7 @@ TEST(ThreadPool, cancel_task) {
     EXPECT_EQ(tp->cancel(task_ids[2]), 0);  //! 第三个任务可正常取消
     EXPECT_EQ(tp->cancel(100), 1);  //! 任务不存在
 
-    loop->exitLoop(Timespan::Second(4));
+    loop->exitLoop(std::chrono::seconds(4));
     loop->runLoop();
 
     tp->cleanup();
@@ -190,7 +190,7 @@ TEST(ThreadPool, prio) {
     for (int i = 0; i < 5; ++i)
         tp->execute(std::bind(backend_func, i), 2-i);
 
-    loop->exitLoop(Timespan::Second(2));
+    loop->exitLoop(std::chrono::seconds(2));
     loop->runLoop();
 
     ASSERT_EQ(task_ids.size(), 5);

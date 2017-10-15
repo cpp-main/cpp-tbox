@@ -25,7 +25,7 @@ void DoInLoop(Loop *wp_loop, int count)
 void ExitLoop(Loop* wp_loop)
 {
     cout << "ExitLoop()" << endl;
-    wp_loop->exitLoop(Timespan::Millisecond(10));
+    wp_loop->exitLoop(std::chrono::milliseconds(10));
 }
 
 void ThreadFunc1(Loop *wp_loop)

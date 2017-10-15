@@ -47,13 +47,13 @@ void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
         string cmd(buff);
 
         if (cmd == "quit") {
-            wp_loop->exitLoop(Timespan::Zero());
+            wp_loop->exitLoop(std::chrono::seconds::zero());
         } else if (cmd == "start") {
             wp_timer->enable();
         } else if (cmd == "stop") {
             wp_timer->disable();
         } else if (cmd == "init") {
-            wp_timer->initialize(Timespan::Millisecond(10), Item::Mode::kPersist);
+            wp_timer->initialize(std::chrono::milliseconds(10), Item::Mode::kPersist);
         } else if (cmd == "cb2") {
             wp_timer->setCallback(TimerCallback2);
         } else if (cmd == "cb1") {
@@ -69,7 +69,7 @@ void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
 void IntSignalCallback(Loop* wp_loop)
 {
     cout << "got signal" << endl;
-    wp_loop->exitLoop(Timespan::Second(3));
+    wp_loop->exitLoop(std::chrono::seconds(3));
     cout << "exit after 3 sec" << endl;
 }
 
@@ -103,12 +103,12 @@ int main(int argc, char *argv[])
 
 
     TimerItem* sp_timer = sp_loop->newTimerItem();
-    sp_timer->initialize(Timespan::Second(1), Item::Mode::kPersist);
+    sp_timer->initialize(std::chrono::seconds(1), Item::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();
 
     TimerItem* sp_timer_1 = sp_loop->newTimerItem();
-    sp_timer_1->initialize(Timespan::Second(5), Item::Mode::kOneshot);
+    sp_timer_1->initialize(std::chrono::seconds(5), Item::Mode::kOneshot);
     sp_timer_1->setCallback(OneshotTimerCallback);
     sp_timer_1->enable();
 
