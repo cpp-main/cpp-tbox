@@ -1,7 +1,7 @@
-LIB_NAME = eventx
-LIB_VERSION_X = 1
+LIB_NAME = network
+LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 0
+LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	buffer.h
