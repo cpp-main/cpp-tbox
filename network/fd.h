@@ -12,14 +12,22 @@ namespace network {
 //! 文件描述符类，封装了对fd的基础操作
 class Fd {
   public:
+    Fd();
     Fd(int fd);
     virtual ~Fd();
 
-    NONCOPYABLE(Fd)
+    NONCOPYABLE(Fd);
+
+    Fd(Fd&& other);
+    Fd& operator = (Fd&& other);
+
+    void swap(Fd &other);
+    void reset();
 
   public:
     //! 获取文件描述符的值。注意谨慎使用
     int get() const { return fd_; }
+    operator int () const { return fd_; }
 
     //! 读
     ssize_t read(void *ptr, size_t size) const;

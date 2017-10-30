@@ -8,12 +8,13 @@ HEAD_FILES = \
 
 SRC_FILES = \
 	buffer.cpp \
-	fd.cpp
+	fd.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
-	buffer_test.cpp
+	buffer_test.cpp \
+	fd_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 

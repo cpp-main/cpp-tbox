@@ -17,11 +17,11 @@
 //! 在类中禁用复制特性
 #define NONCOPYABLE(class_name) \
     class_name(const class_name&) = delete; \
-    class_name& operator = (const class_name &) = delete; \
+    class_name& operator = (const class_name &) = delete
 
 //! 在类中禁用移动特性
 #define IMMOVABLE(class_name) \
     class_name(class_name &&) = delete; \
-    class_name& operator = (class_name &&) = delete; \
+    class_name& operator = (class_name &&) = delete
 
 #endif //TBOX_BASE_DEFINES_H_20171030
