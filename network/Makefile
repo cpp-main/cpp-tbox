@@ -11,7 +11,12 @@ SRC_FILES = \
 	fd.cpp
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
+
+TEST_SRC_FILES = \
+	buffer_test.cpp
+
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
+
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

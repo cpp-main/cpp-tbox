@@ -40,17 +40,22 @@ print_vars:
 # static library
 ################################################################
 STATIC_OBJECTS := $(subst .cpp,.o,$(SRC_FILES))
-STATIC_CXXFLAGS := $(CCXXFLAGS)
 
 print_static_vars :
 	@echo STATIC_LIB=$(STATIC_LIB)
-	@echo STATIC_CXXFLAGS=$(STATIC_CXXFLAGS)
+	@echo CCXXFLAGS=$(CCXXFLAGS)
 
-$(STATIC_OBJECTS) : %.o:%.cpp
+.SUFFIXES: .cpp .c
+
+.cpp.o:
 	@echo "\033[32mCXX $^\033[0m"
-	@$(CXX) $(STATIC_CXXFLAGS) -o $@ -c $^
+	@$(CXX) $(CCXXFLAGS) -o $@ -c $^
+.c.o:
+	@echo "\033[32mCXX $^\033[0m"
+	@$(CC) $(CCXXFLAGS) -o $@ -c $^
 
 $(STATIC_LIB) : print_static_vars $(STATIC_OBJECTS)
+	@echo "\033[32mBUILD $@\033[0m"
 	$(AR) rc $@ $(STATIC_OBJECTS)
 
 ################################################################
@@ -69,6 +74,7 @@ $(SHARED_OBJECTS) : %.oS:%.cpp
 
 $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 	-rm -f $(LIB_BASENAME).so*
+	@echo "\033[32mBUILD $@\033[0m"
 	$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
 	-ln -s $@ $(LIB_BASENAME).so
 	-ln -s $@ $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y)
@@ -76,17 +82,14 @@ $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 ################################################################
 # test
 ################################################################
-TEST_OBJECTS := $(subst .cpp,.oT,$(SRC_FILES))
-TEST_CXXFLAGS := $(CCXXFLAGS) -DENABLE_TEST
+TEST_SRC_FILES += $(SRC_FILES)
+TEST_OBJECTS := $(subst .cpp,.o,$(TEST_SRC_FILES))
 
 print_test_vars :
-	@echo TEST_CXXFLAGS=$(TEST_CXXFLAGS)
-
-$(TEST_OBJECTS) : %.oT:%.cpp
-	@echo "\033[32mCXX $^\033[0m"
-	@$(CXX) $(TEST_CXXFLAGS) -o $@ -c $^
+	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 
 test: print_test_vars $(TEST_OBJECTS)
+	@echo "\033[32mBUILD $@\033[0m"
 	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 ################################################################
