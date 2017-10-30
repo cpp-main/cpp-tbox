@@ -4,16 +4,21 @@
 #include <unistd.h>
 #include <sys/uio.h>
 
+#include "tbox/base/defines.h"
+
 namespace tbox {
 namespace network {
 
 //! 文件描述符类，封装了对fd的基础操作
 class Fd {
   public:
-    explicit Fd(int fd);
+    Fd(int fd);
     virtual ~Fd();
 
+    NONCOPYABLE(Fd)
+
   public:
+    //! 获取文件描述符的值。注意谨慎使用
     int get() const { return fd_; }
 
     //! 读

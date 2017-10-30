@@ -9,8 +9,7 @@ Fd::Fd(int fd) :
 
 Fd::~Fd()
 {
-    if (fd_ != -1)
-        close(fd_);
+    CHECK_CLOSE_FD(fd_);
 }
 
 ssize_t Fd::read(void *ptr, size_t size) const

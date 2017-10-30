@@ -7,11 +7,12 @@ LIB_VERSION_Z = 0
 
 HEAD_FILES = \
 	log.h \
-	log_output.h
+	log_output.h \
+	defines.h \
 
 SRC_FILES = \
 	log_output.cpp \
-	test.cpp
+	test.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 
