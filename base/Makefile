@@ -12,9 +12,11 @@ HEAD_FILES = \
 
 SRC_FILES = \
 	log_output.cpp \
-	test.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
+
+TEST_SRC_FILES = \
+	test.cpp \
 
 TEST_LDFLAGS +=
 

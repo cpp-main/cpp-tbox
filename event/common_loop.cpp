@@ -169,12 +169,3 @@ void CommonLoop::recordTimeCost(uint64_t cost_us)
 
 }
 }
-
-#ifdef ENABLE_TEST
-#include <gtest/gtest.h>
-
-TEST(CommonLoop, _)
-{ }
-
-#endif //ENABLE_TEST
-

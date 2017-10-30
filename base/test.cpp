@@ -1,5 +1,3 @@
-#ifdef ENABLE_TEST
-
 #include <gtest/gtest.h>
 #include <tbox/base/log.h>
 
@@ -13,5 +11,3 @@ TEST(log, output) {
     LogUndo();
     LogTag();
 }
-
-#endif //ENABLE_TEST

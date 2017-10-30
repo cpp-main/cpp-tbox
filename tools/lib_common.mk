@@ -82,15 +82,14 @@ $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 ################################################################
 # test
 ################################################################
-TEST_SRC_FILES += $(SRC_FILES)
 TEST_OBJECTS := $(subst .cpp,.o,$(TEST_SRC_FILES))
 
 print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 
-test: print_test_vars $(TEST_OBJECTS)
+test: print_test_vars $(TEST_OBJECTS) $(STATIC_OBJECTS)
 	@echo "\033[32mBUILD $@\033[0m"
-	$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
+	$(CXX) -o $@ $(TEST_OBJECTS) $(STATIC_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 ################################################################
 # clean and distclean
