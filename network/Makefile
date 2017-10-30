@@ -7,7 +7,8 @@ HEAD_FILES = \
 	buffer.h
 
 SRC_FILES = \
-	buffer.cpp
+	buffer.cpp \
+	fd.cpp
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
