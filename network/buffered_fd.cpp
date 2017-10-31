@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstring>
-
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_item.h>
@@ -86,9 +85,6 @@ bool BufferedFd::enable()
 
     if (sp_read_event_ != nullptr)
         sp_read_event_->enable();
-
-    if (sp_write_event_ != nullptr)
-        sp_write_event_->enable();
 
     state_ = State::kRunning;
 
@@ -214,7 +210,30 @@ void BufferedFd::onReadCallback(short)
 
 void BufferedFd::onWriteCallback(short)
 {
-    LogUndo();
+    //! 如果发送缓冲中已无数据要发送了，那就关闭可写事件
+    if (send_buff_.readableSize() == 0) {
+        sp_write_event_->disable();
+
+        if (send_complete_cb_) {
+            ++cb_level_;
+            send_complete_cb_();
+            --cb_level_;
+        }
+        return;
+    }
+
+    //! 下面是有数据要发送的
+    ssize_t wsize = fd_.write(send_buff_.readableBegin(), send_buff_.readableSize());
+    if (wsize >= 0) {
+        send_buff_.hasRead(wsize);
+    } else {
+        if (error_cb_) {
+            ++cb_level_;
+            error_cb_(errno);
+            --cb_level_;
+        } else
+            LogWarn("write error, wsize:%d, errno:%d, %s", wsize, errno, strerror(errno));
+    }
 }
 
 }
