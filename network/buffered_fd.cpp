@@ -70,25 +70,86 @@ bool BufferedFd::initialize(int fd, short events)
 
 void BufferedFd::setReceiveCallback(const ReceiveCallback &func, size_t threshold)
 {
-    LogUndo();
+    receive_cb_ = func;
+    receive_threshold_ = threshold;
 }
 
 bool BufferedFd::enable()
 {
-    LogUndo();
-    return false;
+    if (state_ == State::kRunning)
+        return true;
+
+    if (state_ != State::kInited) {
+        LogWarn("please initialize() first");
+        return false;
+    }
+
+    if (sp_read_event_ != nullptr)
+        sp_read_event_->enable();
+
+    if (sp_write_event_ != nullptr)
+        sp_write_event_->enable();
+
+    state_ = State::kRunning;
+
+    return true;
 }
 
 bool BufferedFd::disable()
 {
-    LogUndo();
-    return false;
+    if (state_ == State::kInited)
+        return true;
+
+    if (state_ != State::kRunning) {
+        LogWarn("please initialize() first");
+        return false;
+    }
+
+    if (sp_read_event_ != nullptr)
+        sp_read_event_->disable();
+
+    if (sp_write_event_ != nullptr)
+        sp_write_event_->disable();
+
+    state_ = State::kInited;
+
+    return true;
 }
 
-bool BufferedFd::send(const void *p_data, size_t data_size)
+bool BufferedFd::send(const void *data_ptr, size_t data_size)
 {
-    LogUndo();
-    return false;
+    if (sp_write_event_ == nullptr) {
+        LogWarn("send is disabled");
+        return false;
+    }
+
+    //! 如果当前没有 enable() 或者发送缓冲区中还有没有发送完成的数据
+    if ((state_ != State::kRunning) || (send_buff_.readableSize() > 0)) {
+        //! 则新的数据就直接放到发送缓冲区
+        send_buff_.append(data_ptr, data_size);
+    } else {
+        //! 否则尝试发送
+        ssize_t wsize = fd_.write(data_ptr, data_size);
+        if (wsize >= 0) {   //! 如果发送正常
+            //! 如果没有发送完，还有剩余的数据
+            if (static_cast<size_t>(wsize) < data_size) {
+                //! 则将剩余的数据放入到缓冲区
+                const uint8_t* p_remain = static_cast<const uint8_t*>(data_ptr) + wsize;
+                send_buff_.append(p_remain, (data_size - wsize));
+                sp_write_event_->enable();  //! 等待可写事件
+            }
+        } else {    //! 否则就是出了错
+            if (errno == EAGAIN) {  //! 文件操作繁忙
+                send_buff_.append(data_ptr, data_size);
+                sp_write_event_->enable();  //! 等待可写事件
+            } else {
+                LogWarn("send fail, some data drop");
+                //!TODO
+            }
+        }
+    }
+
+    return true;
 }
 
 void BufferedFd::onReadCallback(short)
