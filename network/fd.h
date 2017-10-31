@@ -37,6 +37,11 @@ class Fd {
     ssize_t write(const void *ptr, size_t size) const;
     ssize_t writev(const struct iovec *iov, int iovcnt) const;
 
+    //! 其它
+    void setNonBlock(bool enable) const;    //! 开启或关闭非阻塞选项
+    bool isNonBlock() const;        //! 检查是否非阻塞
+    void setCloseOnExec() const;    //! 设置Exec时关闭选项
+
   private:
     int fd_ = -1;
 };
