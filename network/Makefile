@@ -8,6 +8,7 @@ HEAD_FILES = \
 
 SRC_FILES = \
 	buffer.cpp \
+	buffered_fd.cpp \
 	fd.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
