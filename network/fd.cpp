@@ -26,6 +26,7 @@ Fd::Fd(Fd&& other)
 Fd& Fd::operator = (Fd&& other)
 {
     if (this != &other) {
+        reset();
         fd_ = other.fd_;
         other.fd_ = -1;
     }

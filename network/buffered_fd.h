@@ -32,9 +32,13 @@ class BufferedFd {
     //! 初始化，并指定发送或是接收功能
     bool initialize(int fd, short events = kReadWrite);
 
+    //! 设置接收到数据时的回调函数，threshold为数据阈值
     void setReceiveCallback(const ReceiveCallback &func, size_t threshold);
+    //! 设置完成了当前数据发送时的回调函数
     void setSendCompleteCallback(const WriteCompleteCallback &func) { send_complete_cb_ = func; }
+    //! 设置当读到0字节数据时回调函数
     void setReadZeroCallback(const ReadZeroCallback &func) { read_zero_cb_ = func; }
+    //! 设置当遇到错误时的回调函数
     void setErrorCallback(const ErrorCallback &func) { error_cb_ = func; }
 
     //! 发送数据
@@ -45,7 +49,26 @@ class BufferedFd {
     bool disable();
 
   private:
+    void onReadCallback(short);
+    void onWriteCallback(short);
+
+  private:
     event::Loop *wp_loop_ = nullptr;    //! 事件驱动
+
+    enum class State {
+        kEmpty,     //! 未初始化
+        kInited,    //! 已初始化
+        kRunning    //! 正在运行
+    };
+    State state_ = State::kEmpty;
+
+    Fd fd_;
+
+    event::FdItem *sp_read_event_  = nullptr;
+    event::FdItem *sp_write_event_ = nullptr;
+
+    Buffer send_buff_;
+    Buffer recv_buff_;
 
     ReceiveCallback         receive_cb_;
     WriteCompleteCallback   send_complete_cb_;
@@ -53,6 +76,7 @@ class BufferedFd {
     ErrorCallback           error_cb_;
 
     size_t  receive_threshold_ = 0;
+    int     cb_level_ = 0;
 };
 
 }
