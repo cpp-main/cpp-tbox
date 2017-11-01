@@ -4,18 +4,21 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	buffer.h
+	buffer.h \
+	fd.h \
+	buffered_fd.h \
 
 SRC_FILES = \
 	buffer.cpp \
-	buffered_fd.cpp \
 	fd.cpp \
+	buffered_fd.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
-	buffer_test.cpp \
 	fd_test.cpp \
+	buffer_test.cpp \
+	buffered_fd_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 
