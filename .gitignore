@@ -1,6 +1,7 @@
-*.a
+lib*.a
+lib*.so*
 *.o
-*.oT
+*.oS
 tags
 test
 cscope.*

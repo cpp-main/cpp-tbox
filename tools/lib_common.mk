@@ -55,8 +55,8 @@ print_static_vars :
 	@$(CC) $(CCXXFLAGS) -o $@ -c $^
 
 $(STATIC_LIB) : print_static_vars $(STATIC_OBJECTS)
-	@echo "\033[32mBUILD $@\033[0m"
-	$(AR) rc $@ $(STATIC_OBJECTS)
+	@echo "\033[35mBUILD $@\033[0m"
+	@$(AR) rc $@ $(STATIC_OBJECTS)
 
 ################################################################
 # shared library
@@ -74,8 +74,8 @@ $(SHARED_OBJECTS) : %.oS:%.cpp
 
 $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 	-rm -f $(LIB_BASENAME).so*
-	@echo "\033[32mBUILD $@\033[0m"
-	$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
+	@echo "\033[35mBUILD $@\033[0m"
+	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
 	-ln -s $@ $(LIB_BASENAME).so
 	-ln -s $@ $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y)
 
@@ -88,8 +88,8 @@ print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 
 test: print_test_vars $(TEST_OBJECTS) $(STATIC_OBJECTS)
-	@echo "\033[32mBUILD $@\033[0m"
-	$(CXX) -o $@ $(TEST_OBJECTS) $(STATIC_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
+	@echo "\033[35mBUILD $@\033[0m"
+	@$(CXX) -o $@ $(TEST_OBJECTS) $(STATIC_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 ################################################################
 # clean and distclean

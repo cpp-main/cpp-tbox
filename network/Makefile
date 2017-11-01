@@ -13,7 +13,7 @@ SRC_FILES = \
 	fd.cpp \
 	buffered_fd.cpp \
 
-CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' -Wall -Werror $(CXXFLAGS) -ggdb
+CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
 	fd_test.cpp \

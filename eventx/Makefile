@@ -10,7 +10,7 @@ SRC_FILES = \
 	thread_pool.cpp \
 	impl/thread_pool.cpp \
 
-CCXXFLAGS += -I../base -DLOG_MODULE_ID='"eventx"' -Wall -Werror $(CXXFLAGS) -ggdb
+CCXXFLAGS += -I../base -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
 	thread_pool_test.cpp
