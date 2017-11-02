@@ -76,7 +76,7 @@ bool Buffer::ensureWritableSize(size_t write_size)
         return true;
 
     } else {    //! 只有重新分配更多的空间才可以
-        size_t new_size = (write_index_ + write_size) * 3 / 2;
+        size_t new_size = (write_index_ + write_size) << 1;  //! 两倍扩展
         uint8_t *p_buff = new uint8_t[new_size];
         if (p_buff == NULL)
             return false;
