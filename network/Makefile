@@ -7,6 +7,7 @@ HEAD_FILES = \
 	buffer.h \
 	fd.h \
 	buffered_fd.h \
+	byte_stream.h \
 
 SRC_FILES = \
 	buffer.cpp \

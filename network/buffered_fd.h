@@ -5,13 +5,14 @@
 #include <tbox/event/forward.h>
 #include <tbox/base/defines.h>
 
+#include "byte_stream.h"
 #include "fd.h"
 #include "buffer.h"
 
 namespace tbox {
 namespace network {
 
-class BufferedFd {
+class BufferedFd : public ByteStream {
   public:
     explicit BufferedFd(event::Loop *wp_loop);
     virtual ~BufferedFd();
@@ -19,7 +20,6 @@ class BufferedFd {
     NONCOPYABLE(BufferedFd);
 
   public:
-    using ReceiveCallback       = std::function<void(Buffer&)>;
     using WriteCompleteCallback = std::function<void()>;
     using ReadZeroCallback      = std::function<void()>;
     using ErrorCallback         = std::function<void(int)>;
@@ -32,8 +32,7 @@ class BufferedFd {
     //! 初始化，并指定发送或是接收功能
     bool initialize(int fd, short events = kReadWrite);
 
-    //! 设置接收到数据时的回调函数，threshold为数据阈值
-    void setReceiveCallback(const ReceiveCallback &func, size_t threshold);
+
     //! 设置完成了当前数据发送时的回调函数
     void setSendCompleteCallback(const WriteCompleteCallback &func) { send_complete_cb_ = func; }
     //! 设置当读到0字节数据时回调函数
@@ -41,8 +40,11 @@ class BufferedFd {
     //! 设置当遇到错误时的回调函数
     void setErrorCallback(const ErrorCallback &func) { error_cb_ = func; }
 
-    //! 发送数据
-    bool send(const void *data_ptr, size_t data_size);
+    //! 实现 ByteStream 的接口
+    virtual void setReceiveCallback(const ReceiveCallback &func, size_t threshold) override;
+    virtual bool send(const void *data_ptr, size_t data_size) override;
+    virtual void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
+    virtual void unbind() override { wp_receiver_ = nullptr; }
 
     //! 启动与关闭内部事件驱动机制
     bool enable();
@@ -74,6 +76,8 @@ class BufferedFd {
     WriteCompleteCallback   send_complete_cb_;
     ReadZeroCallback        read_zero_cb_;
     ErrorCallback           error_cb_;
+
+    ByteStream  *wp_receiver_ = nullptr;
 
     size_t  receive_threshold_ = 0;
     int     cb_level_ = 0;

@@ -189,6 +189,13 @@ void BufferedFd::onReadCallback(short)
                 recv_buff_.hasReadAll();    //! 丢弃数据，防止堆积
             }
         }
+
+        //! 如果有绑定接收者，则应将数据直接转发给接收者
+        if (wp_receiver_ != nullptr) {
+            wp_receiver_->send(recv_buff_.readableBegin(), recv_buff_.readableSize());
+            recv_buff_.hasReadAll();
+        }
+
     } else if (rsize == 0) {    //! 读到0字节数据，说明fd_已不可读了
         sp_read_event_->disable();
         if (read_zero_cb_) {
