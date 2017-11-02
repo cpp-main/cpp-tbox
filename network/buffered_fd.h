@@ -30,7 +30,7 @@ class BufferedFd : public ByteStream {
         kReadWrite = 0x03,
     };
     //! 初始化，并指定发送或是接收功能
-    bool initialize(int fd, short events = kReadWrite);
+    bool initialize(Fd &&fd, short events = kReadWrite);
 
 
     //! 设置完成了当前数据发送时的回调函数

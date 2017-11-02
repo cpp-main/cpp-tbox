@@ -23,6 +23,7 @@ class Fd {
 
     void swap(Fd &other);
     void reset();
+    bool isNull() const { return fd_ == -1; }
 
   public:
     //! 获取文件描述符的值。注意谨慎使用

@@ -27,10 +27,10 @@ BufferedFd::~BufferedFd()
     CHECK_DELETE_RESET_OBJ(sp_read_event_);
 }
 
-bool BufferedFd::initialize(int fd, short events)
+bool BufferedFd::initialize(Fd &&fd, short events)
 {
-    if (fd < 0) {
-        LogWarn("fd < 0, fd = %d", fd);
+    if (fd.isNull()) {
+        LogWarn("fd is null");
         return false;
     }
 
@@ -44,7 +44,7 @@ bool BufferedFd::initialize(int fd, short events)
         return false;
     }
 
-    fd_ = Fd(fd);
+    fd_ = std::move(fd);
     fd_.setNonBlock(true);
 
     CHECK_DELETE_RESET_OBJ(sp_write_event_);
@@ -179,7 +179,12 @@ void BufferedFd::onReadCallback(short)
             rbuf[0].iov_len  = writable_size;
         } while ((rsize = fd_.readv(rbuf, 2)) > 0);
 
-        if (recv_buff_.readableSize() >= receive_threshold_) {
+        //! 如果有绑定接收者，则应将数据直接转发给接收者
+        if (wp_receiver_ != nullptr) {
+            wp_receiver_->send(recv_buff_.readableBegin(), recv_buff_.readableSize());
+            recv_buff_.hasReadAll();
+
+        } else if (recv_buff_.readableSize() >= receive_threshold_) {
             if (receive_cb_) {
                 ++cb_level_;
                 receive_cb_(recv_buff_);
@@ -188,12 +193,6 @@ void BufferedFd::onReadCallback(short)
                 LogWarn("receive_cb_ is not set");
                 recv_buff_.hasReadAll();    //! 丢弃数据，防止堆积
             }
-        }
-
-        //! 如果有绑定接收者，则应将数据直接转发给接收者
-        if (wp_receiver_ != nullptr) {
-            wp_receiver_->send(recv_buff_.readableBegin(), recv_buff_.readableSize());
-            recv_buff_.hasReadAll();
         }
 
     } else if (rsize == 0) {    //! 读到0字节数据，说明fd_已不可读了
