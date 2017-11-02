@@ -38,11 +38,13 @@ class Buffer {
     explicit Buffer(size_t reverse_size = kInitialSize);
     virtual ~Buffer();
 
-    void swap(Buffer &other);
-
     Buffer(const Buffer &other);
-    Buffer& operator = (const Buffer &other);
+    Buffer(Buffer &&other);
 
+    Buffer& operator = (const Buffer &other);
+    Buffer& operator = (Buffer &&other);
+
+    void swap(Buffer &other);
     void reset();
 
   public:
@@ -51,13 +53,15 @@ class Buffer {
      */
 
     //! 获取可写空间大小
-    size_t writableSize() const { return buffer_size_ - write_index_; }
+    inline size_t writableSize() const { return buffer_size_ - write_index_; }
 
     //! 保障有指定容量的可写空间
     bool ensureWritableSize(size_t write_size);
 
     //! 获取写首地址
-    inline uint8_t* writableBegin() const { return buffer_ptr_ + write_index_; }
+    inline uint8_t* writableBegin() const {
+        return (buffer_ptr_ != nullptr) ? (buffer_ptr_ + write_index_) : nullptr;
+    }
 
     //! 标记已写入数据大小
     void hasWritten(size_t write_size);
@@ -70,10 +74,12 @@ class Buffer {
      */
 
     //! 获取可读区域大小
-    size_t readableSize() const { return write_index_ - read_index_; }
+    inline size_t readableSize() const { return write_index_ - read_index_; }
 
     //! 获取可读区首地址
-    uint8_t* readableBegin() { return buffer_ptr_ + read_index_; }
+    inline uint8_t* readableBegin() const {
+        return (buffer_ptr_ != nullptr) ? (buffer_ptr_ + read_index_) : nullptr;
+    }
 
     //! 标记已读数据大小
     void hasRead(size_t read_size);
@@ -83,6 +89,12 @@ class Buffer {
 
     //! 从缓冲区读取指定的数据块，返回实际读到的数据大小
     size_t fetch(void *p_buff, size_t buff_size);
+
+    /**
+     * 其它
+     */
+    //! 缩减缓冲多余容量
+    void shrink();
 
   protected:
     void cloneFrom(const Buffer &other);

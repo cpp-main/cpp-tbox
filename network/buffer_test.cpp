@@ -110,7 +110,18 @@ TEST(network_buffer, copy_construct) {
     EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
 }
 
-TEST(network_buffer, assign) {
+TEST(network_buffer, move_construct) {
+    Buffer b1(8);
+    b1.append("abc", 4);
+    Buffer b2(std::move(b1));
+    EXPECT_EQ(b2.readableSize(), 4u);
+    EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
+
+    EXPECT_EQ(b1.readableBegin(), nullptr);
+    EXPECT_EQ(b1.readableSize(), 0u);
+}
+
+TEST(network_buffer, copy_assign) {
     Buffer b1(8);
     b1.append("abc", 4);
     Buffer b2(43);
@@ -118,6 +129,19 @@ TEST(network_buffer, assign) {
     b2 = b1;
     EXPECT_EQ(b2.readableSize(), 4u);
     EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
+}
+
+TEST(network_buffer, move_assign) {
+    Buffer b1(8);
+    b1.append("abc", 4);
+    Buffer b2(43);
+    b2.append("1234567890", 10);
+    b2 = std::move(b1);
+    EXPECT_EQ(b2.readableSize(), 4u);
+    EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
+
+    EXPECT_EQ(b1.readableBegin(), nullptr);
+    EXPECT_EQ(b1.readableSize(), 0u);
 }
 
 TEST(network_buffer, huge_data) {
@@ -160,6 +184,27 @@ TEST(network_buffer, huge_data) {
     //! 期望缓冲的空间大小没有变化
     EXPECT_EQ(max_size, b.buffer_size_);
     EXPECT_EQ(b.readableSize(), 0u);
+}
+
+TEST(network_buffer, shrink_after_readsize_0) {
+    Buffer b;
+    for (int i = 0; i < 100; ++i)
+        b.append("1234567890", 10);
+    b.hasReadAll();
+    b.shrink();
+    EXPECT_EQ(b.buffer_ptr_, nullptr);
+    //!使用valgrind检查内存是否存在泄漏
+}
+
+TEST(network_buffer, shrink_after_readsize_not_0) {
+    Buffer b;
+    for (int i = 0; i < 100; ++i)
+        b.append("1234567890", 10);
+    b.hasRead(990);
+    b.shrink();
+    EXPECT_NE(b.buffer_ptr_, nullptr);
+    EXPECT_EQ(b.readableSize(), 10);
+    //!使用valgrind检查内存是否存在泄漏
 }
 
 TEST(network_buffer, read_all_except_index_reset) {

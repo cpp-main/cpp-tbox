@@ -1,25 +1,25 @@
 #ifndef TBOX_BASE_DEFINES_H_20171030
 #define TBOX_BASE_DEFINES_H_20171030
 
-//! »ñÈ¡¹Ì¶¨Êı×é³ÉÔ±¸öÊı
+//! è·å–å›ºå®šæ•°ç»„æˆå‘˜ä¸ªæ•°
 #define NUMBER_OF_ARRAY(arr)    (sizeof(arr) / sizeof(*arr))
 
-//! ×ÊÔ´ÊÍ·ÅÏà¹Øºê
-#define CHECK_DELETE_RESET_OBJ(obj) do { if (obj != NULL) { delete obj; obj = NULL; } } while (0)
-#define CHECK_DELETE_OBJ(obj)   do { if (obj != NULL) { delete obj; } } while (0)
-#define CHECK_DELETE_RESET_ARRAY(arr)   do { if (arr != NULL) { delete [] arr; arr = NULL; } } while (0)
-#define CHECK_DELETE_ARRAY(arr) do { if (arr != NULL) { delete [] arr; } } while (0)
-#define CHECK_FREE_RESET_PTR(ptr)   do { if (ptr != NULL) { free(ptr); ptr = NULL; } } while (0)
-#define CHECK_FREE_PTR(ptr) do { if (ptr != NULL) { free(ptr); } } while (0)
+//! èµ„æºé‡Šæ”¾ç›¸å…³å®
+#define CHECK_DELETE_RESET_OBJ(obj) do { if (obj != nullptr) { delete obj; obj = nullptr; } } while (0)
+#define CHECK_DELETE_OBJ(obj)   do { if (obj != nullptr) { delete obj; } } while (0)
+#define CHECK_DELETE_RESET_ARRAY(arr)   do { if (arr != nullptr) { delete [] arr; arr = nullptr; } } while (0)
+#define CHECK_DELETE_ARRAY(arr) do { if (arr != nullptr) { delete [] arr; } } while (0)
+#define CHECK_FREE_RESET_PTR(ptr)   do { if (ptr != nullptr) { free(ptr); ptr = nullptr; } } while (0)
+#define CHECK_FREE_PTR(ptr) do { if (ptr != nullptr) { free(ptr); } } while (0)
 #define CHECK_CLOSE_RESET_FD(fd)    do { if (fd != -1) { close(fd); fd = -1; } } while (0)
 #define CHECK_CLOSE_FD(fd)  do { if (fd != -1) { close(fd); } } while (0)
 
-//! ÔÚÀàÖĞ½ûÓÃ¸´ÖÆÌØĞÔ
+//! åœ¨ç±»ä¸­ç¦ç”¨å¤åˆ¶ç‰¹æ€§
 #define NONCOPYABLE(class_name) \
     class_name(const class_name&) = delete; \
     class_name& operator = (const class_name &) = delete
 
-//! ÔÚÀàÖĞ½ûÓÃÒÆ¶¯ÌØĞÔ
+//! åœ¨ç±»ä¸­ç¦ç”¨ç§»åŠ¨ç‰¹æ€§
 #define IMMOVABLE(class_name) \
     class_name(class_name &&) = delete; \
     class_name& operator = (class_name &&) = delete

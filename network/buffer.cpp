@@ -2,6 +2,8 @@
 #include <cstring>
 #include <utility>
 
+#include <tbox/base/defines.h>
+
 #include "buffer.h"
 
 namespace tbox {
@@ -9,10 +11,10 @@ namespace network {
 
 Buffer::Buffer(size_t reverse_size)
 {
-    //! Èç¹ûÔ¤Áô¿Õ¼ä´óĞ¡£¬ÄÇÃ´ÒªÎª»º³å·ÖÅä¿Õ¼ä
+    //! å¦‚æœé¢„ç•™ç©ºé—´å¤§å°ï¼Œé‚£ä¹ˆè¦ä¸ºç¼“å†²åˆ†é…ç©ºé—´
     if (reverse_size > 0) {
         uint8_t *p_buff = new uint8_t [reverse_size];
-        assert(p_buff != NULL);
+        assert(p_buff != nullptr);
         buffer_ptr_ = p_buff;
         buffer_size_ = reverse_size;
     }
@@ -23,12 +25,32 @@ Buffer::Buffer(const Buffer &other)
     cloneFrom(other);
 }
 
+Buffer::Buffer(Buffer &&other)
+{
+    swap(other);
+}
+
 Buffer::~Buffer()
 {
-    if (buffer_size_ > 0) {
-        delete [] buffer_ptr_;
-        buffer_ptr_ = NULL;
+    CHECK_DELETE_RESET_ARRAY(buffer_ptr_);
+}
+
+Buffer& Buffer::operator = (const Buffer &other)
+{
+    if (this != &other)
+        cloneFrom(other);
+
+    return *this;
+}
+
+Buffer& Buffer::operator = (Buffer &&other)
+{
+    if (this != &other) {
+        reset();
+        swap(other);
     }
+
+    return *this;
 }
 
 void Buffer::swap(Buffer &other)
@@ -42,16 +64,6 @@ void Buffer::swap(Buffer &other)
     std::swap(other.write_index_, write_index_);
 }
 
-Buffer& Buffer::operator = (const Buffer &other)
-{
-    if (this != &other) {
-        reset();
-        cloneFrom(other);
-    }
-
-    return *this;
-}
-
 void Buffer::reset()
 {
     Buffer tmp(0);
@@ -63,26 +75,26 @@ bool Buffer::ensureWritableSize(size_t write_size)
     if (write_size == 0)
         return true;
 
-    //! ¿Õ¼ä×ã¹»
+    //! ç©ºé—´è¶³å¤Ÿ
     if (writableSize() >= write_size)
         return true;
 
-    //! ¼ì²éÊÇ·ñ¿ÉÒÔÍ¨¹ı½«Êı¾İÍùÇ°Å²ÊÇ·ñ¿ÉÒÔÂú×ã¿Õ¼äÒªÇó
+    //! æ£€æŸ¥æ˜¯å¦å¯ä»¥é€šè¿‡å°†æ•°æ®å¾€å‰æŒªæ˜¯å¦å¯ä»¥æ»¡è¶³ç©ºé—´è¦æ±‚
     if ((writableSize() + read_index_) >= write_size) {
-        //! ½« readable ÇøµÄÊı¾İÍùÇ°ÒÆ
+        //! å°† readable åŒºçš„æ•°æ®å¾€å‰ç§»
         ::memmove(buffer_ptr_, (buffer_ptr_ + read_index_), (write_index_ - read_index_));
         write_index_ -= read_index_;
         read_index_ = 0;
         return true;
 
-    } else {    //! Ö»ÓĞÖØĞÂ·ÖÅä¸ü¶àµÄ¿Õ¼ä²Å¿ÉÒÔ
-        size_t new_size = (write_index_ + write_size) << 1;  //! Á½±¶À©Õ¹
+    } else {    //! åªæœ‰é‡æ–°åˆ†é…æ›´å¤šçš„ç©ºé—´æ‰å¯ä»¥
+        size_t new_size = (write_index_ + write_size) << 1;  //! ä¸¤å€æ‰©å±•
         uint8_t *p_buff = new uint8_t[new_size];
-        if (p_buff == NULL)
+        if (p_buff == nullptr)
             return false;
 
-        if (buffer_ptr_ != NULL) {
-            //! Ö»ĞèÒª¸´ÖÆ readable ²¿·ÖÊı¾İ
+        if (buffer_ptr_ != nullptr) {
+            //! åªéœ€è¦å¤åˆ¶ readable éƒ¨åˆ†æ•°æ®
             ::memcpy((p_buff + read_index_), (buffer_ptr_ + read_index_), (write_index_ - read_index_));
             delete [] buffer_ptr_;
         }
@@ -137,18 +149,31 @@ size_t Buffer::fetch(void *p_buff, size_t buff_size)
     return read_size;
 }
 
+//! ä¸æ˜¯å®Œå…¨å¤åˆ¶ï¼Œåªå¤åˆ¶æœ‰æ•ˆçš„æ•°æ®
 void Buffer::cloneFrom(const Buffer &other)
 {
-    if (other.buffer_size_ > 0) {
-        uint8_t *p_buff = new uint8_t[other.buffer_size_];
-        assert(p_buff != NULL);
-        ::memcpy(p_buff, other.buffer_ptr_, other.buffer_size_);
-        buffer_ptr_ = p_buff;
+    CHECK_DELETE_RESET_ARRAY(buffer_ptr_);
+
+    //! å¦‚æœ other æœ‰å¯è¯»æ•°æ®ï¼Œåˆ™è¦æ ¹æ®å¯è¯»å¤§å°åˆ†é…ç©ºé—´
+    if (other.readableSize() > 0) {
+        uint8_t *p_buff = new uint8_t[other.readableSize()];
+        assert(p_buff != nullptr);
+        ::memcpy(p_buff, other.readableBegin(), other.readableSize());
+        buffer_ptr_  = p_buff;
+        buffer_size_ = write_index_ = other.readableSize();
+
+    } else {
+        buffer_ptr_  = nullptr;
+        buffer_size_ = write_index_ = 0;
     }
 
-    buffer_size_  = other.buffer_size_;
-    read_index_   = other.read_index_;
-    write_index_  = other.write_index_;
+    read_index_ = 0;
+}
+
+void Buffer::shrink()
+{
+    Buffer tmp(*this);  //! å°†è‡ªå·±å¤åˆ¶ç»™ tmpï¼Œå…¶é—´ä¼šç¼©å‡ç©ºé—´
+    swap(tmp);          //! ä¸ tmp äº¤æ¢
 }
 
 }
