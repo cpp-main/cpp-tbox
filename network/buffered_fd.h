@@ -50,6 +50,10 @@ class BufferedFd : public ByteStream {
     bool enable();
     bool disable();
 
+    //! 缩减缓冲，防止长期占用大空间内存
+    void shrinkRecvBuffer();
+    void shrinkSendBuffer();
+
   private:
     void onReadCallback(short);
     void onWriteCallback(short);

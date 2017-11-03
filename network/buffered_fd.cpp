@@ -148,6 +148,16 @@ bool BufferedFd::send(const void *data_ptr, size_t data_size)
     return true;
 }
 
+void BufferedFd::shrinkRecvBuffer()
+{
+    recv_buff_.shrink();
+}
+
+void BufferedFd::shrinkSendBuffer()
+{
+    send_buff_.shrink();
+}
+
 void BufferedFd::onReadCallback(short)
 {
     struct iovec rbuf[2];
