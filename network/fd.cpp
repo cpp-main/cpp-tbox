@@ -3,71 +3,110 @@
 #include <utility>
 #include <fcntl.h>
 #include <errno.h>
+#include <cassert>
 
+#include <tbox/base/defines.h>
 #include <tbox/base/log.h>
 
 namespace tbox {
 namespace network {
 
 Fd::Fd() { }
-Fd::Fd(int fd) : fd_(fd) { }
+
+Fd::Fd(int fd) {
+    detail_ = new Detail;
+    detail_->fd = fd;
+}
+
+Fd::Fd(int fd, const CloseFunc &close_func) {
+    detail_ = new Detail;
+    detail_->fd = fd;
+    detail_->close_func = close_func;
+}
 
 Fd::~Fd()
 {
-    CHECK_CLOSE_FD(fd_);
+    if (detail_ == nullptr)
+        return;
+
+    assert(detail_->ref_count > 0);
+
+    --detail_->ref_count;
+    if (detail_->ref_count == 0) {
+        if (detail_->close_func)
+            detail_->close_func(detail_->fd);
+        else
+            ::close(detail_->fd);
+        delete detail_;
+    }
 }
 
-Fd::Fd(Fd&& other)
+Fd::Fd(const Fd& other)
 {
-    fd_ = other.fd_;
-    other.fd_ = -1;
+    if (other.detail_ != nullptr) {
+        ++other.detail_->ref_count;
+        detail_ = other.detail_;
+    }
 }
 
-Fd& Fd::operator = (Fd&& other)
+Fd& Fd::operator = (const Fd& other)
 {
     if (this != &other) {
         reset();
-        fd_ = other.fd_;
-        other.fd_ = -1;
+        if (other.detail_ != nullptr) {
+            ++other.detail_->ref_count;
+            detail_ = other.detail_;
+        }
     }
     return *this;
 }
 
 void Fd::swap(Fd &other)
 {
-    std::swap(fd_, other.fd_);
+    std::swap(detail_, other.detail_);
 }
 
-void Fd::reset()
-{
-    Fd tmp;
-    swap(tmp);
-}
+IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(Fd)
 
 ssize_t Fd::read(void *ptr, size_t size) const
 {
-    return ::read(fd_, ptr, size);
+    if (detail_ == nullptr)
+        return -1;
+
+    return ::read(detail_->fd, ptr, size);
 }
 
 ssize_t Fd::readv(const struct iovec *iov, int iovcnt) const
 {
-    return ::readv(fd_, iov, iovcnt);
+    if (detail_ == nullptr)
+        return -1;
+
+    return ::readv(detail_->fd, iov, iovcnt);
 }
 
 ssize_t Fd::write(const void *ptr, size_t size) const
 {
-    return ::write(fd_, ptr, size);
+    if (detail_ == nullptr)
+        return -1;
+
+    return ::write(detail_->fd, ptr, size);
 }
 
 ssize_t Fd::writev(const struct iovec *iov, int iovcnt) const
 {
-    return ::writev(fd_, iov, iovcnt);
+    if (detail_ == nullptr)
+        return -1;
+
+    return ::writev(detail_->fd, iov, iovcnt);
 }
 
 void Fd::setNonBlock(bool enable) const
 {
+    if (detail_ == nullptr)
+        return;
+
 #ifdef O_NONBLOCK
-    int old_flags = fcntl(fd_, F_GETFL, 0);
+    int old_flags = fcntl(detail_->fd, F_GETFL, 0);
     int new_flags = old_flags;
 
     if (enable)
@@ -76,7 +115,7 @@ void Fd::setNonBlock(bool enable) const
         new_flags &= ~O_NONBLOCK;
 
     if (new_flags != old_flags) {
-        int ret = fcntl(fd_, F_SETFL, new_flags);
+        int ret = fcntl(detail_->fd, F_SETFL, new_flags);
         if (ret == -1)
             LogErr("fcntl error, errno:%d", errno);
     }
@@ -87,8 +126,11 @@ void Fd::setNonBlock(bool enable) const
 
 bool Fd::isNonBlock() const
 {
+    if (detail_ == nullptr)
+        return false;
+
 #ifdef O_NONBLOCK
-    int flags = fcntl(fd_, F_GETFL, 0);
+    int flags = fcntl(detail_->fd, F_GETFL, 0);
     return (flags & O_NONBLOCK) != 0;
 #else
 #error No way found to set non-blocking mode for fds.
@@ -97,11 +139,14 @@ bool Fd::isNonBlock() const
 
 void Fd::setCloseOnExec() const
 {
+    if (detail_ == nullptr)
+        return;
+
 #ifdef FD_CLOEXEC
-    int old_flags = fcntl(fd_, F_GETFD, 0);
+    int old_flags = fcntl(detail_->fd, F_GETFD, 0);
     int new_flags = old_flags | FD_CLOEXEC;
     if (new_flags != old_flags) {
-        int ret = fcntl(fd_, F_SETFL, new_flags);
+        int ret = fcntl(detail_->fd, F_SETFL, new_flags);
         if (ret == -1)
             LogErr("fcntl error, errno:%d", errno);
     }

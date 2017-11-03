@@ -73,7 +73,7 @@ TEST(network_BufferedFd, pipe_test)
 
     //! 创建退出定时器，定时1秒
     TimerItem* sp_timer_end = sp_loop->newTimerItem();
-    sp_timer_end->initialize(std::chrono::seconds(1), event::Item::Mode::kOneshot);
+    sp_timer_end->initialize(std::chrono::seconds(2), event::Item::Mode::kOneshot);
     sp_timer_end->setCallback(
         [=] {
             cout << "Info: Exit Loop" << endl;

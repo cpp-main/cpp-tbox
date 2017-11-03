@@ -24,4 +24,24 @@
     class_name(class_name &&) = delete; \
     class_name& operator = (class_name &&) = delete
 
+//! 基于无参构造、析构、swap，实现reset与移动函数
+#define IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(class_name) \
+    class_name::class_name(class_name&& other) \
+    { \
+        swap(other); \
+    } \
+    class_name& class_name::operator = (class_name&& other) \
+    { \
+        if (this != &other) { \
+            reset(); \
+            swap(other); \
+        } \
+        return *this; \
+    } \
+    void class_name::reset() \
+    { \
+        class_name tmp; \
+        swap(tmp); \
+    }
+
 #endif //TBOX_BASE_DEFINES_H_20171030

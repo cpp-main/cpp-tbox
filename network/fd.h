@@ -2,33 +2,37 @@
 #define TBOX_NETWORK_FD_H_20171030
 
 #include <unistd.h>
+#include <functional>
 #include <sys/uio.h>
-
-#include "tbox/base/defines.h"
 
 namespace tbox {
 namespace network {
 
+
 //! 文件描述符类，封装了对fd的基础操作
 class Fd {
   public:
+    using CloseFunc = std::function<void(int)>;
+
     Fd();
     Fd(int fd);
+    Fd(int fd, const CloseFunc &close_func);
     virtual ~Fd();
 
-    NONCOPYABLE(Fd);
+    Fd(const Fd& other);
+    Fd& operator = (const Fd& other);
 
     Fd(Fd&& other);
     Fd& operator = (Fd&& other);
 
     void swap(Fd &other);
     void reset();
-    bool isNull() const { return fd_ == -1; }
+    inline bool isNull() const { return detail_ == nullptr; }
 
   public:
     //! 获取文件描述符的值。注意谨慎使用
-    int get() const { return fd_; }
-    operator int () const { return fd_; }
+    inline int get() const { return (detail_ != nullptr) ? detail_->fd : -1; }
+    operator int () const { return get(); }
 
     //! 读
     ssize_t read(void *ptr, size_t size) const;
@@ -43,8 +47,15 @@ class Fd {
     bool isNonBlock() const;        //! 检查是否非阻塞
     void setCloseOnExec() const;    //! 设置Exec时关闭选项
 
+  protected:
+    struct Detail {
+        int fd = -1;
+        int ref_count = 1;
+        CloseFunc close_func;
+    };
+
   private:
-    int fd_ = -1;
+    Detail *detail_ = nullptr;
 };
 
 }
