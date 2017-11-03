@@ -29,24 +29,24 @@ class BufferedFd : public ByteStream {
         kWriteOnly = 0x02,
         kReadWrite = 0x03,
     };
-    //! ³õÊ¼»¯£¬²¢Ö¸¶¨·¢ËÍ»òÊÇ½ÓÊÕ¹¦ÄÜ
-    bool initialize(Fd &&fd, short events = kReadWrite);
+    //! åˆå§‹åŒ–ï¼Œå¹¶æŒ‡å®šå‘é€æˆ–æ˜¯æ¥æ”¶åŠŸèƒ½
+    bool initialize(Fd fd, short events = kReadWrite);
 
 
-    //! ÉèÖÃÍê³ÉÁËµ±Ç°Êı¾İ·¢ËÍÊ±µÄ»Øµ÷º¯Êı
+    //! è®¾ç½®å®Œæˆäº†å½“å‰æ•°æ®å‘é€æ—¶çš„å›è°ƒå‡½æ•°
     void setSendCompleteCallback(const WriteCompleteCallback &func) { send_complete_cb_ = func; }
-    //! ÉèÖÃµ±¶Áµ½0×Ö½ÚÊı¾İÊ±»Øµ÷º¯Êı
+    //! è®¾ç½®å½“è¯»åˆ°0å­—èŠ‚æ•°æ®æ—¶å›è°ƒå‡½æ•°
     void setReadZeroCallback(const ReadZeroCallback &func) { read_zero_cb_ = func; }
-    //! ÉèÖÃµ±Óöµ½´íÎóÊ±µÄ»Øµ÷º¯Êı
+    //! è®¾ç½®å½“é‡åˆ°é”™è¯¯æ—¶çš„å›è°ƒå‡½æ•°
     void setErrorCallback(const ErrorCallback &func) { error_cb_ = func; }
 
-    //! ÊµÏÖ ByteStream µÄ½Ó¿Ú
+    //! å®ç° ByteStream çš„æ¥å£
     virtual void setReceiveCallback(const ReceiveCallback &func, size_t threshold) override;
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
     virtual void unbind() override { wp_receiver_ = nullptr; }
 
-    //! Æô¶¯Óë¹Ø±ÕÄÚ²¿ÊÂ¼şÇı¶¯»úÖÆ
+    //! å¯åŠ¨ä¸å…³é—­å†…éƒ¨äº‹ä»¶é©±åŠ¨æœºåˆ¶
     bool enable();
     bool disable();
 
@@ -55,12 +55,12 @@ class BufferedFd : public ByteStream {
     void onWriteCallback(short);
 
   private:
-    event::Loop *wp_loop_ = nullptr;    //! ÊÂ¼şÇı¶¯
+    event::Loop *wp_loop_ = nullptr;    //! äº‹ä»¶é©±åŠ¨
 
     enum class State {
-        kEmpty,     //! Î´³õÊ¼»¯
-        kInited,    //! ÒÑ³õÊ¼»¯
-        kRunning    //! ÕıÔÚÔËĞĞ
+        kEmpty,     //! æœªåˆå§‹åŒ–
+        kInited,    //! å·²åˆå§‹åŒ–
+        kRunning    //! æ­£åœ¨è¿è¡Œ
     };
     State state_ = State::kEmpty;
 

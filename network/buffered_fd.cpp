@@ -27,7 +27,7 @@ BufferedFd::~BufferedFd()
     CHECK_DELETE_RESET_OBJ(sp_read_event_);
 }
 
-bool BufferedFd::initialize(Fd &&fd, short events)
+bool BufferedFd::initialize(Fd fd, short events)
 {
     if (fd.isNull()) {
         LogWarn("fd is null");
@@ -44,7 +44,7 @@ bool BufferedFd::initialize(Fd &&fd, short events)
         return false;
     }
 
-    fd_ = std::move(fd);
+    fd_ = fd;
     fd_.setNonBlock(true);
 
     CHECK_DELETE_RESET_OBJ(sp_write_event_);
