@@ -10,7 +10,7 @@ using namespace tbox;
 int main()
 {
     auto sp_loop = event::Loop::New();
-    auto sp_stdio = new network::StdinStream(sp_loop);
+    auto sp_stdio = new network::StdioStream(sp_loop);
 
     sp_stdio->bind(sp_stdio);
     sp_stdio->enable();
