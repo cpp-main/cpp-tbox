@@ -1,23 +1,16 @@
 #include "uart.h"
 
-#include <tbox/base/log.h>
-#include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
+
+#include <tbox/base/log.h>
 
 namespace tbox {
 namespace network {
 
 Uart::Uart(event::Loop *wp_loop) :
     buff_fd_(wp_loop)
-{
-    LogUndo();
-}
-
-Uart::~Uart()
-{
-    LogUndo();
-}
+{ }
 
 bool Uart::initialize(const std::string &dev)
 {

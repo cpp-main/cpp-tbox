@@ -3,6 +3,7 @@
 
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
+
 #include "byte_stream.h"
 #include "buffered_fd.h"
 
@@ -12,7 +13,7 @@ namespace network {
 class Uart : public ByteStream {
   public:
     explicit Uart(event::Loop *wp_loop);
-    virtual ~Uart();
+    virtual ~Uart() { }
 
     NONCOPYABLE(Uart);
     IMMOVABLE(Uart);
