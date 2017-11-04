@@ -187,6 +187,69 @@ bool Uart::setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit sto
     return true;
 }
 
+//! 解析如："115200 8n1" 这样的字串
+bool Uart::setMode(const std::string &mode_str)
+{
+    using namespace std;
+
+    if (mode_str.empty()) {
+        LogErr("mode_str is empty");
+        return false;
+    }
+
+    size_t pos = mode_str.find_first_of(' ', 0);
+    if ((pos == string::npos) || ((pos + 4) < mode_str.size())) {
+        LogErr("mode_str format invalid");
+        return false;
+    }
+
+    //! 提取各字段
+    string baudrate_str = mode_str.substr(0, pos);
+    char data_bits_ch = mode_str[pos + 1];
+    char parity_ch = toupper(mode_str[pos + 2]);
+    char stop_bits_ch = mode_str[pos + 3];
+
+    //! 波特率
+    int baudrate = stoi(baudrate_str);
+
+    //! 数据位
+    DataBit data_bits;
+    if (data_bits_ch == '8')
+        data_bits = DataBit::k8bits;
+    else if (data_bits_ch == '7')
+        data_bits = DataBit::k7bits;
+    else {
+        LogErr("unsupport databit %c", data_bits_ch);
+        return false;
+    }
+
+    //! 奇偶校验位
+    ParityEnd parity;
+    if (parity_ch == 'N')
+        parity = ParityEnd::kNoEnd;
+    else if (parity_ch == 'O')
+        parity = ParityEnd::kOddEnd;
+    else if (parity_ch == 'E')
+        parity = ParityEnd::kEvenEnd;
+    else {
+        LogErr("unsupport parity %c", parity_ch);
+        return false;
+    }
+
+    //! 停止位
+    StopBit stop_bits;
+    if (stop_bits_ch == '1')
+        stop_bits = StopBit::k1bits;
+    else if (stop_bits_ch == '2')
+        stop_bits = StopBit::k2bits;
+    else {
+        LogErr("unsupport stopbit %c", stop_bits_ch);
+        return false;
+    }
+
+    return setMode(baudrate, data_bits, parity, stop_bits);
+}
+
 void Uart::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
     buff_fd_.setReceiveCallback(cb, threshold);

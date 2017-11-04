@@ -19,7 +19,7 @@ class Uart : public ByteStream {
     IMMOVABLE(Uart);
 
   public:
-    enum class DataBit { k7bits, k8bits };  //! 数据位数
+    enum class DataBit { k8bits, k7bits };  //! 数据位数
     enum class StopBit { k1bits, k2bits };  //! 停止位数
     enum class ParityEnd { kNoEnd, kOddEnd, kEvenEnd }; //! 检验位
 
@@ -27,6 +27,7 @@ class Uart : public ByteStream {
     bool initialize(const std::string &dev);
     //! 设置串口的波特率、数据位、奇偶校验、停止位
     bool setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit stop_bit);
+    bool setMode(const std::string &mode_str);  //! 以字串的形式设置，如:"115200 8n1"
 
   public:
     //! 实现ByteStream的接口

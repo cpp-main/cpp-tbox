@@ -28,8 +28,7 @@ TEST(network_uart, echo) {
         << "NOTICE:" << endl
         << "1) check whether /dev/ttyUSB0 exist." << endl
         << "2) run test as root.";
-    ASSERT_TRUE(uart.setMode(115200, Uart::DataBit::k8bits,
-                             Uart::ParityEnd::kNoEnd, Uart::StopBit::k1bits))
+    ASSERT_TRUE(uart.setMode("115200 8n1"))
         << "NOTICE:" << endl
         << "Is this UART support 115200 8N1 ?";
     uart.enable();
@@ -37,6 +36,7 @@ TEST(network_uart, echo) {
     int recv_count = 0;
     uart.setReceiveCallback(
         [&] (Buffer &buff) {
+            //cout << "Info: Recv, size: " << buff.readableSize() << endl;
             while (buff.readableSize() >= 10) {
                 char read_data[10];
                 buff.fetch(read_data, 10);
@@ -54,7 +54,7 @@ TEST(network_uart, echo) {
     sp_timer_send->setCallback(
         [&] () {
             ++send_times;
-            cout << "Info: Send, time: " << send_times << endl;
+            //cout << "Info: Send, time: " << send_times << endl;
             for (int i = 0; i < 100; ++i)
                 uart.send("123456789", 10);
 
