@@ -10,7 +10,7 @@ namespace tbox {
 namespace network {
 
 class Uart : public ByteStream {
-  public: 
+  public:
     explicit Uart(event::Loop *wp_loop);
     virtual ~Uart();
 
@@ -22,10 +22,10 @@ class Uart : public ByteStream {
     enum class StopBit { k1bits, k2bits };  //! 停止位数
     enum class ParityEnd { kNoEnd, kOddEnd, kEvenEnd }; //! 检验位
 
-    bool open(const std::string &dev);
-    Fd fd() const { return fd_; }
-
-    bool initialize(int baudrate, DataBit data_bit, ParityEnd parity, StopBit stop_bit);
+    //! 初始化，打开串口设备文件
+    bool initialize(const std::string &dev);
+    //! 设置串口的波特率、数据位、奇偶校验、停止位
+    bool setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit stop_bit);
 
   public:
     //! 实现ByteStream的接口
@@ -37,6 +37,8 @@ class Uart : public ByteStream {
   public:
     bool enable();
     bool disable();
+
+    Fd fd() const { return fd_; }
 
   private:
     Fd fd_;

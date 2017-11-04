@@ -155,5 +155,16 @@ void Fd::setCloseOnExec() const
 #endif
 }
 
+Fd Fd::Open(const char *filename, int flags)
+{
+    int fd = ::open(filename, flags);
+    if (fd < 0) {
+        LogErr("open file:%s flags:%x fail, errno:%d", filename, flags, errno);
+        return Fd();
+    }
+
+    return Fd(fd);
+}
+
 }
 }

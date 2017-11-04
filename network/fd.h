@@ -29,6 +29,9 @@ class Fd {
     void reset();
     inline bool isNull() const { return detail_ == nullptr; }
 
+  public:   //! 创建函数
+    static Fd Open(const char *filename, int flags);
+
   public:
     //! 获取文件描述符的值。注意谨慎使用
     inline int get() const { return (detail_ != nullptr) ? detail_->fd : -1; }
