@@ -9,6 +9,7 @@ HEAD_FILES = \
 	log.h \
 	log_output.h \
 	defines.h \
+	scope_exit.hpp \
 
 SRC_FILES = \
 	log_output.cpp \

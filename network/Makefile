@@ -24,6 +24,7 @@ TEST_SRC_FILES = \
 	fd_test.cpp \
 	buffer_test.cpp \
 	buffered_fd_test.cpp \
+	uart_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 
