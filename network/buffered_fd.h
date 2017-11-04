@@ -18,6 +18,7 @@ class BufferedFd : public ByteStream {
     virtual ~BufferedFd();
 
     NONCOPYABLE(BufferedFd);
+    IMMOVABLE(BufferedFd);
 
   public:
     using WriteCompleteCallback = std::function<void()>;
