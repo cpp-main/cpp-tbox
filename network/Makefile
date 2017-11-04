@@ -9,12 +9,14 @@ HEAD_FILES = \
 	buffered_fd.h \
 	byte_stream.h \
 	stdio_stream.h \
+	uart.h \
 
 SRC_FILES = \
 	buffer.cpp \
 	fd.cpp \
 	buffered_fd.cpp \
 	stdio_stream.cpp \
+	uart.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
 
