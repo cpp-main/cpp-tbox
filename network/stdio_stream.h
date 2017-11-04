@@ -23,15 +23,14 @@ class StdinStream : public ByteStream {
   public:
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
     bool send(const void *data_ptr, size_t data_size) override { return false; }
-    void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
-    void unbind() override { wp_receiver_ = nullptr; }
+    void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
+    void unbind() override { buff_fd_.unbind(); }
 
     bool enable();
     bool disable();
 
   private:
     BufferedFd buff_fd_;
-    ByteStream *wp_receiver_ = nullptr;
 };
 
 class StdoutStream : public ByteStream {
@@ -64,8 +63,8 @@ class StdioStream : public ByteStream {
   public:
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
     bool send(const void *data_ptr, size_t data_size) override;
-    void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
-    void unbind() override { wp_receiver_ = nullptr; }
+    void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
+    void unbind() override { in_buff_fd_.unbind(); }
 
     bool enable();
     bool disable();
@@ -73,7 +72,6 @@ class StdioStream : public ByteStream {
   private:
     BufferedFd in_buff_fd_;
     BufferedFd out_buff_fd_;
-    ByteStream *wp_receiver_ = nullptr;
 };
 
 }
