@@ -12,6 +12,7 @@ HEAD_FILES = \
 	uart.h \
 	socket_fd.h \
 	ip_address.h \
+	sockaddr.h \
 
 SRC_FILES = \
 	buffer.cpp \
@@ -21,6 +22,7 @@ SRC_FILES = \
 	uart.cpp \
 	socket_fd.cpp \
 	ip_address.cpp \
+	sockaddr.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
 

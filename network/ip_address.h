@@ -31,6 +31,13 @@ class IPAddress {
     uint32_t ip_;
 };
 
+//!TODO
+class IPv6Address {
+  public:
+    IPv6Address();
+  private:
+    uint16_t ipv6_[8] = {0};
+};
 }
 }
 
