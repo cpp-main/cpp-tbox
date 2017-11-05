@@ -12,66 +12,66 @@ namespace impl {
 }
 
 /**
- * Ïß³Ì³ØÀà
+ * çº¿ç¨‹æ± ç±»
  */
 class ThreadPool {
   public:
     /**
-     * ¹¹Ôìº¯Êı
+     * æ„é€ å‡½æ•°
      *
-     * \param main_loop         Ö÷Ïß³ÌµÄLoop¶ÔÏóÖ¸Õë
+     * \param main_loop         ä¸»çº¿ç¨‹çš„Loopå¯¹è±¡æŒ‡é’ˆ
      */
     explicit ThreadPool(event::Loop *main_loop);
     virtual ~ThreadPool();
 
     /**
-     * ³õÊ¼»¯Ïß³Ì³Ø£¬Ö¸¶¨³£×¤Ïß³ÌÊıÓë×î´óÏß³ÌÊı
+     * åˆå§‹åŒ–çº¿ç¨‹æ± ï¼ŒæŒ‡å®šå¸¸é©»çº¿ç¨‹æ•°ä¸æœ€å¤§çº¿ç¨‹æ•°
      *
-     * \param min_thread_num    ³£×¤Ïß³ÌÊı£¬±ØĞë >=0
-     * \param max_thread_num    ×î´óÏß³ÌÊı£¬±ØĞë >=0£¬=0±íÊ¾²»ÏŞ¶¨×î´óÏß³ÌÊıÁ¿
+     * \param min_thread_num    å¸¸é©»çº¿ç¨‹æ•°ï¼Œå¿…é¡» >=0
+     * \param max_thread_num    æœ€å¤§çº¿ç¨‹æ•°ï¼Œå¿…é¡» >=0ï¼Œ=0è¡¨ç¤ºä¸é™å®šæœ€å¤§çº¿ç¨‹æ•°é‡
      *
-     * \return bool     ÊÇ·ñ³É¹¦
+     * \return bool     æ˜¯å¦æˆåŠŸ
      */
     bool initialize(int min_thread_num = 0, int max_thread_num = 0);
 
     using NonReturnFunc = std::function<void ()>;
 
     /**
-     * Ê¹ÓÃworkerÏß³ÌÖ´ĞĞÄ³¸öº¯Êı
+     * ä½¿ç”¨workerçº¿ç¨‹æ‰§è¡ŒæŸä¸ªå‡½æ•°
      *
-     * \param backend_task      ÈÃworkerÏß³ÌÖ´ĞĞµÄº¯Êı¶ÔÏó
-     * \param prio              ÈÎÎñÓÅÏÈ¼¶[-2, -1, 0, 1, 2]£¬Ô½Ğ¡ÓÅÏÈ¼¶Ô½¸ß
+     * \param backend_task      è®©workerçº¿ç¨‹æ‰§è¡Œçš„å‡½æ•°å¯¹è±¡
+     * \param prio              ä»»åŠ¡ä¼˜å…ˆçº§[-2, -1, 0, 1, 2]ï¼Œè¶Šå°ä¼˜å…ˆçº§è¶Šé«˜
      *
-     * \return int  <0 ÈÎÎñ´´½¨Ã»³É¹¦
-     *              >=0 ÈÎÎñid
+     * \return int  <0 ä»»åŠ¡åˆ›å»ºæ²¡æˆåŠŸ
+     *              >=0 ä»»åŠ¡id
      */
     int execute(const NonReturnFunc &backend_task, int prio = 0);
 
     /**
-     * Ê¹ÓÃworkerÏß³ÌÖ´ĞĞÄ³¸öº¯Êı£¬²¢ÔÚÍê³ÉÖ®ºóÔÚÖ÷Ïß³ÌÖ´ĞĞÖ¸¶¨µÄ»Øµ÷º¯Êı
+     * ä½¿ç”¨workerçº¿ç¨‹æ‰§è¡ŒæŸä¸ªå‡½æ•°ï¼Œå¹¶åœ¨å®Œæˆä¹‹ååœ¨ä¸»çº¿ç¨‹æ‰§è¡ŒæŒ‡å®šçš„å›è°ƒå‡½æ•°
      *
-     * \param backend_task      ÈÃworkerÏß³ÌÖ´ĞĞµÄº¯Êı¶ÔÏó
-     * \param main_cb           ÈÎÎñÍê³Éºó£¬ÓÉÖ÷Ïß³ÌÖ´ĞĞµÄ»Øµ÷º¯Êı¶ÔÏó
-     * \param prio              ÈÎÎñÓÅÏÈ¼¶[-2, -1, 0, 1, 2]£¬Ô½Ğ¡ÓÅÏÈ¼¶Ô½¸ß
+     * \param backend_task      è®©workerçº¿ç¨‹æ‰§è¡Œçš„å‡½æ•°å¯¹è±¡
+     * \param main_cb           ä»»åŠ¡å®Œæˆåï¼Œç”±ä¸»çº¿ç¨‹æ‰§è¡Œçš„å›è°ƒå‡½æ•°å¯¹è±¡
+     * \param prio              ä»»åŠ¡ä¼˜å…ˆçº§[-2, -1, 0, 1, 2]ï¼Œè¶Šå°ä¼˜å…ˆçº§è¶Šé«˜
      *
-     * \return int  <0 ÈÎÎñ´´½¨Ã»³É¹¦
-     *              >=0 ÈÎÎñid
+     * \return int  <0 ä»»åŠ¡åˆ›å»ºæ²¡æˆåŠŸ
+     *              >=0 ä»»åŠ¡id
      */
     int execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio = 0);
 
     /**
-     * È¡ÏûÈÎÎñ
+     * å–æ¶ˆä»»åŠ¡
      *
-     * \param task_id   ÈÎÎñid
+     * \param task_id   ä»»åŠ¡id
      *
-     * \return  int     0: ³É¹¦
-     *                  1: Ã»ÓĞÕÒµ½¸ÃÈÎÎñ£¨ÒÑÖ´ĞĞ£©
-     *                  2: ¸ÃÈÎÎñÕıÔÚÖ´ĞĞ
+     * \return  int     0: æˆåŠŸ
+     *                  1: æ²¡æœ‰æ‰¾åˆ°è¯¥ä»»åŠ¡ï¼ˆå·²æ‰§è¡Œï¼‰
+     *                  2: è¯¥ä»»åŠ¡æ­£åœ¨æ‰§è¡Œ
      */
     int cancel(int task_id);
 
     /**
-     * ÇåÀí×ÊÔ´£¬²¢µÈ´ıËùÓĞµÄworkerÏß³Ì½áÊø
+     * æ¸…ç†èµ„æºï¼Œå¹¶ç­‰å¾…æ‰€æœ‰çš„workerçº¿ç¨‹ç»“æŸ
      */
     void cleanup();
 

@@ -56,7 +56,7 @@ bool LibevTimerEvent::isEnabled() const
 bool LibevTimerEvent::enable()
 {
     if (!is_inited_) {
-        //! Ã»ÓĞ³õÊ¼»¯£¬ÊÇ²»ÄÜÖ±½ÓenableµÄ
+        //! æ²¡æœ‰åˆå§‹åŒ–ï¼Œæ˜¯ä¸èƒ½ç›´æ¥enableçš„
         LogErr("can't enable() before initialize()");
         return false;
     }
