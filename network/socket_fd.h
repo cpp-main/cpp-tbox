@@ -33,8 +33,6 @@ class SocketFd : public Fd {
     bool setSendLowWater(int size);     //! 设置发送低水位标记
 
     bool setLinger(bool enable, int linger = 0);    //! 设置延迟关闭
-
-  protected:
 };
 
 }

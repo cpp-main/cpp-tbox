@@ -11,6 +11,7 @@ HEAD_FILES = \
 	stdio_stream.h \
 	uart.h \
 	socket_fd.h \
+	ip_address.h \
 
 SRC_FILES = \
 	buffer.cpp \
@@ -19,6 +20,7 @@ SRC_FILES = \
 	stdio_stream.cpp \
 	uart.cpp \
 	socket_fd.cpp \
+	ip_address.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
 
@@ -27,6 +29,7 @@ TEST_SRC_FILES = \
 	buffer_test.cpp \
 	buffered_fd_test.cpp \
 	uart_test.cpp \
+	ip_address_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 
