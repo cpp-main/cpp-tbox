@@ -3,9 +3,9 @@
 #include <chrono>
 #include <event2/event.h>
 
-#include "fd_item.h"
-#include "timer_item.h"
-#include "signal_item.h"
+#include "fd_event.h"
+#include "timer_event.h"
+#include "signal_event.h"
 #include "common.h"
 
 namespace tbox {
@@ -38,19 +38,19 @@ void LibeventLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     event_base_loopexit(sp_event_base_, &tv);
 }
 
-FdItem* LibeventLoop::newFdItem()
+FdEvent* LibeventLoop::newFdEvent()
 {
-    return new LibeventFdItem(this);
+    return new LibeventFdEvent(this);
 }
 
-TimerItem* LibeventLoop::newTimerItem()
+TimerEvent* LibeventLoop::newTimerEvent()
 {
-    return new LibeventTimerItem(this);
+    return new LibeventTimerEvent(this);
 }
 
-SignalItem* LibeventLoop::newSignalItem()
+SignalEvent* LibeventLoop::newSignalEvent()
 {
-    return new LibeventSignalItem(this);
+    return new LibeventSignalEvent(this);
 }
 
 }

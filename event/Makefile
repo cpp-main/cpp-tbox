@@ -8,7 +8,7 @@ LIB_VERSION_Z = 0
 
 HEAD_FILES = \
 	forward.h loop.h item.h \
-	fd_item.h timer_item.h signal_item.h \
+	fd_event.h timer_event.h signal_event.h \
 	stat.h version.h
 
 SRC_FILES = \
@@ -18,9 +18,9 @@ SRC_FILES = \
 ifeq ($(ENABLE_LIBEVENT), yes)
 SRC_FILES += \
 	engins/libevent/loop.cpp \
-	engins/libevent/fd_item.cpp \
-	engins/libevent/timer_item.cpp \
-	engins/libevent/signal_item.cpp \
+	engins/libevent/fd_event.cpp \
+	engins/libevent/timer_event.cpp \
+	engins/libevent/signal_event.cpp \
 	engins/libevent/common.cpp
 CCXXFLAGS += -DENABLE_LIBEVENT=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)n
@@ -29,9 +29,9 @@ endif
 ifeq ($(ENABLE_LIBEV), yes)
 SRC_FILES += \
 	engins/libev/loop.cpp \
-	engins/libev/fd_item.cpp \
-	engins/libev/signal_item.cpp \
-	engins/libev/timer_item.cpp
+	engins/libev/fd_event.cpp \
+	engins/libev/signal_event.cpp \
+	engins/libev/timer_event.cpp
 CCXXFLAGS += -DENABLE_LIBEV=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)e
 endif

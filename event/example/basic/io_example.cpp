@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <tbox/event/loop.h>
-#include <tbox/event/fd_item.h>
+#include <tbox/event/fd_event.h>
 
 using namespace std;
 using namespace tbox;
@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    FdItem* sp_fd = sp_loop->newFdItem();
-    sp_fd->initialize(STDIN_FILENO, FdItem::kReadEvent, Item::Mode::kPersist);
+    FdEvent* sp_fd = sp_loop->newFdEvent();
+    sp_fd->initialize(STDIN_FILENO, FdEvent::kReadEvent, Event::Mode::kPersist);
     using std::placeholders::_1;
     sp_fd->setCallback(std::bind(FdCallback, STDIN_FILENO, _1));
     sp_fd->enable();

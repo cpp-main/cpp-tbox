@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_LIBEVENT_SINGAL_EVENT_H_20170715
 #define TBOX_EVENT_LIBEVENT_SINGAL_EVENT_H_20170715
 
-#include "../../signal_item.h"
+#include "../../signal_event.h"
 #include <event2/event_struct.h>
 
 namespace tbox {
@@ -9,10 +9,10 @@ namespace event {
 
 class LibeventLoop;
 
-class LibeventSignalItem : public SignalItem {
+class LibeventSignalEvent : public SignalEvent {
   public:
-    explicit LibeventSignalItem(LibeventLoop *wp_loop);
-    virtual ~LibeventSignalItem();
+    explicit LibeventSignalEvent(LibeventLoop *wp_loop);
+    virtual ~LibeventSignalEvent();
 
   public:
     virtual bool initialize(int signum, Mode mode);

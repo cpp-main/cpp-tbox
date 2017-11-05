@@ -13,3 +13,6 @@ uart_to_uart : uart_to_uart.o
 
 clean:
 	rm -rf *.o
+
+distclean: clean
+	rm -f uart_tool uart_to_uart

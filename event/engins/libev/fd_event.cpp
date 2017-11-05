@@ -1,4 +1,4 @@
-#include "fd_item.h"
+#include "fd_event.h"
 
 #include <cassert>
 
@@ -8,7 +8,7 @@
 namespace tbox {
 namespace event {
 
-LibevFdItem::LibevFdItem(LibevLoop *wp_loop) :
+LibevFdEvent::LibevFdEvent(LibevLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
     is_stop_after_trigger_(false),
@@ -17,7 +17,7 @@ LibevFdItem::LibevFdItem(LibevLoop *wp_loop) :
     memset(&io_ev_, 0, sizeof(io_ev_));
 }
 
-LibevFdItem::~LibevFdItem()
+LibevFdEvent::~LibevFdEvent()
 {
     assert(cb_level_ == 0);
     disable();
@@ -28,9 +28,9 @@ short LibevEventsToLocal(short libev_events)
 {
     short ret = 0;
     if (libev_events & EV_READ)
-        ret |= FdItem::kReadEvent;
+        ret |= FdEvent::kReadEvent;
     if (libev_events & EV_WRITE)
-        ret |= FdItem::kWriteEvent;
+        ret |= FdEvent::kWriteEvent;
 
     return ret;
 }
@@ -38,9 +38,9 @@ short LibevEventsToLocal(short libev_events)
 short LocalEventsToLibev(short local_events)
 {
     short ret = 0;
-    if (local_events & FdItem::kWriteEvent)
+    if (local_events & FdEvent::kWriteEvent)
         ret |= EV_WRITE;
-    if (local_events & FdItem::kReadEvent)
+    if (local_events & FdEvent::kReadEvent)
         ret |= EV_READ;
 
     return ret;
@@ -48,14 +48,14 @@ short LocalEventsToLibev(short local_events)
 
 }
 
-bool LibevFdItem::initialize(int fd, short events, Mode mode)
+bool LibevFdEvent::initialize(int fd, short events, Mode mode)
 {
     disable();
 
     short libev_events = LocalEventsToLibev(events);
     io_ev_.active = io_ev_.pending = 0;
     io_ev_.priority = 0;
-    io_ev_.cb = LibevFdItem::OnEventCallback;
+    io_ev_.cb = LibevFdEvent::OnEventCallback;
     io_ev_.data = this;
 
     io_ev_.fd = fd;
@@ -68,12 +68,12 @@ bool LibevFdItem::initialize(int fd, short events, Mode mode)
     return true;
 }
 
-void LibevFdItem::setCallback(const CallbackFunc &cb)
+void LibevFdEvent::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool LibevFdItem::isEnabled() const
+bool LibevFdEvent::isEnabled() const
 {
     if (!is_inited_)
         return false;
@@ -81,7 +81,7 @@ bool LibevFdItem::isEnabled() const
     return io_ev_.active;
 }
 
-bool LibevFdItem::enable()
+bool LibevFdEvent::enable()
 {
     if (!is_inited_) {
         //! 没有初始化，是不能直接enable的
@@ -97,7 +97,7 @@ bool LibevFdItem::enable()
     return true;
 }
 
-bool LibevFdItem::disable()
+bool LibevFdEvent::disable()
 {
     if (!is_inited_)
         return false;
@@ -110,15 +110,15 @@ bool LibevFdItem::disable()
     return true;
 }
 
-void LibevFdItem::OnEventCallback(struct ev_loop*, ev_io *p_w, int events)
+void LibevFdEvent::OnEventCallback(struct ev_loop*, ev_io *p_w, int events)
 {
     assert(p_w != NULL);
 
-    LibevFdItem *pthis = static_cast<LibevFdItem*>(p_w->data);
+    LibevFdEvent *pthis = static_cast<LibevFdEvent*>(p_w->data);
     pthis->onEvent(events);
 }
 
-void LibevFdItem::onEvent(short events)
+void LibevFdEvent::onEvent(short events)
 {
 #ifdef  ENABLE_STAT
     using namespace std::chrono;

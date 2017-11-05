@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_LIBEV_SINGAL_EVENT_H_20170827
 #define TBOX_EVENT_LIBEV_SINGAL_EVENT_H_20170827
 
-#include "../../signal_item.h"
+#include "../../signal_event.h"
 
 #include <ev.h>
 
@@ -10,10 +10,10 @@ namespace event {
 
 class LibevLoop;
 
-class LibevSignalItem : public SignalItem {
+class LibevSignalEvent : public SignalEvent {
   public:
-    explicit LibevSignalItem(LibevLoop *wp_loop);
-    virtual ~LibevSignalItem();
+    explicit LibevSignalEvent(LibevLoop *wp_loop);
+    virtual ~LibevSignalEvent();
 
   public:
     virtual bool initialize(int signum, Mode mode);

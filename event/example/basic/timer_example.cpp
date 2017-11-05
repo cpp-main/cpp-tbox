@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_item.h>
+#include <tbox/event/timer_event.h>
 
 using namespace std;
 using namespace tbox;
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    TimerItem* sp_timer = sp_loop->newTimerItem();
-    sp_timer->initialize(std::chrono::milliseconds(200), Item::Mode::kPersist);
+    TimerEvent* sp_timer = sp_loop->newTimerEvent();
+    sp_timer->initialize(std::chrono::milliseconds(200), Event::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();
 

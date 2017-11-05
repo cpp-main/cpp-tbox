@@ -13,3 +13,6 @@ io_echo_2 : io_echo_2.o
 
 clean:
 	rm -rf *.o
+
+distclean: clean
+	rm -f io_echo_1 io_echo_2

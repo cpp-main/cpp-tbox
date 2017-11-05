@@ -17,9 +17,9 @@ class LibeventLoop : public CommonLoop {
     virtual void runLoop(Mode mode);
     virtual void exitLoop(const std::chrono::milliseconds &wait_time);
 
-    virtual FdItem* newFdItem();
-    virtual TimerItem* newTimerItem();
-    virtual SignalItem* newSignalItem();
+    virtual FdEvent* newFdEvent();
+    virtual TimerEvent* newTimerEvent();
+    virtual SignalEvent* newSignalEvent();
 
   public:
     struct event_base* getEventBasePtr() const { return sp_event_base_; }

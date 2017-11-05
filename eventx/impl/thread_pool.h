@@ -21,12 +21,12 @@ using NonReturnFunc = std::function<void ()>;
 /**
  * 任务项
  */
-struct TaskItem {
+struct TaskEvent {
   int task_id;  //! 任务号
   NonReturnFunc backend_task;   //! 任务在工作线程中执行函数
   NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
 
-  TaskItem(int id, const NonReturnFunc &task, const NonReturnFunc &cb) :
+  TaskEvent(int id, const NonReturnFunc &task, const NonReturnFunc &cb) :
       task_id(id), backend_task(task), main_cb(cb)
   { }
 };
@@ -53,7 +53,7 @@ class ThreadPool {
     bool createWorker();
 
     bool shouldThreadExitWaiting() const;   //! 判定子线程是否需要退出条件变量的wait()函数
-    TaskItem* popOneTask(); //! 取出一个优先级最高的任务
+    TaskEvent* popOneTask(); //! 取出一个优先级最高的任务
 
   private:
     event::Loop *main_loop_ = nullptr; //!< 主线程
@@ -66,7 +66,7 @@ class ThreadPool {
     std::mutex lock_;                //!< 互斥锁
     std::condition_variable cond_var_;   //!< 条件变量
 
-    std::array<std::list<TaskItem*>, 5> undo_tasks_array_;    //!< 优先级任务列表，5级
+    std::array<std::list<TaskEvent*>, 5> undo_tasks_array_;    //!< 优先级任务列表，5级
     std::set<int/*task_id*/> doing_tasks_set_;   //!< 记录正在从事的任务
 
     size_t idle_thread_num_ = 0;    //!< 空间线程个数

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_item.h>
+#include <tbox/event/timer_event.h>
 #include <gtest/gtest.h>
 #include "uart.h"
 
@@ -46,9 +46,9 @@ TEST(network_uart, echo) {
         }, 0);
 
     //! 创建数据发送定时器
-    auto sp_timer_send = sp_loop->newTimerItem();
+    auto sp_timer_send = sp_loop->newTimerEvent();
     SetScopeExitAction([=]{ delete sp_timer_send; });
-    sp_timer_send->initialize(chrono::milliseconds(20), Item::Mode::kPersist);
+    sp_timer_send->initialize(chrono::milliseconds(20), Event::Mode::kPersist);
     sp_timer_send->enable();
     int send_times = 0;
     sp_timer_send->setCallback(
@@ -64,9 +64,9 @@ TEST(network_uart, echo) {
     );
 
     //! 创建停止定时器
-    auto sp_timer_end = sp_loop->newTimerItem();
+    auto sp_timer_end = sp_loop->newTimerEvent();
     SetScopeExitAction([=]{ delete sp_timer_end; });
-    sp_timer_end->initialize(chrono::seconds(3), Item::Mode::kOneshot);
+    sp_timer_end->initialize(chrono::seconds(3), Event::Mode::kOneshot);
     sp_timer_end->enable();
     sp_timer_end->setCallback(
         [=] () {

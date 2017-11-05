@@ -1,6 +1,6 @@
 #include <iostream>
 #include <tbox/event/loop.h>
-#include <tbox/event/signal_item.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/network/buffered_fd.h>
 
 using namespace std;
@@ -23,8 +23,8 @@ int main()
     sp_stdin->enable();
     sp_stdout->enable();
 
-    auto sp_exit = sp_loop->newSignalItem();
-    sp_exit->initialize(SIGINT, event::Item::Mode::kOneshot);
+    auto sp_exit = sp_loop->newSignalEvent();
+    sp_exit->initialize(SIGINT, event::Event::Mode::kOneshot);
     sp_exit->setCallback(
         [=] {
             cout << "Info: Exit Loop" << endl;

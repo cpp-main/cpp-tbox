@@ -9,7 +9,7 @@
 namespace tbox {
 namespace event {
 
-class SignalItem : public Item {
+class SignalEvent : public Event {
   public:
     virtual bool initialize(int signum, Mode mode) = 0;
 
@@ -17,7 +17,7 @@ class SignalItem : public Item {
     virtual void setCallback(const CallbackFunc &cb) = 0;
 
   public:
-    virtual ~SignalItem() { }
+    virtual ~SignalEvent() { }
 };
 
 }

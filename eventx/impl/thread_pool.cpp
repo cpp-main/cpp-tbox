@@ -72,7 +72,7 @@ int ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &
         curr_task_id = ++task_id_alloc_;
     }
 
-    TaskItem *item = new TaskItem(curr_task_id, backend_task, main_cb);
+    TaskEvent *item = new TaskEvent(curr_task_id, backend_task, main_cb);
     if (item == nullptr)
         return -1;
 
@@ -110,7 +110,7 @@ int ThreadPool::cancel(int task_id)
         auto &tasks = undo_tasks_array_.at(i);
         if (!tasks.empty()) {
             for (auto iter = tasks.begin(); iter != tasks.end(); ++iter) {
-                TaskItem *item = *iter;
+                TaskEvent *item = *iter;
                 if (item->task_id == task_id) {
                     tasks.erase(iter);
                     delete item;
@@ -134,7 +134,7 @@ void ThreadPool::cleanup()
         for (size_t i = 0; i < undo_tasks_array_.size(); ++i) {
             auto &tasks = undo_tasks_array_.at(i);
             while (!tasks.empty()) {
-                TaskItem *item = tasks.front();
+                TaskEvent *item = tasks.front();
                 delete item;
                 tasks.pop_front();
             }
@@ -160,7 +160,7 @@ void ThreadPool::threadProc(int id)
     LogInfo("thread %d start", id);
 
     while (true) {
-        TaskItem* item = nullptr;
+        TaskEvent* item = nullptr;
         {
             std::unique_lock<std::mutex> lk(lock_);
 
@@ -253,13 +253,13 @@ bool ThreadPool::shouldThreadExitWaiting() const
     return false;
 }
 
-TaskItem* ThreadPool::popOneTask()
+TaskEvent* ThreadPool::popOneTask()
 {
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     for (size_t i = 0; i < undo_tasks_array_.size(); ++i) {
         auto &tasks = undo_tasks_array_.at(i);
         if (!tasks.empty()) {
-            TaskItem* ret = tasks.front();
+            TaskEvent* ret = tasks.front();
             tasks.pop_front();
             return ret;
         }

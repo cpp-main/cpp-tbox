@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_LIBEVENT_FD_ITEM_H_20170714
 #define TBOX_EVENT_LIBEVENT_FD_ITEM_H_20170714
 
-#include "../../fd_item.h"
+#include "../../fd_event.h"
 #include <event2/event_struct.h>
 
 namespace tbox {
@@ -9,10 +9,10 @@ namespace event {
 
 class LibeventLoop;
 
-class LibeventFdItem : public FdItem {
+class LibeventFdEvent : public FdEvent {
   public:
-    explicit LibeventFdItem(LibeventLoop *wp_loop);
-    virtual ~LibeventFdItem();
+    explicit LibeventFdEvent(LibeventLoop *wp_loop);
+    virtual ~LibeventFdEvent();
 
   public:
     virtual bool initialize(int fd, short events, Mode mode);

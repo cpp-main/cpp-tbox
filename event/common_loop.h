@@ -48,7 +48,7 @@ class CommonLoop : public Loop {
 
     bool has_unhandle_req_;
     int read_fd_, write_fd_;
-    FdItem *sp_read_item_;
+    FdEvent *sp_read_event_;
     std::list<RunInLoopFunc> func_list_;
 
 #ifdef ENABLE_STAT

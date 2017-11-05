@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_LIBEV_FD_EVENT_H_20170827
 #define TBOX_EVENT_LIBEV_FD_EVENT_H_20170827
 
-#include "../../fd_item.h"
+#include "../../fd_event.h"
 
 #include <ev.h>
 
@@ -10,10 +10,10 @@ namespace event {
 
 class LibevLoop;
 
-class LibevFdItem : public FdItem {
+class LibevFdEvent : public FdEvent {
   public:
-    explicit LibevFdItem(LibevLoop *wp_loop);
-    virtual ~LibevFdItem();
+    explicit LibevFdEvent(LibevLoop *wp_loop);
+    virtual ~LibevFdEvent();
 
   public:
     virtual bool initialize(int fd, short events, Mode mode);

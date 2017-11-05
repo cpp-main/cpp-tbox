@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 #include <tbox/event/loop.h>
-#include <tbox/event/fd_item.h>
-#include <tbox/event/timer_item.h>
-#include <tbox/event/signal_item.h>
+#include <tbox/event/fd_event.h>
+#include <tbox/event/timer_event.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/event/stat.h>
 
 using namespace std;
@@ -38,9 +38,9 @@ void printStat(Loop *wp_loop)
          << "us/event: " << stat.time_cost_us / stat.event_count << endl;
 }
 
-void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
+void StdinReadCallback(short events, Loop* wp_loop, TimerEvent* wp_timer)
 {
-    if (events & FdItem::kReadEvent) {
+    if (events & FdEvent::kReadEvent) {
         char buff[32];
         size_t rsize = read(STDIN_FILENO, buff, sizeof(buff));
         buff[rsize - 1] = '\0';
@@ -53,7 +53,7 @@ void StdinReadCallback(short events, Loop* wp_loop, TimerItem* wp_timer)
         } else if (cmd == "stop") {
             wp_timer->disable();
         } else if (cmd == "init") {
-            wp_timer->initialize(std::chrono::milliseconds(10), Item::Mode::kPersist);
+            wp_timer->initialize(std::chrono::milliseconds(10), Event::Mode::kPersist);
         } else if (cmd == "cb2") {
             wp_timer->setCallback(TimerCallback2);
         } else if (cmd == "cb1") {
@@ -102,23 +102,23 @@ int main(int argc, char *argv[])
     }
 
 
-    TimerItem* sp_timer = sp_loop->newTimerItem();
-    sp_timer->initialize(std::chrono::seconds(1), Item::Mode::kPersist);
+    TimerEvent* sp_timer = sp_loop->newTimerEvent();
+    sp_timer->initialize(std::chrono::seconds(1), Event::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();
 
-    TimerItem* sp_timer_1 = sp_loop->newTimerItem();
-    sp_timer_1->initialize(std::chrono::seconds(5), Item::Mode::kOneshot);
+    TimerEvent* sp_timer_1 = sp_loop->newTimerEvent();
+    sp_timer_1->initialize(std::chrono::seconds(5), Event::Mode::kOneshot);
     sp_timer_1->setCallback(OneshotTimerCallback);
     sp_timer_1->enable();
 
-    FdItem* sp_stdin = sp_loop->newFdItem();
-    sp_stdin->initialize(STDIN_FILENO, FdItem::kReadEvent, Item::Mode::kPersist);
+    FdEvent* sp_stdin = sp_loop->newFdEvent();
+    sp_stdin->initialize(STDIN_FILENO, FdEvent::kReadEvent, Event::Mode::kPersist);
     sp_stdin->setCallback(bind(StdinReadCallback, std::placeholders::_1, sp_loop, sp_timer));
     sp_stdin->enable();
 
-    SignalItem* sp_sig_int = sp_loop->newSignalItem();
-    sp_sig_int->initialize(SIGINT, Item::Mode::kPersist);
+    SignalEvent* sp_sig_int = sp_loop->newSignalEvent();
+    sp_sig_int->initialize(SIGINT, Event::Mode::kPersist);
     sp_sig_int->setCallback(bind(IntSignalCallback, sp_loop));
     sp_sig_int->enable();
 

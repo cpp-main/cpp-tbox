@@ -1,4 +1,4 @@
-#include "timer_item.h"
+#include "timer_event.h"
 
 #include <cassert>
 #include <event2/event.h>
@@ -10,7 +10,7 @@
 namespace tbox {
 namespace event {
 
-LibeventTimerItem::LibeventTimerItem(LibeventLoop *wp_loop) :
+LibeventTimerEvent::LibeventTimerEvent(LibeventLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
     cb_level_(0)
@@ -18,13 +18,13 @@ LibeventTimerItem::LibeventTimerItem(LibeventLoop *wp_loop) :
     event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }
 
-LibeventTimerItem::~LibeventTimerItem()
+LibeventTimerEvent::~LibeventTimerEvent()
 {
     assert(cb_level_ == 0);
     disable();
 }
 
-bool LibeventTimerItem::initialize(const std::chrono::milliseconds &interval, Mode mode)
+bool LibeventTimerEvent::initialize(const std::chrono::milliseconds &interval, Mode mode)
 {
     disable();
 
@@ -34,7 +34,7 @@ bool LibeventTimerItem::initialize(const std::chrono::milliseconds &interval, Mo
     if (mode == Mode::kPersist)
         libevent_events |= EV_PERSIST;
 
-    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), -1, libevent_events, LibeventTimerItem::OnEventCallback, this);
+    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), -1, libevent_events, LibeventTimerEvent::OnEventCallback, this);
     if (ret == 0) {
         is_inited_ = true;
         return true;
@@ -44,12 +44,12 @@ bool LibeventTimerItem::initialize(const std::chrono::milliseconds &interval, Mo
     return false;
 }
 
-void LibeventTimerItem::setCallback(const CallbackFunc &cb)
+void LibeventTimerEvent::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool LibeventTimerItem::isEnabled() const
+bool LibeventTimerEvent::isEnabled() const
 {
     if (!is_inited_)
         return false;
@@ -57,7 +57,7 @@ bool LibeventTimerItem::isEnabled() const
     return event_pending(&event_, EV_TIMEOUT, NULL) != 0;
 }
 
-bool LibeventTimerItem::enable()
+bool LibeventTimerEvent::enable()
 {
     if (!is_inited_) {
         LogErr("can't enable() before initialize()");
@@ -76,7 +76,7 @@ bool LibeventTimerItem::enable()
     return true;
 }
 
-bool LibeventTimerItem::disable()
+bool LibeventTimerEvent::disable()
 {
     if (!is_inited_)
         return false;
@@ -93,13 +93,13 @@ bool LibeventTimerItem::disable()
     return true;
 }
 
-void LibeventTimerItem::OnEventCallback(int, short, void *args)
+void LibeventTimerEvent::OnEventCallback(int, short, void *args)
 {
-    LibeventTimerItem *pthis = static_cast<LibeventTimerItem*>(args);
+    LibeventTimerEvent *pthis = static_cast<LibeventTimerEvent*>(args);
     pthis->onEvent();
 }
 
-void LibeventTimerItem::onEvent()
+void LibeventTimerEvent::onEvent()
 {
 #ifdef  ENABLE_STAT
     using namespace std::chrono;

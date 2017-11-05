@@ -5,9 +5,9 @@ namespace tbox {
 namespace event {
 
 class Loop;
-class FdItem;
-class TimerItem;
-class SignalItem;
+class FdEvent;
+class TimerEvent;
+class SignalEvent;
 
 }
 }

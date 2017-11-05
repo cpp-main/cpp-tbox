@@ -1,7 +1,7 @@
 #include <iostream>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
-#include <tbox/event/signal_item.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/network/stdio_stream.h>
 #include <tbox/network/uart.h>
 
@@ -44,9 +44,9 @@ int main(int argc, char **argv)
     sp_stdio->enable();
     sp_uart->enable();
 
-    auto sp_exit = sp_loop->newSignalItem();
+    auto sp_exit = sp_loop->newSignalEvent();
     SetScopeExitAction([=] { delete sp_exit; });
-    sp_exit->initialize(SIGINT, event::Item::Mode::kOneshot);
+    sp_exit->initialize(SIGINT, event::Event::Mode::kOneshot);
     sp_exit->enable();
     sp_exit->setCallback(
         [=] {

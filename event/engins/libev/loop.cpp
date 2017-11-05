@@ -2,9 +2,9 @@
 
 #include <ev.h>
 
-#include "fd_item.h"
-#include "timer_item.h"
-#include "signal_item.h"
+#include "fd_event.h"
+#include "timer_event.h"
+#include "signal_event.h"
 
 namespace tbox {
 namespace event {
@@ -36,8 +36,8 @@ void LibevLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     if (wait_time.count() == 0) {
         ev_break(sp_ev_loop_, EVBREAK_ALL);
     } else {
-        sp_exit_timer_ = newTimerItem();
-        sp_exit_timer_->initialize(wait_time, Item::Mode::kOneshot);
+        sp_exit_timer_ = newTimerEvent();
+        sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
         sp_exit_timer_->setCallback(std::bind(&LibevLoop::onExitTimeup, this));
         sp_exit_timer_->enable();
     }
@@ -49,19 +49,19 @@ void LibevLoop::onExitTimeup()
     ev_break(sp_ev_loop_, EVBREAK_ALL);
 }
 
-FdItem* LibevLoop::newFdItem()
+FdEvent* LibevLoop::newFdEvent()
 {
-    return new LibevFdItem(this);
+    return new LibevFdEvent(this);
 }
 
-TimerItem* LibevLoop::newTimerItem()
+TimerEvent* LibevLoop::newTimerEvent()
 {
-    return new LibevTimerItem(this);
+    return new LibevTimerEvent(this);
 }
 
-SignalItem* LibevLoop::newSignalItem()
+SignalEvent* LibevLoop::newSignalEvent()
 {
-    return new LibevSignalItem(this);
+    return new LibevSignalEvent(this);
 }
 
 }

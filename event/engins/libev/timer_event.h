@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_LIBEV_TIMER_EVENT_H_20170827
 #define TBOX_EVENT_LIBEV_TIMER_EVENT_H_20170827
 
-#include "../../timer_item.h"
+#include "../../timer_event.h"
 
 #include <ev.h>
 
@@ -10,10 +10,10 @@ namespace event {
 
 class LibevLoop;
 
-class LibevTimerItem : public TimerItem {
+class LibevTimerEvent : public TimerEvent {
   public:
-    explicit LibevTimerItem(LibevLoop *wp_loop);
-    virtual ~LibevTimerItem();
+    explicit LibevTimerEvent(LibevLoop *wp_loop);
+    virtual ~LibevTimerEvent();
 
   public:
     virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);

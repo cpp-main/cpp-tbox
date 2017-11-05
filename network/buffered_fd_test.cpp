@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_item.h>
+#include <tbox/event/timer_event.h>
 #include <tbox/network/buffered_fd.h>
 
 #include <unistd.h>
@@ -56,8 +56,8 @@ TEST(network_BufferedFd, pipe_test)
 
     //! 创建定时发送的定时器，每20ms一次，执行10次
     int send_times = 0;
-    TimerItem* sp_timer_send = sp_loop->newTimerItem();
-    sp_timer_send->initialize(std::chrono::milliseconds(20), event::Item::Mode::kPersist);
+    TimerEvent* sp_timer_send = sp_loop->newTimerEvent();
+    sp_timer_send->initialize(std::chrono::milliseconds(20), event::Event::Mode::kPersist);
     sp_timer_send->setCallback(
         [=, &send_times] {
             ++send_times;
@@ -72,8 +72,8 @@ TEST(network_BufferedFd, pipe_test)
     sp_timer_send->enable();
 
     //! 创建退出定时器，定时1秒
-    TimerItem* sp_timer_end = sp_loop->newTimerItem();
-    sp_timer_end->initialize(std::chrono::seconds(2), event::Item::Mode::kOneshot);
+    TimerEvent* sp_timer_end = sp_loop->newTimerEvent();
+    sp_timer_end->initialize(std::chrono::seconds(2), event::Event::Mode::kOneshot);
     sp_timer_end->setCallback(
         [=] {
             cout << "Info: Exit Loop" << endl;

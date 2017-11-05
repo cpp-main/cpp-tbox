@@ -9,7 +9,7 @@
 namespace tbox {
 namespace event {
 
-class TimerItem : public Item {
+class TimerEvent : public Event {
   public:
     virtual bool initialize(const std::chrono::milliseconds &time_span, Mode mode) = 0;
 
@@ -17,7 +17,7 @@ class TimerItem : public Item {
     virtual void setCallback(const CallbackFunc &cb) = 0;
 
   public:
-    virtual ~TimerItem() { }
+    virtual ~TimerEvent() { }
 };
 
 }

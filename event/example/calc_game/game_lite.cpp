@@ -24,22 +24,22 @@ void GameLite::init(Loop *wp_loop)
 {
     wp_loop_ = wp_loop;
 
-    sp_30sec_timer_ = wp_loop_->newTimerItem();
-    sp_20sec_timer_ = wp_loop_->newTimerItem();
-    sp_10sec_timer_ = wp_loop_->newTimerItem();
-    sp_stdin_read_ev_ = wp_loop_->newFdItem();
+    sp_30sec_timer_ = wp_loop_->newTimerEvent();
+    sp_20sec_timer_ = wp_loop_->newTimerEvent();
+    sp_10sec_timer_ = wp_loop_->newTimerEvent();
+    sp_stdin_read_ev_ = wp_loop_->newFdEvent();
 
-    sp_30sec_timer_->initialize(std::chrono::seconds(30), Item::Mode::kOneshot);
+    sp_30sec_timer_->initialize(std::chrono::seconds(30), Event::Mode::kOneshot);
     sp_30sec_timer_->setCallback(std::bind(&GameLite::on30SecReach, this));
 
-    sp_20sec_timer_->initialize(std::chrono::seconds(20), Item::Mode::kOneshot);
+    sp_20sec_timer_->initialize(std::chrono::seconds(20), Event::Mode::kOneshot);
     sp_20sec_timer_->setCallback(std::bind(&GameLite::on20SecReach, this));
 
-    sp_10sec_timer_->initialize(std::chrono::seconds(10), Item::Mode::kOneshot);
+    sp_10sec_timer_->initialize(std::chrono::seconds(10), Event::Mode::kOneshot);
     sp_10sec_timer_->setCallback(std::bind(&GameLite::on10SecReach, this));
 
     using std::placeholders::_1;
-    sp_stdin_read_ev_->initialize(STDIN_FILENO, FdItem::kReadEvent, Item::Mode::kPersist);
+    sp_stdin_read_ev_->initialize(STDIN_FILENO, FdEvent::kReadEvent, Event::Mode::kPersist);
     sp_stdin_read_ev_->setCallback(std::bind(&GameLite::onStdinReadable, this, _1));
 
     cout << "Welcome to Calculate GameLite." << endl

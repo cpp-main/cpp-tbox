@@ -1,4 +1,4 @@
-#include "timer_item.h"
+#include "timer_event.h"
 
 #include <cassert>
 
@@ -8,7 +8,7 @@
 namespace tbox {
 namespace event {
 
-LibevTimerItem::LibevTimerItem(LibevLoop *wp_loop) :
+LibevTimerEvent::LibevTimerEvent(LibevLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
     mode_(Mode::kOneshot),
@@ -17,20 +17,20 @@ LibevTimerItem::LibevTimerItem(LibevLoop *wp_loop) :
     memset(&timer_ev_, 0, sizeof(timer_ev_));
 }
 
-LibevTimerItem::~LibevTimerItem()
+LibevTimerEvent::~LibevTimerEvent()
 {
     assert(cb_level_ == 0);
 
     disable();
 }
 
-bool LibevTimerItem::initialize(const std::chrono::milliseconds &interval, Mode mode)
+bool LibevTimerEvent::initialize(const std::chrono::milliseconds &interval, Mode mode)
 {
     disable();
 
     timer_ev_.active = timer_ev_.pending = 0;
     timer_ev_.priority = 0;
-    timer_ev_.cb = LibevTimerItem::OnEventCallback;
+    timer_ev_.cb = LibevTimerEvent::OnEventCallback;
     timer_ev_.data = this;
 
     interval_ = interval;
@@ -40,12 +40,12 @@ bool LibevTimerItem::initialize(const std::chrono::milliseconds &interval, Mode 
     return true;
 }
 
-void LibevTimerItem::setCallback(const CallbackFunc &cb)
+void LibevTimerEvent::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool LibevTimerItem::isEnabled() const
+bool LibevTimerEvent::isEnabled() const
 {
     if (!is_inited_)
         return false;
@@ -53,7 +53,7 @@ bool LibevTimerItem::isEnabled() const
     return timer_ev_.active;
 }
 
-bool LibevTimerItem::enable()
+bool LibevTimerEvent::enable()
 {
     if (!is_inited_) {
         //! 没有初始化，是不能直接enable的
@@ -77,7 +77,7 @@ bool LibevTimerItem::enable()
     return true;
 }
 
-bool LibevTimerItem::disable()
+bool LibevTimerEvent::disable()
 {
     if (!is_inited_)
         return false;
@@ -90,15 +90,15 @@ bool LibevTimerItem::disable()
     return true;
 }
 
-void LibevTimerItem::OnEventCallback(struct ev_loop*, ev_timer *p_w, int events)
+void LibevTimerEvent::OnEventCallback(struct ev_loop*, ev_timer *p_w, int events)
 {
     assert(p_w != NULL);
 
-    LibevTimerItem *pthis = static_cast<LibevTimerItem*>(p_w->data);
+    LibevTimerEvent *pthis = static_cast<LibevTimerEvent*>(p_w->data);
     pthis->onEvent();
 }
 
-void LibevTimerItem::onEvent()
+void LibevTimerEvent::onEvent()
 {
 #ifdef  ENABLE_STAT
     using namespace std::chrono;

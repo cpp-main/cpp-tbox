@@ -35,9 +35,9 @@ class Loop {
     using RunInLoopFunc = std::function<void()>;
     virtual void runInLoop(const RunInLoopFunc &func) = 0;
 
-    virtual FdItem* newFdItem() = 0;
-    virtual TimerItem* newTimerItem() = 0;
-    virtual SignalItem* newSignalItem() = 0;
+    virtual FdEvent* newFdEvent() = 0;
+    virtual TimerEvent* newTimerEvent() = 0;
+    virtual SignalEvent* newSignalEvent() = 0;
 
     virtual Stat getStat() const = 0;
     virtual void resetStat() = 0;

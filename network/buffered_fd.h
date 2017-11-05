@@ -71,8 +71,8 @@ class BufferedFd : public ByteStream {
 
     Fd fd_;
 
-    event::FdItem *sp_read_event_  = nullptr;
-    event::FdItem *sp_write_event_ = nullptr;
+    event::FdEvent *sp_read_event_  = nullptr;
+    event::FdEvent *sp_write_event_ = nullptr;
 
     Buffer send_buff_;
     Buffer recv_buff_;

@@ -1,4 +1,4 @@
-#include "signal_item.h"
+#include "signal_event.h"
 
 #include <cassert>
 
@@ -8,7 +8,7 @@
 namespace tbox {
 namespace event {
 
-LibevSignalItem::LibevSignalItem(LibevLoop *wp_loop) :
+LibevSignalEvent::LibevSignalEvent(LibevLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
     is_stop_after_trigger_(false),
@@ -17,19 +17,19 @@ LibevSignalItem::LibevSignalItem(LibevLoop *wp_loop) :
     memset(&signal_ev_, 0, sizeof(signal_ev_));
 }
 
-LibevSignalItem::~LibevSignalItem()
+LibevSignalEvent::~LibevSignalEvent()
 {
     assert(cb_level_ == 0);
     disable();
 }
 
-bool LibevSignalItem::initialize(int signum, Mode mode)
+bool LibevSignalEvent::initialize(int signum, Mode mode)
 {
     disable();
 
     signal_ev_.active = signal_ev_.pending = 0;
     signal_ev_.priority = 0;
-    signal_ev_.cb = LibevSignalItem::OnEventCallback;
+    signal_ev_.cb = LibevSignalEvent::OnEventCallback;
     signal_ev_.data = this;
 
     signal_ev_.signum = signum;
@@ -41,12 +41,12 @@ bool LibevSignalItem::initialize(int signum, Mode mode)
     return true;
 }
 
-void LibevSignalItem::setCallback(const CallbackFunc &cb)
+void LibevSignalEvent::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool LibevSignalItem::isEnabled() const
+bool LibevSignalEvent::isEnabled() const
 {
     if (!is_inited_)
         return false;
@@ -54,7 +54,7 @@ bool LibevSignalItem::isEnabled() const
     return signal_ev_.active;
 }
 
-bool LibevSignalItem::enable()
+bool LibevSignalEvent::enable()
 {
     if (!is_inited_) {
         LogErr("can't enable() before initialize()");
@@ -69,7 +69,7 @@ bool LibevSignalItem::enable()
     return true;
 }
 
-bool LibevSignalItem::disable()
+bool LibevSignalEvent::disable()
 {
     if (!is_inited_)
         return false;
@@ -82,15 +82,15 @@ bool LibevSignalItem::disable()
     return true;
 }
 
-void LibevSignalItem::OnEventCallback(struct ev_loop*, ev_signal *p_w, int events)
+void LibevSignalEvent::OnEventCallback(struct ev_loop*, ev_signal *p_w, int events)
 {
     assert(p_w != NULL);
 
-    LibevSignalItem *pthis = static_cast<LibevSignalItem*>(p_w->data);
+    LibevSignalEvent *pthis = static_cast<LibevSignalEvent*>(p_w->data);
     pthis->onEvent();
 }
 
-void LibevSignalItem::onEvent()
+void LibevSignalEvent::onEvent()
 {
 #ifdef  ENABLE_STAT
     using namespace std::chrono;

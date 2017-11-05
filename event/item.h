@@ -4,7 +4,7 @@
 namespace tbox {
 namespace event {
 
-class Item {
+class Event {
   public:
     enum class Mode {
         kPersist,
@@ -16,7 +16,7 @@ class Item {
     virtual bool disable() = 0;
 
   public:
-    virtual ~Item() { }
+    virtual ~Event() { }
 };
 
 }

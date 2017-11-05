@@ -1,7 +1,7 @@
 #include <iostream>
 #include <signal.h>
 #include <tbox/event/loop.h>
-#include <tbox/event/signal_item.h>
+#include <tbox/event/signal_event.h>
 
 using namespace std;
 using namespace tbox;
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    SignalItem* sp_signal = sp_loop->newSignalItem();
-    sp_signal->initialize(SIGINT, Item::Mode::kPersist);
+    SignalEvent* sp_signal = sp_loop->newSignalEvent();
+    sp_signal->initialize(SIGINT, Event::Mode::kPersist);
     sp_signal->setCallback(SignalCallback);
     sp_signal->enable();
 

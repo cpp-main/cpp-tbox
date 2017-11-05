@@ -11,3 +11,6 @@ $(TARGET) : $(OBJECTS)
 
 clean:
 	rm -rf $(OBJECTS)
+
+distclean: clean
+	rm -f $(TARGET)

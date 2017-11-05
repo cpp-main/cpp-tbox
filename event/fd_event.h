@@ -8,7 +8,7 @@
 namespace tbox {
 namespace event {
 
-class FdItem : public Item {
+class FdEvent : public Event {
   public:
     static const int kReadEvent   = 0x01;
     static const int kWriteEvent  = 0x02;
@@ -20,7 +20,7 @@ class FdItem : public Item {
     virtual void setCallback(const CallbackFunc &cb) = 0;
 
   public:
-    virtual ~FdItem() { }
+    virtual ~FdEvent() { }
 };
 
 }

@@ -1,65 +1,42 @@
-#include "fd_item.h"
+#include "signal_event.h"
 
 #include <cassert>
 #include <event2/event.h>
-#include <tbox/base/log.h>
 
 #include "loop.h"
+
+#include <tbox/base/log.h>
 
 namespace tbox {
 namespace event {
 
-LibeventFdItem::LibeventFdItem(LibeventLoop *wp_loop) :
+LibeventSignalEvent::LibeventSignalEvent(LibeventLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
-    events_(0),
     cb_level_(0)
 {
     event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }
 
-LibeventFdItem::~LibeventFdItem()
+LibeventSignalEvent::~LibeventSignalEvent()
 {
     assert(cb_level_ == 0);
     disable();
 }
 
-namespace {
-short LibeventEventsToLocal(short libevent_events)
-{
-    short ret = 0;
-    if (libevent_events & EV_READ)
-        ret |= FdItem::kReadEvent;
-    if (libevent_events & EV_WRITE)
-        ret |= FdItem::kWriteEvent;
-
-    return ret;
-}
-
-short LocalEventsToLibevent(short local_events)
-{
-    short ret = 0;
-    if (local_events & FdItem::kWriteEvent)
-        ret |= EV_WRITE;
-    if (local_events & FdItem::kReadEvent)
-        ret |= EV_READ;
-
-    return ret;
-}
-
-}
-
-bool LibeventFdItem::initialize(int fd, short events, Mode mode)
+bool LibeventSignalEvent::initialize(int signum, Mode mode)
 {
     disable();
 
-    short libevent_events = LocalEventsToLibevent(events);
+    short libevent_events = 0;
     if (mode == Mode::kPersist)
         libevent_events |= EV_PERSIST;
 
-    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), fd, libevent_events, LibeventFdItem::OnEventCallback, this);
+    int ret = event_assign(&event_, wp_loop_->getEventBasePtr(), signum,
+                           libevent_events | EV_SIGNAL,
+                           LibeventSignalEvent::OnEventCallback,
+                           this);
     if (ret == 0) {
-        events_ = events;
         is_inited_ = true;
         return true;
     }
@@ -68,21 +45,20 @@ bool LibeventFdItem::initialize(int fd, short events, Mode mode)
     return false;
 }
 
-void LibeventFdItem::setCallback(const CallbackFunc &cb)
+void LibeventSignalEvent::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool LibeventFdItem::isEnabled() const
+bool LibeventSignalEvent::isEnabled() const
 {
     if (!is_inited_)
         return false;
 
-    short libevent_events = LocalEventsToLibevent(events_);
-    return event_pending(&event_, libevent_events, NULL) != 0;
+    return event_pending(&event_, EV_SIGNAL, NULL) != 0;
 }
 
-bool LibeventFdItem::enable()
+bool LibeventSignalEvent::enable()
 {
     if (!is_inited_) {
         LogErr("can't enable() before initialize()");
@@ -101,7 +77,7 @@ bool LibeventFdItem::enable()
     return true;
 }
 
-bool LibeventFdItem::disable()
+bool LibeventSignalEvent::disable()
 {
     if (!is_inited_)
         return false;
@@ -118,13 +94,13 @@ bool LibeventFdItem::disable()
     return true;
 }
 
-void LibeventFdItem::OnEventCallback(int /*fd*/, short events, void *args)
+void LibeventSignalEvent::OnEventCallback(int, short, void *args)
 {
-    LibeventFdItem *pthis = static_cast<LibeventFdItem*>(args);
-    pthis->onEvent(events);
+    LibeventSignalEvent *pthis = static_cast<LibeventSignalEvent*>(args);
+    pthis->onEvent();
 }
 
-void LibeventFdItem::onEvent(short events)
+void LibeventSignalEvent::onEvent()
 {
 #ifdef  ENABLE_STAT
     using namespace std::chrono;
@@ -132,9 +108,8 @@ void LibeventFdItem::onEvent(short events)
 #endif
 
     if (cb_) {
-        short local_events = LibeventEventsToLocal(events);
         ++cb_level_;
-        cb_(local_events);
+        cb_();
         --cb_level_;
     } else {
         LogWarn("you should specify event callback by setCallback()");

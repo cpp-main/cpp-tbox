@@ -9,7 +9,7 @@
 
 #include <tbox/base/log.h>
 
-#include "fd_item.h"
+#include "fd_event.h"
 #include "stat.h"
 
 namespace tbox {
@@ -18,7 +18,7 @@ namespace event {
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
     read_fd_(-1), write_fd_(-1),
-    sp_read_item_(NULL),
+    sp_read_event_(NULL),
     cb_level_(0)
 { }
 
@@ -44,23 +44,23 @@ void CommonLoop::runThisBeforeLoop()
     int read_fd(fds[0]);
     int write_fd(fds[1]);
 
-    FdItem *sp_read_item = newFdItem();
-    if (!sp_read_item->initialize(read_fd, FdItem::kReadEvent, Item::Mode::kPersist)) {
+    FdEvent *sp_read_event = newFdEvent();
+    if (!sp_read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
         close(write_fd);
         close(read_fd);
-        delete sp_read_item;
+        delete sp_read_event;
         return;
     }
 
     using std::placeholders::_1;
-    sp_read_item->setCallback(std::bind(&CommonLoop::onGotRunInLoopFunc, this, _1));
-    sp_read_item->enable();
+    sp_read_event->setCallback(std::bind(&CommonLoop::onGotRunInLoopFunc, this, _1));
+    sp_read_event->enable();
 
     std::lock_guard<std::mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
     read_fd_ = read_fd;
     write_fd_ = write_fd;
-    sp_read_item_ = sp_read_item;
+    sp_read_event_ = sp_read_event;
 
     if (!func_list_.empty())
         commitRequest();
@@ -75,12 +75,12 @@ void CommonLoop::runThisAfterLoop()
     std::lock_guard<std::mutex> g(lock_);
     loop_thread_id_ = std::thread::id();
 
-    if (sp_read_item_ != NULL) {
-        delete sp_read_item_;
+    if (sp_read_event_ != NULL) {
+        delete sp_read_event_;
         close(write_fd_);
         close(read_fd_);
 
-        sp_read_item_ = NULL;
+        sp_read_event_ = NULL;
         write_fd_ = -1;
         read_fd_ = -1;
     }
@@ -91,7 +91,7 @@ void CommonLoop::runInLoop(const RunInLoopFunc &func)
     std::lock_guard<std::mutex> g(lock_);
     func_list_.push_back(func);
 
-    if (sp_read_item_ == NULL)
+    if (sp_read_event_ == NULL)
         return;
 
     commitRequest();

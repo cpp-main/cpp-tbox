@@ -17,9 +17,9 @@ class LibevLoop : public CommonLoop {
     virtual void runLoop(Mode mode);
     virtual void exitLoop(const std::chrono::milliseconds &wait_time);
 
-    virtual FdItem* newFdItem();
-    virtual TimerItem* newTimerItem();
-    virtual SignalItem* newSignalItem();
+    virtual FdEvent* newFdEvent();
+    virtual TimerEvent* newTimerEvent();
+    virtual SignalEvent* newSignalEvent();
 
   public:
     struct ev_loop* getEvLoopPtr() const { return sp_ev_loop_; }
@@ -29,7 +29,7 @@ class LibevLoop : public CommonLoop {
 
   private:
     struct ev_loop *sp_ev_loop_;
-    TimerItem *sp_exit_timer_;
+    TimerEvent *sp_exit_timer_;
 };
 
 }
