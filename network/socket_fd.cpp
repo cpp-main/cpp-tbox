@@ -39,6 +39,16 @@ bool SocketFd::setSocketOpt(int level, int optname, int value)
     return true;
 }
 
+bool SocketFd::setSocketOpt(int level, int optname, void *value, size_t size)
+{
+    if (::setsockopt(get(), level, optname, value, size) != 0) {
+        LogErr("setsockopt fail, opt:%d, errno:%d, %s",
+               optname, errno, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
 bool SocketFd::setReuseAddress(bool enable)
 {
     return setSocketOpt(SOL_SOCKET, SO_REUSEADDR, enable);
@@ -72,6 +82,15 @@ bool SocketFd::setRecvLowWater(int size)
 bool SocketFd::setSendLowWater(int size)
 {
     return setSocketOpt(SOL_SOCKET, SO_SNDLOWAT, size);
+}
+
+bool SocketFd::setLinger(bool enable, int linger)
+{
+    struct linger value = {
+        .l_onoff = enable,
+        .l_linger = linger
+    };
+    return setSocketOpt(SOL_SOCKET, SO_LINGER, &value, sizeof(value));
 }
 
 }
