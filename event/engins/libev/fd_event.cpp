@@ -61,7 +61,7 @@ bool LibevFdEvent::initialize(int fd, short events, Mode mode)
     io_ev_.fd = fd;
     io_ev_.events = libev_events | EV__IOFDSET;
 
-    if (mode == Mode::kOneshot) //! Èç¹ûÊÇµ¥´ÎÓĞĞ§µÄ£¬ĞèÒªÉèÖÃ±ê¼Ç£¬Ê¹Ö®ÔÚ´¥·¢ºóÍ£Ö¹ÊÂ¼ş
+    if (mode == Mode::kOneshot) //! å¦‚æœæ˜¯å•æ¬¡æœ‰æ•ˆçš„ï¼Œéœ€è¦è®¾ç½®æ ‡è®°ï¼Œä½¿ä¹‹åœ¨è§¦å‘ååœæ­¢äº‹ä»¶
         is_stop_after_trigger_ = true;
 
     is_inited_ = true;
@@ -84,7 +84,7 @@ bool LibevFdEvent::isEnabled() const
 bool LibevFdEvent::enable()
 {
     if (!is_inited_) {
-        //! Ã»ÓĞ³õÊ¼»¯£¬ÊÇ²»ÄÜÖ±½ÓenableµÄ
+        //! æ²¡æœ‰åˆå§‹åŒ–ï¼Œæ˜¯ä¸èƒ½ç›´æ¥enableçš„
         LogErr("can't enable() before initialize()");
         return false;
     }

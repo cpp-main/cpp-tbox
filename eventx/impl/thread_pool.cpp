@@ -79,7 +79,7 @@ int ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &
     {
         std::lock_guard<std::mutex> lg(lock_);
         undo_tasks_array_.at(level).push_back(item);
-        //! Èç¹û¿Õ¼äÏß³Ì²»¹»£¬ÇÒ»¹¿ÉÒÔÔÙ´´½¨ĞÂµÄÏß³Ì
+        //! å¦‚æœç©ºé—´çº¿ç¨‹ä¸å¤Ÿï¼Œä¸”è¿˜å¯ä»¥å†åˆ›å»ºæ–°çš„çº¿ç¨‹
         if (idle_thread_num_ == 0 &&
             (max_thread_num_ == 0 || threads_.size() < max_thread_num_))
             createWorker();
@@ -92,20 +92,20 @@ int ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &
 }
 
 /**
- * ·µ»ØÖµÈçÏÂ£º
- * 0: È¡Ïû³É¹¦
- * 1: Ã»ÓĞÕÒµ½¸ÃÈÎÎñ
- * 2: ¸ÃÈÎÎñÕıÔÚÖ´ĞĞ
+ * è¿”å›å€¼å¦‚ä¸‹ï¼š
+ * 0: å–æ¶ˆæˆåŠŸ
+ * 1: æ²¡æœ‰æ‰¾åˆ°è¯¥ä»»åŠ¡
+ * 2: è¯¥ä»»åŠ¡æ­£åœ¨æ‰§è¡Œ
  */
 int ThreadPool::cancel(int task_id)
 {
     std::lock_guard<std::mutex> lg(lock_);
 
-    //! Èç¹ûÕıÔÚÖ´ĞĞ
+    //! å¦‚æœæ­£åœ¨æ‰§è¡Œ
     if (doing_tasks_set_.find(task_id) != doing_tasks_set_.end())
-        return 2;   //! ·µ»ØÕıÔÚÖ´ĞĞ
+        return 2;   //! è¿”å›æ­£åœ¨æ‰§è¡Œ
 
-    //! ´Ó¸ßÓÅÏÈ¼¶ÏòµÍÓÅÏÈ¼¶±éÀú£¬ÕÒ³öÓÅÏÈ¼¶×î¸ßµÄÈÎÎñ
+    //! ä»é«˜ä¼˜å…ˆçº§å‘ä½ä¼˜å…ˆçº§éå†ï¼Œæ‰¾å‡ºä¼˜å…ˆçº§æœ€é«˜çš„ä»»åŠ¡
     for (size_t i = 0; i < undo_tasks_array_.size(); ++i) {
         auto &tasks = undo_tasks_array_.at(i);
         if (!tasks.empty()) {
@@ -114,13 +114,13 @@ int ThreadPool::cancel(int task_id)
                 if (item->task_id == task_id) {
                     tasks.erase(iter);
                     delete item;
-                    return 0;   //! ·µ»ØÈ¡Ïû³É¹¦
+                    return 0;   //! è¿”å›å–æ¶ˆæˆåŠŸ
                 }
             }
         }
     }
 
-    return 1;   //! ·µ»ØÃ»ÓĞÕÒµ½
+    return 1;   //! è¿”å›æ²¡æœ‰æ‰¾åˆ°
 }
 
 void ThreadPool::cleanup()
@@ -130,7 +130,7 @@ void ThreadPool::cleanup()
 
     {
         std::lock_guard<std::mutex> lg(lock_);
-        //! Çå¿ÕtaskÖĞµÄÈÎÎñ
+        //! æ¸…ç©ºtaskä¸­çš„ä»»åŠ¡
         for (size_t i = 0; i < undo_tasks_array_.size(); ++i) {
             auto &tasks = undo_tasks_array_.at(i);
             while (!tasks.empty()) {
@@ -144,7 +144,7 @@ void ThreadPool::cleanup()
     threads_stop_flag_ = true;
     cond_var_.notify_all();
 
-    //! µÈ´ıËùÓĞµÄÏß³ÌÍË³ö
+    //! ç­‰å¾…æ‰€æœ‰çš„çº¿ç¨‹é€€å‡º
     for (auto item : threads_) {
         std::thread *t = item.second;
         t->join();
@@ -165,13 +165,13 @@ void ThreadPool::threadProc(int id)
             std::unique_lock<std::mutex> lk(lock_);
 
             /**
-             * Îª·ÀÖ¹·´¸´´´½¨Ïß³Ì£¬´Ë´¦×öÓÅ»¯£º
-             * Èç¹ûµ±Ç°ÒÑÓĞ¿ÕÏĞµÄÏß³ÌÔÚµÈ´ı£¬ÇÒµ±Ç°µÄÏß³Ì¸öÊıÒÑ³¬¹ı³¤×¤Ïß³ÌÊı£¬ËµÃ÷Ïß³ÌÊı¾İÒÑÂú×ãÏÖÓĞÒªÇó
-             * ÔòÍË³öµ±Ç°Ïß³Ì
+             * ä¸ºé˜²æ­¢åå¤åˆ›å»ºçº¿ç¨‹ï¼Œæ­¤å¤„åšä¼˜åŒ–ï¼š
+             * å¦‚æœå½“å‰å·²æœ‰ç©ºé—²çš„çº¿ç¨‹åœ¨ç­‰å¾…ï¼Œä¸”å½“å‰çš„çº¿ç¨‹ä¸ªæ•°å·²è¶…è¿‡é•¿é©»çº¿ç¨‹æ•°ï¼Œè¯´æ˜çº¿ç¨‹æ•°æ®å·²æ»¡è¶³ç°æœ‰è¦æ±‚
+             * åˆ™é€€å‡ºå½“å‰çº¿ç¨‹
              */
             if (idle_thread_num_ > 0 && threads_.size() > min_thread_num_) {
                 LogDbg("thread %d will exit, no more work.", id);
-                //! Ôò½«Ïß³ÌÈ¡³öÀ´£¬½»¸ømain_loopÈ¥join()£¬È»ºódelete
+                //! åˆ™å°†çº¿ç¨‹å–å‡ºæ¥ï¼Œäº¤ç»™main_loopå»join()ï¼Œç„¶ådelete
                 auto iter = threads_.find(id);
                 if (iter != threads_.end()) {
                     std::thread *t = iter->second;
@@ -181,27 +181,27 @@ void ThreadPool::threadProc(int id)
                 break;
             }
 
-            //! µÈ´ıÈÎÎñ
+            //! ç­‰å¾…ä»»åŠ¡
             ++idle_thread_num_;
             cond_var_.wait(lk, std::bind(&ThreadPool::shouldThreadExitWaiting, this));
             --idle_thread_num_;
 
             /**
-             * ÓĞÁ½ÖÖÇé¿ö»á´Ó cond_var_.wait() ÍË³ö
-             * 1. ÈÎÎñ¶ÓÁĞÖĞÓĞÈÎÎñĞèÒªÖ´ĞĞÊ±
-             * 2. Ïß³Ì³Ø cleanup() Ê±ÒªÇóËùÓĞ¹¤×÷Ïß³ÌÍË³öÊ±
+             * æœ‰ä¸¤ç§æƒ…å†µä¼šä» cond_var_.wait() é€€å‡º
+             * 1. ä»»åŠ¡é˜Ÿåˆ—ä¸­æœ‰ä»»åŠ¡éœ€è¦æ‰§è¡Œæ—¶
+             * 2. çº¿ç¨‹æ±  cleanup() æ—¶è¦æ±‚æ‰€æœ‰å·¥ä½œçº¿ç¨‹é€€å‡ºæ—¶
              *
-             * ËùÒÔ£¬ÏÂÃæ¼ì²é threads_stop_flag_ ¿´ÊÇ²»ÊÇÇëÇóÍË³ö
+             * æ‰€ä»¥ï¼Œä¸‹é¢æ£€æŸ¥ threads_stop_flag_ çœ‹æ˜¯ä¸æ˜¯è¯·æ±‚é€€å‡º
              */
             if (threads_stop_flag_) {
                 LogDbg("thread %d will exit, stop flag.", id);
                 break;
             }
 
-            item = popOneTask();    //! ´ÓÈÎÎñ¶ÓÁĞÖĞÈ¡³öÓÅÏÈ¼¶×î¸ßµÄÈÎÎñ
+            item = popOneTask();    //! ä»ä»»åŠ¡é˜Ÿåˆ—ä¸­å–å‡ºä¼˜å…ˆçº§æœ€é«˜çš„ä»»åŠ¡
         }
 
-        //! ºóÃæ¾ÍÊÇÈ¥Ö´ĞĞÈÎÎñ£¬²»ĞèÒªÔÙ¼ÓËøÁË
+        //! åé¢å°±æ˜¯å»æ‰§è¡Œä»»åŠ¡ï¼Œä¸éœ€è¦å†åŠ é”äº†
         if (item != nullptr) {
             {
                 std::lock_guard<std::mutex> lg(lock_);
@@ -255,7 +255,7 @@ bool ThreadPool::shouldThreadExitWaiting() const
 
 TaskEvent* ThreadPool::popOneTask()
 {
-    //! ´Ó¸ßÓÅÏÈ¼¶ÏòµÍÓÅÏÈ¼¶±éÀú£¬ÕÒ³öÓÅÏÈ¼¶×î¸ßµÄÈÎÎñ
+    //! ä»é«˜ä¼˜å…ˆçº§å‘ä½ä¼˜å…ˆçº§éå†ï¼Œæ‰¾å‡ºä¼˜å…ˆçº§æœ€é«˜çš„ä»»åŠ¡
     for (size_t i = 0; i < undo_tasks_array_.size(); ++i) {
         auto &tasks = undo_tasks_array_.at(i);
         if (!tasks.empty()) {

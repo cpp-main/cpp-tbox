@@ -19,12 +19,12 @@ namespace impl {
 using NonReturnFunc = std::function<void ()>;
 
 /**
- * ÈÎÎñÏî
+ * ä»»åŠ¡é¡¹
  */
 struct TaskEvent {
-  int task_id;  //! ÈÎÎñºÅ
-  NonReturnFunc backend_task;   //! ÈÎÎñÔÚ¹¤×÷Ïß³ÌÖĞÖ´ĞĞº¯Êı
-  NonReturnFunc main_cb;        //! ÈÎÎñÖ´ĞĞÍê³ÉºóÓÉmain_loopÖ´ĞĞµÄ»Øµ÷º¯Êı
+  int task_id;  //! ä»»åŠ¡å·
+  NonReturnFunc backend_task;   //! ä»»åŠ¡åœ¨å·¥ä½œçº¿ç¨‹ä¸­æ‰§è¡Œå‡½æ•°
+  NonReturnFunc main_cb;        //! ä»»åŠ¡æ‰§è¡Œå®Œæˆåç”±main_loopæ‰§è¡Œçš„å›è°ƒå‡½æ•°
 
   TaskEvent(int id, const NonReturnFunc &task, const NonReturnFunc &cb) :
       task_id(id), backend_task(task), main_cb(cb)
@@ -32,7 +32,7 @@ struct TaskEvent {
 };
 
 /**
- * Ïß³Ì³ØÊµÏÖ
+ * çº¿ç¨‹æ± å®ç°
  */
 class ThreadPool {
   public:
@@ -52,29 +52,29 @@ class ThreadPool {
     void threadProc(int id);
     bool createWorker();
 
-    bool shouldThreadExitWaiting() const;   //! ÅĞ¶¨×ÓÏß³ÌÊÇ·ñĞèÒªÍË³öÌõ¼ş±äÁ¿µÄwait()º¯Êı
-    TaskEvent* popOneTask(); //! È¡³öÒ»¸öÓÅÏÈ¼¶×î¸ßµÄÈÎÎñ
+    bool shouldThreadExitWaiting() const;   //! åˆ¤å®šå­çº¿ç¨‹æ˜¯å¦éœ€è¦é€€å‡ºæ¡ä»¶å˜é‡çš„wait()å‡½æ•°
+    TaskEvent* popOneTask(); //! å–å‡ºä¸€ä¸ªä¼˜å…ˆçº§æœ€é«˜çš„ä»»åŠ¡
 
   private:
-    event::Loop *main_loop_ = nullptr; //!< Ö÷Ïß³Ì
+    event::Loop *main_loop_ = nullptr; //!< ä¸»çº¿ç¨‹
 
-    bool is_ready_ = false;     //! ÊÇ·ñÒÑ¾­³õÊ¼»¯ÁË
+    bool is_ready_ = false;     //! æ˜¯å¦å·²ç»åˆå§‹åŒ–äº†
 
-    size_t min_thread_num_ = 0; //!< ×îÉÙµÄÏß³Ì¸öÊı
-    size_t max_thread_num_ = 0; //!< ×î¶àµÄÏß³Ì¸öÊı
+    size_t min_thread_num_ = 0; //!< æœ€å°‘çš„çº¿ç¨‹ä¸ªæ•°
+    size_t max_thread_num_ = 0; //!< æœ€å¤šçš„çº¿ç¨‹ä¸ªæ•°
 
-    std::mutex lock_;                //!< »¥³âËø
-    std::condition_variable cond_var_;   //!< Ìõ¼ş±äÁ¿
+    std::mutex lock_;                //!< äº’æ–¥é”
+    std::condition_variable cond_var_;   //!< æ¡ä»¶å˜é‡
 
-    std::array<std::list<TaskEvent*>, 5> undo_tasks_array_;    //!< ÓÅÏÈ¼¶ÈÎÎñÁĞ±í£¬5¼¶
-    std::set<int/*task_id*/> doing_tasks_set_;   //!< ¼ÇÂ¼ÕıÔÚ´ÓÊÂµÄÈÎÎñ
+    std::array<std::list<TaskEvent*>, 5> undo_tasks_array_;    //!< ä¼˜å…ˆçº§ä»»åŠ¡åˆ—è¡¨ï¼Œ5çº§
+    std::set<int/*task_id*/> doing_tasks_set_;   //!< è®°å½•æ­£åœ¨ä»äº‹çš„ä»»åŠ¡
 
-    size_t idle_thread_num_ = 0;    //!< ¿Õ¼äÏß³Ì¸öÊı
-    std::map<int/*thread_id*/, std::thread*> threads_;    //!< Ïß³Ì¶ÔÏó
-    int thread_id_alloc_ = 0;       //!< ¹¤×÷Ïß³ÌµÄID·ÖÅäÆ÷
-    bool threads_stop_flag_ = false;//!< ÊÇ·ñËùÓĞ¹¤×÷Ïß³ÌÁ¢¼´Í£Ö¹±ê¼Ç
+    size_t idle_thread_num_ = 0;    //!< ç©ºé—´çº¿ç¨‹ä¸ªæ•°
+    std::map<int/*thread_id*/, std::thread*> threads_;    //!< çº¿ç¨‹å¯¹è±¡
+    int thread_id_alloc_ = 0;       //!< å·¥ä½œçº¿ç¨‹çš„IDåˆ†é…å™¨
+    bool threads_stop_flag_ = false;//!< æ˜¯å¦æ‰€æœ‰å·¥ä½œçº¿ç¨‹ç«‹å³åœæ­¢æ ‡è®°
 
-    int task_id_alloc_ = 0;         //!< ÈÎÎñid·ÖÅä¼ÆÊıÆ÷
+    int task_id_alloc_ = 0;         //!< ä»»åŠ¡idåˆ†é…è®¡æ•°å™¨
 };
 
 }

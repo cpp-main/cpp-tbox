@@ -34,7 +34,7 @@ bool LibevSignalEvent::initialize(int signum, Mode mode)
 
     signal_ev_.signum = signum;
 
-    if (mode == Mode::kOneshot) //! 如果是单次有效的，需要设置标记，使之在触发后停止事件
+    if (mode == Mode::kOneshot) //! 濡傛灉鏄崟娆℃湁鏁堢殑锛岄渶瑕佽缃爣璁帮紝浣夸箣鍦ㄨЕ鍙戝悗鍋滄浜嬩欢
         is_stop_after_trigger_ = true;
 
     is_inited_ = true;
