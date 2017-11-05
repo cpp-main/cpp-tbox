@@ -137,7 +137,7 @@ bool Uart::setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit sto
 
     int baud = Baudrate2Enum(baudrate);
     if (baud == -1) {
-        LogErr("baud %d not support", baudrate);
+        LogErr("baudrate %d not support", baudrate);
         return false;
     }
 
