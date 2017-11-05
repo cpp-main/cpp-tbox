@@ -29,24 +29,49 @@ SocketFd SocketFd::CreateTcpSocket()
     return CreateSocket(AF_INET, SOCK_STREAM, 0);
 }
 
-bool SocketFd::setReuseAddress(bool enable)
+bool SocketFd::setSocketOpt(int level, int optname, int value)
 {
-    int value = enable ? 1 : 0; 
-    if (::setsockopt(get(), SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value)) != 0) {
-        LogErr("setsockopt fail, errno:%d, %s", errno, strerror(errno));
+    if (::setsockopt(get(), level, optname, &value, sizeof(value)) != 0) {
+        LogErr("setsockopt fail, opt:%d, val:%d, errno:%d, %s",
+               optname, value, errno, strerror(errno));
         return false;
     }
     return true;
 }
 
+bool SocketFd::setReuseAddress(bool enable)
+{
+    return setSocketOpt(SOL_SOCKET, SO_REUSEADDR, enable);
+}
+
 bool SocketFd::setBroadcast(bool enable)
 {
-    int value = enable ? 1 : 0; 
-    if (::setsockopt(get(), SOL_SOCKET, SO_BROADCAST, &value, sizeof(value)) != 0) {
-        LogErr("setsockopt fail, errno:%d, %s", errno, strerror(errno));
-        return false;
-    }
-    return true;
+    return setSocketOpt(SOL_SOCKET, SO_BROADCAST, enable);
+}
+
+bool SocketFd::setKeepalive(bool enable)
+{
+    return setSocketOpt(SOL_SOCKET, SO_KEEPALIVE, enable);
+}
+
+bool SocketFd::setRecvBufferSize(int size)
+{
+    return setSocketOpt(SOL_SOCKET, SO_RCVBUF, size);
+}
+
+bool SocketFd::setSendBufferSize(int size)
+{
+    return setSocketOpt(SOL_SOCKET, SO_SNDBUF, size);
+}
+
+bool SocketFd::setRecvLowWater(int size)
+{
+    return setSocketOpt(SOL_SOCKET, SO_RCVLOWAT, size);
+}
+
+bool SocketFd::setSendLowWater(int size)
+{
+    return setSocketOpt(SOL_SOCKET, SO_SNDLOWAT, size);
 }
 
 }
