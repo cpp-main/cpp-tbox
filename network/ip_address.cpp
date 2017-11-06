@@ -17,5 +17,15 @@ std::string IPAddress::toString() const
     return ip_str_buff;
 }
 
+IPAddress IPAddress::Any()
+{
+    return IPAddress(0);
+}
+
+IPAddress IPAddress::Loop()
+{
+    return IPAddress(0x0100007F);
+}
+
 }
 }

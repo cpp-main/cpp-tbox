@@ -25,7 +25,8 @@ class IPAddress {
     std::string toString() const;
 
   public:
-    const static IPAddress Any;
+    static IPAddress Any();     //! 0.0.0.0
+    static IPAddress Loop();    //! 127.0.0.1
 
   private:
     uint32_t ip_;

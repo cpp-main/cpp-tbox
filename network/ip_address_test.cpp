@@ -33,3 +33,13 @@ TEST(network_IPAddress, CalcBroadcastAddress)
     IPAddress broadcast = ip | ~mask;
     EXPECT_EQ(broadcast.toString(), "192.168.11.255");
 }
+
+TEST(network_IPAddress, Loop)
+{
+    EXPECT_EQ(IPAddress::Loop().toString(), "127.0.0.1");
+}
+
+TEST(network_IPAddress, Any)
+{
+    EXPECT_EQ(IPAddress::Any().toString(), "0.0.0.0");
+}

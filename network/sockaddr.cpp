@@ -40,33 +40,33 @@ SockAddr::SockAddr(const string &sock_path)
     p_addr->sun_family = AF_LOCAL;
 
     //!NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
-    memcpy(p_addr->sun_path, sock_path.data(), sock_path.size());
+    ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size());
     len_ = kSockAddrUnHeadSize + sock_path.size();
 }
 
 SockAddr::SockAddr(const struct sockaddr &addr, socklen_t len)
 {
-    memcpy(&addr_, &addr, len);
+    ::memcpy(&addr_, &addr, len);
     len_ = len;
 }
 
 SockAddr::SockAddr(const struct sockaddr_in &addr)
 {
-    memcpy(&addr_, &addr, sizeof(addr));
+    ::memcpy(&addr_, &addr, sizeof(addr));
     len_ = sizeof(addr);
 }
 
 SockAddr::SockAddr(const SockAddr &other)
 {
     len_ = other.len_;
-    memcpy(&addr_, &other.addr_, len_);
+    ::memcpy(&addr_, &other.addr_, len_);
 }
 
 SockAddr& SockAddr::operator = (const SockAddr &other)
 {
     if (this != &other) {
         len_ = other.len_;
-        memcpy(&addr_, &other.addr_, len_);
+        ::memcpy(&addr_, &other.addr_, len_);
     }
     return *this;
 }
@@ -146,7 +146,7 @@ socklen_t SockAddr::toSockAddr(struct sockaddr_in &addr) const
     if (addr_.ss_family != AF_INET)
         return 0;
 
-    memcpy(&addr, &addr_, len_);
+    ::memcpy(&addr, &addr_, len_);
     return len_;
 }
 
@@ -155,7 +155,7 @@ socklen_t SockAddr::toSockAddr(struct sockaddr_un &addr) const
     if (addr_.ss_family != AF_LOCAL)
         return 0;
 
-    memcpy(&addr, &addr_, len_);
+    ::memcpy(&addr, &addr_, len_);
     return len_;
 }
 
