@@ -32,6 +32,7 @@ TEST_SRC_FILES = \
 	buffered_fd_test.cpp \
 	uart_test.cpp \
 	ip_address_test.cpp \
+	sockaddr_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 

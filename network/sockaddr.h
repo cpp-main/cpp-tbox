@@ -16,11 +16,14 @@ class SockAddr {
     SockAddr(const struct sockaddr &addr, socklen_t len);
     SockAddr(const struct sockaddr_in &addr_in);
 
+    SockAddr(const SockAddr &other);
+    SockAddr& operator = (const SockAddr &other);
+
     static SockAddr FromString(const std::string &add_str);
 
     enum Type {
         kNone,
-        kIPv4, kIPv6,
+        kIPv4,
         kLocal, //! Unix Local socket
     };
     Type type() const;
