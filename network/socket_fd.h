@@ -1,6 +1,8 @@
 #ifndef TBOX_NETWORK_SOCKET_FD_H_20171105
 #define TBOX_NETWORK_SOCKET_FD_H_20171105
 
+#include <sys/socket.h>
+
 #include "fd.h"
 
 namespace tbox {
@@ -17,6 +19,11 @@ class SocketFd : public Fd {
     static SocketFd CreateSocket(int domain, int type, int protocal);
     static SocketFd CreateUdpSocket();
     static SocketFd CreateTcpSocket();
+
+  public: //! socket相关的操作
+    ssize_t send(const void* data_ptr, size_t data_size, int flag);
+    ssize_t sendTo(const void* data_ptr, size_t data_size, int flag,
+                   const sockaddr *dest_addr, socklen_t addrlen);
 
   public: //! socket相关的设置
     bool setSocketOpt(int level, int optname, int value);

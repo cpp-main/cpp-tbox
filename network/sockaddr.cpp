@@ -141,6 +141,12 @@ bool SockAddr::get(IPAddress &ip, uint16_t &port) const
     return false;
 }
 
+socklen_t SockAddr::toSockAddr(struct sockaddr &addr) const
+{
+    ::memcpy(&addr, &addr_, len_);
+    return len_;
+}
+
 socklen_t SockAddr::toSockAddr(struct sockaddr_in &addr) const
 {
     if (addr_.ss_family != AF_INET)

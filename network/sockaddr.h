@@ -31,6 +31,7 @@ class SockAddr {
 
     bool get(IPAddress &ip, uint16_t &port) const;
 
+    socklen_t toSockAddr(struct sockaddr &addr) const;
     socklen_t toSockAddr(struct sockaddr_in &addr_in) const;
     socklen_t toSockAddr(struct sockaddr_un &addr_un) const;
 
