@@ -11,8 +11,7 @@ namespace network {
 
 class UdpSocket {
   public:
-    explicit UdpSocket();
-    virtual ~UdpSocket();
+    explicit UdpSocket(bool enable_broadcast = false);
 
     NONCOPYABLE(UdpSocket);
 

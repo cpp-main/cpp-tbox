@@ -1,13 +1,12 @@
-//#include <netinet/in.h>
-
 #include "udp_socket.h"
 
 namespace tbox {
 namespace network {
 
-UdpSocket::UdpSocket()
+UdpSocket::UdpSocket(bool enable_broadcast)
 {
     socket_ = SocketFd::CreateUdpSocket();
+    socket_.setBroadcast(enable_broadcast);
 }
 
 void UdpSocket::sendTo(const void *data_ptr, size_t data_size, const SockAddr &to_addr)
