@@ -16,18 +16,21 @@ class UdpSocket {
     explicit UdpSocket(bool enable_broadcast = false);
     explicit UdpSocket(event::Loop *wp_loop, bool enable_broadcast = false);
 
+    virtual ~UdpSocket();
+
     NONCOPYABLE(UdpSocket);
 
   public:
     bool bind(const SockAddr &addr);    //! 绑定地址与端口
     bool connect(const SockAddr &addr); //! 连接目标地址与端口
 
-    //! 无连接
+    //! 无连接的
     using RecvFromCallback = std::function<void (const void *, size_t, const SockAddr &)>;
     void setRecvFromCallback(const RecvFromCallback &cb) { recv_from_cb_ = cb; }
     ssize_t sendTo(const void *data_ptr, size_t data_size, const SockAddr &to_addr);
 
-    //! 有连接
+    //! 有连接的
+    //! \note   使用之前必需要先 connect() 目标
     using RecvCallback = std::function<void (const void *, size_t)>;
     void setRecvCallback(const RecvCallback &cb) { recv_cb_ = cb; }
     ssize_t send(const void *data_ptr, size_t data_size);

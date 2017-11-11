@@ -25,6 +25,12 @@ UdpSocket::UdpSocket(event::Loop *wp_loop, bool enable_broadcast)
     sp_socket_ev_->setCallback(std::bind(&UdpSocket::onSocketEvent, this, _1));
 }
 
+UdpSocket::~UdpSocket()
+{
+    assert(cb_level_ == 0);
+    CHECK_DELETE_RESET_OBJ(sp_socket_ev_);
+}
+
 bool UdpSocket::bind(const SockAddr &addr)
 {
     LogInfo("bind(%s)", addr.toString().c_str());
@@ -47,7 +53,7 @@ bool UdpSocket::connect(const SockAddr &addr)
     return false;
 }
 
-ssize_t UdpSocket::sendTo(const void *data_ptr, size_t data_size, const SockAddr &to_addr)
+ssize_t UdpSocket::send(const void *data_ptr, size_t data_size, const SockAddr &to_addr)
 {
     struct sockaddr sock_addr;
     socklen_t len = to_addr.toSockAddr(sock_addr);

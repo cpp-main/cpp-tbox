@@ -24,10 +24,11 @@ TEST(UdpSocket, echo)
             udp_server.sendTo(data_ptr, data_size, from_addr);
         }
     );
-   udp_server.enable();
 
     int send_times = 0;
     TimerEvent *sp_timer = sp_loop->newTimerEvent();
+    SetScopeExitAction([sp_timer]{ delete sp_timer; });
+
     sp_timer->initialize(std::chrono::milliseconds(10), Event::Mode::kPersist);
     sp_timer->setCallback(
         [&send_times, &udp_client, server_addr, sp_timer] {
@@ -49,7 +50,7 @@ TEST(UdpSocket, echo)
 
     sp_loop->runInLoop(
         [sp_loop]{
-            sp_loop->exitLoop(std::chrono::seconds(2));
+            sp_loop->exitLoop(std::chrono::seconds(3));
         }
     );
 
@@ -74,15 +75,17 @@ TEST(UdpSocket, echo_connect)
 
     udp_server.bind(server_addr);
     udp_client.connect(server_addr);
-    udp_server.setRecvCallback(
-        [&udp_server](const void *data_ptr, size_t data_size) {
-            udp_server.send(data_ptr, data_size);
+
+    udp_server.setRecvFromCallback(
+        [&udp_server](const void *data_ptr, size_t data_size, const SockAddr &addr) {
+            udp_server.sendTo(data_ptr, data_size, addr);
         }
     );
-   udp_server.enable();
 
     int send_times = 0;
     TimerEvent *sp_timer = sp_loop->newTimerEvent();
+    SetScopeExitAction([sp_timer]{ delete sp_timer; });
+
     sp_timer->initialize(std::chrono::milliseconds(10), Event::Mode::kPersist);
     sp_timer->setCallback(
         [&send_times, &udp_client, sp_timer] {
@@ -104,7 +107,7 @@ TEST(UdpSocket, echo_connect)
 
     sp_loop->runInLoop(
         [sp_loop]{
-            sp_loop->exitLoop(std::chrono::seconds(2));
+            sp_loop->exitLoop(std::chrono::seconds(3));
         }
     );
 
