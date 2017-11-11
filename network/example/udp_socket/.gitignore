@@ -1,0 +1,5 @@
+/send_only 
+/recv_only 
+/request
+/respond
+*.o

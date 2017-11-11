@@ -13,7 +13,7 @@ namespace network {
 
 class UdpSocket {
   public:
-    explicit UdpSocket(bool enable_broadcast = false);
+    explicit UdpSocket(bool enable_broadcast = false);  //! 用于只有发送的场景
     explicit UdpSocket(event::Loop *wp_loop, bool enable_broadcast = false);
 
     virtual ~UdpSocket();
