@@ -25,8 +25,12 @@ class SocketFd : public Fd {
     int bind(const struct sockaddr *addr, socklen_t addrlen);
 
     ssize_t send(const void* data_ptr, size_t data_size, int flag);
+    ssize_t recv(void *data_ptr, size_t data_size, int flag);
+
     ssize_t sendTo(const void* data_ptr, size_t data_size, int flag,
                    const sockaddr *dest_addr, socklen_t addrlen);
+    ssize_t recvFrom(void* data_ptr, size_t data_size, int flag,
+                     sockaddr *dest_addr, socklen_t *addrlen);
 
   public: //! socket相关的设置
     bool setSocketOpt(int level, int optname, int value);

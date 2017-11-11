@@ -53,9 +53,25 @@ ssize_t SocketFd::send(const void* data_ptr, size_t data_size, int flag)
     return ret;
 }
 
+ssize_t SocketFd::recv(void* data_ptr, size_t data_size, int flag)
+{
+    ssize_t ret = ::recv(get(), data_ptr, data_size, flag);
+    if (ret < 0)
+        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+    return ret;
+}
+
 ssize_t SocketFd::sendTo(const void* data_ptr, size_t data_size, int flag, const sockaddr *dest_addr, socklen_t addrlen)
 {
     ssize_t ret = ::sendto(get(), data_ptr, data_size, flag, dest_addr, addrlen);
+    if (ret < 0)
+        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+    return ret;
+}
+
+ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr *dest_addr, socklen_t *addrlen)
+{
+    ssize_t ret = ::recvfrom(get(), data_ptr, data_size, flag, dest_addr, addrlen);
     if (ret < 0)
         LogErr("fail, errno:%d, %s", errno, strerror(errno));
     return ret;

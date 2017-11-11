@@ -2,6 +2,8 @@
 #define TBOX_NETWORK_UDP_SOCKET_H_20171105
 
 #include <tbox/base/defines.h>
+#include <tbox/event/loop.h>
+#include <tbox/event/fd_event.h>
 
 #include "socket_fd.h"
 #include "sockaddr.h"
@@ -12,6 +14,7 @@ namespace network {
 class UdpSocket {
   public:
     explicit UdpSocket(bool enable_broadcast = false);
+    explicit UdpSocket(event::Loop *wp_loop, bool enable_broadcast = false);
 
     NONCOPYABLE(UdpSocket);
 
@@ -32,9 +35,19 @@ class UdpSocket {
     using ErrorCallback = std::function<void ()>;
     void setErrorCallback(const ErrorCallback &cb) { error_cb_ = cb; }
 
+    //! 开启与关闭接收功能
+    bool enable();
+    bool disable();
+
+  protected:
+    void onSocketEvent(short events);
+
   private:
     SocketFd socket_;
     bool connected_ = false;
+
+    event::FdEvent  *sp_socket_ev_ = nullptr;
+    int cb_level_ = 0;
 
     RecvFromCallback recv_from_cb_;
     RecvCallback     recv_cb_;
