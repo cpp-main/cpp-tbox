@@ -4,7 +4,7 @@
 #include <array>
 #include <map>
 #include <set>
-#include <list>
+#include <deque>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -66,7 +66,7 @@ class ThreadPool {
     std::mutex lock_;                //!< 互斥锁
     std::condition_variable cond_var_;   //!< 条件变量
 
-    std::array<std::list<TaskEvent*>, 5> undo_tasks_array_;    //!< 优先级任务列表，5级
+    std::array<std::deque<TaskEvent*>, 5> undo_tasks_array_;    //!< 优先级任务列表，5级
     std::set<int/*task_id*/> doing_tasks_set_;   //!< 记录正在从事的任务
 
     size_t idle_thread_num_ = 0;    //!< 空间线程个数

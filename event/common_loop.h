@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_COMMON_LOOP_H_20170713
 #define TBOX_EVENT_COMMON_LOOP_H_20170713
 
-#include <list>
+#include <deque>
 #include <mutex>
 #include <thread>
 
@@ -49,7 +49,7 @@ class CommonLoop : public Loop {
     bool has_unhandle_req_;
     int read_fd_, write_fd_;
     FdEvent *sp_read_event_;
-    std::list<RunInLoopFunc> func_list_;
+    std::deque<RunInLoopFunc> func_queue_;
 
 #ifdef ENABLE_STAT
     steady_clock::time_point stat_start_;
