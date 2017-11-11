@@ -1,6 +1,7 @@
 #include "udp_socket.h"
 
 #include <tbox/base/log.h>
+#include <errno.h>
 
 #define RECV_BUFF_SIZE  4096
 
@@ -90,44 +91,19 @@ void UdpSocket::onSocketEvent(short events)
         return;
 
     uint8_t read_buff[RECV_BUFF_SIZE];
-    if (connected_) {
-        ssize_t rsize = socket_.recv(read_buff, RECV_BUFF_SIZE, 0);
-        if (rsize > 0) {
-            if (recv_cb_) {
-                ++cb_level_;
-                recv_cb_(read_buff, rsize);
-                --cb_level_;
-            } else
-                LogWarn("recv_cb_ is null");
+    struct sockaddr_in peer_addr;
+    socklen_t addr_size = sizeof(peer_addr);
+    ssize_t rsize = socket_.recvFrom(read_buff, RECV_BUFF_SIZE, 0, (struct sockaddr*)&peer_addr, &addr_size);
+    if (rsize > 0) {
+        if (recv_cb_) {
+            ++cb_level_;
+            recv_cb_(read_buff, rsize, SockAddr(peer_addr));
+            --cb_level_;
+        } else
+            LogWarn("recv_cb_ is null");
 
-        } else if (rsize < 0){
-            if (error_cb_) {
-                ++cb_level_;
-                error_cb_();
-                --cb_level_;
-            } else
-                LogWarn("error_cb_ is null");
-        }
-    } else {
-        struct sockaddr_in peer_addr;
-        socklen_t addr_size = sizeof(peer_addr);
-        ssize_t rsize = socket_.recvFrom(read_buff, RECV_BUFF_SIZE, 0, (struct sockaddr*)&peer_addr, &addr_size);
-        if (rsize > 0) {
-            if (recv_from_cb_) {
-                ++cb_level_;
-                recv_from_cb_(read_buff, rsize, SockAddr(peer_addr));
-                --cb_level_;
-            } else
-                LogWarn("recv_from_cb_ is null");
-
-        } else if (rsize < 0){
-            if (error_cb_) {
-                ++cb_level_;
-                error_cb_();
-                --cb_level_;
-            } else
-                LogWarn("error_cb_ is null");
-        }
+    } else if (rsize < 0) {
+        LogWarn("errno: %d, %s", errno, strerror(errno));
     }
 }
 

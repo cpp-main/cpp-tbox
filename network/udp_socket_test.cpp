@@ -19,9 +19,9 @@ TEST(UdpSocket, echo)
 
     SockAddr server_addr = SockAddr::FromString("127.0.0.1:40000");
     udp_server.bind(server_addr);
-    udp_server.setRecvFromCallback(
+    udp_server.setRecvCallback(
         [&udp_server](const void *data_ptr, size_t data_size, const SockAddr &from_addr) {
-            udp_server.sendTo(data_ptr, data_size, from_addr);
+            udp_server.send(data_ptr, data_size, from_addr);
         }
     );
 
@@ -33,7 +33,7 @@ TEST(UdpSocket, echo)
     sp_timer->setCallback(
         [&send_times, &udp_client, server_addr, sp_timer] {
             for (int i = 0; i < 100; ++i)
-                udp_client.sendTo("123456789", 10, server_addr);
+                udp_client.send("123456789", 10, server_addr);
             ++send_times;
             if (send_times == 100)
                 sp_timer->disable();
@@ -41,7 +41,7 @@ TEST(UdpSocket, echo)
     );
 
     int recv_count = 0;
-    udp_client.setRecvFromCallback(
+    udp_client.setRecvCallback(
         [&recv_count](const void *data_ptr, size_t data_size, const SockAddr &from_addr) {
             ASSERT_STREQ((const char *)data_ptr, "123456789");
             ++recv_count;
@@ -76,9 +76,9 @@ TEST(UdpSocket, echo_connect)
     udp_server.bind(server_addr);
     udp_client.connect(server_addr);
 
-    udp_server.setRecvFromCallback(
+    udp_server.setRecvCallback(
         [&udp_server](const void *data_ptr, size_t data_size, const SockAddr &addr) {
-            udp_server.sendTo(data_ptr, data_size, addr);
+            udp_server.send(data_ptr, data_size, addr);
         }
     );
 
@@ -99,7 +99,7 @@ TEST(UdpSocket, echo_connect)
 
     int recv_count = 0;
     udp_client.setRecvCallback(
-        [&recv_count](const void *data_ptr, size_t data_size) {
+        [&recv_count](const void *data_ptr, size_t data_size, const SockAddr &) {
             ASSERT_STREQ((const char *)data_ptr, "123456789");
             ++recv_count;
         }
