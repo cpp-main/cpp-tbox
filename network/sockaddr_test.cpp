@@ -9,7 +9,7 @@
 
 using namespace tbox::network;
 
-TEST(network_SockAddr, FromString_IPv4)
+TEST(SockAddr, FromString_IPv4)
 {
     SockAddr a1 = SockAddr::FromString("192.168.1.1:1000");
     EXPECT_EQ(a1.type(), SockAddr::Type::kIPv4);
@@ -19,7 +19,7 @@ TEST(network_SockAddr, FromString_IPv4)
     EXPECT_EQ(p_in->sin_port, htons(1000));
 }
 
-TEST(network_SockAddr, FromString_Local)
+TEST(SockAddr, FromString_Local)
 {
     SockAddr a1 = SockAddr::FromString("/tmp/test.sock");
     EXPECT_EQ(a1.type(), SockAddr::Type::kLocal);
@@ -28,19 +28,19 @@ TEST(network_SockAddr, FromString_Local)
     EXPECT_STREQ(p_un->sun_path, "/tmp/test.sock");
 }
 
-TEST(network_SockAddr, ToStringIPv4)
+TEST(SockAddr, ToStringIPv4)
 {
     SockAddr a = SockAddr::FromString("12.34.56.78:60000");
     EXPECT_EQ(a.toString(), "12.34.56.78:60000");
 }
 
-TEST(network_SockAddr, ToStringLocal)
+TEST(SockAddr, ToStringLocal)
 {
     SockAddr a = SockAddr::FromString("/tmp/test.sock");
     EXPECT_EQ(a.toString(), "/tmp/test.sock");
 }
 
-TEST(network_SockAddr, get_IPv4)
+TEST(SockAddr, get_IPv4)
 {
     SockAddr a = SockAddr::FromString("12.34.56.78:60000");
     IPAddress ip;
@@ -50,7 +50,7 @@ TEST(network_SockAddr, get_IPv4)
     EXPECT_EQ(port, 60000);
 }
 
-TEST(network_SockAddr, get_Local)
+TEST(SockAddr, get_Local)
 {
     SockAddr a = SockAddr::FromString("/tmp/test.sock");
     IPAddress ip;
@@ -58,7 +58,7 @@ TEST(network_SockAddr, get_Local)
     EXPECT_FALSE(a.get(ip, port));
 }
 
-TEST(network_SockAddr, toSockAddrIPv4)
+TEST(SockAddr, toSockAddrIPv4)
 {
     SockAddr a = SockAddr::FromString("12.34.56.78:60000");
     struct sockaddr_in addr;
@@ -70,7 +70,7 @@ TEST(network_SockAddr, toSockAddrIPv4)
 
 }
 
-TEST(network_SockAddr, toSockAddrLocal)
+TEST(SockAddr, toSockAddrLocal)
 {
     SockAddr a = SockAddr::FromString("/tmp/test.sock");
     struct sockaddr_un addr;
@@ -81,7 +81,7 @@ TEST(network_SockAddr, toSockAddrLocal)
     EXPECT_STREQ(addr.sun_path, "/tmp/test.sock");
 }
 
-TEST(network_SockAddr, Equal)
+TEST(SockAddr, Equal)
 {
     EXPECT_EQ(SockAddr::FromString("127.0.0.1:5566"), SockAddr::FromString("127.0.0.1:5566"));
     EXPECT_NE(SockAddr::FromString("127.0.0.1:5566"), SockAddr::FromString("127.0.0.1:22"));

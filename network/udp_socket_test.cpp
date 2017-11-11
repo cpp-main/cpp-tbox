@@ -105,16 +105,11 @@ TEST(UdpSocket, echo_connect)
         }
     );
 
-    sp_loop->runInLoop(
-        [sp_loop]{
-            sp_loop->exitLoop(std::chrono::seconds(3));
-        }
-    );
-
     udp_server.enable();
     udp_client.enable();
     sp_timer->enable();
 
+    sp_loop->exitLoop(std::chrono::seconds(3));
     sp_loop->runLoop();
 
     EXPECT_EQ(recv_count, 10000);

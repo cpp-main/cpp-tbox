@@ -7,7 +7,7 @@
 #include "buffer.h"
 using namespace tbox::network;
 
-TEST(network_buffer, constuct) {
+TEST(Buffer, constuct) {
     Buffer b1;
     EXPECT_EQ(b1.readableSize(), 0u);
 
@@ -15,7 +15,7 @@ TEST(network_buffer, constuct) {
     EXPECT_EQ(b2.readableSize(), 0u);
 }
 
-TEST(network_buffer, append_and_fetch) {
+TEST(Buffer, append_and_fetch) {
     Buffer b1(0);
     //! 先插入4个字节
     b1.append("abcd", 4);
@@ -36,7 +36,7 @@ TEST(network_buffer, append_and_fetch) {
  * 检查缓冲区长度是否是8字节。
  * 本测试的目的是观察在写入时缓冲区长度不够时，Buffer会不会移动可读取的数据
  */
-TEST(network_buffer, append_and_move_data) {
+TEST(Buffer, append_and_move_data) {
     Buffer b1(8);
     b1.append("1234567", 7);    //! 插入后只剩1字节
     b1.hasRead(5);              //! 读走5字节
@@ -51,7 +51,7 @@ TEST(network_buffer, append_and_move_data) {
 /**
  * 检查通过readBegin()读取数据是否正常
  */
-TEST(network_buffer, readBegin_hasRead) {
+TEST(Buffer, readBegin_hasRead) {
     Buffer b(8);
     const char *str = "hello world, my name is Sid Lee";
     size_t str_size = strlen(str) + 1;
@@ -68,7 +68,7 @@ TEST(network_buffer, readBegin_hasRead) {
 /**
  * 检查通过writeBegin()写数据是否正常
  */
-TEST(network_buffer, writeBegin_hasWriten) {
+TEST(Buffer, writeBegin_hasWriten) {
     Buffer b(0);
     const char *str = "hello world";
     size_t str_size = strlen(str) + 1;
@@ -79,7 +79,7 @@ TEST(network_buffer, writeBegin_hasWriten) {
     EXPECT_STREQ((const char*)b.readableBegin(), str);
 }
 
-TEST(network_buffer, swap) {
+TEST(Buffer, swap) {
     Buffer b1(8);
     b1.append("abc", 4);
 
@@ -93,7 +93,7 @@ TEST(network_buffer, swap) {
     EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
 }
 
-TEST(network_buffer, reset) {
+TEST(Buffer, reset) {
     Buffer b1(8);
     b1.append("abc", 4);
     b1.reset();
@@ -102,7 +102,7 @@ TEST(network_buffer, reset) {
     EXPECT_TRUE(b1.buffer_ptr_ == NULL);
 }
 
-TEST(network_buffer, copy_construct) {
+TEST(Buffer, copy_construct) {
     Buffer b1(8);
     b1.append("abc", 4);
     Buffer b2(b1);
@@ -110,7 +110,7 @@ TEST(network_buffer, copy_construct) {
     EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
 }
 
-TEST(network_buffer, move_construct) {
+TEST(Buffer, move_construct) {
     Buffer b1(8);
     b1.append("abc", 4);
     Buffer b2(std::move(b1));
@@ -121,7 +121,7 @@ TEST(network_buffer, move_construct) {
     EXPECT_EQ(b1.readableSize(), 0u);
 }
 
-TEST(network_buffer, copy_assign) {
+TEST(Buffer, copy_assign) {
     Buffer b1(8);
     b1.append("abc", 4);
     Buffer b2(43);
@@ -131,7 +131,7 @@ TEST(network_buffer, copy_assign) {
     EXPECT_STREQ((const char*)b2.readableBegin(), "abc");
 }
 
-TEST(network_buffer, move_assign) {
+TEST(Buffer, move_assign) {
     Buffer b1(8);
     b1.append("abc", 4);
     Buffer b2(43);
@@ -144,7 +144,7 @@ TEST(network_buffer, move_assign) {
     EXPECT_EQ(b1.readableSize(), 0u);
 }
 
-TEST(network_buffer, huge_data) {
+TEST(Buffer, huge_data) {
     Buffer b;
     int orig_data[100] = { 0 };
     for (int i = 0; i < 100; ++i) {
@@ -186,7 +186,7 @@ TEST(network_buffer, huge_data) {
     EXPECT_EQ(b.readableSize(), 0u);
 }
 
-TEST(network_buffer, shrink_after_readsize_0) {
+TEST(Buffer, shrink_after_readsize_0) {
     Buffer b;
     for (int i = 0; i < 100; ++i)
         b.append("1234567890", 10);
@@ -196,7 +196,7 @@ TEST(network_buffer, shrink_after_readsize_0) {
     //!使用valgrind检查内存是否存在泄漏
 }
 
-TEST(network_buffer, shrink_after_readsize_not_0) {
+TEST(Buffer, shrink_after_readsize_not_0) {
     Buffer b;
     for (int i = 0; i < 100; ++i)
         b.append("1234567890", 10);
@@ -207,7 +207,7 @@ TEST(network_buffer, shrink_after_readsize_not_0) {
     //!使用valgrind检查内存是否存在泄漏
 }
 
-TEST(network_buffer, read_all_except_index_reset) {
+TEST(Buffer, read_all_except_index_reset) {
     Buffer b;
 
     b.append("123456789", 10);

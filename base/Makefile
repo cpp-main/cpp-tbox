@@ -17,7 +17,8 @@ SRC_FILES = \
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
-	test.cpp \
+	log_output_test.cpp \
+	scope_exit_test.cpp \
 
 TEST_LDFLAGS +=
 

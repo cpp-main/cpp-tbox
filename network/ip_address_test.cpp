@@ -3,7 +3,7 @@
 
 using namespace tbox::network;
 
-TEST(network_IPAddress, And)
+TEST(IPAddress, And)
 {
     IPAddress a("192.168.11.234");
     IPAddress b("255.255.255.0");
@@ -11,7 +11,7 @@ TEST(network_IPAddress, And)
     EXPECT_EQ(c.toString(), "192.168.11.0");
 }
 
-TEST(network_IPAddress, Or)
+TEST(IPAddress, Or)
 {
     IPAddress a("192.168.11.234");
     IPAddress b("0.0.0.255");
@@ -19,14 +19,14 @@ TEST(network_IPAddress, Or)
     EXPECT_EQ(c.toString(), "192.168.11.255");
 }
 
-TEST(network_IPAddress, Invert)
+TEST(IPAddress, Invert)
 {
     IPAddress a("0.0.0.255");
     IPAddress c = ~a;
     EXPECT_EQ(c.toString(), "255.255.255.0");
 }
 
-TEST(network_IPAddress, CalcBroadcastAddress)
+TEST(IPAddress, CalcBroadcastAddress)
 {
     IPAddress ip("192.168.11.234");
     IPAddress mask("255.255.255.0");
@@ -34,12 +34,12 @@ TEST(network_IPAddress, CalcBroadcastAddress)
     EXPECT_EQ(broadcast.toString(), "192.168.11.255");
 }
 
-TEST(network_IPAddress, Loop)
+TEST(IPAddress, Loop)
 {
     EXPECT_EQ(IPAddress::Loop().toString(), "127.0.0.1");
 }
 
-TEST(network_IPAddress, Any)
+TEST(IPAddress, Any)
 {
     EXPECT_EQ(IPAddress::Any().toString(), "0.0.0.0");
 }

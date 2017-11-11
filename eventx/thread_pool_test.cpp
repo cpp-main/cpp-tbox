@@ -22,7 +22,7 @@ auto backend_func = \
 /**
  * 最小线程数为2，最大线程数为5
  */
-TEST(eventx_thread_pool, min2_max5) {
+TEST(ThreadPool, min2_max5) {
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
@@ -46,7 +46,7 @@ TEST(eventx_thread_pool, min2_max5) {
 /**
  * 最小线程数为0，最大线程数为5
  */
-TEST(eventx_thread_pool, min0_max5) {
+TEST(ThreadPool, min0_max5) {
     Loop *loop = Loop::New();
 
     ThreadPool *tp = new ThreadPool(loop);
@@ -70,7 +70,7 @@ TEST(eventx_thread_pool, min0_max5) {
  * 不等其完成工作就退出主线程
  * 主要是检查有没有内存泄漏
  */
-TEST(eventx_thread_pool, exit_before_finish) {
+TEST(ThreadPool, exit_before_finish) {
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
@@ -96,7 +96,7 @@ TEST(eventx_thread_pool, exit_before_finish) {
  *
  * 创建三个任务。在1.5秒时全部取消。
  */
-TEST(eventx_thread_pool, cancel_task) {
+TEST(ThreadPool, cancel_task) {
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
@@ -130,7 +130,7 @@ TEST(eventx_thread_pool, cancel_task) {
  *
  * 期望优先级最高的先被执行
  */
-TEST(eventx_thread_pool, prio) {
+TEST(ThreadPool, prio) {
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);

@@ -1,20 +1,7 @@
 #include <gtest/gtest.h>
-#include "log.h"
 #include "scope_exit.hpp"
 
-TEST(base_log, output)
-{
-    LogFatal("fatal");
-    LogErr("err");
-    LogWarn("warn");
-    LogInfo("info");
-    LogDbg("debug");
-    LogTrace("trace");
-    LogUndo();
-    LogTag();
-}
-
-TEST(base_scope_exit_action, no_name)
+TEST(ScopeExitAction, no_name)
 {
     bool tag = false;
     {
@@ -24,7 +11,7 @@ TEST(base_scope_exit_action, no_name)
     EXPECT_TRUE(tag);
 }
 
-TEST(base_scope_exit_action, named)
+TEST(ScopeExitAction, named)
 {
     bool tag = false;
     {
@@ -34,7 +21,7 @@ TEST(base_scope_exit_action, named)
     EXPECT_TRUE(tag);
 }
 
-TEST(base_scope_exit_action, cancel)
+TEST(ScopeExitAction, cancel)
 {
     bool tag = false;
     {
@@ -44,4 +31,3 @@ TEST(base_scope_exit_action, cancel)
     }
     EXPECT_FALSE(tag);
 }
-

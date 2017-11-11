@@ -18,7 +18,7 @@ using namespace tbox::network;
  * 并将该串口模块的 TXD 与 RXD 进行短接
  * 如果打开设备文件失败，请检查是否存在 /dev/ttyUSB0 文件，并使用 root 权限执行测试用例
  */
-TEST(network_uart, echo) {
+TEST(Uart, echo) {
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([=]{ delete sp_loop; });
 
@@ -63,21 +63,11 @@ TEST(network_uart, echo) {
         }
     );
 
-    //! 创建停止定时器
-    auto sp_timer_end = sp_loop->newTimerEvent();
-    SetScopeExitAction([=]{ delete sp_timer_end; });
-    sp_timer_end->initialize(chrono::seconds(3), Event::Mode::kOneshot);
-    sp_timer_end->enable();
-    sp_timer_end->setCallback(
-        [=] () {
-            sp_loop->exitLoop();
-        }
-    );
-
     for (int i = 0; i < 1000; ++i)
         uart.send("123456789", 10);
 
     cout << "Info: Loop begin" << endl;
+    sp_loop->exitLoop(chrono::seconds(3));
     sp_loop->runLoop();
     cout << "Info: Loop end" << endl;
 

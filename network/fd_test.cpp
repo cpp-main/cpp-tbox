@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 using namespace tbox::network;
 
-TEST(network_fd, close_func)
+TEST(Fd, close_func)
 {
     int closed_fd = -1;
     {
@@ -13,7 +13,7 @@ TEST(network_fd, close_func)
     EXPECT_EQ(closed_fd, 12);
 }
 
-TEST(network_fd, swap)
+TEST(Fd, swap)
 {
     Fd fd(12);
     ASSERT_EQ(fd.get(), 12);
@@ -23,7 +23,7 @@ TEST(network_fd, swap)
     EXPECT_EQ(other.get(), 12);
 }
 
-TEST(network_fd, move_1)
+TEST(Fd, move_1)
 {
     Fd fd1(12);
     Fd fd2(13);
@@ -32,7 +32,7 @@ TEST(network_fd, move_1)
     EXPECT_EQ(fd2.get(), -1);
 }
 
-TEST(network_fd, move_2)
+TEST(Fd, move_2)
 {
     Fd fd1(12);
     Fd fd2(std::move(fd1));
@@ -40,20 +40,20 @@ TEST(network_fd, move_2)
     EXPECT_EQ(fd1.get(), -1);
 }
 
-TEST(network_fd, reset)
+TEST(Fd, reset)
 {
     Fd fd(12);
     fd.reset();
     EXPECT_EQ(fd.get(), -1);
 }
 
-TEST(network_fd, cast)
+TEST(Fd, cast)
 {
     Fd fd(12);
     EXPECT_EQ(fd, 12);
 }
 
-TEST(network_fd, copy_construct)
+TEST(Fd, copy_construct)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -67,7 +67,7 @@ TEST(network_fd, copy_construct)
     EXPECT_EQ(close_times, 1);
 }
 
-TEST(network_fd, copy_assign_no_value)
+TEST(Fd, copy_assign_no_value)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -82,7 +82,7 @@ TEST(network_fd, copy_assign_no_value)
     EXPECT_EQ(close_times, 1);
 }
 
-TEST(network_fd, copy_assign_has_value)
+TEST(Fd, copy_assign_has_value)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -98,7 +98,7 @@ TEST(network_fd, copy_assign_has_value)
     EXPECT_EQ(close_times, 2);
 }
 
-TEST(network_fd, move_construct)
+TEST(Fd, move_construct)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -114,7 +114,7 @@ TEST(network_fd, move_construct)
 }
 
 //! 将有值的fd1给到fd2
-TEST(network_fd, move_assign_1)
+TEST(Fd, move_assign_1)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -131,7 +131,7 @@ TEST(network_fd, move_assign_1)
 }
 
 //! 将无值的fd1给到有值的fd2
-TEST(network_fd, move_assign_2)
+TEST(Fd, move_assign_2)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -148,7 +148,7 @@ TEST(network_fd, move_assign_2)
 }
 
 //! fd1 与 fd2 都有值，将 fd2 给 fd1
-TEST(network_fd, move_assign_3)
+TEST(Fd, move_assign_3)
 {
     int closed_fd = -1;
     int close_times = 0;
@@ -166,7 +166,7 @@ TEST(network_fd, move_assign_3)
 }
 
 //! fd无值fd2有值，将 fd2 给 fd1
-TEST(network_fd, move_assign_4)
+TEST(Fd, move_assign_4)
 {
     int closed_fd = -1;
     int close_times = 0;
