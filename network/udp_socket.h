@@ -24,7 +24,7 @@ class UdpSocket {
 
     //! 无连接
     using RecvFromCallback = std::function<void (const void *, size_t, const SockAddr &)>;
-    void setRecvCallback(const RecvFromCallback &cb) { recv_from_cb_ = cb; }
+    void setRecvFromCallback(const RecvFromCallback &cb) { recv_from_cb_ = cb; }
     ssize_t sendTo(const void *data_ptr, size_t data_size, const SockAddr &to_addr);
 
     //! 有连接

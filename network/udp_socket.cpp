@@ -107,7 +107,7 @@ void UdpSocket::onSocketEvent(short events)
         socklen_t addr_size = sizeof(peer_addr);
         ssize_t rsize = socket_.recvFrom(read_buff, RECV_BUFF_SIZE, 0, (struct sockaddr*)&peer_addr, &addr_size);
         if (rsize > 0) {
-            if (recv_cb_) {
+            if (recv_from_cb_) {
                 ++cb_level_;
                 recv_from_cb_(read_buff, rsize, SockAddr(peer_addr));
                 --cb_level_;

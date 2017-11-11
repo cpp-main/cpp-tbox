@@ -35,6 +35,7 @@ TEST_SRC_FILES = \
 	uart_test.cpp \
 	ip_address_test.cpp \
 	sockaddr_test.cpp \
+	udp_socket_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 
