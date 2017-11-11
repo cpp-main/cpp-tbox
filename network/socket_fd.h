@@ -21,6 +21,9 @@ class SocketFd : public Fd {
     static SocketFd CreateTcpSocket();
 
   public: //! socket相关的操作
+    int connect(const struct sockaddr *addr, socklen_t addrlen);
+    int bind(const struct sockaddr *addr, socklen_t addrlen);
+
     ssize_t send(const void* data_ptr, size_t data_size, int flag);
     ssize_t sendTo(const void* data_ptr, size_t data_size, int flag,
                    const sockaddr *dest_addr, socklen_t addrlen);

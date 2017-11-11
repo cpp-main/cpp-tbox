@@ -3,6 +3,8 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <cassert>
+#include <cstring>
 #include <string>
 
 #include "ip_address.h"
@@ -31,9 +33,12 @@ class SockAddr {
 
     bool get(IPAddress &ip, uint16_t &port) const;
 
-    socklen_t toSockAddr(struct sockaddr &addr) const;
-    socklen_t toSockAddr(struct sockaddr_in &addr_in) const;
-    socklen_t toSockAddr(struct sockaddr_un &addr_un) const;
+    template <typename T>
+    socklen_t toSockAddr(T &addr) const {
+        assert(len_ <= sizeof(T));
+        ::memcpy(&addr, &addr_, len_);
+        return len_;
+    }
 
     bool operator == (const SockAddr &rhs) const;
     bool operator != (const SockAddr &rhs) const { return !(*this == rhs); }

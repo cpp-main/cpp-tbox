@@ -2,7 +2,6 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
-#include <cstring>
 #include <tbox/base/log.h>
 #include <sstream>
 
@@ -139,30 +138,6 @@ bool SockAddr::get(IPAddress &ip, uint16_t &port) const
     }
     LogWarn("type not match");
     return false;
-}
-
-socklen_t SockAddr::toSockAddr(struct sockaddr &addr) const
-{
-    ::memcpy(&addr, &addr_, len_);
-    return len_;
-}
-
-socklen_t SockAddr::toSockAddr(struct sockaddr_in &addr) const
-{
-    if (addr_.ss_family != AF_INET)
-        return 0;
-
-    ::memcpy(&addr, &addr_, len_);
-    return len_;
-}
-
-socklen_t SockAddr::toSockAddr(struct sockaddr_un &addr) const
-{
-    if (addr_.ss_family != AF_LOCAL)
-        return 0;
-
-    ::memcpy(&addr, &addr_, len_);
-    return len_;
 }
 
 bool SockAddr::operator == (const SockAddr &rhs) const
