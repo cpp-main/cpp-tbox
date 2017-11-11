@@ -2,4 +2,5 @@
 /recv_only
 /request
 /respond
+/ping_pong
 *.o
