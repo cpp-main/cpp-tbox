@@ -2,8 +2,8 @@ include ../build_env.mk
 
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. -ltbox_network -ltbox_eventx -ltbox_event-ne -ltbox_base -levent_core -lev -lpthread
-
-all : send_only recv_only request respond 
+TARGETS = send_only recv_only request respond
+all : $(TARGETS)
 
 send_only : send_only.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -21,4 +21,4 @@ clean:
 	rm -rf *.o
 
 distclean: clean
-	rm -f send_only
+	rm -f $(TARGETS)

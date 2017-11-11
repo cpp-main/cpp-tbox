@@ -26,9 +26,6 @@ int main()
     );
     respond.enable();
 
-    cout << "start" << endl;
     sp_loop->runLoop();
-    cout << "exit" << endl;
-
     return 0;
 }
