@@ -7,7 +7,7 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 0
 
 HEAD_FILES = \
-	forward.h loop.h item.h \
+	forward.h loop.h event.h \
 	fd_event.h timer_event.h signal_event.h \
 	stat.h version.h
 

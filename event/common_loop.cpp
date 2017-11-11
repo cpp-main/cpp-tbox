@@ -62,7 +62,7 @@ void CommonLoop::runThisBeforeLoop()
     write_fd_ = write_fd;
     sp_read_event_ = sp_read_event;
 
-    if (!func_list_.empty())
+    if (!func_queue_.empty())
         commitRequest();
 
 #ifdef  ENABLE_STAT
@@ -89,7 +89,7 @@ void CommonLoop::runThisAfterLoop()
 void CommonLoop::runInLoop(const RunInLoopFunc &func)
 {
     std::lock_guard<std::mutex> g(lock_);
-    func_list_.push_back(func);
+    func_queue_.push_back(func);
 
     if (sp_read_event_ == NULL)
         return;
@@ -99,10 +99,10 @@ void CommonLoop::runInLoop(const RunInLoopFunc &func)
 
 void CommonLoop::onGotRunInLoopFunc(short)
 {
-    std::list<RunInLoopFunc> tmp;
+    std::deque<RunInLoopFunc> tmp;
     {
         std::lock_guard<std::mutex> g(lock_);
-        func_list_.swap(tmp);
+        func_queue_.swap(tmp);
         finishRequest();
     }
 
