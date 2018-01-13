@@ -47,6 +47,28 @@ TEST(Fd, reset)
     EXPECT_EQ(fd.get(), -1);
 }
 
+TEST(Fd, close) {
+    int close_times = 0;
+    Fd fd1(12, [&](int v) { ++close_times; });
+    {
+        Fd fd2 = fd1;
+        {
+            Fd fd3 = fd2;
+            EXPECT_EQ(fd3.get(), 12);
+            EXPECT_EQ(close_times, 0);
+            fd3.close();
+            EXPECT_EQ(close_times, 1);
+        }
+        EXPECT_EQ(fd2.get(), -1);
+        EXPECT_TRUE(fd2.isNull());
+        EXPECT_EQ(close_times, 1);
+    }
+
+    EXPECT_EQ(fd1.get(), -1);
+    EXPECT_TRUE(fd1.isNull());
+    EXPECT_EQ(close_times, 1);
+}
+
 TEST(Fd, cast)
 {
     Fd fd(12);

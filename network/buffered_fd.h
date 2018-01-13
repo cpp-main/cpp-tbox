@@ -25,14 +25,20 @@ class BufferedFd : public ByteStream {
     using ReadZeroCallback      = std::function<void()>;
     using ErrorCallback         = std::function<void(int)>;
 
+    enum class State {
+        kEmpty,     //! 未初始化
+        kInited,    //! 已初始化
+        kRunning    //! 正在运行
+    };
+
     enum {
         kReadOnly  = 0x01,
         kWriteOnly = 0x02,
         kReadWrite = 0x03,
     };
+
     //! 初始化，并指定发送或是接收功能
     bool initialize(Fd fd, short events = kReadWrite);
-
 
     //! 设置完成了当前数据发送时的回调函数
     void setSendCompleteCallback(const WriteCompleteCallback &func) { send_complete_cb_ = func; }
@@ -55,6 +61,9 @@ class BufferedFd : public ByteStream {
     void shrinkRecvBuffer();
     void shrinkSendBuffer();
 
+    inline Fd fd() const { return fd_; }
+    inline State state() const { return state_; }
+
   private:
     void onReadCallback(short);
     void onWriteCallback(short);
@@ -62,14 +71,8 @@ class BufferedFd : public ByteStream {
   private:
     event::Loop *wp_loop_ = nullptr;    //! 事件驱动
 
-    enum class State {
-        kEmpty,     //! 未初始化
-        kInited,    //! 已初始化
-        kRunning    //! 正在运行
-    };
-    State state_ = State::kEmpty;
-
     Fd fd_;
+    State state_ = State::kEmpty;
 
     event::FdEvent *sp_read_event_  = nullptr;
     event::FdEvent *sp_write_event_ = nullptr;

@@ -33,10 +33,12 @@ Fd::~Fd()
 
     --detail_->ref_count;
     if (detail_->ref_count == 0) {
-        if (detail_->close_func)
-            detail_->close_func(detail_->fd);
-        else
-            ::close(detail_->fd);
+        if (detail_->fd >= 0) {
+            if (detail_->close_func)
+                detail_->close_func(detail_->fd);
+            else
+                ::close(detail_->fd);
+        }
         delete detail_;
     }
 }
@@ -67,6 +69,18 @@ void Fd::swap(Fd &other)
 }
 
 IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(Fd)
+
+void Fd::close()
+{
+    if (detail_->fd >= 0) {
+        if (detail_->close_func) {
+            detail_->close_func(detail_->fd);
+            detail_->close_func = nullptr;
+        } else
+            ::close(detail_->fd);
+        detail_->fd = -1;
+    }
+}
 
 ssize_t Fd::read(void *ptr, size_t size) const
 {

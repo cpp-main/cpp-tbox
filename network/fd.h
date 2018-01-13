@@ -27,7 +27,10 @@ class Fd {
 
     void swap(Fd &other);
     void reset();
-    inline bool isNull() const { return detail_ == nullptr; }
+
+    void close();   //! 提前关闭
+
+    inline bool isNull() const { return detail_ == nullptr || detail_->fd == -1; }
 
   public:   //! 创建函数
     static Fd Open(const char *filename, int flags);
