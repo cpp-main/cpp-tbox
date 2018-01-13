@@ -81,10 +81,11 @@ void TcpConnection::onSocketClosed()
     std::swap(tmp, sp_buffered_fd_);
     wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
 
-    ++cb_level_;
-    if (disconnected_cb_)
+    if (disconnected_cb_) {
+        ++cb_level_;
         disconnected_cb_();
-    --cb_level_;
+        --cb_level_;
+    }
 }
 
 void TcpConnection::onError(int errnum)
