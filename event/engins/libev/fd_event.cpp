@@ -139,6 +139,8 @@ void LibevFdEvent::onEvent(short events)
         LogWarn("WARN: you should specify event callback by setCallback()");
     }
 
+    wp_loop_->handleNextFunc();
+
 #ifdef  ENABLE_STAT
     uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
     wp_loop_->recordTimeCost(cost_us);

@@ -32,8 +32,11 @@ class Loop {
 
     virtual bool isInLoopThread() = 0;
 
-    using RunInLoopFunc = std::function<void()>;
-    virtual void runInLoop(const RunInLoopFunc &func) = 0;
+    using Func = std::function<void()>;
+    //! 注入下一轮将执行的函数，支持跨线程
+    virtual void runInLoop(const Func &func) = 0;
+    //! 注入本回调完成后立即执行的函数，不支持跨线程
+    virtual void runNext(const Func &func) = 0;
 
     virtual FdEvent* newFdEvent() = 0;
     virtual TimerEvent* newTimerEvent() = 0;
