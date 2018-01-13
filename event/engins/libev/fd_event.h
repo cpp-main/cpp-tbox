@@ -23,6 +23,8 @@ class LibevFdEvent : public FdEvent {
     virtual bool enable();
     virtual bool disable();
 
+    virtual Loop* getLoop() const;
+
   protected:
     static void OnEventCallback(struct ev_loop *p_loop, ev_io *p_w, int events);
     void onEvent(short events);

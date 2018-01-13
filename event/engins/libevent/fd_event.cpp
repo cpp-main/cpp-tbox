@@ -118,6 +118,11 @@ bool LibeventFdEvent::disable()
     return true;
 }
 
+Loop* LibeventFdEvent::getLoop() const
+{
+    return wp_loop_;
+}
+
 void LibeventFdEvent::OnEventCallback(int /*fd*/, short events, void *args)
 {
     LibeventFdEvent *pthis = static_cast<LibeventFdEvent*>(args);
@@ -140,11 +145,21 @@ void LibeventFdEvent::onEvent(short events)
         LogWarn("you should specify event callback by setCallback()");
     }
 
-    wp_loop_->handleNextFunc();
+    auto wp_loop = wp_loop_;
+    /**
+     * 上面为什么要多此一举？
+     *
+     * 由于 Loop 中实现了 runNext() 方法。在上面 cb_() 执行中，用户有可能用 runNext() 注册
+     * 了一个对本对应的销毁函数。这个函数将在下面的 handleNextFunc() 中执行。
+     * 因为如果下面 handleNextFunc() 中 delete 本事件对象，那么本对象的成本就不能再访问了。
+     * 否则就属于非常访问题了。为了规避这个问题，才将成员变量 wp_loop_ 赋值到栈中的 wp_loop。
+     * 有了这步操作，后面就不依赖对象本身的生命期了。
+     */
+    wp_loop->handleNextFunc();
 
 #ifdef  ENABLE_STAT
     uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
-    wp_loop_->recordTimeCost(cost_us);
+    wp_loop->recordTimeCost(cost_us);
 #endif
 }
 

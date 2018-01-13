@@ -4,6 +4,8 @@
 namespace tbox {
 namespace event {
 
+class Loop;
+
 class Event {
   public:
     enum class Mode {
@@ -14,6 +16,8 @@ class Event {
     virtual bool isEnabled() const = 0;
     virtual bool enable() = 0;
     virtual bool disable() = 0;
+
+    virtual Loop* getLoop() const = 0;
 
   public:
     virtual ~Event() { }

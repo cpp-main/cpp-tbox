@@ -18,7 +18,7 @@ namespace event {
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
     read_fd_(-1), write_fd_(-1),
-    sp_read_event_(NULL),
+    sp_read_event_(nullptr),
     cb_level_(0)
 { }
 
@@ -75,12 +75,12 @@ void CommonLoop::runThisAfterLoop()
     std::lock_guard<std::mutex> g(lock_);
     loop_thread_id_ = std::thread::id();
 
-    if (sp_read_event_ != NULL) {
+    if (sp_read_event_ != nullptr) {
         delete sp_read_event_;
         close(write_fd_);
         close(read_fd_);
 
-        sp_read_event_ = NULL;
+        sp_read_event_ = nullptr;
         write_fd_ = -1;
         read_fd_ = -1;
     }
@@ -90,6 +90,11 @@ void CommonLoop::runInLoop(const Func &func)
 {
     std::lock_guard<std::mutex> g(lock_);
     run_in_loop_func_queue_.push_back(func);
+
+    if (sp_read_event_ == nullptr)
+        return;
+
+    commitRequest();
 }
 
 void CommonLoop::runNext(const Func &func)
