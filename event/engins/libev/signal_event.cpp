@@ -82,6 +82,11 @@ bool LibevSignalEvent::disable()
     return true;
 }
 
+Loop* LibevSignalEvent::getLoop() const
+{
+    return wp_loop_;
+}
+
 void LibevSignalEvent::OnEventCallback(struct ev_loop*, ev_signal *p_w, int events)
 {
     assert(p_w != NULL);
@@ -109,9 +114,12 @@ void LibevSignalEvent::onEvent()
         LogErr("you should specify event callback by setCallback()");
     }
 
+    auto wp_loop = wp_loop_;
+    wp_loop->handleNextFunc();
+
 #ifdef  ENABLE_STAT
     uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
-    wp_loop_->recordTimeCost(cost_us);
+    wp_loop->recordTimeCost(cost_us);
 #endif
 }
 

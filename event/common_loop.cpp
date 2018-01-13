@@ -18,7 +18,7 @@ namespace event {
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
     read_fd_(-1), write_fd_(-1),
-    sp_read_event_(NULL),
+    sp_read_event_(nullptr),
     cb_level_(0)
 { }
 
@@ -62,7 +62,7 @@ void CommonLoop::runThisBeforeLoop()
     write_fd_ = write_fd;
     sp_read_event_ = sp_read_event;
 
-    if (!func_queue_.empty())
+    if (!run_in_loop_func_queue_.empty())
         commitRequest();
 
 #ifdef  ENABLE_STAT
@@ -75,43 +75,69 @@ void CommonLoop::runThisAfterLoop()
     std::lock_guard<std::mutex> g(lock_);
     loop_thread_id_ = std::thread::id();
 
-    if (sp_read_event_ != NULL) {
+    if (sp_read_event_ != nullptr) {
         delete sp_read_event_;
         close(write_fd_);
         close(read_fd_);
 
-        sp_read_event_ = NULL;
+        sp_read_event_ = nullptr;
         write_fd_ = -1;
         read_fd_ = -1;
     }
 }
 
-void CommonLoop::runInLoop(const RunInLoopFunc &func)
+void CommonLoop::runInLoop(const Func &func)
 {
     std::lock_guard<std::mutex> g(lock_);
-    func_queue_.push_back(func);
+    run_in_loop_func_queue_.push_back(func);
 
-    if (sp_read_event_ == NULL)
+    if (sp_read_event_ == nullptr)
         return;
 
     commitRequest();
 }
 
+void CommonLoop::runNext(const Func &func)
+{
+    if (!isInLoopThread()) {
+        LogWarn("Fail, use runInLoop() instead.");
+        return;
+    }
+
+    run_next_func_queue_.push_back(func);
+}
+
+void CommonLoop::handleNextFunc()
+{
+    while (!run_next_func_queue_.empty()) {
+        Func &func = run_next_func_queue_.front();
+        if (func) {
+            ++cb_level_;
+            func();
+            --cb_level_;
+        }
+        run_next_func_queue_.pop_front();
+    }
+}
+
 void CommonLoop::onGotRunInLoopFunc(short)
 {
-    std::deque<RunInLoopFunc> tmp;
+    std::deque<Func> tmp;
     {
         std::lock_guard<std::mutex> g(lock_);
-        func_queue_.swap(tmp);
+        run_in_loop_func_queue_.swap(tmp);
         finishRequest();
     }
 
     while (!tmp.empty()) {
-        RunInLoopFunc func = tmp.front();
-        ++cb_level_;
-        if (func)
+        Func &func = tmp.front();
+        if (func) {
+            ++cb_level_;
             func();
-        --cb_level_;
+            --cb_level_;
+
+            handleNextFunc();
+        }
         tmp.pop_front();
     }
 }

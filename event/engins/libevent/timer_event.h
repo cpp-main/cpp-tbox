@@ -22,6 +22,8 @@ class LibeventTimerEvent : public TimerEvent {
     virtual bool enable();
     virtual bool disable();
 
+    virtual Loop* getLoop() const;
+
   protected:
     static void OnEventCallback(int, short, void *args);
     void onEvent();

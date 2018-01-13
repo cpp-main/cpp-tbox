@@ -22,7 +22,8 @@ class CommonLoop : public Loop {
 
   public:
     virtual bool isInLoopThread();
-    virtual void runInLoop(const RunInLoopFunc &func);
+    virtual void runInLoop(const Func &func);
+    virtual void runNext(const Func &func);
 
     virtual Stat getStat() const;
     virtual void resetStat();
@@ -31,6 +32,7 @@ class CommonLoop : public Loop {
 #ifdef ENABLE_STAT
     void recordTimeCost(uint64_t cost_us);
 #endif  //ENABLE_STAT
+    void handleNextFunc();
 
   protected:
     void runThisBeforeLoop();
@@ -49,7 +51,8 @@ class CommonLoop : public Loop {
     bool has_unhandle_req_;
     int read_fd_, write_fd_;
     FdEvent *sp_read_event_;
-    std::deque<RunInLoopFunc> func_queue_;
+    std::deque<Func> run_in_loop_func_queue_;
+    std::deque<Func> run_next_func_queue_;
 
 #ifdef ENABLE_STAT
     steady_clock::time_point stat_start_;

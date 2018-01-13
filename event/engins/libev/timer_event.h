@@ -23,6 +23,8 @@ class LibevTimerEvent : public TimerEvent {
     virtual bool enable();
     virtual bool disable();
 
+    virtual Loop* getLoop() const;
+
   protected:
     static void OnEventCallback(struct ev_loop*, ev_timer *p_w, int events);
     void onEvent();

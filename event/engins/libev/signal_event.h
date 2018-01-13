@@ -23,6 +23,8 @@ class LibevSignalEvent : public SignalEvent {
     virtual bool enable();
     virtual bool disable();
 
+    virtual Loop* getLoop() const;
+
   protected:
     static void OnEventCallback(struct ev_loop *p_loop, ev_signal *p_w, int events);
     void onEvent();

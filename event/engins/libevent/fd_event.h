@@ -22,6 +22,8 @@ class LibeventFdEvent : public FdEvent {
     virtual bool enable();
     virtual bool disable();
 
+    virtual Loop* getLoop() const;
+
   protected:
     static void OnEventCallback(int fd, short events, void *args);
     void onEvent(short events);
