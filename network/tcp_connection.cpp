@@ -26,6 +26,11 @@ TcpConnection::~TcpConnection()
     CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
 }
 
+void TcpConnection::enable()
+{
+    sp_buffered_fd_->enable();
+}
+
 bool TcpConnection::disconnect()
 {
     LogInfo("%s", peer_addr_.toString().c_str());

@@ -22,7 +22,10 @@ class SocketFd : public Fd {
 
   public: //! socket相关的操作
     int connect(const struct sockaddr *addr, socklen_t addrlen);
+
     int bind(const struct sockaddr *addr, socklen_t addrlen);
+    int listen(int backlog);
+    SocketFd accept(struct sockaddr *addr, socklen_t *addrlen);
 
     ssize_t send(const void* data_ptr, size_t data_size, int flag);
     ssize_t recv(void *data_ptr, size_t data_size, int flag);

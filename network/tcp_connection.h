@@ -12,10 +12,10 @@ namespace tbox {
 namespace network {
 
 class TcpConnection : ByteStream {
-  public:
-    explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
-    virtual ~TcpConnection();
+    friend class TcpAcceptor;
 
+  public:
+    virtual ~TcpConnection();
     NONCOPYABLE(TcpConnection);
 
   public:
@@ -39,6 +39,10 @@ class TcpConnection : ByteStream {
   protected:
     void onSocketClosed();
     void onError(int errnum);
+
+  private:
+    explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
+    void enable();
 
   private:
     event::Loop *wp_loop_;

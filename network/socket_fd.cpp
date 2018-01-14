@@ -45,6 +45,14 @@ int SocketFd::bind(const struct sockaddr *addr, socklen_t addrlen)
     return ret;
 }
 
+int SocketFd::listen(int backlog)
+{
+    int ret = ::listen(get(), backlog);
+    if (ret < 0)
+        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+    return ret;
+}
+
 ssize_t SocketFd::send(const void* data_ptr, size_t data_size, int flag)
 {
     ssize_t ret = ::send(get(), data_ptr, data_size, flag);

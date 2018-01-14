@@ -26,9 +26,9 @@ class Fd {
     Fd& operator = (Fd&& other);
 
     void swap(Fd &other);
-    void reset();
+    void reset();   //! 重置本Fd
 
-    void close();   //! 提前关闭
+    void close();   //! 提前关闭资源，无论是否还有其它Fd对象引用
 
     inline bool isNull() const { return detail_ == nullptr || detail_->fd == -1; }
 
