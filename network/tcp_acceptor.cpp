@@ -69,12 +69,12 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 {
     if (bind_addr.type() == SockAddr::Type::kIPv4) {
         struct sockaddr_in sock_addr;
-        bind_addr.toSockAddr(sock_addr);
-        return sock_fd.bind((const struct sockaddr*)&sock_addr, sizeof(sock_addr));
+        socklen_t len = bind_addr.toSockAddr(sock_addr);
+        return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
     } else if (bind_addr.type() == SockAddr::Type::kLocal) {
         struct sockaddr_un sock_addr;
-        bind_addr.toSockAddr(sock_addr);
-        return sock_fd.bind((const struct sockaddr*)&sock_addr, sizeof(sock_addr));
+        socklen_t len = bind_addr.toSockAddr(sock_addr);
+        return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
     } else {
         LogErr("bind addr type not support");
         return -1;

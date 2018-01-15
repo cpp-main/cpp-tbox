@@ -39,8 +39,8 @@ SockAddr::SockAddr(const string &sock_path)
     p_addr->sun_family = AF_LOCAL;
 
     //!NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
-    ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size());
-    len_ = kSockAddrUnHeadSize + sock_path.size();
+    ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size() + 1);
+    len_ = kSockAddrUnHeadSize + sock_path.size() + 1;
 }
 
 SockAddr::SockAddr(const struct sockaddr &addr, socklen_t len)
