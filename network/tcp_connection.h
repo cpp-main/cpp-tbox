@@ -11,7 +11,7 @@
 namespace tbox {
 namespace network {
 
-class TcpConnection : ByteStream {
+class TcpConnection : public ByteStream {
     friend class TcpAcceptor;
 
   public:
