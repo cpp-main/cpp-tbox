@@ -15,7 +15,7 @@ TEST(ScopeExitAction, named)
 {
     bool tag = false;
     {
-        tbox::ScopeExitAction a1([&] {tag = true;});
+        tbox::ScopeExitActionGuard a1([&] {tag = true;});
         EXPECT_FALSE(tag);
     }
     EXPECT_TRUE(tag);
@@ -25,7 +25,7 @@ TEST(ScopeExitAction, cancel)
 {
     bool tag = false;
     {
-        tbox::ScopeExitAction a1([&] {tag = true;});
+        tbox::ScopeExitActionGuard a1([&] {tag = true;});
         EXPECT_FALSE(tag);
         a1.cancel();
     }
