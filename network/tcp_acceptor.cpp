@@ -1,6 +1,10 @@
 #include "tcp_acceptor.h"
 
 #include <sys/un.h>
+#include <unistd.h>
+#include <errno.h>
+#include <cstring>
+
 #include <tbox/base/log.h>
 
 #include "tcp_connection.h"
@@ -99,6 +103,14 @@ void TcpAcceptor::cleanup()
 {
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sock_fd_.close();
+
+    //! 对于Unix Domain的Socket在退出的时候要删除对应的socket文件
+    if (bind_addr_.type() == SockAddr::Type::kLocal) {
+        const char *socket_file = bind_addr_.toString().c_str();
+        int ret = ::unlink(socket_file);
+        if (ret != 0)
+            LogWarn("remove file %s fail. errno:%d, %s", socket_file, errno, strerror(errno));
+    }
 }
 
 void TcpAcceptor::onSocketRead(short events)
