@@ -21,7 +21,6 @@ using namespace tbox::network;
 
 void PrintUsage(const char *prog)
 {
-    using namespace std;
     cout << "Usage: " << prog << " <ip:port|localpath>" << endl
          << "Exp  : " << prog << " 127.0.0.1:12345" << endl
          << "       " << prog << " /tmp/test.sock" << endl;
@@ -34,13 +33,15 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    SockAddr bind_addr = SockAddr::FromString(argv[1]);
+
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     set<TcpConnection*> conns;
 
     TcpAcceptor acceptor(sp_loop);
-    acceptor.initialize(SockAddr::FromString(argv[1]), 1);
+    acceptor.initialize(bind_addr);
     //! 指定有Client连接上了该做的事务
     acceptor.setNewConnectionCallback(
         [&] (TcpConnection *new_conn) {
@@ -74,6 +75,17 @@ int main(int argc, char **argv)
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");
+
+    //! 打印提示
+    if (bind_addr.type() == SockAddr::Type::kIPv4) {
+        IPAddress ip;
+        uint16_t port;
+        bind_addr.get(ip, port);
+        cout << "try command: nc " << ip.toString() << ' ' << port << endl;
+    } else {
+        cout << "try command: nc -U " << bind_addr.toString() << endl;
+    }
+
     sp_loop->runLoop();
     LogInfo("service stoped");
 
