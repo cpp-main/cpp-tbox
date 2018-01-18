@@ -33,7 +33,7 @@ class TcpAcceptor {
     void cleanup();
 
   protected:
-    virtual SocketFd createSocket(const SockAddr::Type addr_type);
+    virtual SocketFd createSocket(SockAddr::Type addr_type);
     virtual int bindAddress(SocketFd sock_fd, const SockAddr &bind_addr);
 
     void onSocketRead(short events);    //! 处理新的连接请求
