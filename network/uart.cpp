@@ -12,16 +12,18 @@ Uart::Uart(event::Loop *wp_loop) :
     buff_fd_(wp_loop)
 { }
 
-bool Uart::initialize(const std::string &dev)
+bool Uart::initialize(const std::string &dev, const std::string &mode)
 {
-    Fd fd = Fd::Open(dev.c_str(), O_RDWR | O_NOCTTY);
-    if (fd.isNull()) {
-        LogErr("Uart open fail");
+    if (!openDevice(dev))
         return false;
-    }
+    return setMode(mode);
+}
 
-    fd_ = std::move(fd);
-    return buff_fd_.initialize(fd_);
+bool Uart::initialize(const std::string &dev, const Mode &mode)
+{
+    if (!openDevice(dev))
+        return false;
+    return setMode(mode);
 }
 
 namespace {
@@ -128,16 +130,16 @@ int Baudrate2Enum(int baudrate)
 
 }
 
-bool Uart::setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit stop_bit)
+bool Uart::setMode(const Mode &mode)
 {
     if (fd_ < 0) {
         LogErr("please open first");
         return false;
     }
 
-    int baud = Baudrate2Enum(baudrate);
+    int baud = Baudrate2Enum(mode.baudrate);
     if (baud == -1) {
-        LogErr("baudrate %d not support", baudrate);
+        LogErr("baudrate %d not support", mode.baudrate);
         return false;
     }
 
@@ -155,23 +157,23 @@ bool Uart::setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit sto
     options.c_lflag &= ~(ISIG | ICANON | ECHO | IEXTEN);
 
     options.c_cflag &= ~CSIZE;
-    if (data_bit == DataBit::k8bits)
+    if (mode.data_bit == DataBit::k8bits)
         options.c_cflag |= CS8;
     else
         options.c_cflag |= CS7;
 
     options.c_cflag &= ~PARENB;
     options.c_iflag &= ~(INPCK | ISTRIP);
-    if (parity != ParityEnd::kNoEnd) {
+    if (mode.parity != ParityEnd::kNoEnd) {
         options.c_cflag |= PARENB;
         options.c_iflag |= (INPCK | ISTRIP);
-        if (parity == ParityEnd::kOddEnd)
+        if (mode.parity == ParityEnd::kOddEnd)
             options.c_cflag |= PARODD;
         else
             options.c_cflag &= ~PARODD;
     }
 
-    if (stop_bit == StopBit::k1bits)
+    if (mode.stop_bit == StopBit::k1bits)
         options.c_cflag &= ~CSTOPB;
     else
         options.c_cflag |= CSTOPB;
@@ -209,45 +211,44 @@ bool Uart::setMode(const std::string &mode_str)
     char parity_ch = toupper(mode_str[pos + 2]);
     char stop_bits_ch = mode_str[pos + 3];
 
+    Mode mode;
+
     //! 波特率
-    int baudrate = stoi(baudrate_str);
+    mode.baudrate = stoi(baudrate_str);
 
     //! 数据位
-    DataBit data_bits;
     if (data_bits_ch == '8')
-        data_bits = DataBit::k8bits;
+        mode.data_bit = DataBit::k8bits;
     else if (data_bits_ch == '7')
-        data_bits = DataBit::k7bits;
+        mode.data_bit = DataBit::k7bits;
     else {
         LogErr("unsupport databit %c", data_bits_ch);
         return false;
     }
 
     //! 奇偶校验位
-    ParityEnd parity;
     if (parity_ch == 'N')
-        parity = ParityEnd::kNoEnd;
+        mode.parity = ParityEnd::kNoEnd;
     else if (parity_ch == 'O')
-        parity = ParityEnd::kOddEnd;
+        mode.parity = ParityEnd::kOddEnd;
     else if (parity_ch == 'E')
-        parity = ParityEnd::kEvenEnd;
+        mode.parity = ParityEnd::kEvenEnd;
     else {
         LogErr("unsupport parity %c", parity_ch);
         return false;
     }
 
     //! 停止位
-    StopBit stop_bits;
     if (stop_bits_ch == '1')
-        stop_bits = StopBit::k1bits;
+        mode.stop_bit = StopBit::k1bits;
     else if (stop_bits_ch == '2')
-        stop_bits = StopBit::k2bits;
+        mode.stop_bit = StopBit::k2bits;
     else {
         LogErr("unsupport stopbit %c", stop_bits_ch);
         return false;
     }
 
-    return setMode(baudrate, data_bits, parity, stop_bits);
+    return setMode(mode);
 }
 
 void Uart::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
@@ -288,6 +289,18 @@ bool Uart::disable()
     }
 
     return buff_fd_.disable();
+}
+
+bool Uart::openDevice(const std::string &dev)
+{
+    Fd fd = Fd::Open(dev.c_str(), O_RDWR | O_NOCTTY);
+    if (fd.isNull()) {
+        LogErr("Uart open fail");
+        return false;
+    }
+
+    fd_ = std::move(fd);
+    return buff_fd_.initialize(fd_);
 }
 
 }

@@ -30,9 +30,7 @@ int main(int argc, char **argv)
     auto sp_uart  = new network::Uart(sp_loop);
     SetScopeExitAction([=] { delete sp_uart; });
 
-    if (!sp_uart->initialize(argv[1]))
-        return 0;
-    if (!sp_uart->setMode(argv[2])) {
+    if (!sp_uart->initialize(argv[1], argv[2])) {
         PrintUsage(argv[0]);
         return 0;
     }

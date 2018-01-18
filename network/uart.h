@@ -19,15 +19,21 @@ class Uart : public ByteStream {
     IMMOVABLE(Uart);
 
   public:
-    enum class DataBit { k8bits, k7bits };  //! 数据位数
-    enum class StopBit { k1bits, k2bits };  //! 停止位数
-    enum class ParityEnd { kNoEnd, kOddEnd, kEvenEnd }; //! 检验位
+    enum class DataBit { k8bits, k7bits };  //!< 数据位数
+    enum class StopBit { k1bits, k2bits };  //!< 停止位数
+    enum class ParityEnd { kNoEnd, kOddEnd, kEvenEnd }; //!< 校验位
 
-    //! 初始化，打开串口设备文件
-    bool initialize(const std::string &dev);
-    //! 设置串口的波特率、数据位、奇偶校验、停止位
-    bool setMode(int baudrate, DataBit data_bit, ParityEnd parity, StopBit stop_bit);
-    bool setMode(const std::string &mode_str);  //! 以字串的形式设置，如:"115200 8n1"
+    //! 串口配置
+    struct Mode {
+        int baudrate = 115200;  //!< 波特率
+        DataBit data_bit = DataBit::k8bits;     //!< 数据位
+        ParityEnd parity = ParityEnd::kNoEnd;   //!< 校验位
+        StopBit stop_bit = StopBit::k1bits;     //!< 停止位
+    };
+
+    //! 打开串口设备文件，并配置模式
+    bool initialize(const std::string &dev, const std::string &mode);
+    bool initialize(const std::string &dev, const Mode &mode);
 
   public:
     //! 实现ByteStream的接口
@@ -41,6 +47,12 @@ class Uart : public ByteStream {
     bool disable();
 
     Fd fd() const { return fd_; }
+
+  protected:
+    bool openDevice(const std::string &dev);
+
+    bool setMode(const Mode &mode);
+    bool setMode(const std::string &mode_str);  //! 以字串的形式设置，如:"115200 8n1"
 
   private:
     Fd fd_;
