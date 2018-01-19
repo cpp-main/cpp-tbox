@@ -157,5 +157,76 @@ void TcpConnector::enterConnectingState()
     }
 }
 
+void TcpConnector::exitConnectingState()
+{
+    sp_write_ev_->disable();
+
+    //! 释放 sp_write_ev_ 对象
+    event::FdEvent *tmp = nullptr;
+    std::swap(tmp, sp_write_ev_);
+    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    //! 关闭 socket
+    sock_fd_.close();
+    LogDbg("exit connecting state");
+}
+
+void TcpConnector::enterReconnectDelayState()
+{
+    //! 计算出要延时等待的时长
+    ++cb_level_;
+    int delay_sec = reconn_delay_calc_func_(conn_fail_times_);
+    --cb_level_;
+
+    //! 创建定时器进行等待
+    CHECK_DELETE_RESET_OBJ(sp_delay_ev_);
+    sp_delay_ev_ = wp_loop_->newTimerEvent();
+    sp_delay_ev_->initialize(std::chrono::seconds(delay_sec), event::Event::Mode::kOneshot);
+    sp_delay_ev_->setCallback(std::bind(&TcpConnector::onDelayTimeout, this));
+    sp_delay_ev_->enable();
+
+    state_ = State::kReconnectDelay;
+    LogDbg("enter reconnect delay state, delay: %d", delay_sec);
+}
+
+void TcpConnector::exitReconnectDelayState()
+{
+    //! 关闭定时器
+    sp_delay_ev_->disable();
+
+    //! 销毁定时器
+    event::TimerEvent *tmp = nullptr;
+    std::swap(tmp, sp_delay_ev_);
+    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    LogDbg("exit reconnect delay state");
+}
+
+void TcpConnector::onConnectFail()
+{
+    ++conn_fail_times_;
+    //! 如果设置了尝试次数，且超过了尝试次数，则回调 connect_fail_cb_ 然后回到 State::kIdle
+    //! 否则继续进入重连等待延时状态
+    if ((try_times_ > 0) && (conn_fail_times_ >= try_times_)) {
+        if (connect_fail_cb_) {
+            ++cb_level_;
+            connect_fail_cb_();
+            --cb_level_;
+        }
+        state_ = State::kIdle;
+    } else
+        enterReconnectDelayState();
+}
+
+void TcpConnector::onSocketWritable()
+{
+    //!TODO
+}
+
+void TcpConnector::onDelayTimeout()
+{
+    //!TODO
+}
+
 }
 }
