@@ -75,7 +75,7 @@ class TcpConnector {
     ConnectedCallback       connected_cb_;
     ConnectFailCallback     connect_fail_cb_;
     ReconnectDelayCalc      reconn_delay_calc_func_;
-    int try_times_ = 3;     //!< 尝试连接次数
+    int try_times_ = 0;     //!< 尝试连接次数
 
     SocketFd sock_fd_;
 

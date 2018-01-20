@@ -11,7 +11,8 @@ namespace tbox {
 namespace network {
 
 TcpConnector::TcpConnector(event::Loop *wp_loop) :
-    wp_loop_(wp_loop)
+    wp_loop_(wp_loop),
+    reconn_delay_calc_func_([](int) {return 1;})
 { }
 
 TcpConnector::~TcpConnector()
@@ -214,7 +215,9 @@ void TcpConnector::onConnectFail()
             ++cb_level_;
             connect_fail_cb_();
             --cb_level_;
-        }
+        } else
+            LogWarn("connector stoped");
+
         state_ = State::kIdle;
     } else
         enterReconnectDelayState();
