@@ -5,6 +5,8 @@
 
 #include <tbox/base/log.h>
 
+#include "tcp_connection.h"
+
 namespace tbox {
 namespace network {
 
@@ -220,12 +222,43 @@ void TcpConnector::onConnectFail()
 
 void TcpConnector::onSocketWritable()
 {
-    //!TODO
+    //! 读取Socket错误码
+    int sock_errno = 0;
+    socklen_t optlen = sizeof(sock_errno);
+    if (sock_fd_.getSocketOpt(SOL_SOCKET, SO_ERROR, &sock_errno, &optlen)) {
+        if (sock_errno == 0) {  //! 连接成功
+            SocketFd conn_sock_fd = sock_fd_;
+            sock_fd_.reset();
+
+            exitConnectingState();
+            state_ = State::kIdle;
+
+            LogInfo("connect to %s success", server_addr_.toString().c_str());
+            if (connected_cb_) {
+                auto sp_conn = new TcpConnection(wp_loop_, conn_sock_fd, server_addr_);
+                sp_conn->enable();
+                ++cb_level_;
+                connected_cb_(sp_conn);
+                --cb_level_;
+            } else
+                LogWarn("connected callback is not set");
+
+        } else {    //! 连接失败
+            LogDbg("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));
+            //! 状态切换：kConnecting --> kReconnectDelay
+            exitConnectingState();
+            onConnectFail();
+        }
+    } else {    //! 没有读取到 SO_ERROR
+        LogErr("getSocketOpt fail, errno:%d, %s", errno, strerror(errno));
+    }
 }
 
 void TcpConnector::onDelayTimeout()
 {
-    //!TODO
+    //! 状态切换：kReconnectDelay --> kConnecting
+    exitReconnectDelayState();
+    enterConnectingState();
 }
 
 }

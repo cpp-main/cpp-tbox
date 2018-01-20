@@ -93,19 +93,29 @@ ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr 
     return ret;
 }
 
-bool SocketFd::setSocketOpt(int level, int optname, int value)
+bool SocketFd::getSocketOpt(int level, int optname, void *optval, socklen_t *optlen)
 {
-    if (::setsockopt(get(), level, optname, &value, sizeof(value)) != 0) {
-        LogErr("fail, opt:%d, val:%d, errno:%d, %s",
-               optname, value, errno, strerror(errno));
+    if (::getsockopt(get(), level, optname, optval, optlen) != 0) {
+        LogErr("fail, opt:%d, errno:%d, %s",
+               optname, errno, strerror(errno));
         return false;
     }
     return true;
 }
 
-bool SocketFd::setSocketOpt(int level, int optname, void *value, size_t size)
+bool SocketFd::setSocketOpt(int level, int optname, int optval)
 {
-    if (::setsockopt(get(), level, optname, value, size) != 0) {
+    if (::setsockopt(get(), level, optname, &optval, sizeof(optval)) != 0) {
+        LogErr("fail, opt:%d, val:%d, errno:%d, %s",
+               optname, optval, errno, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool SocketFd::setSocketOpt(int level, int optname, const void *optval, socklen_t optlen)
+{
+    if (::setsockopt(get(), level, optname, optval, optlen) != 0) {
         LogErr("fail, opt:%d, errno:%d, %s",
                optname, errno, strerror(errno));
         return false;
