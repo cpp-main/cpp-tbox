@@ -36,8 +36,9 @@ class SocketFd : public Fd {
                      sockaddr *dest_addr, socklen_t *addrlen);
 
   public: //! socket相关的设置
-    bool setSocketOpt(int level, int optname, int value);
-    bool setSocketOpt(int level, int optname, void *value, size_t size);
+    bool getSocketOpt(int level, int optname, void *optval, socklen_t *optlen);
+    bool setSocketOpt(int level, int optname, int optval);
+    bool setSocketOpt(int level, int optname, const void *optval, socklen_t optlen);
 
     bool setReuseAddress(bool enable);  //! 设置可重用地址
     bool setBroadcast(bool enable);     //! 设置是否允许广播

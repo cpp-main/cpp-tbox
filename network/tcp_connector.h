@@ -6,8 +6,13 @@
 #include <tbox/event/fd_event.h>
 #include <tbox/event/timer_event.h>
 
+#include "sockaddr.h"
+#include "socket_fd.h"
+
 namespace tbox {
 namespace network {
+
+class TcpConnection;
 
 class TcpConnector {
   public:
@@ -30,7 +35,7 @@ class TcpConnector {
     using ReconnectDelayCalc    = std::function<int(int)>;
 
     //! 必需设置项
-    void setServer(const SockAddr &server_addr);            //!< 设置服务端地址
+    void initialize(const SockAddr &server_addr);            //!< 设置服务端地址
     void setConnectedCallback(const ConnectedCallback &cb); //!< 设置连接成功的回调
 
     //! 非必需设置项
@@ -46,8 +51,8 @@ class TcpConnector {
     State state() const { return state_; }
 
   protected:
-    virtual SocketFd createSocket() const;
-    virtual int connect(SocketFd sock_fd) const;
+    virtual SocketFd createSocket(SockAddr::Type addr_type) const;
+    virtual int connect(SocketFd sock_fd, const SockAddr &addr) const;
 
     void checkSettingAndTryEnterIdleState();
 
@@ -70,12 +75,12 @@ class TcpConnector {
     ConnectedCallback       connected_cb_;
     ConnectFailCallback     connect_fail_cb_;
     ReconnectDelayCalc      reconn_delay_calc_func_;
-    int try_times_ = 3;     //!< 尝试连接次数
+    int try_times_ = 0;     //!< 尝试连接次数
 
     SocketFd sock_fd_;
 
-    event::FdEvent   *sp_write_ev_ = nullptr;   //!< connect 过程的结果监听事件
-    event::TimeEvent *sp_delay_ev_ = nullptr;   //!< 重连等待延时定时器
+    event::FdEvent    *sp_write_ev_ = nullptr;   //!< connect 过程的结果监听事件
+    event::TimerEvent *sp_delay_ev_ = nullptr;   //!< 重连等待延时定时器
 
     int conn_fail_times_ = 0;   //! 连续 connect 失败计数
     int cb_level_ = 0;

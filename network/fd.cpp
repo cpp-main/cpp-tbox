@@ -72,7 +72,7 @@ IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(Fd)
 
 void Fd::close()
 {
-    if (detail_->fd >= 0) {
+    if (detail_ != nullptr && detail_->fd >= 0) {
         if (detail_->close_func) {
             detail_->close_func(detail_->fd);
             detail_->close_func = nullptr;

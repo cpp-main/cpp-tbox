@@ -56,7 +56,7 @@ bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
     return true;
 }
 
-SocketFd TcpAcceptor::createSocket(const SockAddr::Type addr_type)
+SocketFd TcpAcceptor::createSocket(SockAddr::Type addr_type)
 {
     int flags = SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC;
     if (addr_type == SockAddr::Type::kIPv4)
@@ -128,6 +128,7 @@ void TcpAcceptor::onClientConnected()
         LogWarn("accept fail");
         return;
     }
+
     SockAddr peer_addr(addr, addr_len);
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 

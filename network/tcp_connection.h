@@ -13,6 +13,7 @@ namespace network {
 
 class TcpConnection : public ByteStream {
     friend class TcpAcceptor;
+    friend class TcpConnector;
 
   public:
     virtual ~TcpConnection();

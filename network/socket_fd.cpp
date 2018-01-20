@@ -12,7 +12,7 @@ SocketFd SocketFd::CreateSocket(int domain, int type, int protocal)
 {
     int fd = ::socket(domain, type, protocal);
     if (fd < 0) {
-        LogErr("create socket fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("create socket fail, errno:%d, %s", errno, strerror(errno));
         return SocketFd();
     }
 
@@ -33,7 +33,7 @@ int SocketFd::connect(const struct sockaddr *addr, socklen_t addrlen)
 {
     int ret = ::connect(get(), addr, addrlen);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -41,7 +41,7 @@ int SocketFd::bind(const struct sockaddr *addr, socklen_t addrlen)
 {
     int ret = ::bind(get(), addr, addrlen);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -49,7 +49,7 @@ int SocketFd::listen(int backlog)
 {
     int ret = ::listen(get(), backlog);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -57,7 +57,7 @@ int SocketFd::accept(struct sockaddr *addr, socklen_t *addrlen)
 {
     int ret = ::accept(get(), addr, addrlen);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -65,7 +65,7 @@ ssize_t SocketFd::send(const void* data_ptr, size_t data_size, int flag)
 {
     ssize_t ret = ::send(get(), data_ptr, data_size, flag);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -73,7 +73,7 @@ ssize_t SocketFd::recv(void* data_ptr, size_t data_size, int flag)
 {
     ssize_t ret = ::recv(get(), data_ptr, data_size, flag);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -81,7 +81,7 @@ ssize_t SocketFd::sendTo(const void* data_ptr, size_t data_size, int flag, const
 {
     ssize_t ret = ::sendto(get(), data_ptr, data_size, flag, dest_addr, addrlen);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -89,25 +89,32 @@ ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr 
 {
     ssize_t ret = ::recvfrom(get(), data_ptr, data_size, flag, dest_addr, addrlen);
     if (ret < 0)
-        LogErr("fail, errno:%d, %s", errno, strerror(errno));
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
-bool SocketFd::setSocketOpt(int level, int optname, int value)
+bool SocketFd::getSocketOpt(int level, int optname, void *optval, socklen_t *optlen)
 {
-    if (::setsockopt(get(), level, optname, &value, sizeof(value)) != 0) {
-        LogErr("fail, opt:%d, val:%d, errno:%d, %s",
-               optname, value, errno, strerror(errno));
+    if (::getsockopt(get(), level, optname, optval, optlen) != 0) {
+        LogDbg("fail, opt:%d, errno:%d, %s", optname, errno, strerror(errno));
         return false;
     }
     return true;
 }
 
-bool SocketFd::setSocketOpt(int level, int optname, void *value, size_t size)
+bool SocketFd::setSocketOpt(int level, int optname, int optval)
 {
-    if (::setsockopt(get(), level, optname, value, size) != 0) {
-        LogErr("fail, opt:%d, errno:%d, %s",
-               optname, errno, strerror(errno));
+    if (::setsockopt(get(), level, optname, &optval, sizeof(optval)) != 0) {
+        LogDbg("fail, opt:%d, val:%d, errno:%d, %s", optname, optval, errno, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool SocketFd::setSocketOpt(int level, int optname, const void *optval, socklen_t optlen)
+{
+    if (::setsockopt(get(), level, optname, optval, optlen) != 0) {
+        LogDbg("fail, opt:%d, errno:%d, %s", optname, errno, strerror(errno));
         return false;
     }
     return true;
