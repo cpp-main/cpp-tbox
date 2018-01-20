@@ -126,7 +126,7 @@ extern "C" {
         _output_mask = output_mask;
     }
 
-    void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
+    void __attribute((weak)) LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                        int line, int level, const char *fmt, ...)
     {
         if (level < 0) level = 0;
