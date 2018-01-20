@@ -58,10 +58,12 @@ int main(int argc, char **argv)
             new_conn->bind(new_conn);   //! (2) 信息流绑定为自己
         }
     );
+
+    //! 设置连接尝试次数，与多次尝试失败后的处理
     connector.setTryTimes(3);
     connector.setConnectFailCallback(
         [&] {
-            //! 打印提示
+            //! 打印提示要开服务
             cout << "Connect server fail!" << endl
                  << "You should run command:" << endl;
             if (bind_addr.type() == SockAddr::Type::kIPv4) {
@@ -85,7 +87,7 @@ int main(int argc, char **argv)
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
     sp_stop_ev->setCallback(
-        [sp_loop, sp_curr] {
+        [sp_loop, &sp_curr] {
             if (sp_curr != nullptr) {
                 sp_curr->disconnect();  //! (1) 主动断开连接
                 delete sp_curr;         //! (2) 销毁Client对象。思考：为什么这里可以直接delete，而L51不可以？
