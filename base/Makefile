@@ -12,6 +12,7 @@ HEAD_FILES = \
 	scope_exit.hpp \
 
 SRC_FILES = \
+	log_imp.cpp \
 	log_output.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)

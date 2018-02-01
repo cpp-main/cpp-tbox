@@ -11,6 +11,8 @@
 #include <syslog.h>
 #include <mutex>
 
+#include "log_imp.h"
+
 #define TIMESTAMP_STRING_SIZE   28
 
 namespace {
@@ -34,28 +36,29 @@ namespace {
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06ld", tmp, tv.tv_usec);
     }
 
-    void _PrintLogToStdout(const char *module_id, const char *func_name, const char *file_name,
-                           int line, int level, const char *fmt, va_list args)
+    void _PrintLogToStdout(LogContent *content)
     {
         char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
         _GetCurrTimeString(timestamp);
 
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
-        printf("%s", level_color_start[level]);
+        printf("%s", level_color_start[content->level]);
 
-        printf("%s %ld %s %s ", timestamp, ::syscall(SYS_gettid), level_name[level], module_id);
+        printf("%s %ld %s %s ", timestamp, ::syscall(SYS_gettid), level_name[content->level], content->module_id);
 
-        if (func_name != NULL)
-            printf("%s() ", func_name);
+        if (content->func_name != NULL)
+            printf("%s() ", content->func_name);
 
-        if (fmt != NULL) {
-            vprintf(fmt, args);
+        if (content->fmt != NULL) {
+            va_list args;
+            va_copy(args, content->args);
+            vprintf(content->fmt, args);    //! 不可以直接使用 content->args，因为 va_list 只能被使用一次
             putchar(' ');
         }
 
-        if (file_name != NULL) {
-            printf("-- %s:%d", file_name, line);
+        if (content->file_name != NULL) {
+            printf("-- %s:%d", content->file_name, content->line);
         }
 
         printf("%s", level_color_end);
@@ -65,29 +68,30 @@ namespace {
     const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
 
     //! syslogd
-    void _PrintLogToSyslog(const char *module_id, const char *func_name, const char *file_name,
-                           int line, int level, const char *fmt, va_list args)
+    void _PrintLogToSyslog(LogContent *content)
     {
         const int buff_size = 2048;
         char buff[buff_size];
 
         int write_size = buff_size;
 
-        int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", syscall(SYS_gettid), module_id);
+        int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", syscall(SYS_gettid), content->module_id);
         write_size -= len;
 
-        if (write_size > 2 && level == 5) {
+        if (write_size > 2 && content->level == 5) {
             len = snprintf(buff + (buff_size - write_size), write_size, "==TRACE== ");
             write_size -= len;
         }
 
-        if (write_size > 2 && func_name != NULL) {
-            len = snprintf(buff + (buff_size - write_size), write_size, "%s() ", func_name);
+        if (write_size > 2 && content->func_name != NULL) {
+            len = snprintf(buff + (buff_size - write_size), write_size, "%s() ", content->func_name);
             write_size -= len;
         }
 
-        if (write_size > 2 && fmt != NULL) {
-            len = vsnprintf(buff + (buff_size - write_size), write_size, fmt, args);
+        if (write_size > 2 && content->fmt != NULL) {
+            va_list args;
+            va_copy(args, content->args);   //! 同上，va_list 要被复制了使用
+            len = vsnprintf(buff + (buff_size - write_size), write_size, content->fmt, args);
             write_size -= len;
 
             if (write_size > 2) {
@@ -97,28 +101,33 @@ namespace {
             }
         }
 
-        if (write_size > 2 && file_name != NULL) {
-            len = snprintf(buff + (buff_size - write_size), write_size, "-- %s:%d", file_name, line);
+        if (write_size > 2 && content->file_name != NULL) {
+            len = snprintf(buff + (buff_size - write_size), write_size, "-- %s:%d", content->file_name, content->line);
             write_size -= len;
         }
 
-        syslog(loglevel_to_syslog[level], "%s", buff);
+        syslog(loglevel_to_syslog[content->level], "%s", buff);
     }
 }
 
 //! Declare log filte function as weak reference
 //! Even if user did't implement their own filter function, it stall works.
-bool __attribute((weak)) LogOutput_FilterFunc(const char *module_id, const char *func_name, const char *file_name, int level);
+bool __attribute((weak)) LogOutput_FilterFunc(LogContent *content);
 
 extern "C" {
+
+    static void _LogOutput_PrintfFunc(LogContent *content);
+
     void LogOutput_Initialize(const char *proc_name)
     {
+        LogSetPrintfFunc(_LogOutput_PrintfFunc);
         openlog(proc_name, 0, LOG_USER);
     }
 
     void LogOutput_Cleanup()
     {
         closelog();
+        LogSetPrintfFunc(nullptr);
     }
 
     void LogOutput_SetMask(int output_mask)
@@ -126,28 +135,16 @@ extern "C" {
         _output_mask = output_mask;
     }
 
-    void __attribute((weak)) LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
-                       int line, int level, const char *fmt, ...)
+    static void _LogOutput_PrintfFunc(LogContent *content)
     {
-        if (level < 0) level = 0;
-        if (level > 5) level = 5;
-
         if ((LogOutput_FilterFunc != NULL) &&
-            !LogOutput_FilterFunc(module_id, func_name, file_name, level))
+            !LogOutput_FilterFunc(content))
             return;
 
-        const char *module_id_be_print = (module_id != NULL) ? module_id : "???";
-
-        va_list args;
-
-        va_start(args, fmt);
         if (_output_mask & LOG_OUTPUT_MASK_STDOUT)
-            _PrintLogToStdout(module_id_be_print, func_name, file_name, line, level, fmt, args);
-        va_end(args);
+            _PrintLogToStdout(content);
 
-        va_start(args, fmt);
         if (_output_mask & LOG_OUTPUT_MASK_SYSLOG)
-            _PrintLogToSyslog(module_id_be_print, func_name, file_name, line, level, fmt, args);
-        va_end(args);
+            _PrintLogToSyslog(content);
     }
 }

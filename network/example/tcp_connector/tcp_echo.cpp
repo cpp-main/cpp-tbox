@@ -12,6 +12,7 @@
 #include <tbox/network/tcp_connection.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
 
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    LogOutput_Initialize(argv[0]);
     SockAddr bind_addr = SockAddr::FromString(argv[1]);
 
     Loop *sp_loop = Loop::New();
