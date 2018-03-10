@@ -17,6 +17,7 @@ HEAD_FILES = \
 	tcp_connection.h \
 	tcp_acceptor.h \
 	tcp_connector.h \
+	tcp_client.h \
 
 SRC_FILES = \
 	buffer.cpp \
@@ -31,6 +32,7 @@ SRC_FILES = \
 	tcp_connection.cpp \
 	tcp_acceptor.cpp \
 	tcp_connector.cpp \
+	tcp_client.cpp \
 
 CCXXFLAGS += -I../base -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
 

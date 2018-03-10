@@ -35,7 +35,7 @@ class TcpConnector {
     using ReconnectDelayCalc    = std::function<int(int)>;
 
     //! 必需设置项
-    void initialize(const SockAddr &server_addr);            //!< 设置服务端地址
+    void initialize(const SockAddr &server_addr);           //!< 设置服务端地址
     void setConnectedCallback(const ConnectedCallback &cb); //!< 设置连接成功的回调
 
     //! 非必需设置项
