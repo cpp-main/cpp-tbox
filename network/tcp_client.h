@@ -35,6 +35,7 @@ class TcpClient : public ByteStream {
     void cleanup();
 
     bool isConnected() const { return sp_connection_ == nullptr; }
+    bool disconnect();
 
   public:   //! 实现ByteStream的接口
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
@@ -52,6 +53,7 @@ class TcpClient : public ByteStream {
     ConnectedCallback    connected_cb_;
     DisconnectedCallback disconnected_cb_;
     ReceiveCallback      received_cb_;
+    size_t               received_threshold_ = 0;
     ByteStream *wp_stream_receiver_ = nullptr;
     bool reconnect_enabled_ = true;
 
