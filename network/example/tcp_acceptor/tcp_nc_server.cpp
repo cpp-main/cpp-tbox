@@ -6,6 +6,7 @@
 
 #include <tbox/network/tcp_acceptor.h>
 #include <tbox/network/tcp_connection.h>
+#include <tbox/network/stdio_stream.h>
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
@@ -41,7 +42,18 @@ int main(int argc, char **argv)
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
+    StdioStream stdio(sp_loop);
+    stdio.enable();
+
     set<TcpConnection*> conns;
+
+    stdio.setReceiveCallback(
+        [&] (Buffer &buff) {
+            for (auto conn : conns)
+                conn->send(buff.readableBegin(), buff.readableSize());
+            buff.hasReadAll();
+        }, 0
+    );
 
     TcpAcceptor acceptor(sp_loop);
     acceptor.initialize(bind_addr);
@@ -55,7 +67,7 @@ int main(int argc, char **argv)
                     sp_loop->runNext([new_conn] { delete new_conn; });  //! 延后销毁自己
                 }
             );
-            new_conn->bind(new_conn);   //! (2) 信息流绑定为自己
+            new_conn->bind(&stdio);     //! (2) 信息流绑定终端输出
             conns.insert(new_conn);     //! (3) 将自己注册到 conns 中
         }
     );

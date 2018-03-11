@@ -36,7 +36,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    //LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize(argv[0]);
     SockAddr bind_addr = SockAddr::FromString(argv[1]);
 
     Loop *sp_loop = Loop::New();
