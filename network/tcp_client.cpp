@@ -21,6 +21,7 @@ TcpClient::~TcpClient()
     if (state_ != State::kNone)
         cleanup();
 
+    CHECK_DELETE_RESET_OBJ(sp_connection_);
     CHECK_DELETE_RESET_OBJ(sp_connector_);
 }
 
