@@ -24,18 +24,26 @@ class TcpClient : public ByteStream {
     using ConnectedCallback    = std::function<void()>;
     using DisconnectedCallback = std::function<void()>;
 
+    //!< 状态
+    enum class State {
+        kNone,          //!< 未初始化
+        kIdle,          //!< 空闲
+        kConnecting,    //!< 连接中
+        kConnected      //!< 连接成功
+    };
+
   public:
     bool initialize(const SockAddr &server_addr);
     void setConnectedCallback(const ConnectedCallback &cb) { connected_cb_ = cb; }
     void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
     void setAutoReconnect(bool enable) { reconnect_enabled_ = enable; }
 
-    bool start();
-    bool stop();
+    bool start();   //!< 开始连接服务端
+    bool stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
+
     void cleanup();
 
-    bool isConnected() const { return sp_connection_ == nullptr; }
-    bool disconnect();
+    State state() const { return state_; }
 
   public:   //! 实现ByteStream的接口
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
@@ -49,12 +57,13 @@ class TcpClient : public ByteStream {
 
   private:
     event::Loop *wp_loop_;
+    State state_ = State::kNone;
 
     ConnectedCallback    connected_cb_;
     DisconnectedCallback disconnected_cb_;
     ReceiveCallback      received_cb_;
     size_t               received_threshold_ = 0;
-    ByteStream *wp_stream_receiver_ = nullptr;
+    ByteStream          *wp_receiver_ = nullptr;
     bool reconnect_enabled_ = true;
 
     TcpConnector  *sp_connector_  = nullptr;
