@@ -8,6 +8,8 @@
 
 #include "byte_stream.h"
 #include "sockaddr.h"
+
+#include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {
@@ -20,6 +22,9 @@ class TcpClient : public ByteStream {
   public:
     explicit TcpClient(event::Loop *wp_loop);
     virtual ~TcpClient();
+
+    NONCOPYABLE(TcpClient);
+    IMMOVABLE(TcpClient);
 
     using ConnectedCallback    = std::function<void()>;
     using DisconnectedCallback = std::function<void()>;

@@ -49,7 +49,7 @@ class SockAddr {
 
   private:
     struct sockaddr_storage addr_;
-    socklen_t len_ = 0; //! 当地址为 AF_LOCAL 时，表示字串长度
+    socklen_t len_ = 0; //!< 表示地址有效长度
 };
 
 }

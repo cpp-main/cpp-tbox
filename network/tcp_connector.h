@@ -20,6 +20,7 @@ class TcpConnector {
     virtual ~TcpConnector();
 
     NONCOPYABLE(TcpConnector);
+    IMMOVABLE(TcpConnector);
 
     //! 状态
     enum class State {

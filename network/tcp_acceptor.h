@@ -20,6 +20,7 @@ class TcpAcceptor {
     virtual ~TcpAcceptor();
 
     NONCOPYABLE(TcpAcceptor);
+    IMMOVABLE(TcpAcceptor);
 
   public:
     bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);

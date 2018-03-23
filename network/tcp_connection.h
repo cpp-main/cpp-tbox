@@ -17,7 +17,9 @@ class TcpConnection : public ByteStream {
 
   public:
     virtual ~TcpConnection();
+
     NONCOPYABLE(TcpConnection);
+    IMMOVABLE(TcpConnection);
 
   public:
     using DisconnectedCallback = std::function<void ()>;
