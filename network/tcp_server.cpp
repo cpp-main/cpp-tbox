@@ -1,5 +1,6 @@
 #include "tcp_server.h"
 
+#include <limits>
 #include <tbox/base/log.h>
 
 namespace tbox {

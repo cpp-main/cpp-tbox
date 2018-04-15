@@ -1,7 +1,10 @@
 #ifndef TBOX_NETWORK_TCP_SERVER_H_20180412
 #define TBOX_NETWORK_TCP_SERVER_H_20180412
 
+#include <vector>
+
 #include <tbox/base/defines.h>
+#include <tbox/base/object_container.hpp>
 #include <tbox/event/loop.h>
 
 #include "sockaddr.h"
@@ -9,6 +12,8 @@
 
 namespace tbox {
 namespace network {
+
+class TcpConnection;
 
 class TcpServer {
   public:
@@ -19,23 +24,15 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using ConnId = uint64_t;    //! 连接ID号
-
-    //! 客户端ID
-    struct ClientId {
-        size_t pos = 0;
-        ConnId id  = 0;
-
-        bool operator == (const ClientId &rhs) const { return id == rhs.id; }
-        bool operator <  (const ClientId &rhs) const { return id < rhs.id; }
-    };
+    using Container = ObjectContainer<TcpConnection>;
+    using Client = Container::Token;
 
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
 
-    using ConnectedCallback     = std::function<void(const ClientId &)>;
-    using DisconnectedCallback  = std::function<void(const ClientId &)>;
-    using ReceiveCallback       = std::function<void(const ClientId &, Buffer &)>;
+    using ConnectedCallback     = std::function<void(const Client &)>;
+    using DisconnectedCallback  = std::function<void(const Client &)>;
+    using ReceiveCallback       = std::function<void(const Client &, Buffer &)>;
 
     //! 设置有新客户端连接时的回调
     void setConnectedCallback(const ConnectedCallback &cb);
@@ -49,13 +46,17 @@ class TcpServer {
     void cleanup(); //!< 清理
 
     //! 向指定客户端发送数据
-    bool send(const ClientId &client, const void *data_ptr, size_t data_size);
+    bool send(const Client &client, const void *data_ptr, size_t data_size);
     //! 断开指定客户端的连接
-    bool disconnect(const ClientId &client);
+    bool disconnect(const Client &client);
+
+    //! 检查客户端的连接是否有效
+    bool isClientValid(const Client &client) const;
+    //! 获取客户端的地址
+    SockAddr getClientAddress(const Client &client) const;
 
   private:
-    ConnId last_conn_id_ = 0;
-    //!TODO:
+    Container conns_;
 };
 
 }
