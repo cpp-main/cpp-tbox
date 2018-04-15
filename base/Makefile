@@ -10,6 +10,7 @@ HEAD_FILES = \
 	log_output.h \
 	defines.h \
 	scope_exit.hpp \
+	object_container.hpp \
 
 SRC_FILES = \
 	log_imp.cpp \
@@ -20,6 +21,7 @@ CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 TEST_SRC_FILES = \
 	log_output_test.cpp \
 	scope_exit_test.cpp \
+	object_container_test.cpp \
 
 TEST_LDFLAGS +=
 
