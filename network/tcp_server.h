@@ -13,6 +13,7 @@
 namespace tbox {
 namespace network {
 
+class TcpAcceptor;
 class TcpConnection;
 
 class TcpServer {
@@ -24,8 +25,8 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using Container = ObjectContainer<TcpConnection>;
-    using Client = Container::Token;
+    using ConnContainer = ObjectContainer<TcpConnection>;
+    using Client = ConnContainer::Token;
 
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
@@ -35,14 +36,15 @@ class TcpServer {
     using ReceiveCallback       = std::function<void(const Client &, Buffer &)>;
 
     //! 设置有新客户端连接时的回调
-    void setConnectedCallback(const ConnectedCallback &cb);
+    void setConnectedCallback(const ConnectedCallback &cb) { connected_cb_ = cb; }
     //! 设置有客户端断开时的回调
-    void setDisconnectedCallback(const DisconnectedCallback &cb);
+    void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
     //! 设置接收到客户端消息时的回调
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold);
+    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
+    { receive_cb_ = cb; receive_threshold_ = threshold; }
 
     bool start();   //!< 启动服务
-    bool stop();    //!< 停止服务
+    bool stop();    //!< 停止服务，断开所有连接
     void cleanup(); //!< 清理
 
     //! 向指定客户端发送数据
@@ -56,7 +58,17 @@ class TcpServer {
     SockAddr getClientAddress(const Client &client) const;
 
   private:
-    Container conns_;
+    event::Loop *wp_loop_ = nullptr;
+
+    ConnectedCallback       connected_cb_;
+    DisconnectedCallback    disconnected_cb_;
+    ReceiveCallback         receive_cb_;
+    size_t                  receive_threshold_ = 0;
+
+    TcpAcceptor *sp_acceptor_ = nullptr;
+    ConnContainer conns_;
+
+    int cb_level_ = 0;
 };
 
 }
