@@ -24,13 +24,10 @@ TEST(Uart, echo) {
 
     Uart uart(sp_loop);
 
-    ASSERT_TRUE(uart.initialize("/dev/ttyUSB0"))
+    ASSERT_TRUE(uart.initialize("/dev/ttyUSB0", "115200 8n1"))
         << "NOTICE:" << endl
         << "1) check whether /dev/ttyUSB0 exist." << endl
         << "2) run test as root.";
-    ASSERT_TRUE(uart.setMode("115200 8n1"))
-        << "NOTICE:" << endl
-        << "Is this UART support 115200 8N1 ?";
     uart.enable();
 
     int recv_count = 0;

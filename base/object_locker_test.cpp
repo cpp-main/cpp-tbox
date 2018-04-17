@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
-#include "object_container.hpp"
+#include "object_locker.hpp"
 #include <vector>
 
 using namespace tbox;
 
-TEST(ObjectContainer, insert_1_and_remove)
+TEST(ObjectLocker, insert_1_and_remove)
 {
-    ObjectContainer<int> oc;
+    ObjectLocker<int> oc;
     auto t = oc.insert(new int(100));
 
     int *i1 = oc.at(t);
@@ -14,7 +14,7 @@ TEST(ObjectContainer, insert_1_and_remove)
     EXPECT_NE(i1, nullptr);
     EXPECT_EQ(*i1, 100);
 
-    oc.erase(t);
+    oc.remove(t);
     EXPECT_EQ(oc.size(), 0u);
     delete i1;
 
@@ -22,12 +22,12 @@ TEST(ObjectContainer, insert_1_and_remove)
     EXPECT_EQ(i2, nullptr);
 }
 
-TEST(ObjectContainer, insert_100_and_remove)
+TEST(ObjectLocker, insert_100_and_remove)
 {
-    using OC = ObjectContainer<int>;
+    using OC = ObjectLocker<int>;
     OC oc;
 
-    std::vector<OC::Token> tokens;
+    std::vector<OC::Key> tokens;
     //! 插入0~74的值
     for (int i = 0; i < 75; ++i) {
         auto t = oc.insert(new int(i));
@@ -42,7 +42,7 @@ TEST(ObjectContainer, insert_100_and_remove)
         EXPECT_NE(p, nullptr);
         EXPECT_EQ(*p, i);
 
-        oc.erase(t);
+        oc.remove(t);
         delete p;
     }
     EXPECT_EQ(oc.size(), 25u);
@@ -68,7 +68,7 @@ TEST(ObjectContainer, insert_100_and_remove)
         EXPECT_NE(p, nullptr);
         EXPECT_EQ(*p, i);
 
-        oc.erase(t);
+        oc.remove(t);
         delete p;
     }
     EXPECT_EQ(oc.size(), 0u);
