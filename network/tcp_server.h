@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <tbox/base/defines.h>
-#include <tbox/base/object_container.hpp>
+#include <tbox/base/object_locker.hpp>
 #include <tbox/event/loop.h>
 
 #include "sockaddr.h"
@@ -25,8 +25,8 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using ConnContainer = ObjectContainer<TcpConnection>;
-    using Client = ConnContainer::Token;
+    using TcpConns = ObjectLocker<TcpConnection>;
+    using Client = TcpConns::Key;
 
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
@@ -66,7 +66,7 @@ class TcpServer {
     size_t                  receive_threshold_ = 0;
 
     TcpAcceptor *sp_acceptor_ = nullptr;
-    ConnContainer conns_;
+    TcpConns conns_;    //!< TcpConnection 容器
 
     int cb_level_ = 0;
 };
