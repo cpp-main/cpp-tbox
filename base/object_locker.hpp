@@ -26,13 +26,14 @@ template <typename T> class ObjectLocker {
 
     class Key {
         friend ObjectLocker;
+
         Id id;
         size_t pos;
 
       public:
-        bool equal(const Key &other) const { return id == other.id && pos == other.pos; }
-        bool less(const Key &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
-        size_t hash() const { return (id << 8) | (pos & 0xff); }
+        inline bool equal(const Key &other) const { return id == other.id && pos == other.pos; }
+        inline bool less(const Key &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
+        inline size_t hash() const { return (id << 8) | (pos & 0xff); }
     };
 
     void reserve(size_t size);  //!< 预留指定大小的储物空间
@@ -170,37 +171,5 @@ size_t ObjectLocker<T>::allocPos()
 }
 
 }
-
-#if 0
-namespace std {
-
-template <typename T>
-struct equal_to {
-    bool operator () (const typename tbox::ObjectLocker<T>::Key &lhs,
-                      const typename tbox::ObjectLocker<T>::Key &rhs)
-    {
-        return lhs.equal(rhs);
-    }
-};
-
-template <typename T>
-struct less {
-    bool operator () (const typename tbox::ObjectLocker<T>::Key &lhs,
-                      const typename tbox::ObjectLocker<T>::Key &rhs)
-    {
-        return lhs.less(rhs);
-    }
-};
-
-template <typename T>
-struct hash {
-    size_t operator () (const typename tbox::ObjectLocker<T>::Key &key)
-    {
-        return key.hash();
-    }
-}
-
-}
-#endif
 
 #endif //TBOX_BASE_OBJECT_LOCKER_H_20180415

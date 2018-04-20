@@ -75,12 +75,3 @@ TEST(ObjectLocker, insert_100_and_remove)
     }
     EXPECT_EQ(oc.size(), 0u);
 }
-
-#if 0
-TEST(ObjectLocker, key)
-{
-    using Key = ObjectLocker<int>::Key;
-    std::set<Key> s1;
-    std::unordered_set<Key> s2;
-}
-#endif
