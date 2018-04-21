@@ -129,13 +129,14 @@ void TcpServer::onTcpConnected(TcpConnection *new_conn)
 
 void TcpServer::onTcpDisconnected(const Client &client)
 {
-    TcpConnection *conn = conns_.remove(client);
-    wp_loop_->runNext([conn] { CHECK_DELETE_OBJ(conn); });
-
     ++cb_level_;
     if (disconnected_cb_)
         disconnected_cb_(client);
     --cb_level_;
+
+    TcpConnection *conn = conns_.remove(client);
+    wp_loop_->runNext([conn] { CHECK_DELETE_OBJ(conn); });
+    //! 为什么先回调，再访问后面？是为了在回调中还能访问到TcpConnection对象
 }
 
 void TcpServer::onTcpReceived(const Client &client, Buffer &buff)
