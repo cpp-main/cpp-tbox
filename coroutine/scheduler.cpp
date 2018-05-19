@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include <tbox/base/log.h>
 #include <cassert>
+#include <cstring>
 
 namespace tbox {
 namespace coroutine {
@@ -42,8 +43,8 @@ struct Routine {
         p_routine->mainEntry();
     }
 
-    Routine(CoId i, RoutineEntry e, const string &n, size_t ss, Scheduler &sch) :
-        id(i), entry_func(e), name(n), scheduler(sch)
+    Routine(RoutineEntry e, const string &n, size_t ss, Scheduler &sch) :
+        entry_func(e), name(n), scheduler(sch)
     {
         LogDbg("Routine(%u)", id.getId());
 
@@ -54,7 +55,7 @@ struct Routine {
         ctx.uc_stack.ss_size = ss;
         ctx.uc_stack.ss_sp = p_stack_mem;
         ctx.uc_link = &(scheduler.main_ctx_);
-        makecontent(&ctx, (void(*)(void))RoutineMainEntry, 1, this);
+        makecontext(&ctx, (void(*)(void))RoutineMainEntry, 1, this);
     }
 
     ~Routine()
@@ -79,8 +80,10 @@ Scheduler::~Scheduler()
 
 CoId Scheduler::createCo(RoutineEntry entry, const string &name, size_t stack_size)
 {
-    Routine *new_routine = new Routine(id, entry, name, stack_size, *this);
-    return routine_locker_.insert(new_routine);
+    Routine *new_routine = new Routine(entry, name, stack_size, *this);
+    CoId id = routine_locker_.insert(new_routine);
+    new_routine->id = id;
+    return id;
 }
 
 bool Scheduler::makeRoutineReady(Routine *routine)
@@ -90,9 +93,9 @@ bool Scheduler::makeRoutineReady(Routine *routine)
         return false;
 
     routine->state = Routine::State::kReady;
-    lst_read_routines_.push_back(routine);
+    lst_ready_routines_.push_back(routine);
 
-    wp_loop_->runInLoop(std::bind(&Scheduler::scheduler, this));
+    wp_loop_->runInLoop(std::bind(&Scheduler::schedule, this));
     return true;
 }
 

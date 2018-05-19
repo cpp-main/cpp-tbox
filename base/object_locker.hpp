@@ -34,6 +34,8 @@ template <typename T> class ObjectLocker {
         inline bool equal(const Key &other) const { return id == other.id && pos == other.pos; }
         inline bool less(const Key &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
         inline size_t hash() const { return (id << 8) | (pos & 0xff); }
+
+        Id getId() const { return id; }
     };
 
     void reserve(size_t size);  //!< 预留指定大小的储物空间

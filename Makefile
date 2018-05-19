@@ -13,6 +13,7 @@ app_y += base
 app_y += event
 app_y += eventx
 app_y += network
+app_y += coroutine
 
 all test: $(STAGING_DIR)
 	@for i in $(app_y); do \

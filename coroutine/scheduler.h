@@ -1,6 +1,7 @@
 #ifndef TBOX_COROUTINE_SCHEDULER_H_20180519
 #define TBOX_COROUTINE_SCHEDULER_H_20180519
 
+#include <list>
 #include <ucontext.h>
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
@@ -10,9 +11,11 @@ namespace tbox {
 namespace coroutine {
 
 class Routine;
+class Scheduler;
 
 using RoutineLocker = ObjectLocker<Routine>;
 using CoId = RoutineLocker::Key;
+using RoutineEntry = std::function<void(Scheduler&)>;
 
 class Scheduler {
     friend struct Routine;
@@ -35,7 +38,7 @@ class Scheduler {
     bool isCanceled() const;        //! 当前协程是否被取消
     std::string getName() const;    //! 当前协程的名称
 
-    event::Loop getLoop() const { return wp_loop_; }
+    event::Loop* getLoop() const { return wp_loop_; }
 
   public:
     //! 主协程调用
@@ -51,7 +54,7 @@ class Scheduler {
     ucontext_t main_ctx_;   //! 主协程上下文
     RoutineLocker routine_locker_;
     Routine *curr_routine_ = nullptr;   //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
-    std::list<Routine *> lst_read_routines_;    //! 已就绪的 Routine 链表
+    std::list<Routine*> lst_ready_routines_;    //! 已就绪的 Routine 链表
 };
 
 }
