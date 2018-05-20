@@ -14,7 +14,7 @@ class Routine;
 class Scheduler;
 
 using RoutineLocker = ObjectLocker<Routine>;
-using CoId = RoutineLocker::Key;
+using RoutineKey = RoutineLocker::Key;
 using RoutineEntry = std::function<void(Scheduler&)>;
 
 class Scheduler {
@@ -25,32 +25,32 @@ class Scheduler {
     virtual ~Scheduler();
 
   public:
-    //! 创建一个协程
-    CoId createCo(RoutineEntry entry, const std::string &name = "", size_t stack_size = 8192);
-    bool resumeCo(CoId id);    //! 恢复协程
-    bool cancelCo(CoId id);    //! 取消协程
+    //! 创建一个协程。创建后不自动执行，需要一次 resume()
+    RoutineKey create(const RoutineEntry &entry, const std::string &name = "", size_t stack_size = 8192);
+    bool resume(const RoutineKey &key);  //! 恢复协程
+    bool cancel(const RoutineKey &key);  //! 取消协程
 
   public:
-    void wait();    //! 切换到主协程，等待被 resumeCo() 唤醒
+    //! 以下仅限子协程调用
+    void wait();    //! 切换到主协程，等待被 resumeRoutine() 唤醒
     void yield();   //! 切换到主协程，等待下一个事件循环继续执行
 
-    CoId getCoId() const;           //! 获取当前协程id
+    RoutineKey getKey() const;      //! 获取当前协程key
     bool isCanceled() const;        //! 当前协程是否被取消
     std::string getName() const;    //! 当前协程的名称
 
     event::Loop* getLoop() const { return wp_loop_; }
 
-  public:
-    //! 主协程调用
+  protected:
     void schedule();    //! 调度，依次切换到就绪的 Routine 去执行，直到没有 Routine 就绪为止
 
-  protected:
     bool makeRoutineReady(Routine *routine);
-    void swapToRoutine(Routine *routine);
+    void switchToRoutine(Routine *routine);
     bool isInMainRoutine() const;   //! 是否处于主协程中
 
   private:
     event::Loop *wp_loop_ = nullptr;
+
     ucontext_t main_ctx_;   //! 主协程上下文
     RoutineLocker routine_locker_;
     Routine *curr_routine_ = nullptr;   //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程

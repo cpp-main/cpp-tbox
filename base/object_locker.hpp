@@ -52,7 +52,7 @@ template <typename T> class ObjectLocker {
     bool empty() const { return size() == 0; }
 
     template <typename Func>
-    void foreach(Func func);
+    void foreach(Func func);    //! 遍历过程中允许执行 remove() 操作
 
   protected:
     Id allocId();
