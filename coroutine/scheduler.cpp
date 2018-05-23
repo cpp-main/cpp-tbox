@@ -131,6 +131,9 @@ bool Scheduler::cancel(const RoutineKey &key)
 void Scheduler::wait()
 {
     assert(!isInMainRoutine());
+    if (curr_routine_->is_canceled)
+        return;
+
     curr_routine_->state = Routine::State::kSuspend;
     swapcontext(&(curr_routine_->ctx), &main_ctx_);
 }
@@ -138,6 +141,9 @@ void Scheduler::wait()
 void Scheduler::yield()
 {
     assert(!isInMainRoutine());
+    if (curr_routine_->is_canceled)
+        return;
+
     makeRoutineReady(curr_routine_);
     swapcontext(&(curr_routine_->ctx), &main_ctx_);
 }
@@ -170,7 +176,7 @@ bool Scheduler::makeRoutineReady(Routine *routine)
         return false;
 
     routine->state = Routine::State::kReady;
-    lst_ready_routines_.push_back(routine);
+    ready_routines_.push(routine);
     wp_loop_->runInLoop(std::bind(&Scheduler::schedule, this));
     return true;
 }
@@ -200,10 +206,10 @@ void Scheduler::schedule()
     assert(isInMainRoutine());
 
     //! 逐一切换到就绪链表对应的协程去执行，直到就绪链表为空
-    while (!lst_ready_routines_.empty()) {
-        Routine *routine = lst_ready_routines_.front();
+    while (!ready_routines_.empty()) {
+        Routine *routine = ready_routines_.front();
         switchToRoutine(routine);
-        lst_ready_routines_.pop_front();
+        ready_routines_.pop();
     }
 }
 
