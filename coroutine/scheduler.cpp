@@ -9,6 +9,7 @@ namespace coroutine {
 using namespace std;
 using namespace event;
 
+//! 协程对象
 struct Routine {
     RoutineKey   key;   //! 协程索引
     RoutineEntry entry; //! 协程函数入口
@@ -19,18 +20,19 @@ struct Routine {
 
     //! 协程状态
     enum class State {
-        kNotStart,  //!< 未启动
         kSuspend,   //!< 挂起，等待被resume()
         kReady,     //!< 就绪
         kRunning,   //!< 正在运行
         kDead,      //!< 已死亡
     };
-    State state = State::kNotStart;
+    State state = State::kSuspend;
+    bool is_started  = false;
     bool is_canceled = false;
 
     void mainEntry()
     {
         LogDbg("Routine %u:%s start", key.getId(), name.c_str());
+        is_started = true;
         entry(scheduler);
         state = State::kDead;
         LogDbg("Routine %u:%s end", key.getId(), name.c_str());
@@ -49,6 +51,8 @@ struct Routine {
         void *p_stack_mem = malloc(ss);
         assert(p_stack_mem != nullptr);
 
+        //!TODO: 是否可以加哨兵标记，检查栈溢出
+
         getcontext(&ctx);
         ctx.uc_stack.ss_size = ss;
         ctx.uc_stack.ss_sp = p_stack_mem;
@@ -58,7 +62,8 @@ struct Routine {
 
     ~Routine()
     {
-        assert(state == State::kNotStart || state == State::kDead);
+        //! 只有没有启动或是已结束的协程才能被释放
+        assert(!is_started || state == State::kDead);
 
         free(ctx.uc_stack.ss_sp);
         LogDbg("~Routine(%u)", key.getId());
@@ -78,7 +83,7 @@ Scheduler::~Scheduler()
     //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
     routine_locker_.foreach(
         [this] (Routine *routine) {
-            if (routine->state == Routine::State::kNotStart) {
+            if (!routine->is_started) {
                 routine_locker_.remove(routine->key);
                 delete routine;
             } else {
@@ -205,11 +210,20 @@ void Scheduler::schedule()
 {
     assert(isInMainRoutine());
 
+    //! 思考：为什么要定义一个 tmp 来与 ready_routines_ 进行交换，而不是直接使用？
+    //!
+    //! 如果存在某个协程，在循环里反复 yield()，则会导致 ready_routines_ 一直不为空。
+    //! 进而导致 schedule() 函数无法退出。导致 Loop 中的其它事件阻塞，得不到处理。
+    //! 这里的处理方法，就是将 ready_routines_ 中的内容移到 tmp 中来。后来执行中就绪
+    //! 的协程留到下一轮去处理。
+    ReadyRoutineQueue tmp;
+    std::swap(tmp, ready_routines_);
+
     //! 逐一切换到就绪链表对应的协程去执行，直到就绪链表为空
-    while (!ready_routines_.empty()) {
-        Routine *routine = ready_routines_.front();
+    while (!tmp.empty()) {
+        Routine *routine = tmp.front();
         switchToRoutine(routine);
-        ready_routines_.pop();
+        tmp.pop();
     }
 }
 

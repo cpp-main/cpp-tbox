@@ -24,6 +24,9 @@ class Scheduler {
     explicit Scheduler(event::Loop *wp_loop);
     virtual ~Scheduler();
 
+    NONCOPYABLE(Scheduler);
+    IMMOVABLE(Scheduler);
+
   public:
     //! 创建一个协程，并返回协程Key。创建后不自动执行，需要一次 resume()
     RoutineKey create(const RoutineEntry &entry, const std::string &name = "", size_t stack_size = 8192);
@@ -41,9 +44,10 @@ class Scheduler {
 
     event::Loop* getLoop() const { return wp_loop_; }
 
-  protected:
-    void schedule();    //! 调度，依次切换到就绪的 Routine 去执行，直到没有 Routine 就绪为止
+  public:
+    void schedule();    //! 调度，依次切换到已就绪的 Routine 去执行，直到没有 Routine 就绪为止
 
+  protected:
     bool makeRoutineReady(Routine *routine);
     void switchToRoutine(Routine *routine);
     bool isInMainRoutine() const;   //! 是否处于主协程中
@@ -54,7 +58,9 @@ class Scheduler {
     ucontext_t main_ctx_;   //! 主协程上下文
     RoutineLocker routine_locker_;
     Routine *curr_routine_ = nullptr;       //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
-    std::queue<Routine*> ready_routines_;   //! 已就绪的 Routine 链表
+
+    using ReadyRoutineQueue = std::queue<Routine*>;
+    ReadyRoutineQueue ready_routines_;      //! 已就绪的 Routine 链表
 };
 
 }
