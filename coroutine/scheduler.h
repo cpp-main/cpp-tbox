@@ -44,10 +44,9 @@ class Scheduler {
 
     event::Loop* getLoop() const { return wp_loop_; }
 
-  public:
+  protected:
     void schedule();    //! 调度，依次切换到已就绪的 Routine 去执行，直到没有 Routine 就绪为止
 
-  protected:
     bool makeRoutineReady(Routine *routine);
     void switchToRoutine(Routine *routine);
     bool isInMainRoutine() const;   //! 是否处于主协程中

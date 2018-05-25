@@ -9,29 +9,6 @@ using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::coroutine;
 
-TEST(Scheduler, OneRoutineOnly)
-{
-    Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
-
-    int exec_count = 0;
-    Scheduler sch(sp_loop);
-    auto key = sch.create(
-        [&exec_count](Scheduler &sch) {
-            ++exec_count;
-            sch.wait();
-            ++exec_count;
-        },
-        "test1"
-    );
-    sch.resume(key);
-    sch.schedule();
-    EXPECT_EQ(exec_count, 1);
-    sch.resume(key);
-    sch.schedule();
-    EXPECT_EQ(exec_count, 2);
-}
-
 TEST(Scheduler, CreateTwoRoutineThenStop)
 {
     Loop *sp_loop = event::Loop::New();
@@ -46,7 +23,7 @@ TEST(Scheduler, CreateTwoRoutineThenStop)
         sch.create(entry, "test1");
         sch.create(entry, "test2");
 
-        sp_loop->exitLoop(chrono::milliseconds(20));
+        sp_loop->exitLoop(chrono::milliseconds(10));
         sp_loop->runLoop();
     }
 
@@ -68,7 +45,7 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
         sch.resume(key1);
         sch.create(entry, "test2");
 
-        sp_loop->exitLoop(chrono::milliseconds(20));
+        sp_loop->exitLoop(chrono::milliseconds(10));
         sp_loop->runLoop();
     }
 
@@ -134,44 +111,37 @@ TEST(Scheduler, RoutineCreateAnotherRoutine)
     EXPECT_TRUE(routine2_end);
 }
 
-//! 测试 Scheduler的yield()与cancel()功能
-TEST(Scheduler, CancelRoutineByTimer)
+//! 测试 Scheduler的yield()
+TEST(Scheduler, Yield)
 {
     Loop *sp_loop = event::Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
     Scheduler sch(sp_loop);
 
-    bool routine_stop = false;
-    int  count = 0;
-    auto routine_entry = [&] (Scheduler &sch) {
-        while (true) {
-            ++count;
+    int routine1_count = 0;
+    auto routine1_entry = [&] (Scheduler &sch) {
+        for (int i = 0; i < 20; ++i) {
+            ++routine1_count;
             sch.yield();
-            if (sch.isCanceled())
-                break;
         }
-        routine_stop = true;
     };
-    auto key = sch.create(routine_entry);
-    sch.resume(key);
-
-    //! 创建定时器，1秒后取消协程
-    auto timer = sp_loop->newTimerEvent();
-    SetScopeExitAction([timer]{ delete timer;});
-    timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
-    timer->setCallback(
-        [&] {
-            sch.cancel(key);
-            sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
+    int routine2_count = 0;
+    auto routine2_entry = [&] (Scheduler &sch) {
+        for (int i = 0; i < 10; ++i) {
+            ++routine2_count;
+            sch.yield();
         }
-    );
-    timer->enable();
+    };
 
+    sch.resume(sch.create(routine1_entry));
+    sch.resume(sch.create(routine2_entry));
+
+    sp_loop->exitLoop(chrono::seconds(1));
     sp_loop->runLoop();
 
-    EXPECT_NE(count, 0);
-    EXPECT_TRUE(routine_stop);
+    EXPECT_EQ(routine1_count, 20);
+    EXPECT_EQ(routine2_count, 10);
 }
 
 //! 测试 Scheduler::wait() 功能
@@ -210,4 +180,44 @@ TEST(Scheduler, Wait)
 
     EXPECT_TRUE(routine_begin);
     EXPECT_TRUE(routine_end);
+}
+
+//! 测试 Scheduler的yield()与cancel()功能
+TEST(Scheduler, CancelRoutineByTimer)
+{
+    Loop *sp_loop = event::Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+
+    Scheduler sch(sp_loop);
+
+    bool routine_stop = false;
+    int  count = 0;
+    auto routine_entry = [&] (Scheduler &sch) {
+        while (true) {
+            ++count;
+            sch.yield();
+            if (sch.isCanceled())
+                break;
+        }
+        routine_stop = true;
+    };
+    auto key = sch.create(routine_entry);
+    sch.resume(key);
+
+    //! 创建定时器，1秒后取消协程
+    auto timer = sp_loop->newTimerEvent();
+    SetScopeExitAction([timer]{ delete timer;});
+    timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
+    timer->setCallback(
+        [&] {
+            sch.cancel(key);
+            sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
+        }
+    );
+    timer->enable();
+
+    sp_loop->runLoop();
+
+    EXPECT_NE(count, 0);
+    EXPECT_TRUE(routine_stop);
 }
