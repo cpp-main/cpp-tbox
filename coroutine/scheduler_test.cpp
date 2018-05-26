@@ -41,8 +41,8 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
         auto entry = [&exec_count] (Scheduler &sch) {
             ++exec_count;
         };
-        auto key1 = sch.create(entry, "test1");
-        sch.resume(key1);
+        auto token1 = sch.create(entry, "test1");
+        sch.resume(token1);
         sch.create(entry, "test2");
 
         sp_loop->exitLoop(chrono::milliseconds(10));
@@ -52,7 +52,7 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
     EXPECT_EQ(exec_count, 1);
 }
 
-//! 测试在协程中是否能获取name与key
+//! 测试在协程中是否能获取name与token
 TEST(Scheduler, GetInfoInRoutine)
 {
     Loop *sp_loop = event::Loop::New();
@@ -61,22 +61,22 @@ TEST(Scheduler, GetInfoInRoutine)
     Scheduler sch(sp_loop);
 
     string read_name;
-    RoutineKey  read_key;
+    RoutineToken  read_token;
 
     auto entry = [&] (Scheduler &sch) {
         read_name = sch.getName();
-        read_key = sch.getKey();
+        read_token = sch.getToken();
     };
 
-    auto key1 = sch.create(entry, "test1");
-    sch.resume(key1);
+    auto token1 = sch.create(entry, "test1");
+    sch.resume(token1);
     sch.create(entry, "test2");
 
     sp_loop->exitLoop(chrono::milliseconds(20));
     sp_loop->runLoop();
 
     EXPECT_EQ(read_name, "test1");
-    EXPECT_TRUE(read_key.equal(key1));
+    EXPECT_TRUE(read_token.equal(token1));
 }
 
 //! 测试在协程中创建另一个协程，观察被创建的协程是否被执行
@@ -94,15 +94,15 @@ TEST(Scheduler, RoutineCreateAnotherRoutine)
 
     bool routine2_end = false;
     auto routine2_entry = [&] (Scheduler &sch) {
-        auto key = sch.create(routine1_entry, "be created routine");
-        sch.resume(key);
+        auto token = sch.create(routine1_entry, "be created routine");
+        sch.resume(token);
         sch.yield();
         routine2_end = true;
     };
 
 
-    auto key = sch.create(routine2_entry);
-    sch.resume(key);
+    auto token = sch.create(routine2_entry);
+    sch.resume(token);
 
     sp_loop->exitLoop(chrono::milliseconds(20));
     sp_loop->runLoop();
@@ -159,8 +159,8 @@ TEST(Scheduler, Wait)
         sch.wait();
         routine_end = true;
     };
-    auto key = sch.create(routine_entry);
-    sch.resume(key);
+    auto token = sch.create(routine_entry);
+    sch.resume(token);
 
     //! 创建定时器，1秒后唤醒协程
     auto timer = sp_loop->newTimerEvent();
@@ -170,7 +170,7 @@ TEST(Scheduler, Wait)
         [&] {
             EXPECT_TRUE(routine_begin);
             EXPECT_FALSE(routine_end);
-            sch.resume(key);
+            sch.resume(token);
             sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
         }
     );
@@ -201,8 +201,8 @@ TEST(Scheduler, CancelRoutineByTimer)
         }
         routine_stop = true;
     };
-    auto key = sch.create(routine_entry);
-    sch.resume(key);
+    auto token = sch.create(routine_entry);
+    sch.resume(token);
 
     //! 创建定时器，1秒后取消协程
     auto timer = sp_loop->newTimerEvent();
@@ -210,7 +210,7 @@ TEST(Scheduler, CancelRoutineByTimer)
     timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
     timer->setCallback(
         [&] {
-            sch.cancel(key);
+            sch.cancel(token);
             sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
         }
     );

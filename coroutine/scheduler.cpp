@@ -11,7 +11,7 @@ using namespace event;
 
 //! 协程对象
 struct Routine {
-    RoutineKey   key;   //! 协程索引
+    RoutineToken token; //! 协程索引
     RoutineEntry entry; //! 协程函数入口
     string       name;  //! 协程名
     Scheduler   &scheduler; //! 协度器引用
@@ -31,11 +31,11 @@ struct Routine {
 
     void mainEntry()
     {
-        LogDbg("Routine %u:%s start", key.getId(), name.c_str());
+        LogDbg("Routine %u:%s start", token.getId(), name.c_str());
         is_started = true;
         entry(scheduler);
         state = State::kDead;
-        LogDbg("Routine %u:%s end", key.getId(), name.c_str());
+        LogDbg("Routine %u:%s end", token.getId(), name.c_str());
     }
 
     static void RoutineMainEntry(Routine *p_routine)
@@ -46,7 +46,7 @@ struct Routine {
     Routine(const RoutineEntry &e, const string &n, size_t ss, Scheduler &sch) :
         entry(e), name(n), scheduler(sch)
     {
-        LogDbg("Routine(%u)", key.getId());
+        LogDbg("Routine(%u)", token.getId());
 
         void *p_stack_mem = malloc(ss);
         assert(p_stack_mem != nullptr);
@@ -66,7 +66,7 @@ struct Routine {
         assert(!is_started || state == State::kDead);
 
         free(ctx.uc_stack.ss_sp);
-        LogDbg("~Routine(%u)", key.getId());
+        LogDbg("~Routine(%u)", token.getId());
     }
 };
 
@@ -81,10 +81,10 @@ Scheduler::Scheduler(Loop *wp_loop) :
 Scheduler::~Scheduler()
 {
     //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
-    routine_locker_.foreach(
+    routine_cabinet_.foreach(
         [this] (Routine *routine) {
             if (!routine->is_started) {
-                routine_locker_.remove(routine->key);
+                routine_cabinet_.remove(routine->token);
                 delete routine;
             } else {
                 routine->is_canceled = true;
@@ -93,8 +93,8 @@ Scheduler::~Scheduler()
     );
 
     //! 令已启动的协程尽快正常退出
-    while (!routine_locker_.empty()) {
-        routine_locker_.foreach(
+    while (!routine_cabinet_.empty()) {
+        routine_cabinet_.foreach(
             [this] (Routine *routine) {
                 switchToRoutine(routine);
             }
@@ -107,25 +107,25 @@ Scheduler::~Scheduler()
     //! 所以，这里的解决办法：令协程自行了结。
 }
 
-RoutineKey Scheduler::create(const RoutineEntry &entry, const string &name, size_t stack_size)
+RoutineToken Scheduler::create(const RoutineEntry &entry, const string &name, size_t stack_size)
 {
     Routine *new_routine = new Routine(entry, name, stack_size, *this);
-    RoutineKey key = routine_locker_.insert(new_routine);
-    new_routine->key = key;
-    return key;
+    RoutineToken token = routine_cabinet_.insert(new_routine);
+    new_routine->token = token;
+    return token;
 }
 
-bool Scheduler::resume(const RoutineKey &key)
+bool Scheduler::resume(const RoutineToken &token)
 {
-    Routine *routine = routine_locker_.at(key);
+    Routine *routine = routine_cabinet_.at(token);
     if (routine != nullptr)
         return makeRoutineReady(routine);
     return false;
 }
 
-bool Scheduler::cancel(const RoutineKey &key)
+bool Scheduler::cancel(const RoutineToken &token)
 {
-    Routine *routine = routine_locker_.at(key);
+    Routine *routine = routine_cabinet_.at(token);
     if (routine != nullptr) {
         routine->is_canceled = true;
         return makeRoutineReady(routine);
@@ -153,10 +153,10 @@ void Scheduler::yield()
     swapcontext(&(curr_routine_->ctx), &main_ctx_);
 }
 
-RoutineKey Scheduler::getKey() const
+RoutineToken Scheduler::getToken() const
 {
     assert(!isInMainRoutine());
-    return curr_routine_->key;
+    return curr_routine_->token;
 }
 
 bool Scheduler::isCanceled() const
@@ -180,7 +180,7 @@ bool Scheduler::makeRoutineReady(Routine *routine)
         return false;
 
     routine->state = Routine::State::kReady;
-    ready_routines_.push(routine->key);
+    ready_routines_.push(routine->token);
     wp_loop_->runInLoop(std::bind(&Scheduler::schedule, this));
     return true;
 }
@@ -198,7 +198,7 @@ void Scheduler::switchToRoutine(Routine *routine)
 
     //! 检查协程状态，如果已经结束了的协程，要释放资源
     if (routine->state == Routine::State::kDead) {
-        routine_locker_.remove(routine->key);
+        routine_cabinet_.remove(routine->token);
         delete curr_routine_;
     }
 
@@ -220,7 +220,7 @@ void Scheduler::schedule()
 
     //! 逐一切换到就绪链表对应的协程去执行，直到就绪链表为空
     while (!tmp.empty()) {
-        Routine *routine = routine_locker_.at(tmp.front());
+        Routine *routine = routine_cabinet_.at(tmp.front());
         if (routine != nullptr)
             switchToRoutine(routine);
         tmp.pop();

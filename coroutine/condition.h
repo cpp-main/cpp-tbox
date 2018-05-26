@@ -12,13 +12,13 @@ class Condition {
     Condition(Scheduler &sch) : sch_(sch) { }
 
     //! 绑定当前协程
-    void bind() { key_ = sch_.getKey(); }
+    void bind() { token_ = sch_.getToken(); }
     //! 绑定指定协程
-    void bind(const RoutineKey &key) { key_ = key; }
+    void bind(const RoutineToken &token) { token_ = token; }
 
     Condition& operator = (bool v) {
         if (v && !v_)
-            sch_.resume(key_);
+            sch_.resume(token_);
         v_ = v;
         return *this;
     }
@@ -27,7 +27,7 @@ class Condition {
 
   private:
     Scheduler &sch_;
-    RoutineKey key_;
+    RoutineToken token_;
 
     bool v_ = false;
 };

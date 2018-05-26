@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include "object_locker.hpp"
+#include "cabinet.hpp"
 #include <vector>
 #include <unordered_set>
 #include <set>
 
 using namespace tbox;
 
-TEST(ObjectLocker, insert_1_and_remove)
+TEST(Cabinet, insert_1_and_remove)
 {
-    ObjectLocker<int> oc;
+    Cabinet<int> oc;
     auto t = oc.insert(new int(100));
 
     int *i1 = oc.at(t);
@@ -24,12 +24,12 @@ TEST(ObjectLocker, insert_1_and_remove)
     EXPECT_EQ(i2, nullptr);
 }
 
-TEST(ObjectLocker, insert_100_and_remove)
+TEST(Cabinet, insert_100_and_remove)
 {
-    using OC = ObjectLocker<int>;
+    using OC = Cabinet<int>;
     OC oc;
 
-    std::vector<OC::Key> tokens;
+    std::vector<OC::Token> tokens;
     //! 插入0~74的值
     for (int i = 0; i < 75; ++i) {
         auto t = oc.insert(new int(i));

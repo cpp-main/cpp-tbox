@@ -1,13 +1,13 @@
-#ifndef TBOX_BASE_OBJECT_LOCKER_H_20180415
-#define TBOX_BASE_OBJECT_LOCKER_H_20180415
+#ifndef TBOX_BASE_CABINET_H_20180415
+#define TBOX_BASE_CABINET_H_20180415
 
 /**
- * 实现一个对象储物柜 ObjectLocker
+ * 实现一个对象储物柜 Cabinet
  * 其特征在于：
- * 1) 存储一个对象指针后，将获得一个 Key，即称:"钥匙"；
- * 2) 该 Key 无法单位访问到对象，需要通过 ObjectLocker.at(key) 才能获取到对象；
- * 3) 如果 Key 对应的对象被删除，那么该 Key 就会失效。失效了的 Key 取不出对象；
- * 3) 使用 Key 获取对象、存入与取走对象的时间复杂度均为 O(1)；
+ * 1) 存储一个对象指针后，将获得一个 Token，即称:"凭据"；
+ * 2) 该 Token 无法单位访问到对象，需要通过 Cabinet.at(token) 才能获取到对象；
+ * 3) 如果 Token 对应的对象被删除，那么该 Token 就会失效。失效了的 Token 取不出对象；
+ * 3) 使用 Token 获取对象、存入与取出对象的时间复杂度均为 O(1)；
  *
  * 使用场景：
  * - TcpServer 服务器，要管理其 TcpConnection 的生命期
@@ -20,19 +20,19 @@
 
 namespace tbox {
 
-template <typename T> class ObjectLocker {
+template <typename T> class Cabinet {
   public:
     using Id = size_t;
 
-    class Key {
-        friend ObjectLocker;
+    class Token {
+        friend Cabinet;
 
         Id id;
         size_t pos;
 
       public:
-        inline bool equal(const Key &other) const { return id == other.id && pos == other.pos; }
-        inline bool less(const Key &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
+        inline bool equal(const Token &other) const { return id == other.id && pos == other.pos; }
+        inline bool less(const Token &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
         inline size_t hash() const { return (id << 8) | (pos & 0xff); }
 
         Id getId() const { return id; }
@@ -40,13 +40,13 @@ template <typename T> class ObjectLocker {
 
     void reserve(size_t size);  //!< 预留指定大小的储物空间
 
-    Key insert(T *obj);         //!< 存入对象
-    T*  remove(const Key &key); //!< 删除对象
+    Token insert(T *obj);         //!< 存入对象
+    T*  remove(const Token &token); //!< 删除对象
     void clear();               //!< 清空所有对象
 
     //! 获取对象的指针
-    T* at(const Key &key) const;
-    T* operator [] (const Key &key) const { return at(key); }
+    T* at(const Token &token) const;
+    T* operator [] (const Token &token) const { return at(token); }
 
     size_t size() const;
     bool empty() const { return size() == 0; }
@@ -77,35 +77,35 @@ template <typename T> class ObjectLocker {
 ///////////////////////////////////////////////////////////////////////
 
 template <typename T>
-void ObjectLocker<T>::reserve(size_t size)
+void Cabinet<T>::reserve(size_t size)
 {
     cells_.reserve(size);
 }
 
 template <typename T>
-typename ObjectLocker<T>::Key ObjectLocker<T>::insert(T *obj)
+typename Cabinet<T>::Token Cabinet<T>::insert(T *obj)
 {
-    Key new_key;
-    new_key.id = allocId();
-    new_key.pos = allocPos();
+    Token new_token;
+    new_token.id = allocId();
+    new_token.pos = allocPos();
 
-    Cell &cell = cells_.at(new_key.pos);
-    cell.id = new_key.id;
+    Cell &cell = cells_.at(new_token.pos);
+    cell.id = new_token.id;
     cell.obj_ptr = obj;
 
     ++count_;
-    return new_key;
+    return new_token;
 }
 
 template <typename T>
-T* ObjectLocker<T>::remove(const ObjectLocker<T>::Key &key)
+T* Cabinet<T>::remove(const Cabinet<T>::Token &token)
 {
-    Cell &cell = cells_.at(key.pos);
-    if (cell.id == key.id) {
+    Cell &cell = cells_.at(token.pos);
+    if (cell.id == token.id) {
         T *ptr = cell.obj_ptr;
         cell.id = 0;
         cell.next_free = first_free_;
-        first_free_ = key.pos;
+        first_free_ = token.pos;
         --count_;
         return ptr;
     }
@@ -113,7 +113,7 @@ T* ObjectLocker<T>::remove(const ObjectLocker<T>::Key &key)
 }
 
 template <typename T>
-void ObjectLocker<T>::clear()
+void Cabinet<T>::clear()
 {
     last_id_ = 0;
     cells_.clear();
@@ -122,23 +122,23 @@ void ObjectLocker<T>::clear()
 }
 
 template <typename T>
-T* ObjectLocker<T>::at(const ObjectLocker<T>::Key &key) const
+T* Cabinet<T>::at(const Cabinet<T>::Token &token) const
 {
-    const Cell &cell = cells_.at(key.pos);
-    if (cell.id == key.id)
+    const Cell &cell = cells_.at(token.pos);
+    if (cell.id == token.id)
         return cell.obj_ptr;
     return nullptr;
 }
 
 template <typename T>
-size_t ObjectLocker<T>::size() const
+size_t Cabinet<T>::size() const
 {
     return count_;
 }
 
 template <typename T>
 template <typename Func>
-void ObjectLocker<T>::foreach(Func func)
+void Cabinet<T>::foreach(Func func)
 {
     for (auto &cell : cells_) {
         if (cell.id != 0)
@@ -147,7 +147,7 @@ void ObjectLocker<T>::foreach(Func func)
 }
 
 template <typename T>
-typename ObjectLocker<T>::Id ObjectLocker<T>::allocId()
+typename Cabinet<T>::Id Cabinet<T>::allocId()
 {
     //! 避免分配 0 作为 id
     if (last_id_ == std::numeric_limits<Id>::max())
@@ -157,7 +157,7 @@ typename ObjectLocker<T>::Id ObjectLocker<T>::allocId()
 }
 
 template <typename T>
-size_t ObjectLocker<T>::allocPos()
+size_t Cabinet<T>::allocPos()
 {
     if (first_free_ != std::numeric_limits<size_t>::max()) {
         //! 如果有空间格子，则直接使用空间格式
@@ -174,4 +174,4 @@ size_t ObjectLocker<T>::allocPos()
 
 }
 
-#endif //TBOX_BASE_OBJECT_LOCKER_H_20180415
+#endif //TBOX_BASE_CABINET_H_20180415

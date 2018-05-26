@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <tbox/base/defines.h>
-#include <tbox/base/object_locker.hpp>
+#include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
 
 #include "sockaddr.h"
@@ -25,8 +25,8 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using TcpConns = ObjectLocker<TcpConnection>;
-    using Client = TcpConns::Key;
+    using TcpConns = Cabinet<TcpConnection>;
+    using Client = TcpConns::Token;
 
     enum class State {
         kNone, kInited, kRunning
