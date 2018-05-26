@@ -176,12 +176,11 @@ string Scheduler::getName() const
  */
 bool Scheduler::makeRoutineReady(Routine *routine)
 {
-    if ((routine->state == Routine::State::kReady)
-        || (routine->state == Routine::State::kDead))
+    if (routine->state == Routine::State::kDead)
         return false;
 
     routine->state = Routine::State::kReady;
-    ready_routines_.push(routine);
+    ready_routines_.push(routine->key);
     wp_loop_->runInLoop(std::bind(&Scheduler::schedule, this));
     return true;
 }
@@ -221,8 +220,9 @@ void Scheduler::schedule()
 
     //! 逐一切换到就绪链表对应的协程去执行，直到就绪链表为空
     while (!tmp.empty()) {
-        Routine *routine = tmp.front();
-        switchToRoutine(routine);
+        Routine *routine = routine_locker_.at(tmp.front());
+        if (routine != nullptr)
+            switchToRoutine(routine);
         tmp.pop();
     }
 }

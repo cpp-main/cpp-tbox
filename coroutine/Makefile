@@ -4,7 +4,8 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	scheduler.h
+	scheduler.h \
+	condition.h \
 
 SRC_FILES = \
 	scheduler.cpp
@@ -12,7 +13,8 @@ SRC_FILES = \
 CCXXFLAGS += -DLOG_MODULE_ID='"coroutine"' $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
-	scheduler_test.cpp
+	scheduler_test.cpp \
+	condition_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 

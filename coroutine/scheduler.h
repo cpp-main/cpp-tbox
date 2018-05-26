@@ -58,7 +58,7 @@ class Scheduler {
     RoutineLocker routine_locker_;
     Routine *curr_routine_ = nullptr;       //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
 
-    using ReadyRoutineQueue = std::queue<Routine*>;
+    using ReadyRoutineQueue = std::queue<RoutineKey>;
     ReadyRoutineQueue ready_routines_;      //! 已就绪的 Routine 链表
 };
 
