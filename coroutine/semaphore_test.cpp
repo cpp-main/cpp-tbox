@@ -22,7 +22,7 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
 
     int times = 200;
     int count = 0;
-    //! 生产者，将 send_vec 中的数据逐一发送到 ch
+    //! 生产者
     auto routine1_entry = [&] (Scheduler &sch) {
         for (int i = 0; i < times; ++i) {
             sem.release();
@@ -30,7 +30,7 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
         }
     };
 
-    //! 消费者，从 ch 中读取数据，存入到 recv_vec 中
+    //! 消费者
     auto routine2_entry = [&] (Scheduler &sch) {
         while (!sch.isCanceled()) {
             sem.acquire();
@@ -44,12 +44,11 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
     sp_loop->exitLoop(chrono::milliseconds(100));
     sp_loop->runLoop();
 
-    //! 检查发送的数据与接收到数据是否对应
     EXPECT_EQ(times, count);
 }
 
 /**
- * 用定时器定时向ch发送数据，协程循环接收数据
+ * 用定时器定时通过sem释放资源，协程循环接收数据
  *
  * 主要测试主协程的loop事件与子协程之间是否存在冲突
  */
@@ -64,6 +63,7 @@ TEST(Semaphore, TimerProduceAndConsumer)
     int times = 10;
     int count = 0;
 
+    //! 定时器，定时生产
     int index = 0;
     auto timer = sp_loop->newTimerEvent();
     timer->initialize(chrono::milliseconds(10), Event::Mode::kPersist);
@@ -79,7 +79,7 @@ TEST(Semaphore, TimerProduceAndConsumer)
     );
     timer->enable();
 
-    //! 消费者，从 ch 中读取数据，存入到 recv_vec 中
+    //! 消费者
     auto routine2_entry = [&] (Scheduler &sch) {
         while (!sch.isCanceled()) {
             sem.acquire();
@@ -91,7 +91,6 @@ TEST(Semaphore, TimerProduceAndConsumer)
 
     sp_loop->runLoop();
 
-    //! 检查发送的数据与接收到数据是否对应
     EXPECT_EQ(count, times);
 }
 
