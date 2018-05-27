@@ -27,10 +27,13 @@ template <typename T> class Cabinet {
     class Token {
         friend Cabinet;
 
-        Id id;
-        size_t pos;
+        Id id = 0;
+        size_t pos = 0;
 
       public:
+        inline void reset() { id = 0; pos = 0; }
+        inline bool isNull() const { return id == 0; }
+
         inline bool equal(const Token &other) const { return id == other.id && pos == other.pos; }
         inline bool less(const Token &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
         inline size_t hash() const { return (id << 8) | (pos & 0xff); }

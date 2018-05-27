@@ -15,6 +15,8 @@ class Condition {
     void bind() { token_ = sch_.getToken(); }
     //! 绑定指定协程
     void bind(const RoutineToken &token) { token_ = token; }
+    //! 解除绑定
+    void unbind() { token_.reset(); }
 
     Condition& operator = (bool v) {
         if (v && !v_)
