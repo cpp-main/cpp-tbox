@@ -1,5 +1,5 @@
-#ifndef TBOX_COROUTINE_FLAG_HPP_20180527
-#define TBOX_COROUTINE_FLAG_HPP_20180527
+#ifndef TBOX_COROUTINE_BROADCAST_HPP_20180527
+#define TBOX_COROUTINE_BROADCAST_HPP_20180527
 
 #include <vector>
 #include "scheduler.h"
@@ -7,9 +7,10 @@
 namespace tbox {
 namespace coroutine {
 
-class Flag {
+//! 广播信号
+class Broadcast {
   public:
-    Flag(Scheduler &sch) : sch_(sch) { }
+    Broadcast(Scheduler &sch) : sch_(sch) { }
 
     bool wait() {
         wait_tokens_.push_back(sch_.getToken());
@@ -31,4 +32,4 @@ class Flag {
 }
 }
 
-#endif //TBOX_COROUTINE_FLAG_HPP_20180527
+#endif //TBOX_COROUTINE_BROADCAST_HPP_20180527

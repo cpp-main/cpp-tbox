@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "flag.hpp"
+#include "broadcast.hpp"
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -10,20 +10,20 @@ using namespace tbox::coroutine;
 /**
  * 多个协程等待一个信号
  */
-TEST(Flag, TwoRoutineUsingSharedValue)
+TEST(Broadcast, TwoRoutineUsingSharedValue)
 {
     Loop *sp_loop = event::Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
     Scheduler sch(sp_loop);
 
-    Flag flag(sch);
+    Broadcast bc(sch);
     int start_count = 0;
     int end_count = 0;
 
     auto wait_entry = [&] (Scheduler &sch) {
         ++start_count;
-        flag.wait();
+        bc.wait();
         if (sch.isCanceled())
             return;
         ++end_count;
@@ -33,7 +33,7 @@ TEST(Flag, TwoRoutineUsingSharedValue)
         sch.yield();
         EXPECT_EQ(start_count, 3);  //! 检查是不是所有的协程都在等
         EXPECT_EQ(end_count, 0);
-        flag.post();
+        bc.post();
     };
 
     sch.create(wait_entry);

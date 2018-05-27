@@ -8,7 +8,7 @@ HEAD_FILES = \
 	channel.hpp \
 	semaphore.hpp \
 	mutex.hpp \
-	flag.hpp \
+	broadcast.hpp \
 
 SRC_FILES = \
 	scheduler.cpp
@@ -20,7 +20,7 @@ TEST_SRC_FILES = \
 	channel_test.cpp \
 	semaphore_test.cpp \
 	mutex_test.cpp \
-	flag_test.cpp \
+	broadcast_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 
