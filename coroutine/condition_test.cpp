@@ -29,10 +29,11 @@ TEST(Condition, OneWakeAnother)
     int count = 0;
     auto routine2_entry = [&] (Scheduler &sch) {
         while (!sch.isCanceled()) {
-            sch.wait();
             if (cond) {     //! 检查是不是 cond 触发的
                 ++count;
                 cond = false;   //! 将 cond 复位
+            } else {
+                sch.wait();
             }
         }
     };
