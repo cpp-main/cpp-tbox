@@ -15,10 +15,11 @@ class Semaphore {
     bool acquire () {
         if (count_ == 0) {      //! 如果没有资源，则等待
             token_.push(sch_.getToken());
-            sch_.wait();
-
-            if (count_ == 0)    //! 检查一下，有可能协程被cancel
-                return false;
+            do {
+                sch_.wait();
+                if (sch_.isCanceled())
+                    return false;
+            } while (count_ == 0);
         }
 
         --count_;

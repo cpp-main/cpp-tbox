@@ -16,10 +16,11 @@ class Channel {
     bool operator >> (T &out) {
         if (queue_.empty()) {   //! 如果队列里没有，则等待
             token_.push(sch_.getToken());
-            sch_.wait();
-
-            if (queue_.empty()) //! 检查一下，有可能协程被cancel
-                return false;
+            do {
+                sch_.wait();
+                if (sch_.isCanceled())
+                    return false;
+            } while (queue_.empty());
         }
 
         out = queue_.front();
