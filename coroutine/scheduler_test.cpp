@@ -20,8 +20,8 @@ TEST(Scheduler, CreateTwoRoutineThenStop)
         auto entry = [&exec_count] (Scheduler &sch) {
             ++exec_count;
         };
-        sch.create(entry, "test1");
-        sch.create(entry, "test2");
+        sch.create(entry, false, "test1");
+        sch.create(entry, false, "test2");
 
         sp_loop->exitLoop(chrono::milliseconds(10));
         sp_loop->runLoop();
@@ -41,9 +41,8 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
         auto entry = [&exec_count] (Scheduler &sch) {
             ++exec_count;
         };
-        auto token1 = sch.create(entry, "test1");
-        sch.resume(token1);
-        sch.create(entry, "test2");
+        sch.create(entry, true, "test1");
+        sch.create(entry, false, "test2");
 
         sp_loop->exitLoop(chrono::milliseconds(10));
         sp_loop->runLoop();
@@ -68,9 +67,7 @@ TEST(Scheduler, GetInfoInRoutine)
         read_token = sch.getToken();
     };
 
-    auto token1 = sch.create(entry, "test1");
-    sch.resume(token1);
-    sch.create(entry, "test2");
+    auto token1 = sch.create(entry, true, "test1");
 
     sp_loop->exitLoop(chrono::milliseconds(20));
     sp_loop->runLoop();
@@ -94,15 +91,13 @@ TEST(Scheduler, RoutineCreateAnotherRoutine)
 
     bool routine2_end = false;
     auto routine2_entry = [&] (Scheduler &sch) {
-        auto token = sch.create(routine1_entry, "be created routine");
-        sch.resume(token);
+        sch.create(routine1_entry);
         sch.yield();
         routine2_end = true;
     };
 
 
-    auto token = sch.create(routine2_entry);
-    sch.resume(token);
+    sch.create(routine2_entry);
 
     sp_loop->exitLoop(chrono::milliseconds(20));
     sp_loop->runLoop();
@@ -134,8 +129,8 @@ TEST(Scheduler, Yield)
         }
     };
 
-    sch.resume(sch.create(routine1_entry));
-    sch.resume(sch.create(routine2_entry));
+    sch.create(routine1_entry);
+    sch.create(routine2_entry);
 
     sp_loop->exitLoop(chrono::seconds(1));
     sp_loop->runLoop();
@@ -160,7 +155,6 @@ TEST(Scheduler, Wait)
         routine_end = true;
     };
     auto token = sch.create(routine_entry);
-    sch.resume(token);
 
     //! 创建定时器，1秒后唤醒协程
     auto timer = sp_loop->newTimerEvent();
@@ -202,7 +196,6 @@ TEST(Scheduler, CancelRoutineByTimer)
         routine_stop = true;
     };
     auto token = sch.create(routine_entry);
-    sch.resume(token);
 
     //! 创建定时器，1秒后取消协程
     auto timer = sp_loop->newTimerEvent();

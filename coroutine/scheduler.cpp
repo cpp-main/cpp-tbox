@@ -107,11 +107,13 @@ Scheduler::~Scheduler()
     //! 所以，这里的解决办法：令协程自行了结。
 }
 
-RoutineToken Scheduler::create(const RoutineEntry &entry, const string &name, size_t stack_size)
+RoutineToken Scheduler::create(const RoutineEntry &entry, bool run_now, const string &name, size_t stack_size)
 {
     Routine *new_routine = new Routine(entry, name, stack_size, *this);
     RoutineToken token = routine_cabinet_.insert(new_routine);
     new_routine->token = token;
+    if (run_now)
+        makeRoutineReady(new_routine);
     return token;
 }
 
@@ -176,7 +178,8 @@ string Scheduler::getName() const
  */
 bool Scheduler::makeRoutineReady(Routine *routine)
 {
-    if (routine->state == Routine::State::kDead)
+    if (routine->state == Routine::State::kReady
+        || routine->state == Routine::State::kDead)
         return false;
 
     routine->state = Routine::State::kReady;

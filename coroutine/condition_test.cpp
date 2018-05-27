@@ -37,10 +37,8 @@ TEST(Condition, OneWakeAnother)
         }
     };
 
-    auto r1 = sch.create(routine1_entry, "r1");
-    auto r2 = sch.create(routine2_entry, "r2");
-    sch.resume(r1);
-    sch.resume(r2);
+    sch.create(routine1_entry, true, "r1");
+    auto r2 = sch.create(routine2_entry, true, "r2");
 
     cond.bind(r2);  //! cond 绑定 r2
 

@@ -17,6 +17,8 @@ using RoutineCabinet = Cabinet<Routine>;
 using RoutineToken  = RoutineCabinet::Token;
 using RoutineEntry  = std::function<void(Scheduler&)>;
 
+#define ROUTINE_STACK_DEFAULT_SIZE  8192    //! 子协程默认栈大小
+
 class Scheduler {
     friend struct Routine;
 
@@ -29,7 +31,11 @@ class Scheduler {
 
   public:
     //! 创建一个协程，并返回协程Token。创建后不自动执行，需要一次 resume()
-    RoutineToken create(const RoutineEntry &entry, const std::string &name = "", size_t stack_size = 8192);
+    RoutineToken create(const RoutineEntry &entry,
+                        bool run_now = true,            //! 是否立即运行
+                        const std::string &name = "",   //! 子协程名
+                        size_t stack_size = ROUTINE_STACK_DEFAULT_SIZE);
+
     bool resume(const RoutineToken &token); //! 恢复指定协程
     bool cancel(const RoutineToken &token); //! 取消指定协程
 
