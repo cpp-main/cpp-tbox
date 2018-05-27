@@ -1,6 +1,7 @@
 #ifndef TBOX_COROUTINE_FLAG_HPP_20180527
 #define TBOX_COROUTINE_FLAG_HPP_20180527
 
+#include <vector>
 #include "scheduler.h"
 
 namespace tbox {
@@ -11,7 +12,7 @@ class Flag {
     Flag(Scheduler &sch) : sch_(sch) { }
 
     bool wait() {
-        wait_tokens_.push(sch_.getToken());
+        wait_tokens_.push_back(sch_.getToken());
         sch_.wait();
         return !sch_.isCanceled();
     }
@@ -24,7 +25,7 @@ class Flag {
 
   private:
     Scheduler &sch_;
-    std::queue<RoutineToken> wait_tokens_;
+    std::vector<RoutineToken> wait_tokens_;
 };
 
 }

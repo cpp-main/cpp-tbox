@@ -1,0 +1,48 @@
+#include <gtest/gtest.h>
+#include "flag.hpp"
+#include <tbox/base/scope_exit.hpp>
+
+using namespace std;
+using namespace tbox;
+using namespace tbox::event;
+using namespace tbox::coroutine;
+
+/**
+ * 多个协程等待一个信号
+ */
+TEST(Flag, TwoRoutineUsingSharedValue)
+{
+    Loop *sp_loop = event::Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+
+    Scheduler sch(sp_loop);
+
+    Flag flag(sch);
+    int start_count = 0;
+    int end_count = 0;
+
+    auto wait_entry = [&] (Scheduler &sch) {
+        ++start_count;
+        flag.wait();
+        if (sch.isCanceled())
+            return;
+        ++end_count;
+    };
+
+    auto post_entry = [&] (Scheduler &sch) {
+        sch.yield();
+        EXPECT_EQ(start_count, 3);  //! 检查是不是所有的协程都在等
+        EXPECT_EQ(end_count, 0);
+        flag.post();
+    };
+
+    sch.create(wait_entry);
+    sch.create(wait_entry);
+    sch.create(wait_entry);
+    sch.create(post_entry);
+
+    sp_loop->exitLoop(chrono::milliseconds(100));
+    sp_loop->runLoop();
+
+    EXPECT_EQ(end_count, 3);    //! 检查是不是所有的协程都等到了
+}
