@@ -7,6 +7,7 @@ HEAD_FILES = \
 	scheduler.h \
 	condition.h \
 	channel.hpp \
+	semaphore.hpp \
 
 SRC_FILES = \
 	scheduler.cpp
@@ -17,6 +18,7 @@ TEST_SRC_FILES = \
 	scheduler_test.cpp \
 	condition_test.cpp \
 	channel_test.cpp \
+	semaphore_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 

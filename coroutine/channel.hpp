@@ -7,6 +7,7 @@
 namespace tbox {
 namespace coroutine {
 
+//! 参考 Golang 的 chan，实现一个通道
 template <class T>
 class Channel {
   public:
