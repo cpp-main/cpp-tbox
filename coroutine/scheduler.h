@@ -44,6 +44,8 @@ class Scheduler {
     void wait();    //! 切换到主协程，等待被 resumeRoutine() 唤醒
     void yield();   //! 切换到主协程，等待下一个事件循环继续执行
 
+    bool join(const RoutineToken &other_routine);   //! 等待另一个协程结束
+
     RoutineToken getToken() const;  //! 获取当前协程token
     bool isCanceled() const;        //! 当前协程是否被取消
     std::string getName() const;    //! 当前协程的名称

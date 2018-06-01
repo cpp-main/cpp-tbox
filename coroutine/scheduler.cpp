@@ -28,6 +28,7 @@ struct Routine {
     State state = State::kSuspend;
     bool is_started  = false;
     bool is_canceled = false;
+    RoutineToken join_token;    //! 等待其结束的协程
 
     void mainEntry()
     {
@@ -155,6 +156,32 @@ void Scheduler::yield()
     swapcontext(&(curr_routine_->ctx), &main_ctx_);
 }
 
+bool Scheduler::join(const RoutineToken &other_routine)
+{
+    assert(!isInMainRoutine());
+    if (curr_routine_->is_canceled)
+        return false;
+
+    Routine *routine = routine_cabinet_.at(other_routine);
+    if (routine != nullptr) {
+        //! 如果已经结束了的，就直接返回成功
+        if (routine->state == Routine::State::kDead)
+            return true;
+        //! 如果已被其它协程join()了的，就返回失败
+        if (!routine->join_token.isNull())
+            return false;
+
+        routine->join_token = curr_routine_->token;
+
+        curr_routine_->state = Routine::State::kSuspend;
+        swapcontext(&(curr_routine_->ctx), &main_ctx_);
+
+        //! 如果不是被cancel唤醒的，那返回成功；否则返回失败
+        return !curr_routine_->is_canceled;
+    }
+    return false;
+}
+
 RoutineToken Scheduler::getToken() const
 {
     assert(!isInMainRoutine());
@@ -202,6 +229,11 @@ void Scheduler::switchToRoutine(Routine *routine)
     //! 检查协程状态，如果已经结束了的协程，要释放资源
     if (routine->state == Routine::State::kDead) {
         routine_cabinet_.remove(routine->token);
+
+        //! 如果有其它协程在join这个协程，那么要唤醒等待的协程
+        if (!curr_routine_->join_token.isNull())
+            resume(curr_routine_->join_token);
+
         delete curr_routine_;
     }
 

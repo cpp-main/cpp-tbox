@@ -214,3 +214,38 @@ TEST(Scheduler, CancelRoutineByTimer)
     EXPECT_NE(count, 0);
     EXPECT_TRUE(routine_stop);
 }
+
+//! 测试 Scheduler的join()
+TEST(Scheduler, JoinSubRoutine)
+{
+    Loop *sp_loop = event::Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+
+    Scheduler sch(sp_loop);
+    bool sub_exit = false;
+    int count = 0;
+    int times = 10;
+    auto sub_entry = [&] (Scheduler &sch) {
+        for (int i = 0; i < times; ++i) {
+            sch.yield();
+            ++count;
+        }
+        sub_exit = true;
+    };
+
+    bool main_exit = false;
+    auto main_entry = [&] (Scheduler &sch) {
+        sch.join(sch.create(sub_entry));    //! 创建子协程，并等待其结束
+
+        EXPECT_TRUE(sub_exit);
+        EXPECT_EQ(count, times);
+        main_exit = true;
+    };
+
+    sch.create(main_entry);
+
+    sp_loop->exitLoop(chrono::milliseconds(100));
+    sp_loop->runLoop();
+
+    EXPECT_TRUE(main_exit);
+}
