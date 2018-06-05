@@ -254,5 +254,39 @@ TEST(Scheduler, JoinSubRoutine)
 
 TEST(Scheduler, OneLoopTwoSchedule)
 {
-    //TODO
+    Loop *sp_loop = event::Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+
+    Scheduler sch1(sp_loop);
+    Scheduler sch2(sp_loop);
+
+    bool sch1_routine1_run = false;
+    bool sch1_routine2_run = false;
+    bool sch2_routine_run = false;
+
+    sch1.create(
+        [&](Scheduler &sch) {
+            sch1_routine1_run = true;
+        }
+    );
+    sch1.create(
+        [&](Scheduler &sch) {
+            sch1_routine2_run = true;
+        }
+    );
+    sch2.create(
+        [&](Scheduler &sch) {
+            sch2_routine_run = true;
+        }
+    );
+
+    sp_loop->exitLoop(chrono::milliseconds(100));
+    sp_loop->runLoop();
+
+    sch1.cleanup();
+    sch2.cleanup();
+
+    EXPECT_TRUE(sch1_routine1_run);
+    EXPECT_TRUE(sch1_routine2_run);
+    EXPECT_TRUE(sch2_routine_run);
 }
