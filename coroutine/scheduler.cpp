@@ -81,31 +81,7 @@ Scheduler::Scheduler(Loop *wp_loop) :
 
 Scheduler::~Scheduler()
 {
-    //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
-    routine_cabinet_.foreach(
-        [this] (Routine *routine) {
-            if (!routine->is_started) {
-                routine_cabinet_.remove(routine->token);
-                delete routine;
-            } else {
-                routine->is_canceled = true;
-            }
-        }
-    );
-
-    //! 令已启动的协程尽快正常退出
-    while (!routine_cabinet_.empty()) {
-        routine_cabinet_.foreach(
-            [this] (Routine *routine) {
-                switchToRoutine(routine);
-            }
-        );
-    }
-    //! 思考：为什么不能直接删除已启动的协程？
-    //!
-    //! 因为直接删除很可能会引起协程的资源得不到释放，比如对象的析构函数被跳过。
-    //! 轻则引起内存泄漏，重则阻塞、崩溃。
-    //! 所以，这里的解决办法：令协程自行了结。
+    cleanup();
 }
 
 RoutineToken Scheduler::create(const RoutineEntry &entry, bool run_now, const string &name, size_t stack_size)
@@ -134,6 +110,39 @@ bool Scheduler::cancel(const RoutineToken &token)
         return makeRoutineReady(routine);
     }
     return false;
+}
+
+void Scheduler::cleanup()
+{
+    assert(isInMainRoutine());  //! 仅限主协程使用
+
+    //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
+    routine_cabinet_.foreach(
+        [this] (Routine *routine) {
+            if (!routine->is_started) {
+                routine_cabinet_.remove(routine->token);
+                delete routine;
+            } else {
+                routine->is_canceled = true;
+            }
+        }
+    );
+
+    //! 令已启动的协程尽快正常退出
+    while (!routine_cabinet_.empty()) {
+        routine_cabinet_.foreach(
+            [this] (Routine *routine) {
+                switchToRoutine(routine);
+            }
+        );
+    }
+    //! 思考：为什么不能直接删除已启动的协程？
+    //!
+    //! 因为直接删除很可能会引起协程的资源得不到释放，比如对象的析构函数被跳过。
+    //! 轻则引起内存泄漏，重则阻塞、崩溃。
+    //! 所以，这里的解决办法：令协程自行了结。
+
+    routine_cabinet_.clear();
 }
 
 void Scheduler::wait()

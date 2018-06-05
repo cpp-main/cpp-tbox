@@ -37,7 +37,7 @@ class Scheduler {
                         size_t stack_size = ROUTINE_STACK_DEFAULT_SIZE);
 
     bool resume(const RoutineToken &token); //! 恢复指定协程
-    bool cancel(const RoutineToken &token); //! 取消指定协程
+    bool cancel(const RoutineToken &token); //! 取消指定协程，只能给协程发送了取消请求，并非立即停止
 
   public:
     //! 以下仅限子协程调用
@@ -51,6 +51,10 @@ class Scheduler {
     std::string getName() const;    //! 当前协程的名称
 
     event::Loop* getLoop() const { return wp_loop_; }
+
+  public:
+    //! 以下仅限主协程调用
+    void cleanup(); //! 强行停止并清理所有的协程，通常在程序退出前使用
 
   protected:
     void schedule();    //! 调度，依次切换到已就绪的 Routine 去执行，直到没有 Routine 就绪为止

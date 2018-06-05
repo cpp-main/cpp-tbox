@@ -248,4 +248,11 @@ TEST(Scheduler, JoinSubRoutine)
     sp_loop->runLoop();
 
     EXPECT_TRUE(main_exit);
+
+    sch.cleanup();
+}
+
+TEST(Scheduler, OneLoopTwoSchedule)
+{
+    //TODO
 }

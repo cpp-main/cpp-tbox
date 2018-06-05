@@ -9,6 +9,7 @@ HEAD_FILES = \
 	semaphore.hpp \
 	mutex.hpp \
 	broadcast.hpp \
+	condition.hpp \
 
 SRC_FILES = \
 	scheduler.cpp
@@ -21,6 +22,7 @@ TEST_SRC_FILES = \
 	semaphore_test.cpp \
 	mutex_test.cpp \
 	broadcast_test.cpp \
+	condition_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 

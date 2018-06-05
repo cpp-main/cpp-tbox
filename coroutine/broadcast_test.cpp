@@ -45,4 +45,6 @@ TEST(Broadcast, TwoRoutineUsingSharedValue)
     sp_loop->runLoop();
 
     EXPECT_EQ(end_count, 3);    //! 检查是不是所有的协程都等到了
+
+    sch.cleanup();
 }

@@ -45,6 +45,8 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
     sp_loop->runLoop();
 
     EXPECT_EQ(times, count);
+
+    sch.cleanup();
 }
 
 /**
@@ -92,5 +94,7 @@ TEST(Semaphore, TimerProduceAndConsumer)
     sp_loop->runLoop();
 
     EXPECT_EQ(count, times);
+
+    sch.cleanup();
 }
 

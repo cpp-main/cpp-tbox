@@ -165,5 +165,7 @@ TEST(Channel, TimerProduceAndConsumer)
 
     //! 检查发送的数据与接收到数据是否对应
     EXPECT_EQ(send_vec, recv_vec);
+
+    sch.cleanup();
 }
 

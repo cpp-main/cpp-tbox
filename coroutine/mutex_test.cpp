@@ -173,5 +173,7 @@ TEST(MutexLocker, TwoRoutineUsingSharedValue)
     sp_loop->runLoop();
 
     EXPECT_EQ(shared_var, 1);
+
+    sch.cleanup();
 }
 
