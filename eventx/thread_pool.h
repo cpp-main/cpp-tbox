@@ -7,10 +7,6 @@
 namespace tbox {
 namespace eventx {
 
-namespace impl {
-    class ThreadPool;
-}
-
 /**
  * 线程池类
  */
@@ -75,8 +71,18 @@ class ThreadPool {
      */
     void cleanup();
 
+  protected:
+    void threadProc(int id);
+    bool createWorker();
+
+    bool shouldThreadExitWaiting() const;   //! 判定子线程是否需要退出条件变量的wait()函数
+
+    struct Task;
+    Task* popOneTask(); //! 取出一个优先级最高的任务
+
   private:
-    impl::ThreadPool *impl_;
+    struct Data;
+    Data *d_ = nullptr;
 };
 
 }

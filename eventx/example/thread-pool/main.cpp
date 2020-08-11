@@ -5,6 +5,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/thread_pool.h>
 #include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
 
 using namespace std;
 
@@ -17,10 +18,12 @@ int StoreDataToFile(const string &filename, const string &content)
     return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     using namespace tbox::event;
     using namespace tbox::eventx;
+
+    LogOutput_Initialize(argv[0]);
 
     Loop* sp_loop = Loop::New();
     ThreadPool *sp_tp = new ThreadPool(sp_loop);
