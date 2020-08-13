@@ -3,8 +3,10 @@
 #include <vector>
 #include <unordered_set>
 #include <set>
+#include <unordered_set>
 
 using namespace tbox;
+using namespace tbox::cabinet;
 
 TEST(Cabinet, insert_1_and_remove)
 {
@@ -29,7 +31,7 @@ TEST(Cabinet, insert_100_and_remove)
     using OC = Cabinet<int>;
     OC oc;
 
-    std::vector<OC::Token> tokens;
+    std::vector<Token> tokens;
     //! 插入0~74的值
     for (int i = 0; i < 75; ++i) {
         auto t = oc.insert(new int(i));
@@ -74,4 +76,22 @@ TEST(Cabinet, insert_100_and_remove)
         delete p;
     }
     EXPECT_EQ(oc.size(), 0u);
+}
+
+//! 测试Token可不可以用为std::set的key
+TEST(Cabinet, token_as_set_key)
+{
+    std::set<Token> token_set;
+    token_set.insert(Token(1, 2));
+    token_set.insert(Token(2, 0));
+    EXPECT_EQ(token_set.size(), 2u);
+}
+
+//! 测试Token可不可以用为std::unordered_set的key
+TEST(Cabinet, token_as_unordered_set_key)
+{
+    std::unordered_set<Token> token_set;
+    token_set.insert(Token(1, 2));
+    token_set.insert(Token(2, 0));
+    EXPECT_EQ(token_set.size(), 2u);
 }

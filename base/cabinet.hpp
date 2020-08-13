@@ -19,28 +19,38 @@
 #include <limits>
 
 namespace tbox {
+namespace cabinet {
 
+using Id = size_t;
+using Pos = size_t;
+
+//! 凭据
+class Token {
+  public:
+    Token() { }
+    Token(Id id, Pos pos) : id_(id), pos_(pos) { }
+
+    inline Id id() const { return id_; }
+    inline Pos pos() const { return pos_; }
+
+    inline void reset() { id_ = 0; pos_ = 0; }
+    inline bool isNull() const { return id_ == 0; }
+
+    inline bool equal(const Token &other) const { return id_ == other.id_ && pos_ == other.pos_; }
+    inline bool less(const Token &other)  const { return id_ != other.id_ ? id_ < other.id_ : pos_ < other.pos_; }
+    inline size_t hash() const { return (id_ << 8) | (pos_ & 0xff); }
+
+    inline bool operator == (const Token &other) const { return equal(other); }
+    inline bool operator < (const Token &other) const { return less(other); }
+
+  private:
+    Id id_ = 0;
+    Pos pos_ = 0;
+};
+
+//! 柜子
 template <typename T> class Cabinet {
   public:
-    using Id = size_t;
-
-    class Token {
-        friend Cabinet;
-
-        Id id = 0;
-        size_t pos = 0;
-
-      public:
-        inline void reset() { id = 0; pos = 0; }
-        inline bool isNull() const { return id == 0; }
-
-        inline bool equal(const Token &other) const { return id == other.id && pos == other.pos; }
-        inline bool less(const Token &other)  const { return id != other.id ? id < other.id : pos < other.pos; }
-        inline size_t hash() const { return (id << 8) | (pos & 0xff); }
-
-        Id getId() const { return id; }
-    };
-
     void reserve(size_t size);  //!< 预留指定大小的储物空间
 
     Token insert(T *obj);         //!< 存入对象
@@ -59,21 +69,22 @@ template <typename T> class Cabinet {
 
   protected:
     Id allocId();
-    size_t allocPos();
+    Pos allocPos();
 
   private:
+    //! 单元格
     struct Cell {
         Id id = 0;  //!< 为 0 时，表示该格子为空闲状态，则 next_free 有效
                     //!< 不为 0 时，表示该格子存有对象，则 obj_ptr 有效
         union {
             T *obj_ptr = nullptr;   //!< 对象指针的地址
-            size_t next_free;       //!< 下一个空闲格子的位置
+            Pos next_free;          //!< 下一个空闲格子的位置
         };
     };
 
     Id last_id_ = 0;    //!< 上一个被分配的id号
     std::vector<Cell> cells_;
-    size_t first_free_ = std::numeric_limits<size_t>::max(); //!< 第一个空闲格式位置
+    Pos first_free_ = std::numeric_limits<Pos>::max(); //!< 第一个空闲格式位置
     size_t count_ = 0;
 };
 
@@ -86,14 +97,12 @@ void Cabinet<T>::reserve(size_t size)
 }
 
 template <typename T>
-typename Cabinet<T>::Token Cabinet<T>::insert(T *obj)
+Token Cabinet<T>::insert(T *obj)
 {
-    Token new_token;
-    new_token.id = allocId();
-    new_token.pos = allocPos();
+    Token new_token(allocId(), allocPos());
 
-    Cell &cell = cells_.at(new_token.pos);
-    cell.id = new_token.id;
+    Cell &cell = cells_.at(new_token.pos());
+    cell.id = new_token.id();
     cell.obj_ptr = obj;
 
     ++count_;
@@ -101,14 +110,14 @@ typename Cabinet<T>::Token Cabinet<T>::insert(T *obj)
 }
 
 template <typename T>
-T* Cabinet<T>::remove(const Cabinet<T>::Token &token)
+T* Cabinet<T>::remove(const Token &token)
 {
-    Cell &cell = cells_.at(token.pos);
-    if (cell.id == token.id) {
+    Cell &cell = cells_.at(token.pos());
+    if (cell.id == token.id()) {
         T *ptr = cell.obj_ptr;
         cell.id = 0;
         cell.next_free = first_free_;
-        first_free_ = token.pos;
+        first_free_ = token.pos();
         --count_;
         return ptr;
     }
@@ -120,15 +129,15 @@ void Cabinet<T>::clear()
 {
     last_id_ = 0;
     cells_.clear();
-    first_free_ = std::numeric_limits<size_t>::max();
+    first_free_ = std::numeric_limits<Pos>::max();
     count_ = 0;
 }
 
 template <typename T>
-T* Cabinet<T>::at(const Cabinet<T>::Token &token) const
+T* Cabinet<T>::at(const Token &token) const
 {
-    const Cell &cell = cells_.at(token.pos);
-    if (cell.id == token.id)
+    const Cell &cell = cells_.at(token.pos());
+    if (cell.id == token.id())
         return cell.obj_ptr;
     return nullptr;
 }
@@ -150,7 +159,7 @@ void Cabinet<T>::foreach(Func func)
 }
 
 template <typename T>
-typename Cabinet<T>::Id Cabinet<T>::allocId()
+Id Cabinet<T>::allocId()
 {
     //! 避免分配 0 作为 id
     if (last_id_ == std::numeric_limits<Id>::max())
@@ -160,11 +169,11 @@ typename Cabinet<T>::Id Cabinet<T>::allocId()
 }
 
 template <typename T>
-size_t Cabinet<T>::allocPos()
+Pos Cabinet<T>::allocPos()
 {
-    if (first_free_ != std::numeric_limits<size_t>::max()) {
+    if (first_free_ != std::numeric_limits<Pos>::max()) {
         //! 如果有空间格子，则直接使用空间格式
-        size_t new_pos = first_free_;
+        Pos new_pos = first_free_;
         Cell &cell = cells_.at(new_pos);
         first_free_ = cell.next_free;
         return new_pos;
@@ -175,6 +184,22 @@ size_t Cabinet<T>::allocPos()
     }
 }
 
+}
+}
+
+//! 为了支持 unordered_set 与 unordered_map 的 key
+namespace std {
+template <> struct hash <tbox::cabinet::Token> {
+    size_t operator () (const tbox::cabinet::Token &t) const {
+        return t.hash();
+    }
+};
+
+template <> struct equal_to <tbox::cabinet::Token> {
+    bool operator () (const tbox::cabinet::Token &lhs, const tbox::cabinet::Token &rhs) const {
+        return lhs.equal(rhs);
+    }
+};
 }
 
 #endif //TBOX_BASE_CABINET_HPP_20180415
