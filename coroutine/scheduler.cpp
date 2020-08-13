@@ -32,11 +32,11 @@ struct Routine {
 
     void mainEntry()
     {
-        LogDbg("Routine %u:%s start", token.getId(), name.c_str());
+        LogDbg("Routine %u:%s start", token.id(), name.c_str());
         is_started = true;
         entry(scheduler);
         state = State::kDead;
-        LogDbg("Routine %u:%s end", token.getId(), name.c_str());
+        LogDbg("Routine %u:%s end", token.id(), name.c_str());
     }
 
     static void RoutineMainEntry(Routine *p_routine)
@@ -47,7 +47,7 @@ struct Routine {
     Routine(const RoutineEntry &e, const string &n, size_t ss, Scheduler &sch) :
         entry(e), name(n), scheduler(sch)
     {
-        LogDbg("Routine(%u)", token.getId());
+        LogDbg("Routine(%u)", token.id());
 
         void *p_stack_mem = malloc(ss);
         assert(p_stack_mem != nullptr);
@@ -67,7 +67,7 @@ struct Routine {
         assert(!is_started || state == State::kDead);
 
         free(ctx.uc_stack.ss_sp);
-        LogDbg("~Routine(%u)", token.getId());
+        LogDbg("~Routine(%u)", token.id());
     }
 };
 

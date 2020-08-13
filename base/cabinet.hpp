@@ -194,12 +194,6 @@ template <> struct hash <tbox::cabinet::Token> {
         return t.hash();
     }
 };
-
-template <> struct equal_to <tbox::cabinet::Token> {
-    bool operator () (const tbox::cabinet::Token &lhs, const tbox::cabinet::Token &rhs) const {
-        return lhs.equal(rhs);
-    }
-};
 }
 
 #endif //TBOX_BASE_CABINET_HPP_20180415

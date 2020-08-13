@@ -13,8 +13,8 @@ namespace coroutine {
 class Routine;
 class Scheduler;
 
-using RoutineCabinet = Cabinet<Routine>;
-using RoutineToken  = RoutineCabinet::Token;
+using RoutineCabinet = cabinet::Cabinet<Routine>;
+using RoutineToken  = cabinet::Token;
 using RoutineEntry  = std::function<void(Scheduler&)>;
 
 #define ROUTINE_STACK_DEFAULT_SIZE  8192    //! 子协程默认栈大小

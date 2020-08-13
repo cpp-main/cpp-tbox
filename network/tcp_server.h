@@ -25,8 +25,8 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using TcpConns = Cabinet<TcpConnection>;
-    using Client = TcpConns::Token;
+    using TcpConns = cabinet::Cabinet<TcpConnection>;
+    using Client = cabinet::Token;
 
     enum class State {
         kNone, kInited, kRunning
