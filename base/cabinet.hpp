@@ -1,5 +1,5 @@
-#ifndef TBOX_BASE_CABINET_H_20180415
-#define TBOX_BASE_CABINET_H_20180415
+#ifndef TBOX_BASE_CABINET_HPP_20180415
+#define TBOX_BASE_CABINET_HPP_20180415
 
 /**
  * 实现一个对象储物柜 Cabinet
@@ -177,4 +177,4 @@ size_t Cabinet<T>::allocPos()
 
 }
 
-#endif //TBOX_BASE_CABINET_H_20180415
+#endif //TBOX_BASE_CABINET_HPP_20180415
