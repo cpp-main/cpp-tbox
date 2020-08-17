@@ -19,27 +19,31 @@ class Client {
   public:
     //! 配置项
     struct Config {
+        //! 基础配置
         struct Basic {
             struct Broker {
-                std::string domain = "localhost";
-                uint16_t port = 1883;
+                std::string domain = "localhost";   //! 地址
+                uint16_t port = 1883;               //! 端口
             };
-            Broker broker;
-            std::string client_id;
-            std::string username, passwd;
-            int keepalive = 60;
+            Broker broker;                      //! Broker信息
+            std::string client_id;              //! 客户端ID
+            std::string username, passwd;       //! 用户名与密码
+            int keepalive = 60;                 //! 心跳时长（秒）
         };
+        //! 加密配置
         struct TLS {
-            std::string ca_file, ca_path;
-            std::string cert_file;
-            std::string key_file;
-            bool is_require_peer_cert = true;
-            std::string ssl_version;
-            bool is_insecure = false;
+            bool enabled = false;               //! 是否启用
+            std::string ca_file, ca_path;       //! CA文件或路径，二选一
+            std::string cert_file, key_file;    //! 证书与密钥，如果有则一起有
+            bool is_require_peer_cert = true;   //! 是否需要验对方的证书
+            std::string ssl_version;            //! SSL版本
+            bool is_insecure = false;           //! 是否非安全使用
         };
+        //! 遗言配置
         struct Will {
-            std::string topic;
-            Memblock payload;
+            bool enabled = false;               //! 是否启动遗言
+            std::string topic;                  //! 遗言Topic
+            Memblock payload;                   //! 遗言内容
             int qos = 0;
             bool retain = false;
         };
@@ -49,9 +53,7 @@ class Client {
         TLS   tls;
     };
 
-    bool initialize(const Config &config);
-    void cleanup();
-
+    //! 回调函数类型定义
     using ConnectedCallback         = std::function<void()>;
     using DisconnectedCallback      = std::function<void()>;
     using MessageReceivedCallback   = std::function<void(int /*mid*/, const std::string &/*topic*/,
@@ -71,17 +73,22 @@ class Client {
         TopicUnsubscribedCallback   unsubscribed;
     };
 
-    void setCallbacks(const Callbacks &cbs);
+    bool initialize(const Config &config, const Callbacks &callbacks);
+    void cleanup();
 
     bool start();
     bool stop();
 
+    //! 订阅与取消订阅
     int subscribe(const std::string &topic, int *mid = nullptr, int qos = 0);
     int ubsubscribe(const std::string &topic, int *mid = nullptr);
+
+    //! 发布消息
     int publish(const std::string &topic,
                 const void *payload_ptr = nullptr, size_t payload_size = 0,
                 int qos = 0, bool retain = false, int *mid = nullptr);
 
+    //! 是否与Broker建议了连接
     bool isConnected() const;
 
   private:
