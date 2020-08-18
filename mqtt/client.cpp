@@ -365,17 +365,52 @@ void Client::onMosquittoConnectDone(int ret)
 
 void Client::enableSockeRead()
 {
-    LogUndo();
+    if (mosquitto_socket(d_->sp_mosq) < 0)
+        return;
+
+    if (d_->sp_sock_read_ev->isEnabled())
+        return;
+
+    d_->sp_sock_read_ev->initialize(mosquitto_socket(d_->sp_mosq), FdEvent::kReadEvent, Event::Mode::kPersist);
+    d_->sp_sock_read_ev->enable();
+}
+
+void Client::enableSockeWrite()
+{
+    if (mosquitto_socket(d_->sp_mosq) < 0)
+        return;
+
+    if (d_->sp_sock_write_ev->isEnabled())
+        return;
+
+    d_->sp_sock_write_ev->initialize(mosquitto_socket(d_->sp_mosq), FdEvent::kWriteEvent, Event::Mode::kOneshot);
+    d_->sp_sock_write_ev->enable();
 }
 
 void Client::enableSockeWriteIfNeed()
 {
-    LogUndo();
+    if (mosquitto_want_write(d_->sp_mosq))
+        enableSockeWrite();
 }
 
 void Client::enableTimer()
 {
-    LogUndo();
+    d_->sp_timer_ev->enable();
+}
+
+void Client::disableSockeRead()
+{
+    d_->sp_sock_read_ev->disable();
+}
+
+void Client::disableSockeWrite()
+{
+    d_->sp_sock_write_ev->disable();
+}
+
+void Client::disableTimer()
+{
+    d_->sp_timer_ev->disable();
 }
 
 }

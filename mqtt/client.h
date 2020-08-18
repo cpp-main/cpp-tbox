@@ -112,8 +112,14 @@ class Client {
     void onMosquittoConnectDone(int ret);
 
     void enableSockeRead();
+    void enableSockeWrite();
     void enableSockeWriteIfNeed();
     void enableTimer();
+
+    void disableSockeRead();
+    void disableSockeWrite();
+    void disableTimer();
+
 
   private:
     struct Data;
