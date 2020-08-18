@@ -170,6 +170,7 @@ bool Client::start()
         return false;
     }
 
+    //! 基础设置
     const char *client_id = nullptr;
     if (!d_->config.base.client_id.empty())
         client_id = d_->config.base.client_id.c_str();
@@ -186,9 +187,78 @@ bool Client::start()
         return false;
     }
 
-    //!TODO
-    LogUndo();
-    return false;
+    //! TLS 设置
+    if (d_->config.tls.enabled) {
+        const char *ca_file   = nullptr;
+        const char *ca_path   = nullptr;
+        const char *cert_file = nullptr;
+        const char *key_file  = nullptr;
+
+        if (!d_->config.tls.ca_file.empty())
+            ca_file = d_->config.tls.ca_file.c_str();
+
+        if (!d_->config.tls.ca_path.empty())
+            ca_path = d_->config.tls.ca_path.c_str();
+
+        if (!d_->config.tls.cert_file.empty()) {
+            cert_file = d_->config.tls.cert_file.c_str();
+            key_file  = d_->config.tls.key_file.c_str();
+        }
+
+        //! TODO: 没有完善 pw_callback 功能，将来需要再实现，暂时填nullptr
+        mosquitto_tls_set(d_->sp_mosq, ca_file, ca_path, cert_file, key_file, nullptr);
+
+        const char *ssl_version = nullptr;
+        const char *ciphers = nullptr;  //! TODO: 暂不设置
+
+        if (!d_->config.tls.ssl_version.empty())
+            ssl_version = d_->config.tls.ssl_version.c_str();
+
+        mosquitto_tls_opts_set(d_->sp_mosq, d_->config.tls.is_require_peer_cert, ssl_version, ciphers);
+        mosquitto_tls_insecure_set(d_->sp_mosq, d_->config.tls.is_insecure);
+    }
+
+    //! Will 设置
+    if (d_->config.will.enabled) {
+        mosquitto_will_set(d_->sp_mosq,
+                           d_->config.will.topic.c_str(),
+                           d_->config.will.payload.size(),
+                           d_->config.will.payload.data(),
+                           d_->config.will.qos,
+                           d_->config.will.retain);
+    }
+
+    const char *username = nullptr;
+    const char *passwd   = nullptr;
+
+    if (!d_->config.base.username.empty())
+        username = d_->config.base.username.c_str();
+
+    if (!d_->config.base.passwd.empty())
+        passwd = d_->config.base.passwd.c_str();
+
+    if (username != nullptr)
+        mosquitto_username_pw_set(d_->sp_mosq, username, passwd);
+
+    d_->state = Data::State::kConnecting;
+
+    CHECK_DELETE_RESET_OBJ(d_->sp_thread);
+    //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
+    d_->sp_thread = new thread(
+        [this] {
+            int ret = mosquitto_connect(d_->sp_mosq,
+                                        d_->config.base.broker.domain.c_str(),
+                                        d_->config.base.broker.port,
+                                        d_->config.base.keepalive);
+            d_->wp_loop->runInLoop(
+                [this, ret] {
+                    onMosquittoConnectDone(ret);
+                }
+            );
+        }
+    );
+
+    return true;
 }
 
 bool Client::stop()
@@ -270,7 +340,43 @@ void Client::OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid)
 {
     LogUndo();
 }
-void OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str);
+
+void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str)
+{
+    LogUndo();
+}
+
+void Client::onMosquittoConnectDone(int ret)
+{
+    d_->sp_thread->join();
+    CHECK_DELETE_RESET_OBJ(d_->sp_thread);
+
+    if (ret == MOSQ_ERR_SUCCESS) {
+        enableSockeRead();
+        enableSockeWriteIfNeed();
+        d_->state = Data::State::kConnected;
+
+    } else {
+        LogWarn("connect fail, ret:%d", ret);
+    }
+
+    enableTimer();
+}
+
+void Client::enableSockeRead()
+{
+    LogUndo();
+}
+
+void Client::enableSockeWriteIfNeed()
+{
+    LogUndo();
+}
+
+void Client::enableTimer()
+{
+    LogUndo();
+}
 
 }
 }
