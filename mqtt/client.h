@@ -109,6 +109,14 @@ class Client {
     static void OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid);
     static void OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str);
 
+    void onConnect(int rc);
+    void onDisconnect(int rc);
+    void onPublish(int mid);
+    void onSubscribe(int mid, int qos, const int *granted_qos);
+    void onUnsubscribe(int mid);
+    void onMessage(const struct mosquitto_message *msg);
+    void onLog(int level, const char *str);
+
     void onMosquittoConnectDone(int ret);
 
     void enableSockeRead();

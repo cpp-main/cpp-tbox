@@ -313,35 +313,77 @@ void Client::onSocketWrite()
 
 void Client::OnConnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onConnect(rc);
 }
 
 void Client::OnDisconnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onDisconnect(rc);
 }
 
 void Client::OnPublishWrapper(struct mosquitto *, void *userdata, int mid)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onPublish(mid);
 }
 
 void Client::OnMessageWrapper(struct mosquitto *, void *userdata, const struct mosquitto_message *msg)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onMessage(msg);
 }
 
 void Client::OnSubscribeWrapper(struct mosquitto *, void *userdata, int mid, int qos_count, const int *granted_qos)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onSubscribe(mid, qos_count, granted_qos);
 }
 
 void Client::OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid)
 {
-    LogUndo();
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onUnsubscribe(mid);
 }
 
 void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str)
+{
+    Client *p_this = static_cast<Client*>(userdata);
+    p_this->onLog(level, str);
+}
+
+void Client::onConnect(int rc)
+{
+    LogUndo();
+}
+
+void Client::onDisconnect(int rc)
+{
+    LogUndo();
+}
+
+void Client::onPublish(int mid)
+{
+    LogUndo();
+}
+
+void Client::onSubscribe(int mid, int qos, const int *granted_qos)
+{
+    LogUndo();
+}
+
+void Client::onUnsubscribe(int mid)
+{
+    LogUndo();
+}
+
+void Client::onMessage(const struct mosquitto_message *msg)
+{
+    LogUndo();
+}
+
+void Client::onLog(int level, const char *str)
 {
     LogUndo();
 }
