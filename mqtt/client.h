@@ -5,6 +5,9 @@
 #include <tbox/base/memblock.h>
 #include <tbox/event/loop.h>
 
+struct mosquitto;
+struct mosquitto_message;
+
 namespace tbox {
 namespace mqtt {
 
@@ -20,7 +23,7 @@ class Client {
     //! 配置项
     struct Config {
         //! 基础配置
-        struct Basic {
+        struct Base {
             struct Broker {
                 std::string domain = "localhost";   //! 地址
                 uint16_t port = 1883;               //! 端口
@@ -48,9 +51,11 @@ class Client {
             bool retain = false;
         };
 
-        Basic basic;
-        Will  will;
-        TLS   tls;
+        Base base;
+        Will will;
+        TLS  tls;
+
+        bool isValid() const;
     };
 
     //! 回调函数类型定义
@@ -90,6 +95,19 @@ class Client {
 
     //! 是否与Broker建议了连接
     bool isConnected() const;
+
+  protected:
+    void onTimerTick();
+    void onSocketRead();
+    void onSocketWrite();
+
+    static void OnConnectWrapper(struct mosquitto *, void *userdata, int rc);
+    static void OnDisconnectWrapper(struct mosquitto *, void *userdata, int rc);
+    static void OnPublishWrapper(struct mosquitto *, void *userdata, int mid);
+    static void OnMessageWrapper(struct mosquitto *, void *userdata, const struct mosquitto_message *msg);
+    static void OnSubscribeWrapper(struct mosquitto *, void *userdata, int mid, int qos_count, const int *granted_qos);
+    static void OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid);
+    static void OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str);
 
   private:
     struct Data;
