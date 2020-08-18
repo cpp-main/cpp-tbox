@@ -82,7 +82,7 @@ class Client {
     void cleanup();
 
     bool start();
-    bool stop();
+    void stop();
 
     //! 订阅与取消订阅
     int subscribe(const std::string &topic, int *mid = nullptr, int qos = 0);
@@ -117,7 +117,7 @@ class Client {
     void onMessage(const struct mosquitto_message *msg);
     void onLog(int level, const char *str);
 
-    void onMosquittoConnectDone(int ret);
+    void onMosquittoConnectDone(int ret, bool first_connect);
 
     void enableSockeRead();
     void enableSockeWrite();

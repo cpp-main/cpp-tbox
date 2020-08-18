@@ -174,6 +174,7 @@ bool Client::start()
     const char *client_id = nullptr;
     if (!d_->config.base.client_id.empty())
         client_id = d_->config.base.client_id.c_str();
+
     int ret = mosquitto_reinitialise(d_->sp_mosq, client_id, true, this);
     if (ret == MOSQ_ERR_SUCCESS) {
         mosquitto_connect_callback_set(d_->sp_mosq, OnConnectWrapper);
@@ -252,7 +253,7 @@ bool Client::start()
                                         d_->config.base.keepalive);
             d_->wp_loop->runInLoop(
                 [this, ret] {
-                    onMosquittoConnectDone(ret);
+                    onMosquittoConnectDone(ret, true);
                 }
             );
         }
@@ -261,54 +262,125 @@ bool Client::start()
     return true;
 }
 
-bool Client::stop()
+void Client::stop()
 {
     if (d_->state <= Data::State::kInited)
-        return true;
+        return;
 
-    LogUndo();
+    if (d_->state == Data::State::kConnected) {
+        //! 如果已成功连接，则立即断开
+        mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnect() 中处理
+    } else {
+        //! 如果正在连接，则停止连接线程
+        if (d_->sp_thread != nullptr) {
+            d_->sp_thread->join();
+            CHECK_DELETE_RESET_OBJ(d_->sp_thread);
+        }
+    }
+
+    disableTimer();
+
+    d_->is_connected = false;
     d_->state = Data::State::kInited;
-    return false;
+    return;
 }
 
-int Client::subscribe(const std::string &topic, int *mid, int qos)
+int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 {
-    LogUndo();
-    return 0;
+    if (!d_->is_connected) {
+        LogWarn("broke is disconnected");
+        return false;
+    }
+
+    int mid = 0;
+    int ret = mosquitto_subscribe(d_->sp_mosq, &mid, topic.c_str(), qos);
+    if (p_mid != nullptr)
+        *p_mid = mid;
+
+    enableSockeWriteIfNeed();
+    return ret == MOSQ_ERR_SUCCESS;
 }
 
-int Client::ubsubscribe(const std::string &topic, int *mid)
+int Client::ubsubscribe(const std::string &topic, int *p_mid)
 {
-    LogUndo();
-    return 0;
+    if (!d_->is_connected) {
+        LogWarn("broke is disconnected");
+        return false;
+    }
+
+    int mid = 0;
+    int ret = mosquitto_unsubscribe(d_->sp_mosq, &mid, topic.c_str());
+    if (p_mid != nullptr)
+        *p_mid = mid;
+
+    enableSockeWriteIfNeed();
+    return ret == MOSQ_ERR_SUCCESS;
 }
 
 int Client::publish(const std::string &topic, const void *payload_ptr, size_t payload_size,
-                    int qos, bool retain, int *mid)
+                    int qos, bool retain, int *p_mid)
 {
-    LogUndo();
-    return 0;
+    if (!d_->is_connected) {
+        LogWarn("broke is disconnected");
+        return false;
+    }
+
+    int mid = 0;
+    int ret = mosquitto_publish(d_->sp_mosq, &mid, topic.c_str(),
+                                payload_size, payload_ptr,
+                                qos, retain);
+    if (p_mid != nullptr)
+        *p_mid = mid;
+
+    enableSockeWriteIfNeed();
+    return ret == MOSQ_ERR_SUCCESS;
 }
 
 bool Client::isConnected() const
 {
-    LogUndo();
-    return false;
+    return d_->is_connected;
 }
 
 void Client::onTimerTick()
 {
-    LogUndo();
+    if (d_->state == Data::State::kConnected) {
+        mosquitto_loop_misc(d_->sp_mosq);
+
+        if (mosquitto_socket(d_->sp_mosq) < 0) {
+            LogInfo("disconnected with broker, retry.");
+            d_->is_connected = false;
+            d_->state = Data::State::kConnecting;
+        } else {
+            enableSockeWriteIfNeed();
+        }
+    }
+
+    if (d_->state == Data::State::kConnecting) {
+        if (d_->sp_thread == nullptr) {
+            d_->sp_thread = new thread(
+                [this] {
+                    int ret = mosquitto_reconnect(d_->sp_mosq);
+                    d_->wp_loop->runInLoop(
+                        [this, ret] {
+                            onMosquittoConnectDone(ret, false);
+                        }
+                    );
+                }
+            );
+        }
+    }
 }
 
 void Client::onSocketRead()
 {
-    LogUndo();
+    mosquitto_loop_read(d_->sp_mosq, 1);
+    enableSockeWriteIfNeed();
 }
 
 void Client::onSocketWrite()
 {
-    LogUndo();
+    mosquitto_loop_write(d_->sp_mosq, 1);
+    enableSockeWriteIfNeed();
 }
 
 void Client::OnConnectWrapper(struct mosquitto *, void *userdata, int rc)
@@ -355,40 +427,101 @@ void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const c
 
 void Client::onConnect(int rc)
 {
-    LogUndo();
+    if (rc != 0) {
+        LogWarn("connect fail, rc:%d", rc);
+        return;
+    }
+
+    d_->is_connected = true;
+    LogInfo("connected");
+
+    ++d_->cb_level;
+    if (d_->callbacks.connected)
+        d_->callbacks.connected();
+    --d_->cb_level;
 }
 
 void Client::onDisconnect(int rc)
 {
-    LogUndo();
+    disableSockeRead();
+    disableSockeWrite();
+
+    d_->is_connected = false;
+    LogInfo("disconnected");
+
+    ++d_->cb_level;
+    if (d_->callbacks.disconnected)
+        d_->callbacks.disconnected();
+    --d_->cb_level;
 }
 
 void Client::onPublish(int mid)
 {
-    LogUndo();
+    LogInfo("mid:%d", mid);
+
+    ++d_->cb_level;
+    if (d_->callbacks.message_pub)
+        d_->callbacks.message_pub(mid);
+    --d_->cb_level;
 }
 
 void Client::onSubscribe(int mid, int qos, const int *granted_qos)
 {
-    LogUndo();
+    LogInfo("mid:%d, qos:%d", mid, qos);
+
+    ++d_->cb_level;
+    if (d_->callbacks.subscribed)
+        d_->callbacks.subscribed(mid, qos, granted_qos);
+    --d_->cb_level;
 }
 
 void Client::onUnsubscribe(int mid)
 {
-    LogUndo();
+    LogInfo("mid:%d", mid);
+
+    ++d_->cb_level;
+    if (d_->callbacks.unsubscribed)
+        d_->callbacks.unsubscribed(mid);
+    --d_->cb_level;
 }
 
 void Client::onMessage(const struct mosquitto_message *msg)
 {
-    LogUndo();
+    if (msg == nullptr)
+        return;
+
+    LogInfo("mid:%d, topic:%s", msg->mid, msg->topic);
+
+    ++d_->cb_level;
+    if (d_->callbacks.message_recv)
+        d_->callbacks.message_recv(msg->mid,
+                                   msg->topic,
+                                   msg->payload,
+                                   msg->payloadlen,
+                                   msg->qos,
+                                   msg->retain);
+    --d_->cb_level;
 }
 
 void Client::onLog(int level, const char *str)
 {
-    LogUndo();
+    auto new_level = LOG_LEVEL_DEBUG;
+    switch (level & 0x1F) {
+        case MOSQ_LOG_INFO:
+            new_level = LOG_LEVEL_INFO;
+            break;
+        case MOSQ_LOG_ERR:
+            new_level = LOG_LEVEL_ERROR;
+            break;
+        case MOSQ_LOG_WARNING:
+        case MOSQ_LOG_NOTICE:
+            new_level = LOG_LEVEL_WARN;
+            break;
+    }
+    LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, "%s", str);
 }
 
-void Client::onMosquittoConnectDone(int ret)
+void Client::onMosquittoConnectDone(int ret, bool first_connect)
 {
     d_->sp_thread->join();
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
@@ -397,12 +530,13 @@ void Client::onMosquittoConnectDone(int ret)
         enableSockeRead();
         enableSockeWriteIfNeed();
         d_->state = Data::State::kConnected;
-
     } else {
         LogWarn("connect fail, ret:%d", ret);
     }
 
-    enableTimer();
+    //! 如果是首次连接要启动定时器，重连的不需要
+    if (first_connect)
+        enableTimer();
 }
 
 void Client::enableSockeRead()
