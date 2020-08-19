@@ -31,8 +31,6 @@ int main(int argc, char **argv)
     mqtt::Client mqtt(sp_loop);
 
     mqtt::Client::Config conf;
-    //! 可以添加配置项
-    conf.base.client_id = "pub_test";
 
     int pub_mid = 0;
     mqtt::Client::Callbacks cbs;
