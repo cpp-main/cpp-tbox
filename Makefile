@@ -14,6 +14,7 @@ app_y += event
 app_y += eventx
 app_y += network
 app_y += coroutine
+app_y += mqtt
 
 all test: $(STAGING_DIR)
 	@for i in $(app_y); do \

@@ -12,6 +12,7 @@ HEAD_FILES = \
 	scope_exit.hpp \
 	cabinet.hpp \
 	ptr_cabinet.h \
+	memblock.h \
 
 SRC_FILES = \
 	log_imp.cpp \
