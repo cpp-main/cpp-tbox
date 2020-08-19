@@ -171,6 +171,7 @@ bool Client::start()
     if (ret == MOSQ_ERR_SUCCESS) {
         mosquitto_connect_callback_set(d_->sp_mosq, OnConnectWrapper);
         mosquitto_disconnect_callback_set(d_->sp_mosq, OnDisconnectWrapper);
+        mosquitto_message_callback_set(d_->sp_mosq, OnMessageWrapper);
         mosquitto_publish_callback_set(d_->sp_mosq, OnPublishWrapper);
         mosquitto_subscribe_callback_set(d_->sp_mosq, OnSubscribeWrapper);
         mosquitto_unsubscribe_callback_set(d_->sp_mosq, OnUnsubscribeWrapper);

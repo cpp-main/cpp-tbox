@@ -13,4 +13,4 @@ pub : pub.cpp
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 clean:
-	rm -rf *.o
+	rm -rf sub pub
