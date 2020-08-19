@@ -93,8 +93,15 @@ class Client {
                 const void *payload_ptr = nullptr, size_t payload_size = 0,
                 int qos = 0, bool retain = false, int *mid = nullptr);
 
-    //! 是否与Broker建议了连接
-    bool isConnected() const;
+    //! 状态
+    enum class State {
+        kNone = 0,      //!< 未初始化
+        kInited,        //!< 已初始化
+        kConnecting,    //!< 正在连接
+        kConnected,     //!< 已连接
+    };
+
+    State getState() const;
 
   protected:
     void onTimerTick();
@@ -127,7 +134,6 @@ class Client {
     void disableSockeRead();
     void disableSockeWrite();
     void disableTimer();
-
 
   private:
     struct Data;

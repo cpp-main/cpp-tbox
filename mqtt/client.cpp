@@ -27,17 +27,9 @@ struct Client::Data {
     FdEvent    *sp_sock_read_ev  = nullptr;
     FdEvent    *sp_sock_write_ev = nullptr;
 
-    //! 工作状态
-    enum class State {
-        kNone = 0,      //!< 未初始化
-        kInited,        //!< 已初始化
-        kConnecting,    //!< 正在连接
-        kConnected,     //!< 已连接
-    };
     State state = State::kNone;
 
     int cb_level = 0;   //! 回调层级
-    bool is_connected = false;
 
     std::thread *sp_thread = nullptr;
 
@@ -136,7 +128,7 @@ bool Client::Config::isValid() const
 
 bool Client::initialize(const Config &config, const Callbacks &callbacks)
 {
-    if (d_->state != Data::State::kNone) {
+    if (d_->state != State::kNone) {
         LogWarn("cleanup first");
         return false;
     }
@@ -147,25 +139,25 @@ bool Client::initialize(const Config &config, const Callbacks &callbacks)
     d_->config = config;
     d_->callbacks = callbacks;
 
-    d_->state = Data::State::kInited;
+    d_->state = State::kInited;
     return true;
 }
 
 void Client::cleanup()
 {
-    if (d_->state <= Data::State::kNone)
+    if (d_->state <= State::kNone)
         return;
 
     stop();
 
     d_->config = Config();
     d_->callbacks = Callbacks();
-    d_->state = Data::State::kNone;
+    d_->state = State::kNone;
 }
 
 bool Client::start()
 {
-    if (d_->state != Data::State::kInited) {
+    if (d_->state != State::kInited) {
         LogWarn("state != kInited");
         return false;
     }
@@ -241,7 +233,7 @@ bool Client::start()
     if (username != nullptr)
         mosquitto_username_pw_set(d_->sp_mosq, username, passwd);
 
-    d_->state = Data::State::kConnecting;
+    d_->state = State::kConnecting;
 
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
@@ -264,10 +256,10 @@ bool Client::start()
 
 void Client::stop()
 {
-    if (d_->state <= Data::State::kInited)
+    if (d_->state <= State::kInited)
         return;
 
-    if (d_->state == Data::State::kConnected) {
+    if (d_->state == State::kConnected) {
         //! 如果已成功连接，则立即断开
         mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnect() 中处理
     } else {
@@ -280,14 +272,13 @@ void Client::stop()
 
     disableTimer();
 
-    d_->is_connected = false;
-    d_->state = Data::State::kInited;
+    d_->state = State::kInited;
     return;
 }
 
 int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 {
-    if (!d_->is_connected) {
+    if (d_->state != State::kConnected) {
         LogWarn("broke is disconnected");
         return false;
     }
@@ -303,7 +294,7 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 
 int Client::ubsubscribe(const std::string &topic, int *p_mid)
 {
-    if (!d_->is_connected) {
+    if (d_->state != State::kConnected) {
         LogWarn("broke is disconnected");
         return false;
     }
@@ -320,7 +311,7 @@ int Client::ubsubscribe(const std::string &topic, int *p_mid)
 int Client::publish(const std::string &topic, const void *payload_ptr, size_t payload_size,
                     int qos, bool retain, int *p_mid)
 {
-    if (!d_->is_connected) {
+    if (d_->state != State::kConnected) {
         LogWarn("broke is disconnected");
         return false;
     }
@@ -336,26 +327,25 @@ int Client::publish(const std::string &topic, const void *payload_ptr, size_t pa
     return ret == MOSQ_ERR_SUCCESS;
 }
 
-bool Client::isConnected() const
+Client::State Client::getState() const
 {
-    return d_->is_connected;
+    return d_->state;
 }
 
 void Client::onTimerTick()
 {
-    if (d_->state == Data::State::kConnected) {
+    if (d_->state == State::kConnected) {
         mosquitto_loop_misc(d_->sp_mosq);
 
         if (mosquitto_socket(d_->sp_mosq) < 0) {
             LogInfo("disconnected with broker, retry.");
-            d_->is_connected = false;
-            d_->state = Data::State::kConnecting;
+            d_->state = State::kConnecting;
         } else {
             enableSockeWriteIfNeed();
         }
     }
 
-    if (d_->state == Data::State::kConnecting) {
+    if (d_->state == State::kConnecting) {
         if (d_->sp_thread == nullptr) {
             d_->sp_thread = new thread(
                 [this] {
@@ -432,7 +422,6 @@ void Client::onConnect(int rc)
         return;
     }
 
-    d_->is_connected = true;
     LogInfo("connected");
 
     ++d_->cb_level;
@@ -446,7 +435,6 @@ void Client::onDisconnect(int rc)
     disableSockeRead();
     disableSockeWrite();
 
-    d_->is_connected = false;
     LogInfo("disconnected");
 
     ++d_->cb_level;
@@ -529,7 +517,7 @@ void Client::onMosquittoConnectDone(int ret, bool first_connect)
     if (ret == MOSQ_ERR_SUCCESS) {
         enableSockeRead();
         enableSockeWriteIfNeed();
-        d_->state = Data::State::kConnected;
+        d_->state = State::kConnected;
     } else {
         LogWarn("connect fail, ret:%d", ret);
     }
