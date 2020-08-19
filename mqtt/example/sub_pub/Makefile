@@ -1,6 +1,6 @@
 include ../build_env.mk
 
-TARGET := sub pub
+TARGET := sub pub conn
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. -ltbox_mqtt -ltbox_event-ne -ltbox_base -levent_core -lev -lmosquitto -lpthread
 
@@ -12,5 +12,8 @@ sub : sub.cpp
 pub : pub.cpp
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
+conn : conn.cpp
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
 clean:
-	rm -rf sub pub
+	rm -rf $(TARGET)

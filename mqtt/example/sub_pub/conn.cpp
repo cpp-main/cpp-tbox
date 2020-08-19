@@ -15,40 +15,31 @@ int main(int argc, char **argv)
     using namespace tbox;
     using namespace tbox::event;
 
-    if (argc < 2) {
-        cout << "Usage: " << argv[0] << " <topic>" << endl
-             << "Exp  : " << argv[0] << " #" << endl;
-        return 0;
-    }
-
-    const char *topic = argv[1];
     LogOutput_Initialize(argv[0]);
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
-
     mqtt::Client mqtt(sp_loop);
 
     mqtt::Client::Config conf;
-    //! 可以添加配置项
+#if 0
+    conf.base.broker.domain = "cppmain.cpp";
+    conf.base.broker.port = 1883;
     conf.base.client_id = "pub_test";
+    conf.base.username = "hevake";
+    conf.base.passwd = "abc123";
+    conf.base.keepalive = 60;
 
-    int sub_mid = 0;
-    mqtt::Client::Callbacks cbs;
-    cbs.connected = [&] {
-        mqtt.subscribe(topic, &sub_mid);
-    };
-    cbs.subscribed = [&] (int mid, int, const int *) {
-        if (mid == sub_mid)
-            cout << "subscribe success" << endl;
-    };
-    cbs.message_recv = [&] (int mid, const string &topic,
-                            const void *payload_ptr, int payload_len,
-                            int qos, bool retain) {
-        cout << topic << ' ' << static_cast<const char *>(payload_ptr) << endl;
-    };
+    conf.tls.enabled = true;
+    conf.tls.ca_file = "./ca.perm";
+    conf.tls.ca_path = "./ca";
+    conf.tls.key_file = "./key";
+    conf.tls.cert_file = "./cert";
+    conf.tls.is_require_peer_cert = true;
+    conf.tls.is_insecure = false;
+#endif
 
-    if (!mqtt.initialize(conf, cbs)) {
+    if (!mqtt.initialize(conf, mqtt::Client::Callbacks())) {
         LogErr("init mqtt fail");
         return 0;
     }

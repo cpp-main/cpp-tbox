@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstring>
+
+#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
@@ -21,9 +23,11 @@ int main(int argc, char **argv)
     const char *topic = argv[1];
     const char *payload = argv[2];
 
-    LogOutput_Initialize(argv[0]);
+    //LogOutput_Initialize(argv[0]);
 
     Loop* sp_loop = Loop::New();
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
+
     mqtt::Client mqtt(sp_loop);
 
     mqtt::Client::Config conf;
@@ -55,7 +59,5 @@ int main(int argc, char **argv)
     LogInfo("Stoped");
 
     mqtt.cleanup();
-
-    delete sp_loop;
     return 0;
 }
