@@ -1,8 +1,6 @@
 #ifndef TBOX_COROUTINE_SCHEDULER_H_20180519
 #define TBOX_COROUTINE_SCHEDULER_H_20180519
 
-#include <queue>
-#include <ucontext.h>
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/cabinet.hpp>
@@ -49,8 +47,7 @@ class Scheduler {
     RoutineToken getToken() const;  //! 获取当前协程token
     bool isCanceled() const;        //! 当前协程是否被取消
     std::string getName() const;    //! 当前协程的名称
-
-    event::Loop* getLoop() const { return wp_loop_; }
+    event::Loop* getLoop() const;
 
   public:
     //! 以下仅限主协程调用
@@ -64,14 +61,8 @@ class Scheduler {
     bool isInMainRoutine() const;   //! 是否处于主协程中
 
   private:
-    event::Loop *wp_loop_ = nullptr;
-
-    ucontext_t main_ctx_;   //! 主协程上下文
-    RoutineCabinet routine_cabinet_;
-    Routine *curr_routine_ = nullptr;       //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
-
-    using ReadyRoutineQueue = std::queue<RoutineToken>;
-    ReadyRoutineQueue ready_routines_;      //! 已就绪的 Routine 链表
+    struct Data;
+    Data *d_ = nullptr;
 };
 
 }
