@@ -2,8 +2,8 @@
 #define TBOX_COROUTINE_SCHEDULER_H_20180519
 
 #include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
 #include <tbox/base/cabinet.hpp>
+#include <tbox/event/loop.h>
 
 namespace tbox {
 namespace coroutine {
@@ -11,12 +11,12 @@ namespace coroutine {
 class Routine;
 class Scheduler;
 
-using RoutineCabinet = cabinet::Cabinet<Routine>;
 using RoutineToken  = cabinet::Token;
 using RoutineEntry  = std::function<void(Scheduler&)>;
 
 #define ROUTINE_STACK_DEFAULT_SIZE  8192    //! 子协程默认栈大小
 
+//! 协程调度器
 class Scheduler {
     friend struct Routine;
 
@@ -41,8 +41,7 @@ class Scheduler {
     //! 以下仅限子协程调用
     void wait();    //! 切换到主协程，等待被 resumeRoutine() 唤醒
     void yield();   //! 切换到主协程，等待下一个事件循环继续执行
-
-    bool join(const RoutineToken &other_routine);   //! 等待另一个协程结束
+    bool join(const RoutineToken &other_routine);   //! 一个协程等待另一个协程结束
 
     RoutineToken getToken() const;  //! 获取当前协程token
     bool isCanceled() const;        //! 当前协程是否被取消
