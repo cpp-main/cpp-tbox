@@ -11,7 +11,7 @@ CCXXFLAGS += -DLOG_MODULE_ID='"mqtt"' $(CXXFLAGS) -ggdb
 
 TEST_SRC_FILES = \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -lmosquitto -levent_core -lev
 
 ENABLE_SHARED_LIB = no
 

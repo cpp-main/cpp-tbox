@@ -1,6 +1,7 @@
 #ifndef TBOX_COROUTINE_SEMAPHORE_HPP_20180527
 #define TBOX_COROUTINE_SEMAPHORE_HPP_20180527
 
+#include <queue>
 #include "scheduler.h"
 
 namespace tbox {
