@@ -4,6 +4,7 @@
 #include <limits>
 
 #include <tbox/base/log.h>
+
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"
 
@@ -12,40 +13,80 @@ namespace network {
 
 using namespace std::placeholders;
 
+using TcpConns = cabinet::Cabinet<TcpConnection>;
+
+//! 私有数据
+struct TcpServer::Data {
+    event::Loop *wp_loop = nullptr;
+
+    ConnectedCallback       connected_cb;
+    DisconnectedCallback    disconnected_cb;
+    ReceiveCallback         receive_cb;
+    size_t                  receive_threshold = 0;
+
+    TcpAcceptor *sp_acceptor = nullptr;
+    TcpConns conns;     //!< TcpConnection 容器
+
+    State state = State::kNone;
+    int cb_level = 0;
+};
+
 TcpServer::TcpServer(event::Loop *wp_loop) :
-    wp_loop_(wp_loop),
-    sp_acceptor_(new TcpAcceptor(wp_loop))
-{ }
+    d_(new Data)
+{
+    assert(d_ != nullptr);
+
+    d_->wp_loop = wp_loop;
+    d_->sp_acceptor = new TcpAcceptor(wp_loop);
+}
 
 TcpServer::~TcpServer()
 {
-    assert(cb_level_ == 0);
+    assert(d_->cb_level == 0);
 
     cleanup();
-    CHECK_DELETE_RESET_OBJ(sp_acceptor_);
+    CHECK_DELETE_RESET_OBJ(d_->sp_acceptor);
+
+    delete d_;
 }
 
 bool TcpServer::initialize(const SockAddr &bind_addr, int listen_backlog)
 {
-    if (state_ != State::kNone)
+    if (d_->state != State::kNone)
         return false;
 
-    if (sp_acceptor_->initialize(bind_addr, listen_backlog)) {
-        sp_acceptor_->setNewConnectionCallback(std::bind(&TcpServer::onTcpConnected, this, _1));
-        state_ = State::kInited;
+    if (d_->sp_acceptor->initialize(bind_addr, listen_backlog)) {
+        d_->sp_acceptor->setNewConnectionCallback(std::bind(&TcpServer::onTcpConnected, this, _1));
+        d_->state = State::kInited;
         return true;
     }
 
     return false;
 }
 
+void TcpServer::setConnectedCallback(const ConnectedCallback &cb)
+{
+    d_->connected_cb = cb;
+}
+
+void TcpServer::setDisconnectedCallback(const DisconnectedCallback &cb)
+{
+    d_->disconnected_cb = cb;
+}
+
+void TcpServer::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
+{
+    d_->receive_cb = cb;
+    d_->receive_threshold = threshold;
+}
+
 bool TcpServer::start()
 {
-    if (state_ != State::kInited)
+    if (d_->state != State::kInited)
         return false;
 
-    if (sp_acceptor_->start()) {
-        state_ = State::kRunning;
+    if (d_->sp_acceptor->start()) {
+        d_->state = State::kRunning;
         return true;
     }
     return false;
@@ -53,19 +94,19 @@ bool TcpServer::start()
 
 bool TcpServer::stop()
 {
-    if (state_ != State::kRunning)
+    if (d_->state != State::kRunning)
         return false;
 
-    conns_.foreach(
+    d_->conns.foreach(
         [](TcpConnection *conn) {
             conn->disconnect();
             delete conn;
         }
     );
-    conns_.clear();
+    d_->conns.clear();
 
-    if (sp_acceptor_->stop()) {
-        state_ = State::kInited;
+    if (d_->sp_acceptor->stop()) {
+        d_->state = State::kInited;
         return true;
     }
     return false;
@@ -73,22 +114,22 @@ bool TcpServer::stop()
 
 void TcpServer::cleanup()
 {
-    stop();
-
-    if (state_ != State::kInited)
+    if (d_->state <= State::kNone)
         return;
 
-    connected_cb_ = nullptr;
-    disconnected_cb_ = nullptr;
-    receive_cb_ = nullptr;
-    receive_threshold_ = 0;
+    stop();
 
-    state_ = State::kNone;
+    d_->connected_cb = nullptr;
+    d_->disconnected_cb = nullptr;
+    d_->receive_cb = nullptr;
+    d_->receive_threshold = 0;
+
+    d_->state = State::kNone;
 }
 
 bool TcpServer::send(const Client &client, const void *data_ptr, size_t data_size)
 {
-    auto conn = conns_.at(client);
+    auto conn = d_->conns.at(client);
     if (conn != nullptr)
         return conn->send(data_ptr, data_size);
     return false;
@@ -96,7 +137,7 @@ bool TcpServer::send(const Client &client, const void *data_ptr, size_t data_siz
 
 bool TcpServer::disconnect(const Client &client)
 {
-    auto conn = conns_.at(client);
+    auto conn = d_->conns.at(client);
     if (conn != nullptr)
         return conn->disconnect();
     return false;
@@ -104,47 +145,52 @@ bool TcpServer::disconnect(const Client &client)
 
 bool TcpServer::isClientValid(const Client &client) const
 {
-    return conns_.at(client) != nullptr;
+    return d_->conns.at(client) != nullptr;
 }
 
 SockAddr TcpServer::getClientAddress(const Client &client) const
 {
-    auto conn = conns_.at(client);
+    auto conn = d_->conns.at(client);
     if (conn != nullptr)
         return conn->peerAddr();
     return SockAddr();
 }
 
+TcpServer::State TcpServer::state() const
+{
+    return d_->state;
+}
+
 void TcpServer::onTcpConnected(TcpConnection *new_conn)
 {
-    Client client = conns_.insert(new_conn);
-    new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), receive_threshold_);
+    Client client = d_->conns.insert(new_conn);
+    new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), d_->receive_threshold);
     new_conn->setDisconnectedCallback(std::bind(&TcpServer::onTcpDisconnected, this, client));
 
-    ++cb_level_;
-    if (connected_cb_)
-        connected_cb_(client);
-    --cb_level_;
+    ++d_->cb_level;
+    if (d_->connected_cb)
+        d_->connected_cb(client);
+    --d_->cb_level;
 }
 
 void TcpServer::onTcpDisconnected(const Client &client)
 {
-    ++cb_level_;
-    if (disconnected_cb_)
-        disconnected_cb_(client);
-    --cb_level_;
+    ++d_->cb_level;
+    if (d_->disconnected_cb)
+        d_->disconnected_cb(client);
+    --d_->cb_level;
 
-    TcpConnection *conn = conns_.remove(client);
-    wp_loop_->runNext([conn] { CHECK_DELETE_OBJ(conn); });
+    TcpConnection *conn = d_->conns.remove(client);
+    d_->wp_loop->runNext([conn] { CHECK_DELETE_OBJ(conn); });
     //! 为什么先回调，再访问后面？是为了在回调中还能访问到TcpConnection对象
 }
 
 void TcpServer::onTcpReceived(const Client &client, Buffer &buff)
 {
-    ++cb_level_;
-    if (receive_cb_)
-        receive_cb_(client, buff);
-    --cb_level_;
+    ++d_->cb_level;
+    if (d_->receive_cb)
+        d_->receive_cb(client, buff);
+    --d_->cb_level;
 }
 
 }

@@ -1,8 +1,6 @@
 #ifndef TBOX_NETWORK_TCP_SERVER_H_20180412
 #define TBOX_NETWORK_TCP_SERVER_H_20180412
 
-#include <vector>
-
 #include <tbox/base/defines.h>
 #include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
@@ -25,11 +23,12 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using TcpConns = cabinet::Cabinet<TcpConnection>;
     using Client = cabinet::Token;
 
     enum class State {
-        kNone, kInited, kRunning
+        kNone,      //! 未初始化
+        kInited,    //! 已初始化
+        kRunning    //! 已启动
     };
 
     //! 设置绑定地址与backlog
@@ -40,12 +39,11 @@ class TcpServer {
     using ReceiveCallback       = std::function<void(const Client &, Buffer &)>;
 
     //! 设置有新客户端连接时的回调
-    void setConnectedCallback(const ConnectedCallback &cb) { connected_cb_ = cb; }
+    void setConnectedCallback(const ConnectedCallback &cb);
     //! 设置有客户端断开时的回调
-    void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
+    void setDisconnectedCallback(const DisconnectedCallback &cb);
     //! 设置接收到客户端消息时的回调
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
-    { receive_cb_ = cb; receive_threshold_ = threshold; }
+    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold);
 
     bool start();   //!< 启动服务
     bool stop();    //!< 停止服务，断开所有连接
@@ -61,7 +59,7 @@ class TcpServer {
     //! 获取客户端的地址
     SockAddr getClientAddress(const Client &client) const;
 
-    State state() const { return state_; }
+    State state() const;
 
   protected:
     void onTcpConnected(TcpConnection *new_conn);
@@ -69,18 +67,8 @@ class TcpServer {
     void onTcpReceived(const Client &client, Buffer &buff);
 
   private:
-    event::Loop *wp_loop_ = nullptr;
-
-    ConnectedCallback       connected_cb_;
-    DisconnectedCallback    disconnected_cb_;
-    ReceiveCallback         receive_cb_;
-    size_t                  receive_threshold_ = 0;
-
-    TcpAcceptor *sp_acceptor_ = nullptr;
-    TcpConns conns_;    //!< TcpConnection 容器
-
-    State state_ = State::kNone;
-    int cb_level_ = 0;
+    struct Data;
+    Data *d_ = nullptr;
 };
 
 }
