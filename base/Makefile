@@ -11,13 +11,11 @@ HEAD_FILES = \
 	defines.h \
 	scope_exit.hpp \
 	cabinet.hpp \
-	ptr_cabinet.h \
 	memblock.h \
 
 SRC_FILES = \
 	log_imp.cpp \
 	log_output.cpp \
-	ptr_cabinet.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 
