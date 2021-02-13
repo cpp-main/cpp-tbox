@@ -18,8 +18,8 @@
 namespace {
     int _output_mask = LOG_OUTPUT_MASK_STDOUT | LOG_OUTPUT_MASK_SYSLOG;
 
-    const char *level_name[] = { "FATAL", "ERROR", "WARN ", "INFO ", "DEBUG", "TRACE" };
-    const char *level_color_start[] = { "\033[31;4m", "\033[31m", "\033[33m", "\033[32m", "\033[34m", "\033[35m" };
+    const char *level_name[] = { "[F]", "[E]", "[W]", "[N]", "[I]", "[D]", "[T]" };
+    const char *level_color_start[] = { "\033[31m", "\033[91m", "\033[93m", "\033[33m", "\033[39m", "\033[36m", "\033[35m" };
     const char *level_color_end = "\033[0m";
     std::mutex _stdout_lock;
 
@@ -29,11 +29,15 @@ namespace {
         struct timezone tz;
 
         gettimeofday(&tv, &tz);
+#if 1
         struct tm tm;
         localtime_r(&tv.tv_sec, &tm);
         char tmp[20];
         strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06ld", tmp, tv.tv_usec);
+#else
+        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%ld.%06ld", tv.tv_sec, tv.tv_usec);
+#endif
     }
 
     void _PrintLogToStdout(LogContent *content)
@@ -43,9 +47,8 @@ namespace {
 
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
-        printf("%s", level_color_start[content->level]);
-
-        printf("%s %ld %s %s ", timestamp, ::syscall(SYS_gettid), level_name[content->level], content->module_id);
+        printf("%s%s ", level_color_start[content->level], level_name[content->level]);
+        printf("%s %ld %s ", timestamp, ::syscall(SYS_gettid), content->module_id);
 
         if (content->func_name != NULL)
             printf("%s() ", content->func_name);
@@ -60,8 +63,7 @@ namespace {
         if (content->file_name != NULL) {
             printf("-- %s:%d", content->file_name, content->line);
         }
-
-        printf("%s", level_color_end);
+        printf(level_color_end);
         putchar('\n');
     }
 

@@ -8,7 +8,7 @@
 #define LOG_LEVEL_FATAL     0   //!< Program will crash
 #define LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle
 #define LOG_LEVEL_WARN      2   //!< Got inner abnormal situation, but program can handle it
-#define LOG_LEVEL_NOTICE    3   //!< Got outside invalid input, we should notice it
+#define LOG_LEVEL_NOTICE    3   //!< It not big problem, but we should notice it, such as invalid data input
 #define LOG_LEVEL_INFO      4   //!< Normal message exchange with other program
 #define LOG_LEVEL_DEBUG     5   //!< Normal process inside program
 #define LOG_LEVEL_TRACE     6   //!< Temporary debugging log
@@ -43,7 +43,7 @@
     #define LogTag()
 #endif
 
-#define LogUndo()           LogWarn("!!! Undo !!!")
+#define LogUndo()           LogNotice("!!! Undo !!!")
 
 #ifdef __cplusplus
 extern "C" {

@@ -8,6 +8,7 @@ TEST(Log, output_type)
     LogFatal("fatal");
     LogErr("err");
     LogWarn("warn");
+    LogNotice("notice");
     LogInfo("info");
     LogDbg("debug");
     LogTrace("trace");
