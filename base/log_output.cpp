@@ -18,9 +18,8 @@
 namespace {
     int _output_mask = LOG_OUTPUT_MASK_STDOUT | LOG_OUTPUT_MASK_SYSLOG;
 
-    const char *level_name[] = { "[F]", "[E]", "[W]", "[N]", "[I]", "[D]", "[T]" };
-    const char *level_color_start[] = { "\033[31m", "\033[91m", "\033[93m", "\033[33m", "\033[39m", "\033[36m", "\033[35m" };
-    const char *level_color_end = "\033[0m";
+    const char *level_name = "FEWNIDT";
+    const int level_color_num[] = {31, 91, 93, 33, 39, 36, 35};
     std::mutex _stdout_lock;
 
     void _GetCurrTimeString(char *timestamp)
@@ -47,7 +46,10 @@ namespace {
 
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
-        printf("%s%s ", level_color_start[content->level], level_name[content->level]);
+        //! 开启色彩，显示日志等级
+        printf("\033[%dm[%c] ", level_color_num[content->level], level_name[content->level]);
+
+        //! 打印时间戳、线程号、模块名
         printf("%s %ld %s ", timestamp, ::syscall(SYS_gettid), content->module_id);
 
         if (content->func_name != NULL)
@@ -63,8 +65,8 @@ namespace {
         if (content->file_name != NULL) {
             printf("-- %s:%d", content->file_name, content->line);
         }
-        printf(level_color_end);
-        putchar('\n');
+
+        puts("\033[0m");    //! 恢复色彩
     }
 
     const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
