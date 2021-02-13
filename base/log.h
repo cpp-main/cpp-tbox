@@ -7,10 +7,11 @@
 //! Define log levels
 #define LOG_LEVEL_FATAL     0   //!< Program will crash
 #define LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle
-#define LOG_LEVEL_WARN      2   //!< Got abnormal situation, but program can handle it
-#define LOG_LEVEL_INFO      3   //!< Normal message exchange with other program
-#define LOG_LEVEL_DEBUG     4   //!< Normal process inside program
-#define LOG_LEVEL_TRACE     5   //!< Temporary debugging log
+#define LOG_LEVEL_WARN      2   //!< Got inner abnormal situation, but program can handle it
+#define LOG_LEVEL_NOTICE    3   //!< Got outside invalid input, we should notice it
+#define LOG_LEVEL_INFO      4   //!< Normal message exchange with other program
+#define LOG_LEVEL_DEBUG     5   //!< Normal process inside program
+#define LOG_LEVEL_TRACE     6   //!< Temporary debugging log
 
 //! Module ID
 #ifndef LOG_MODULE_ID
@@ -22,18 +23,19 @@
 #define LogPrintf(level, fmt, ...) \
     LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, fmt, ## __VA_ARGS__)
 
-#define LogFatal(fmt, ...)  LogPrintf(LOG_LEVEL_FATAL, fmt, ## __VA_ARGS__)
-#define LogErr(fmt, ...)    LogPrintf(LOG_LEVEL_ERROR, fmt, ## __VA_ARGS__)
-#define LogWarn(fmt, ...)   LogPrintf(LOG_LEVEL_WARN,  fmt, ## __VA_ARGS__)
-#define LogInfo(fmt, ...)   LogPrintf(LOG_LEVEL_INFO,  fmt, ## __VA_ARGS__)
+#define LogFatal(fmt, ...)  LogPrintf(LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
+#define LogErr(fmt, ...)    LogPrintf(LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
+#define LogWarn(fmt, ...)   LogPrintf(LOG_LEVEL_WARN,   fmt, ## __VA_ARGS__)
+#define LogNotice(fmt, ...) LogPrintf(LOG_LEVEL_NOTICE, fmt, ## __VA_ARGS__)
+#define LogInfo(fmt, ...)   LogPrintf(LOG_LEVEL_INFO,   fmt, ## __VA_ARGS__)
 
-#if !defined(BUILD_LOG_LEVEL) || (BUILD_LOG_LEVEL >= LOG_LEVEL_DEBUG)
+#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= LOG_LEVEL_DEBUG)
     #define LogDbg(fmt, ...)    LogPrintf(LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__)
 #else
     #define LogDbg(fmt, ...)
 #endif
 
-#if !defined(BUILD_LOG_LEVEL) || (BUILD_LOG_LEVEL >= LOG_LEVEL_TRACE)
+#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= LOG_LEVEL_TRACE)
     #define LogTrace(fmt, ...)  LogPrintf(LOG_LEVEL_TRACE, fmt, ## __VA_ARGS__)
     #define LogTag()            LogTrace("==> Run Here <==")
 #else

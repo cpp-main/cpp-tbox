@@ -1,11 +1,19 @@
 #include "log_imp.h"
+#include "log.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+//! 日志输出函数指针
 static LogPrintfFuncType _log_printf_func = nullptr;
 
+/**
+ * \brief   日志格式化打印接口的实现
+ *
+ * 1.对数据合法性进行校验;
+ * 2.将日志数据打包成 LogContent，然后调用 _log_printf_func 指向的函数进行输出
+ */
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                    int line, int level, const char *fmt, ...)
 {
@@ -13,7 +21,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
     va_start(args, fmt);
 
     if (level < 0) level = 0;
-    if (level > 5) level = 5;
+    if (level > LOG_LEVEL_TRACE) level = LOG_LEVEL_TRACE;
 
     const char *module_id_be_print = (module_id != nullptr) ? module_id : "???";
 
