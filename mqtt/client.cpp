@@ -503,8 +503,10 @@ void Client::onLog(int level, const char *str)
             new_level = LOG_LEVEL_ERROR;
             break;
         case MOSQ_LOG_WARNING:
-        case MOSQ_LOG_NOTICE:
             new_level = LOG_LEVEL_WARN;
+            break;
+        case MOSQ_LOG_NOTICE:
+            new_level = LOG_LEVEL_NOTICE;
             break;
     }
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, "%s", str);
