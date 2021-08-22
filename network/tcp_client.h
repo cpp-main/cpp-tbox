@@ -39,16 +39,16 @@ class TcpClient : public ByteStream {
 
   public:
     bool initialize(const SockAddr &server_addr);
-    void setConnectedCallback(const ConnectedCallback &cb) { connected_cb_ = cb; }
-    void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
-    void setAutoReconnect(bool enable) { reconnect_enabled_ = enable; }
+    void setConnectedCallback(const ConnectedCallback &cb);
+    void setDisconnectedCallback(const DisconnectedCallback &cb);
+    void setAutoReconnect(bool enable);
 
     bool start();   //!< 开始连接服务端
     bool stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
 
     void cleanup();
 
-    State state() const { return state_; }
+    State state() const;
 
   public:   //! 实现ByteStream的接口
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
@@ -61,20 +61,8 @@ class TcpClient : public ByteStream {
     void onTcpDisconnected();
 
   private:
-    event::Loop *wp_loop_;
-    State state_ = State::kNone;
-
-    ConnectedCallback    connected_cb_;
-    DisconnectedCallback disconnected_cb_;
-    ReceiveCallback      received_cb_;
-    size_t               received_threshold_ = 0;
-    ByteStream          *wp_receiver_ = nullptr;
-    bool reconnect_enabled_ = true;
-
-    TcpConnector  *sp_connector_  = nullptr;
-    TcpConnection *sp_connection_ = nullptr;
-
-    int cb_level_ = 0;
+    struct Data;
+    Data *d_ = nullptr;
 };
 
 }
