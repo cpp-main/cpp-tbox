@@ -39,8 +39,7 @@ TcpClient::~TcpClient()
 {
     assert(d_->cb_level == 0);
 
-    if (d_->state != State::kNone)
-        cleanup();
+    cleanup();
 
     CHECK_DELETE_RESET_OBJ(d_->sp_connection);
     CHECK_DELETE_RESET_OBJ(d_->sp_connector);
@@ -59,7 +58,7 @@ bool TcpClient::initialize(const SockAddr &server_addr)
     d_->sp_connector->initialize(server_addr);
     d_->sp_connector->setConnectedCallback(std::bind(&TcpClient::onTcpConnected, this, _1));
 
-    d_->state = State::kIdle;
+    d_->state = State::kInited;
     return true;
 }
 
@@ -80,7 +79,7 @@ void TcpClient::setAutoReconnect(bool enable)
 
 bool TcpClient::start()
 {
-    if (d_->state != State::kIdle) {
+    if (d_->state != State::kInited) {
         LogWarn("not in idle state, initialize or stop first");
         return false;
     }
@@ -89,30 +88,27 @@ bool TcpClient::start()
     return d_->sp_connector->start();
 }
 
-bool TcpClient::stop()
+void TcpClient::stop()
 {
     if (d_->state == State::kConnecting) {
-        d_->state = State::kIdle;
-        return d_->sp_connector->stop();
+        d_->state = State::kInited;
+        d_->sp_connector->stop();
 
     } else if (d_->state == State::kConnected) {
         TcpConnection *tobe_delete = nullptr;
         std::swap(tobe_delete, d_->sp_connection);
         tobe_delete->disconnect();
         d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });
-        d_->state = State::kIdle;
-        return true;
-
-    } else {
-        LogWarn("not in connecting or connected state, ignore");
-        return false;
+        d_->state = State::kInited;
     }
 }
 
 void TcpClient::cleanup()
 {
-    if (d_->state != State::kIdle)
-        stop();
+    if (d_->state <= State::kNone)
+        return;
+
+    stop();
 
     d_->connected_cb = nullptr;
     d_->disconnected_cb = nullptr;
@@ -183,7 +179,7 @@ void TcpClient::onTcpDisconnected()
     //! 这里要使用延后释放，因为本函数一定是 d_->sp_connection 对象自己调用的
     d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });
 
-    d_->state = State::kIdle;
+    d_->state = State::kInited;
 
     if (d_->reconnect_enabled)
         start();

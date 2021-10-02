@@ -32,7 +32,7 @@ class TcpClient : public ByteStream {
     //!< 状态
     enum class State {
         kNone,          //!< 未初始化
-        kIdle,          //!< 空闲
+        kInited,        //!< 已初始化
         kConnecting,    //!< 连接中
         kConnected      //!< 连接成功
     };
@@ -44,7 +44,7 @@ class TcpClient : public ByteStream {
     void setAutoReconnect(bool enable);
 
     bool start();   //!< 开始连接服务端
-    bool stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
+    void stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
 
     void cleanup();
 

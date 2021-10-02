@@ -46,7 +46,7 @@ class TcpServer {
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold);
 
     bool start();   //!< 启动服务
-    bool stop();    //!< 停止服务，断开所有连接
+    void stop();    //!< 停止服务，断开所有连接
     void cleanup(); //!< 清理
 
     //! 向指定客户端发送数据

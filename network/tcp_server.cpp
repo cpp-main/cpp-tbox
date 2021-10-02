@@ -92,10 +92,10 @@ bool TcpServer::start()
     return false;
 }
 
-bool TcpServer::stop()
+void TcpServer::stop()
 {
     if (d_->state != State::kRunning)
-        return false;
+        return;
 
     d_->conns.foreach(
         [](TcpConnection *conn) {
@@ -105,11 +105,8 @@ bool TcpServer::stop()
     );
     d_->conns.clear();
 
-    if (d_->sp_acceptor->stop()) {
-        d_->state = State::kInited;
-        return true;
-    }
-    return false;
+    d_->sp_acceptor->stop();
+    d_->state = State::kInited;
 }
 
 void TcpServer::cleanup()
