@@ -110,6 +110,8 @@ void TcpClient::cleanup()
 
     stop();
 
+    d_->sp_connector->cleanup();
+
     d_->connected_cb = nullptr;
     d_->disconnected_cb = nullptr;
     d_->received_cb = nullptr;
