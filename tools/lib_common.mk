@@ -82,10 +82,17 @@ $(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
 ################################################################
 # test
 ################################################################
-TEST_OBJECTS := $(subst .cpp,.o,$(TEST_SRC_FILES))
+TEST_OBJECTS := $(subst .cpp,.oT,$(TEST_SRC_FILES))
+TEST_CXXFLAGS := $(CCXXFLAGS)
+
+$(TEST_OBJECTS) : %.oT:%.cpp
+	@echo "\033[32mCXX $^\033[0m"
+	@$(CXX) $(TEST_CXXFLAGS) -o $@ -c $^
 
 print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
+	@echo TEST_CXXFLAGS=$(TEST_CXXFLAGS)
+	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
 test: print_test_vars $(STATIC_OBJECTS) $(TEST_OBJECTS)
 	@echo "\033[35mBUILD $@\033[0m"
