@@ -25,7 +25,7 @@ class TcpConnector {
     //! 状态
     enum class State {
         kNone,              //!< 未初始化
-        kIdle,              //!< 空闲未连接
+        kInited,            //!< 空闲未连接
         kReconnectDelay,    //!< 重连等待
         kConnecting,        //!< 连接中
     };
@@ -45,7 +45,7 @@ class TcpConnector {
     void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func); //!< 设置用户自定义的重连延迟策略
 
     bool start();   //!< 开始连接
-    bool stop();    //!< 停止连接
+    void stop();    //!< 停止连接
 
     void cleanup(); //!< 清理
 

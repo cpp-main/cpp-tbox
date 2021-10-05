@@ -19,6 +19,8 @@ TcpConnector::~TcpConnector()
 {
     assert(cb_level_ == 0);
 
+    cleanup();
+
     CHECK_DELETE_RESET_OBJ(sp_delay_ev_);
     CHECK_DELETE_RESET_OBJ(sp_write_ev_);
 }
@@ -27,7 +29,7 @@ void TcpConnector::checkSettingAndTryEnterIdleState()
 {
     if (state_ == State::kNone) {
         if (server_addr_.type() != SockAddr::Type::kNone && connected_cb_)
-            state_ = State::kIdle;
+            state_ = State::kInited;
     }
 }
 
@@ -60,7 +62,7 @@ void TcpConnector::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
 
 bool TcpConnector::start()
 {
-    if (state_ != State::kIdle) {
+    if (state_ != State::kInited) {
         LogWarn("not in idle state");
         return false;
     }
@@ -70,18 +72,33 @@ bool TcpConnector::start()
     return true;
 }
 
-bool TcpConnector::stop()
+void TcpConnector::stop()
 {
     if ((state_ == State::kConnecting) || (state_ == State::kNone))
-        return false;
+        return;
 
     if (state_ == State::kConnecting)
         exitConnectingState();
     else if (state_ == State::kReconnectDelay)
         exitReconnectDelayState();
 
-    state_ = State::kIdle;
-    return true;
+    state_ = State::kInited;
+}
+
+void TcpConnector::cleanup()
+{
+    if (state_ <= State::kNone)
+        return;
+
+    stop();
+
+    connected_cb_ = nullptr;
+    connect_fail_cb_ = nullptr;
+    reconn_delay_calc_func_ = [](int) {return 1;};
+    try_times_ = 0;
+    conn_fail_times_ = 0;
+
+    state_ = State::kNone;
 }
 
 SocketFd TcpConnector::createSocket(SockAddr::Type addr_type) const
@@ -208,7 +225,7 @@ void TcpConnector::exitReconnectDelayState()
 void TcpConnector::onConnectFail()
 {
     ++conn_fail_times_;
-    //! 如果设置了尝试次数，且超过了尝试次数，则回调 connect_fail_cb_ 然后回到 State::kIdle
+    //! 如果设置了尝试次数，且超过了尝试次数，则回调 connect_fail_cb_ 然后回到 State::kInited
     //! 否则继续进入重连等待延时状态
     if ((try_times_ > 0) && (conn_fail_times_ >= try_times_)) {
         if (connect_fail_cb_) {
@@ -218,7 +235,7 @@ void TcpConnector::onConnectFail()
         } else
             LogWarn("connector stoped");
 
-        state_ = State::kIdle;
+        state_ = State::kInited;
     } else
         enterReconnectDelayState();
 }
@@ -234,7 +251,7 @@ void TcpConnector::onSocketWritable()
             sock_fd_.reset();
 
             exitConnectingState();
-            state_ = State::kIdle;
+            state_ = State::kInited;
 
             LogInfo("connect to %s success", server_addr_.toString().c_str());
             if (connected_cb_) {
