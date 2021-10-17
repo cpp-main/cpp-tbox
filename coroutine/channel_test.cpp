@@ -136,6 +136,7 @@ TEST(Channel, TimerProduceAndConsumer)
 
     size_t index = 0;
     auto timer = sp_loop->newTimerEvent();
+    SetScopeExitAction([timer]{ delete timer;});
     timer->initialize(chrono::milliseconds(10), Event::Mode::kPersist);
     timer->setCallback(
         [&] {

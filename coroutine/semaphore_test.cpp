@@ -69,6 +69,7 @@ TEST(Semaphore, TimerProduceAndConsumer)
     int index = 0;
     auto timer = sp_loop->newTimerEvent();
     timer->initialize(chrono::milliseconds(10), Event::Mode::kPersist);
+    SetScopeExitAction([timer]{ delete timer;});
     timer->setCallback(
         [&] {
             if (index < times) {
