@@ -69,7 +69,7 @@ namespace {
         puts("\033[0m");    //! 恢复色彩
     }
 
-    const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
+    const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
 
     //! syslogd
     void _PrintLogToSyslog(LogContent *content)
