@@ -7,6 +7,9 @@ TARGETS=io_example timer_example signal_example \
 CXXFLAGS += -ggdb
 LDFLAGS += -ltbox_event-ne -ltbox_base -levent_core -lev -lpthread
 
+CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+LDFLAGS += -fsanitize=address -static-libasan
+
 all: $(TARGETS)
 
 stdin_timer_signal_demo : stdin_timer_signal_demo.o

@@ -3,6 +3,10 @@ include ../build_env.mk
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. -ltbox_network -ltbox_eventx -ltbox_event-ne -ltbox_base -levent_core -lev -lpthread
 TARGETS = send_only recv_only request respond ping_pong
+
+CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+LDFLAGS += -fsanitize=address -static-libasan
+
 all : $(TARGETS)
 
 send_only : send_only.o
