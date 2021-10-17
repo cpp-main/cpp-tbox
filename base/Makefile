@@ -24,7 +24,7 @@ TEST_SRC_FILES = \
 	scope_exit_test.cpp \
 	cabinet_test.cpp \
 
-TEST_LDFLAGS +=
+TEST_LDFLAGS := $(LDFLAGS)
 
 ENABLE_SHARED_LIB = no
 

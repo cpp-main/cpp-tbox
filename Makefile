@@ -3,6 +3,14 @@ include build_env.mk
 .PHONY: all clean distclean
 
 CCFLAGS := -Wall -Werror
+
+ifeq ($(RELEASE), 1)
+CCFLAGS += -O2
+else
+CCFLAGS += -fsanitize=address -fno-omit-frame-pointer -DDEBUG=1 -O0 -ggdb
+LDFLAGS += -fsanitize=address -static-libasan
+endif
+
 CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
 CFLAGS := $(CCFLAGS) $(CFLAGS)
 APPS_DIR := $(PWD)

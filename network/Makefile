@@ -36,7 +36,7 @@ SRC_FILES = \
 	tcp_client.cpp \
 	tcp_server.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"network"' $(CXXFLAGS) -ggdb
+CCXXFLAGS += -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	fd_test.cpp \

@@ -5,10 +5,6 @@ STAGING_LIB := $(STAGING_DIR)/lib
 
 CCFLAGS := -I$(STAGING_INCLUDE)
 
-# Release or Debug
-#CCFLAGS += -O2
-CCFLAGS += -ggdb -O0
-
 CFLAGS := $(CCFLAGS) -std=c99
 CXXFLAGS := $(CCFLAGS) -std=c++11
 LDFLAGS := -L$(STAGING_LIB)

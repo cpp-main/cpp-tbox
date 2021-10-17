@@ -9,7 +9,7 @@ HEAD_FILES = \
 SRC_FILES = \
 	thread_pool.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS) -ggdb
+CCXXFLAGS += -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	thread_pool_test.cpp
