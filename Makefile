@@ -24,7 +24,7 @@ app_y += eventx
 app_y += network
 app_y += coroutine
 app_y += mqtt
-app_y += logger
+app_y += log2file
 
 all test: $(STAGING_DIR)
 	@for i in $(app_y); do \
