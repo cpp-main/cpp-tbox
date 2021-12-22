@@ -32,13 +32,13 @@ int Main(int argc, char **argv)
     //! 初始化所有应用
     for (auto app : apps) {
         if (!app->initialize())
-            break;
+            break;  //!FIXME
     }
 
     //! 启动所有应用
     for (auto app : apps) {
         if (!app->start())
-            break;
+            break;  //!FIXME
     }
 
     RegisterSignals();
@@ -75,11 +75,13 @@ int Main(int argc, char **argv)
     util::ThreadWDog::Stop();
     util::ThreadWDog::Unregister();
 
+    //! 倒序cleanup所有应用
     for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
         (*rit)->cleanup();
 
     context.thread_pool()->cleanup();
 
+    //! 倒序释放所有应用
     for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
         delete *rit;
 
