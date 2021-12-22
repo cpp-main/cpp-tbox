@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace tbox {
-namespace main {
+namespace util {
 
 PidFile::PidFile(const std::string &pid_filename) :
     pid_filename_(pid_filename)

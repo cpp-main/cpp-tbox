@@ -25,7 +25,7 @@
 #include <tbox/base/defines.h>
 
 namespace tbox {
-namespace main {
+namespace util {
 
 class PidFile {
   public:

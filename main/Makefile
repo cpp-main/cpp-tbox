@@ -4,13 +4,13 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	thread_wdog.h \
-	pid_file.h \
+	app.h \
+	context.h \
 
 SRC_FILES = \
 	main.cpp \
-	thread_wdog.cpp \
-	pid_file.cpp \
+	context.cpp \
+	signal_handler.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 

@@ -37,7 +37,7 @@
 #include <functional>
 
 namespace tbox {
-namespace main {
+namespace util {
 
 /**
  * 线程看门狗

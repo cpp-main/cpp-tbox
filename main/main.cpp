@@ -1,80 +1,97 @@
-#include <signal.h>
-#include <execinfo.h>
-
-#include <iostream>
-#include <sstream>
+#include <vector>
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
+#include <tbox/util/thread_wdog.h>
 
-using namespace tbox;
+#include "context.h"
+#include "app.h"
 
-namespace {
-void OnStopSignal(int signo);
-void OnErrorSignal(int signo);
+namespace tbox {
+namespace main {
+
+extern void RegisterSignals();
+extern void RegisterApps(Context &context, std::vector<App*> &apps);   //! 由用户去实现
 
 std::function<void()> normal_stop_func; //!< 正常退出前要做的事情
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
-}
 
-int main(int argc, char **argv)
+int Main(int argc, char **argv)
 {
     LogOutput_Initialize(argv[0]);
-
     LogInfo("Wellcome!");
 
-    //! 注册信号处理函数
-    signal(SIGINT,  OnStopSignal);
-    signal(SIGTERM, OnStopSignal);
-    signal(SIGSEGV, OnErrorSignal);
-    signal(SIGILL,  OnErrorSignal);
-    signal(SIGABRT, OnErrorSignal);
-    signal(SIGBUS,  OnErrorSignal);
-    signal(SIGPIPE, SIG_IGN);
+    Context context;
+
+    std::vector<App*> apps;
+    RegisterApps(context, apps);
+
+    //! 初始化所有应用
+    for (auto app : apps) {
+        if (!app->initialize())
+            break;
+    }
+
+    //! 启动所有应用
+    for (auto app : apps) {
+        if (!app->start())
+            break;
+    }
+
+    RegisterSignals();
+
+    auto feeddog_timer = context.loop()->newTimerEvent();
+
+    normal_stop_func = [&] {
+        for (auto app : apps)
+            app->stop();
+
+        feeddog_timer->disable();
+        context.loop()->exitLoop(std::chrono::seconds(1));
+    };
+
+    error_exit_func = [&] {
+        //! 主要是保存日志
+        LogOutput_Cleanup();
+    };
+
+    //! 创建喂狗定时器
+    SetScopeExitAction([feeddog_timer] { delete feeddog_timer; } );
+    feeddog_timer->initialize(std::chrono::seconds(2), event::Event::Mode::kPersist);
+    feeddog_timer->setCallback(util::ThreadWDog::FeedDog);
+
+    //! 启动前准备
+    util::ThreadWDog::Register("main", 3);
+    util::ThreadWDog::Start();
+    feeddog_timer->enable();
+
+    LogInfo("Start!");
+    context.loop()->runLoop();
+    LogInfo("Stoped");
+
+    util::ThreadWDog::Stop();
+    util::ThreadWDog::Unregister();
+
+    for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
+        (*rit)->cleanup();
+
+    context.thread_pool()->cleanup();
+
+    for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
+        delete *rit;
 
     LogInfo("Bye!");
     LogOutput_Cleanup();
     return 0;
 }
 
-namespace {
-
-//! 处理正常停止信号
-void OnStopSignal(int signo)
-{
-    LogInfo("Got stop signal: %d", signo);
-    normal_stop_func();
+}
 }
 
-//! 打印调用栈
-void PrintCallStack()
+int main(int argc, char **argv)
 {
-    const int buffer_size = 1024;
-
-    void *buffer[buffer_size];
-    int n = backtrace(buffer, buffer_size);
-
-    std::stringstream ss;
-    char **symbols = backtrace_symbols(buffer, n);
-    if (symbols != NULL) {
-        for (int i = 0; i < n; i++)
-            ss << '[' << i << "] " << symbols[i] << std::endl;
-        free(symbols);
-    } else {
-        ss << "<no stack symbols>" << std::endl;
-    }
-
-    LogFatal("\n-----call stack-----\n%s", ss.str().c_str());
-}
-
-//! 处理程序运行异常信号
-void OnErrorSignal(int signo)
-{
-    LogFatal("Receive signal %d", signo);
-    PrintCallStack();
-    error_exit_func();
-    exit(EXIT_FAILURE);
-}
+    return tbox::main::Main(argc, argv);
 }

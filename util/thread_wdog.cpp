@@ -11,7 +11,7 @@
 #include <tbox/base/log.h>
 
 namespace tbox {
-namespace main {
+namespace util {
 
 namespace {
 
