@@ -7,6 +7,7 @@ HEAD_FILES = \
 	app.h \
 	apps.h \
 	context.h \
+	main.h \
 
 SRC_FILES = \
 	apps.cpp \

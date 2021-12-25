@@ -4,8 +4,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/thread_pool.h>
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 //! 进程上下文
 class Context {
@@ -24,7 +23,6 @@ class Context {
     eventx::ThreadPool *sp_thread_pool_ = nullptr;
 };
 
-}
 }
 
 #endif //TBOX_MAIN_CONTEXT_H_20211222

@@ -1,8 +1,7 @@
 #ifndef TBOX_MAIN_APPS_H_20211225
 #define TBOX_MAIN_APPS_H_20211225
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 class App;
 
@@ -33,7 +32,6 @@ class Apps {
     Data *d_;
 };
 
-}
 }
 
 #endif //TBOX_MAIN_APPS_H_20211225

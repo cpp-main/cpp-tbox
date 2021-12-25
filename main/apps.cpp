@@ -6,8 +6,7 @@
 
 #include "app.h"
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 struct Apps::Data {
     std::vector<App*> apps;
@@ -108,5 +107,4 @@ Apps::State Apps::state() const
     return d_->state;
 }
 
-}
 }

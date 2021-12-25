@@ -7,8 +7,7 @@
 
 #include <tbox/base/log.h>
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 extern std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
@@ -55,5 +54,4 @@ void RegisterSignals()
     signal(SIGPIPE, SIG_IGN);
 }
 
-}
 }

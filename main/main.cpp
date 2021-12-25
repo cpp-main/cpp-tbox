@@ -13,8 +13,7 @@
 #include "apps.h"
 #include "app.h"
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 extern void RegisterSignals();
 extern void RegisterApps(Context &context, Apps &apps); //! 由用户去实现
@@ -57,8 +56,6 @@ int Main(int argc, char **argv)
                     auto normal_stop_func = [&] {
                         LogInfo("Got stop signal");
                         apps.stop();
-                        feeddog_timer->disable();
-                        util::ThreadWDog::Unregister();
                         context.loop()->exitLoop(std::chrono::seconds(1));
                     };
                     sig_int_event->setCallback(normal_stop_func);
@@ -70,8 +67,8 @@ int Main(int argc, char **argv)
 
                     //! 启动前准备
                     util::ThreadWDog::Start();
-
                     util::ThreadWDog::Register("main", 3);
+
                     feeddog_timer->enable();
                     sig_int_event->enable();
                     sig_term_event->enable();
@@ -80,14 +77,15 @@ int Main(int argc, char **argv)
                     context.loop()->runLoop();
                     LogInfo("Stoped");
 
+                    util::ThreadWDog::Unregister();
                     util::ThreadWDog::Stop();
                 } else {
-                    LogWarn("Start apps fail");
+                    LogWarn("Apps start fail");
                 }
 
                 apps.cleanup();  //! cleanup所有应用
             } else {
-                LogWarn("Initialize apps fail");
+                LogWarn("Apps init fail");
             }
         } else {
             LogWarn("No app found");
@@ -103,7 +101,6 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-}
 }
 
 int main(int argc, char **argv)

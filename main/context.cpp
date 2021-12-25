@@ -2,8 +2,7 @@
 
 #include <cassert>
 
-namespace tbox {
-namespace main {
+namespace tbox::main {
 
 Context::Context() :
     sp_loop_(event::Loop::New()),
@@ -30,5 +29,4 @@ void Context::cleanup()
     //!TODO
 }
 
-}
 }
