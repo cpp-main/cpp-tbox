@@ -13,6 +13,9 @@ class Context {
     Context();
     ~Context();
 
+    bool initialize();
+    void cleanup();
+
     inline event::Loop* loop() const { return sp_loop_; }
     inline eventx::ThreadPool* thread_pool() const { return sp_thread_pool_; }
 

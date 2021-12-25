@@ -10,16 +10,9 @@
 namespace tbox {
 namespace main {
 
-extern std::function<void()> normal_stop_func; //!< 正常退出前要做的事情
 extern std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
 namespace {
-//! 处理正常停止信号
-void OnStopSignal(int signo)
-{
-    LogInfo("Got stop signal: %d", signo);
-    normal_stop_func();
-}
 
 //! 打印调用栈
 void PrintCallStack()
@@ -55,8 +48,6 @@ void OnErrorSignal(int signo)
 void RegisterSignals()
 {
     //! 注册信号处理函数
-    signal(SIGINT,  OnStopSignal);
-    signal(SIGTERM, OnStopSignal);
     signal(SIGSEGV, OnErrorSignal);
     signal(SIGILL,  OnErrorSignal);
     signal(SIGABRT, OnErrorSignal);

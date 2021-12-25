@@ -19,5 +19,16 @@ Context::~Context()
     delete sp_loop_;
 }
 
+bool Context::initialize()
+{
+    //!TODO
+    return true;
+}
+
+void Context::cleanup()
+{
+    //!TODO
+}
+
 }
 }
