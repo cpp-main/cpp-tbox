@@ -1,7 +1,5 @@
 #include <tbox/base/log.h>
-#include <tbox/main/app.h>
-#include <tbox/main/apps.h>
-#include <tbox/main/context.h>
+#include <tbox/main/main.h>
 
 class MyApp1 : public tbox::main::App
 {
