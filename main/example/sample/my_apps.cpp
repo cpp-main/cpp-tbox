@@ -1,6 +1,6 @@
-#include <vector>
 #include <tbox/base/log.h>
 #include <tbox/main/app.h>
+#include <tbox/main/apps.h>
 #include <tbox/main/context.h>
 
 class MyApp1 : public tbox::main::App
@@ -74,12 +74,10 @@ class MyApp2 : public tbox::main::App
     }
 };
 
-namespace tbox {
-namespace main {
-void RegisterApps(Context &context, std::vector<App*> &apps)
+namespace tbox::main {
+void RegisterApps(Context &context, Apps &apps)
 {
-    apps.push_back(new MyApp1);
-    apps.push_back(new MyApp2);
-}
+    apps.add(new MyApp1);
+    apps.add(new MyApp2);
 }
 }

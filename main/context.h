@@ -13,7 +13,7 @@ class Context {
     Context();
     ~Context();
 
-    bool initialize();
+    bool initialize();  //!TODO:加参数
     void cleanup();
 
     inline event::Loop* loop() const { return sp_loop_; }

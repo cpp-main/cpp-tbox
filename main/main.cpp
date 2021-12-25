@@ -10,21 +10,16 @@
 #include <tbox/util/thread_wdog.h>
 
 #include "context.h"
+#include "apps.h"
 #include "app.h"
 
 namespace tbox {
 namespace main {
 
 extern void RegisterSignals();
-extern void RegisterApps(Context &context, std::vector<App*> &apps);   //! 由用户去实现
+extern void RegisterApps(Context &context, Apps &apps); //! 由用户去实现
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
-
-bool InitializeApps(const std::vector<App*> &apps);
-bool StartApps(const std::vector<App*> &apps);
-void StopApps(const std::vector<App*> &apps);
-void CleanupApps(const std::vector<App*> &apps);
-void DeleteApps(std::vector<App*> &apps);
 
 int Main(int argc, char **argv)
 {
@@ -40,12 +35,12 @@ int Main(int argc, char **argv)
 
     Context context;
     if (context.initialize()) {
-        std::vector<App*> apps;
+        Apps apps;
         RegisterApps(context, apps);
 
         if (!apps.empty()) {
-            if (InitializeApps(apps)) {
-                if (StartApps(apps)) {  //! 启动所有应用
+            if (apps.initialize()) {
+                if (apps.start()) {  //! 启动所有应用
                     auto feeddog_timer = context.loop()->newTimerEvent();
                     auto sig_int_event  = context.loop()->newSignalEvent();
                     auto sig_term_event = context.loop()->newSignalEvent();
@@ -61,8 +56,9 @@ int Main(int argc, char **argv)
                     sig_term_event->initialize(SIGTERM, event::Event::Mode::kOneshot);
                     auto normal_stop_func = [&] {
                         LogInfo("Got stop signal");
-                        StopApps(apps);
+                        apps.stop();
                         feeddog_timer->disable();
+                        util::ThreadWDog::Unregister();
                         context.loop()->exitLoop(std::chrono::seconds(1));
                     };
                     sig_int_event->setCallback(normal_stop_func);
@@ -73,9 +69,9 @@ int Main(int argc, char **argv)
                     feeddog_timer->setCallback(util::ThreadWDog::FeedDog);
 
                     //! 启动前准备
-                    util::ThreadWDog::Register("main", 3);
                     util::ThreadWDog::Start();
 
+                    util::ThreadWDog::Register("main", 3);
                     feeddog_timer->enable();
                     sig_int_event->enable();
                     sig_term_event->enable();
@@ -85,17 +81,14 @@ int Main(int argc, char **argv)
                     LogInfo("Stoped");
 
                     util::ThreadWDog::Stop();
-                    util::ThreadWDog::Unregister();
                 } else {
                     LogWarn("Start apps fail");
                 }
 
-                CleanupApps(apps);  //! cleanup所有应用
+                apps.cleanup();  //! cleanup所有应用
             } else {
                 LogWarn("Initialize apps fail");
             }
-
-            DeleteApps(apps);   //! 释放所有应用
         } else {
             LogWarn("No app found");
         }
@@ -108,44 +101,6 @@ int Main(int argc, char **argv)
     LogInfo("Bye!");
     LogOutput_Cleanup();
     return 0;
-}
-
-bool InitializeApps(const std::vector<App*> &apps)
-{
-    for (auto app : apps) {
-        if (!app->initialize())
-            return false;
-    }
-    return true;
-}
-
-bool StartApps(const std::vector<App*> &apps)
-{
-    for (auto app : apps) {
-        if (!app->start())
-            return false;
-    }
-    return true;
-}
-
-void StopApps(const std::vector<App*> &apps)
-{
-    for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
-        (*rit)->stop();
-}
-
-void CleanupApps(const std::vector<App*> &apps)
-{
-    for (auto rit = apps.rbegin(); rit != apps.rend(); ++rit)
-        (*rit)->cleanup();
-}
-
-void DeleteApps(std::vector<App*> &apps)
-{
-    while (!apps.empty()) {
-        delete apps.back();
-        apps.pop_back();
-    }
 }
 
 }

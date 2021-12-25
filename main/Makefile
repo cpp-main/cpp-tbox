@@ -5,9 +5,11 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	app.h \
+	apps.h \
 	context.h \
 
 SRC_FILES = \
+	apps.cpp \
 	main.cpp \
 	context.cpp \
 	signal_handler.cpp \
