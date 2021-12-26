@@ -9,7 +9,7 @@ main，是应用程序的启动框架。
 
 **第一步**：实现 tbox::main::App 接口类，如 App 类；
 
-``
+```C++
 #include <tbox/main/main.h>
 
 class App : public tbox::main::App
@@ -24,11 +24,11 @@ class App : public tbox::main::App
     void cleanup() override;
 };
 
-``
+```
 
 **第二步**：实现应用注册函数 ``tbox::main::RegisterApps()``，在该函数中创建 MyApp 类，并加入到 Apps 里；
 
-``
+```C++
 #include <tbox/main/main.h>
 #include "app.h"
 
@@ -38,11 +38,11 @@ void RegisterApps(Context &context, Apps &apps)
     apps.add(new ::App(context));
 }
 }
-``
+```
 
 **第三步**：在 Makefile 中添加 main 所依赖的库：
 
-``
+```Makefile
 LDFLAGS += \
 	-ltbox_main \
 	-ltbox_eventx \
@@ -51,4 +51,4 @@ LDFLAGS += \
 	-ltbox_base \
 	-levent_core \
 	-lev -lpthread
-``
+```
