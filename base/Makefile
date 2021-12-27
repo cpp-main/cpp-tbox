@@ -12,6 +12,8 @@ HEAD_FILES = \
 	scope_exit.hpp \
 	cabinet.hpp \
 	memblock.h \
+	json_fwd.h \
+	json.hpp \
 
 SRC_FILES = \
 	log_imp.cpp \
