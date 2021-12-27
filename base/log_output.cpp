@@ -47,22 +47,22 @@ namespace {
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
         //! 开启色彩，显示日志等级
-        printf("\033[%dm[%c] ", level_color_num[content->level], level_name[content->level]);
+        printf("\033[%dm<%c> ", level_color_num[content->level], level_name[content->level]);
 
         //! 打印时间戳、线程号、模块名
         printf("%s %ld %s ", timestamp, ::syscall(SYS_gettid), content->module_id);
 
-        if (content->func_name != NULL)
+        if (content->func_name != nullptr)
             printf("%s() ", content->func_name);
 
-        if (content->fmt != NULL) {
+        if (content->fmt != nullptr) {
             va_list args;
             va_copy(args, content->args);
             vprintf(content->fmt, args);    //! 不可以直接使用 content->args，因为 va_list 只能被使用一次
             putchar(' ');
         }
 
-        if (content->file_name != NULL) {
+        if (content->file_name != nullptr) {
             printf("-- %s:%d", content->file_name, content->line);
         }
 
@@ -87,12 +87,12 @@ namespace {
             write_size -= len;
         }
 
-        if (write_size > 2 && content->func_name != NULL) {
+        if (write_size > 2 && content->func_name != nullptr) {
             len = snprintf(buff + (buff_size - write_size), write_size, "%s() ", content->func_name);
             write_size -= len;
         }
 
-        if (write_size > 2 && content->fmt != NULL) {
+        if (write_size > 2 && content->fmt != nullptr) {
             va_list args;
             va_copy(args, content->args);   //! 同上，va_list 要被复制了使用
             len = vsnprintf(buff + (buff_size - write_size), write_size, content->fmt, args);
@@ -105,7 +105,7 @@ namespace {
             }
         }
 
-        if (write_size > 2 && content->file_name != NULL) {
+        if (write_size > 2 && content->file_name != nullptr) {
             len = snprintf(buff + (buff_size - write_size), write_size, "-- %s:%d", content->file_name, content->line);
             write_size -= len;
         }
@@ -141,7 +141,7 @@ extern "C" {
 
     static void _LogOutput_PrintfFunc(LogContent *content)
     {
-        if ((LogOutput_FilterFunc != NULL) &&
+        if ((LogOutput_FilterFunc != nullptr) &&
             !LogOutput_FilterFunc(content))
             return;
 

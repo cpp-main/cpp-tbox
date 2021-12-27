@@ -43,7 +43,10 @@
     #define LogTag()
 #endif
 
-#define LogUndo()           LogNotice("!!! Undo !!!")
+#define LogUndo() LogNotice("!!! Undo !!!")
+
+//! 打印错误码，需要 #include <string.h>
+#define LogErrno(err, fmt, ...) LogErr("Errno:%d(%s) " fmt, (err), strerror(err), ## __VA_ARGS__)
 
 #ifdef __cplusplus
 extern "C" {

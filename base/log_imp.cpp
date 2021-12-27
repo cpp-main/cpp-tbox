@@ -25,7 +25,14 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
 
     const char *module_id_be_print = (module_id != nullptr) ? module_id : "???";
 
-    LogContent content = { module_id_be_print, func_name, file_name, line, level, fmt };
+    LogContent content = {
+        .module_id = module_id_be_print,
+        .func_name = func_name,
+        .file_name = file_name,
+        .line = line,
+        .level = level,
+        .fmt = fmt
+    };
     va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
 
     if (_log_printf_func != nullptr)

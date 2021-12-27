@@ -21,3 +21,10 @@ TEST(Log, output_detail)
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
     LogInfo("%d, %f, %s", 123456, 12.345, "world");
 }
+
+TEST(Log, error)
+{
+    LogErrno(1, "");
+    LogErrno(1, "no value");
+    LogErrno(1, "has value:%d", 123);
+}
