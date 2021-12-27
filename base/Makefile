@@ -23,6 +23,7 @@ TEST_SRC_FILES = \
 	log_output_test.cpp \
 	scope_exit_test.cpp \
 	cabinet_test.cpp \
+	json_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS)
 
