@@ -53,7 +53,7 @@ LDFLAGS += \
 	-lev -lpthread
 ```
 
-# TODO
+# 未来规化
 
 1. 实现参数化，引入JSON配置文件；
 2. 引入交互命令接口 shell；
