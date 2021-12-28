@@ -19,7 +19,7 @@ CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
 TEST_SRC_FILES =
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_eventx -ltbox_event-ne -ltbox_util -ltbox_base -levent_core -lev
 
 ENABLE_SHARED_LIB = no
 
