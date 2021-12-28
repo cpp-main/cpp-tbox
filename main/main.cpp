@@ -40,9 +40,8 @@ int Main(int argc, char **argv)
     Apps apps;
 
     RegisterApps(context, apps);
-
-    if (context.initialize(conf)) {
-        if (!apps.empty()) {
+    if (!apps.empty()) {
+        if (context.initialize(conf)) {
             if (apps.initialize(conf)) {
                 if (apps.start()) {  //! 启动所有应用
                     auto feeddog_timer = context.loop()->newTimerEvent();
@@ -93,12 +92,12 @@ int Main(int argc, char **argv)
                 LogWarn("Apps init fail");
             }
         } else {
-            LogWarn("No app found");
+            LogWarn("Context init fail");
         }
 
         context.cleanup();
     } else {
-        LogWarn("Context init fail");
+        LogWarn("No app found");
     }
 
     LogInfo("Bye!");
