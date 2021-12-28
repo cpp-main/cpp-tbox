@@ -101,8 +101,15 @@ int Main(int argc, char **argv)
     return 0;
 }
 
+__attribute__((weak))
+void RegisterApps(Context &context, Apps &apps)
+{
+    LogWarn("You should implement this function");
 }
 
+}
+
+__attribute__((weak))
 int main(int argc, char **argv)
 {
     return tbox::main::Main(argc, argv);
