@@ -19,7 +19,7 @@ App::~App()
     delete server_;
 }
 
-bool App::initialize()
+bool App::initialize(const tbox::Json &cfg)
 {
     if (!server_->initialize(SockAddr::FromString("127.0.0.1:12345")))
         return false;

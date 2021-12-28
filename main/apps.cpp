@@ -50,13 +50,13 @@ bool Apps::empty() const
     return d_->apps.empty();
 }
 
-bool Apps::initialize()
+bool Apps::initialize(const Json &cfg)
 {
     if (d_->state != State::kNone)
         return false;
 
     for (auto app : d_->apps) {
-        if (!app->initialize())
+        if (!app->initialize(cfg))
             return false;
     }
 

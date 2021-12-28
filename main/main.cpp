@@ -4,9 +4,12 @@
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
+
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/signal_event.h>
+
 #include <tbox/util/thread_wdog.h>
 
 #include "context.h"
@@ -32,13 +35,15 @@ int Main(int argc, char **argv)
     };
     RegisterSignals();
 
+    Json conf;
     Context context;
-    if (context.initialize()) {
-        Apps apps;
-        RegisterApps(context, apps);
+    Apps apps;
 
+    RegisterApps(context, apps);
+
+    if (context.initialize(conf)) {
         if (!apps.empty()) {
-            if (apps.initialize()) {
+            if (apps.initialize(conf)) {
                 if (apps.start()) {  //! 启动所有应用
                     auto feeddog_timer = context.loop()->newTimerEvent();
                     auto sig_int_event  = context.loop()->newSignalEvent();

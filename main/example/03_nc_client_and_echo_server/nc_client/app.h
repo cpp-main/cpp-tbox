@@ -15,7 +15,7 @@ class App : public main::App
     App(tbox::main::Context &ctx);
     ~App();
 
-    bool initialize() override;
+    bool initialize(const tbox::Json &cfg) override;
     bool start() override;
     void stop() override;
     void cleanup() override;
