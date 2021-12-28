@@ -44,9 +44,10 @@ int Main(int argc, char **argv)
         if (context.initialize(conf)) {
             if (apps.initialize(conf)) {
                 if (apps.start()) {  //! 启动所有应用
-                    auto feeddog_timer = context.loop()->newTimerEvent();
+                    auto feeddog_timer  = context.loop()->newTimerEvent();
                     auto sig_int_event  = context.loop()->newSignalEvent();
                     auto sig_term_event = context.loop()->newSignalEvent();
+                    //! 预定在离开时自动释放对象，确保无内存泄漏
                     SetScopeExitAction(
                         [feeddog_timer, sig_int_event, sig_term_event] {
                             delete sig_term_event;
@@ -91,11 +92,11 @@ int Main(int argc, char **argv)
             } else {
                 LogWarn("Apps init fail");
             }
+
+            context.cleanup();
         } else {
             LogWarn("Context init fail");
         }
-
-        context.cleanup();
     } else {
         LogWarn("No app found");
     }
@@ -106,6 +107,7 @@ int Main(int argc, char **argv)
 }
 
 __attribute__((weak))
+//! 定义为弱定义，默认运行时报错误提示，避免编译错误
 void RegisterApps(Context &context, Apps &apps)
 {
     LogWarn("You should implement this function");
@@ -114,6 +116,7 @@ void RegisterApps(Context &context, Apps &apps)
 }
 
 __attribute__((weak))
+//! 定义为弱定义，允许用户自己定义
 int main(int argc, char **argv)
 {
     return tbox::main::Main(argc, argv);
