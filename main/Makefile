@@ -14,6 +14,7 @@ SRC_FILES = \
 	main.cpp \
 	context.cpp \
 	signal_handler.cpp \
+	config.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
