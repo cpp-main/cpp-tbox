@@ -30,6 +30,11 @@ Context::~Context()
     delete d_;
 }
 
+void Context::fillDefaultConfig(Json &cfg) const
+{
+    //!TODO
+}
+
 bool Context::initialize(const Json &cfg)
 {
     //!TODO

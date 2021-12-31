@@ -10,6 +10,8 @@ class App {
   public:
     virtual ~App() {}
 
+    virtual void fillDefaultConfig(Json &cfg) const { }
+
     virtual bool initialize(const Json &cfg) = 0;
     virtual bool start() = 0;
     virtual void stop() = 0;

@@ -13,6 +13,8 @@ class Context {
     Context();
     ~Context();
 
+    void fillDefaultConfig(Json &cfg) const;
+
     bool initialize(const Json &cfg);
     void cleanup();
 

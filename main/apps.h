@@ -22,6 +22,8 @@ class Apps {
     bool add(App *app);
     bool empty() const;
 
+    void fillDefaultConfig(Json &cfg) const;
+
     bool initialize(const Json &cfg);
     bool start();
     void stop();

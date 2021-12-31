@@ -50,6 +50,12 @@ bool Apps::empty() const
     return d_->apps.empty();
 }
 
+void Apps::fillDefaultConfig(Json &cfg) const
+{
+    for (auto app : d_->apps)
+        app->fillDefaultConfig(cfg);
+}
+
 bool Apps::initialize(const Json &cfg)
 {
     if (d_->state != State::kNone)

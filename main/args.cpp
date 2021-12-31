@@ -1,4 +1,4 @@
-#include "config.h"
+#include "args.h"
 
 #include <getopt.h>
 #include <iostream>
@@ -9,7 +9,11 @@ namespace tbox::main {
 
 using namespace std;
 
-bool Config::parse(Json &conf, int argc, char **argv)
+Args::Args(Json &conf) :
+    conf_(conf)
+{ }
+
+bool Args::parse(int argc, char **argv)
 {
     const char *opt_str = "hvnpc:s:";
     const struct option opt_list[] = {
@@ -51,37 +55,37 @@ bool Config::parse(Json &conf, int argc, char **argv)
                 break;
 
             case 'c':
-                loadConfig(conf, optarg);
+                loadConfig(optarg);
                 break;
 
             case 's':
-                set(conf, optarg);
+                set(optarg);
                 break;
         }
     }
 
     if (print)
-        cout << conf.dump(2) << endl;
+        cout << conf_.dump(2) << endl;
 
     return run;
 }
 
-void Config::printHelp(const char *proc_name)
+void Args::printHelp(const char *proc_name)
 {
     //TODO:
 }
 
-void Config::printVersion()
+void Args::printVersion()
 {
     //TODO:
 }
 
-void Config::loadConfig(Json &conf, const char *config_filename)
+void Args::loadConfig(const char *config_filename)
 {
     //TODO:
 }
 
-void Config::set(Json &conf, const char *set_string)
+void Args::set(const char *set_string)
 {
     //TODO:
 }

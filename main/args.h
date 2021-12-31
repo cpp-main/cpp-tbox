@@ -1,7 +1,7 @@
 /**
- * 本文件定义 Config 类
+ * 本文件定义 Args 类
  *
- * Config 类用于解释程序的命令参数，输出程序运行的配置Json数据。
+ * Args 类用于解释程序的命令参数，输出程序运行的配置Json数据。
  *
  * 参数：
  *
@@ -22,35 +22,39 @@
  * myproc -v
  * myproc --version
  */
-#ifndef TBOX_MAIN_CONFIG_H_20211229
-#define TBOX_MAIN_CONFIG_H_20211229
+#ifndef TBOX_MAIN_ARGS_H_20211229
+#define TBOX_MAIN_ARGS_H_20211229
 
 #include <tbox/base/json_fwd.h>
 
 namespace tbox::main {
 
-class Config {
+class Args {
   public:
+    Args(Json &conf);
+
     /**
      * 解析参数
      *
-     * \param   conf    配置Json
      * \param   argc    参数个数
      * \param   argv    参数列表
      *
      * \return true     运行
      * \return false    停止运行
      */
-    bool parse(Json &conf, int argc, char **argv);
+    bool parse(int argc, char **argv);
 
   protected:
     void printHelp(const char *proc_name);
     void printVersion();
 
-    void loadConfig(Json &conf, const char *config_filename);
-    void set(Json &conf, const char *set_string);
+    void loadConfig(const char *config_filename);
+    void set(const char *set_string);
+
+  private:
+    Json &conf_;
 };
 
 }
 
-#endif //TBOX_MAIN_CONFIG_H_20211229
+#endif //TBOX_MAIN_ARGS_H_20211229

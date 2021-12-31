@@ -14,7 +14,7 @@
 
 #include "context.h"
 #include "apps.h"
-#include "config.h"
+#include "args.h"
 
 namespace tbox::main {
 
@@ -25,17 +25,6 @@ std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事�
 
 int Main(int argc, char **argv)
 {
-    RegisterSignals();
-
-    Json conf;
-    Context context;
-    Apps apps;
-    RegisterApps(context, apps);
-
-    Config config;
-    if (!config.parse(conf, argc, argv))
-        return false;
-
     LogOutput_Initialize(argv[0]);
     LogInfo("Wellcome!");
 
@@ -44,6 +33,21 @@ int Main(int argc, char **argv)
         //! 主要是保存日志
         LogOutput_Cleanup();
     };
+
+    RegisterSignals();
+
+    Context context;
+    Apps apps;
+    RegisterApps(context, apps);
+
+    Json conf;
+    Args args(conf);
+
+    context.fillDefaultConfig(conf);
+    apps.fillDefaultConfig(conf);
+
+    if (!args.parse(argc, argv))
+        return false;
 
     if (!apps.empty()) {
         if (context.initialize(conf)) {
