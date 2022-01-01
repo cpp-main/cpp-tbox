@@ -9,6 +9,10 @@ namespace tbox::main {
 
 using namespace std;
 
+std::string GetAppDescribe();
+std::string GetAppBuildTime();
+void GetAppVersion(int &major, int &minor, int &rev, int &build);
+
 Args::Args(Json &conf) :
     conf_(conf)
 { }
@@ -19,8 +23,8 @@ bool Args::parse(int argc, char **argv)
     const struct option opt_list[] = {
         { "help",    0, nullptr, 'h'},
         { "version", 0, nullptr, 'v'},
-        { "config",  0, nullptr, 'c'},
-        { "set",     0, nullptr, 's'},
+        { "config",  1, nullptr, 'c'},
+        { "set",     1, nullptr, 's'},
         { "not_run", 0, nullptr, 'n'},
         { "print",   0, nullptr, 'p'},
 
@@ -77,7 +81,11 @@ void Args::printHelp(const char *proc_name)
 
 void Args::printVersion()
 {
-    //TODO:
+    int major, minor, rev, build;
+    GetAppVersion(major, minor, rev, build);
+
+    cout << "version: " << major << '.' << minor << '.' << rev << '.' << build << endl
+         << "buid: " << GetAppBuildTime() << endl;
 }
 
 void Args::loadConfig(const char *config_filename)

@@ -25,15 +25,6 @@ std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事�
 
 int Main(int argc, char **argv)
 {
-    LogOutput_Initialize(argv[0]);
-    LogInfo("Wellcome!");
-
-    //! 注册异常退出时的动作，在异常信号触发时调用
-    error_exit_func = [&] {
-        //! 主要是保存日志
-        LogOutput_Cleanup();
-    };
-
     RegisterSignals();
 
     Context context;
@@ -48,6 +39,15 @@ int Main(int argc, char **argv)
 
     if (!args.parse(argc, argv))
         return false;
+
+    LogOutput_Initialize(argv[0]);
+    LogInfo("Wellcome!");
+
+    //! 注册异常退出时的动作，在异常信号触发时调用
+    error_exit_func = [&] {
+        //! 主要是保存日志
+        LogOutput_Cleanup();
+    };
 
     if (!apps.empty()) {
         if (context.initialize(conf)) {
@@ -115,17 +115,11 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-__attribute__((weak))
-//! 定义为弱定义，默认运行时报错误提示，避免编译错误
-void RegisterApps(Context &context, Apps &apps)
-{
-    LogWarn("You should implement this function");
-}
-
 }
 
 __attribute__((weak))
-//! 定义为弱定义，允许用户自己定义
+//! 定义为弱定义，允许用户自己定义。
+//! 另一方面，避免在 make test 时与 gtest 的 main() 冲突。
 int main(int argc, char **argv)
 {
     return tbox::main::Main(argc, argv);

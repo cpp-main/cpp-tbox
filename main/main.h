@@ -35,6 +35,27 @@ void RegisterApps(Context &context, Apps &apps);
  * }
  */
 int Main(int argc, char **argv);
+
+/**
+ * 获取应用描述，由开发者去实现
+ *
+ * 在执行 -h --help 时用于显示
+ */
+std::string GetAppDescribe();
+
+/**
+ * 获取编译时间，由开发者去实现
+ * 通常这样实现：
+ *   return __DATE__ " " __TIME__;
+ * 但要保证每次make的时候都能重新编译
+ */
+std::string GetAppBuildTime();
+
+/**
+ * 获取版本号，由开发者去实现
+ */
+void GetAppVersion(int &major, int &minor, int &rev, int &build);
+
 }
 
 #endif //TBOX_MAIN_MAIN_H_20211225
