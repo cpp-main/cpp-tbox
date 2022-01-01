@@ -56,9 +56,23 @@ void Apps::fillDefaultConfig(Json &cfg) const
         app->fillDefaultConfig(cfg);
 }
 
-bool Apps::initialize(const Json &cfg)
+bool Apps::construct(Context &ctx)
 {
     if (d_->state != State::kNone)
+        return false;
+
+    for (auto app : d_->apps) {
+        if (!app->construct(ctx))
+            return false;
+    }
+
+    d_->state = State::kConstructed;
+    return true;
+}
+
+bool Apps::initialize(const Json &cfg)
+{
+    if (d_->state != State::kConstructed)
         return false;
 
     for (auto app : d_->apps) {
@@ -68,19 +82,6 @@ bool Apps::initialize(const Json &cfg)
 
     d_->state = State::kInited;
     return true;
-}
-
-void Apps::cleanup()
-{
-    if (d_->state <= State::kNone)
-        return;
-
-    stop();
-
-    for (auto rit = d_->apps.rbegin(); rit != d_->apps.rend(); ++rit)
-        (*rit)->cleanup();
-
-    d_->state = State::kNone;
 }
 
 bool Apps::start()
@@ -106,6 +107,19 @@ void Apps::stop()
         (*rit)->stop();
 
     d_->state = State::kInited;
+}
+
+void Apps::cleanup()
+{
+    if (d_->state <= State::kNone)
+        return;
+
+    stop();
+
+    for (auto rit = d_->apps.rbegin(); rit != d_->apps.rend(); ++rit)
+        (*rit)->cleanup();
+
+    d_->state = State::kNone;
 }
 
 Apps::State Apps::state() const

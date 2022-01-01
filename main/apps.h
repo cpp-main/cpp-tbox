@@ -6,6 +6,7 @@
 namespace tbox::main {
 
 class App;
+class Context;
 
 class Apps {
   public:
@@ -14,6 +15,7 @@ class Apps {
 
     enum class State {
         kNone,
+        kConstructed,
         kInited,
         kRunning,
     };
@@ -24,6 +26,7 @@ class Apps {
 
     void fillDefaultConfig(Json &cfg) const;
 
+    bool construct(Context &ctx);
     bool initialize(const Json &cfg);
     bool start();
     void stop();

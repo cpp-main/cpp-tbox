@@ -9,16 +9,16 @@ namespace tbox::main {
 
 __attribute__((weak))
 //! 定义为弱定义，默认运行时报错误提示，避免编译错误
-void RegisterApps(Context &context, Apps &apps)
+void RegisterApps(Apps &apps)
 {
     const char *src_text = R"(
 #include <tbox/main/main.h>
 #include "your_app.h"
 
 namespace tbox::main {
-void RegisterApps(Context &context, Apps &apps)
+void RegisterApps(Apps &apps)
 {
-    apps.add(new YourApp(context));
+    apps.add(new YourApp);
 }
 }
 )";
