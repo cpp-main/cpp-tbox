@@ -11,6 +11,7 @@
 #include <tbox/event/signal_event.h>
 
 #include <tbox/util/thread_wdog.h>
+#include <tbox/util/pid_file.h>
 
 #include "context.h"
 #include "apps.h"
@@ -53,6 +54,12 @@ int Main(int argc, char **argv)
     };
 
     if (!apps.empty()) {
+
+        util::PidFile pid_file;
+        auto &js_pidfile = conf["pid_file"];
+        if (js_pidfile.is_string())
+            pid_file.lock(js_pidfile.get<std::string>());
+
         if (apps.construct(ctx)) {
             if (ctx.initialize(conf)) {
                 if (apps.initialize(conf)) {

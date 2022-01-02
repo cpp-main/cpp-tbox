@@ -61,7 +61,7 @@ bool Context::initialize(const Json &cfg)
 
 void Context::cleanup()
 {
-    d_->thread_pool->cleanup();
+    d_->sp_thread_pool->cleanup();
 }
 
 event::Loop* Context::loop() const
