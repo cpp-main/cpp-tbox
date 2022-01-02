@@ -7,6 +7,14 @@
 
 namespace tbox::main {
 
+void GetVersion(int &major, int &minor, int &rev, int &build)
+{
+    major = 1;
+    minor = 0;
+    rev   = 0;
+    build = 0;
+}
+
 __attribute__((weak))
 //! 定义为弱定义，默认运行时报错误提示，避免编译错误
 void RegisterApps(Apps &apps)

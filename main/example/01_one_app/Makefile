@@ -15,7 +15,7 @@ LDFLAGS += -L.. \
 
 CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
 LDFLAGS += -fsanitize=address -static-libasan
-OBJECTS := reg_apps.o app.o
+OBJECTS := main.o app.o
 
 all : $(TARGET)
 

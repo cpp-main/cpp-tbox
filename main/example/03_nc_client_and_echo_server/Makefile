@@ -3,7 +3,7 @@ include ../build_env.mk
 .PHONY : all clean distclean
 
 TARGET := sample
-OBJECTS := reg_apps.o
+OBJECTS := main.o
 
 include nc_client/app.mk
 include echo_server/app.mk

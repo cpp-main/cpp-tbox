@@ -3,7 +3,7 @@ include ../build_env.mk
 .PHONY : all clean distclean
 
 TARGET := sample
-OBJECTS := reg_apps.o
+OBJECTS := main.o
 
 include app1/app.mk
 include app2/app.mk

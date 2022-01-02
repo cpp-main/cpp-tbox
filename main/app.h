@@ -5,6 +5,8 @@
 
 namespace tbox::main {
 
+class Context;
+
 /**
  * 应用接口类
  *

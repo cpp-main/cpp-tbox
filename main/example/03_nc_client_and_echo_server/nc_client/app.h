@@ -12,17 +12,17 @@ using namespace tbox;
 class App : public main::App
 {
   public:
-    App(tbox::main::Context &ctx);
     ~App();
 
+    bool construct(tbox::main::Context &ctx) override;
     bool initialize(const tbox::Json &cfg) override;
     bool start() override;
     void stop() override;
     void cleanup() override;
 
   private:
-    network::TcpClient *client_;
-    network::StdioStream *stdio_;
+    network::TcpClient *client_ = nullptr;
+    network::StdioStream *stdio_ = nullptr;
 };
 
 }
