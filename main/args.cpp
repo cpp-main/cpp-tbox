@@ -84,7 +84,7 @@ void Args::printVersion()
     int major, minor, rev, build;
     GetAppVersion(major, minor, rev, build);
 
-    cout << "version: " << major << '.' << minor << '.' << rev << '.' << build << endl
+    cout << "version: " << major << '.' << minor << '.' << rev << '_' << build << endl
          << "buid: " << GetAppBuildTime() << endl;
 }
 
