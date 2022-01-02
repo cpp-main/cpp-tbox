@@ -30,20 +30,19 @@ void RegisterApps(Apps &apps)
 }
 }
 )";
-    LogWarn("You should implement tbox::main::RegisterApps(), exp:%s", src_text);
+    std::cerr << "WARN: You should implement tbox::main::RegisterApps().\nExp:" << std::endl
+         << src_text << std::endl;
 }
 
 __attribute__((weak))
 std::string GetAppBuildTime()
 {
-    LogWarn("You should implement tbox::main::GetAppBuildTime()");
     return "Unknown";
 }
 
 __attribute__((weak))
 std::string GetAppDescribe()
 {
-    LogWarn("You should implement tbox::main::GetAppDescribe()");
     return "Author didn't specify";
 }
 
@@ -51,7 +50,6 @@ __attribute__((weak))
 void GetAppVersion(int &major, int &minor, int &rev, int &build)
 {
     major = minor = rev = build = 0;
-    LogWarn("You should implement tbox::main::GetAppVersion()");
 }
 
 }
