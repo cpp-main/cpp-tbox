@@ -1,7 +1,9 @@
 #include "context.h"
 
 #include <cassert>
+
 #include <tbox/base/json.hpp>
+#include <tbox/base/log.h>
 
 namespace tbox::main {
 
@@ -32,18 +34,34 @@ Context::~Context()
 
 void Context::fillDefaultConfig(Json &cfg) const
 {
-    //!TODO
+    cfg["thread_pool"] = R"({"min":1, "max":0})"_json;
 }
 
 bool Context::initialize(const Json &cfg)
 {
-    //!TODO
+    auto &js_thread_pool = cfg["thread_pool"];
+    if (js_thread_pool.is_null()) {
+        LogWarn("cfg.thread_pool not found");
+        return false;
+    }
+
+    auto &js_thread_pool_min = js_thread_pool["min"];
+    auto &js_thread_pool_max = js_thread_pool["max"];
+    if (!js_thread_pool_min.is_number() || !js_thread_pool_max.is_number()) {
+        LogWarn("in cfg.thread_pool, min or max is not number");
+        return false;
+    }
+
+    if (!d_->sp_thread_pool->initialize(js_thread_pool_min.get<int>(),
+                                        js_thread_pool_max.get<int>()))
+        return false;
+
     return true;
 }
 
 void Context::cleanup()
 {
-    //!TODO
+    d_->thread_pool->cleanup();
 }
 
 event::Loop* Context::loop() const

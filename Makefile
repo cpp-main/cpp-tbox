@@ -5,7 +5,7 @@ include build_env.mk
 CCFLAGS := -Wall -Werror
 
 ifeq ($(RELEASE), 1)
-CCFLAGS += -O2
+CCFLAGS += -O2 -Os
 else
 CCFLAGS += -fsanitize=address -fno-omit-frame-pointer -DDEBUG=1 -O0 -ggdb
 LDFLAGS += -fsanitize=address -static-libasan
