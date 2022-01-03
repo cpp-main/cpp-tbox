@@ -6,6 +6,8 @@
 
 #include <tbox/base/json.hpp>
 
+#include <tbox/util/string.h>
+
 namespace tbox::main {
 
 using namespace std;
@@ -24,11 +26,6 @@ bool Args::parse(int argc, char **argv)
     const struct option opt_list[] = {
         { "help",    0, nullptr, 'h'},
         { "version", 0, nullptr, 'v'},
-        { "config",  1, nullptr, 'c'},
-        { "set",     1, nullptr, 's'},
-        { "not_run", 0, nullptr, 'n'},
-        { "print",   0, nullptr, 'p'},
-
         { 0, 0, nullptr, 0 },
     };
 
@@ -90,17 +87,17 @@ bool Args::parse(int argc, char **argv)
     return run;
 }
 
-void Args::printHelp(const char *proc_name)
+void Args::printHelp(const std::string &proc_name)
 {
     cout << "Usage: " << proc_name << " [OPTION]" << endl
         << GetAppDescribe() << endl << endl
         << "OPTION:" << endl
-        << "  -h, --help            display this help text and exit" << endl
-        << "  -v, --version         display version and exit" << endl
-        << "  -p, --print           display config" << endl
-        << "  -n, --not_run         not run and exit" << endl
-        << "  -s, --set=TEXT        set config filed" << endl
-        << "  -c, --config=FILE     specify config file, file context type: JSON" << endl
+        << "  -h, --help        display this help text and exit" << endl
+        << "  -v, --version     display version and exit" << endl
+        << "  -c FILE           specify config file, file type: JSON" << endl
+        << "  -s KEY=VALUE      set config field" << endl
+        << "  -p                display config" << endl
+        << "  -n                not run and exit" << endl
         << endl
         << "EXAMPLE:" << endl
         << "  " << proc_name << endl
@@ -125,11 +122,11 @@ void Args::printVersion()
          << "   buid : " << GetAppBuildTime() << endl;
 }
 
-bool Args::load(const char *config_filename)
+bool Args::load(const std::string &config_filename)
 {
     ifstream ifs(config_filename);
     if (!ifs) {
-        cerr << "Err: open config file " << config_filename << " fail." << endl;
+        cerr << "Error: open config file " << config_filename << " fail." << endl;
         return false;
     }
 
@@ -137,18 +134,23 @@ bool Args::load(const char *config_filename)
         auto js_patch = Json::parse(ifs);
         conf_.merge_patch(js_patch);
     } catch (const exception &e) {
-        cerr << "Err: parse json fail, " << e.what() << endl;
+        cerr << "Error: parse json fail, " << e.what() << endl;
         return false;
     }
 
     return true;
 }
 
-bool Args::set(const char *set_string)
+bool Args::set(const std::string &set_string)
 {
     cout << "set(" << set_string << ")" << endl;
-    //TODO:
-    return false;
+    vector<string> str_vec;
+    if (util::string::Split(set_string, "=", str_vec) != 2) {
+        cerr << "Error: in -s --set option, TEXT format is '<KEY>=<VALUE>'" << endl;
+        return false;
+    }
+
+    return true;
 }
 
 }

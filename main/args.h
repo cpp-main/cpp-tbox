@@ -45,11 +45,11 @@ class Args {
     bool parse(int argc, char **argv);
 
   protected:
-    void printHelp(const char *proc_name);
+    void printHelp(const std::string &proc_name);
     void printVersion();
 
-    bool load(const char *config_filename);
-    bool set(const char *set_string);
+    bool load(const std::string &config_filename);
+    bool set(const std::string &set_string);
 
   private:
     Json &conf_;
