@@ -48,8 +48,8 @@ class Args {
     void printHelp(const char *proc_name);
     void printVersion();
 
-    void loadConfig(const char *config_filename);
-    void set(const char *set_string);
+    bool load(const char *config_filename);
+    bool set(const char *set_string);
 
   private:
     Json &conf_;

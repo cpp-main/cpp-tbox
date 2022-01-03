@@ -12,6 +12,7 @@
 
 #include <tbox/util/thread_wdog.h>
 #include <tbox/util/pid_file.h>
+#include <tbox/util/fs.h>
 
 #include "context.h"
 #include "apps.h"
@@ -38,13 +39,23 @@ int Main(int argc, char **argv)
     Json conf;
     Args args(conf);
 
+    conf["pid_file"] = "";
     ctx.fillDefaultConfig(conf);
     apps.fillDefaultConfig(conf);
 
     if (!args.parse(argc, argv))
-        return false;
+        return 0;
 
-    LogOutput_Initialize(argv[0]);
+    util::PidFile pid_file;
+    auto &js_pidfile = conf["pid_file"];
+    if (js_pidfile.is_string()) {
+        auto pid_filename = js_pidfile.get<std::string>();
+        if (!pid_filename.empty())
+            if (!pid_file.lock(js_pidfile.get<std::string>()))
+                return 0;
+    }
+
+    LogOutput_Initialize(util::fs::Basename(argv[0]).c_str());
     LogInfo("Wellcome!");
 
     //! 注册异常退出时的动作，在异常信号触发时调用
@@ -54,12 +65,6 @@ int Main(int argc, char **argv)
     };
 
     if (!apps.empty()) {
-
-        util::PidFile pid_file;
-        auto &js_pidfile = conf["pid_file"];
-        if (js_pidfile.is_string())
-            pid_file.lock(js_pidfile.get<std::string>());
-
         if (apps.construct(ctx)) {
             if (ctx.initialize(conf)) {
                 if (apps.initialize(conf)) {

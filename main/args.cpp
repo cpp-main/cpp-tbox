@@ -2,6 +2,7 @@
 
 #include <getopt.h>
 #include <iostream>
+#include <fstream>
 
 #include <tbox/base/json.hpp>
 
@@ -32,7 +33,9 @@ bool Args::parse(int argc, char **argv)
     };
 
     bool run = true;    //!< 是否需要正常运行
-    bool print = false; //!< 是否需要打印配置数据
+    bool print_help = false;    //!< 是否需要打印帮助
+    bool print_cfg  = false;    //!< 是否需要打印配置数据
+    bool print_ver  = false;    //!< 是否需要打印配置版本信息
 
     while (true) {
         int flag = getopt_long(argc, argv, opt_str, opt_list, nullptr);
@@ -42,12 +45,12 @@ bool Args::parse(int argc, char **argv)
         switch (flag) {
             case 'h':
             case '?':   //! 如果参数不合法
-                printHelp(argv[0]);
+                print_help = true;
                 run = false;
                 break;
 
             case 'v':
-                printVersion();
+                print_ver = true;
                 run = false;
                 break;
 
@@ -56,20 +59,32 @@ bool Args::parse(int argc, char **argv)
                 break;
 
             case 'p':
-                print = true;
+                print_cfg = true;
                 break;
 
             case 'c':
-                loadConfig(optarg);
+                if (!load(optarg)) {
+                    print_help = true;
+                    run = false;
+                }
                 break;
 
             case 's':
-                set(optarg);
+                if (!set(optarg)) {
+                    print_help = true;
+                    run = false;
+                }
                 break;
         }
     }
 
-    if (print)
+    if (print_help)
+        printHelp(argv[0]);
+
+    if (print_ver)
+        printVersion();
+
+    if (print_cfg)
         cout << conf_.dump(2) << endl;
 
     return run;
@@ -110,16 +125,30 @@ void Args::printVersion()
          << "   buid : " << GetAppBuildTime() << endl;
 }
 
-void Args::loadConfig(const char *config_filename)
+bool Args::load(const char *config_filename)
 {
-    cout << "loadConfig(" << config_filename << ")" << endl;
-    //TODO:
+    ifstream ifs(config_filename);
+    if (!ifs) {
+        cerr << "Err: open config file " << config_filename << " fail." << endl;
+        return false;
+    }
+
+    try {
+        auto js_patch = Json::parse(ifs);
+        conf_.merge_patch(js_patch);
+    } catch (const exception &e) {
+        cerr << "Err: parse json fail, " << e.what() << endl;
+        return false;
+    }
+
+    return true;
 }
 
-void Args::set(const char *set_string)
+bool Args::set(const char *set_string)
 {
     cout << "set(" << set_string << ")" << endl;
     //TODO:
+    return false;
 }
 
 }
