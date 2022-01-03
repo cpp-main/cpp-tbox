@@ -28,7 +28,7 @@ namespace tbox::util {
 
 class PidFile {
   public:
-    PidFile() = default;
+    PidFile();
     virtual ~PidFile();
 
     NONCOPYABLE(PidFile);

@@ -11,6 +11,9 @@ using namespace std;
 
 namespace tbox::util {
 
+PidFile::PidFile()
+{ }
+
 PidFile::~PidFile()
 {
     unlock();
