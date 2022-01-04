@@ -24,17 +24,16 @@
 #include <string>
 #include <tbox/base/defines.h>
 
-namespace tbox {
-namespace util {
+namespace tbox::util {
 
 class PidFile {
   public:
-    explicit PidFile(const std::string &pid_filename);
+    PidFile();
     virtual ~PidFile();
 
     NONCOPYABLE(PidFile);
 
-    bool lock();
+    bool lock(const std::string &pid_filename);
     bool unlock();
 
   private:
@@ -42,7 +41,6 @@ class PidFile {
     int fd_ = -1;
 };
 
-}
 }
 
 #endif //TBOX_PID_FILE_H_20211221

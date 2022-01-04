@@ -9,11 +9,9 @@
 
 using namespace std;
 
-namespace tbox {
-namespace util {
+namespace tbox::util {
 
-PidFile::PidFile(const std::string &pid_filename) :
-    pid_filename_(pid_filename)
+PidFile::PidFile()
 { }
 
 PidFile::~PidFile()
@@ -21,10 +19,12 @@ PidFile::~PidFile()
     unlock();
 }
 
-bool PidFile::lock()
+bool PidFile::lock(const std::string &pid_filename)
 {
     if (fd_ >= 0)   //! 已经 initialize() 过，直接返回
         return true;
+
+    pid_filename_ = pid_filename;
 
     int fd = open(pid_filename_.c_str(), O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) {
@@ -79,5 +79,4 @@ bool PidFile::unlock()
     return true;
 }
 
-}
 }

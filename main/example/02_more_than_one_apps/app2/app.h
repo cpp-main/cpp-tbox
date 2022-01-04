@@ -8,9 +8,9 @@ namespace app2 {
 class App : public tbox::main::App
 {
   public:
-    App(tbox::main::Context &ctx);
     ~App();
 
+    bool construct(tbox::main::Context &ctx) override;
     bool initialize(const tbox::Json &cfg) override;
     bool start() override;
     void stop() override;

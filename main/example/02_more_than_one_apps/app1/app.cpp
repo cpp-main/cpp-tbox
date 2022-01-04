@@ -3,9 +3,10 @@
 
 namespace app1 {
 
-App::App(tbox::main::Context &ctx)
+bool App::construct(tbox::main::Context &ctx)
 {
     LogTag();
+    return true;
 }
 
 App::~App()

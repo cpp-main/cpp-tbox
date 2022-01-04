@@ -11,9 +11,11 @@ HEAD_FILES = \
 
 SRC_FILES = \
 	apps.cpp \
-	main.cpp \
 	context.cpp \
-	signal_handler.cpp \
+	main.cpp \
+	error_handle.cpp \
+	misc.cpp \
+	args.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 

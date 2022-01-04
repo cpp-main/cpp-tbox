@@ -2,21 +2,22 @@
 
 #include <cassert>
 #include <tbox/base/log.h>
+#include <tbox/base/defines.h>
 
 namespace echo_server {
 
 using namespace tbox::main;
 using namespace tbox::network;
 
-App::App(Context &ctx) :
-    server_(new TcpServer(ctx.loop()))
+bool App::construct(Context &ctx)
 {
-    assert(server_ != nullptr);
+    server_ = new TcpServer(ctx.loop());
+    return server_ != nullptr;
 }
 
 App::~App()
 {
-    delete server_;
+    CHECK_DELETE_RESET_OBJ(server_);
 }
 
 bool App::initialize(const tbox::Json &cfg)

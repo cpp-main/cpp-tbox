@@ -6,21 +6,10 @@
 #include "context.h"
 
 namespace tbox::main {
-/**
- * 应用注册函数
- *
- * 当程序运行起来时，用调用该函数，加载 App 应用对象。
- * 用户需要去定义它。
- * 例：
- * namespace tbox::main {
- *     void RegisterApps(Context &context, Apps &apps)
- *     {
- *         apps.add(new MyApp1(context));
- *         apps.add(new MyApp2(context));
- *     }
- * }
- */
-void RegisterApps(Context &context, Apps &apps);
+
+//////////////////////////////////////////////////////////////////////////
+// 以下是由main库提供的
+//////////////////////////////////////////////////////////////////////////
 
 /**
  * main框架主入口
@@ -35,6 +24,57 @@ void RegisterApps(Context &context, Apps &apps);
  * }
  */
 int Main(int argc, char **argv);
+
+/**
+ * 获取 main 库的版本号
+ */
+void GetVersion(int &major, int &minor, int &rev, int &build);
+
+//////////////////////////////////////////////////////////////////////////
+// 以下是需要开发者去实现的
+//////////////////////////////////////////////////////////////////////////
+
+/**
+ * 应用注册函数，用户需要去定义它
+ *
+ * 当程序运行起来时，用调用该函数，加载 App 应用对象。
+ *
+ * 实现如下例：
+ * namespace tbox::main {
+ *     void RegisterApps(Apps &apps)
+ *     {
+ *         apps.add(new MyApp1);
+ *         apps.add(new MyApp2);
+ *     }
+ * }
+ */
+void RegisterApps(Apps &apps);
+
+/**
+ * 获取应用的描述
+ *
+ * 在执行 -h --help 时用于显示
+ */
+std::string GetAppDescribe();
+
+/**
+ * 获取应用的编译时间
+ *
+ * 在执行 -v --version 时用于显示
+ *
+ * 通常这样实现：
+ *   return __DATE__ " " __TIME__;
+ * 但要保证每次make的时候都能重新编译
+ */
+std::string GetAppBuildTime();
+
+/**
+ * 获取应用的版本号，由开发者去实现
+ *
+ * 在执行 -v --version 时用于显示
+ */
+void GetAppVersion(int &major, int &minor, int &rev, int &build);
+
 }
 
 #endif //TBOX_MAIN_MAIN_H_20211225

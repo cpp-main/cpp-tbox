@@ -11,16 +11,16 @@ using namespace tbox;
 class App : public main::App
 {
   public:
-    App(tbox::main::Context &ctx);
     ~App();
 
+    bool construct(tbox::main::Context &ctx) override;
     bool initialize(const tbox::Json &cfg) override;
     bool start() override;
     void stop() override;
     void cleanup() override;
 
   private:
-    network::TcpServer *server_;
+    network::TcpServer *server_ = nullptr;
 };
 
 }
