@@ -130,7 +130,15 @@ void Run(Context &ctx, Apps &apps)
     sig_term_event->enable();
 
     LogInfo("Start!");
-    ctx.loop()->runLoop();
+
+    try {
+        ctx.loop()->runLoop();
+    } catch (const std::exception &e) {
+        LogErr("catch execption: %s", e.what());
+    } catch (...) {
+        LogErr("catch unknown execption");
+    }
+
     LogInfo("Stoped");
 
     util::ThreadWDog::Unregister();
