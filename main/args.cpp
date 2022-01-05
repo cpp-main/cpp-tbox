@@ -26,54 +26,70 @@ bool Args::parse(int argc, const char * const * const argv)
     bool print_tips = false;    //!< 是否需要打印Tips
     bool print_cfg  = false;    //!< 是否需要打印配置数据
     bool print_ver  = false;    //!< 是否需要打印配置版本信息
-    std::string proc_name;
+    const std::string proc_name = argv[0];
 
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         const std::string curr = argv[i];
         const std::string next = (argc == (i + 1)) ? "" : argv[i + 1];
-        if (i == 0) {
-            proc_name = curr;
-        } else if (curr == "-h" || curr == "--help") {
-            print_help = true;
-            run = false;
-        } else if (curr == "-v" || curr == "--version") {
-            print_ver = true;
-            run = false;
-        } else if (curr == "-n") {
-            run = false;
-        } else if (curr == "-p") {
-            print_cfg = true;
-        } else if (curr == "-c") {
-            if (next.empty()) {
-                cerr << "Error: missing argument to `-c'" << endl;
-                print_tips = true;
+        if (curr[0] == '-') {
+            if (curr[1] == '-') {   //! 匹配 --
+                const std::string opt = curr.substr(2);
+                if (opt == "help")
+                    print_help = true;
+                else if (opt == "version")
+                    print_ver = true;
+                else
+                    cerr << "Error: invalid option `--" << opt << "'" << endl;
                 run = false;
-                break;
-            }
+            } else {
+                for (size_t j = 1; j < curr.size(); ++j) {
+                    char opt = curr[j];
+                    bool last = ((j + 1) == curr.size());
+                    if (opt == 'v') {
+                        print_ver = true;
+                        run = false;
+                    } else if (opt == 'h') {
+                        print_help = true;
+                        run = false;
+                    } else if (opt == 'n') {
+                        run = false;
+                    } else if (opt == 'p') {
+                        print_cfg = true;
+                    } else if (opt == 's') {
+                        if (!last || next.empty()) {
+                            cerr << "Error: missing argument to `"<< opt << "'" << endl;
+                            print_tips = true;
+                            run = false;
+                            break;
+                        }
 
-            ++i;
-            if (!load(next)) {
-                print_tips = true;
-                run = false;
-            }
+                        ++i;
+                        if (!set(next)) {
+                            print_tips = true;
+                            run = false;
+                        }
 
-        } else if (curr == "-s") {
-            if (next.empty()) {
-                cerr << "Error: missing argument to `-s'" << endl;
-                print_tips = true;
-                run = false;
-                break;
-            }
+                    } else if (opt == 'c') {
+                        if (!last || next.empty()) {
+                            cerr << "Error: missing argument to `"<< opt << "'" << endl;
+                            print_tips = true;
+                            run = false;
+                            break;
+                        }
 
-            ++i;
-            if (!set(next)) {
-                print_tips = true;
-                run = false;
+                        ++i;
+                        if (!load(next)) {
+                            print_tips = true;
+                            run = false;
+                        }
+
+                    } else {
+                        cerr << "Error: invalid option `" << opt << "'" << endl;
+                        print_tips = true;
+                        run = false;
+                    }
+                }
             }
-        } else {
-            cerr << "Error: invalid option `" << curr << "'" << endl;
-            print_tips = true;
-            run = false;
         }
     }
 
