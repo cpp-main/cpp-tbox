@@ -6,6 +6,7 @@
 #include <tbox/base/json.hpp>
 
 #include <tbox/util/string.h>
+#include <tbox/util/argument_parser.h>
 
 namespace tbox::main {
 
@@ -28,70 +29,69 @@ bool Args::parse(int argc, const char * const * const argv)
     bool print_ver  = false;    //!< 是否需要打印配置版本信息
     const std::string proc_name = argv[0];
 
-    for (int i = 1; i < argc; ++i) {
-        const std::string curr = argv[i];
-        const std::string next = (argc == (i + 1)) ? "" : argv[i + 1];
-        if (curr[0] == '-') {
-            if (curr[1] == '-') {   //! 匹配 --
-                const std::string opt = curr.substr(2);
-                if (opt == "help")
+    util::ArgumentParser parser(
+        [&] (char s_opt, const string &l_opt, util::ArgumentParser::OptStr &opt_str) {
+            if (s_opt == 0) {
+                if (l_opt == "help") {
                     print_help = true;
-                else if (opt == "version")
+                } else if (l_opt == "version") {
                     print_ver = true;
-                else
-                    cerr << "Error: invalid option `--" << opt << "'" << endl;
+                } else {
+                    cerr << "Error: invalid option `--" << l_opt << "'" << endl;
+                    return false;
+                }
                 run = false;
+                return true;
             } else {
-                for (size_t j = 1; j < curr.size(); ++j) {
-                    char opt = curr[j];
-                    bool last = ((j + 1) == curr.size());
-                    if (opt == 'v') {
-                        print_ver = true;
-                        run = false;
-                    } else if (opt == 'h') {
-                        print_help = true;
-                        run = false;
-                    } else if (opt == 'n') {
-                        run = false;
-                    } else if (opt == 'p') {
-                        print_cfg = true;
-                    } else if (opt == 's') {
-                        if (!last || next.empty()) {
-                            cerr << "Error: missing argument to `"<< opt << "'" << endl;
-                            print_tips = true;
-                            run = false;
-                            break;
-                        }
-
-                        ++i;
-                        if (!set(next)) {
-                            print_tips = true;
-                            run = false;
-                        }
-
-                    } else if (opt == 'c') {
-                        if (!last || next.empty()) {
-                            cerr << "Error: missing argument to `"<< opt << "'" << endl;
-                            print_tips = true;
-                            run = false;
-                            break;
-                        }
-
-                        ++i;
-                        if (!load(next)) {
-                            print_tips = true;
-                            run = false;
-                        }
-
-                    } else {
-                        cerr << "Error: invalid option `" << opt << "'" << endl;
+                if (s_opt == 'h') {
+                    print_help = true;
+                    run = false;
+                } else if (s_opt == 'v') {
+                    print_ver = true;
+                    run = false;
+                } else if (s_opt == 'n') {
+                    run = false;
+                } else if (s_opt == 'p') {
+                    print_cfg = true;
+                } else if (s_opt == 'c') {
+                    if (opt_str.isNull()) {
+                        cerr << "Error: missing argument to `"<< s_opt << "'" << endl;
                         print_tips = true;
                         run = false;
+                        return false;
                     }
+                    if (!load(opt_str.str())) {
+                        print_tips = true;
+                        run = false;
+                        return false;
+                    }
+
+                } else if (s_opt == 's') {
+                    if (opt_str.isNull()) {
+                        cerr << "Error: missing argument to `"<< s_opt << "'" << endl;
+                        print_tips = true;
+                        run = false;
+                        return false;
+                    }
+                    if (!set(opt_str.str())) {
+                        print_tips = true;
+                        run = false;
+                        return false;
+                    }
+
+                } else {
+                    cerr << "Error: invalid option `" << s_opt << "'" << endl;
+                    print_tips = true;
+                    run = false;
+                    return false;
                 }
+
+                return true;
             }
         }
-    }
+    );
+
+    parser.parse(argc, argv);
 
     if (print_tips)
         printTips(proc_name);
@@ -129,13 +129,13 @@ void Args::printHelp(const std::string &proc_name)
         << "  " << proc_name << endl
         << "  " << proc_name << R"( -c somewhere/conf.json)" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -p)" << endl
-        << "  " << proc_name << R"( -c somewhere/conf.json -p -n)" << endl
+        << "  " << proc_name << R"( -c somewhere/conf.json -pn)" << endl
         << "  " << proc_name << R"( -s 'log.level=6' -s 'log.output="stdout"')" << endl
         << "  " << proc_name << R"( -s 'log={"level":5,"output":"tcp","tcp":{"ip":"192.168.0.20","port":50000}}')" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -s 'log.level=6' -s 'thread_pool.min_thread=2')" << endl
         << endl
         << "CONFIG:" << endl
-        << R"(  type ")" << proc_name << R"( -p -n" to display default config.)" << endl
+        << R"(  type ")" << proc_name << R"( -pn" to display default config.)" << endl
         << endl;
 }
 

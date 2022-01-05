@@ -9,6 +9,7 @@ HEAD_FILES = \
 	thread_wdog.h \
 	string.h \
 	fs.h \
+	argument_parser.h \
 
 SRC_FILES = \
 	async_data_stream.cpp \
