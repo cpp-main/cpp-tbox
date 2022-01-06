@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <vector>
+#include <iostream>
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
@@ -39,7 +40,6 @@ int Main(int argc, char **argv)
     Json conf;
     Args args(conf);
 
-    conf["pid_file"] = "";
     ctx.fillDefaultConfig(conf);
     apps.fillDefaultConfig(conf);
 
@@ -51,8 +51,10 @@ int Main(int argc, char **argv)
     if (js_pidfile.is_string()) {
         auto pid_filename = js_pidfile.get<std::string>();
         if (!pid_filename.empty())
-            if (!pid_file.lock(js_pidfile.get<std::string>()))
+            if (!pid_file.lock(js_pidfile.get<std::string>())) {
+                std::cerr << "Warn: another process is running, exit" << std::endl;
                 return 0;
+            }
     }
 
     LogOutput_Initialize(util::fs::Basename(argv[0]).c_str());
