@@ -12,8 +12,8 @@ namespace tbox::main {
 
 using namespace std;
 
-std::string GetAppDescribe();
-std::string GetAppBuildTime();
+string GetAppDescribe();
+string GetAppBuildTime();
 void GetAppVersion(int &major, int &minor, int &rev, int &build);
 
 Args::Args(Json &conf) :
@@ -27,60 +27,62 @@ bool Args::parse(int argc, const char * const * const argv)
     bool print_tips = false;    //!< 是否需要打印Tips
     bool print_cfg  = false;    //!< 是否需要打印配置数据
     bool print_ver  = false;    //!< 是否需要打印配置版本信息
-    const std::string proc_name = argv[0];
+    const string proc_name = argv[0];
 
-    util::ArgumentParser parser(
-        [&] (char s_opt, const string &l_opt, util::ArgumentParser::OptStr &opt_str) {
-            if (s_opt == 0) {
-                if (l_opt == "help") {
+    using namespace tbox::util;
+
+    ArgumentParser parser(
+        [&] (char short_option, const std::string &long_option, ArgumentParser::OptionValue &option_value) {
+            if (short_option == 0) {
+                if (long_option == "help") {
                     print_help = true;
-                } else if (l_opt == "version") {
+                } else if (long_option == "version") {
                     print_ver = true;
                 } else {
-                    cerr << "Error: invalid option `--" << l_opt << "'" << endl;
+                    cerr << "Error: invalid option `--" << long_option << "'" << endl;
                     return false;
                 }
                 run = false;
                 return true;
             } else {
-                if (s_opt == 'h') {
+                if (short_option == 'h') {
                     print_help = true;
                     run = false;
-                } else if (s_opt == 'v') {
+                } else if (short_option == 'v') {
                     print_ver = true;
                     run = false;
-                } else if (s_opt == 'n') {
+                } else if (short_option == 'n') {
                     run = false;
-                } else if (s_opt == 'p') {
+                } else if (short_option == 'p') {
                     print_cfg = true;
-                } else if (s_opt == 'c') {
-                    if (opt_str.isNull()) {
-                        cerr << "Error: missing argument to `"<< s_opt << "'" << endl;
+                } else if (short_option == 'c') {
+                    if (!option_value.valid()) {
+                        cerr << "Error: missing argument to `"<< short_option << "'" << endl;
                         print_tips = true;
                         run = false;
                         return false;
                     }
-                    if (!load(opt_str.str())) {
+                    if (!load(option_value.get())) {
                         print_tips = true;
                         run = false;
                         return false;
                     }
 
-                } else if (s_opt == 's') {
-                    if (opt_str.isNull()) {
-                        cerr << "Error: missing argument to `"<< s_opt << "'" << endl;
+                } else if (short_option == 's') {
+                    if (!option_value.valid()) {
+                        cerr << "Error: missing argument to `"<< short_option << "'" << endl;
                         print_tips = true;
                         run = false;
                         return false;
                     }
-                    if (!set(opt_str.str())) {
+                    if (!set(option_value.get())) {
                         print_tips = true;
                         run = false;
                         return false;
                     }
 
                 } else {
-                    cerr << "Error: invalid option `" << s_opt << "'" << endl;
+                    cerr << "Error: invalid option `" << short_option << "'" << endl;
                     print_tips = true;
                     run = false;
                     return false;
