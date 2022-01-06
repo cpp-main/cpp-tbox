@@ -22,9 +22,9 @@ bool PickKeyAndValue(const std::string &orig, std::string &key, std::string &val
 
 bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
 {
-    assert(start >= 0);
-    assert(argc > start);
+    assert(argc >= 1);
     assert(argv != nullptr);
+    assert(start >= 0);
 
     for (int i = start; i < argc; ++i) {
         const char *curr_arg = argv[i];
