@@ -44,17 +44,18 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
             if (curr[1] == '-') {   //! 匹配 --xxxx
                 const std::string opt = curr.substr(2);
                 std::string key, value;
-                //! handle --key=value
+                //! handle '--key=value'
                 if (PickKeyAndValue(opt, key, value)) {
                     OptionValue tmp;
                     tmp.set(value);
                     if (!handler_(0, key, tmp))
                         return false;
                 } else {
+                    //! handle '--key value'
                     if (!handler_(0, opt, opt_value))
                         return false;
                 }
-            } else {    //! match -x
+            } else {    //! handle -xyz pattern
                 for (size_t j = 1; j < curr.size(); ++j) {
                     char opt = curr[j];
                     if (j != (curr.size() - 1)) {
@@ -62,6 +63,7 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
                         if (!handler_(opt, "", tmp))
                             return false;
                     } else {
+                        //! only this last opt possess value
                         if (!handler_(opt, "", opt_value))
                             return false;
                     }
