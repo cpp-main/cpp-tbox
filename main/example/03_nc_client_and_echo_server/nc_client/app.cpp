@@ -3,11 +3,17 @@
 #include <cassert>
 #include <tbox/base/log.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/json.hpp>
 
 namespace nc_client {
 
 using namespace tbox::main;
 using namespace tbox::network;
+
+void App::fillDefaultConfig(Json &cfg) const
+{
+    cfg["nc_client"]["server"] = "127.0.0.1:12345";
+}
 
 bool App::construct(tbox::main::Context &ctx)
 {
@@ -25,7 +31,11 @@ App::~App()
 
 bool App::initialize(const tbox::Json &cfg)
 {
-    if (!client_->initialize(SockAddr::FromString("127.0.0.1:12345")))
+    auto js_server = cfg["nc_client"]["server"];
+    if (!js_server.is_string())
+        return false;
+
+    if (!client_->initialize(SockAddr::FromString(js_server.get<std::string>())))
         return false;
 
     client_->bind(stdio_);
