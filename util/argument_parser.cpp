@@ -4,6 +4,22 @@
 
 namespace tbox::util {
 
+namespace {
+/**
+ * \brief   pick key and value from '--key=value'
+ */
+bool PickKeyAndValue(const std::string &orig, std::string &key, std::string &value)
+{
+    auto pos = orig.find_first_of('=');
+    if (pos == std::string::npos)
+        return false;
+
+    key   = orig.substr(0, pos);
+    value = orig.substr(pos + 1);
+    return true;
+}
+}
+
 bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
 {
     assert(start >= 0);
@@ -27,9 +43,17 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
         if (curr[0] == '-') {
             if (curr[1] == '-') {   //! 匹配 --xxxx
                 const std::string opt = curr.substr(2);
-                //!FIXME: need handle --xyz=abc
-                if (!handler_(0, opt, opt_value))
-                    return false;
+                std::string key, value;
+                //! handle --key=value
+                if (PickKeyAndValue(opt, key, value)) {
+                    OptionValue tmp;
+                    tmp.set(value);
+                    if (!handler_(0, key, tmp))
+                        return false;
+                } else {
+                    if (!handler_(0, opt, opt_value))
+                        return false;
+                }
             } else {    //! match -x
                 for (size_t j = 1; j < curr.size(); ++j) {
                     char opt = curr[j];

@@ -7,7 +7,7 @@ using namespace tbox::util;
 
 TEST(ArgumentParser, Fail)
 {
-    const char* argv[] = {"test", "-x"};
+    const char* argv[] = {"test_fail", "-x"};
     ArgumentParser parser(
         [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
             return false;
@@ -19,10 +19,10 @@ TEST(ArgumentParser, Fail)
 
 TEST(ArgumentParser, LongOptionKeyAndValue)
 {
-    const char* argv[] = {"test", "--key=123", "-n"};
+    const char* argv[] = {"test_long_opt_key_and_value", "--key=123", "-n"};
     ArgumentParser parser(
         [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
-            if (short_opt != 0) {
+            if (short_opt == 0) {
                 EXPECT_EQ(long_opt, "key");
                 EXPECT_TRUE(opt_value.valid());
                 EXPECT_EQ(opt_value.get(), "123");
@@ -38,7 +38,7 @@ TEST(ArgumentParser, LongOptionKeyAndValue)
 
 TEST(ArgumentParser, All)
 {
-    const char* argv[] = {"test", "-ab", "123", "-x", "--set", "xyz", "--run"};
+    const char* argv[] = {"test_all", "-ab", "123", "-x", "--set", "xyz", "--run"};
     ArgumentParser parser(
         [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
             if (short_opt == 'a') {

@@ -1,3 +1,42 @@
+/**
+ * This file achived an arguemnt parser.
+ *
+ * Example:
+ *
+ *   test -h -l 6
+ *   test --help --level 6
+ *   test --help --level=6
+ *
+ * Code:
+ *
+ * int main(int argc, char **argv)
+ * {
+ *     bool print_help = false;
+ *     int  level = 0;
+ *     tbox::util::ArgumentParser parser(
+ *         [&](char short_opt, const std::string &long_opt,
+ *             ArgumentParser::OptionValue& opt_value) {
+ *             if (short_opt == 'h' || long_opt == "help") {
+ *                 print_help = true;
+ *             } else if (short_opt == 'l' || long_opt == "level") {
+ *                 level = std::stoi(opt_value.get());
+ *             } else {
+ *                 if (short_opt != 0)
+ *                     cerr << "Error: invalid option `-" << short_opt << "'" << endl;
+ *                 else
+ *                     cerr << "Error: invalid option `--" << long_option << "'" << endl;
+ *                 return false;
+ *             }
+ *             return true;
+ *         }
+ *     );
+ *
+ *     if (!parser(argc, argv))
+ *         return 0;
+ *
+ *     //! ... you app code ...
+ * }
+ */
 #ifndef TBOX_UTIL_ARGUMENT_PARSER_H_20220105
 #define TBOX_UTIL_ARGUMENT_PARSER_H_20220105
 
