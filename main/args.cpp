@@ -33,63 +33,51 @@ bool Args::parse(int argc, const char * const * const argv)
 
     ArgumentParser parser(
         [&] (char short_option, const std::string &long_option, ArgumentParser::OptionValue &option_value) {
-            if (short_option == 0) {
-                if (long_option == "help") {
-                    print_help = true;
-                } else if (long_option == "version") {
-                    print_ver = true;
-                } else {
-                    cerr << "Error: invalid option `--" << long_option << "'" << endl;
-                    return false;
-                }
+            if (short_option == 'h' || long_option == "help") {
+                print_help = true;
                 run = false;
-                return true;
-            } else {
-                if (short_option == 'h') {
-                    print_help = true;
-                    run = false;
-                } else if (short_option == 'v') {
-                    print_ver = true;
-                    run = false;
-                } else if (short_option == 'n') {
-                    run = false;
-                } else if (short_option == 'p') {
-                    print_cfg = true;
-                } else if (short_option == 'c') {
-                    if (!option_value.valid()) {
-                        cerr << "Error: missing argument to `"<< short_option << "'" << endl;
-                        print_tips = true;
-                        run = false;
-                        return false;
-                    }
-                    if (!load(option_value.get())) {
-                        print_tips = true;
-                        run = false;
-                        return false;
-                    }
-
-                } else if (short_option == 's') {
-                    if (!option_value.valid()) {
-                        cerr << "Error: missing argument to `"<< short_option << "'" << endl;
-                        print_tips = true;
-                        run = false;
-                        return false;
-                    }
-                    if (!set(option_value.get())) {
-                        print_tips = true;
-                        run = false;
-                        return false;
-                    }
-
-                } else {
-                    cerr << "Error: invalid option `" << short_option << "'" << endl;
+            } else if (short_option == 'v' || long_option == "version") {
+                print_ver = true;
+                run = false;
+            } else if (short_option == 'n') {
+                run = false;
+            } else if (short_option == 'p') {
+                print_cfg = true;
+            } else if (short_option == 'c') {
+                if (!option_value.valid()) {
+                    cerr << "Error: missing argument to `"<< short_option << "'" << endl;
                     print_tips = true;
                     run = false;
                     return false;
                 }
-
-                return true;
+                if (!load(option_value.get())) {
+                    print_tips = true;
+                    run = false;
+                    return false;
+                }
+            } else if (short_option == 's') {
+                if (!option_value.valid()) {
+                    cerr << "Error: missing argument to `"<< short_option << "'" << endl;
+                    print_tips = true;
+                    run = false;
+                    return false;
+                }
+                if (!set(option_value.get())) {
+                    print_tips = true;
+                    run = false;
+                    return false;
+                }
+            } else {
+                if (short_option == 0)
+                    cerr << "Error: invalid option `" << long_option << "'" << endl;
+                else
+                    cerr << "Error: invalid option `" << short_option << "'" << endl;
+                print_tips = true;
+                run = false;
+                return false;
             }
+
+            return true;
         }
     );
 
