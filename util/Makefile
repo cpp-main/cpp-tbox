@@ -9,6 +9,7 @@ HEAD_FILES = \
 	thread_wdog.h \
 	string.h \
 	fs.h \
+	argument_parser.h \
 
 SRC_FILES = \
 	async_data_stream.cpp \
@@ -16,6 +17,7 @@ SRC_FILES = \
 	thread_wdog.cpp \
 	string.cpp \
 	fs.cpp \
+	argument_parser.cpp \
 
 CCXXFLAGS += -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -25,6 +27,7 @@ TEST_SRC_FILES = \
 	pid_file_test.cpp \
 	string_test.cpp \
 	fs_test.cpp \
+	argument_parser_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 
