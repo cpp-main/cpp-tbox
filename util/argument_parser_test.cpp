@@ -38,7 +38,7 @@ TEST(ArgumentParser, LongOptionKeyAndValue)
 
 TEST(ArgumentParser, All)
 {
-    const char* argv[] = {"test_all", "-ab", "123", "-x", "--set", "xyz", "--run"};
+    const char* argv[] = {"test_all", "-ab", "123", "-x", "--set", "xyz", "--run", "--key=value"};
     ArgumentParser parser(
         [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
             if (short_opt == 'a') {
@@ -52,7 +52,10 @@ TEST(ArgumentParser, All)
                 EXPECT_TRUE(opt_value.valid());
                 EXPECT_EQ(opt_value.get(), "xyz");
             } else if (long_opt == "run") {
-                EXPECT_FALSE(opt_value.valid());
+                EXPECT_TRUE(opt_value.valid());
+            } else if (long_opt == "key") {
+                EXPECT_TRUE(opt_value.valid());
+                EXPECT_EQ(opt_value.get(), "value");
             } else {
                 return false;
             }
