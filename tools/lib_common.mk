@@ -11,7 +11,7 @@
 # all, libxxx.a, libxxx.so.x.x.x, test, clean, distclean, install, uninstall
 ################################################################
 
-.PHONY: all print_vars print_static_vars print_shared_vars print_test_vars clean distclean install uninstall
+.PHONY: all print_vars print_static_vars print_shared_vars print_test_vars clean distclean install uninstall pre_build post_build
 
 LIB_BASENAME=libtbox_$(LIB_NAME)$(LIB_NAME_EXT)
 
@@ -21,7 +21,7 @@ SHARED_LIB := $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y).$(LIB_VERSION
 ENABLE_STATIC_LIB ?= yes
 ENABLE_SHARED_LIB ?= yes
 
-TARGETS := print_vars
+TARGETS := pre_build print_vars
 
 ifeq ($(ENABLE_STATIC_LIB),yes)
 	TARGETS += $(STATIC_LIB)
@@ -30,6 +30,8 @@ endif
 ifeq ($(ENABLE_SHARED_LIB),yes)
 	TARGETS += $(SHARED_LIB)
 endif
+
+TARGETS += post_build
 
 all: $(TARGETS) install
 
