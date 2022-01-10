@@ -6,4 +6,5 @@ lib*.so*
 tags
 test
 cscope.*
-/.staging_dir
+/.staging
+/.output
