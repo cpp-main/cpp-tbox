@@ -17,7 +17,7 @@ SRC_FILES = \
 	misc.cpp \
 	args.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	test_main.cpp \

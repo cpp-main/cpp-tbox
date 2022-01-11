@@ -19,7 +19,7 @@ SRC_FILES = \
 	log_imp.cpp \
 	log_output.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	log_output_test.cpp \
@@ -29,6 +29,6 @@ TEST_SRC_FILES = \
 
 TEST_LDFLAGS := $(LDFLAGS)
 
-ENABLE_SHARED_LIB = no
+#ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

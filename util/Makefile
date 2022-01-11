@@ -19,7 +19,7 @@ SRC_FILES = \
 	fs.cpp \
 	argument_parser.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	async_data_stream_test.cpp \

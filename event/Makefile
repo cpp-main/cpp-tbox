@@ -22,7 +22,7 @@ SRC_FILES += \
 	engins/libevent/timer_event.cpp \
 	engins/libevent/signal_event.cpp \
 	engins/libevent/common.cpp
-CCXXFLAGS += -DENABLE_LIBEVENT=1
+CXXFLAGS += -DENABLE_LIBEVENT=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)n
 endif
 
@@ -32,11 +32,11 @@ SRC_FILES += \
 	engins/libev/fd_event.cpp \
 	engins/libev/signal_event.cpp \
 	engins/libev/timer_event.cpp
-CCXXFLAGS += -DENABLE_LIBEV=1
+CXXFLAGS += -DENABLE_LIBEV=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)e
 endif
 
-CCXXFLAGS += -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)
 
 ifeq ($(ENABLE_STAT), yes)
 CCXXFLAGS += -DENABLE_STAT=1

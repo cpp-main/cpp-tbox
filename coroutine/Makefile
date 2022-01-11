@@ -14,7 +14,7 @@ HEAD_FILES = \
 SRC_FILES = \
 	scheduler.cpp
 
-CCXXFLAGS += -DLOG_MODULE_ID='"coroutine"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"coroutine"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 	scheduler_test.cpp \

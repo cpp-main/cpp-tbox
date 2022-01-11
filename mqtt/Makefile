@@ -7,7 +7,7 @@ HEAD_FILES = client.h
 
 SRC_FILES = client.cpp
 
-CCXXFLAGS += -DLOG_MODULE_ID='"mqtt"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"mqtt"' $(CXXFLAGS)
 
 TEST_SRC_FILES = \
 

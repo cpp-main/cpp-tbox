@@ -27,7 +27,7 @@ app_y += mqtt
 app_y += log2file
 app_y += main
 
-all test: $(OUTPUT_DIR) $(STAGING_DIR)
+all test: $(STAGING_DIR)
 	@for i in $(app_y); do \
 		[ ! -d $$i ] || $(MAKE) -C $$i $@ || exit $$? ; \
 	done
@@ -38,16 +38,8 @@ $(STAGING_DIR) :
 		mkdir -p $@/lib; \
 	fi
 
-$(OUTPUT_DIR) :
-	[ -d $@ ] || mkdir -p $@
-
 clean:
-	@for i in $(app_y); do \
-		[ ! -d $$i ] || $(MAKE) -C $$i $@ || exit $$? ; \
-	done
+	-rm -rf $(OUTPUT_DIR)
 
-distclean:
-	@for i in $(app_y); do \
-		[ ! -d $$i ] || $(MAKE) -C $$i $@ || exit $$? ; \
-	done
+distclean: clean
 	-rm -rf $(STAGING_DIR)
