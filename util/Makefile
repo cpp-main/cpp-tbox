@@ -11,7 +11,7 @@ HEAD_FILES = \
 	fs.h \
 	argument_parser.h \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	async_data_stream.cpp \
 	pid_file.cpp \
 	thread_wdog.cpp \
@@ -21,7 +21,7 @@ SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	async_data_stream_test.cpp \
 	thread_wdog_test.cpp \
 	pid_file_test.cpp \

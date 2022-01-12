@@ -11,12 +11,12 @@ HEAD_FILES = \
 	fd_event.h timer_event.h signal_event.h \
 	stat.h version.h
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	loop.cpp common_loop.cpp \
 	version.cpp
 
 ifeq ($(ENABLE_LIBEVENT), yes)
-SRC_FILES += \
+CPP_SRC_FILES += \
 	engins/libevent/loop.cpp \
 	engins/libevent/fd_event.cpp \
 	engins/libevent/timer_event.cpp \
@@ -27,7 +27,7 @@ LIB_NAME_EXT := $(LIB_NAME_EXT)n
 endif
 
 ifeq ($(ENABLE_LIBEV), yes)
-SRC_FILES += \
+CPP_SRC_FILES += \
 	engins/libev/loop.cpp \
 	engins/libev/fd_event.cpp \
 	engins/libev/signal_event.cpp \

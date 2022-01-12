@@ -20,7 +20,7 @@ HEAD_FILES = \
 	tcp_client.h \
 	tcp_server.h \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	buffer.cpp \
 	fd.cpp \
 	buffered_fd.cpp \
@@ -38,7 +38,7 @@ SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	fd_test.cpp \
 	buffer_test.cpp \
 	buffered_fd_test.cpp \

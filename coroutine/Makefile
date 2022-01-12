@@ -11,12 +11,12 @@ HEAD_FILES = \
 	broadcast.hpp \
 	condition.hpp \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	scheduler.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"coroutine"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	scheduler_test.cpp \
 	channel_test.cpp \
 	semaphore_test.cpp \

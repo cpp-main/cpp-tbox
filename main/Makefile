@@ -9,7 +9,7 @@ HEAD_FILES = \
 	context.h \
 	main.h \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	apps.cpp \
 	context.cpp \
 	main.cpp \
@@ -19,7 +19,7 @@ SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	test_main.cpp \
 	args_test.cpp \
 
