@@ -17,26 +17,12 @@ APPS_DIR := $(PWD)
 
 export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
 
-app_y += base
-app_y += util
-app_y += event
-app_y += eventx
-app_y += network
-app_y += coroutine
-app_y += mqtt
-app_y += log2file
-app_y += main
+include config.mk
 
-all test: $(STAGING_DIR)
+all test:
 	@for i in $(app_y); do \
 		[ ! -d $$i ] || $(MAKE) -C $$i $@ || exit $$? ; \
 	done
-
-$(STAGING_DIR) :
-	if [ ! -d $@ ]; then \
-		mkdir -p $@/include; \
-		mkdir -p $@/lib; \
-	fi
 
 clean:
 	-rm -rf $(OUTPUT_DIR)

@@ -26,11 +26,11 @@ ENABLE_SHARED_LIB ?= yes
 TARGETS := pre_build print_vars
 
 ifeq ($(ENABLE_STATIC_LIB),yes)
-	TARGETS += $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
+	TARGETS += build_static_lib
 endif
 
 ifeq ($(ENABLE_SHARED_LIB),yes)
-	TARGETS += $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
+	TARGETS += build_shared_lib
 endif
 
 TARGETS += post_build
@@ -39,6 +39,12 @@ all: $(TARGETS) install
 
 print_vars:
 	@echo CXX=$(CXX)
+	@echo C_SRC_FILES=$(C_SRC_FILES)
+	@echo CC_SRC_FILES=$(CC_SRC_FILES)
+	@echo CPP_SRC_FILES=$(CPP_SRC_FILES)
+	@echo OUTPUT_DIR=$(OUTPUT_DIR)
+	@echo STAGING_DIR=$(STAGING_DIR)
+	@echo INSTALL_DIR=$(INSTALL_DIR)
 
 ################################################################
 # static library
@@ -76,15 +82,18 @@ $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_OBJECT,$(src))))
 $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_OBJECT,$(src))))
 
-print_static_vars :
+print_static_compile_vars :
 	@echo CXXFLAGS=$(CXXFLAGS)
-	@echo LDFLAGS=$(LDFLAGS)
+
+print_static_build_vars :
 	@echo OBJECTS=$(OBJECTS)
 
-$(LIB_OUTPUT_DIR)/$(STATIC_LIB) : print_static_vars $(OBJECTS)
+$(LIB_OUTPUT_DIR)/$(STATIC_LIB) : $(OBJECTS)
 	@echo "\033[35mBUILD $(STATIC_LIB) \033[0m"
 	@mkdir -p $(dir $@)
 	@$(AR) rc $@ $(OBJECTS)
+
+build_static_lib : print_shared_compile_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB) print_static_build_vars
 
 ################################################################
 # shared library
@@ -125,14 +134,17 @@ $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_SHARED_OBJECT,$(src))))
 $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_SHARED_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_SHARED_OBJECT,$(src))))
 
-print_shared_vars :
-	@echo SHARED_LIB=$(SHARED_LIB)
+print_shared_compile_vars :
 	@echo SHARED_CXXFLAGS=$(SHARED_CXXFLAGS)
+
+print_shared_build_vars :
 	@echo SHARED_OBJECTS=$(SHARED_OBJECTS)
 
-$(LIB_OUTPUT_DIR)/$(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
+$(LIB_OUTPUT_DIR)/$(SHARED_LIB) : $(SHARED_OBJECTS)
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
 	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
+
+build_shared_lib : print_shared_compile_vars $(LIB_OUTPUT_DIR)/$(SHARED_LIB) print_shared_build_vars
 
 ################################################################
 # test
@@ -153,16 +165,18 @@ endef
 
 $(foreach src,$(TEST_CPP_SRC_FILES),$(eval $(call CREATE_CPP_TEST_OBJECT,$(src))))
 
-test : $(LIB_OUTPUT_DIR)/test
-
-print_test_vars :
-	@echo TEST_OBJECTS=$(TEST_OBJECTS)
+print_test_compile_vars :
 	@echo TEST_CXXFLAGS=$(TEST_CXXFLAGS)
+
+print_test_build_vars :
+	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
-$(LIB_OUTPUT_DIR)/test: print_test_vars $(TEST_OBJECTS) $(OBJECTS)
+$(LIB_OUTPUT_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
+
+test : print_vars print_test_compile_vars $(LIB_OUTPUT_DIR)/test print_test_build_vars
 
 ################################################################
 # install and uninstall
