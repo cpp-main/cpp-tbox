@@ -42,4 +42,4 @@ clean:
 	-rm -rf $(OUTPUT_DIR)
 
 distclean: clean
-	-rm -rf $(STAGING_DIR)
+	-rm -rf $(STAGING_DIR) $(INSTALL_DIR)

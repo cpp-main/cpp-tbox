@@ -6,6 +6,7 @@
 # HOW TO USE:
 # before include this file. those variables need be specified.
 # LIB_VERSION_X, LIB_VERSION_Y, LIB_VERSION_Z, C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, TEST_LDFLAGS
+# OUTPUT_DIR, STAGING_DIR, INSTALL_DIR
 #
 # TARGETS:
 # all, libxxx.a, libxxx.so.x.x.x, test, clean, distclean, install, uninstall
@@ -130,12 +131,8 @@ print_shared_vars :
 	@echo SHARED_OBJECTS=$(SHARED_OBJECTS)
 
 $(LIB_OUTPUT_DIR)/$(SHARED_LIB) : print_shared_vars $(SHARED_OBJECTS)
-	-rm -f $(LIB_OUTPUT_DIR)/$(LIB_BASENAME).so*
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
 	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
-	cd $(LIB_OUTPUT_DIR); \
-	ln -s $(SHARED_LIB) $(LIB_BASENAME).so; \
-	ln -s $(SHARED_LIB) $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y)
 
 ################################################################
 # test
@@ -167,19 +164,49 @@ $(LIB_OUTPUT_DIR)/test: print_test_vars $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
-# head files
-HEAD_TO_DEST_FILE = $(addprefix $(STAGING_DIR)/include/tbox/$(LIB_NAME)/,$(1))
+################################################################
+# install and uninstall
+################################################################
 
-define CREATE_HEAD_FILE_TARGET
-$(call HEAD_TO_DEST_FILE,$(1)) : $(1)
+# install head files
+SRC_HEAD_TO_INSTALL_HEAD = $(addprefix $(STAGING_DIR)/include/tbox/$(LIB_NAME)/,$(1))
+
+define CREATE_INSTALL_HEAD_TARGET
+$(call SRC_HEAD_TO_INSTALL_HEAD,$(1)) : $(1)
 	@mkdir -p $$(dir $$@)
-	@echo "\033[35mCOPY $(1)\033[0m"
 	@cp $$^ $$@
 endef
 
-$(foreach src,$(HEAD_FILES),$(eval $(call CREATE_HEAD_FILE_TARGET,$(src))))
+$(foreach src,$(HEAD_FILES),$(eval $(call CREATE_INSTALL_HEAD_TARGET,$(src))))
 
-HEAD_FILE_TARGETS := $(foreach src,$(HEAD_FILES),$(call HEAD_TO_DEST_FILE,$(src)))
+INSTALL_HEADS := $(foreach src,$(HEAD_FILES),$(call SRC_HEAD_TO_INSTALL_HEAD,$(src)))
+
+# install static library
+ifeq ($(ENABLE_STATIC_LIB),yes)
+INSTALL_STATIC_LIB := $(STAGING_DIR)/lib/$(STATIC_LIB)
+$(INSTALL_STATIC_LIB) : $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
+	@mkdir -p $(dir $@)
+	@cp $^ $@
+endif
+
+# install shared library
+ifeq ($(ENABLE_SHARED_LIB),yes)
+INSTALL_SHARED_LIB := $(INSTALL_DIR)/lib/$(SHARED_LIB)
+$(INSTALL_SHARED_LIB) : $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
+	@mkdir -p $(dir $@)
+	@cd $(dir $@); \
+	rm -f $(LIB_BASENAME).so*; \
+	cp $^ .; \
+	ln -s $(SHARED_LIB) $(LIB_BASENAME).so; \
+	ln -s $(SHARED_LIB) $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y)
+endif
+
+install: $(INSTALL_HEADS) $(INSTALL_STATIC_LIB) $(INSTALL_SHARED_LIB)
+
+uninstall:
+	rm -rf $(STAGING_DIR)/include/$(LIB_NAME)
+	rm -f $(STAGING_DIR)/lib/$(LIB_BASENAME).a
+	rm -f $(INSTALL_DIR)/lib/$(LIB_BASENAME).so*
 
 ################################################################
 # clean and distclean
@@ -187,18 +214,3 @@ HEAD_FILE_TARGETS := $(foreach src,$(HEAD_FILES),$(call HEAD_TO_DEST_FILE,$(src)
 clean:
 	-rm -f $(OBJECTS) $(SHARED_OBJECTS) $(TEST_OBJECTS)
 
-################################################################
-# install and uninstall
-################################################################
-
-install: $(HEAD_FILE_TARGETS)
-ifeq ($(ENABLE_STATIC_LIB),yes)
-	cp $(LIB_OUTPUT_DIR)/$(STATIC_LIB) $(STAGING_DIR)/lib/
-endif
-ifeq ($(ENABLE_SHARED_LIB),yes)
-	cp -d $(LIB_OUTPUT_DIR)/$(LIB_BASENAME).so* $(STAGING_DIR)/lib/
-endif
-
-uninstall:
-	rm -rf $(STAGING_DIR)/include/$(LIB_NAME)
-	rm -f $(STAGING_DIR)/lib/$(LIB_BASENAME).*

@@ -2,4 +2,5 @@ tags
 test
 cscope.*
 /.staging
+/.install
 /.output

@@ -4,14 +4,16 @@ export STAGING_DIR ?= $(TOP_DIR)/.staging
 export STAGING_INCLUDE := $(STAGING_DIR)/include
 export STAGING_LIB := $(STAGING_DIR)/lib
 
+export INSTALL_DIR := $(TOP_DIR)/.install
+export INSTALL_LIB := $(INSTALL_DIR)/lib
+
 export OUTPUT_DIR := $(TOP_DIR)/.output
 
 CCFLAGS := -I$(STAGING_INCLUDE)
 
 export CFLAGS := $(CCFLAGS) -std=c99
 export CXXFLAGS := $(CCFLAGS) -std=c++11
-export LDFLAGS := -L$(STAGING_LIB)
-export INSTALL_DIR := $(STAGING_DIR)
+export LDFLAGS := -L$(STAGING_LIB) -L$(INSTALL_LIB)
 
 TOOLCHAIN_BIN_PREFIX :=
 export AR := $(TOOLCHAIN_BIN_PREFIX)ar
