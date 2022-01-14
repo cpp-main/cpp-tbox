@@ -7,3 +7,4 @@ app_y += coroutine
 app_y += mqtt
 app_y += log2file
 app_y += main
+#app_y += 03_nc_client_and_echo_server
