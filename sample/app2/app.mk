@@ -1,0 +1,4 @@
+CPP_SRC_FILES += app2/app.cpp
+CC_SRC_FILES +=
+C_SRC_FILES +=
+LDFLAGS +=

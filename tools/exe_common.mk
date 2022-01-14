@@ -113,12 +113,25 @@ test : print_vars print_test_vars $(EXE_OUTPUT_DIR)/test
 # install and uninstall
 ################################################################
 
+# install head files
+SRC_CONF_TO_INSTALL_CONF = $(addprefix $(INSTALL_DIR)/etc/$(EXE_NAME)/,$(1))
+
+define CREATE_INSTALL_CONF_TARGET
+$(call SRC_CONF_TO_INSTALL_CONF,$(1)) : $(1)
+	@mkdir -p $$(dir $$@)
+	@cp $$^ $$@
+endef
+
+$(foreach src,$(CONF_FILES),$(eval $(call CREATE_INSTALL_CONF_TARGET,$(src))))
+
+INSTALL_CONFS := $(foreach src,$(CONF_FILES),$(call SRC_CONF_TO_INSTALL_CONF,$(src)))
+
 INSTALL_EXE := $(INSTALL_DIR)/bin/$(EXE_NAME)
 $(INSTALL_EXE) : $(EXE_OUTPUT_DIR)/$(EXE_NAME)
 	@mkdir -p $(dir $@)
 	cp $^ $@
 
-install: $(INSTALL_EXE)
+install: $(INSTALL_EXE) $(INSTALL_CONFS)
 
 uninstall:
 	rm -f $(INSTALL_DIR)/bin/$(EXE_NAME)
