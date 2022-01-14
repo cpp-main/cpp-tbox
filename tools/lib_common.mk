@@ -82,10 +82,8 @@ $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_OBJECT,$(src))))
 $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_OBJECT,$(src))))
 
-print_static_compile_vars :
+print_static_vars :
 	@echo CXXFLAGS=$(CXXFLAGS)
-
-print_static_build_vars :
 	@echo OBJECTS=$(OBJECTS)
 
 $(LIB_OUTPUT_DIR)/$(STATIC_LIB) : $(OBJECTS)
@@ -93,7 +91,7 @@ $(LIB_OUTPUT_DIR)/$(STATIC_LIB) : $(OBJECTS)
 	@mkdir -p $(dir $@)
 	@$(AR) rc $@ $(OBJECTS)
 
-build_static_lib : print_shared_compile_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB) print_static_build_vars
+build_static_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
 
 ################################################################
 # shared library
@@ -134,17 +132,15 @@ $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_SHARED_OBJECT,$(src))))
 $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_SHARED_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_SHARED_OBJECT,$(src))))
 
-print_shared_compile_vars :
+print_shared_vars :
 	@echo SHARED_CXXFLAGS=$(SHARED_CXXFLAGS)
-
-print_shared_build_vars :
 	@echo SHARED_OBJECTS=$(SHARED_OBJECTS)
 
 $(LIB_OUTPUT_DIR)/$(SHARED_LIB) : $(SHARED_OBJECTS)
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
 	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
 
-build_shared_lib : print_shared_compile_vars $(LIB_OUTPUT_DIR)/$(SHARED_LIB) print_shared_build_vars
+build_shared_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
 
 ################################################################
 # test
@@ -165,10 +161,8 @@ endef
 
 $(foreach src,$(TEST_CPP_SRC_FILES),$(eval $(call CREATE_CPP_TEST_OBJECT,$(src))))
 
-print_test_compile_vars :
+print_test_vars :
 	@echo TEST_CXXFLAGS=$(TEST_CXXFLAGS)
-
-print_test_build_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
@@ -176,7 +170,7 @@ $(LIB_OUTPUT_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
-test : print_vars print_test_compile_vars $(LIB_OUTPUT_DIR)/test print_test_build_vars
+test : print_vars print_test_vars $(LIB_OUTPUT_DIR)/test
 
 ################################################################
 # install and uninstall
