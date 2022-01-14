@@ -2,6 +2,7 @@ EXE_NAME := sample
 
 CPP_SRC_FILES := main.cpp build_time.cpp
 TEST_CPP_SRC_FILES :=
+TEST_LDFLAGS :=
 
 CONF_FILES := default.conf
 
@@ -18,7 +19,7 @@ LDFLAGS += \
 	-levent_core \
 	-lev -lpthread
 
-TEST_LDFLAGS := $(LDFLAGS)
+TEST_LDFLAGS += $(LDFLAGS)
 
 pre_build :
 	touch build_time.cpp
