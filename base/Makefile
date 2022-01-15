@@ -29,6 +29,6 @@ TEST_CPP_SRC_FILES = \
 
 TEST_LDFLAGS := $(LDFLAGS)
 
-#ENABLE_SHARED_LIB = no
+ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk
