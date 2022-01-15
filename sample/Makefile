@@ -1,6 +1,6 @@
 EXE_NAME := sample
 
-CPP_SRC_FILES := main.cpp build_time.cpp
+CPP_SRC_FILES := app_main.cpp build_time.cpp
 TEST_CPP_SRC_FILES :=
 TEST_LDFLAGS :=
 

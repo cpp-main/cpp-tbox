@@ -12,7 +12,7 @@ void RegisterApps(Apps &apps)
 
 std::string GetAppDescribe()
 {
-    return "This is exe_demo.";
+    return "This is a sample within two apps.";
 }
 
 void GetAppVersion(int &major, int &minor, int &rev, int &build)
