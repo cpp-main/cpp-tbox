@@ -61,14 +61,14 @@ OBJECTS += $(foreach src,$(C_SRC_FILES),$(call C_SOURCE_TO_OBJECT,$(src)))
 define CREATE_CPP_OBJECT
 $(call CPP_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
 endef
 
 define CREATE_CC_OBJECT
 $(call CC_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
 endef
 
@@ -88,7 +88,7 @@ print_static_vars :
 
 $(LIB_OUTPUT_DIR)/$(STATIC_LIB) : $(OBJECTS)
 	@echo "\033[35mBUILD $(STATIC_LIB) \033[0m"
-	@mkdir -p $(dir $@)
+	@install -d $(dir $@)
 	@$(AR) rc $@ $(OBJECTS)
 
 build_static_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
@@ -111,14 +111,14 @@ SHARED_CFLAGS := $(CFLAGS) -fPIC
 define CREATE_CPP_SHARED_OBJECT
 $(call CPP_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(SHARED_CXXFLAGS) -o $$@ -c $$^
 endef
 
 define CREATE_CC_SHARED_OBJECT
 $(call CC_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(SHARED_CXXFLAGS) -o $$@ -c $$^
 endef
 
@@ -155,7 +155,7 @@ TEST_CXXFLAGS := $(CXXFLAGS)
 define CREATE_CPP_TEST_OBJECT
 $(call CPP_SOURCE_TO_TEST_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(TEST_CXXFLAGS) -o $$@ -c $$^
 endef
 
@@ -181,8 +181,7 @@ SRC_HEAD_TO_INSTALL_HEAD = $(addprefix $(STAGING_DIR)/include/tbox/$(LIB_NAME)/,
 
 define CREATE_INSTALL_HEAD_TARGET
 $(call SRC_HEAD_TO_INSTALL_HEAD,$(1)) : $(1)
-	@mkdir -p $$(dir $$@)
-	@cp $$^ $$@
+	@install -D $$^ $$@
 endef
 
 $(foreach src,$(HEAD_FILES),$(eval $(call CREATE_INSTALL_HEAD_TARGET,$(src))))
@@ -193,15 +192,14 @@ INSTALL_HEADS := $(foreach src,$(HEAD_FILES),$(call SRC_HEAD_TO_INSTALL_HEAD,$(s
 ifeq ($(ENABLE_STATIC_LIB),yes)
 INSTALL_STATIC_LIB := $(STAGING_DIR)/lib/$(STATIC_LIB)
 $(INSTALL_STATIC_LIB) : $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
-	@mkdir -p $(dir $@)
-	@cp $^ $@
+	@install -D $^ $@
 endif
 
 # install shared library
 ifeq ($(ENABLE_SHARED_LIB),yes)
 INSTALL_SHARED_LIB := $(INSTALL_DIR)/lib/$(SHARED_LIB)
 $(INSTALL_SHARED_LIB) : $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
-	@mkdir -p $(dir $@)
+	@install -d $(dir $@)
 	@cd $(dir $@); \
 	rm -f $(LIB_BASENAME).so*; \
 	cp $^ .; \
