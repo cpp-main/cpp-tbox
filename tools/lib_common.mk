@@ -181,7 +181,7 @@ SRC_HEAD_TO_INSTALL_HEAD = $(addprefix $(STAGING_DIR)/include/tbox/$(LIB_NAME)/,
 
 define CREATE_INSTALL_HEAD_TARGET
 $(call SRC_HEAD_TO_INSTALL_HEAD,$(1)) : $(1)
-	@install -D $$^ $$@
+	@install -Dm 640 $$^ $$@
 endef
 
 $(foreach src,$(HEAD_FILES),$(eval $(call CREATE_INSTALL_HEAD_TARGET,$(src))))
@@ -192,7 +192,7 @@ INSTALL_HEADS := $(foreach src,$(HEAD_FILES),$(call SRC_HEAD_TO_INSTALL_HEAD,$(s
 ifeq ($(ENABLE_STATIC_LIB),yes)
 INSTALL_STATIC_LIB := $(STAGING_DIR)/lib/$(STATIC_LIB)
 $(INSTALL_STATIC_LIB) : $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
-	@install -D $^ $@
+	@install -Dm 640 $^ $@
 endif
 
 # install shared library
@@ -202,7 +202,7 @@ $(INSTALL_SHARED_LIB) : $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
 	@install -d $(dir $@)
 	@cd $(dir $@); \
 	rm -f $(LIB_BASENAME).so*; \
-	cp $^ .; \
+	install -Dm 750 $^ $@; \
 	ln -s $(SHARED_LIB) $(LIB_BASENAME).so; \
 	ln -s $(SHARED_LIB) $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y)
 endif

@@ -46,21 +46,22 @@ OBJECTS += $(foreach src,$(C_SRC_FILES),$(call C_SOURCE_TO_OBJECT,$(src)))
 define CREATE_CPP_OBJECT
 $(call CPP_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
 endef
 
 define CREATE_CC_OBJECT
 $(call CC_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
 endef
 
 define CREATE_C_OBJECT
 $(call C_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $^\033[0m"
-	@$(CC) $(CFLAGS) -o $@ -c $^
+	@install -d $$(dir $$@)
+	@$(CC) $(CFLAGS) -o $$@ -c $$^
 endef
 
 $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_OBJECT,$(src))))
@@ -74,7 +75,7 @@ print_exe_vars :
 
 $(EXE_OUTPUT_DIR)/$(EXE_NAME) : $(OBJECTS)
 	@echo "\033[35mBUILD $(EXE_NAME) \033[0m"
-	@mkdir -p $(dir $@)
+	@install -d $(dir $@)
 	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
 
 build_exe : print_exe_vars $(EXE_OUTPUT_DIR)/$(EXE_NAME)
@@ -92,7 +93,7 @@ TEST_CXXFLAGS := $(CXXFLAGS)
 define CREATE_CPP_TEST_OBJECT
 $(call CPP_SOURCE_TO_TEST_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
-	@mkdir -p $$(dir $$@)
+	@install -d $$(dir $$@)
 	@$(CXX) $(TEST_CXXFLAGS) -o $$@ -c $$^
 endef
 
@@ -118,8 +119,7 @@ SRC_CONF_TO_INSTALL_CONF = $(addprefix $(INSTALL_DIR)/etc/$(EXE_NAME)/,$(1))
 
 define CREATE_INSTALL_CONF_TARGET
 $(call SRC_CONF_TO_INSTALL_CONF,$(1)) : $(1)
-	@mkdir -p $$(dir $$@)
-	@cp $$^ $$@
+	@install -Dm 640 $$^ $$@
 endef
 
 $(foreach src,$(CONF_FILES),$(eval $(call CREATE_INSTALL_CONF_TARGET,$(src))))
@@ -128,8 +128,7 @@ INSTALL_CONFS := $(foreach src,$(CONF_FILES),$(call SRC_CONF_TO_INSTALL_CONF,$(s
 
 INSTALL_EXE := $(INSTALL_DIR)/bin/$(EXE_NAME)
 $(INSTALL_EXE) : $(EXE_OUTPUT_DIR)/$(EXE_NAME)
-	@mkdir -p $(dir $@)
-	cp $^ $@
+	@install -Dm 750 $^ $@
 
 install: $(INSTALL_EXE) $(INSTALL_CONFS)
 
