@@ -24,7 +24,7 @@ namespace tbox::main {
 extern void RegisterSignals();
 extern void RegisterApps(Apps &apps); //! 由用户去实现
 
-extern void Run(Context &ctx, Apps &apps);
+extern void Run(Context &ctx, Apps &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
@@ -37,24 +37,37 @@ int Main(int argc, char **argv)
 
     Context ctx;
 
-    Json conf;
-    Args args(conf);
+    Json js_conf;
+    Args args(js_conf);
 
-    ctx.fillDefaultConfig(conf);
-    apps.fillDefaultConfig(conf);
+    ctx.fillDefaultConfig(js_conf);
+    apps.fillDefaultConfig(js_conf);
 
     if (!args.parse(argc, argv))
         return 0;
 
     util::PidFile pid_file;
-    auto &js_pidfile = conf["pid_file"];
-    if (js_pidfile.is_string()) {
-        auto pid_filename = js_pidfile.get<std::string>();
-        if (!pid_filename.empty())
-            if (!pid_file.lock(js_pidfile.get<std::string>())) {
-                std::cerr << "Warn: another process is running, exit" << std::endl;
-                return 0;
+    if (js_conf.contains("pid_file")) {
+        auto &js_pidfile = js_conf["pid_file"];
+        if (js_pidfile.is_string()) {
+            auto pid_filename = js_pidfile.get<std::string>();
+            if (!pid_filename.empty()) {
+                if (!pid_file.lock(js_pidfile.get<std::string>())) {
+                    std::cerr << "Warn: another process is running, exit" << std::endl;
+                    return 0;
+                }
             }
+        }
+    }
+
+    int loop_exit_wait = 1;
+    if (js_conf.contains("loop_exit_wait")) {
+        auto js_loop_exit_wait = js_conf.at("loop_exit_wait");
+        if (js_loop_exit_wait.is_number()) {
+            loop_exit_wait = js_loop_exit_wait.get<int>();
+        } else {
+            std::cerr << "Warn: loop_exit_wait invaild" << std::endl;
+        }
     }
 
     LogOutput_Initialize(util::fs::Basename(argv[0]).c_str());
@@ -68,10 +81,10 @@ int Main(int argc, char **argv)
 
     if (!apps.empty()) {
         if (apps.construct(ctx)) {
-            if (ctx.initialize(conf)) {
-                if (apps.initialize(conf)) {
+            if (ctx.initialize(js_conf)) {
+                if (apps.initialize(js_conf)) {
                     if (apps.start()) {  //! 启动所有应用
-                        Run(ctx, apps);
+                        Run(ctx, apps, loop_exit_wait);
                     } else {
                         LogWarn("Apps start fail");
                     }
@@ -95,7 +108,7 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-void Run(Context &ctx, Apps &apps)
+void Run(Context &ctx, Apps &apps, int loop_exit_wait)
 {
     auto feeddog_timer  = ctx.loop()->newTimerEvent();
     auto sig_int_event  = ctx.loop()->newSignalEvent();
@@ -114,7 +127,7 @@ void Run(Context &ctx, Apps &apps)
     auto normal_stop_func = [&] {
         LogInfo("Got stop signal");
         apps.stop();
-        ctx.loop()->exitLoop(std::chrono::seconds(1));
+        ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
     };
     sig_int_event->setCallback(normal_stop_func);
     sig_term_event->setCallback(normal_stop_func);
