@@ -15,8 +15,8 @@
 #include <tbox/util/pid_file.h>
 #include <tbox/util/fs.h>
 
-#include "context.h"
-#include "apps.h"
+#include "context_imp.h"
+#include "apps_imp.h"
 #include "args.h"
 
 namespace tbox::main {
@@ -24,7 +24,7 @@ namespace tbox::main {
 extern void RegisterSignals();
 extern void RegisterApps(Apps &apps); //! 由用户去实现
 
-extern void Run(Context &ctx, Apps &apps, int loop_exit_wait);
+extern void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
@@ -32,10 +32,10 @@ int Main(int argc, char **argv)
 {
     RegisterSignals();
 
-    Apps apps;
+    AppsImp apps;
     RegisterApps(apps);
 
-    Context ctx;
+    ContextImp ctx;
 
     Json js_conf;
     Args args(js_conf);
@@ -108,7 +108,7 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-void Run(Context &ctx, Apps &apps, int loop_exit_wait)
+void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
 {
     auto feeddog_timer  = ctx.loop()->newTimerEvent();
     auto sig_int_event  = ctx.loop()->newSignalEvent();
@@ -128,6 +128,7 @@ void Run(Context &ctx, Apps &apps, int loop_exit_wait)
         LogInfo("Got stop signal");
         apps.stop();
         ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
+        LogInfo("Loop will exit after %d sec", loop_exit_wait);
     };
     sig_int_event->setCallback(normal_stop_func);
     sig_term_event->setCallback(normal_stop_func);

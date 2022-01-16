@@ -10,8 +10,8 @@ HEAD_FILES = \
 	main.h \
 
 CPP_SRC_FILES = \
-	apps.cpp \
-	context.cpp \
+	apps_imp.cpp \
+	context_imp.cpp \
 	main.cpp \
 	error_handle.cpp \
 	misc.cpp \
@@ -20,8 +20,6 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
-	test_main.cpp \
-	args_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_eventx -ltbox_event-ne -ltbox_util -ltbox_base -levent_core -lev
 
