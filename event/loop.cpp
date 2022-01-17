@@ -10,6 +10,10 @@
 #include "engins/libev/loop.h"
 #endif
 
+#ifdef ENABLE_EPOLL
+#include "engins/epoll/loop.h"
+#endif
+
 namespace tbox {
 namespace event {
 
@@ -24,6 +28,12 @@ Loop* Loop::New(Engine engine)
         case Engine::kLibev:
             return new LibevLoop;
 #endif
+
+#ifdef ENABLE_EPOLL
+        case Engine::kEpoll:
+            return new EpollLoop;
+#endif
+
         default:
             LogErr("Unsupport engine");
     }
@@ -37,6 +47,9 @@ Loop* Loop::New()
 #endif
 #ifdef ENABLE_LIBEV
     return new LibevLoop;
+#endif
+#ifdef ENABLE_EPOLL
+    return new EpollLoop;
 #endif
     return NULL;
 }

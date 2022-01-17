@@ -16,6 +16,7 @@ class Loop {
         kLibevent,
         kLibev,
         kLibuv,
+        kEpoll,
     };
 
     static Loop* New();

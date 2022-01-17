@@ -20,12 +20,12 @@ export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
 app_y += base
 app_y += util
 app_y += event
-app_y += eventx
-app_y += network
-app_y += coroutine
-app_y += mqtt
-app_y += log2file
-app_y += main
+#app_y += eventx
+#app_y += network
+#app_y += coroutine
+#app_y += mqtt
+#app_y += log2file
+#app_y += main
 
 all test: $(STAGING_DIR)
 	@for i in $(app_y); do \

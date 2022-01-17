@@ -4,7 +4,7 @@ LIB_NAME = event
 LIB_NAME_EXT = -
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 0
+LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	forward.h loop.h event.h \
@@ -34,6 +34,16 @@ SRC_FILES += \
 	engins/libev/timer_event.cpp
 CCXXFLAGS += -DENABLE_LIBEV=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)e
+endif
+
+ifeq ($(ENABLE_EPOLL), yes)
+SRC_FILES += \
+	engins/epoll/loop.cpp \
+	engins/epoll/fd_event.cpp \
+	engins/epoll/signal_event.cpp \
+	engins/epoll/timer_event.cpp
+CCXXFLAGS += -DENABLE_EPOLL=1
+LIB_NAME_EXT := $(LIB_NAME_EXT)ep
 endif
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)

@@ -14,7 +14,7 @@ void TimerCallback()
 
 void PrintUsage(const char *process_name)
 {
-    cout << "Usage:" << process_name << " libevent|libev" << endl;
+    cout << "Usage:" << process_name << " libevent|libev|epoll" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
         loop_engine = Loop::Engine::kLibevent;
     else if (string(argv[1]) == "libev")
         loop_engine = Loop::Engine::kLibev;
+    else if (string(argv[1]) == "epoll")
+        loop_engine = Loop::Engine::kEpoll;
     else {
         PrintUsage(argv[0]);
         return 0;
