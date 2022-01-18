@@ -4,10 +4,12 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	thread_pool.h
+	thread_pool.h \
+	timers.h \
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
+	timers.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
 
