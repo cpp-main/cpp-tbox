@@ -1,6 +1,7 @@
 #ifndef TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
 #define TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
 
+#include "tbox/base/cabinet.hpp"
 #include "../../timer_event.h"
 
 
@@ -38,7 +39,7 @@ class EpollTimerEvent : public TimerEvent {
     CallbackFunc cb_{ nullptr };
     int cb_level_{ 0 };
 
-    uint64_t id_{ 0 };
+    cabinet::Token token_;
 };
 
 }

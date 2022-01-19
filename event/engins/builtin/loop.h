@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+#include "tbox/base/cabinet.hpp"
 #include "../../common_loop.h"
 
 #ifndef MAX_LOOP_ENTRIES
@@ -30,16 +31,6 @@ struct EventData
 };
 
 class BuiltinLoop : public CommonLoop {
-    struct Timer
-    {
-        uint64_t interval;
-        uint64_t expired;
-        uint64_t repeat;
-        uint64_t id;
-
-        std::function<void()> handler;
-    };
-
   public:
     explicit BuiltinLoop();
     virtual ~BuiltinLoop();
@@ -54,23 +45,46 @@ class BuiltinLoop : public CommonLoop {
 
   public:
     int epollFd() { return epoll_fd_; }
-    uint64_t addTimer(uint64_t interval, int repeat, std::function<void()> handler = nullptr);
-    void delTimer(uint64_t id);
+
+    using TimerCallback = std::function<void()>;
+    cabinet::Token addTimer(uint64_t interval, int64_t repeat, TimerCallback handler = nullptr);
+    void deleteTimer(const cabinet::Token &);
 
   protected:
     void onExitTimeup();
 
   private:
-    void onTick();
+    void onTimeExpired();
+
+  private:
+    struct Timer
+    {
+        uint64_t interval;
+        uint64_t expired;
+        uint64_t repeat;
+        cabinet::Token token;
+
+        TimerCallback handler;
+    };
+
+    struct TimerCmp
+    {
+        bool operator()(const Timer *x, const Timer *y) const
+        {
+            return x->expired > y->expired;
+        }
+    };
 
   private:
     int epoll_fd_{ -1 };
-    bool valid_{ true };
+    bool running_{ true };
     TimerEvent *sp_exit_timer_{ nullptr };
 
-    std::vector<Timer> timers_{ };
-    uint64_t timer_id_{ 0 };
-    std::function<bool (const Timer &x, const Timer &y)> cmp_{[](const Timer &x, const Timer &y){ return x.expired > y. expired; }};
+    //std::vector<Timer> timers_{ };
+    std::vector<Timer *> timer_min_heap_;
+    cabinet::Cabinet<Timer> timer_cabinet_;
+    //uint64_t timer_id_{ 0 };
+    //std::function<bool (const Timer &x, const Timer &y)> cmp_{[](const Timer &x, const Timer &y){ return x.expired > y. expired; }};
 };
 
 }

@@ -1,15 +1,17 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <cstdint>
-#include <ctime>
-#include <cmath>
 #include <algorithm>
+#include <chrono>
+#include <limits>
+#include <cassert>
 #include <errno.h>
 #include <string.h>
 #include "loop.h"
 #include "timer_event.h"
 #include "fd_event.h"
 #include "signal_event.h"
+#include "tbox/base/defines.h"
 
 namespace tbox {
 namespace event {
@@ -17,9 +19,7 @@ namespace event {
 namespace {
 uint64_t CurrentMilliseconds()
 {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return t.tv_sec * 1000 + lround(t.tv_nsec / 1e6);
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
 }
 
@@ -30,35 +30,41 @@ BuiltinLoop::BuiltinLoop()
 
 BuiltinLoop::~BuiltinLoop()
 {
-    if (sp_exit_timer_)
-        delete sp_exit_timer_;
-
-    close(epoll_fd_);
+    CHECK_CLOSE_RESET_FD(epoll_fd_);
+    CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
 }
 
-void BuiltinLoop::onTick()
+void BuiltinLoop::onTimeExpired()
 {
-    if (timers_.size() <= 0)
+    if (timer_min_heap_.size() <= 0)
         return;
 
     auto now = CurrentMilliseconds();
-    Timer &t = timers_.front();
-    if (now < t.expired)
-        return;
 
-    // The top of timer was expired
-    if (t.handler)
-        t.handler();
+    while (timer_min_heap_.size() > 0) {
+        auto t = timer_min_heap_.front();
+        assert(t != nullptr);
 
-    -- t.repeat;
+        if (now < t->expired)
+            return;
 
-    if (t.repeat > 0) {
-        t.expired = now + t.interval;
-        std::make_heap(timers_.begin(), timers_.end(), cmp_); ///< Just need rebuild the heap
-    } else {
-        /// Note: pop_heap and pop_back should used by paired.
-        std::pop_heap(timers_.begin(), timers_.end(), cmp_);
-        timers_.pop_back();
+        // The top of timer was expired
+        if (t->handler)
+            t->handler();
+
+        -- t->repeat;
+
+        // swap first element and last element
+        std::pop_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
+        if (t->repeat > 0) {
+            t->expired += t->interval;
+            // push the last element to heap again
+            std::push_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
+        } else {
+            // remove the last element
+            timer_min_heap_.pop_back();
+            CHECK_DELETE_RESET_OBJ(t);
+        }
     }
 }
 
@@ -66,7 +72,7 @@ void BuiltinLoop::runLoop(Mode mode)
 {
     std::array<struct epoll_event, MAX_LOOP_ENTRIES> events;
     memset(events.data(), 0 , events.size());
-    valid_ = (mode == Loop::Mode::kForever);
+    running_ = (mode == Loop::Mode::kForever);
     int64_t wait_time = 0;
 
     if (epoll_fd_ < 0)
@@ -76,24 +82,23 @@ void BuiltinLoop::runLoop(Mode mode)
 
     do {
         /// Get the top of minimum heap
-        wait_time = timers_.size() > 0 ? timers_.front().expired - CurrentMilliseconds() : -1;
+        wait_time = timer_min_heap_.size() > 0 ? timer_min_heap_.front()->expired - CurrentMilliseconds() : -1;
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), wait_time);
 
-        onTick();
+        onTimeExpired();
 
         if (fds <= 0)
             continue;
 
         for (int i = 0; i < fds; ++i) {
             EventData *event_data = static_cast<EventData *>(events.at(i).data.ptr);
-            if (!event_data)
-                continue;
+            assert(event_data != nullptr);
 
             if (event_data->handler)
                 event_data->handler(event_data->fd, events.at(i).events, event_data->obj);
         }
 
-    } while (valid_);
+    } while (running_);
 
     runThisAfterLoop();
 }
@@ -101,7 +106,7 @@ void BuiltinLoop::runLoop(Mode mode)
 void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
     if (wait_time.count() == 0) {
-        this->valid_ = false;
+        running_ = false;
     } else {
         sp_exit_timer_ = newTimerEvent();
         sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
@@ -113,37 +118,44 @@ void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 void BuiltinLoop::onExitTimeup()
 {
     sp_exit_timer_->disable();
-    this->valid_ = false;
+    running_ = false;
 }
 
-uint64_t BuiltinLoop::addTimer(uint64_t  interval, int repeat, std::function<void()> handler)
+cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, TimerCallback handler)
 {
     if (repeat == 0)
-        return ++timer_id_;
+        return cabinet::Token();
 
     if (repeat < 0)
-        repeat = -1;
+        repeat = std::numeric_limits<int64_t>::max();
 
-    uint64_t now = CurrentMilliseconds();
-    Timer t;
+    auto now = CurrentMilliseconds();
+    Timer *t = new Timer;
+    assert(t != nullptr);
 
-    auto timer_id = ++timer_id_;
-    t.id = timer_id_;
-    t.expired = now + interval;
-    t.interval = interval;
-    t.handler = handler;
-    t.repeat = repeat;
+    t->expired = now + interval;
+    t->interval = interval;
+    t->handler = handler;
+    t->repeat = repeat;
+    t->token = this->timer_cabinet_.insert(t);
 
-    timers_.push_back(std::move(t));
-    std::push_heap(timers_.begin(), timers_.end(), cmp_);
+    timer_min_heap_.push_back(t);
+    std::push_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
 
-    return timer_id;
+    return t->token;
 }
 
-void BuiltinLoop::delTimer(uint64_t id)
+void BuiltinLoop::deleteTimer(const cabinet::Token& token)
 {
-    std::remove_if(timers_.begin(), timers_.end(), [id](const Timer &t){ return t.id == id; });
-    std::make_heap(timers_.begin(), timers_.end(), cmp_);
+    std::remove_if(timer_min_heap_.begin(), timer_min_heap_.end(),[token](const Timer *t){
+        if (t->token == token) {
+            CHECK_DELETE_RESET_OBJ(t);
+            return true;
+        }
+        return false;
+    });
+
+    std::make_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
 }
 
 FdEvent* BuiltinLoop::newFdEvent()
