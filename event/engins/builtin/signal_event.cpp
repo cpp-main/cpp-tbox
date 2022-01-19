@@ -12,7 +12,7 @@
 namespace tbox {
 namespace event {
 
-EpollSignalEvent::EpollSignalEvent(EpollLoop *wp_loop) :
+EpollSignalEvent::EpollSignalEvent(BuiltinLoop *wp_loop) :
      wp_loop_(wp_loop)
     ,signal_fd_event_(new EpollFdEvent(wp_loop))
 { }

@@ -7,7 +7,7 @@
 namespace tbox {
 namespace event {
 
-EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop) :
+EpollFdEvent::EpollFdEvent(BuiltinLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_inited_(false),
     is_stop_after_trigger_(false),

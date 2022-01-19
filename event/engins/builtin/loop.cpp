@@ -23,12 +23,12 @@ uint64_t CurrentMilliseconds()
 }
 }
 
-EpollLoop::EpollLoop()
+BuiltinLoop::BuiltinLoop()
 {
     epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
 }
 
-EpollLoop::~EpollLoop()
+BuiltinLoop::~BuiltinLoop()
 {
     if (sp_exit_timer_)
         delete sp_exit_timer_;
@@ -36,7 +36,7 @@ EpollLoop::~EpollLoop()
     close(epoll_fd_);
 }
 
-void EpollLoop::onTick()
+void BuiltinLoop::onTick()
 {
     if (timers_.size() <= 0)
         return;
@@ -62,7 +62,7 @@ void EpollLoop::onTick()
     }
 }
 
-void EpollLoop::runLoop(Mode mode)
+void BuiltinLoop::runLoop(Mode mode)
 {
     std::array<struct epoll_event, MAX_LOOP_ENTRIES> events;
     memset(events.data(), 0 , events.size());
@@ -98,25 +98,25 @@ void EpollLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-void EpollLoop::exitLoop(const std::chrono::milliseconds &wait_time)
+void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
     if (wait_time.count() == 0) {
         this->valid_ = false;
     } else {
         sp_exit_timer_ = newTimerEvent();
         sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
-        sp_exit_timer_->setCallback(std::bind(&EpollLoop::onExitTimeup, this));
+        sp_exit_timer_->setCallback(std::bind(&BuiltinLoop::onExitTimeup, this));
         sp_exit_timer_->enable();
     }
 }
 
-void EpollLoop::onExitTimeup()
+void BuiltinLoop::onExitTimeup()
 {
     sp_exit_timer_->disable();
     this->valid_ = false;
 }
 
-uint64_t EpollLoop::addTimer(uint64_t  interval, int repeat, std::function<void()> handler)
+uint64_t BuiltinLoop::addTimer(uint64_t  interval, int repeat, std::function<void()> handler)
 {
     if (repeat == 0)
         return ++timer_id_;
@@ -140,23 +140,23 @@ uint64_t EpollLoop::addTimer(uint64_t  interval, int repeat, std::function<void(
     return timer_id;
 }
 
-void EpollLoop::delTimer(uint64_t id)
+void BuiltinLoop::delTimer(uint64_t id)
 {
     std::remove_if(timers_.begin(), timers_.end(), [id](const Timer &t){ return t.id == id; });
     std::make_heap(timers_.begin(), timers_.end(), cmp_);
 }
 
-FdEvent* EpollLoop::newFdEvent()
+FdEvent* BuiltinLoop::newFdEvent()
 {
     return new EpollFdEvent(this);
 }
 
-TimerEvent* EpollLoop::newTimerEvent()
+TimerEvent* BuiltinLoop::newTimerEvent()
 {
     return new EpollTimerEvent(this);
 }
 
-SignalEvent* EpollLoop::newSignalEvent()
+SignalEvent* BuiltinLoop::newSignalEvent()
 {
     return new EpollSignalEvent(this);
 }

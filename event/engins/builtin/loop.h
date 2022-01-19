@@ -29,7 +29,7 @@ struct EventData
     uint32_t events;
 };
 
-class EpollLoop : public CommonLoop {
+class BuiltinLoop : public CommonLoop {
     struct Timer
     {
         uint64_t interval;
@@ -41,8 +41,8 @@ class EpollLoop : public CommonLoop {
     };
 
   public:
-    explicit EpollLoop();
-    virtual ~EpollLoop();
+    explicit BuiltinLoop();
+    virtual ~BuiltinLoop();
 
   public:
     virtual void runLoop(Mode mode);

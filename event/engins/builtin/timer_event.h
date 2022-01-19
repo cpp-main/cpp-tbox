@@ -7,11 +7,11 @@
 namespace tbox {
 namespace event {
 
-class EpollLoop;
+class BuiltinLoop;
 
 class EpollTimerEvent : public TimerEvent {
   public:
-    explicit EpollTimerEvent(EpollLoop *wp_loop);
+    explicit EpollTimerEvent(BuiltinLoop *wp_loop);
     virtual ~EpollTimerEvent();
 
   public:
@@ -28,7 +28,7 @@ class EpollTimerEvent : public TimerEvent {
     void onEvent();
 
   private:
-    EpollLoop *wp_loop_;
+    BuiltinLoop *wp_loop_;
     bool is_inited_{ false };
     bool is_enabled_{ false };
 

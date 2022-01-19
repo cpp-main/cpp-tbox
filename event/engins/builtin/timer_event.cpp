@@ -6,7 +6,7 @@
 namespace tbox {
 namespace event {
 
-EpollTimerEvent::EpollTimerEvent(EpollLoop *wp_loop)
+EpollTimerEvent::EpollTimerEvent(BuiltinLoop *wp_loop)
     : wp_loop_(wp_loop)
 { }
 

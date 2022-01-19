@@ -6,12 +6,12 @@
 namespace tbox {
 namespace event {
 
-class EpollLoop;
+class BuiltinLoop;
 struct EventData;
 
 class EpollFdEvent : public FdEvent {
   public:
-    explicit EpollFdEvent(EpollLoop *wp_loop);
+    explicit EpollFdEvent(BuiltinLoop *wp_loop);
     virtual ~EpollFdEvent();
 
   public:
@@ -29,7 +29,7 @@ class EpollFdEvent : public FdEvent {
     void onEvent(short events);
 
   private:
-    EpollLoop *wp_loop_;
+    BuiltinLoop *wp_loop_;
     bool is_inited_{ false };
     bool is_enabled_{ false };
     bool is_stop_after_trigger_ { false };

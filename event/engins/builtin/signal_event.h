@@ -8,12 +8,12 @@ struct epoll_event;
 namespace tbox {
 namespace event {
 
-class EpollLoop;
+class BuiltinLoop;
 class EpollFdEvent;
 
 class EpollSignalEvent : public SignalEvent {
   public:
-    explicit EpollSignalEvent(EpollLoop *wp_loop);
+    explicit EpollSignalEvent(BuiltinLoop *wp_loop);
     virtual ~EpollSignalEvent();
 
   public:
@@ -30,7 +30,7 @@ class EpollSignalEvent : public SignalEvent {
     void onEvent(short events);
 
   private:
-    EpollLoop *wp_loop_{ nullptr };
+    BuiltinLoop *wp_loop_{ nullptr };
     EpollFdEvent *signal_fd_event_{ nullptr };
 
     bool is_inited_{ false };
