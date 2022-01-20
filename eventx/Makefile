@@ -14,7 +14,8 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
-	thread_pool_test.cpp
+	thread_pool_test.cpp \
+	timers_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 ENABLE_SHARED_LIB = no

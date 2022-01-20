@@ -28,7 +28,7 @@ class Timers::Impl {
 
 Timers::Impl::~Impl()
 {
-    LogUndo();
+    cleanup();
 }
 
 Timers::Token Timers::Impl::doEvery(const Milliseconds &m_sec, const Callback &cb)
