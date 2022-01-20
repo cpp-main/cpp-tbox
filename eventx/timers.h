@@ -32,9 +32,10 @@ class Timers {
     Token doEvery(const Milliseconds &m_sec, const Callback &cb);
     Token doAfter(const Milliseconds &m_sec, const Callback &cb);
     Token doAt(const TimePoint &time_point, const Callback &cb);
-    Token AddCron(const std::string &cron_exp, const Callback &cb);
 
     bool cancel(const Token &token);
+
+    void cleanup();
 
   private:
     class Impl;
