@@ -19,8 +19,10 @@ namespace event {
 namespace {
 uint64_t CurrentMilliseconds()
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    return std::chrono::duration_cast<std::chrono::milliseconds> \
+        (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
+
 }
 
 BuiltinLoop::BuiltinLoop()
@@ -70,8 +72,9 @@ void BuiltinLoop::onTimeExpired()
 
 void BuiltinLoop::runLoop(Mode mode)
 {
-    std::array<struct epoll_event, MAX_LOOP_ENTRIES> events;
-    memset(events.data(), 0 , events.size());
+    std::vector<struct epoll_event> events;
+    events.resize(max_loop_entries_);
+
     running_ = (mode == Loop::Mode::kForever);
     int64_t wait_time = 0;
 
@@ -96,6 +99,13 @@ void BuiltinLoop::runLoop(Mode mode)
 
             if (event_data->handler)
                 event_data->handler(event_data->fd, events.at(i).events, event_data->obj);
+        }
+
+        /// If the receiver array size is full, increase its size
+        if (fds >= max_loop_entries_) {
+            std::vector<struct epoll_event> temp_events;
+            temp_events.resize(++max_loop_entries_);
+            events.swap(temp_events);
         }
 
     } while (running_);

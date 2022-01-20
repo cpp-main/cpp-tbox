@@ -6,8 +6,8 @@
 #include "tbox/base/cabinet.hpp"
 #include "../../common_loop.h"
 
-#ifndef MAX_LOOP_ENTRIES
-#define MAX_LOOP_ENTRIES (1024)
+#ifndef DEFAULT_MAX_LOOP_ENTRIES
+#define DEFAULT_MAX_LOOP_ENTRIES (256)
 #endif
 
 namespace tbox {
@@ -76,15 +76,13 @@ class BuiltinLoop : public CommonLoop {
     };
 
   private:
+    int max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
     int epoll_fd_{ -1 };
     bool running_{ true };
     TimerEvent *sp_exit_timer_{ nullptr };
 
-    //std::vector<Timer> timers_{ };
     std::vector<Timer *> timer_min_heap_;
     cabinet::Cabinet<Timer> timer_cabinet_;
-    //uint64_t timer_id_{ 0 };
-    //std::function<bool (const Timer &x, const Timer &y)> cmp_{[](const Timer &x, const Timer &y){ return x.expired > y. expired; }};
 };
 
 }
