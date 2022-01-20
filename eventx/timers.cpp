@@ -68,8 +68,9 @@ Timers::Token Timers::Impl::doAfter(const Milliseconds &m_sec, const Callback &c
 
 Timers::Token Timers::Impl::doAt(const TimePoint &time_point, const Callback &cb)
 {
-    LogUndo();
-    return Token();
+    using namespace std::chrono;
+    auto d = duration_cast<Milliseconds>(time_point - system_clock::now());
+    return doAfter(d, cb);
 }
 
 bool Timers::Impl::cancel(const Token &token)
@@ -77,7 +78,7 @@ bool Timers::Impl::cancel(const Token &token)
     auto timer = timers_.remove(token);
     if (timer != nullptr) {
         timer->disable();
-        wp_loop_->runNext([timer] { CHECK_DELETE_OBJ(timer); });
+        wp_loop_->runNext([timer] { delete timer; });
         return true;
     }
 

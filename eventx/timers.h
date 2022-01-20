@@ -35,7 +35,7 @@ class Timers {
 
     bool cancel(const Token &token);
 
-    void cleanup();
+    void cleanup(); //!< WARN: don't invoke in loop
 
   private:
     class Impl;
