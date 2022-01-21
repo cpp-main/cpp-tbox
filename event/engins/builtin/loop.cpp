@@ -25,9 +25,10 @@ uint64_t CurrentMilliseconds()
 
 }
 
-BuiltinLoop::BuiltinLoop()
+BuiltinLoop::BuiltinLoop() :
+    epoll_fd_(epoll_create1(EPOLL_CLOEXEC))
 {
-    epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
+    assert(epoll_fd_ >= 0);
 }
 
 BuiltinLoop::~BuiltinLoop()
@@ -38,12 +39,9 @@ BuiltinLoop::~BuiltinLoop()
 
 void BuiltinLoop::onTimeExpired()
 {
-    if (timer_min_heap_.size() <= 0)
-        return;
-
     auto now = CurrentMilliseconds();
 
-    while (timer_min_heap_.size() > 0) {
+    while (!timer_min_heap_.empty()) {
         auto t = timer_min_heap_.front();
         assert(t != nullptr);
 
@@ -72,20 +70,24 @@ void BuiltinLoop::onTimeExpired()
 
 void BuiltinLoop::runLoop(Mode mode)
 {
-    std::vector<struct epoll_event> events;
-    events.resize(max_loop_entries_);
-
-    running_ = (mode == Loop::Mode::kForever);
-    int64_t wait_time = 0;
-
     if (epoll_fd_ < 0)
         return;
 
+    std::vector<struct epoll_event> events;
+    events.reserve(max_loop_entries_);
+
     runThisBeforeLoop();
 
+    running_ = true;
     do {
         /// Get the top of minimum heap
-        wait_time = timer_min_heap_.size() > 0 ? timer_min_heap_.front()->expired - CurrentMilliseconds() : -1;
+        int64_t wait_time = -1;
+        if (!timer_min_heap_.empty()) {
+            wait_time = timer_min_heap_.front()->expired - CurrentMilliseconds();
+            if (wait_time < 0)  //! 有没有可能存在 expired 比当前早？如果真存在，该怎么处理？
+                wait_time = 0;
+        }
+
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), wait_time);
 
         onTimeExpired();
@@ -104,11 +106,12 @@ void BuiltinLoop::runLoop(Mode mode)
         /// If the receiver array size is full, increase its size
         if (fds >= max_loop_entries_) {
             std::vector<struct epoll_event> temp_events;
-            temp_events.resize(++max_loop_entries_);
+            max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);   /// 按 1.5 倍增长
+            temp_events.reserve(max_loop_entries_);
             events.swap(temp_events);
         }
 
-    } while (running_);
+    } while (running_ && (mode == Loop::Mode::kForever));
 
     runThisAfterLoop();
 }
@@ -120,18 +123,12 @@ void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     } else {
         sp_exit_timer_ = newTimerEvent();
         sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
-        sp_exit_timer_->setCallback(std::bind(&BuiltinLoop::onExitTimeup, this));
+        sp_exit_timer_->setCallback([this] { running_ = false; });
         sp_exit_timer_->enable();
     }
 }
 
-void BuiltinLoop::onExitTimeup()
-{
-    sp_exit_timer_->disable();
-    running_ = false;
-}
-
-cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, TimerCallback handler)
+cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, const TimerCallback &cb)
 {
     if (repeat == 0)
         return cabinet::Token();
@@ -142,12 +139,12 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, TimerCa
     auto now = CurrentMilliseconds();
     Timer *t = new Timer;
     assert(t != nullptr);
+    t->token = this->timer_cabinet_.insert(t);
 
     t->expired = now + interval;
     t->interval = interval;
-    t->handler = handler;
+    t->handler = cb;
     t->repeat = repeat;
-    t->token = this->timer_cabinet_.insert(t);
 
     timer_min_heap_.push_back(t);
     std::push_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
@@ -157,13 +154,15 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, TimerCa
 
 void BuiltinLoop::deleteTimer(const cabinet::Token& token)
 {
-    std::remove_if(timer_min_heap_.begin(), timer_min_heap_.end(),[token](const Timer *t){
-        if (t->token == token) {
-            CHECK_DELETE_RESET_OBJ(t);
-            return true;
+    std::remove_if(timer_min_heap_.begin(), timer_min_heap_.end(),
+        [token] (const Timer *t) {
+            if (t->token == token) {
+                CHECK_DELETE_RESET_OBJ(t);  //!FIXME: 直接删是否合适？
+                return true;
+            }
+            return false;
         }
-        return false;
-    });
+    );
 
     std::make_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
 }
@@ -182,7 +181,6 @@ SignalEvent* BuiltinLoop::newSignalEvent()
 {
     return new EpollSignalEvent(this);
 }
-
 
 }
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+
 #include "tbox/base/cabinet.hpp"
 #include "../../common_loop.h"
 
@@ -44,33 +45,27 @@ class BuiltinLoop : public CommonLoop {
     virtual SignalEvent* newSignalEvent();
 
   public:
-    int epollFd() { return epoll_fd_; }
+    int epollFd() const { return epoll_fd_; }
 
     using TimerCallback = std::function<void()>;
-    cabinet::Token addTimer(uint64_t interval, int64_t repeat, TimerCallback handler = nullptr);
+    cabinet::Token addTimer(uint64_t interval, int64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &);
-
-  protected:
-    void onExitTimeup();
 
   private:
     void onTimeExpired();
 
   private:
-    struct Timer
-    {
+    struct Timer {
+        cabinet::Token token;
         uint64_t interval;
         uint64_t expired;
         uint64_t repeat;
-        cabinet::Token token;
 
         TimerCallback handler;
     };
 
-    struct TimerCmp
-    {
-        bool operator()(const Timer *x, const Timer *y) const
-        {
+    struct TimerCmp {
+        bool operator()(const Timer *x, const Timer *y) const {
             return x->expired > y->expired;
         }
     };
@@ -81,8 +76,8 @@ class BuiltinLoop : public CommonLoop {
     bool running_{ true };
     TimerEvent *sp_exit_timer_{ nullptr };
 
-    std::vector<Timer *> timer_min_heap_;
     cabinet::Cabinet<Timer> timer_cabinet_;
+    std::vector<Timer *> timer_min_heap_;
 };
 
 }
