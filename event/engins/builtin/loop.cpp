@@ -88,7 +88,7 @@ void BuiltinLoop::runLoop(Mode mode)
                 wait_time = 0;
         }
 
-        int fds = epoll_wait(epoll_fd_, events.data(), events.size(), wait_time);
+        int fds = epoll_wait(epoll_fd_, events.data(), events.capacity(), wait_time);
 
         onTimeExpired();
 
