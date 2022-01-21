@@ -74,7 +74,14 @@ void BuiltinLoop::runLoop(Mode mode)
         return;
 
     std::vector<struct epoll_event> events;
-    events.reserve(max_loop_entries_);
+    /*
+     * Why not events.reserve()?
+     * The reserve() method only allocates memory, but leaves it uninitialized,
+     * it only affects capacity(), but size() will be unchanged.
+     * The standard only guarantees that std::vector::data returns a pointer and [data(), data() + size()] is a valid range,
+     * the capacity is not concerned. So we need use resize and ensure the [data(), data() + size()] is a valid range whitch used by epoll_wait.
+     */
+    events.resize(max_loop_entries_);
 
     runThisBeforeLoop();
 
@@ -84,11 +91,11 @@ void BuiltinLoop::runLoop(Mode mode)
         int64_t wait_time = -1;
         if (!timer_min_heap_.empty()) {
             wait_time = timer_min_heap_.front()->expired - CurrentMilliseconds();
-            if (wait_time < 0)  //! 有没有可能存在 expired 比当前早？如果真存在，该怎么处理？
+            if (wait_time < 0) //! If expired is little than now, then we consider this timer invalid and trigger it immediately.
                 wait_time = 0;
         }
 
-        int fds = epoll_wait(epoll_fd_, events.data(), events.capacity(), wait_time);
+        int fds = epoll_wait(epoll_fd_, events.data(), events.size(), wait_time);
 
         onTimeExpired();
 
@@ -103,11 +110,11 @@ void BuiltinLoop::runLoop(Mode mode)
                 event_data->handler(event_data->fd, events.at(i).events, event_data->obj);
         }
 
-        /// If the receiver array size is full, increase its size
+        /// If the receiver array size is full, increase its size with 1.5 times.
         if (fds >= max_loop_entries_) {
             std::vector<struct epoll_event> temp_events;
-            max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);   /// 按 1.5 倍增长
-            temp_events.reserve(max_loop_entries_);
+            max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
+            temp_events.resize(max_loop_entries_);
             events.swap(temp_events);
         }
 
