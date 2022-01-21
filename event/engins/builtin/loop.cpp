@@ -13,8 +13,7 @@
 #include "signal_event.h"
 #include "tbox/base/defines.h"
 
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 namespace {
 uint64_t CurrentMilliseconds()
@@ -37,6 +36,19 @@ BuiltinLoop::~BuiltinLoop()
     CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
 }
 
+int64_t BuiltinLoop::getWaitTime() const
+{
+    /// Get the top of minimum heap
+    int64_t wait_time = -1;
+    if (!timer_min_heap_.empty()) {
+        wait_time = timer_min_heap_.front()->expired - CurrentMilliseconds();
+        if (wait_time < 0) //! If expired is little than now, then we consider this timer invalid and trigger it immediately.
+            wait_time = 0;
+    }
+
+    return wait_time;
+}
+
 void BuiltinLoop::onTimeExpired()
 {
     auto now = CurrentMilliseconds();
@@ -46,7 +58,7 @@ void BuiltinLoop::onTimeExpired()
         assert(t != nullptr);
 
         if (now < t->expired)
-            return;
+            break;
 
         // The top of timer was expired
         if (t->handler)
@@ -85,17 +97,9 @@ void BuiltinLoop::runLoop(Mode mode)
 
     runThisBeforeLoop();
 
-    running_ = true;
+    keep_running_ = (mode == Loop::Mode::kForever);
     do {
-        /// Get the top of minimum heap
-        int64_t wait_time = -1;
-        if (!timer_min_heap_.empty()) {
-            wait_time = timer_min_heap_.front()->expired - CurrentMilliseconds();
-            if (wait_time < 0) //! If expired is little than now, then we consider this timer invalid and trigger it immediately.
-                wait_time = 0;
-        }
-
-        int fds = epoll_wait(epoll_fd_, events.data(), events.size(), wait_time);
+        int fds = epoll_wait(epoll_fd_, events.data(), events.size(), getWaitTime());
 
         onTimeExpired();
 
@@ -112,13 +116,17 @@ void BuiltinLoop::runLoop(Mode mode)
 
         /// If the receiver array size is full, increase its size with 1.5 times.
         if (fds >= max_loop_entries_) {
-            std::vector<struct epoll_event> temp_events;
             max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
+#if 0
+            std::vector<struct epoll_event> temp_events;
             temp_events.resize(max_loop_entries_);
             events.swap(temp_events);
+#else
+            events.resize(max_loop_entries_);
+#endif
         }
 
-    } while (running_ && (mode == Loop::Mode::kForever));
+    } while (keep_running_);
 
     runThisAfterLoop();
 }
@@ -126,16 +134,16 @@ void BuiltinLoop::runLoop(Mode mode)
 void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
     if (wait_time.count() == 0) {
-        running_ = false;
+        keep_running_ = false;
     } else {
         sp_exit_timer_ = newTimerEvent();
         sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
-        sp_exit_timer_->setCallback([this] { running_ = false; });
+        sp_exit_timer_->setCallback([this] { keep_running_ = false; });
         sp_exit_timer_->enable();
     }
 }
 
-cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, const TimerCallback &cb)
+cabinet::Token BuiltinLoop::addTimer(uint64_t interval, int64_t repeat, const TimerCallback &cb)
 {
     if (repeat == 0)
         return cabinet::Token();
@@ -144,8 +152,10 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, const T
         repeat = std::numeric_limits<int64_t>::max();
 
     auto now = CurrentMilliseconds();
+
     Timer *t = new Timer;
     assert(t != nullptr);
+
     t->token = this->timer_cabinet_.insert(t);
 
     t->expired = now + interval;
@@ -161,17 +171,23 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t  interval, int64_t repeat, const T
 
 void BuiltinLoop::deleteTimer(const cabinet::Token& token)
 {
-    std::remove_if(timer_min_heap_.begin(), timer_min_heap_.end(),
-        [token] (const Timer *t) {
-            if (t->token == token) {
-                CHECK_DELETE_RESET_OBJ(t);  //!FIXME: 直接删是否合适？
-                return true;
-            }
-            return false;
-        }
-    );
+    auto timer = timer_cabinet_.remove(token);
+    if (timer == nullptr)
+        return;
 
+#if 0
+    timer_min_heap_.erase(timer);
     std::make_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
+#else
+    //! If we use the above method, it is likely to disrupt order, leading to a wide range of exchanges.
+    //! This method will be a little better.
+    timer->expired = 0;
+    std::make_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
+    std::pop_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
+    timer_min_heap_.pop_back();
+#endif
+
+    runNext([timer] { delete timer; }); //! Delete later, avoid delete itself
 }
 
 FdEvent* BuiltinLoop::newFdEvent()
@@ -189,5 +205,4 @@ SignalEvent* BuiltinLoop::newSignalEvent()
     return new EpollSignalEvent(this);
 }
 
-}
 }

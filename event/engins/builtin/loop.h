@@ -11,13 +11,11 @@
 #define DEFAULT_MAX_LOOP_ENTRIES (256)
 #endif
 
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 typedef void(*event_handler)(int fd, uint32_t events, void *obj);
 
-struct EventData
-{
+struct EventData {
     EventData(int f, void *o, event_handler h, uint32_t e)
         : fd(f)
         , obj(o)
@@ -45,7 +43,7 @@ class BuiltinLoop : public CommonLoop {
     virtual SignalEvent* newSignalEvent();
 
   public:
-    int epollFd() const { return epoll_fd_; }
+    inline int epollFd() const { return epoll_fd_; }
 
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, int64_t repeat, const TimerCallback &cb);
@@ -53,13 +51,14 @@ class BuiltinLoop : public CommonLoop {
 
   private:
     void onTimeExpired();
+    int64_t getWaitTime() const;
 
   private:
     struct Timer {
         cabinet::Token token;
-        uint64_t interval;
-        uint64_t expired;
-        uint64_t repeat;
+        uint64_t interval = 0;
+        uint64_t expired = 0;
+        uint64_t repeat = 0;
 
         TimerCallback handler;
     };
@@ -73,14 +72,13 @@ class BuiltinLoop : public CommonLoop {
   private:
     int max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
     int epoll_fd_{ -1 };
-    bool running_{ true };
+    bool keep_running_{ true };
     TimerEvent *sp_exit_timer_{ nullptr };
 
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer *> timer_min_heap_;
 };
 
-}
 }
 
 #endif //TBOX_EVENT_LIBEPOLL_LOOP_H_20220105
