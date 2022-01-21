@@ -43,7 +43,7 @@ SRC_FILES += \
 	engins/builtin/signal_event.cpp \
 	engins/builtin/timer_event.cpp
 CCXXFLAGS += -DENABLE_BUILTIN=1
-LIB_NAME_EXT =
+LIB_NAME_EXT :=
 endif
 
 CCXXFLAGS += -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)

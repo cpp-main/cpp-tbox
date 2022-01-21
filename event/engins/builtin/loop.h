@@ -13,19 +13,19 @@
 
 namespace tbox::event {
 
-typedef void(*event_handler)(int fd, uint32_t events, void *obj);
+typedef void(*event_cb)(int fd, uint32_t events, void *obj);
 
 struct EventData {
-    EventData(int f, void *o, event_handler h, uint32_t e)
+    EventData(int f, void *o, event_cb h, uint32_t e)
         : fd(f)
         , obj(o)
-        , handler(h)
+        , cb(h)
         , events(e)
     {  }
 
     int fd;
     void *obj;
-    event_handler handler;
+    event_cb cb;
     uint32_t events;
 };
 
@@ -46,8 +46,8 @@ class BuiltinLoop : public CommonLoop {
     inline int epollFd() const { return epoll_fd_; }
 
     using TimerCallback = std::function<void()>;
-    cabinet::Token addTimer(uint64_t interval, int64_t repeat, const TimerCallback &cb);
-    void deleteTimer(const cabinet::Token &);
+    cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
+    void deleteTimer(const cabinet::Token &token);
 
   private:
     void onTimeExpired();
@@ -60,7 +60,7 @@ class BuiltinLoop : public CommonLoop {
         uint64_t expired = 0;
         uint64_t repeat = 0;
 
-        TimerCallback handler;
+        TimerCallback cb;
     };
 
     struct TimerCmp {

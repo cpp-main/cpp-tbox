@@ -61,21 +61,22 @@ void BuiltinLoop::onTimeExpired()
             break;
 
         // The top of timer was expired
-        if (t->handler)
-            t->handler();
-
-        -- t->repeat;
+        if (t->cb)
+            t->cb();
 
         // swap first element and last element
         std::pop_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
-        if (t->repeat > 0) {
+        if (unlikely(t->repeat == 1)) {
+            // remove the last element
+            timer_min_heap_.pop_back();
+            timer_cabinet_.remove(t->token);
+            CHECK_DELETE_RESET_OBJ(t);
+        } else {
             t->expired += t->interval;
             // push the last element to heap again
             std::push_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
-        } else {
-            // remove the last element
-            timer_min_heap_.pop_back();
-            CHECK_DELETE_RESET_OBJ(t);
+            if (t->repeat != 0)
+                --t->repeat;
         }
     }
 }
@@ -110,8 +111,8 @@ void BuiltinLoop::runLoop(Mode mode)
             EventData *event_data = static_cast<EventData *>(events.at(i).data.ptr);
             assert(event_data != nullptr);
 
-            if (event_data->handler)
-                event_data->handler(event_data->fd, events.at(i).events, event_data->obj);
+            if (event_data->cb)
+                event_data->cb(event_data->fd, events.at(i).events, event_data->obj);
         }
 
         /// If the receiver array size is full, increase its size with 1.5 times.
@@ -143,13 +144,9 @@ void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     }
 }
 
-cabinet::Token BuiltinLoop::addTimer(uint64_t interval, int64_t repeat, const TimerCallback &cb)
+cabinet::Token BuiltinLoop::addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb)
 {
-    if (repeat == 0)
-        return cabinet::Token();
-
-    if (repeat < 0)
-        repeat = std::numeric_limits<int64_t>::max();
+    assert(cb);
 
     auto now = CurrentMilliseconds();
 
@@ -160,7 +157,7 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t interval, int64_t repeat, const Ti
 
     t->expired = now + interval;
     t->interval = interval;
-    t->handler = cb;
+    t->cb = cb;
     t->repeat = repeat;
 
     timer_min_heap_.push_back(t);

@@ -49,7 +49,7 @@ bool EpollTimerEvent::enable()
         return true;
 
     if (wp_loop_)
-        token_ = wp_loop_->addTimer(interval_.count(), mode_ == Mode::kOneshot ? 1 : -1, [this]{ onEvent(); });
+        token_ = wp_loop_->addTimer(interval_.count(), mode_ == Mode::kOneshot ? 1 : 0, [this]{ onEvent(); });
 
     is_enabled_ = true;
 
