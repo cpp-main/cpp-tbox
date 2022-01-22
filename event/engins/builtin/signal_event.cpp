@@ -4,13 +4,14 @@
 #include <signal.h>
 #include <cassert>
 #include <cstdlib>
-#include "loop.h"
+
 #include "signal_event.h"
+
+#include <tbox/base/defines.h>
+#include "loop.h"
 #include "fd_event.h"
 
-
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 EpollSignalEvent::EpollSignalEvent(BuiltinLoop *wp_loop) :
      wp_loop_(wp_loop)
@@ -22,10 +23,7 @@ EpollSignalEvent::~EpollSignalEvent()
     assert(cb_level_ == 0);
     disable();
 
-    if (signal_fd_event_) {
-        delete signal_fd_event_;
-        signal_fd_event_ = nullptr;
-    }
+    CHECK_DELETE_RESET_OBJ(signal_fd_event_);
 }
 
 bool EpollSignalEvent::initialize(int signum, Mode mode)
@@ -47,7 +45,8 @@ bool EpollSignalEvent::initialize(int signum, Mode mode)
 
     signal_fd_event_->setCallback(std::bind(&EpollSignalEvent::onEvent, this, std::placeholders::_1));
 
-    if (mode == Mode::kOneshot) is_stop_after_trigger_ = true;
+    if (mode == Mode::kOneshot)
+        is_stop_after_trigger_ = true;
 
     is_inited_ = true;
     return true;
@@ -136,5 +135,4 @@ void EpollSignalEvent::onEvent(short events)
 #endif
 }
 
-}
 }

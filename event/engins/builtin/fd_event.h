@@ -5,8 +5,7 @@
 
 #include <sys/epoll.h>
 
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 class BuiltinLoop;
 struct EventData;
@@ -46,7 +45,6 @@ class EpollFdEvent : public FdEvent {
 
 };
 
-}
 }
 
 #endif //TBOX_EVENT_LIBEPOLL_FD_EVENT_H_20220110

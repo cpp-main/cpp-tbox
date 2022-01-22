@@ -3,8 +3,7 @@
 #include "fd_event.h"
 #include "loop.h"
 
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 EpollFdEvent::EpollFdEvent(BuiltinLoop *wp_loop) :
     wp_loop_(wp_loop),
@@ -144,5 +143,4 @@ void EpollFdEvent::onEvent(short events)
 #endif
 }
 
-}
 }

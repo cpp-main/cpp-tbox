@@ -5,8 +5,7 @@
 #include "../../timer_event.h"
 
 
-namespace tbox {
-namespace event {
+namespace tbox::event {
 
 class BuiltinLoop;
 
@@ -42,7 +41,6 @@ class EpollTimerEvent : public TimerEvent {
     cabinet::Token token_;
 };
 
-}
 }
 
 #endif //TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
