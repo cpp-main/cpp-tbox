@@ -114,6 +114,14 @@ void CommonLoop::runNext(const Func &func)
     run_next_func_queue_.push_back(func);
 }
 
+void CommonLoop::run(const Func &func)
+{
+    if (isInLoopThread())
+        run_next_func_queue_.push_back(func);
+    else
+        runInLoop(func);
+}
+
 void CommonLoop::handleNextFunc()
 {
     while (!run_next_func_queue_.empty()) {
@@ -159,7 +167,9 @@ void CommonLoop::onGotRunInLoopFunc(short)
 
 void CommonLoop::cleanupDeferredTasks()
 {
-    while (!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) {
+    int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
+    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
+            && remain_loop_count-- > 0) {
         handleNextFunc();
         while (!run_in_loop_func_queue_.empty()) {
             Func &func = run_in_loop_func_queue_.front();
@@ -171,6 +181,9 @@ void CommonLoop::cleanupDeferredTasks()
             run_in_loop_func_queue_.pop_front();
         }
     }
+
+    if (remain_loop_count == 0)
+        LogWarn("found recursive actions, force quit");
 }
 
 void CommonLoop::commitRequest()

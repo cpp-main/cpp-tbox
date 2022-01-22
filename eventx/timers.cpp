@@ -24,10 +24,12 @@ class Timers::Impl {
   private:
     event::Loop *wp_loop_;
     cabinet::Cabinet<event::TimerEvent> timers_;
+    int cb_level_ = 0;
 };
 
 Timers::Impl::~Impl()
 {
+    assert(cb_level_ == 0);
     cleanup();
 }
 
@@ -41,7 +43,13 @@ Timers::Token Timers::Impl::doEvery(const Milliseconds &m_sec, const Callback &c
     auto new_timer = wp_loop_->newTimerEvent();
     auto new_token = timers_.insert(new_timer);
     new_timer->initialize(m_sec, event::Event::Mode::kPersist);
-    new_timer->setCallback(std::bind(cb, new_token));
+    new_timer->setCallback(
+        [new_token, cb, this] {
+            ++cb_level_;
+            cb(new_token);
+            --cb_level_;
+        }
+    );
     new_timer->enable();
     return new_token;
 }
@@ -58,7 +66,9 @@ Timers::Token Timers::Impl::doAfter(const Milliseconds &m_sec, const Callback &c
     new_timer->initialize(m_sec, event::Event::Mode::kOneshot);
     new_timer->setCallback(
         [new_token, cb, this] {
+            ++cb_level_;
             cb(new_token);
+            --cb_level_;
             cancel(new_token);
         }
     );
@@ -79,7 +89,7 @@ bool Timers::Impl::cancel(const Token &token)
     if (timer != nullptr) {
         timer->disable();
         if (wp_loop_->isRunning())
-            wp_loop_->runNext([timer] { delete timer; });
+            wp_loop_->run([timer] { delete timer; });
         else
             delete timer;
         return true;
@@ -91,9 +101,12 @@ bool Timers::Impl::cancel(const Token &token)
 void Timers::Impl::cleanup()
 {
     timers_.foreach(
-        [](event::TimerEvent *timer) {
+        [this](event::TimerEvent *timer) {
             timer->disable();
-            delete timer;
+            if (wp_loop_->isRunning())
+                wp_loop_->run([timer]{ delete timer; });
+            else
+                delete timer;
         }
     );
     timers_.clear();

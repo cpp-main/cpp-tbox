@@ -23,8 +23,10 @@ class CommonLoop : public Loop {
   public:
     bool isInLoopThread() override;
     bool isRunning() const override;
+
     void runInLoop(const Func &func) override;
     void runNext(const Func &func) override;
+    void run(const Func &func) override;
 
     Stat getStat() const override;
     void resetStat() override;

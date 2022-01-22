@@ -38,11 +38,13 @@ class Loop {
     //! Loop是否正在运行
     virtual bool isRunning() const = 0;
 
+    //! 委托延后执行动作
     using Func = std::function<void()>;
     virtual void runInLoop(const Func &func) = 0;
     virtual void runNext(const Func &func) = 0;
+    virtual void run(const Func &func) = 0;
     /**
-     * runInLoop() 与 runNext() 区别
+     * runInLoop(), runNext(), run() 区别
      *
      * runInLoop()
      *   功能：注入下一轮将执行的函数，有加锁操作，支持跨线程，跨Loop间调用；
@@ -55,9 +57,15 @@ class Loop {
      *
      * runInLoop() 能替代 runNext()，但 runNext() 比 runInLoop() 更轻量。
      *
-     * 建议：
+     * run()
+     *   功能：自动选择 runNext() 或是 runInLoop()。
+     *         当与Loop在同一线程时，选择 runNext()，否则选择 runInLoop()。
+     *   场景：当不知道该怎么选择，只想让动作尽快被执行时。
+     *   注意：同 runNext()
+     *
+     * 使用建议：
      *   能用 runNext() 的场景就用 runNext()，不能用再使用 runInLoop()。
-     *   如果你嫌麻烦，也不追求高效，一率采用 runInLoop() 也不会出错。
+     *   如果你嫌麻烦，就直接使用 run()。让它自己选择吧。
      */
 
     //! 创建事件
