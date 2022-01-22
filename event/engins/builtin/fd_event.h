@@ -3,6 +3,8 @@
 
 #include "../../fd_event.h"
 
+#include <sys/epoll.h>
+
 namespace tbox {
 namespace event {
 
@@ -24,8 +26,10 @@ class EpollFdEvent : public FdEvent {
 
     virtual Loop* getLoop() const;
 
+  public:
+    static void OnEventCallback(int fd, uint32_t events, void *obj);
+
   protected:
-    static void HandleEvent(int fd, uint32_t events, void *obj);
     void onEvent(short events);
 
   private:
@@ -34,8 +38,12 @@ class EpollFdEvent : public FdEvent {
     bool is_enabled_{ false };
     bool is_stop_after_trigger_ { false };
     CallbackFunc cb_;
+
+    int fd_ = -1;
+    struct epoll_event ev_;
+
     int cb_level_{ 0 };
-    EventData *fd_event_data_{ nullptr };
+
 };
 
 }

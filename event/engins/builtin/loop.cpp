@@ -1,16 +1,20 @@
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <errno.h>
+
+#include <cassert>
+#include <cstring>
 #include <cstdint>
+
 #include <algorithm>
 #include <chrono>
 #include <limits>
-#include <cassert>
-#include <errno.h>
-#include <string.h>
+
 #include "loop.h"
 #include "timer_event.h"
 #include "fd_event.h"
 #include "signal_event.h"
+
 #include "tbox/base/defines.h"
 
 namespace tbox::event {
@@ -108,11 +112,8 @@ void BuiltinLoop::runLoop(Mode mode)
             continue;
 
         for (int i = 0; i < fds; ++i) {
-            EventData *event_data = static_cast<EventData *>(events.at(i).data.ptr);
-            assert(event_data != nullptr);
-
-            if (event_data->cb)
-                event_data->cb(event_data->fd, events.at(i).events, event_data->obj);
+            epoll_event &ev = events.at(i);
+            EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
         }
 
         /// If the receiver array size is full, increase its size with 1.5 times.

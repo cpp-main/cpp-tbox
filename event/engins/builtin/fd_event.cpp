@@ -1,6 +1,5 @@
 #include <cassert>
 #include <cstring>
-#include <sys/epoll.h>
 #include "fd_event.h"
 #include "loop.h"
 
@@ -13,7 +12,7 @@ EpollFdEvent::EpollFdEvent(BuiltinLoop *wp_loop) :
     is_stop_after_trigger_(false),
     cb_level_(0)
 {
-
+    memset(&ev_, 0, sizeof(ev_));
 }
 
 EpollFdEvent::~EpollFdEvent()
@@ -51,10 +50,11 @@ short LocalEventsToEpoll(short local_events)
 bool EpollFdEvent::initialize(int fd, short events, Mode mode)
 {
     disable();
-    uint32_t epoll_events = LocalEventsToEpoll(events);
-    if (!fd_event_data_)
-        fd_event_data_ = new EventData(fd, this, EpollFdEvent::HandleEvent, epoll_events);
 
+    fd_ = fd;
+    memset(&ev_, 0, sizeof(ev_));
+    ev_.data.ptr = static_cast<void *>(this);
+    ev_.events = LocalEventsToEpoll(events);
 
     if (mode == Mode::kOneshot)
         is_stop_after_trigger_ = true;
@@ -84,15 +84,7 @@ bool EpollFdEvent::enable()
     if (isEnabled())
         return true;
 
-    if (!fd_event_data_)
-        return false;
-
-    struct epoll_event ev;
-    memset(&ev, 0, sizeof(ev));
-    ev.events = fd_event_data_->events;
-    ev.data.ptr = static_cast<void *>(fd_event_data_);
-
-    int ret = epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_ADD, fd_event_data_->fd, &ev);
+    int ret = epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_ADD, fd_, &ev_);
     if (ret != 0)
         return false;
 
@@ -108,11 +100,7 @@ bool EpollFdEvent::disable()
     if (!isEnabled())
         return true;
 
-    if (fd_event_data_) {
-        epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_DEL, fd_event_data_->fd, NULL);
-        delete fd_event_data_;
-        fd_event_data_ = nullptr;
-    }
+    epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_DEL, fd_, NULL);
 
     is_enabled_ = false;
     return true;
@@ -123,14 +111,10 @@ Loop* EpollFdEvent::getLoop() const
     return wp_loop_;
 }
 
-void EpollFdEvent::HandleEvent(int fd, uint32_t events, void *obj)
+void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
 {
-    EpollFdEvent *self = reinterpret_cast<EpollFdEvent*>(obj);
-
-    if (!self)
-        return;
-
-    self->onEvent(events);
+    EpollFdEvent *pthis = static_cast<EpollFdEvent*>(obj);
+    pthis->onEvent(events);
 }
 
 void EpollFdEvent::onEvent(short events)

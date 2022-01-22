@@ -13,22 +13,6 @@
 
 namespace tbox::event {
 
-typedef void(*event_cb)(int fd, uint32_t events, void *obj);
-
-struct EventData {
-    EventData(int f, void *o, event_cb h, uint32_t e)
-        : fd(f)
-        , obj(o)
-        , cb(h)
-        , events(e)
-    {  }
-
-    int fd;
-    void *obj;
-    event_cb cb;
-    uint32_t events;
-};
-
 class BuiltinLoop : public CommonLoop {
   public:
     explicit BuiltinLoop();
