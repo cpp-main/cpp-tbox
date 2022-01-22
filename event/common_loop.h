@@ -18,15 +18,16 @@ namespace event {
 class CommonLoop : public Loop {
   public:
     CommonLoop();
-    virtual ~CommonLoop();
+    ~CommonLoop() override;
 
   public:
-    virtual bool isInLoopThread();
-    virtual void runInLoop(const Func &func);
-    virtual void runNext(const Func &func);
+    bool isInLoopThread() override;
+    bool isRunning() const override;
+    void runInLoop(const Func &func) override;
+    void runNext(const Func &func) override;
 
-    virtual Stat getStat() const;
-    virtual void resetStat();
+    Stat getStat() const override;
+    void resetStat() override;
 
   public:
 #ifdef ENABLE_STAT
@@ -40,17 +41,20 @@ class CommonLoop : public Loop {
 
     void onGotRunInLoopFunc(short);
 
+    void cleanupDeferredTasks();
+
     void commitRequest();
     void finishRequest();
 
   private:
-    std::mutex lock_;
+    mutable std::mutex lock_;
 
     std::thread::id loop_thread_id_;
 
     bool has_unhandle_req_;
     int read_fd_, write_fd_;
     FdEvent *sp_read_event_;
+
     std::deque<Func> run_in_loop_func_queue_;
     std::deque<Func> run_next_func_queue_;
 

@@ -33,6 +33,12 @@ bool CommonLoop::isInLoopThread()
     return std::this_thread::get_id() == loop_thread_id_;
 }
 
+bool CommonLoop::isRunning() const
+{
+    std::lock_guard<std::mutex> g(lock_);
+    return sp_read_event_ != nullptr;
+}
+
 void CommonLoop::runThisBeforeLoop()
 {
     int fds[2] = { 0 };
@@ -73,8 +79,9 @@ void CommonLoop::runThisBeforeLoop()
 void CommonLoop::runThisAfterLoop()
 {
     std::lock_guard<std::mutex> g(lock_);
-    loop_thread_id_ = std::thread::id();
+    cleanupDeferredTasks();
 
+    loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
     if (sp_read_event_ != nullptr) {
         delete sp_read_event_;
         close(write_fd_);
@@ -122,6 +129,14 @@ void CommonLoop::handleNextFunc()
 
 void CommonLoop::onGotRunInLoopFunc(short)
 {
+    /**
+     * NOTICE:
+     * 这里使用 tmp 将 run_in_loop_func_queue_ 中的内容交换出去。然后再从 tmp 逐一取任务出来执行。
+     * 其目的在于腾空 run_in_loop_func_queue_，让新 runInLoop() 的任务则会在下一轮循环中执行。
+     * 从而防止无限 runInLoop() 引起的死循环，导致其它事件得不到处理。
+     *
+     * 这点与 runNext() 不同
+     */
     std::deque<Func> tmp;
     {
         std::lock_guard<std::mutex> g(lock_);
@@ -139,6 +154,22 @@ void CommonLoop::onGotRunInLoopFunc(short)
             handleNextFunc();
         }
         tmp.pop_front();
+    }
+}
+
+void CommonLoop::cleanupDeferredTasks()
+{
+    while (!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) {
+        handleNextFunc();
+        while (!run_in_loop_func_queue_.empty()) {
+            Func &func = run_in_loop_func_queue_.front();
+            if (func) {
+                ++cb_level_;
+                func();
+                --cb_level_;
+            }
+            run_in_loop_func_queue_.pop_front();
+        }
     }
 }
 

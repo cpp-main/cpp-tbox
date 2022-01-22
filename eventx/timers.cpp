@@ -78,7 +78,10 @@ bool Timers::Impl::cancel(const Token &token)
     auto timer = timers_.remove(token);
     if (timer != nullptr) {
         timer->disable();
-        wp_loop_->runNext([timer] { delete timer; });
+        if (wp_loop_->isRunning())
+            wp_loop_->runNext([timer] { delete timer; });
+        else
+            delete timer;
         return true;
     }
 
