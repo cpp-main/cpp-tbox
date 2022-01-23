@@ -165,6 +165,7 @@ void CommonLoop::onGotRunInLoopFunc(short)
     }
 }
 
+//! 清理 run_in_loop_func_queue_ 与 run_next_func_queue_ 中的任务
 void CommonLoop::cleanupDeferredTasks()
 {
     int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
