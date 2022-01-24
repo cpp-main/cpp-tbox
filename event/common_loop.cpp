@@ -169,8 +169,7 @@ void CommonLoop::cleanupDeferredTasks()
     int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
     while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
             && remain_loop_count-- > 0) {
-        std::deque<Func> tasks;
-        tasks.swap(run_next_func_queue_);
+        std::deque<Func> tasks = std::move(run_next_func_queue_);
         tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
         run_in_loop_func_queue_.clear();
 
