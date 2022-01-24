@@ -36,6 +36,9 @@ CXXFLAGS += -DENABLE_LIBEV=1
 LIB_NAME_EXT := $(LIB_NAME_EXT)e
 endif
 
+TEST_CPP_SRC_FILES = \
+	common_loop_test.cpp \
+
 CXXFLAGS := -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)
 
 ifeq ($(ENABLE_STAT), yes)

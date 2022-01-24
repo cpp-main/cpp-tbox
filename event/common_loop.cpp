@@ -1,6 +1,5 @@
 #include "common_loop.h"
 
-#include <mutex>
 #include <thread>
 #include <unistd.h>
 #include <fcntl.h>
@@ -29,13 +28,13 @@ CommonLoop::~CommonLoop()
 
 bool CommonLoop::isInLoopThread()
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     return std::this_thread::get_id() == loop_thread_id_;
 }
 
 bool CommonLoop::isRunning() const
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     return sp_read_event_ != nullptr;
 }
 
@@ -62,7 +61,7 @@ void CommonLoop::runThisBeforeLoop()
     sp_read_event->setCallback(std::bind(&CommonLoop::onGotRunInLoopFunc, this, _1));
     sp_read_event->enable();
 
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
     read_fd_ = read_fd;
     write_fd_ = write_fd;
@@ -78,7 +77,7 @@ void CommonLoop::runThisBeforeLoop()
 
 void CommonLoop::runThisAfterLoop()
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     cleanupDeferredTasks();
 
     loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
@@ -95,7 +94,7 @@ void CommonLoop::runThisAfterLoop()
 
 void CommonLoop::runInLoop(const Func &func)
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     run_in_loop_func_queue_.push_back(func);
 
     if (sp_read_event_ == nullptr)
@@ -147,7 +146,7 @@ void CommonLoop::onGotRunInLoopFunc(short)
      */
     std::deque<Func> tmp;
     {
-        std::lock_guard<std::mutex> g(lock_);
+        std::lock_guard<std::recursive_mutex> g(lock_);
         run_in_loop_func_queue_.swap(tmp);
         finishRequest();
     }
@@ -171,15 +170,18 @@ void CommonLoop::cleanupDeferredTasks()
     int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
     while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
             && remain_loop_count-- > 0) {
-        handleNextFunc();
-        while (!run_in_loop_func_queue_.empty()) {
-            Func &func = run_in_loop_func_queue_.front();
+        std::deque<Func> tasks = std::move(run_next_func_queue_);
+        tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
+        run_in_loop_func_queue_.clear();
+
+        while (!tasks.empty()) {
+            Func &func = tasks.front();
             if (func) {
                 ++cb_level_;
                 func();
                 --cb_level_;
             }
-            run_in_loop_func_queue_.pop_front();
+            tasks.pop_front();
         }
     }
 

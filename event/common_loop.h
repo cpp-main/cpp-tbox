@@ -49,7 +49,7 @@ class CommonLoop : public Loop {
     void finishRequest();
 
   private:
-    mutable std::mutex lock_;
+    mutable std::recursive_mutex lock_;
 
     std::thread::id loop_thread_id_;
 
