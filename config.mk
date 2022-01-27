@@ -6,5 +6,6 @@ app_y += network
 app_y += coroutine
 app_y += mqtt
 app_y += log2file
+app_y += iac
 app_y += main
 app_y += sample
