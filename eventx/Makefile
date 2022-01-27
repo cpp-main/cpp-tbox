@@ -5,17 +5,17 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	thread_pool.h \
-	timers.h \
+	timer_pool.h \
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
-	timers.cpp \
+	timer_pool.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	thread_pool_test.cpp \
-	timers_test.cpp \
+	timer_pool_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
 ENABLE_SHARED_LIB = no

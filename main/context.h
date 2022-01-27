@@ -3,7 +3,7 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/eventx/thread_pool.h>
-#include <tbox/eventx/timers.h>
+#include <tbox/eventx/timer_pool.h>
 
 namespace tbox::main {
 
@@ -12,7 +12,7 @@ class Context {
   public:
     virtual event::Loop* loop() const = 0;
     virtual eventx::ThreadPool* thread_pool() const = 0;
-    virtual eventx::Timers* timers() const = 0;
+    virtual eventx::TimerPool* timer_pool() const = 0;
 };
 
 }

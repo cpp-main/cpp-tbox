@@ -1,4 +1,4 @@
-#include "timers.h"
+#include "timer_pool.h"
 
 #include <cassert>
 
@@ -8,7 +8,7 @@
 
 namespace tbox::eventx {
 
-class Timers::Impl {
+class TimerPool::Impl {
   public:
     Impl(event::Loop *wp_loop) : wp_loop_(wp_loop) { }
     ~Impl();
@@ -27,13 +27,13 @@ class Timers::Impl {
     int cb_level_ = 0;
 };
 
-Timers::Impl::~Impl()
+TimerPool::Impl::~Impl()
 {
     assert(cb_level_ == 0);
     cleanup();
 }
 
-Timers::Token Timers::Impl::doEvery(const Milliseconds &m_sec, const Callback &cb)
+TimerPool::Token TimerPool::Impl::doEvery(const Milliseconds &m_sec, const Callback &cb)
 {
     if (!cb) {
         LogWarn("cb == nullptr");
@@ -54,7 +54,7 @@ Timers::Token Timers::Impl::doEvery(const Milliseconds &m_sec, const Callback &c
     return new_token;
 }
 
-Timers::Token Timers::Impl::doAfter(const Milliseconds &m_sec, const Callback &cb)
+TimerPool::Token TimerPool::Impl::doAfter(const Milliseconds &m_sec, const Callback &cb)
 {
     if (!cb) {
         LogWarn("cb == nullptr");
@@ -76,14 +76,14 @@ Timers::Token Timers::Impl::doAfter(const Milliseconds &m_sec, const Callback &c
     return new_token;
 }
 
-Timers::Token Timers::Impl::doAt(const TimePoint &time_point, const Callback &cb)
+TimerPool::Token TimerPool::Impl::doAt(const TimePoint &time_point, const Callback &cb)
 {
     using namespace std::chrono;
     auto d = duration_cast<Milliseconds>(time_point - system_clock::now());
     return doAfter(d, cb);
 }
 
-bool Timers::Impl::cancel(const Token &token)
+bool TimerPool::Impl::cancel(const Token &token)
 {
     auto timer = timers_.remove(token);
     if (timer != nullptr) {
@@ -98,7 +98,7 @@ bool Timers::Impl::cancel(const Token &token)
     return false;
 }
 
-void Timers::Impl::cleanup()
+void TimerPool::Impl::cleanup()
 {
     timers_.foreach(
         [this](event::TimerEvent *timer) {
@@ -116,38 +116,38 @@ void Timers::Impl::cleanup()
 // wrapper
 /////////////////////////////////////////////////////////////////////////////
 
-Timers::Timers(event::Loop *wp_loop) :
+TimerPool::TimerPool(event::Loop *wp_loop) :
     impl_(new Impl(wp_loop))
 {
     assert(impl_ != nullptr);
 }
 
-Timers::~Timers()
+TimerPool::~TimerPool()
 {
     delete impl_;
 }
 
-Timers::Token Timers::doEvery(const Milliseconds &m_sec, const Callback &cb)
+TimerPool::Token TimerPool::doEvery(const Milliseconds &m_sec, const Callback &cb)
 {
     return impl_->doEvery(m_sec, cb);
 }
 
-Timers::Token Timers::doAfter(const Milliseconds &m_sec, const Callback &cb)
+TimerPool::Token TimerPool::doAfter(const Milliseconds &m_sec, const Callback &cb)
 {
     return impl_->doAfter(m_sec, cb);
 }
 
-Timers::Token Timers::doAt(const TimePoint &time_point, const Callback &cb)
+TimerPool::Token TimerPool::doAt(const TimePoint &time_point, const Callback &cb)
 {
     return impl_->doAt(time_point, cb);
 }
 
-bool Timers::cancel(const Token &token)
+bool TimerPool::cancel(const Token &token)
 {
     return impl_->cancel(token);
 }
 
-void Timers::cleanup()
+void TimerPool::cleanup()
 {
     impl_->cleanup();
 }

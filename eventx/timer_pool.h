@@ -1,5 +1,5 @@
-#ifndef TBOX_EVENTX_TIMERS_H_20220119
-#define TBOX_EVENTX_TIMERS_H_20220119
+#ifndef TBOX_EVENTX_TIMER_POOL_H_20220119
+#define TBOX_EVENTX_TIMER_POOL_H_20220119
 
 #include <string>
 #include <functional>
@@ -14,7 +14,7 @@ namespace tbox::eventx {
 
 //! 定时任务管理器
 //! 让开发者轻松创建定时任务而不必关心定时器的生命期
-class Timers {
+class TimerPool {
   public:
     using Token = cabinet::Token;
     using Callback = std::function<void(const Token &)>;
@@ -22,11 +22,11 @@ class Timers {
     using TimePoint = std::chrono::system_clock::time_point;
 
   public:
-    explicit Timers(event::Loop *wp_loop);
-    virtual ~Timers();
+    explicit TimerPool(event::Loop *wp_loop);
+    virtual ~TimerPool();
 
-    NONCOPYABLE(Timers);
-    IMMOVABLE(Timers);
+    NONCOPYABLE(TimerPool);
+    IMMOVABLE(TimerPool);
 
   public:
     Token doEvery(const Milliseconds &m_sec, const Callback &cb);
@@ -47,4 +47,4 @@ class Timers {
 
 }
 
-#endif //TBOX_EVENTX_TIMERS_H_20220119
+#endif //TBOX_EVENTX_TIMER_POOL_H_20220119

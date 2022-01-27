@@ -10,16 +10,16 @@ namespace tbox::main {
 ContextImp::ContextImp() :
     sp_loop_(event::Loop::New()),
     sp_thread_pool_(new eventx::ThreadPool(sp_loop_)),
-    sp_timers_(new eventx::Timers(sp_loop_))
+    sp_timer_pool_(new eventx::TimerPool(sp_loop_))
 {
     assert(sp_loop_ != nullptr);
     assert(sp_thread_pool_ != nullptr);
-    assert(sp_timers_ != nullptr);
+    assert(sp_timer_pool_ != nullptr);
 }
 
 ContextImp::~ContextImp()
 {
-    delete sp_timers_;
+    delete sp_timer_pool_;
     delete sp_thread_pool_;
     delete sp_loop_;
 }
@@ -52,7 +52,7 @@ bool ContextImp::initialize(const Json &cfg)
 
 void ContextImp::cleanup()
 {
-    sp_timers_->cleanup();
+    sp_timer_pool_->cleanup();
     sp_thread_pool_->cleanup();
 }
 
