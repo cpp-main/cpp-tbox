@@ -37,9 +37,9 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 
 - 创建 http 模块，实现 Http 相关的 Server 与 Client 端；
 - 在 event 中支持 buildin 事件驱动；
-- 在 eventx 中支持定时器管理器 timers，实现随心创建定时执行任务；
 - 在 network 中支持 TLS；
 - 实现异步日志输出模块；
 - 实现类似于 shell 的命令交互，并添加到 main 中；
 - 实现使用 CMake 进行工程管理；
 - 创建 CoAP 模块，实现 CoAP 的客户端与服务端；
+- 实现Broker，使模块间可以订阅与发送消息
