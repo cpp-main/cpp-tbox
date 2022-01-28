@@ -1,7 +1,7 @@
-LIB_NAME = telnet
+LIB_NAME = shell
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	telnetd.h \
@@ -12,7 +12,7 @@ CPP_SRC_FILES = \
 	shell.cpp \
 	impl/shell.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"telnetd"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"shell"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	telnetd_test.cpp \
