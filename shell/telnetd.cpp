@@ -1,8 +1,11 @@
 #include "telnetd.h"
 #include <iostream>
+#include <map>
 #include <tbox/network/tcp_server.h>
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
+
+#include "interface.h"
 
 namespace tbox::shell {
 
@@ -12,16 +15,21 @@ using namespace event;
 using namespace network;
 using namespace std::placeholders;
 
-class Telnetd::Impl {
+class Telnetd::Impl : public Connection {
   public:
     Impl(event::Loop *wp_loop, ShellInteract *wp_shell);
-    ~Impl();
+    virtual ~Impl();
 
   public:
     bool initialize(const std::string &bind_addr);
     bool start();
     void stop();
     void cleanup();
+
+  public:
+    bool send(const Session &session, const std::string &str) override;
+    bool endSession(const Session &session) override;
+    bool isValid(const Session &session) const override;
 
   protected:
     void onTcpConnected(const TcpServer::Client &client);
@@ -32,6 +40,9 @@ class Telnetd::Impl {
     Loop *wp_loop_ = nullptr;
     ShellInteract *wp_shell_ = nullptr;
     TcpServer *sp_tcp_ = nullptr;
+
+    std::map<Session, TcpServer::Client> session_to_client_;
+    std::map<TcpServer::Client, Session> client_to_session_;
 };
 
 Telnetd::Telnetd(event::Loop *wp_loop, ShellInteract *wp_shell) :
@@ -107,38 +118,58 @@ void Telnetd::Impl::cleanup()
     sp_tcp_->cleanup();
 }
 
-bool Telnetd::send(const Session &session, const std::string &str)
+bool Telnetd::Impl::send(const Session &session, const std::string &str)
 {
-    LogUndo();
-    return false;
+    auto client = session_to_client_.at(session);
+    if (session.isNull())
+        return false;
+
+    sp_tcp_->send(client, str.c_str(), str.size());
+    return true;
 }
 
-bool Telnetd::endSession(const Session &session)
+bool Telnetd::Impl::endSession(const Session &session)
 {
-    LogUndo();
-    return false;
+    auto client = session_to_client_.at(session);
+    if (client.isNull())
+        return false;
+
+    client_to_session_.erase(client);
+    session_to_client_.erase(session);
+    sp_tcp_->disconnect(client);
+    return true;
 }
 
-bool Telnetd::isValid(const Session &session) const
+bool Telnetd::Impl::isValid(const Session &session) const
 {
-    LogUndo();
-    return false;
+    return session_to_client_.find(session) != session_to_client_.end();
 }
 
 void Telnetd::Impl::onTcpConnected(const TcpServer::Client &client)
 {
     cout << "from " << client.id() << " connected" << endl;
+    auto session = wp_shell_->newSession(this);
+    client_to_session_[client] = session;
+    session_to_client_[session] = client;
 }
 
 void Telnetd::Impl::onTcpDisconnected(const TcpServer::Client &client)
 {
     cout << "from " << client.id() << " disconnected" << endl;
+    auto session = client_to_session_.at(client);
+    client_to_session_.erase(client);
+    session_to_client_.erase(session);
 }
 
 void Telnetd::Impl::onTcpReceived(const TcpServer::Client &client, Buffer &buff)
 {
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
     cout << "from " << client.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
+
+    auto session = client_to_session_.at(client);
+    std::string str(reinterpret_cast<const char*>(buff.readableBegin()), buff.readableSize());
+    wp_shell_->input(session, str);
+
     buff.hasReadAll();
 }
 
