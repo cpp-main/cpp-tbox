@@ -2,12 +2,14 @@
 #define TBOX_TELNET_H_20220127
 
 #include <tbox/event/loop.h>
+#include <tbox/base/cabinet.hpp>
+#include "shell.h"
 
 namespace tbox::telnetd {
 
 class Telnetd {
   public:
-    explicit Telnetd(event::Loop *wp_loop);
+    explicit Telnetd(event::Loop *wp_loop, Shell *wp_shell);
     virtual ~Telnetd();
 
   public:

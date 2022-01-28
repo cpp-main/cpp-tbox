@@ -5,10 +5,12 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	telnetd.h \
+	shell.h \
 
 CPP_SRC_FILES = \
 	telnetd.cpp \
-	impl/impl.cpp \
+	shell.cpp \
+	impl/shell.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"telnetd"' $(CXXFLAGS)
 
