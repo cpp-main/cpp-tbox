@@ -1,15 +1,14 @@
-#ifndef TBOX_TELNET_H_20220127
-#define TBOX_TELNET_H_20220127
+#ifndef TBOX_SHELL_TELNETD_H_20220127
+#define TBOX_SHELL_TELNETD_H_20220127
 
+#include "interface.h"
 #include <tbox/event/loop.h>
-#include <tbox/base/cabinet.hpp>
-#include "shell.h"
 
-namespace tbox::telnetd {
+namespace tbox::shell {
 
-class Telnetd {
+class Telnetd : public Connection {
   public:
-    explicit Telnetd(event::Loop *wp_loop, Shell *wp_shell);
+    explicit Telnetd(event::Loop *wp_loop, ShellInteract *wp_shell);
     virtual ~Telnetd();
 
   public:
@@ -26,4 +25,4 @@ class Telnetd {
 
 }
 
-#endif //TBOX_TELNET_H_20220127
+#endif //TBOX_SHELL_TELNETD_H_20220127

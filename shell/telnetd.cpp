@@ -3,7 +3,7 @@
 #include <tbox/network/tcp_server.h>
 #include <tbox/util/string.h>
 
-namespace tbox::telnetd {
+namespace tbox::shell {
 
 using namespace std;
 using namespace util;
@@ -13,7 +13,7 @@ using namespace std::placeholders;
 
 class Telnetd::Impl {
   public:
-    Impl(event::Loop *wp_loop, Shell *wp_shell);
+    Impl(event::Loop *wp_loop, ShellInteract *wp_shell);
     ~Impl();
 
   public:
@@ -29,11 +29,11 @@ class Telnetd::Impl {
 
   private:
     Loop *wp_loop_ = nullptr;
-    Shell *wp_shell_ = nullptr;
+    ShellInteract *wp_shell_ = nullptr;
     TcpServer *sp_tcp_ = nullptr;
 };
 
-Telnetd::Telnetd(event::Loop *wp_loop, Shell *wp_shell) :
+Telnetd::Telnetd(event::Loop *wp_loop, ShellInteract *wp_shell) :
     impl_(new Impl(wp_loop, wp_shell))
 {
     assert(impl_ != nullptr);
@@ -64,7 +64,7 @@ void Telnetd::cleanup()
     return impl_->cleanup();
 }
 
-Telnetd::Impl::Impl(event::Loop *wp_loop, Shell *wp_shell) :
+Telnetd::Impl::Impl(event::Loop *wp_loop, ShellInteract *wp_shell) :
     wp_loop_(wp_loop),
     wp_shell_(wp_shell),
     sp_tcp_(new TcpServer(wp_loop))

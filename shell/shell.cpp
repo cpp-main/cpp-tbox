@@ -1,10 +1,9 @@
 #include "shell.h"
 #include <cassert>
-#include <tbox/base/log.h>
 
 #include "impl/shell.h"
 
-namespace tbox::telnetd {
+namespace tbox::shell {
 
 Shell::Shell() :
     impl_(new Impl)
@@ -17,57 +16,44 @@ Shell::~Shell()
     delete impl_;
 }
 
-void Shell::setOutputFunc(const OutputFunc &func)
+Session Shell::newSession(Connection *wp_conn)
 {
-    LogUndo();
-}
-
-Session Shell::newSession()
-{
-    LogUndo();
-    return Session();
+    return impl_->newSession(wp_conn);
 }
 
 bool Shell::deleteSession(const Session &session)
 {
-    LogUndo();
-    return false;
+    return impl_->deleteSession(session);
 }
 
-bool Shell::input(const Session &session, const std::string &input)
+bool Shell::input(const Session &session, const std::string &str)
 {
-    LogUndo();
-    return "";
+    return impl_->input(session, str);
 }
 
 Node Shell::create(const EndNode &info)
 {
-    LogUndo();
-    return Node();
+    return impl_->create(info);
 }
 
 Node Shell::create(const DirNode &info)
 {
-    LogUndo();
-    return Node();
+    return impl_->create(info);
 }
 
 Node Shell::root() const
 {
-    LogUndo();
-    return Node();
+    return impl_->root();
 }
 
 Node Shell::find(const std::string &path) const
 {
-    LogUndo();
-    return Node();
+    return impl_->find(path);
 }
 
 bool Shell::mount(const Node &parent, const Node &child, const std::string &name)
 {
-    LogUndo();
-    return false;
+    return impl_->mount(parent, child, name);
 }
 
 }

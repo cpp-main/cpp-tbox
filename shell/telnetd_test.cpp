@@ -6,7 +6,7 @@
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
-using namespace tbox::telnetd;
+using namespace tbox::shell;
 
 TEST(Telnetd, _)
 {

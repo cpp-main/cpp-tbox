@@ -4,6 +4,9 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 2
 
 HEAD_FILES = \
+	types.h \
+	interface.h \
+	telnetd.h \
 	telnetd.h \
 	shell.h \
 
