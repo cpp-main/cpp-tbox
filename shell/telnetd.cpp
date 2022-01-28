@@ -2,6 +2,7 @@
 #include <iostream>
 #include <tbox/network/tcp_server.h>
 #include <tbox/util/string.h>
+#include <tbox/base/log.h>
 
 namespace tbox::shell {
 
@@ -104,6 +105,24 @@ void Telnetd::Impl::stop()
 void Telnetd::Impl::cleanup()
 {
     sp_tcp_->cleanup();
+}
+
+bool Telnetd::send(const Session &session, const std::string &str)
+{
+    LogUndo();
+    return false;
+}
+
+bool Telnetd::endSession(const Session &session)
+{
+    LogUndo();
+    return false;
+}
+
+bool Telnetd::isValid(const Session &session) const
+{
+    LogUndo();
+    return false;
 }
 
 void Telnetd::Impl::onTcpConnected(const TcpServer::Client &client)

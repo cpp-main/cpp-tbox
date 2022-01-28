@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "telnetd.h"
+#include "shell.h"
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -12,9 +13,12 @@ TEST(Telnetd, _)
 {
     Loop *sp_loop = event::Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
-    Telnetd t(sp_loop);
-    t.initialize("127.0.0.1:12345");
-    t.start();
+
+    Shell shell;
+    Telnetd telnet(sp_loop, &shell);
+
+    telnet.initialize("127.0.0.1:12345");
+    telnet.start();
     sp_loop->runLoop();
-    t.cleanup();
+    telnet.cleanup();
 }

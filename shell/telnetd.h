@@ -17,6 +17,11 @@ class Telnetd : public Connection {
     void stop();
     void cleanup();
 
+  public:
+    bool send(const Session &session, const std::string &str) override;
+    bool endSession(const Session &session) override;
+    bool isValid(const Session &session) const override;
+
   private:
     class Impl;
     Impl *impl_ = nullptr;

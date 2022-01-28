@@ -7,7 +7,6 @@ HEAD_FILES = \
 	types.h \
 	interface.h \
 	telnetd.h \
-	telnetd.h \
 	shell.h \
 
 CPP_SRC_FILES = \
