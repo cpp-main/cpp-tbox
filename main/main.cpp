@@ -83,7 +83,7 @@ int Main(int argc, char **argv)
         if (apps.construct(ctx)) {
             if (ctx.initialize(js_conf)) {
                 if (apps.initialize(js_conf)) {
-                    if (apps.start()) {  //! 启动所有应用
+                    if (ctx.start() && apps.start()) {  //! 启动所有应用
                         Run(ctx, apps, loop_exit_wait);
                     } else {
                         LogWarn("Apps start fail");
@@ -127,6 +127,7 @@ void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
     auto normal_stop_func = [&] {
         LogInfo("Got stop signal");
         apps.stop();
+        ctx.stop();
         ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
         LogInfo("Loop will exit after %d sec", loop_exit_wait);
     };
