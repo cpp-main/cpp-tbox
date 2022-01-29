@@ -16,42 +16,42 @@ Terminal::~Terminal()
     delete impl_;
 }
 
-Session Terminal::newSession(Connection *wp_conn)
+SessionToken Terminal::newSession(Connection *wp_conn)
 {
     return impl_->newSession(wp_conn);
 }
 
-bool Terminal::deleteSession(const Session &session)
+bool Terminal::deleteSession(const SessionToken &session)
 {
     return impl_->deleteSession(session);
 }
 
-bool Terminal::input(const Session &session, const std::string &str)
+bool Terminal::input(const SessionToken &session, const std::string &str)
 {
     return impl_->input(session, str);
 }
 
-Node Terminal::create(const EndNode &info)
+NodeToken Terminal::create(const EndNode &info)
 {
     return impl_->create(info);
 }
 
-Node Terminal::create(const DirNode &info)
+NodeToken Terminal::create(const DirNode &info)
 {
     return impl_->create(info);
 }
 
-Node Terminal::root() const
+NodeToken Terminal::root() const
 {
     return impl_->root();
 }
 
-Node Terminal::find(const std::string &path) const
+NodeToken Terminal::find(const std::string &path) const
 {
     return impl_->find(path);
 }
 
-bool Terminal::mount(const Node &parent, const Node &child, const std::string &name)
+bool Terminal::mount(const NodeToken &parent, const NodeToken &child, const std::string &name)
 {
     return impl_->mount(parent, child, name);
 }

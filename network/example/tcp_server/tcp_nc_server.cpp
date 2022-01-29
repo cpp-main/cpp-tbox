@@ -50,28 +50,28 @@ int main(int argc, char **argv)
 
     //! 定义TcpServer::Client的less函数子，以实现set<T>容器
     struct ClientLess {
-        bool operator () (const TcpServer::Client &lhs,
-                          const TcpServer::Client &rhs) {
+        bool operator () (const TcpServer::ClientToken &lhs,
+                          const TcpServer::ClientToken &rhs) {
             return lhs.less(rhs);
         }
     };
-    set<TcpServer::Client, ClientLess> clients;
+    set<TcpServer::ClientToken, ClientLess> clients;
 
     //! 收到连接时，将client存入到clients中
     server.setConnectedCallback(
-        [&clients] (const TcpServer::Client &client) {
+        [&clients] (const TcpServer::ClientToken &client) {
             clients.insert(client);
         }
     );
     //! 当连接断开时，将client从clients中移除
     server.setDisconnectedCallback(
-        [&clients] (const TcpServer::Client &client) {
+        [&clients] (const TcpServer::ClientToken &client) {
             clients.erase(client);
         }
     );
     //! 收到tcp数据时，通过stdio发送
     server.setReceiveCallback(
-        [&stdio] (const TcpServer::Client &client, Buffer &buff) {
+        [&stdio] (const TcpServer::ClientToken &client, Buffer &buff) {
             stdio.send(buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
         }, 0

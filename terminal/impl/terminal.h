@@ -7,16 +7,19 @@ namespace tbox::terminal {
 
 class Terminal::Impl {
   public:
-    Session newSession(Connection *wp_conn);
-    bool deleteSession(const Session &session);
-    bool input(const Session &session, const std::string &str);
+    SessionToken newSession(Connection *wp_conn);
+    bool deleteSession(const SessionToken &session);
+    bool input(const SessionToken &session, const std::string &str);
 
   public:
-    Node create(const EndNode &info);
-    Node create(const DirNode &info);
-    Node root() const;
-    Node find(const std::string &path) const;
-    bool mount(const Node &parent, const Node &child, const std::string &name);
+    NodeToken create(const EndNode &info);
+    NodeToken create(const DirNode &info);
+    NodeToken root() const;
+    NodeToken find(const std::string &path) const;
+    bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
+
+  protected:
+    class SessionContext {};
 };
 
 }

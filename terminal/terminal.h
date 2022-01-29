@@ -6,22 +6,22 @@
 namespace tbox::terminal {
 
 class Terminal : public TerminalInteract,
-              public TerminalBuild {
+                 public TerminalBuild {
   public:
     Terminal();
     ~Terminal();
 
   public:
-    Session newSession(Connection *wp_conn) override;
-    bool deleteSession(const Session &session) override;
-    bool input(const Session &session, const std::string &str) override;
+    SessionToken newSession(Connection *wp_conn) override;
+    bool deleteSession(const SessionToken &session) override;
+    bool input(const SessionToken &session, const std::string &str) override;
 
   public:
-    Node create(const EndNode &info) override;
-    Node create(const DirNode &info) override;
-    Node root() const override;
-    Node find(const std::string &path) const override;
-    bool mount(const Node &parent, const Node &child, const std::string &name) override;
+    NodeToken create(const EndNode &info) override;
+    NodeToken create(const DirNode &info) override;
+    NodeToken root() const override;
+    NodeToken find(const std::string &path) const override;
+    bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
 
   private:
     class Impl;

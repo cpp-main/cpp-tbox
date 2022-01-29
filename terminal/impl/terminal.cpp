@@ -3,49 +3,49 @@
 
 namespace tbox::terminal {
 
-Session Terminal::Impl::newSession(Connection *wp_conn)
+SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 {
     LogUndo();
-    return Session();
+    return SessionToken();
 }
 
-bool Terminal::Impl::deleteSession(const Session &session)
-{
-    LogUndo();
-    return false;
-}
-
-bool Terminal::Impl::input(const Session &session, const std::string &str)
+bool Terminal::Impl::deleteSession(const SessionToken &session)
 {
     LogUndo();
     return false;
 }
 
-Node Terminal::Impl::create(const EndNode &info)
+bool Terminal::Impl::input(const SessionToken &session, const std::string &str)
 {
     LogUndo();
-    return Node();
+    return false;
 }
 
-Node Terminal::Impl::create(const DirNode &info)
+NodeToken Terminal::Impl::create(const EndNode &info)
 {
     LogUndo();
-    return Node();
+    return NodeToken();
 }
 
-Node Terminal::Impl::root() const
+NodeToken Terminal::Impl::create(const DirNode &info)
 {
     LogUndo();
-    return Node();
+    return NodeToken();
 }
 
-Node Terminal::Impl::find(const std::string &path) const
+NodeToken Terminal::Impl::root() const
 {
     LogUndo();
-    return Node();
+    return NodeToken();
 }
 
-bool Terminal::Impl::mount(const Node &parent, const Node &child, const std::string &name)
+NodeToken Terminal::Impl::find(const std::string &path) const
+{
+    LogUndo();
+    return NodeToken();
+}
+
+bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child, const std::string &name)
 {
     LogUndo();
     return false;

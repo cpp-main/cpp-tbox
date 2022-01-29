@@ -7,11 +7,13 @@
 
 namespace tbox::terminal {
 
-using Session = cabinet::Token;
+class Session;
 
-using Node = cabinet::Token;
+using SessionToken = cabinet::Token;
+using NodeToken = cabinet::Token;
+
 using Args = std::vector<std::string>;
-using Func = std::function<void(const Args &)>;
+using Func = std::function<void(Session &, const Args &)>;
 
 struct EndNode {
     Func func;          //!< 执行函数

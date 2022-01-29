@@ -23,7 +23,7 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using Client = cabinet::Token;
+    using ClientToken = cabinet::Token;
 
     enum class State {
         kNone,      //! 未初始化
@@ -34,9 +34,9 @@ class TcpServer {
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
 
-    using ConnectedCallback     = std::function<void(const Client &)>;
-    using DisconnectedCallback  = std::function<void(const Client &)>;
-    using ReceiveCallback       = std::function<void(const Client &, Buffer &)>;
+    using ConnectedCallback     = std::function<void(const ClientToken &)>;
+    using DisconnectedCallback  = std::function<void(const ClientToken &)>;
+    using ReceiveCallback       = std::function<void(const ClientToken &, Buffer &)>;
 
     //! 设置有新客户端连接时的回调
     void setConnectedCallback(const ConnectedCallback &cb);
@@ -50,21 +50,21 @@ class TcpServer {
     void cleanup(); //!< 清理
 
     //! 向指定客户端发送数据
-    bool send(const Client &client, const void *data_ptr, size_t data_size);
+    bool send(const ClientToken &client, const void *data_ptr, size_t data_size);
     //! 断开指定客户端的连接
-    bool disconnect(const Client &client);
+    bool disconnect(const ClientToken &client);
 
     //! 检查客户端的连接是否有效
-    bool isClientValid(const Client &client) const;
+    bool isClientValid(const ClientToken &client) const;
     //! 获取客户端的地址
-    SockAddr getClientAddress(const Client &client) const;
+    SockAddr getClientAddress(const ClientToken &client) const;
 
     State state() const;
 
   protected:
     void onTcpConnected(TcpConnection *new_conn);
-    void onTcpDisconnected(const Client &client);
-    void onTcpReceived(const Client &client, Buffer &buff);
+    void onTcpDisconnected(const ClientToken &client);
+    void onTcpReceived(const ClientToken &client, Buffer &buff);
 
   private:
     struct Data;
