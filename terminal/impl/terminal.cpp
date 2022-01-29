@@ -32,6 +32,16 @@ class SessionImpl : public Session {
     SessionToken token_;
 };
 
+Terminal::Impl::~Impl()
+{
+    sessions_.foreach(
+        [](SessionImpl *p) {
+            delete p;
+        }
+    );
+    sessions_.clear();
+}
+
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 {
     auto s = new SessionImpl(wp_conn);
@@ -54,7 +64,8 @@ bool Terminal::Impl::input(const SessionToken &token, const std::string &str)
 {
     auto s = sessions_.at(token);
     if (s != nullptr) {
-        LogUndo();
+        LogUndo();  //!TODO
+        s->send(str);
         return true;
     }
     return false;

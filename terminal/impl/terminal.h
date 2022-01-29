@@ -10,6 +10,9 @@ class SessionImpl;
 
 class Terminal::Impl {
   public:
+    ~Impl();
+
+  public:
     SessionToken newSession(Connection *wp_conn);
     bool deleteSession(const SessionToken &session);
     bool input(const SessionToken &session, const std::string &str);

@@ -148,6 +148,7 @@ bool Telnetd::Impl::isValid(const SessionToken &session) const
 void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &client)
 {
     cout << "from " << client.id() << " connected" << endl;
+
     auto session = wp_terminal_->newSession(this);
     client_to_session_[client] = session;
     session_to_client_[session] = client;
@@ -156,9 +157,11 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &client)
 void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &client)
 {
     cout << "from " << client.id() << " disconnected" << endl;
+
     auto session = client_to_session_.at(client);
     client_to_session_.erase(client);
     session_to_client_.erase(session);
+    wp_terminal_->deleteSession(session);
 }
 
 void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &client, Buffer &buff)
