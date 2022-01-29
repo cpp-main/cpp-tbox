@@ -24,7 +24,7 @@ class Terminal::Impl {
     NodeToken find(const std::string &path) const;
     bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
 
-  protected:
+  private:
     cabinet::Cabinet<SessionImpl> sessions_;
 };
 

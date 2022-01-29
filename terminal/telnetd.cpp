@@ -36,6 +36,25 @@ class Telnetd::Impl : public Connection {
     void onTcpDisconnected(const TcpServer::ClientToken &client);
     void onTcpReceived(const TcpServer::ClientToken &client, Buffer &buff);
 
+    enum Cmd {
+        kEOF = 236, kSUSP, kABORT, kEOR, kSE, kNOP, kDM,
+        kBRK, kIP, kAO, kAYT, kEC, kEL, kGA, kSB,
+        kWILL, kWONT, kDO, kDONT,
+        kIAC
+    };
+
+    enum Opt {
+        kECHO = 1,
+        kSTATUS = 5,
+        kCLOCK = 6,
+        kTYPE = 24,
+        kWINDOW = 31,
+        kSPEED = 32,
+    };
+
+    void send(const TcpServer::ClientToken &token, Cmd c, Opt o);
+    void send(const TcpServer::ClientToken &token, Opt o, const uint8_t *p, size_t s);
+
   private:
     Loop *wp_loop_ = nullptr;
     TerminalInteract *wp_terminal_ = nullptr;
@@ -174,6 +193,28 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &client, Buffer &
     wp_terminal_->input(session, str);
 
     buff.hasReadAll();
+}
+
+void Telnetd::Impl::send(const TcpServer::ClientToken &t, Cmd c, Opt o)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, c, o };
+    sp_tcp_->send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::send(const TcpServer::ClientToken &t, Opt o, const uint8_t *p, size_t s)
+{
+    size_t size = s + 5;
+    uint8_t tmp[size] = {
+        [0] = Cmd::kIAC,
+        [1] = Cmd::kSB,
+        [2] = o,
+    };
+
+    memcpy(tmp + 3, p, s);
+    tmp[size-2] = Cmd::kIAC;
+    tmp[size-1] = Cmd::kSE;
+
+    sp_tcp_->send(t, tmp, size);
 }
 
 }
