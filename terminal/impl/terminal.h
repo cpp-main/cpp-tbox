@@ -2,8 +2,11 @@
 #define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
 #include "../terminal.h"
+#include <tbox/base/cabinet.hpp>
 
 namespace tbox::terminal {
+
+class SessionImpl;
 
 class Terminal::Impl {
   public:
@@ -19,7 +22,7 @@ class Terminal::Impl {
     bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
 
   protected:
-    class SessionContext {};
+    cabinet::Cabinet<SessionImpl> sessions_;
 };
 
 }
