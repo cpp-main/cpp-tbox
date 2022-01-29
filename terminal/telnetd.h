@@ -1,15 +1,15 @@
-#ifndef TBOX_SHELL_TELNETD_H_20220127
-#define TBOX_SHELL_TELNETD_H_20220127
+#ifndef TBOX_TERMINAL_TELNETD_H_20220127
+#define TBOX_TERMINAL_TELNETD_H_20220127
 
 #include <tbox/event/loop.h>
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
-class ShellInteract;
+class TerminalInteract;
 
 class Telnetd {
   public:
-    Telnetd(event::Loop *wp_loop, ShellInteract *wp_shell);
+    Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal);
     ~Telnetd();
 
   public:
@@ -26,4 +26,4 @@ class Telnetd {
 
 }
 
-#endif //TBOX_SHELL_TELNETD_H_20220127
+#endif //TBOX_TERMINAL_TELNETD_H_20220127

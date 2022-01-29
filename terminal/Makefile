@@ -1,4 +1,4 @@
-LIB_NAME = shell
+LIB_NAME = terminal
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
 LIB_VERSION_Z = 2
@@ -7,14 +7,14 @@ HEAD_FILES = \
 	types.h \
 	interface.h \
 	telnetd.h \
-	shell.h \
+	terminal.h \
 
 CPP_SRC_FILES = \
 	telnetd.cpp \
-	shell.cpp \
-	impl/shell.cpp \
+	terminal.cpp \
+	impl/terminal.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"shell"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"terminal"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	telnetd_test.cpp \

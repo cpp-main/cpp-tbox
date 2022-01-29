@@ -1,9 +1,9 @@
-#ifndef TBOX_SHELL_INTERFACE_H_20220128
-#define TBOX_SHELL_INTERFACE_H_20220128
+#ifndef TBOX_TERMINAL_INTERFACE_H_20220128
+#define TBOX_TERMINAL_INTERFACE_H_20220128
 
 #include "types.h"
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
 class Connection {
   public:
@@ -12,14 +12,14 @@ class Connection {
     virtual bool isValid(const Session &session) const = 0;
 };
 
-class ShellInteract {
+class TerminalInteract {
   public:
     virtual Session newSession(Connection *wp_conn) = 0;
     virtual bool deleteSession(const Session &session) = 0;
     virtual bool input(const Session &session, const std::string &str) = 0;
 };
 
-class ShellBuild {
+class TerminalBuild {
   public:
     virtual Node create(const EndNode &info) = 0;
     virtual Node create(const DirNode &info) = 0;
@@ -32,4 +32,4 @@ class ShellBuild {
 
 }
 
-#endif //TBOX_SHELL_INTERFACE_H_20220128
+#endif //TBOX_TERMINAL_INTERFACE_H_20220128

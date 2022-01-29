@@ -1,11 +1,11 @@
-#ifndef TBOX_SHELL_TYPES_H_20220128
-#define TBOX_SHELL_TYPES_H_20220128
+#ifndef TBOX_TERMINAL_TYPES_H_20220128
+#define TBOX_TERMINAL_TYPES_H_20220128
 
 #include <string>
 #include <functional>
 #include <tbox/base/cabinet.hpp>
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
 using Session = cabinet::Token;
 
@@ -24,4 +24,4 @@ struct DirNode {
 
 }
 
-#endif //TBOX_SHELL_TYPES_H_20220128
+#endif //TBOX_TERMINAL_TYPES_H_20220128

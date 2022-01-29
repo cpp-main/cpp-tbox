@@ -1,15 +1,15 @@
-#ifndef TBOX_TELNETD_SHELL_H_20220128
-#define TBOX_TELNETD_SHELL_H_20220128
+#ifndef TBOX_TELNETD_TERMINAL_H_20220128
+#define TBOX_TELNETD_TERMINAL_H_20220128
 
 #include "interface.h"
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
-class Shell : public ShellInteract,
-              public ShellBuild {
+class Terminal : public TerminalInteract,
+              public TerminalBuild {
   public:
-    Shell();
-    ~Shell();
+    Terminal();
+    ~Terminal();
 
   public:
     Session newSession(Connection *wp_conn) override;
@@ -30,4 +30,4 @@ class Shell : public ShellInteract,
 
 }
 
-#endif //TBOX_TELNETD_SHELL_H_20220128
+#endif //TBOX_TELNETD_TERMINAL_H_20220128

@@ -7,7 +7,7 @@
 
 #include "interface.h"
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
 using namespace std;
 using namespace util;
@@ -17,7 +17,7 @@ using namespace std::placeholders;
 
 class Telnetd::Impl : public Connection {
   public:
-    Impl(event::Loop *wp_loop, ShellInteract *wp_shell);
+    Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal);
     virtual ~Impl();
 
   public:
@@ -38,15 +38,15 @@ class Telnetd::Impl : public Connection {
 
   private:
     Loop *wp_loop_ = nullptr;
-    ShellInteract *wp_shell_ = nullptr;
+    TerminalInteract *wp_terminal_ = nullptr;
     TcpServer *sp_tcp_ = nullptr;
 
     std::map<Session, TcpServer::Client> session_to_client_;
     std::map<TcpServer::Client, Session> client_to_session_;
 };
 
-Telnetd::Telnetd(event::Loop *wp_loop, ShellInteract *wp_shell) :
-    impl_(new Impl(wp_loop, wp_shell))
+Telnetd::Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
+    impl_(new Impl(wp_loop, wp_terminal))
 {
     assert(impl_ != nullptr);
 }
@@ -76,13 +76,13 @@ void Telnetd::cleanup()
     return impl_->cleanup();
 }
 
-Telnetd::Impl::Impl(event::Loop *wp_loop, ShellInteract *wp_shell) :
+Telnetd::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
     wp_loop_(wp_loop),
-    wp_shell_(wp_shell),
+    wp_terminal_(wp_terminal),
     sp_tcp_(new TcpServer(wp_loop))
 {
     assert(wp_loop_ != nullptr);
-    assert(wp_shell_ != nullptr);
+    assert(wp_terminal_ != nullptr);
     assert(sp_tcp_ != nullptr);
 }
 
@@ -148,7 +148,7 @@ bool Telnetd::Impl::isValid(const Session &session) const
 void Telnetd::Impl::onTcpConnected(const TcpServer::Client &client)
 {
     cout << "from " << client.id() << " connected" << endl;
-    auto session = wp_shell_->newSession(this);
+    auto session = wp_terminal_->newSession(this);
     client_to_session_[client] = session;
     session_to_client_[session] = client;
 }
@@ -168,7 +168,7 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::Client &client, Buffer &buff)
 
     auto session = client_to_session_.at(client);
     std::string str(reinterpret_cast<const char*>(buff.readableBegin()), buff.readableSize());
-    wp_shell_->input(session, str);
+    wp_terminal_->input(session, str);
 
     buff.hasReadAll();
 }

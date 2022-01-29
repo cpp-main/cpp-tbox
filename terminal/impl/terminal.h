@@ -1,11 +1,11 @@
-#ifndef TBOX_TELNETD_SHELL_IMPL_H_20220128
-#define TBOX_TELNETD_SHELL_IMPL_H_20220128
+#ifndef TBOX_TELNETD_TERMINAL_IMPL_H_20220128
+#define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
-#include "../shell.h"
+#include "../terminal.h"
 
-namespace tbox::shell {
+namespace tbox::terminal {
 
-class Shell::Impl {
+class Terminal::Impl {
   public:
     Session newSession(Connection *wp_conn);
     bool deleteSession(const Session &session);
@@ -21,4 +21,4 @@ class Shell::Impl {
 
 }
 
-#endif //TBOX_TELNETD_SHELL_IMPL_H_20220128
+#endif //TBOX_TELNETD_TERMINAL_IMPL_H_20220128

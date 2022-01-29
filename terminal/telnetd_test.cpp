@@ -1,21 +1,21 @@
 #include <gtest/gtest.h>
 
 #include "telnetd.h"
-#include "shell.h"
+#include "terminal.h"
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
-using namespace tbox::shell;
+using namespace tbox::terminal;
 
 TEST(Telnetd, _)
 {
     Loop *sp_loop = event::Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
-    Shell shell;
-    Telnetd telnet(sp_loop, &shell);
+    Terminal terminal;
+    Telnetd telnet(sp_loop, &terminal);
 
     telnet.initialize("127.0.0.1:12345");
     telnet.start();
