@@ -37,8 +37,21 @@ class Telnetd::Impl : public Connection {
     void onTcpReceived(const TcpServer::ClientToken &client, Buffer &buff);
 
     enum Cmd {
-        kEOF = 236, kSUSP, kABORT, kEOR, kSE, kNOP, kDM,
-        kBRK, kIP, kAO, kAYT, kEC, kEL, kGA, kSB,
+        kEOF = 236,
+        kSUSP,
+        kABORT,
+        kEOR,
+        kSE,    //!< Sub end
+        kNOP,
+        kDM,    //!< Data Mark
+        kBRK,   //!< Break
+        kIP,    //!< Interrupt Process
+        kAO,    //!< Abort output
+        kAYT,   //!< Are you here
+        kEC,    //!< Erase character
+        kEL,    //!< Erase line
+        kGA,    //!< Go ahead
+        kSB,    //!< Sub begin
         kWILL, kWONT, kDO, kDONT,
         kIAC
     };
@@ -52,8 +65,16 @@ class Telnetd::Impl : public Connection {
         kSPEED = 32,
     };
 
-    void send(const TcpServer::ClientToken &token, Cmd c, Opt o);
-    void send(const TcpServer::ClientToken &token, Opt o, const uint8_t *p, size_t s);
+    bool send(const TcpServer::ClientToken &token, const void *data_ptr, size_t data_size);
+
+    void sendWill(const TcpServer::ClientToken &client, Opt opt);
+    void sendWont(const TcpServer::ClientToken &client, Opt opt);
+    void sendDo(const TcpServer::ClientToken &client, Opt opt);
+    void sendDont(const TcpServer::ClientToken &client, Opt opt);
+
+    void sendCmd(const TcpServer::ClientToken &client, Cmd cmd);
+
+    void sendSub(const TcpServer::ClientToken &token, Opt o, const uint8_t *p, size_t s);
 
   private:
     Loop *wp_loop_ = nullptr;
@@ -166,16 +187,19 @@ bool Telnetd::Impl::isValid(const SessionToken &session) const
 
 void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &client)
 {
-    cout << "from " << client.id() << " connected" << endl;
+    cout << client.id() << " connected" << endl;
 
     auto session = wp_terminal_->newSession(this);
     client_to_session_[client] = session;
     session_to_client_[session] = client;
+
+    sendDont(client, kECHO);
+    sendCmd(client, kGA);
 }
 
 void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &client)
 {
-    cout << "from " << client.id() << " disconnected" << endl;
+    cout << client.id() << " disconnected" << endl;
 
     auto session = client_to_session_.at(client);
     client_to_session_.erase(client);
@@ -186,7 +210,7 @@ void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &client)
 void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &client, Buffer &buff)
 {
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
-    cout << "from " << client.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
+    cout << "recv from " << client.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
 
     auto session = client_to_session_.at(client);
     std::string str(reinterpret_cast<const char*>(buff.readableBegin()), buff.readableSize());
@@ -195,13 +219,45 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &client, Buffer &
     buff.hasReadAll();
 }
 
-void Telnetd::Impl::send(const TcpServer::ClientToken &t, Cmd c, Opt o)
+bool Telnetd::Impl::send(const TcpServer::ClientToken &token, const void *data_ptr, size_t data_size)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, c, o };
-    sp_tcp_->send(t, tmp, sizeof(tmp));
+    auto hex_str = string::RawDataToHexStr(data_ptr, data_size);
+    cout << "send to " << token.id() << " size " << data_size << ": " << hex_str << endl;
+
+    return sp_tcp_->send(token, data_ptr, data_size);
 }
 
-void Telnetd::Impl::send(const TcpServer::ClientToken &t, Opt o, const uint8_t *p, size_t s)
+void Telnetd::Impl::sendWill(const TcpServer::ClientToken &t, Opt o)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kWILL, o };
+    send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::sendWont(const TcpServer::ClientToken &t, Opt o)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kWONT, o };
+    send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::sendDo(const TcpServer::ClientToken &t, Opt o)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kDO, o };
+    send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::sendDont(const TcpServer::ClientToken &t, Opt o)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kDONT, o };
+    send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::sendCmd(const TcpServer::ClientToken &t, Cmd c)
+{
+    const uint8_t tmp[] = { Cmd::kIAC, c };
+    send(t, tmp, sizeof(tmp));
+}
+
+void Telnetd::Impl::sendSub(const TcpServer::ClientToken &t, Opt o, const uint8_t *p, size_t s)
 {
     size_t size = s + 5;
     uint8_t tmp[size] = {
@@ -214,7 +270,7 @@ void Telnetd::Impl::send(const TcpServer::ClientToken &t, Opt o, const uint8_t *
     tmp[size-2] = Cmd::kIAC;
     tmp[size-1] = Cmd::kSE;
 
-    sp_tcp_->send(t, tmp, size);
+    send(t, tmp, size);
 }
 
 }
