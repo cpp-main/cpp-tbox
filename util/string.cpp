@@ -90,7 +90,7 @@ uint8_t hexCharToValue(char hex_char)
     else if (('a' <= hex_char) && (hex_char <= 'f'))
         return hex_char - 'a' + 10;
     else
-        return 0;
+        throw NotAZaz09Exception();
 }
 
 }
@@ -109,6 +109,31 @@ size_t HexStrToRawData(const std::string &hex_str, void *out_ptr, uint16_t out_l
         ++data_len;
     }
     return data_len;
+}
+
+void HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter)
+{
+    out.clear();
+
+    auto start_pos = hex_str.find_first_not_of(delimiter);
+    while (start_pos != std::string::npos) {
+        auto end_pos = hex_str.find_first_of(delimiter, start_pos);
+        if (end_pos == std::string::npos)
+            end_pos = hex_str.size();
+
+        size_t len = end_pos - start_pos;
+        uint8_t value = 0;
+        if (len == 1) {
+            value = hexCharToValue(hex_str.at(start_pos));
+        } else if (len == 2) {
+            value = hexCharToValue(hex_str.at(start_pos)) << 4;
+            value |= hexCharToValue(hex_str.at(start_pos + 1));
+        } else
+            throw MoreThan2CharException();
+
+        out.push_back(value);
+        start_pos = hex_str.find_first_not_of(delimiter, end_pos);
+    }
 }
 
 void Replace(std::string &target_str, const std::string &pattern_str, const std::string &replace_str,

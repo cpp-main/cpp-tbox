@@ -56,6 +56,20 @@ std::string RawDataToHexStr(const void *data_ptr, uint16_t data_len,
                             bool uppercase = false,
                             const std::string &delimiter = std::string(" "));
 
+//! 字符不是A-Z a-z 0-9
+class NotAZaz09Exception : public std::exception {
+    const char* what() const throw() override {
+        return "character not a-z A-Z 0-9";
+    }
+};
+
+//! 一个个体太长
+class MoreThan2CharException : public std::exception {
+    const char* what() const throw() override {
+        return "more than 2 characters";
+    }
+};
+
 /**
  * \brief       将HEX字串转换成原始数据
  *
@@ -66,6 +80,8 @@ std::string RawDataToHexStr(const void *data_ptr, uint16_t data_len,
  * \return      实际转换的数据长度
  */
 size_t HexStrToRawData(const std::string &hex_str, void *out_ptr, uint16_t out_len);
+
+void HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter = " \t");
 
 /**
  * \brief       替换字串中指定个数的字串
