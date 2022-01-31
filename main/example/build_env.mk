@@ -1,4 +1,4 @@
-STAGING_DIR := ../../../.staging_dir
+STAGING_DIR := ../../../.staging
 
 STAGING_INCLUDE := $(STAGING_DIR)/include
 STAGING_LIB := $(STAGING_DIR)/lib
