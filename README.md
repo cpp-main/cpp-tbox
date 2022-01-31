@@ -36,10 +36,10 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 #### 未来规化
 
 - 创建 http 模块，实现 Http 相关的 Server 与 Client 端；
-- 在 event 中支持 buildin 事件驱动；
+- 在 event 中支持 buildin 事件驱动（进行中 feature-epoll）；
 - 在 network 中支持 TLS；
 - 实现异步日志输出模块；
-- 实现类似于 shell 的命令交互，并添加到 main 中；
+- 实现类似于 shell 的命令交互，并添加到 main 中（进行中 feature-shell）；
 - 实现使用 CMake 进行工程管理；
 - 创建 CoAP 模块，实现 CoAP 的客户端与服务端；
-- 实现Broker，使模块间可以订阅与发送消息
+- 实现Broker，使模块间可以订阅与发送消息（进行中 feature-Broker）；
