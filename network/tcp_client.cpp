@@ -172,6 +172,12 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
     d_->sp_connection = new_conn;
 
     d_->state = State::kConnected;
+
+    if (d_->connected_cb) {
+        ++d_->cb_level;
+        d_->connected_cb();
+        --d_->cb_level;
+    }
 }
 
 void TcpClient::onTcpDisconnected()

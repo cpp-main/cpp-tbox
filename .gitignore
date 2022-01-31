@@ -1,6 +1,9 @@
 tags
 test
 cscope.*
+*.o
+lib*.a
+lib*.so*
 /.staging
 /.install
 /.output
