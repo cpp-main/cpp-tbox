@@ -112,7 +112,7 @@ size_t HexStrToRawData(const std::string &hex_str, void *out_ptr, uint16_t out_l
 }
 
 namespace {
-void HexStrToRawDataWithDelimiter(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter)
+void _HexStrToRawDataWithDelimiter(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter)
 {
     auto start_pos = hex_str.find_first_not_of(delimiter);
     while (start_pos != std::string::npos) {
@@ -135,11 +135,13 @@ void HexStrToRawDataWithDelimiter(const std::string &hex_str, std::vector<uint8_
     }
 }
 
-void HexStrToRawDataWithoutDelimiter(const std::string &hex_str, std::vector<uint8_t> &out)
+void _HexStrToRawDataWithoutDelimiter(const std::string &hex_str, std::vector<uint8_t> &out)
 {
-    for (size_t i = 0; ((i * 2 + 1) < hex_str.size()); ++i) {
-        char h_char = hex_str.at(2 * i);
-        char l_char = hex_str.at(2 * i + 1);
+    auto start_pos = hex_str.find_first_not_of(" \t");
+    auto end_pos = hex_str.find_last_not_of(" \t") + 1;
+    for (size_t i = 0; ((i * 2) < (end_pos - start_pos)); ++i) {
+        char h_char = hex_str.at(start_pos + 2 * i);
+        char l_char = hex_str.at(start_pos + 2 * i + 1);
         uint8_t value = (hexCharToValue(h_char) << 4) | (hexCharToValue(l_char) & 0x0f);
         out.push_back(value);
     }
@@ -151,9 +153,9 @@ size_t HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, co
     out.clear();
 
     if (delimiter.empty())
-        HexStrToRawDataWithoutDelimiter(hex_str, out);
+        _HexStrToRawDataWithoutDelimiter(hex_str, out);
     else
-        HexStrToRawDataWithDelimiter(hex_str, out, delimiter);
+        _HexStrToRawDataWithDelimiter(hex_str, out, delimiter);
 
     return out.size();
 }
@@ -176,5 +178,3 @@ void Replace(std::string &target_str, const std::string &pattern_str, const std:
 }
 
 }
-
-

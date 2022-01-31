@@ -180,6 +180,20 @@ TEST(string, HexStrToRawDataVector9) {
     EXPECT_EQ(out[2], 0x56);
 }
 
+TEST(string, HexStrToRawDataVector10) {
+    std::vector<uint8_t> out;
+    HexStrToRawData("  123456 ", out);
+    EXPECT_EQ(out.size(), 3u);
+    EXPECT_EQ(out[0], 0x12);
+    EXPECT_EQ(out[1], 0x34);
+    EXPECT_EQ(out[2], 0x56);
+}
+
+TEST(string, HexStrToRawDataVector11) {
+    std::vector<uint8_t> out;
+    EXPECT_THROW(HexStrToRawData("12 3456", out), NotAZaz09Exception);
+}
+
 TEST(string, Replace) {
     if (true) { //! 全替换
         std::string t("aa bbaa aab aaaa aab");
