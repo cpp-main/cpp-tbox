@@ -53,11 +53,13 @@ bool ContextImp::initialize(const Json &cfg)
     if (!sp_thread_pool_->initialize(js_thread_pool_min.get<int>(), js_thread_pool_max.get<int>()))
         return false;
 
-    auto &js_telnetd = cfg["telnetd"];
-    if (!js_telnetd.is_null()) {
-        auto &js_telnetd_bind = js_telnetd["bind"];
-        if (sp_telnetd_->initialize(js_telnetd_bind.get<std::string>()))
-            telnetd_init_ok = true;
+    if (cfg.contains("telnetd")) {
+        auto &js_telnetd = cfg["telnetd"];
+        if (js_telnetd.contains("bind")) {
+            auto &js_telnetd_bind = js_telnetd["bind"];
+            if (sp_telnetd_->initialize(js_telnetd_bind.get<std::string>()))
+                telnetd_init_ok = true;
+        }
     }
 
     return true;
