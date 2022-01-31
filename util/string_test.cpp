@@ -94,7 +94,7 @@ TEST(string, HexStrToRawDataFixSizeBuffer) {
 
 TEST(string, HexStrToRawDataVector1) {
     std::vector<uint8_t> out;
-    HexStrToRawData("01 2f Ab 67", out);
+    HexStrToRawData("01 2f Ab 67", out, " \t");
     EXPECT_EQ(out.size(), 4u);
     EXPECT_EQ(out[0], 0x01);
     EXPECT_EQ(out[1], 0x2f);
@@ -112,9 +112,19 @@ TEST(string, HexStrToRawDataVector1_1) {
     EXPECT_EQ(out[3], 0x67);
 }
 
+TEST(string, HexStrToRawDataVector1_2) {
+    std::vector<uint8_t> out;
+    HexStrToRawData(" : 01 :2f : Ab: 67 :", out, ": ");
+    EXPECT_EQ(out.size(), 4u);
+    EXPECT_EQ(out[0], 0x01);
+    EXPECT_EQ(out[1], 0x2f);
+    EXPECT_EQ(out[2], 0xAb);
+    EXPECT_EQ(out[3], 0x67);
+}
+
 TEST(string, HexStrToRawDataVector2) {
     std::vector<uint8_t> out;
-    HexStrToRawData("\t 01 \t23 \t 45\t67\t ", out);
+    HexStrToRawData("\t 01 \t23 \t 45\t67\t ", out, "\t ");
     EXPECT_EQ(out.size(), 4u);
     EXPECT_EQ(out[0], 0x01);
     EXPECT_EQ(out[1], 0x23);
@@ -124,7 +134,7 @@ TEST(string, HexStrToRawDataVector2) {
 
 TEST(string, HexStrToRawDataVector3) {
     std::vector<uint8_t> out;
-    HexStrToRawData("1 2 3 4", out);
+    HexStrToRawData("1 2 3 4", out, " ");
     EXPECT_EQ(out.size(), 4u);
     EXPECT_EQ(out[0], 0x01);
     EXPECT_EQ(out[1], 0x02);
@@ -134,7 +144,7 @@ TEST(string, HexStrToRawDataVector3) {
 
 TEST(string, HexStrToRawDataVector4) {
     std::vector<uint8_t> out;
-    HexStrToRawData("   1     2 ", out);
+    HexStrToRawData("   1     2 ", out, " ");
     EXPECT_EQ(out.size(), 2u);
     EXPECT_EQ(out[0], 0x01);
     EXPECT_EQ(out[1], 0x02);
@@ -147,18 +157,27 @@ TEST(string, HexStrToRawDataVector5) {
 
 TEST(string, HexStrToRawDataVector6) {
     std::vector<uint8_t> out;
-    EXPECT_THROW(HexStrToRawData(" 123  ", out), MoreThan2CharException);
+    EXPECT_THROW(HexStrToRawData(" 123  ", out, " "), MoreThan2CharException);
 }
 
 TEST(string, HexStrToRawDataVector7) {
     std::vector<uint8_t> out;
-    HexStrToRawData("    ", out);
+    HexStrToRawData("    ", out, " ");
     EXPECT_EQ(out.size(), 0u);
 }
 
 TEST(string, HexStrToRawDataVector8) {
     std::vector<uint8_t> out;
-    EXPECT_THROW(HexStrToRawData(" __zs a", out), MoreThan2CharException);
+    EXPECT_THROW(HexStrToRawData(" __zs a", out, " "), MoreThan2CharException);
+}
+
+TEST(string, HexStrToRawDataVector9) {
+    std::vector<uint8_t> out;
+    HexStrToRawData("123456", out);
+    EXPECT_EQ(out.size(), 3u);
+    EXPECT_EQ(out[0], 0x12);
+    EXPECT_EQ(out[1], 0x34);
+    EXPECT_EQ(out[2], 0x56);
 }
 
 TEST(string, Replace) {

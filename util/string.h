@@ -63,7 +63,7 @@ class NotAZaz09Exception : public std::exception {
     }
 };
 
-//! 一个个体太长
+//! 字串个体超过2个
 class MoreThan2CharException : public std::exception {
     const char* what() const throw() override {
         return "more than 2 characters";
@@ -81,7 +81,16 @@ class MoreThan2CharException : public std::exception {
  */
 size_t HexStrToRawData(const std::string &hex_str, void *out_ptr, uint16_t out_len);
 
-void HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter = " \t");
+/**
+ * \brief       将HEX字串转换成原始数据
+ *
+ * \param hex_str   HEX字串
+ * \param out       输出到数据vector
+ * \param delimiter 分隔符，常用的分隔符有 " \t", ": ", ", "
+ *
+ * \return      实际转换的数据长度
+ */
+size_t HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, const std::string &delimiter = "");
 
 /**
  * \brief       替换字串中指定个数的字串
