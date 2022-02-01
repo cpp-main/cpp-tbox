@@ -1,6 +1,7 @@
 #include "telnetd.h"
 #include <iostream>
 #include <map>
+#include <algorithm>
 #include <tbox/network/tcp_server.h>
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
@@ -64,12 +65,7 @@ class Telnetd::Impl : public Connection {
     bool send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size);
 
     void sendString(const TcpServer::ClientToken &ct, const std::string &str);
-
-    void sendWill(const TcpServer::ClientToken &ct, Opt opt);
-    void sendWont(const TcpServer::ClientToken &ct, Opt opt);
-    void sendDo(const TcpServer::ClientToken &ct, Opt opt);
-    void sendDont(const TcpServer::ClientToken &ct, Opt opt);
-
+    void sendNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt);
     void sendCmd(const TcpServer::ClientToken &ct, Cmd cmd);
     void sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8_t *p, size_t s);
 
@@ -78,12 +74,7 @@ class Telnetd::Impl : public Connection {
     void onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff);
 
     void onRecvString(const TcpServer::ClientToken &ct, const std::string &str);
-
-    void onRecvWill(const TcpServer::ClientToken &ct, Opt opt);
-    void onRecvWont(const TcpServer::ClientToken &ct, Opt opt);
-    void onRecvDo(const TcpServer::ClientToken &ct, Opt opt);
-    void onRecvDont(const TcpServer::ClientToken &ct, Opt opt);
-
+    void onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt);
     void onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd);
     void onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s);
 
@@ -204,7 +195,7 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     client_to_session_[ct] = st;
     session_to_client_[st] = ct;
 
-    sendDont(ct, kECHO);
+    sendNego(ct, kDONT, kECHO);
     sendCmd(ct, kGA);
 }
 
@@ -216,18 +207,6 @@ void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
     client_to_session_.erase(ct);
     session_to_client_.erase(st);
     wp_terminal_->deleteSession(st);
-}
-
-void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
-{
-    auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
-    cout << "recv from " << ct.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
-
-    auto st = client_to_session_.at(ct);
-    std::string str(reinterpret_cast<const char*>(buff.readableBegin()), buff.readableSize());
-    wp_terminal_->input(st, str);
-
-    buff.hasReadAll();
 }
 
 bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size)
@@ -243,33 +222,15 @@ void Telnetd::Impl::sendString(const TcpServer::ClientToken &ct, const std::stri
     send(ct, str.data(), str.size());
 }
 
-void Telnetd::Impl::sendWill(const TcpServer::ClientToken &ct, Opt o)
+void Telnetd::Impl::sendNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt o)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kWILL, o };
+    const uint8_t tmp[] = { Cmd::kIAC, cmd, o };
     send(ct, tmp, sizeof(tmp));
 }
 
-void Telnetd::Impl::sendWont(const TcpServer::ClientToken &ct, Opt o)
+void Telnetd::Impl::sendCmd(const TcpServer::ClientToken &ct, Cmd cmd)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kWONT, o };
-    send(ct, tmp, sizeof(tmp));
-}
-
-void Telnetd::Impl::sendDo(const TcpServer::ClientToken &ct, Opt o)
-{
-    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kDO, o };
-    send(ct, tmp, sizeof(tmp));
-}
-
-void Telnetd::Impl::sendDont(const TcpServer::ClientToken &ct, Opt o)
-{
-    const uint8_t tmp[] = { Cmd::kIAC, Cmd::kDONT, o };
-    send(ct, tmp, sizeof(tmp));
-}
-
-void Telnetd::Impl::sendCmd(const TcpServer::ClientToken &ct, Cmd c)
-{
-    const uint8_t tmp[] = { Cmd::kIAC, c };
+    const uint8_t tmp[] = { Cmd::kIAC, cmd};
     send(ct, tmp, sizeof(tmp));
 }
 
@@ -289,27 +250,41 @@ void Telnetd::Impl::sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8
     send(ct, tmp, size);
 }
 
+void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
+{
+    auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
+    cout << "recv from " << ct.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
+
+    while (buff.readableSize() != 0) {
+        auto begin = buff.readableBegin();
+        auto end   = begin + buff.readableSize();
+        auto iter  = std::find(begin, end, Cmd::kIAC);
+        auto size = iter - begin;
+        if (size > 0) {
+            onRecvString(ct, std::string(reinterpret_cast<const char *>(begin), size));
+        } else {
+            uint8_t cmd = begin[1];
+            if (cmd == Cmd::kWILL || cmd == Cmd::kWONT || cmd == Cmd::kDO || cmd == Cmd::kDONT) {
+                onRecvNego(ct, static_cast<Cmd>(cmd), static_cast<Opt>(begin[2]));
+                size = 3;
+            } else if (cmd == Cmd::kSB) {
+                //!TODO
+            } else {
+                onRecvCmd(ct, static_cast<Cmd>(cmd));
+                size = 2;
+            }
+        }
+        buff.hasRead(size);
+    }
+}
+
 void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::string &str)
 {
-    LogUndo();
+    auto st = client_to_session_.at(ct);
+    wp_terminal_->input(st, str);
 }
 
-void Telnetd::Impl::onRecvWill(const TcpServer::ClientToken &ct, Opt opt)
-{
-    LogUndo();
-}
-
-void Telnetd::Impl::onRecvWont(const TcpServer::ClientToken &ct, Opt opt)
-{
-    LogUndo();
-}
-
-void Telnetd::Impl::onRecvDo(const TcpServer::ClientToken &ct, Opt opt)
-{
-    LogUndo();
-}
-
-void Telnetd::Impl::onRecvDont(const TcpServer::ClientToken &ct, Opt opt)
+void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
 {
     LogUndo();
 }
