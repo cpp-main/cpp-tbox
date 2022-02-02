@@ -263,12 +263,31 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff
         if (size > 0) {
             onRecvString(ct, std::string(reinterpret_cast<const char *>(begin), size));
         } else {
+            if (buff.readableSize() < 2)
+                return;
+
+            //! start with IAC
             uint8_t cmd = begin[1];
             if (cmd == Cmd::kWILL || cmd == Cmd::kWONT || cmd == Cmd::kDO || cmd == Cmd::kDONT) {
+                if (buff.readableSize() < 3)
+                    return;
                 onRecvNego(ct, static_cast<Cmd>(cmd), static_cast<Opt>(begin[2]));
                 size = 3;
+
             } else if (cmd == Cmd::kSB) {
-                //!TODO
+                if (buff.readableSize() < 6)
+                    return;
+
+                Opt opt = static_cast<Opt>(begin[2]);
+                auto cmd_end_iac = std::find(begin + 4, end, Cmd::kIAC);
+                if (cmd_end_iac == end)
+                    return;
+                if ((cmd_end_iac + 1) == end)
+                    return;
+
+                onRecvSub(ct, opt, begin + 3, (cmd_end_iac - begin - 3));
+                size = cmd_end_iac - begin + 2;
+
             } else {
                 onRecvCmd(ct, static_cast<Cmd>(cmd));
                 size = 2;
@@ -286,17 +305,17 @@ void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::st
 
 void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
 {
-    LogUndo();
+    LogTrace("cmd:%x, opt:%x", cmd, opt);
 }
 
 void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)
 {
-    LogUndo();
+    LogTrace("cmd:%x", cmd);
 }
 
 void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s)
 {
-    LogUndo();
+    LogTrace("opt:%x, data:%s", opt, util::string::RawDataToHexStr(p, s).c_str());
 }
 
 }

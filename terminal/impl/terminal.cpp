@@ -64,7 +64,7 @@ bool Terminal::Impl::input(const SessionToken &token, const std::string &str)
 {
     auto s = sessions_.at(token);
     if (s != nullptr) {
-        LogUndo();  //!TODO
+        LogTrace("%s", str.c_str());
         s->send(str);
         return true;
     }
