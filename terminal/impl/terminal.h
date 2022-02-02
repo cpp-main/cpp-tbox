@@ -16,6 +16,7 @@ class Terminal::Impl {
     SessionToken newSession(Connection *wp_conn);
     bool deleteSession(const SessionToken &session);
     bool input(const SessionToken &session, const std::string &str);
+    bool windowSize(const SessionToken &st, uint16_t w, uint16_t h);
 
   public:
     NodeToken create(const EndNode &info);

@@ -71,6 +71,12 @@ bool Terminal::Impl::input(const SessionToken &token, const std::string &str)
     return false;
 }
 
+bool Terminal::Impl::windowSize(const SessionToken &token, uint16_t w, uint16_t h)
+{
+    LogTrace("w:%u, h:%u", w, h);
+    return false;
+}
+
 NodeToken Terminal::Impl::create(const EndNode &info)
 {
     LogUndo();

@@ -20,6 +20,7 @@ class TerminalInteract {
     virtual SessionToken newSession(Connection *wp_conn) = 0;
     virtual bool deleteSession(const SessionToken &session) = 0;
     virtual bool input(const SessionToken &session, const std::string &str) = 0;
+    virtual bool windowSize(const SessionToken &st, uint16_t w, uint16_t h) = 0;
 
   protected:
     virtual ~TerminalInteract() { }

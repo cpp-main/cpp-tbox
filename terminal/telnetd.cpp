@@ -320,6 +320,12 @@ void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)
 void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s)
 {
     LogTrace("opt:%x, data:%s", opt, util::string::RawDataToHexStr(p, s).c_str());
+    auto st = client_to_session_.at(ct);
+    if (opt == kWINDOW) {
+        uint16_t w = p[0] << 8 | p[1];
+        uint16_t h = p[2] << 8 | p[3];
+        wp_terminal_->windowSize(st, w, h);
+    }
 }
 
 }

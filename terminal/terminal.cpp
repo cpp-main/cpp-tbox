@@ -31,6 +31,11 @@ bool Terminal::input(const SessionToken &session, const std::string &str)
     return impl_->input(session, str);
 }
 
+bool Terminal::windowSize(const SessionToken &st, uint16_t w, uint16_t h)
+{
+    return impl_->windowSize(st, w, h);
+}
+
 NodeToken Terminal::create(const EndNode &info)
 {
     return impl_->create(info);
