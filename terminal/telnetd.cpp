@@ -55,6 +55,7 @@ class Telnetd::Impl : public Connection {
 
     enum Opt {
         kECHO = 1,
+        kSGA = 3,
         kSTATUS = 5,
         kCLOCK = 6,
         kTYPE = 24,
@@ -196,7 +197,10 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     session_to_client_[st] = ct;
 
     sendNego(ct, kDONT, kECHO);
-    sendCmd(ct, kGA);
+    sendNego(ct, kDO, kWINDOW);
+    sendNego(ct, kDO, kSPEED);
+    sendNego(ct, kWILL, kECHO);
+    sendNego(ct, kWILL, kSGA);
 }
 
 void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
