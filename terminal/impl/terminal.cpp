@@ -1,4 +1,8 @@
 #include "terminal.h"
+
+#include <vector>
+#include <deque>
+
 #include <tbox/base/log.h>
 
 namespace tbox::terminal {
@@ -14,22 +18,30 @@ class SessionImpl : public Session {
     void setSessionToken(const SessionToken &token)
     { token_ = token; }
 
+    void setWindowSize(uint16_t w, uint16_t h)
+    { window_width_ = w; window_height_ = h; }
+
   public:
-    bool send(const std::string &str) override {
-        return wp_conn_->send(token_, str);
-    }
+    bool send(const std::string &str) override { return wp_conn_->send(token_, str); }
+    void endSession() override { wp_conn_->endSession(token_); }
+    bool isValid() const override { return wp_conn_->isValid(token_); }
 
-    void endSession() override {
-        wp_conn_->endSession(token_);
-    }
+    bool window_width() const override { return window_width_; }
+    bool window_height() const override { return window_height_; }
 
-    bool isValid() const override {
-        return wp_conn_->isValid(token_);
-    }
+  public:
+    std::string curr_input;
+    size_t cursor = 0;
+
+    std::vector<NodeToken> pwd;        //! 当前路径
+    std::deque<std::string> history;   //! 历史命令
 
   private:
     Connection *wp_conn_ = nullptr;
     SessionToken token_;
+
+    uint16_t window_width_ = 0;
+    uint16_t window_height_ = 0;
 };
 
 Terminal::Impl::~Impl()
@@ -60,7 +72,7 @@ bool Terminal::Impl::deleteSession(const SessionToken &token)
     return false;
 }
 
-bool Terminal::Impl::input(const SessionToken &token, const std::string &str)
+bool Terminal::Impl::onRecvString(const SessionToken &token, const std::string &str)
 {
     auto s = sessions_.at(token);
     if (s != nullptr) {
@@ -71,9 +83,13 @@ bool Terminal::Impl::input(const SessionToken &token, const std::string &str)
     return false;
 }
 
-bool Terminal::Impl::windowSize(const SessionToken &token, uint16_t w, uint16_t h)
+bool Terminal::Impl::onRecvWindowSize(const SessionToken &token, uint16_t w, uint16_t h)
 {
-    LogTrace("w:%u, h:%u", w, h);
+    auto s = sessions_.at(token);
+    if (s != nullptr) {
+        s->setWindowSize(w, h);
+        return true;
+    }
     return false;
 }
 
@@ -106,6 +122,42 @@ bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child, cons
     LogUndo();
     return false;
 }
+
+void Terminal::Impl::onEnterKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onBackspaceKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onTabKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onUpKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onDownKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onLeftKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
+void Terminal::Impl::onRightKey(SessionImpl *s)
+{
+    LogUndo();
+}
+
 
 }
 

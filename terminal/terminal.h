@@ -13,9 +13,10 @@ class Terminal : public TerminalInteract,
 
   public:
     SessionToken newSession(Connection *wp_conn) override;
-    bool deleteSession(const SessionToken &session) override;
-    bool input(const SessionToken &session, const std::string &str) override;
-    bool windowSize(const SessionToken &st, uint16_t w, uint16_t h) override;
+    bool deleteSession(const SessionToken &st) override;
+
+    bool onRecvString(const SessionToken &st, const std::string &str) override;
+    bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h) override;
 
   public:
     NodeToken create(const EndNode &info) override;

@@ -21,19 +21,19 @@ SessionToken Terminal::newSession(Connection *wp_conn)
     return impl_->newSession(wp_conn);
 }
 
-bool Terminal::deleteSession(const SessionToken &session)
+bool Terminal::deleteSession(const SessionToken &st)
 {
-    return impl_->deleteSession(session);
+    return impl_->deleteSession(st);
 }
 
-bool Terminal::input(const SessionToken &session, const std::string &str)
+bool Terminal::onRecvString(const SessionToken &st, const std::string &str)
 {
-    return impl_->input(session, str);
+    return impl_->onRecvString(st, str);
 }
 
-bool Terminal::windowSize(const SessionToken &st, uint16_t w, uint16_t h)
+bool Terminal::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h)
 {
-    return impl_->windowSize(st, w, h);
+    return impl_->onRecvWindowSize(st, w, h);
 }
 
 NodeToken Terminal::create(const EndNode &info)

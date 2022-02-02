@@ -14,9 +14,9 @@ class Terminal::Impl {
 
   public:
     SessionToken newSession(Connection *wp_conn);
-    bool deleteSession(const SessionToken &session);
-    bool input(const SessionToken &session, const std::string &str);
-    bool windowSize(const SessionToken &st, uint16_t w, uint16_t h);
+    bool deleteSession(const SessionToken &st);
+    bool onRecvString(const SessionToken &st, const std::string &str);
+    bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h);
 
   public:
     NodeToken create(const EndNode &info);
@@ -24,6 +24,15 @@ class Terminal::Impl {
     NodeToken root() const;
     NodeToken find(const std::string &path) const;
     bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
+
+  protected:
+    void onEnterKey(SessionImpl *s);
+    void onBackspaceKey(SessionImpl *s);
+    void onTabKey(SessionImpl *s);
+    void onUpKey(SessionImpl *s);
+    void onDownKey(SessionImpl *s);
+    void onLeftKey(SessionImpl *s);
+    void onRightKey(SessionImpl *s);
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;

@@ -304,7 +304,7 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff
 void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::string &str)
 {
     auto st = client_to_session_.at(ct);
-    wp_terminal_->input(st, str);
+    wp_terminal_->onRecvString(st, str);
 }
 
 void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
@@ -324,7 +324,7 @@ void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const u
     if (opt == kWINDOW) {
         uint16_t w = p[0] << 8 | p[1];
         uint16_t h = p[2] << 8 | p[3];
-        wp_terminal_->windowSize(st, w, h);
+        wp_terminal_->onRecvWindowSize(st, w, h);
     }
 }
 
