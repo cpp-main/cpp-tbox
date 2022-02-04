@@ -23,9 +23,9 @@ TEST(TimerPool, doEvery)
 
     auto start_time = system_clock::now();
     int count = 0;
-    TimerPool::Token token;
+    TimerPool::TimerToken token;
     token = timer_pool.doEvery(milliseconds(100),
-        [&] (const TimerPool::Token &t){
+        [&] (const TimerPool::TimerToken &t){
             EXPECT_EQ(t, token);
             auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(count * 100 + 90));
@@ -52,10 +52,10 @@ TEST(TimerPool, doAfter)
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
     auto start_time = system_clock::now();
-    TimerPool::Token token;
+    TimerPool::TimerToken token;
     bool is_run = false;
     token = timer_pool.doAfter(milliseconds(500),
-        [&] (const TimerPool::Token &t){
+        [&] (const TimerPool::TimerToken &t){
             EXPECT_EQ(t, token);
             auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(490));
@@ -83,7 +83,7 @@ TEST(TimerPool, cancel_inside_loop)
 
     bool is_run = false;
     auto token = timer_pool.doAfter(milliseconds(100),
-        [&] (const TimerPool::Token &){
+        [&] (const TimerPool::TimerToken &){
             is_run = true;
         }
     );
@@ -115,7 +115,7 @@ TEST(TimerPool, cancel_outside_loop)
 
     bool is_run = false;
     auto token = timer_pool.doAfter(milliseconds(100),
-        [&] (const TimerPool::Token &){
+        [&] (const TimerPool::TimerToken &){
             is_run = true;
         }
     );
@@ -140,10 +140,10 @@ TEST(TimerPool, doAt)
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
     auto start_time = system_clock::now();
-    TimerPool::Token token;
+    TimerPool::TimerToken token;
     bool is_run = false;
     token = timer_pool.doAt(start_time + milliseconds(1000),
-        [&] (const TimerPool::Token &t){
+        [&] (const TimerPool::TimerToken &t){
             EXPECT_EQ(t, token);
             auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(990));
@@ -173,8 +173,8 @@ TEST(TimerPool, all)
     auto start_time = system_clock::now();
 
     int count = 0;
-    TimerPool::Token token = timer_pool.doEvery(milliseconds(100),
-        [&] (const TimerPool::Token &t) {
+    TimerPool::TimerToken token = timer_pool.doEvery(milliseconds(100),
+        [&] (const TimerPool::TimerToken &t) {
             auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(count * 100 + 90));
             EXPECT_LT(d, milliseconds(count * 100 + 110));
@@ -184,7 +184,7 @@ TEST(TimerPool, all)
 
     bool is_run = false;
     timer_pool.doAfter(milliseconds(510),
-        [&] (const TimerPool::Token &t) {
+        [&] (const TimerPool::TimerToken &t) {
             auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(500));
             EXPECT_LT(d, milliseconds(520));
@@ -194,7 +194,7 @@ TEST(TimerPool, all)
     );
 
     timer_pool.doAfter(milliseconds(1010),
-        [&] (const TimerPool::Token &) {
+        [&] (const TimerPool::TimerToken &) {
             sp_loop->exitLoop();
         }
     );

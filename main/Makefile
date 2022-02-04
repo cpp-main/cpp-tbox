@@ -21,7 +21,14 @@ CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_terminal -ltbox_eventx -ltbox_event-ne -ltbox_util -ltbox_base -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) \
+	-ltbox_terminal \
+	-ltbox_network \
+	-ltbox_eventx \
+	-ltbox_event-ne \
+	-ltbox_util \
+	-ltbox_base \
+	-levent_core -lev
 
 ENABLE_SHARED_LIB = no
 
