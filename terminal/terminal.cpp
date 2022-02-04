@@ -26,6 +26,16 @@ bool Terminal::deleteSession(const SessionToken &st)
     return impl_->deleteSession(st);
 }
 
+bool Terminal::onBegin(const SessionToken &st)
+{
+    return impl_->onBegin(st);
+}
+
+bool Terminal::onExit(const SessionToken &st)
+{
+    return impl_->onExit(st);
+}
+
 bool Terminal::onRecvString(const SessionToken &st, const std::string &str)
 {
     return impl_->onRecvString(st, str);

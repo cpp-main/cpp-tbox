@@ -7,6 +7,7 @@ namespace tbox::terminal {
 
 class Connection {
   public:
+    virtual bool send(const SessionToken &st, char ch) = 0;
     virtual bool send(const SessionToken &st, const std::string &str) = 0;
     virtual bool endSession(const SessionToken &st) = 0;
     virtual bool isValid(const SessionToken &st) const = 0;
@@ -20,6 +21,8 @@ class TerminalInteract {
     virtual SessionToken newSession(Connection *wp_conn) = 0;
     virtual bool deleteSession(const SessionToken &st) = 0;
 
+    virtual bool onBegin(const SessionToken &st) = 0;
+    virtual bool onExit(const SessionToken &st) = 0;
     virtual bool onRecvString(const SessionToken &st, const std::string &str) = 0;
     virtual bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h) = 0;
 
@@ -43,6 +46,7 @@ class TerminalBuild {
 
 class Session {
   public:
+    virtual bool send(char ch) = 0;
     virtual bool send(const std::string &str) = 0;
     virtual void endSession() = 0;
     virtual bool isValid() const = 0;

@@ -28,6 +28,7 @@ class Telnetd::Impl : public Connection {
     void cleanup();
 
   public:
+    bool send(const SessionToken &st, char ch) override;
     bool send(const SessionToken &st, const std::string &str) override;
     bool endSession(const SessionToken &st) override;
     bool isValid(const SessionToken &st) const override;
@@ -171,6 +172,16 @@ bool Telnetd::Impl::send(const SessionToken &st, const std::string &str)
     return true;
 }
 
+bool Telnetd::Impl::send(const SessionToken &st, char ch)
+{
+    auto ct = session_to_client_.at(st);
+    if (st.isNull())
+        return false;
+
+    sp_tcp_->send(ct, &ch, 1);
+    return true;
+}
+
 bool Telnetd::Impl::endSession(const SessionToken &st)
 {
     auto ct = session_to_client_.at(st);
@@ -201,6 +212,8 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     sendNego(ct, kDO, kSPEED);
     sendNego(ct, kWILL, kECHO);
     sendNego(ct, kWILL, kSGA);
+
+    wp_terminal_->onBegin(st);
 }
 
 void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)

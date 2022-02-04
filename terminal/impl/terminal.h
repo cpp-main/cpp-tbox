@@ -15,6 +15,10 @@ class Terminal::Impl {
   public:
     SessionToken newSession(Connection *wp_conn);
     bool deleteSession(const SessionToken &st);
+
+    bool onBegin(const SessionToken &st);
+    bool onExit(const SessionToken &st);
+
     bool onRecvString(const SessionToken &st, const std::string &str);
     bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h);
 
@@ -26,6 +30,7 @@ class Terminal::Impl {
     bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
 
   protected:
+    void onChar(SessionImpl *s, char ch);
     void onEnterKey(SessionImpl *s);
     void onBackspaceKey(SessionImpl *s);
     void onTabKey(SessionImpl *s);
