@@ -18,7 +18,6 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"terminal"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
-	telnetd_test.cpp \
 	impl/keyword_scanner_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_event-ne -ltbox_util -ltbox_base -levent_core -lev
