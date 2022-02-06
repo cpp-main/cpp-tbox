@@ -49,7 +49,9 @@ bool Terminal::Impl::onBegin(const SessionToken &st)
     if (s == nullptr)
         return false;
 
-    s->send("\r\nWelcome to TBox Terminal.\r\n$ ");
+    s->send("\r\nWelcome to TBox Terminal.\r\n");
+    printPrompt(s);
+
     return true;
 }
 
@@ -175,7 +177,10 @@ void Terminal::Impl::onChar(SessionImpl *s, char ch)
 
 void Terminal::Impl::onEnterKey(SessionImpl *s)
 {
-    LogUndo();
+    s->send("\r\n");
+    s->cursor = 0;
+    s->history.push_back(std::move(s->curr_input));
+    printPrompt(s);
 }
 
 void Terminal::Impl::onBackspaceKey(SessionImpl *s)
@@ -245,6 +250,14 @@ void Terminal::Impl::onEndKey(SessionImpl *s)
         s->send(MOVE_RIGHT_KEY);
         s->cursor++;
     }
+}
+
+void Terminal::Impl::printPrompt(SessionImpl *s)
+{
+    using namespace std;
+    stringstream ss;
+    ss << "$ ";
+    s->send(ss.str());
 }
 
 }
