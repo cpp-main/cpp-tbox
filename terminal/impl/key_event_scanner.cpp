@@ -1,17 +1,17 @@
-#include "keyword_scanner.h"
+#include "key_event_scanner.h"
 #include <algorithm>
 #include <cctype>
 
 namespace tbox::terminal {
 
-void KeywordScanner::start()
+void KeyEventScanner::start()
 {
     result_ = Result::kNone;
     step_ = Step::kNone;
     extra_ = 0;
 }
 
-KeywordScanner::Status KeywordScanner::next(uint8_t byte)
+KeyEventScanner::Status KeyEventScanner::next(uint8_t byte)
 {
     if (step_ == Step::kNone) {
         if (byte == 0x09) {
@@ -201,7 +201,7 @@ KeywordScanner::Status KeywordScanner::next(uint8_t byte)
     return Status::kFail;
 }
 
-KeywordScanner::Status KeywordScanner::stop()
+KeyEventScanner::Status KeyEventScanner::stop()
 {
     if (step_ == Step::k1b) {
         result_ = Result::kESC;
