@@ -10,6 +10,11 @@
 
 namespace tbox::terminal {
 
+namespace {
+const std::string MOVE_LEFT_KEY("\033[D");
+const std::string MOVE_RIGHT_KEY("\033[C");
+}
+
 Terminal::Impl::~Impl()
 {
     sessions_.foreach(
@@ -181,7 +186,7 @@ void Terminal::Impl::onBackspaceKey(SessionImpl *s)
     if (s->cursor == s->curr_input.size())
         s->curr_input.pop_back();
     else
-        s->curr_input.erase(s->cursor-1, 1);
+        s->curr_input.erase((s->cursor - 1), 1);
 
     s->cursor--;
 
@@ -214,10 +219,7 @@ void Terminal::Impl::onMoveLeftKey(SessionImpl *s)
         return;
 
     s->cursor--;
-
-    s->send(0x1b);
-    s->send(0x5b);
-    s->send(0x44);
+    s->send(MOVE_LEFT_KEY);
 }
 
 void Terminal::Impl::onMoveRightKey(SessionImpl *s)
@@ -226,21 +228,23 @@ void Terminal::Impl::onMoveRightKey(SessionImpl *s)
         return;
 
     s->cursor++;
-
-    s->send(0x1b);
-    s->send(0x5b);
-    s->send(0x43);
+    s->send(MOVE_RIGHT_KEY);
 }
 
 void Terminal::Impl::onHomeKey(SessionImpl *s)
 {
-    LogUndo();
+    while (s->cursor != 0) {
+        s->send(MOVE_LEFT_KEY);
+        s->cursor--;
+    }
 }
 
 void Terminal::Impl::onEndKey(SessionImpl *s)
 {
-    LogUndo();
+    while (s->cursor < s->curr_input.size()) {
+        s->send(MOVE_RIGHT_KEY);
+        s->cursor++;
+    }
 }
 
 }
-
