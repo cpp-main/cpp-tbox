@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <deque>
+#include <sstream>
 
 #include <tbox/base/log.h>
 
@@ -64,15 +65,48 @@ bool Terminal::Impl::onRecvString(const SessionToken &st, const std::string &str
         return false;
 
     LogTrace("%s", str.c_str());
+    s->key_event_scanner_.start();
     for (char c : str) {
-        if (c == 0x7f) {    //! 退格键
-            onBackspaceKey(s);
-        } else if (c == 0x09) { //! 制表符
-            onTabKey(s);
-        } else {
-            onChar(s, c);
+        auto status = s->key_event_scanner_.next(c);
+        if (status == KeyEventScanner::Status::kEnsure) {
+            switch (s->key_event_scanner_.result()) {
+                case KeyEventScanner::Result::kPrintable:
+                    onChar(s, c);
+                    break;
+                case KeyEventScanner::Result::kEnter:
+                    onEnterKey(s);
+                    break;
+                case KeyEventScanner::Result::kBackspace:
+                    onBackspaceKey(s);
+                    break;
+                case KeyEventScanner::Result::kTab:
+                    onTabKey(s);
+                    break;
+                case KeyEventScanner::Result::kMoveUp:
+                    onMoveUpKey(s);
+                    break;
+                case KeyEventScanner::Result::kMoveDown:
+                    onMoveDownKey(s);
+                    break;
+                case KeyEventScanner::Result::kMoveLeft:
+                    onMoveLeftKey(s);
+                    break;
+                case KeyEventScanner::Result::kMoveRight:
+                    onMoveRightKey(s);
+                    break;
+                case KeyEventScanner::Result::kHome:
+                    onHomeKey(s);
+                    break;
+                case KeyEventScanner::Result::kEnd:
+                    onEndKey(s);
+                    break;
+                default:
+                    break;
+            }
+            s->key_event_scanner_.start();
         }
     }
+    s->key_event_scanner_.stop();
     return true;
 }
 
@@ -120,8 +154,18 @@ void Terminal::Impl::onChar(SessionImpl *s, char ch)
 {
     s->send(ch);
 
+    if (s->cursor == s->curr_input.size())
+        s->curr_input.push_back(ch);
+    else
+        s->curr_input.insert(s->cursor, 1, ch);
     s->cursor++;
-    s->curr_input.push_back(ch);
+
+    std::stringstream ss;
+    ss  << s->curr_input.substr(s->cursor)
+        << std::string((s->curr_input.size() - s->cursor), '\b');
+    s->send(ss.str());
+
+    LogTrace("s->curr_input: %s", s->curr_input.c_str());
 }
 
 void Terminal::Impl::onEnterKey(SessionImpl *s)
@@ -134,12 +178,19 @@ void Terminal::Impl::onBackspaceKey(SessionImpl *s)
     if (s->cursor == 0)
         return;
 
-    s->send(8);
-    s->send(' ');
-    s->send(8);
+    if (s->cursor == s->curr_input.size())
+        s->curr_input.pop_back();
+    else
+        s->curr_input.erase(s->cursor-1, 1);
 
     s->cursor--;
-    s->curr_input.pop_back();
+
+    std::stringstream ss;
+    ss  << '\b' << s->curr_input.substr(s->cursor) << ' '
+        << std::string((s->curr_input.size() - s->cursor + 1), '\b');
+    s->send(ss.str());
+
+    LogTrace("s->curr_input: %s", s->curr_input.c_str());
 }
 
 void Terminal::Impl::onTabKey(SessionImpl *s)
@@ -147,26 +198,49 @@ void Terminal::Impl::onTabKey(SessionImpl *s)
     LogUndo();
 }
 
-void Terminal::Impl::onUpKey(SessionImpl *s)
+void Terminal::Impl::onMoveUpKey(SessionImpl *s)
 {
     LogUndo();
 }
 
-void Terminal::Impl::onDownKey(SessionImpl *s)
+void Terminal::Impl::onMoveDownKey(SessionImpl *s)
 {
     LogUndo();
 }
 
-void Terminal::Impl::onLeftKey(SessionImpl *s)
+void Terminal::Impl::onMoveLeftKey(SessionImpl *s)
+{
+    if (s->cursor == 0)
+        return;
+
+    s->cursor--;
+
+    s->send(0x1b);
+    s->send(0x5b);
+    s->send(0x44);
+}
+
+void Terminal::Impl::onMoveRightKey(SessionImpl *s)
+{
+    if (s->cursor >= s->curr_input.size())
+        return;
+
+    s->cursor++;
+
+    s->send(0x1b);
+    s->send(0x5b);
+    s->send(0x43);
+}
+
+void Terminal::Impl::onHomeKey(SessionImpl *s)
 {
     LogUndo();
 }
 
-void Terminal::Impl::onRightKey(SessionImpl *s)
+void Terminal::Impl::onEndKey(SessionImpl *s)
 {
     LogUndo();
 }
-
 
 }
 

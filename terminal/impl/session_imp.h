@@ -1,6 +1,7 @@
-
 #ifndef TBOX_TERMINAL_SESSION_IMP_H_20220204
 #define TBOX_TERMINAL_SESSION_IMP_H_20220204
+
+#include "key_event_scanner.h"
 
 namespace tbox::terminal {
 
@@ -33,6 +34,8 @@ class SessionImpl : public Session {
 
     std::vector<NodeToken> pwd;        //! 当前路径
     std::deque<std::string> history;   //! 历史命令
+
+    KeyEventScanner key_event_scanner_;
 
   private:
     Connection *wp_conn_ = nullptr;

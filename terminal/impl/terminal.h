@@ -34,10 +34,12 @@ class Terminal::Impl {
     void onEnterKey(SessionImpl *s);
     void onBackspaceKey(SessionImpl *s);
     void onTabKey(SessionImpl *s);
-    void onUpKey(SessionImpl *s);
-    void onDownKey(SessionImpl *s);
-    void onLeftKey(SessionImpl *s);
-    void onRightKey(SessionImpl *s);
+    void onMoveUpKey(SessionImpl *s);
+    void onMoveDownKey(SessionImpl *s);
+    void onMoveLeftKey(SessionImpl *s);
+    void onMoveRightKey(SessionImpl *s);
+    void onHomeKey(SessionImpl *s);
+    void onEndKey(SessionImpl *s);
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;
