@@ -25,7 +25,7 @@ class Terminal : public TerminalInteract,
     NodeToken create(const DirNode &info) override;
     NodeToken root() const override;
     NodeToken find(const std::string &path) const override;
-    bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
+    bool mount(const NodeToken &parent, const NodeToken &child) override;
 
   private:
     class Impl;

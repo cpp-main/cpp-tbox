@@ -155,7 +155,7 @@ NodeToken Terminal::Impl::find(const std::string &path) const
     return NodeToken();
 }
 
-bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child, const std::string &name)
+bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
 {
     LogUndo();
     return false;

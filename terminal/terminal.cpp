@@ -66,9 +66,9 @@ NodeToken Terminal::find(const std::string &path) const
     return impl_->find(path);
 }
 
-bool Terminal::mount(const NodeToken &parent, const NodeToken &child, const std::string &name)
+bool Terminal::mount(const NodeToken &parent, const NodeToken &child)
 {
-    return impl_->mount(parent, child, name);
+    return impl_->mount(parent, child);
 }
 
 }

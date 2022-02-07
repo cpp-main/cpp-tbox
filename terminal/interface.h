@@ -38,7 +38,7 @@ class TerminalBuild {
     virtual NodeToken root() const = 0;
     virtual NodeToken find(const std::string &path) const = 0;
 
-    virtual bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name) = 0;
+    virtual bool mount(const NodeToken &parent, const NodeToken &child) = 0;
 
   protected:
     virtual ~TerminalBuild() { }

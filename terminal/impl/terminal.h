@@ -27,7 +27,7 @@ class Terminal::Impl {
     NodeToken create(const DirNode &info);
     NodeToken root() const;
     NodeToken find(const std::string &path) const;
-    bool mount(const NodeToken &parent, const NodeToken &child, const std::string &name);
+    bool mount(const NodeToken &parent, const NodeToken &child);
 
   protected:
     void onChar(SessionImpl *s, char ch);
