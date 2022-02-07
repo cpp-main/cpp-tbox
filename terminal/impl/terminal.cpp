@@ -3,8 +3,10 @@
 #include <vector>
 #include <deque>
 #include <sstream>
+#include <iomanip>
 
 #include <tbox/base/log.h>
+#include <tbox/util/split_cmdline.h>
 
 #include "session_imp.h"
 
@@ -180,21 +182,26 @@ void Terminal::Impl::onEnterKey(SessionImpl *s)
 {
     s->send("\r\n");
 
-    bool is_succ = executeCmd(s);
+    bool store_in_history = false;
+    bool recover_cmdline = false;
+    executeCmdline(s, store_in_history, recover_cmdline);
 
     printPrompt(s);
 
-    if (is_succ) {
+    if (store_in_history) {
         //! 如果成功，则将已执行的命令加入history，另起一行
         s->cursor = 0;
         s->history.push_back(std::move(s->curr_input));
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
-    } else {
+    }
+
+    if (recover_cmdline) {
         //! 如果没有成功，则将原来的命令重新打印出来
         s->cursor = s->curr_input.size();
         s->send(s->curr_input);
     }
+
     s->history_index = 0;
 }
 
@@ -311,10 +318,90 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
     s->send(ss.str());
 }
 
-bool Terminal::Impl::executeCmd(SessionImpl *s)
+void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline)
 {
-    //!TODO:处理并执行命令
+    if (s->curr_input.empty())
+        return;
+
+    std::vector<std::string> args;
+    if (!util::SplitCmdline(s->curr_input, args) || args.empty()) {
+        s->send("Error: parse cmdline fail!\r\n");
+        return;
+    }
+
+    store_in_history = false;
+    recover_cmdline = false;
+
+    const auto &cmd = args[0];
+    if (cmd == "ls") {
+        bool is_succ = executeLsCmd(s, args);
+        store_in_history = is_succ;
+        recover_cmdline = !is_succ;
+    } else if (cmd == "cd") {
+        bool is_succ = executeCdCmd(s, args);
+        store_in_history = is_succ;
+        recover_cmdline = !is_succ;
+    } else if (cmd == "help") {
+        bool is_succ = executeHelpCmd(s, args);
+        store_in_history = is_succ;
+        recover_cmdline = !is_succ;
+    } else if (cmd == "history") {
+        executeHistoryCmd(s, args);
+    } else if (cmd == "exit") {
+        executeExitCmd(s, args);
+    } else {
+        bool is_succ = executeUserCmd(s, args);
+        store_in_history = is_succ;
+        recover_cmdline = !is_succ;
+    }
+}
+
+bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
+{
     LogUndo();
     return true;
 }
+
+bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
+{
+    LogUndo();
+    return true;
+}
+
+bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
+{
+    LogUndo();
+    return true;
+}
+
+void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
+{
+    std::stringstream ss;
+    for (const auto &cmd : s->history)
+        ss << cmd << "\r\n";
+    s->send(ss.str());
+}
+
+void Terminal::Impl::executeExitCmd(SessionImpl *s, const Args &args)
+{
+    s->send("Bye!\r\n");
+    s->endSession();
+}
+
+bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
+{
+    const auto &cmd = args[0];
+
+    bool is_cmd_found = true;   //TODO
+    LogUndo();
+
+    if (!is_cmd_found) {
+        std::stringstream ss;
+        ss << "Error: " << cmd << " not found\r\n";
+        s->send(ss.str());
+        return false;
+    }
+    return true;
+}
+
 }

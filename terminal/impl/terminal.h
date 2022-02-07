@@ -43,7 +43,14 @@ class Terminal::Impl {
     void onEndKey(SessionImpl *s);
 
     void printPrompt(SessionImpl *s);
-    bool executeCmd(SessionImpl *s);
+    void executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline);
+
+    bool executeCdCmd(SessionImpl *s, const Args &args);
+    bool executeHelpCmd(SessionImpl *s, const Args &args);
+    bool executeLsCmd(SessionImpl *s, const Args &args);
+    void executeHistoryCmd(SessionImpl *s, const Args &args);
+    void executeExitCmd(SessionImpl *s, const Args &args);
+    bool executeUserCmd(SessionImpl *s, const Args &args);
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;

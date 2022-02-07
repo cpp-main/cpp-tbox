@@ -188,9 +188,15 @@ bool Telnetd::Impl::endSession(const SessionToken &st)
     if (ct.isNull())
         return false;
 
-    client_to_session_.erase(ct);
-    session_to_client_.erase(st);
-    sp_tcp_->disconnect(ct);
+    //! 委托执行，否则会出自我销毁的异常
+    wp_loop_->run(
+        [this, st, ct] {
+            client_to_session_.erase(ct);
+            session_to_client_.erase(st);
+            sp_tcp_->disconnect(ct);
+        }
+    );
+
     return true;
 }
 
