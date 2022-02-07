@@ -9,6 +9,8 @@
 #include <tbox/util/split_cmdline.h>
 
 #include "session_imp.h"
+#include "dir_node.h"
+#include "func_node.h"
 
 namespace tbox::terminal {
 
@@ -16,6 +18,12 @@ namespace {
 const std::string MOVE_LEFT_KEY("\033[D");
 const std::string MOVE_RIGHT_KEY("\033[C");
 const size_t HISTORY_MAX_SIZE(20);
+}
+
+Terminal::Impl::Impl()
+{
+    DirNode *root_node = new DirNode("");
+    root_token_ = nodes_.insert(root_node);
 }
 
 Terminal::Impl::~Impl()
@@ -26,6 +34,13 @@ Terminal::Impl::~Impl()
         }
     );
     sessions_.clear();
+
+    nodes_.foreach(
+        [](Node *p) {
+            delete p;
+        }
+    );
+    nodes_.clear();
 }
 
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)
@@ -134,20 +149,19 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 
 NodeToken Terminal::Impl::create(const FuncInfo &info)
 {
-    LogUndo();
-    return NodeToken();
+    FuncNode *node = new FuncNode(info.name, info.func, info.help);
+    return nodes_.insert(node);
 }
 
 NodeToken Terminal::Impl::create(const DirInfo &info)
 {
-    LogUndo();
-    return NodeToken();
+    DirNode *node = new DirNode(info.name);
+    return nodes_.insert(node);
 }
 
 NodeToken Terminal::Impl::root() const
 {
-    LogUndo();
-    return NodeToken();
+    return root_token_;
 }
 
 NodeToken Terminal::Impl::find(const std::string &path) const

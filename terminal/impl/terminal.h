@@ -1,8 +1,10 @@
 #ifndef TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 #define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
-#include "../terminal.h"
 #include <tbox/base/cabinet.hpp>
+
+#include "../terminal.h"
+#include "node.h"
 
 namespace tbox::terminal {
 
@@ -10,6 +12,7 @@ class SessionImpl;
 
 class Terminal::Impl {
   public:
+    Impl();
     ~Impl();
 
   public:
@@ -54,6 +57,8 @@ class Terminal::Impl {
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;
+    cabinet::Cabinet<Node> nodes_;
+    NodeToken root_token_;
 };
 
 }
