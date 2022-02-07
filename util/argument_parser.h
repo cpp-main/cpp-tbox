@@ -41,6 +41,7 @@
 #define TBOX_UTIL_ARGUMENT_PARSER_H_20220105
 
 #include <functional>
+#include <vector>
 
 namespace tbox::util {
 
@@ -114,6 +115,7 @@ class ArgumentParser {
      * \return  false   解析失败
      */
     bool parse(int argc, const char * const * const argv, int start = 1);
+    bool parse(const std::vector<std::string> &args, int start = 1);
 
   private:
     Handler handler_;

@@ -20,25 +20,13 @@ bool PickKeyAndValue(const std::string &orig, std::string &key, std::string &val
 }
 }
 
-bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
+bool ArgumentParser::parse(const std::vector<std::string> &args, int start)
 {
-    assert(argc >= 1);
-    assert(argv != nullptr);
-    assert(start >= 0);
-
-    for (int i = start; i < argc; ++i) {
-        const char *curr_arg = argv[i];
-        if (curr_arg == nullptr)
-            return false;
-
-        const std::string curr(curr_arg);
+    for (size_t i = start; i < args.size(); ++i) {
+        const std::string &curr = args.at(i);
         OptionValue opt_value;
-        if (i != (argc - 1)) {
-            const char *next_arg = argv[i + 1];
-            if (next_arg == nullptr)
-                return false;
-            opt_value.set(next_arg);
-        }
+        if (i != (args.size() - 1))
+            opt_value.set(args.at(i + 1));
 
         if (curr[0] == '-') {
             if (curr[1] == '-') {   //! 匹配 --xxxx
@@ -76,6 +64,23 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
     }
 
     return true;
+
+}
+
+bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
+{
+    assert(argc >= 1);
+    assert(argv != nullptr);
+    assert(start >= 0);
+
+    std::vector<std::string> args;
+    for (int i = start; i < argc; ++i) {
+        const char *curr = argv[i];
+        if (curr == nullptr)
+            return false;
+        args.push_back(curr);
+    }
+    return parse(args, 0);
 }
 
 }
