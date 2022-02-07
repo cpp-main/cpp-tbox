@@ -71,4 +71,9 @@ bool Terminal::mount(const NodeToken &parent, const NodeToken &child)
     return impl_->mount(parent, child);
 }
 
+bool Terminal::list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const
+{
+    return impl_->list(token, node_vec);
+}
+
 }

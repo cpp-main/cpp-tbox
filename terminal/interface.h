@@ -37,6 +37,7 @@ class TerminalBuild {
 
     virtual NodeToken root() const = 0;
     virtual NodeToken find(const std::string &path) const = 0;
+    virtual bool list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const = 0;
 
     virtual bool mount(const NodeToken &parent, const NodeToken &child) = 0;
 

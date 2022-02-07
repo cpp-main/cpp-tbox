@@ -14,7 +14,7 @@ class DirNode : public Node {
 
     bool addChild(const NodeToken &nt, const std::string &child_name);
     NodeToken findChild(const std::string &child_name) const;
-    std::vector<NodeInfo> children() const;
+    void children(std::vector<NodeInfo> &vec) const;
 
   private:
     std::map<std::string, NodeToken> children_;

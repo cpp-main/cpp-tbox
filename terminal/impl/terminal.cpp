@@ -166,7 +166,7 @@ NodeToken Terminal::Impl::root() const
 
 NodeToken Terminal::Impl::find(const std::string &path) const
 {
-    LogUndo();
+    LogUndo();  //!TODO
     return NodeToken();
 }
 
@@ -180,6 +180,20 @@ bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
 
     auto p_dir_node = dynamic_cast<DirNode*>(p_node);
     return p_dir_node->addChild(child, c_node->name());
+}
+
+bool Terminal::Impl::list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const
+{
+    auto p_node = nodes_.at(token);
+    if (p_node == nullptr)
+        return false;
+
+    auto p_dir_node = dynamic_cast<DirNode*>(p_node);
+    if (p_dir_node == nullptr)
+        return false;
+
+    p_dir_node->children(node_vec);
+    return true;
 }
 
 void Terminal::Impl::onChar(SessionImpl *s, char ch)

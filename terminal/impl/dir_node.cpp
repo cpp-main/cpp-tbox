@@ -20,14 +20,12 @@ NodeToken DirNode::findChild(const std::string &child_name) const
     return iter->second;
 }
 
-std::vector<NodeInfo> DirNode::children() const
+void DirNode::children(std::vector<NodeInfo> &vec) const
 {
-    std::vector<NodeInfo> child_vec;
     for (auto item : children_) {
         NodeInfo info{ item.first, item.second };
-        child_vec.push_back(info);
+        vec.push_back(info);
     }
-    return child_vec;
 }
 
 }

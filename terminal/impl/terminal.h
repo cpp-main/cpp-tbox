@@ -31,6 +31,7 @@ class Terminal::Impl {
     NodeToken root() const;
     NodeToken find(const std::string &path) const;
     bool mount(const NodeToken &parent, const NodeToken &child);
+    bool list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const;
 
   protected:
     void onChar(SessionImpl *s, char ch);
