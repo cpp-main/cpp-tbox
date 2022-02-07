@@ -7,10 +7,11 @@ FuncNode::FuncNode(const std::string &name,
     Node(name), func_(func), help_(help)
 { }
 
-void FuncNode::execute(Session &s, const Args &a) const
+bool FuncNode::execute(Session &s, const Args &a) const
 {
     if (func_)
-        func_(s, a);
+        return func_(s, a);
+    return false;
 }
 
 }

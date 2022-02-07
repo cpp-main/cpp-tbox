@@ -7,6 +7,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
+#include <tbox/util/string.h>
 
 #include "session_imp.h"
 #include "dir_node.h"
@@ -166,8 +167,10 @@ NodeToken Terminal::Impl::root() const
 
 NodeToken Terminal::Impl::find(const std::string &path) const
 {
-    LogUndo();  //!TODO
-    return NodeToken();
+    using namespace std;
+    vector<NodeToken> node_token;
+    bool is_found = findNode(path, node_token);
+    return is_found ? node_token.back() : NodeToken();
 }
 
 bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
@@ -347,8 +350,13 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
 {
     using namespace std;
     stringstream ss;
-    //!TODO:打印当前路径
-    ss << "> ";
+
+    ss << '/';
+    for (auto token : s->path) {
+        auto node = nodes_.at(token);
+        ss << node->name() << '/';
+    }
+    ss << " > ";
     s->send(ss.str());
 }
 
@@ -394,8 +402,29 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
 
 bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 {
-    LogUndo();
-    return true;
+    using namespace std;
+
+    if (args.size() < 2) {
+        s->send("Error: cd <path>\r\n");
+        return false;
+    }
+
+    const auto &path = args.at(1);
+    vector<NodeToken> node_token = s->path;
+    bool is_found = findNode(path, node_token);
+    if (is_found) {
+        auto top_node_token = node_token.back();
+        auto top_node = nodes_.at(top_node_token);
+        if (top_node->type() == NodeType::kDir) {
+            s->path = node_token;
+            return true;
+        }
+    }
+
+    stringstream ss;
+    ss << "Error: cannot access '" << path << "'\r\n";
+    s->send(ss.str());
+    return false;
 }
 
 bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
@@ -406,8 +435,38 @@ bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 {
-    LogUndo();
-    return true;
+    using namespace std;
+
+    if (args.size() < 2) {
+        s->send("Error: ls <path>\r\n");
+        return false;
+    }
+
+    const auto &path = args.at(1);
+    vector<NodeToken> node_token = s->path;
+    bool is_found = findNode(path, node_token);
+    if (is_found) {
+        auto top_node_token = node_token.back();
+        auto top_node = nodes_.at(top_node_token);
+        if (top_node->type() == NodeType::kDir) {
+            auto top_dir_node = static_cast<DirNode*>(top_node);
+            vector<NodeInfo> node_info_vec;
+            top_dir_node->children(node_info_vec);
+
+            stringstream ss;
+            for (auto item : node_info_vec)
+                ss << item.name;
+            ss << "'\r\n";
+            s->send(ss.str());
+
+            return true;
+        }
+    }
+
+    stringstream ss;
+    ss << "Error: cannot access '" << path << "'\r\n";
+    s->send(ss.str());
+    return false;
 }
 
 void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
@@ -431,16 +490,63 @@ void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
 {
+    using namespace std;
+
+    std::stringstream ss;
     const auto &cmd = args[0];
+    vector<NodeToken> node_token = s->path;
 
-    bool is_cmd_found = true;   //TODO
-    LogUndo();
-
-    if (!is_cmd_found) {
-        std::stringstream ss;
+    bool is_cmd_found = findNode(cmd, node_token);
+    if (is_cmd_found) {
+        auto top_node_token = node_token.back();
+        auto top_node = nodes_.at(top_node_token);
+        if (top_node->type() == NodeType::kFunc) {
+            auto top_func_node = static_cast<FuncNode*>(top_node);
+            return top_func_node->execute(*s, args);
+        } else {
+            ss << "Error: " << cmd << " not function\r\n";
+        }
+    } else {
         ss << "Error: " << cmd << " not found\r\n";
-        s->send(ss.str());
-        return false;
+    }
+
+    s->send(ss.str());
+    return false;
+}
+
+bool Terminal::Impl::findNode(const std::string &path, std::vector<NodeToken> &node_path) const
+{
+    using namespace std;
+
+    vector<string> path_vec;
+    util::string::Split(path, "/", path_vec);
+
+    if (!path_vec[0].empty()) {
+        node_path.clear();
+        path_vec.erase(path_vec.begin());
+    }
+
+    for (const auto &path_item : path_vec) {
+        if (path_item == "." || path_item.empty()) {
+            continue;
+        } else if (path_item == "..") {
+            if (node_path.empty())
+                return false;
+            else
+                node_path.pop_back();
+        } else {
+            NodeToken top_node_token = node_path.empty() ? root_token_ : node_path.back();
+            Node *top_node = nodes_.at(top_node_token);
+            if (top_node->type() == NodeType::kFunc)
+                return false;
+
+            DirNode *top_dir_node = static_cast<DirNode*>(top_node);
+            auto next_node_token = top_dir_node->findChild(path_item);
+            if (next_node_token.isNull())
+                return false;
+
+            node_path.push_back(next_node_token);
+        }
     }
     return true;
 }

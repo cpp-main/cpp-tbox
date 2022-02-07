@@ -13,7 +13,7 @@ using SessionToken = cabinet::Token;
 using NodeToken    = cabinet::Token;
 
 using Args = std::vector<std::string>;
-using Func = std::function<void(Session &, const Args &)>;
+using Func = std::function<bool (Session &, const Args &)>;
 
 enum class NodeType { kFunc, kDir };
 

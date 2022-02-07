@@ -57,6 +57,8 @@ class Terminal::Impl {
     void executeTreeCmd(SessionImpl *s, const Args &args);
     bool executeUserCmd(SessionImpl *s, const Args &args);
 
+    bool findNode(const std::string &path, std::vector<NodeToken> &node_path) const;
+
   private:
     cabinet::Cabinet<SessionImpl> sessions_;
     cabinet::Cabinet<Node> nodes_;
