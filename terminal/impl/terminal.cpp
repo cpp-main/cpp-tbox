@@ -231,6 +231,7 @@ void Terminal::Impl::onDeleteKey(SessionImpl *s)
 
 void Terminal::Impl::onTabKey(SessionImpl *s)
 {
+    //!TODO: 实现补全功能
     LogUndo();
 }
 
