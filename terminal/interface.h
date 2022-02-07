@@ -32,8 +32,8 @@ class TerminalInteract {
 
 class TerminalBuild {
   public:
-    virtual NodeToken create(const EndNode &info) = 0;
-    virtual NodeToken create(const DirNode &info) = 0;
+    virtual NodeToken create(const FuncInfo &info) = 0;
+    virtual NodeToken create(const DirInfo &info) = 0;
 
     virtual NodeToken root() const = 0;
     virtual NodeToken find(const std::string &path) const = 0;

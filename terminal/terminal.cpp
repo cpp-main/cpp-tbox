@@ -46,12 +46,12 @@ bool Terminal::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h)
     return impl_->onRecvWindowSize(st, w, h);
 }
 
-NodeToken Terminal::create(const EndNode &info)
+NodeToken Terminal::create(const FuncInfo &info)
 {
     return impl_->create(info);
 }
 
-NodeToken Terminal::create(const DirNode &info)
+NodeToken Terminal::create(const DirInfo &info)
 {
     return impl_->create(info);
 }

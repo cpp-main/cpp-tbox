@@ -23,8 +23,8 @@ class Terminal::Impl {
     bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h);
 
   public:
-    NodeToken create(const EndNode &info);
-    NodeToken create(const DirNode &info);
+    NodeToken create(const FuncInfo &info);
+    NodeToken create(const DirInfo &info);
     NodeToken root() const;
     NodeToken find(const std::string &path) const;
     bool mount(const NodeToken &parent, const NodeToken &child);

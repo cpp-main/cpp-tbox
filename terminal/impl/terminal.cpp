@@ -132,13 +132,13 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
     return false;
 }
 
-NodeToken Terminal::Impl::create(const EndNode &info)
+NodeToken Terminal::Impl::create(const FuncInfo &info)
 {
     LogUndo();
     return NodeToken();
 }
 
-NodeToken Terminal::Impl::create(const DirNode &info)
+NodeToken Terminal::Impl::create(const DirInfo &info)
 {
     LogUndo();
     return NodeToken();

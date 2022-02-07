@@ -21,8 +21,8 @@ class Terminal : public TerminalInteract,
     bool onExit(const SessionToken &st) override;
 
   public:
-    NodeToken create(const EndNode &info) override;
-    NodeToken create(const DirNode &info) override;
+    NodeToken create(const FuncInfo &info) override;
+    NodeToken create(const DirInfo &info) override;
     NodeToken root() const override;
     NodeToken find(const std::string &path) const override;
     bool mount(const NodeToken &parent, const NodeToken &child) override;

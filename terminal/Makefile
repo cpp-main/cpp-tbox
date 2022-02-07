@@ -14,6 +14,8 @@ CPP_SRC_FILES = \
 	terminal.cpp \
 	impl/terminal.cpp \
 	impl/key_event_scanner.cpp \
+	impl/dir_node.cpp \
+	impl/func_node.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"terminal"' $(CXXFLAGS)
 
