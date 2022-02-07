@@ -108,6 +108,9 @@ bool Terminal::Impl::onRecvString(const SessionToken &st, const std::string &str
                 case KeyEventScanner::Result::kEnd:
                     onEndKey(s);
                     break;
+                case KeyEventScanner::Result::kDelete:
+                    onDeleteKey(s);
+                    break;
                 default:
                     break;
             }
@@ -215,6 +218,19 @@ void Terminal::Impl::onBackspaceKey(SessionImpl *s)
     s->send(ss.str());
 
     LogTrace("s->curr_input: %s", s->curr_input.c_str());
+}
+
+void Terminal::Impl::onDeleteKey(SessionImpl *s)
+{
+    if (s->cursor >= s->curr_input.size())
+        return;
+
+    s->curr_input.erase((s->cursor), 1);
+
+    std::stringstream ss;
+    ss  << s->curr_input.substr(s->cursor) << ' '
+        << std::string((s->curr_input.size() - s->cursor + 1), '\b');
+    s->send(ss.str());
 }
 
 void Terminal::Impl::onTabKey(SessionImpl *s)

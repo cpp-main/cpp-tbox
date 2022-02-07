@@ -33,6 +33,7 @@ class Terminal::Impl {
     void onChar(SessionImpl *s, char ch);
     void onEnterKey(SessionImpl *s);
     void onBackspaceKey(SessionImpl *s);
+    void onDeleteKey(SessionImpl *s);
     void onTabKey(SessionImpl *s);
     void onMoveUpKey(SessionImpl *s);
     void onMoveDownKey(SessionImpl *s);
