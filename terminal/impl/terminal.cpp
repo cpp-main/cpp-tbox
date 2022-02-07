@@ -363,6 +363,8 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
         executeHistoryCmd(s, args);
     } else if (cmd == "exit") {
         executeExitCmd(s, args);
+    } else if (cmd == "tree") {
+        executeTreeCmd(s, args);
     } else {
         bool is_succ = executeUserCmd(s, args);
         store_in_history = is_succ;
@@ -400,6 +402,11 @@ void Terminal::Impl::executeExitCmd(SessionImpl *s, const Args &args)
 {
     s->send("Bye!\r\n");
     s->endSession();
+}
+
+void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
+{
+    LogUndo();
 }
 
 bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
