@@ -42,6 +42,7 @@ class Terminal::Impl {
     void onEndKey(SessionImpl *s);
 
     void printPrompt(SessionImpl *s);
+    bool executeCmd(SessionImpl *s);
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;

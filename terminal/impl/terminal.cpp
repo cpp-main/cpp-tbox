@@ -13,6 +13,7 @@ namespace tbox::terminal {
 namespace {
 const std::string MOVE_LEFT_KEY("\033[D");
 const std::string MOVE_RIGHT_KEY("\033[C");
+const size_t HISTORY_MAX_SIZE(20);
 }
 
 Terminal::Impl::~Impl()
@@ -178,9 +179,22 @@ void Terminal::Impl::onChar(SessionImpl *s, char ch)
 void Terminal::Impl::onEnterKey(SessionImpl *s)
 {
     s->send("\r\n");
-    s->cursor = 0;
-    s->history.push_back(std::move(s->curr_input));
+
+    bool is_succ = executeCmd(s);
+
     printPrompt(s);
+
+    if (is_succ) {
+        //! 如果成功，则将已执行的命令加入history，另起一行
+        s->cursor = 0;
+        s->history.push_back(std::move(s->curr_input));
+        if (s->history.size() > HISTORY_MAX_SIZE)
+            s->history.pop_front();
+    } else {
+        //! 如果没有成功，则将原来的命令重新打印出来
+        s->cursor = s->curr_input.size();
+        s->send(s->curr_input);
+    }
 }
 
 void Terminal::Impl::onBackspaceKey(SessionImpl *s)
@@ -256,8 +270,15 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
 {
     using namespace std;
     stringstream ss;
-    ss << "$ ";
+    //!TODO:打印当前路径
+    ss << "> ";
     s->send(ss.str());
 }
 
+bool Terminal::Impl::executeCmd(SessionImpl *s)
+{
+    //!TODO:处理并执行命令
+    LogUndo();
+    return true;
+}
 }
