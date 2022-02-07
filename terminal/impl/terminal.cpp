@@ -172,8 +172,14 @@ NodeToken Terminal::Impl::find(const std::string &path) const
 
 bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
 {
-    LogUndo();
-    return false;
+    auto p_node = nodes_.at(parent);
+    auto c_node = nodes_.at(child);
+
+    if (p_node == nullptr || c_node == nullptr)
+        return false;
+
+    auto p_dir_node = dynamic_cast<DirNode*>(p_node);
+    return p_dir_node->addChild(child, c_node->name());
 }
 
 void Terminal::Impl::onChar(SessionImpl *s, char ch)
