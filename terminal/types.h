@@ -20,16 +20,24 @@ enum class NodeType { kFunc, kDir };
 struct NodeInfo {
     std::string name;
     NodeToken   token;
+
+    NodeInfo(const std::string &n, const NodeToken &t) :
+        name(n), token(t) { }
 };
 
 struct FuncInfo {
     std::string name;
     Func        func;   //!< 执行函数
     std::string help;   //!< 帮助说明
+
+    FuncInfo(const std::string &n, const Func &f, const std::string &h) :
+        name(n), func(f), help(h) { }
 };
 
 struct DirInfo {
     std::string name;
+
+    DirInfo(const std::string &n) : name(n) { }
 };
 
 }

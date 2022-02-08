@@ -3,6 +3,7 @@
 #include <signal.h>
 
 #include <iostream>
+#include <sstream>
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
@@ -22,10 +23,9 @@ void BuildNodes(TerminalBuild &term, Loop *wp_loop);
 
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
-        std::cout << "Exp: " << argv[0] << " 0.0.0.0:12345" << std::endl;
-        return 0;
-    }
+    std::string bind_addr = "0.0.0.0:12345";
+    if (argc >= 2)
+        bind_addr = argv[1];
 
     LogOutput_Initialize(argv[0]);
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
     Terminal term;
     Telnetd telnetd(sp_loop, &term);
-    if (!telnetd.initialize(argv[1])) {
+    if (!telnetd.initialize(bind_addr)) {
         std::cout << "Error: telnetd init fail" << std::endl;
         return 0;
     }
@@ -65,5 +65,35 @@ int main(int argc, char **argv)
 
 void BuildNodes(TerminalBuild &term, Loop *wp_loop)
 {
+    Func func = \
+        [](Session &s, const Args &args) -> bool {
+            std::stringstream ss;
+            ss << "this is func\r\nargs:";
+            for (auto a : args)
+                ss << ' ' << a;
+            ss << "\r\n";
+            s.send(ss.str());
+            return true;
+        };
 
+    auto fun1_token = term.create(FuncInfo("func1", func, ""));
+    auto fun2_token = term.create(FuncInfo("func2", func, ""));
+    auto fun_token = term.create(FuncInfo("func", func, ""));
+
+    auto dir1_token = term.create(DirInfo("dir1"));
+    auto dir2_token = term.create(DirInfo("dir2"));
+
+    auto dir1_1_token = term.create(DirInfo("dir1_1"));
+    auto dir1_2_token = term.create(DirInfo("dir1_2"));
+
+    term.mount(dir1_1_token, fun_token);
+    term.mount(dir1_2_token, fun1_token);
+    term.mount(dir1_2_token, fun2_token);
+
+    term.mount(dir1_token, dir1_1_token);
+    term.mount(dir1_token, dir1_2_token);
+
+    term.mount(term.root(), fun1_token);
+    term.mount(term.root(), dir1_token);
+    term.mount(term.root(), dir2_token);
 }

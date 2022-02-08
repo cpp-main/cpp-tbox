@@ -362,11 +362,14 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
 
 void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline)
 {
-    if (s->curr_input.empty())
+    auto cmdline = s->curr_input;
+    if (cmdline.empty())
         return;
 
+    LogTrace("cmdline: %s", cmdline.c_str());
+
     std::vector<std::string> args;
-    if (!util::SplitCmdline(s->curr_input, args) || args.empty()) {
+    if (!util::SplitCmdline(cmdline, args) || args.empty()) {
         s->send("Error: parse cmdline fail!\r\n");
         return;
     }
@@ -413,7 +416,7 @@ bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
     vector<NodeToken> node_token = s->path;
     bool is_found = findNode(path, node_token);
     if (is_found) {
-        auto top_node_token = node_token.back();
+        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
             s->path = node_token;
@@ -437,16 +440,14 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 {
     using namespace std;
 
-    if (args.size() < 2) {
-        s->send("Error: ls <path>\r\n");
-        return false;
-    }
+    string path = ".";
+    if (args.size() >= 2)
+        path = args[1];
 
-    const auto &path = args.at(1);
     vector<NodeToken> node_token = s->path;
     bool is_found = findNode(path, node_token);
     if (is_found) {
-        auto top_node_token = node_token.back();
+        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
             auto top_dir_node = static_cast<DirNode*>(top_node);
@@ -455,8 +456,7 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 
             stringstream ss;
             for (auto item : node_info_vec)
-                ss << item.name;
-            ss << "'\r\n";
+                ss << item.name << "\r\n";
             s->send(ss.str());
 
             return true;
@@ -498,7 +498,7 @@ bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
 
     bool is_cmd_found = findNode(cmd, node_token);
     if (is_cmd_found) {
-        auto top_node_token = node_token.back();
+        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kFunc) {
             auto top_func_node = static_cast<FuncNode*>(top_node);
@@ -521,7 +521,7 @@ bool Terminal::Impl::findNode(const std::string &path, std::vector<NodeToken> &n
     vector<string> path_vec;
     util::string::Split(path, "/", path_vec);
 
-    if (!path_vec[0].empty()) {
+    if (path_vec[0].empty()) {
         node_path.clear();
         path_vec.erase(path_vec.begin());
     }
