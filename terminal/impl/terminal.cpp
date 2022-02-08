@@ -352,11 +352,22 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
     stringstream ss;
 
     ss << '/';
+
+#if 0
     for (auto token : s->path) {
         auto node = nodes_.at(token);
         ss << node->name() << '/';
     }
-    ss << " > ";
+#else
+    for (size_t i = 0; i < s->path.size(); ++i) {
+        auto node = nodes_.at(s->path.at(i));
+        ss << node->name();
+        if ((i + 1) != s->path.size())
+            ss << '/';
+    }
+#endif
+
+    ss << " # ";
     s->send(ss.str());
 }
 
@@ -396,6 +407,8 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
         executeExitCmd(s, args);
     } else if (cmd == "tree") {
         executeTreeCmd(s, args);
+        store_in_history = true;
+        recover_cmdline = false;
     } else {
         bool is_succ = executeUserCmd(s, args);
         store_in_history = is_succ;
@@ -407,12 +420,10 @@ bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 {
     using namespace std;
 
-    if (args.size() < 2) {
-        s->send("Error: cd <path>\r\n");
-        return false;
-    }
+    string path = "/";
+    if (args.size() >= 2)
+        path = args[1];
 
-    const auto &path = args.at(1);
     vector<NodeToken> node_token = s->path;
     bool is_found = findNode(path, node_token);
     if (is_found) {
