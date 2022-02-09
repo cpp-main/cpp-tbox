@@ -7,8 +7,14 @@ namespace tbox::terminal {
 
 class Node {
   public:
+    explicit Node(const std::string &help) : help_(help) { }
     virtual ~Node() { }
+
     virtual NodeType type() const = 0;
+    std::string help() const { return help_; }
+
+  private:
+    std::string help_;
 };
 
 }

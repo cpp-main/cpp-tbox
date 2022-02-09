@@ -76,11 +76,11 @@ void BuildNodes(TerminalBuild &term, Loop *wp_loop)
             return true;
         };
 
-    auto fun1_token = term.createFuncNode(func, "");
-    auto fun2_token = term.createFuncNode(func, "");
-    auto fun_token = term.createFuncNode(func, "");
+    auto fun1_token = term.createFuncNode(func, "This is fun1");
+    auto fun2_token = term.createFuncNode(func, "This is fun2");
+    auto fun_token = term.createFuncNode(func, "This is fun");
 
-    auto dir1_token = term.createDirNode();
+    auto dir1_token = term.createDirNode("This is dir1");
     auto dir2_token = term.createDirNode();
 
     auto dir1_1_token = term.createDirNode();

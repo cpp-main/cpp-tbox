@@ -18,14 +18,14 @@ namespace tbox::terminal {
 using namespace std;
 
 namespace {
-const string MOVE_LEFT_KEY("\033[D");
-const string MOVE_RIGHT_KEY("\033[C");
-const size_t HISTORY_MAX_SIZE(20);
+    const string MOVE_LEFT_KEY("\033[D");
+    const string MOVE_RIGHT_KEY("\033[C");
+    const size_t HISTORY_MAX_SIZE(20);
 }
 
 Terminal::Impl::Impl()
 {
-    root_token_ = nodes_.insert(new DirNode);
+    root_token_ = nodes_.insert(new DirNode("this is root node"));
 }
 
 Terminal::Impl::~Impl()
@@ -155,9 +155,9 @@ NodeToken Terminal::Impl::createFuncNode(const Func &func, const string &help)
     return nodes_.insert(node);
 }
 
-NodeToken Terminal::Impl::createDirNode()
+NodeToken Terminal::Impl::createDirNode(const string &help)
 {
-    DirNode *node = new DirNode;
+    DirNode *node = new DirNode(help);
     return nodes_.insert(node);
 }
 
@@ -418,8 +418,24 @@ bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
 {
-    LogUndo();
-    return true;
+    string path = ".";
+    if (args.size() >= 2)
+        path = args[1];
+
+    auto node_path = s->path;
+    bool is_found = findNode(path, node_path);
+    if (is_found) {
+        auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
+        auto top_node = nodes_.at(top_node_token);
+        auto help_str = top_node->help() + "\r\n";
+        s->send(help_str);
+        return true;
+    }
+
+    stringstream ss;
+    ss << "Error: cannot access '" << path << "'\r\n";
+    s->send(ss.str());
+    return false;
 }
 
 bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)

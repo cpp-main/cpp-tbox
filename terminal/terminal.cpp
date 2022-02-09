@@ -51,9 +51,9 @@ NodeToken Terminal::createFuncNode(const Func &func, const std::string &help)
     return impl_->createFuncNode(func, help);
 }
 
-NodeToken Terminal::createDirNode()
+NodeToken Terminal::createDirNode(const std::string &help)
 {
-    return impl_->createDirNode();
+    return impl_->createDirNode(help);
 }
 
 NodeToken Terminal::rootNode() const

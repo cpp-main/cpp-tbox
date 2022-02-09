@@ -22,7 +22,7 @@ class Terminal : public TerminalInteract,
 
   public:
     NodeToken createFuncNode(const Func &func, const std::string &help) override;
-    NodeToken createDirNode() override;
+    NodeToken createDirNode(const std::string &help) override;
     NodeToken rootNode() const override;
     NodeToken findNode(const std::string &path) const override;
     bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
