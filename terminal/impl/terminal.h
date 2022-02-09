@@ -46,6 +46,8 @@ class Terminal::Impl {
     void onEndKey(SessionImpl *s);
 
     void printPrompt(SessionImpl *s);
+    void printHelp(SessionImpl *s);
+
     void executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline);
 
     bool executeCdCmd(SessionImpl *s, const Args &args);

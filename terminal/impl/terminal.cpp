@@ -348,6 +348,20 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
     s->send(ss.str());
 }
 
+void Terminal::Impl::printHelp(SessionImpl *s)
+{
+    const char *help_str = \
+        "buildin command:\r\n"
+        "- cd        Chang directory\r\n"
+        "- ls        List nodes under specified path\r\n"
+        "- tree      List all nodes as tree\r\n"
+        "- exit      Exit this\r\n"
+        "- help      Print help of specified node\r\n"
+        "- history   List history command\r\n"
+        ;
+    s->send(help_str);
+}
+
 void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline)
 {
     auto cmdline = s->curr_input;
@@ -418,12 +432,14 @@ bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
 {
-    string path = ".";
-    if (args.size() >= 2)
-        path = args[1];
+    if (args.size() < 2) {
+        printHelp(s);
+        return true;
+    }
 
+    string path_str = args[1];
     auto node_path = s->path;
-    bool is_found = findNode(path, node_path);
+    bool is_found = findNode(path_str, node_path);
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
@@ -433,7 +449,7 @@ bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
     }
 
     stringstream ss;
-    ss << "Error: cannot access '" << path << "'\r\n";
+    ss << "Error: cannot access '" << path_str << "'\r\n";
     s->send(ss.str());
     return false;
 }
