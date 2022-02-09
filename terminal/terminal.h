@@ -21,12 +21,11 @@ class Terminal : public TerminalInteract,
     bool onExit(const SessionToken &st) override;
 
   public:
-    NodeToken create(const FuncInfo &info) override;
-    NodeToken create(const DirInfo &info) override;
-    NodeToken root() const override;
-    NodeToken find(const std::string &path) const override;
-    bool mount(const NodeToken &parent, const NodeToken &child) override;
-    bool list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const override;
+    NodeToken createFuncNode(const Func &func, const std::string &help) override;
+    NodeToken createDirNode() override;
+    NodeToken rootNode() const override;
+    NodeToken findNode(const std::string &path) const override;
+    bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
 
   private:
     class Impl;

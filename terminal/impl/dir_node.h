@@ -8,8 +8,6 @@ namespace tbox::terminal {
 
 class DirNode : public Node {
   public:
-    using Node::Node;
-
     NodeType type() const override { return NodeType::kDir; }
 
     bool addChild(const NodeToken &nt, const std::string &child_name);

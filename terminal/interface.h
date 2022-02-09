@@ -32,14 +32,13 @@ class TerminalInteract {
 
 class TerminalBuild {
   public:
-    virtual NodeToken create(const FuncInfo &info) = 0;
-    virtual NodeToken create(const DirInfo &info) = 0;
+    virtual NodeToken createFuncNode(const Func &func, const std::string &help) = 0;
+    virtual NodeToken createDirNode() = 0;
 
-    virtual NodeToken root() const = 0;
-    virtual NodeToken find(const std::string &path) const = 0;
-    virtual bool list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const = 0;
+    virtual NodeToken rootNode() const = 0;
+    virtual NodeToken findNode(const std::string &path) const = 0;
 
-    virtual bool mount(const NodeToken &parent, const NodeToken &child) = 0;
+    virtual bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) = 0;
 
   protected:
     virtual ~TerminalBuild() { }

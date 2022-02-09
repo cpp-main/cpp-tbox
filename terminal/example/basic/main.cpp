@@ -68,7 +68,7 @@ void BuildNodes(TerminalBuild &term, Loop *wp_loop)
     Func func = \
         [](Session &s, const Args &args) -> bool {
             std::stringstream ss;
-            ss << "this is func\r\nargs:";
+            ss << "This is func. Args:";
             for (auto a : args)
                 ss << ' ' << a;
             ss << "\r\n";
@@ -76,24 +76,26 @@ void BuildNodes(TerminalBuild &term, Loop *wp_loop)
             return true;
         };
 
-    auto fun1_token = term.create(FuncInfo("func1", func, ""));
-    auto fun2_token = term.create(FuncInfo("func2", func, ""));
-    auto fun_token = term.create(FuncInfo("func", func, ""));
+    auto fun1_token = term.createFuncNode(func, "");
+    auto fun2_token = term.createFuncNode(func, "");
+    auto fun_token = term.createFuncNode(func, "");
 
-    auto dir1_token = term.create(DirInfo("dir1"));
-    auto dir2_token = term.create(DirInfo("dir2"));
+    auto dir1_token = term.createDirNode();
+    auto dir2_token = term.createDirNode();
 
-    auto dir1_1_token = term.create(DirInfo("dir1_1"));
-    auto dir1_2_token = term.create(DirInfo("dir1_2"));
+    auto dir1_1_token = term.createDirNode();
+    auto dir1_2_token = term.createDirNode();
 
-    term.mount(dir1_1_token, fun_token);
-    term.mount(dir1_2_token, fun1_token);
-    term.mount(dir1_2_token, fun2_token);
+    term.mountNode(dir1_1_token, fun_token, "func");
+    term.mountNode(dir1_2_token, fun1_token, "func1");
+    term.mountNode(dir1_2_token, fun2_token, "func2");
 
-    term.mount(dir1_token, dir1_1_token);
-    term.mount(dir1_token, dir1_2_token);
+    term.mountNode(dir1_token, dir1_1_token, "dir1_1");
+    term.mountNode(dir1_token, dir1_2_token, "dir1_2");
 
-    term.mount(term.root(), fun1_token);
-    term.mount(term.root(), dir1_token);
-    term.mount(term.root(), dir2_token);
+    term.mountNode(term.rootNode(), fun1_token, "func1");
+    term.mountNode(term.rootNode(), dir1_token, "dir1");
+    term.mountNode(term.rootNode(), dir2_token, "dir2");
+
+    term.mountNode(dir1_1_token, term.rootNode(), "root");  //! 循环引用
 }

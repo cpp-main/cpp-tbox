@@ -25,20 +25,8 @@ struct NodeInfo {
         name(n), token(t) { }
 };
 
-struct FuncInfo {
-    std::string name;
-    Func        func;   //!< 执行函数
-    std::string help;   //!< 帮助说明
-
-    FuncInfo(const std::string &n, const Func &f, const std::string &h) :
-        name(n), func(f), help(h) { }
-};
-
-struct DirInfo {
-    std::string name;
-
-    DirInfo(const std::string &n) : name(n) { }
-};
+using PathItem  = std::pair<std::string, NodeToken>;
+using Path      = std::vector<PathItem>;
 
 }
 

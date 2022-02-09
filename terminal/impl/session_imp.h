@@ -32,7 +32,7 @@ class SessionImpl : public Session {
     std::string curr_input;
     size_t cursor = 0;
 
-    std::vector<NodeToken>  path;      //! 当前路径
+    Path path;  //! 当前路径
     std::deque<std::string> history;   //! 历史命令
     size_t history_index = 0;   //! 0表示不指定历史命令
 

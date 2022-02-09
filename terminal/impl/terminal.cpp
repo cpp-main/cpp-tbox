@@ -23,8 +23,7 @@ const size_t HISTORY_MAX_SIZE(20);
 
 Terminal::Impl::Impl()
 {
-    DirNode *root_node = new DirNode("");
-    root_token_ = nodes_.insert(root_node);
+    root_token_ = nodes_.insert(new DirNode);
 }
 
 Terminal::Impl::~Impl()
@@ -148,32 +147,32 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
     return false;
 }
 
-NodeToken Terminal::Impl::create(const FuncInfo &info)
+NodeToken Terminal::Impl::createFuncNode(const Func &func, const std::string &help)
 {
-    FuncNode *node = new FuncNode(info.name, info.func, info.help);
+    FuncNode *node = new FuncNode(func, help);
     return nodes_.insert(node);
 }
 
-NodeToken Terminal::Impl::create(const DirInfo &info)
+NodeToken Terminal::Impl::createDirNode()
 {
-    DirNode *node = new DirNode(info.name);
+    DirNode *node = new DirNode;
     return nodes_.insert(node);
 }
 
-NodeToken Terminal::Impl::root() const
+NodeToken Terminal::Impl::rootNode() const
 {
     return root_token_;
 }
 
-NodeToken Terminal::Impl::find(const std::string &path) const
+NodeToken Terminal::Impl::findNode(const std::string &path_str) const
 {
     using namespace std;
-    vector<NodeToken> node_token;
-    bool is_found = findNode(path, node_token);
-    return is_found ? node_token.back() : NodeToken();
+    Path node_path;
+    bool is_found = findNode(path_str, node_path);
+    return is_found ? node_path.back().second : NodeToken();
 }
 
-bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
+bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name)
 {
     auto p_node = nodes_.at(parent);
     auto c_node = nodes_.at(child);
@@ -181,22 +180,11 @@ bool Terminal::Impl::mount(const NodeToken &parent, const NodeToken &child)
     if (p_node == nullptr || c_node == nullptr)
         return false;
 
-    auto p_dir_node = dynamic_cast<DirNode*>(p_node);
-    return p_dir_node->addChild(child, c_node->name());
-}
-
-bool Terminal::Impl::list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const
-{
-    auto p_node = nodes_.at(token);
-    if (p_node == nullptr)
+    if (p_node->type() != NodeType::kDir)
         return false;
 
-    auto p_dir_node = dynamic_cast<DirNode*>(p_node);
-    if (p_dir_node == nullptr)
-        return false;
-
-    p_dir_node->children(node_vec);
-    return true;
+    auto p_dir_node = static_cast<DirNode*>(p_node);
+    return p_dir_node->addChild(child, name);
 }
 
 void Terminal::Impl::onChar(SessionImpl *s, char ch)
@@ -360,8 +348,7 @@ void Terminal::Impl::printPrompt(SessionImpl *s)
     }
 #else
     for (size_t i = 0; i < s->path.size(); ++i) {
-        auto node = nodes_.at(s->path.at(i));
-        ss << node->name();
+        ss << s->path.at(i).first;
         if ((i + 1) != s->path.size())
             ss << '/';
     }
@@ -424,13 +411,13 @@ bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
     if (args.size() >= 2)
         path = args[1];
 
-    vector<NodeToken> node_token = s->path;
-    bool is_found = findNode(path, node_token);
+    auto node_path = s->path;
+    bool is_found = findNode(path, node_path);
     if (is_found) {
-        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
+        auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
-            s->path = node_token;
+            s->path = node_path;
             return true;
         }
     }
@@ -455,10 +442,10 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
     if (args.size() >= 2)
         path = args[1];
 
-    vector<NodeToken> node_token = s->path;
-    bool is_found = findNode(path, node_token);
+    auto node_path = s->path;
+    bool is_found = findNode(path, node_path);
     if (is_found) {
-        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
+        auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
             auto top_dir_node = static_cast<DirNode*>(top_node);
@@ -505,11 +492,11 @@ bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
 
     std::stringstream ss;
     const auto &cmd = args[0];
-    vector<NodeToken> node_token = s->path;
+    auto node_path = s->path;
+    bool is_cmd_found = findNode(cmd, node_path);
 
-    bool is_cmd_found = findNode(cmd, node_token);
     if (is_cmd_found) {
-        auto top_node_token = node_token.empty() ? root_token_ : node_token.back();
+        auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kFunc) {
             auto top_func_node = static_cast<FuncNode*>(top_node);
@@ -525,38 +512,38 @@ bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
     return false;
 }
 
-bool Terminal::Impl::findNode(const std::string &path, std::vector<NodeToken> &node_path) const
+bool Terminal::Impl::findNode(const std::string &path_str, Path &node_path) const
 {
     using namespace std;
 
-    vector<string> path_vec;
-    util::string::Split(path, "/", path_vec);
+    vector<string> path_str_vec;
+    util::string::Split(path_str, "/", path_str_vec);
 
-    if (path_vec[0].empty()) {
+    if (path_str_vec[0].empty()) {
         node_path.clear();
-        path_vec.erase(path_vec.begin());
+        path_str_vec.erase(path_str_vec.begin());
     }
 
-    for (const auto &path_item : path_vec) {
-        if (path_item == "." || path_item.empty()) {
+    for (const auto &node_name : path_str_vec) {
+        if (node_name == "." || node_name.empty()) {
             continue;
-        } else if (path_item == "..") {
+        } else if (node_name == "..") {
             if (node_path.empty())
                 return false;
             else
                 node_path.pop_back();
         } else {
-            NodeToken top_node_token = node_path.empty() ? root_token_ : node_path.back();
+            NodeToken top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
             Node *top_node = nodes_.at(top_node_token);
             if (top_node->type() == NodeType::kFunc)
                 return false;
 
             DirNode *top_dir_node = static_cast<DirNode*>(top_node);
-            auto next_node_token = top_dir_node->findChild(path_item);
+            auto next_node_token = top_dir_node->findChild(node_name);
             if (next_node_token.isNull())
                 return false;
 
-            node_path.push_back(next_node_token);
+            node_path.push_back(make_pair(node_name, next_node_token));
         }
     }
     return true;

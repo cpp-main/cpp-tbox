@@ -7,15 +7,8 @@ namespace tbox::terminal {
 
 class Node {
   public:
-    explicit Node(const std::string &name) : name_(name) { }
     virtual ~Node() { }
-
     virtual NodeType type() const = 0;
-
-    inline std::string name() const { return name_; }
-
-  private:
-    std::string name_;
 };
 
 }

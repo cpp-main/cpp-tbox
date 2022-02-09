@@ -46,34 +46,29 @@ bool Terminal::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h)
     return impl_->onRecvWindowSize(st, w, h);
 }
 
-NodeToken Terminal::create(const FuncInfo &info)
+NodeToken Terminal::createFuncNode(const Func &func, const std::string &help)
 {
-    return impl_->create(info);
+    return impl_->createFuncNode(func, help);
 }
 
-NodeToken Terminal::create(const DirInfo &info)
+NodeToken Terminal::createDirNode()
 {
-    return impl_->create(info);
+    return impl_->createDirNode();
 }
 
-NodeToken Terminal::root() const
+NodeToken Terminal::rootNode() const
 {
-    return impl_->root();
+    return impl_->rootNode();
 }
 
-NodeToken Terminal::find(const std::string &path) const
+NodeToken Terminal::findNode(const std::string &path) const
 {
-    return impl_->find(path);
+    return impl_->findNode(path);
 }
 
-bool Terminal::mount(const NodeToken &parent, const NodeToken &child)
+bool Terminal::mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name)
 {
-    return impl_->mount(parent, child);
-}
-
-bool Terminal::list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const
-{
-    return impl_->list(token, node_vec);
+    return impl_->mountNode(parent, child, name);
 }
 
 }

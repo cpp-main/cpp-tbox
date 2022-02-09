@@ -26,12 +26,11 @@ class Terminal::Impl {
     bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h);
 
   public:
-    NodeToken create(const FuncInfo &info);
-    NodeToken create(const DirInfo &info);
-    NodeToken root() const;
-    NodeToken find(const std::string &path) const;
-    bool mount(const NodeToken &parent, const NodeToken &child);
-    bool list(const NodeToken &token, std::vector<NodeInfo> &node_vec) const;
+    NodeToken createFuncNode(const Func &func, const std::string &help);
+    NodeToken createDirNode();
+    NodeToken rootNode() const;
+    NodeToken findNode(const std::string &path) const;
+    bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name);
 
   protected:
     void onChar(SessionImpl *s, char ch);
@@ -57,7 +56,7 @@ class Terminal::Impl {
     void executeTreeCmd(SessionImpl *s, const Args &args);
     bool executeUserCmd(SessionImpl *s, const Args &args);
 
-    bool findNode(const std::string &path, std::vector<NodeToken> &node_path) const;
+    bool findNode(const std::string &path, Path &node_path) const;
 
   private:
     cabinet::Cabinet<SessionImpl> sessions_;

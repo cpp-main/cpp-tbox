@@ -8,9 +8,7 @@ namespace tbox::terminal {
 
 class FuncNode : public Node {
   public:
-    FuncNode(const std::string &name,
-             const Func &func,
-             const std::string &help);
+    FuncNode(const Func &func, const std::string &help);
 
     NodeType type() const override { return NodeType::kFunc; }
     bool execute(Session &s, const Args &a) const;
