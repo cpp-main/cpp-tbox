@@ -15,9 +15,11 @@
 
 namespace tbox::terminal {
 
+using namespace std;
+
 namespace {
-const std::string MOVE_LEFT_KEY("\033[D");
-const std::string MOVE_RIGHT_KEY("\033[C");
+const string MOVE_LEFT_KEY("\033[D");
+const string MOVE_RIGHT_KEY("\033[C");
 const size_t HISTORY_MAX_SIZE(20);
 }
 
@@ -83,7 +85,7 @@ bool Terminal::Impl::onExit(const SessionToken &st)
     return true;
 }
 
-bool Terminal::Impl::onRecvString(const SessionToken &st, const std::string &str)
+bool Terminal::Impl::onRecvString(const SessionToken &st, const string &str)
 {
     auto s = sessions_.at(st);
     if (s == nullptr)
@@ -147,7 +149,7 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
     return false;
 }
 
-NodeToken Terminal::Impl::createFuncNode(const Func &func, const std::string &help)
+NodeToken Terminal::Impl::createFuncNode(const Func &func, const string &help)
 {
     FuncNode *node = new FuncNode(func, help);
     return nodes_.insert(node);
@@ -164,15 +166,14 @@ NodeToken Terminal::Impl::rootNode() const
     return root_token_;
 }
 
-NodeToken Terminal::Impl::findNode(const std::string &path_str) const
+NodeToken Terminal::Impl::findNode(const string &path_str) const
 {
-    using namespace std;
     Path node_path;
     bool is_found = findNode(path_str, node_path);
     return is_found ? node_path.back().second : NodeToken();
 }
 
-bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name)
+bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, const string &name)
 {
     auto p_node = nodes_.at(parent);
     auto c_node = nodes_.at(child);
@@ -197,9 +198,9 @@ void Terminal::Impl::onChar(SessionImpl *s, char ch)
         s->curr_input.insert(s->cursor, 1, ch);
     s->cursor++;
 
-    std::stringstream ss;
+    stringstream ss;
     ss  << s->curr_input.substr(s->cursor)
-        << std::string((s->curr_input.size() - s->cursor), '\b');
+        << string((s->curr_input.size() - s->cursor), '\b');
     s->send(ss.str());
 }
 
@@ -216,7 +217,7 @@ void Terminal::Impl::onEnterKey(SessionImpl *s)
     if (store_in_history) {
         //! 如果成功，则将已执行的命令加入history，另起一行
         s->cursor = 0;
-        s->history.push_back(std::move(s->curr_input));
+        s->history.push_back(move(s->curr_input));
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
     }
@@ -242,9 +243,9 @@ void Terminal::Impl::onBackspaceKey(SessionImpl *s)
 
     s->cursor--;
 
-    std::stringstream ss;
+    stringstream ss;
     ss  << '\b' << s->curr_input.substr(s->cursor) << ' '
-        << std::string((s->curr_input.size() - s->cursor + 1), '\b');
+        << string((s->curr_input.size() - s->cursor + 1), '\b');
     s->send(ss.str());
 }
 
@@ -255,9 +256,9 @@ void Terminal::Impl::onDeleteKey(SessionImpl *s)
 
     s->curr_input.erase((s->cursor), 1);
 
-    std::stringstream ss;
+    stringstream ss;
     ss  << s->curr_input.substr(s->cursor) << ' '
-        << std::string((s->curr_input.size() - s->cursor + 1), '\b');
+        << string((s->curr_input.size() - s->cursor + 1), '\b');
     s->send(ss.str());
 }
 
@@ -336,24 +337,13 @@ void Terminal::Impl::onEndKey(SessionImpl *s)
 
 void Terminal::Impl::printPrompt(SessionImpl *s)
 {
-    using namespace std;
     stringstream ss;
-
     ss << '/';
-
-#if 0
-    for (auto token : s->path) {
-        auto node = nodes_.at(token);
-        ss << node->name() << '/';
-    }
-#else
     for (size_t i = 0; i < s->path.size(); ++i) {
         ss << s->path.at(i).first;
         if ((i + 1) != s->path.size())
             ss << '/';
     }
-#endif
-
     ss << " # ";
     s->send(ss.str());
 }
@@ -366,7 +356,7 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
 
     LogTrace("cmdline: %s", cmdline.c_str());
 
-    std::vector<std::string> args;
+    vector<string> args;
     if (!util::SplitCmdline(cmdline, args) || args.empty()) {
         s->send("Error: parse cmdline fail!\r\n");
         return;
@@ -405,8 +395,6 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
 
 bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 {
-    using namespace std;
-
     string path = "/";
     if (args.size() >= 2)
         path = args[1];
@@ -436,8 +424,6 @@ bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 {
-    using namespace std;
-
     string path = ".";
     if (args.size() >= 2)
         path = args[1];
@@ -469,7 +455,7 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 
 void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
 {
-    std::stringstream ss;
+    stringstream ss;
     for (const auto &cmd : s->history)
         ss << cmd << "\r\n";
     s->send(ss.str());
@@ -488,9 +474,8 @@ void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
 bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
 {
-    using namespace std;
 
-    std::stringstream ss;
+    stringstream ss;
     const auto &cmd = args[0];
     auto node_path = s->path;
     bool is_cmd_found = findNode(cmd, node_path);
@@ -502,7 +487,8 @@ bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
             auto top_func_node = static_cast<FuncNode*>(top_node);
             return top_func_node->execute(*s, args);
         } else {
-            ss << "Error: " << cmd << " not function\r\n";
+            s->path = node_path;
+            return true;
         }
     } else {
         ss << "Error: " << cmd << " not found\r\n";
@@ -512,10 +498,8 @@ bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
     return false;
 }
 
-bool Terminal::Impl::findNode(const std::string &path_str, Path &node_path) const
+bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
 {
-    using namespace std;
-
     vector<string> path_str_vec;
     util::string::Split(path_str, "/", path_str_vec);
 
