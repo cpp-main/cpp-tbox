@@ -15,6 +15,7 @@ CPP_SRC_FILES = \
 	impl/terminal.cpp \
 	impl/terminal_shortcuts.cpp \
 	impl/terminal_commands.cpp \
+	impl/terminal_nodes.cpp \
 	impl/key_event_scanner.cpp \
 	impl/dir_node.cpp \
 	impl/func_node.cpp \
