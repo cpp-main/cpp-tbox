@@ -35,7 +35,7 @@ KeyEventScanner::Status KeyEventScanner::next(uint8_t byte)
             return Status::kEnsure;
         }
     } else if (step_ == Step::k0d) {
-        if (byte == 0x00) {
+        if (byte == 0x00 || byte == 0x0a) {
             result_ = Result::kEnter;
             return Status::kEnsure;
         }

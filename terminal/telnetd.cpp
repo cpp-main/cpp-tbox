@@ -168,7 +168,7 @@ bool Telnetd::Impl::send(const SessionToken &st, const std::string &str)
     if (st.isNull())
         return false;
 
-    sp_tcp_->send(ct, str.c_str(), str.size());
+    send(ct, str.c_str(), str.size());
     return true;
 }
 
@@ -178,7 +178,7 @@ bool Telnetd::Impl::send(const SessionToken &st, char ch)
     if (st.isNull())
         return false;
 
-    sp_tcp_->send(ct, &ch, 1);
+    send(ct, &ch, 1);
     return true;
 }
 
@@ -234,9 +234,10 @@ void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
 
 bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size)
 {
+#if 0
     auto hex_str = string::RawDataToHexStr(data_ptr, data_size);
     cout << "send to " << ct.id() << " size " << data_size << ": " << hex_str << endl;
-
+#endif
     return sp_tcp_->send(ct, data_ptr, data_size);
 }
 
@@ -275,9 +276,10 @@ void Telnetd::Impl::sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8
 
 void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
 {
+#if 0
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
     cout << "recv from " << ct.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
-
+#endif
     while (buff.readableSize() != 0) {
         auto begin = buff.readableBegin();
         auto end   = begin + buff.readableSize();

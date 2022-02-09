@@ -44,12 +44,14 @@ void Terminal::Impl::onEnterKey(SessionImpl *s)
 
     printPrompt(s);
 
+    s->cursor = 0;
     if (store_in_history) {
         //! 如果成功，则将已执行的命令加入history，另起一行
-        s->cursor = 0;
         s->history.push_back(move(s->curr_input));
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
+    } else {
+        s->curr_input.clear();
     }
 
     if (recover_cmdline) {
