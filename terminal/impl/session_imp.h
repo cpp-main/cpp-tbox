@@ -2,6 +2,7 @@
 #define TBOX_TERMINAL_SESSION_IMP_H_20220204
 
 #include "key_event_scanner.h"
+#include <deque>
 
 namespace tbox::terminal {
 

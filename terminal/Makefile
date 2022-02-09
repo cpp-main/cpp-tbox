@@ -13,6 +13,8 @@ CPP_SRC_FILES = \
 	telnetd.cpp \
 	terminal.cpp \
 	impl/terminal.cpp \
+	impl/terminal_shortcuts.cpp \
+	impl/terminal_commands.cpp \
 	impl/key_event_scanner.cpp \
 	impl/dir_node.cpp \
 	impl/func_node.cpp \
