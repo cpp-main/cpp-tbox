@@ -48,9 +48,9 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
     } else if (cmd == "exit") {
         executeExitCmd(s, args);
     } else if (cmd == "tree") {
-        executeTreeCmd(s, args);
-        store_in_history = true;
-        recover_cmdline = false;
+        bool is_succ = executeTreeCmd(s, args);
+        store_in_history = is_succ;
+        recover_cmdline = !is_succ;
     } else {
         bool is_succ = executeUserCmd(s, args);
         store_in_history = is_succ;
@@ -60,23 +60,27 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
 
 bool Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
 {
-    string path = "/";
+    string path_str = "/";
     if (args.size() >= 2)
-        path = args[1];
+        path_str = args[1];
+
+    stringstream ss;
 
     auto node_path = s->path;
-    bool is_found = findNode(path, node_path);
+    bool is_found = findNode(path_str, node_path);
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
             s->path = node_path;
             return true;
+        } else {
+            ss << "Error: '" << path_str << "' not directory" << "\r\n";
         }
+    } else {
+        ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    stringstream ss;
-    ss << "Error: cannot access '" << path << "'\r\n";
     s->send(ss.str());
     return false;
 }
@@ -88,31 +92,36 @@ bool Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
         return true;
     }
 
+    stringstream ss;
+    bool is_succ = false;
+
     string path_str = args[1];
     auto node_path = s->path;
     bool is_found = findNode(path_str, node_path);
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-        auto help_str = top_node->help() + "\r\n";
-        s->send(help_str);
-        return true;
+        ss << top_node->help() << "\r\n";
+        is_succ = true;
+    } else {
+        ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    stringstream ss;
-    ss << "Error: cannot access '" << path_str << "'\r\n";
     s->send(ss.str());
-    return false;
+    return is_succ;
 }
 
 bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 {
-    string path = ".";
+    string path_str = ".";
     if (args.size() >= 2)
-        path = args[1];
+        path_str = args[1];
+
+    stringstream ss;
+    bool is_succ = false;
 
     auto node_path = s->path;
-    bool is_found = findNode(path, node_path);
+    bool is_found = findNode(path_str, node_path);
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
@@ -121,19 +130,18 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
             vector<NodeInfo> node_info_vec;
             top_dir_node->children(node_info_vec);
 
-            stringstream ss;
             for (auto item : node_info_vec)
                 ss << item.name << "\r\n";
-            s->send(ss.str());
-
-            return true;
+            is_succ = true;
+        } else {
+            ss << path_str << " is function" << "\r\n";
         }
+    } else {
+        ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    stringstream ss;
-    ss << "Error: cannot access '" << path << "'\r\n";
     s->send(ss.str());
-    return false;
+    return is_succ;
 }
 
 void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
@@ -150,15 +158,38 @@ void Terminal::Impl::executeExitCmd(SessionImpl *s, const Args &args)
     s->endSession();
 }
 
-void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
+bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 {
-    LogUndo();
+    string path_str = ".";
+    if (args.size() >= 2)
+        path_str = args[1];
+
+    stringstream ss;
+    bool is_succ = false;
+
+    auto node_path = s->path;
+    bool is_found = findNode(path_str, node_path);
+    if (is_found) {
+        auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
+        auto top_node = nodes_.at(top_node_token);
+        if (top_node->type() == NodeType::kDir) {
+            //!TODO
+        } else {
+            //!TODO
+        }
+        is_succ = true;
+    } else {
+        ss << "Error: cannot access '" << path_str << "'\r\n";
+    }
+
+    s->send(ss.str());
+    return is_succ;
 }
 
 bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
 {
-
     stringstream ss;
+
     const auto &cmd = args[0];
     auto node_path = s->path;
     bool is_cmd_found = findNode(cmd, node_path);

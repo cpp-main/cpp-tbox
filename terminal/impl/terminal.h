@@ -55,7 +55,7 @@ class Terminal::Impl {
     bool executeLsCmd(SessionImpl *s, const Args &args);
     void executeHistoryCmd(SessionImpl *s, const Args &args);
     void executeExitCmd(SessionImpl *s, const Args &args);
-    void executeTreeCmd(SessionImpl *s, const Args &args);
+    bool executeTreeCmd(SessionImpl *s, const Args &args);
     bool executeUserCmd(SessionImpl *s, const Args &args);
 
     bool findNode(const std::string &path, Path &node_path) const;
