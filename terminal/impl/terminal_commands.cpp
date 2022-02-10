@@ -27,7 +27,7 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
         return;
     }
 
-    store_in_history = false;
+    store_in_history = true;
     recover_cmdline = false;
 
     const auto &cmd = args[0];
@@ -35,6 +35,8 @@ void Terminal::Impl::executeCmdline(SessionImpl *s, bool &store_in_history, bool
         bool is_succ = executeLsCmd(s, args);
         store_in_history = is_succ;
         recover_cmdline = !is_succ;
+    } else if (cmd == "pwd") {
+        executePwdCmd(s, args);
     } else if (cmd == "cd") {
         bool is_succ = executeCdCmd(s, args);
         store_in_history = is_succ;
@@ -184,6 +186,19 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
     s->send(ss.str());
     return is_succ;
+}
+
+void Terminal::Impl::executePwdCmd(SessionImpl *s, const Args &args)
+{
+    stringstream ss;
+    ss << '/';
+    for (size_t i = 0; i < s->path.size(); ++i) {
+        ss << s->path.at(i).first;
+        if ((i + 1) != s->path.size())
+            ss << '/';
+    }
+    ss << "\r\n";
+    s->send(ss.str());
 }
 
 bool Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)

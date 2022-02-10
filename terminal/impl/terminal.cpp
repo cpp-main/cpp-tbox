@@ -140,15 +140,7 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 
 void Terminal::Impl::printPrompt(SessionImpl *s)
 {
-    stringstream ss;
-    ss << '/';
-    for (size_t i = 0; i < s->path.size(); ++i) {
-        ss << s->path.at(i).first;
-        if ((i + 1) != s->path.size())
-            ss << '/';
-    }
-    ss << " # ";
-    s->send(ss.str());
+    s->send("# ");
 }
 
 void Terminal::Impl::printHelp(SessionImpl *s)
