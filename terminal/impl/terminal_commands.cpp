@@ -183,7 +183,8 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                 auto top_dir_node = static_cast<DirNode*>(top_node);
                 vector<NodeInfo> node_info_vec;
                 top_dir_node->children(node_info_vec);
-                node_token_stack.push_back(node_info_vec);
+                if (!node_info_vec.empty())
+                    node_token_stack.push_back(node_info_vec);
             }
 /**
  * Print like below:
@@ -247,7 +248,7 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                 }
             }
         } else {
-            ss << " is a function\r\n";
+            ss << node_path.back().first << " is a function\r\n";
         }
         is_succ = true;
     } else {
