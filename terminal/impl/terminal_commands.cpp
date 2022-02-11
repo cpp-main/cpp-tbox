@@ -175,9 +175,50 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
-            //!TODO
+            auto top_dir_node = static_cast<DirNode*>(top_node);
+            vector<NodeInfo> node_info_vec;
+            top_dir_node->children(node_info_vec);
+
+            vector<vector<NodeInfo>> traverse_node_token_cache;    //! 遍历记录
+            traverse_node_token_cache.push_back(node_info_vec);
+            string level_str;
+
+            while (!traverse_node_token_cache.empty()) {
+                auto &last_level = traverse_node_token_cache.back();
+                while (!last_level.empty()) {
+                    auto &curr_node_info = last_level.front();
+                    auto curr_node = nodes_.at(curr_node_info.token);
+                    if (curr_node->type() == NodeType::kFunc) {
+                        LogUndo(); //!TODO: 打印
+                    } else if (curr_node->type() == NodeType::kDir) {
+                        vector<NodeInfo> node_info_vec;
+                        auto curr_dir_node = static_cast<DirNode*>(curr_node);
+                        curr_dir_node->children(node_info_vec);
+
+                        //! 查重，防止循环路径引起的死循环
+                        bool is_repeat = false;
+                        for (auto &level : traverse_node_token_cache) {
+                            if (level.front().token == curr_node_info.token)
+                                is_repeat = true;
+                        }
+                        if (is_repeat) {
+                            LogUndo(); //!TODO: 打印
+                        } else {
+                            traverse_node_token_cache.push_back(node_info_vec);
+                            level_str += "|  ";
+                            LogUndo(); //!TODO: 打印
+                        }
+                        break;
+                    }
+                }
+
+                if (last_level.empty()) {
+                    traverse_node_token_cache.pop_back();
+                    level_str.erase(level_str.size() - 4);
+                }
+            }
         } else {
-            //!TODO
+            LogUndo(); //!TODO
         }
         is_succ = true;
     } else {
