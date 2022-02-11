@@ -175,46 +175,70 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
-            auto top_dir_node = static_cast<DirNode*>(top_node);
-            vector<NodeInfo> node_info_vec;
-            top_dir_node->children(node_info_vec);
+            vector<vector<NodeInfo>> node_token_stack;    //! 遍历记录
+            string indent_str;
 
-            vector<vector<NodeInfo>> traverse_node_token_cache;    //! 遍历记录
-            traverse_node_token_cache.push_back(node_info_vec);
-            string level_str;
+            {
+                auto top_dir_node = static_cast<DirNode*>(top_node);
+                vector<NodeInfo> node_info_vec;
+                top_dir_node->children(node_info_vec);
+                node_token_stack.push_back(node_info_vec);
+            }
+/**
+ * |-- a
+ * |   |-- aa
+ * |   |   |-- aaa
+ * |   |   `-- aab
+ * |   `-- ab
+ * |-- b
+ * |   |-- ba
+ * |   `-- bb
+ * `-- c
+ *     `- ca
+ */
+            while (!node_token_stack.empty()) {
+                auto &last_level = node_token_stack.back();
 
-            while (!traverse_node_token_cache.empty()) {
-                auto &last_level = traverse_node_token_cache.back();
                 while (!last_level.empty()) {
                     auto &curr_node_info = last_level.front();
+                    const char *curr_indent_str = last_level.size() == 1 ? "`-- " : "|-- ";
+                    ss << indent_str << curr_indent_str << curr_node_info.name;
+
                     auto curr_node = nodes_.at(curr_node_info.token);
                     if (curr_node->type() == NodeType::kFunc) {
-                        LogUndo(); //!TODO: 打印
+                        ss << "*\r\n";
                     } else if (curr_node->type() == NodeType::kDir) {
-                        vector<NodeInfo> node_info_vec;
-                        auto curr_dir_node = static_cast<DirNode*>(curr_node);
-                        curr_dir_node->children(node_info_vec);
-
                         //! 查重，防止循环路径引起的死循环
                         bool is_repeat = false;
-                        for (auto &level : traverse_node_token_cache) {
-                            if (level.front().token == curr_node_info.token)
+                        for (size_t i = 0; i < node_token_stack.size() - 1; ++i) {
+                            if (node_token_stack[i].front().token == curr_node_info.token) {
                                 is_repeat = true;
+                                ss << "(r)";
+                                break;
+                            }
                         }
-                        if (is_repeat) {
-                            LogUndo(); //!TODO: 打印
-                        } else {
-                            traverse_node_token_cache.push_back(node_info_vec);
-                            level_str += "|  ";
-                            LogUndo(); //!TODO: 打印
-                        }
-                        break;
-                    }
-                }
+                        ss << "\r\n";
 
-                if (last_level.empty()) {
-                    traverse_node_token_cache.pop_back();
-                    level_str.erase(level_str.size() - 4);
+                        auto curr_dir_node = static_cast<DirNode*>(curr_node);
+                        vector<NodeInfo> node_info_vec;
+                        curr_dir_node->children(node_info_vec);
+
+                        if (!is_repeat && !node_info_vec.empty()) {
+                            node_token_stack.push_back(node_info_vec);
+                            indent_str += "|   ";
+                            break;
+                        }
+                    }
+
+                    while (!node_token_stack.empty()) {
+                        node_token_stack.back().erase(node_token_stack.back().begin());
+                        if (node_token_stack.back().empty()) {
+                            node_token_stack.pop_back();
+                            if (!indent_str.empty())
+                                indent_str.erase(indent_str.size() - 4);
+                        } else
+                            break;
+                    }
                 }
             }
         } else {
