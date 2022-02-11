@@ -173,7 +173,6 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
     bool is_found = findNode(path_str, node_path);
 
     if (is_found) {
-        //ss << node_path.back().first;
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
