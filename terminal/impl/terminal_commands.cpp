@@ -171,7 +171,9 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
     auto node_path = s->path;
     bool is_found = findNode(path_str, node_path);
+
     if (is_found) {
+        //ss << node_path.back().first;
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
@@ -185,6 +187,8 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                 node_token_stack.push_back(node_info_vec);
             }
 /**
+ * Print like below:
+ * .
  * |-- a
  * |   |-- aa
  * |   |   |-- aaa
@@ -201,7 +205,8 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
                 while (!last_level.empty()) {
                     auto &curr_node_info = last_level.front();
-                    const char *curr_indent_str = last_level.size() == 1 ? "`-- " : "|-- ";
+                    bool is_last_node = last_level.size() == 1;
+                    const char *curr_indent_str = is_last_node ? "`-- " : "|-- ";
                     ss << indent_str << curr_indent_str << curr_node_info.name;
 
                     auto curr_node = nodes_.at(curr_node_info.token);
@@ -213,7 +218,7 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                         for (size_t i = 0; i < node_token_stack.size() - 1; ++i) {
                             if (node_token_stack[i].front().token == curr_node_info.token) {
                                 is_repeat = true;
-                                ss << "(r)";
+                                ss << "(R)";
                                 break;
                             }
                         }
@@ -225,11 +230,12 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
 
                         if (!is_repeat && !node_info_vec.empty()) {
                             node_token_stack.push_back(node_info_vec);
-                            indent_str += "|   ";
+                            indent_str += (is_last_node ? "    " : "|   ");
                             break;
                         }
                     }
 
+                    //! 向上清理
                     while (!node_token_stack.empty()) {
                         node_token_stack.back().erase(node_token_stack.back().begin());
                         if (node_token_stack.back().empty()) {
@@ -242,7 +248,7 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                 }
             }
         } else {
-            LogUndo(); //!TODO
+            ss << " is a function\r\n";
         }
         is_succ = true;
     } else {
