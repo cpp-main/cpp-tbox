@@ -188,7 +188,6 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
             }
 /**
  * Print like below:
- * .
  * |-- a
  * |   |-- aa
  * |   |   |-- aaa
@@ -204,9 +203,10 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                 auto &last_level = node_token_stack.back();
 
                 while (!last_level.empty()) {
-                    auto &curr_node_info = last_level.front();
                     bool is_last_node = last_level.size() == 1;
                     const char *curr_indent_str = is_last_node ? "`-- " : "|-- ";
+
+                    auto &curr_node_info = last_level.front();
                     ss << indent_str << curr_indent_str << curr_node_info.name;
 
                     auto curr_node = nodes_.at(curr_node_info.token);
@@ -218,20 +218,22 @@ bool Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
                         for (size_t i = 0; i < node_token_stack.size() - 1; ++i) {
                             if (node_token_stack[i].front().token == curr_node_info.token) {
                                 is_repeat = true;
-                                ss << "(R)";
+                                ss << "(R)";    //! 表示循环引用了
                                 break;
                             }
                         }
                         ss << "\r\n";
 
-                        auto curr_dir_node = static_cast<DirNode*>(curr_node);
-                        vector<NodeInfo> node_info_vec;
-                        curr_dir_node->children(node_info_vec);
-
-                        if (!is_repeat && !node_info_vec.empty()) {
-                            node_token_stack.push_back(node_info_vec);
-                            indent_str += (is_last_node ? "    " : "|   ");
-                            break;
+                        if (!is_repeat) {
+                            auto curr_dir_node = static_cast<DirNode*>(curr_node);
+                            vector<NodeInfo> node_info_vec;
+                            curr_dir_node->children(node_info_vec);
+                            if (!node_info_vec.empty()) {
+                                //! 向下延伸
+                                node_token_stack.push_back(node_info_vec);
+                                indent_str += (is_last_node ? "    " : "|   ");
+                                break;
+                            }
                         }
                     }
 
