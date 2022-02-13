@@ -1,5 +1,6 @@
 #include "terminal.h"
 
+#include <tbox/base/log.h>
 #include <tbox/util/string.h>
 
 #include "dir_node.h"
@@ -38,11 +39,16 @@ bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, 
     auto p_node = nodes_.at(parent);
     auto c_node = nodes_.at(child);
 
-    if (p_node == nullptr || c_node == nullptr)
+    if (p_node == nullptr || c_node == nullptr ||
+        p_node->type() != NodeType::kDir) {
+        LogWarn("parent or child is invalid, or parent not directory");
         return false;
+    }
 
-    if (p_node->type() != NodeType::kDir)
+    if (name.empty() || name[0] == '!') {
+        LogWarn("name is invalid");
         return false;
+    }
 
     auto p_dir_node = static_cast<DirNode*>(p_node);
     return p_dir_node->addChild(child, name);
