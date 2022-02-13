@@ -38,28 +38,18 @@ void Terminal::Impl::onEnterKey(SessionImpl *s)
 {
     s->send("\r\n");
 
-    bool store_in_history = false;
-    bool recover_cmdline = false;
-    executeCmdline(s, store_in_history, recover_cmdline);
+    executeCmdline(s);
 
     printPrompt(s);
 
-    s->cursor = 0;
-    if (store_in_history) {
-        //! 如果成功，则将已执行的命令加入history，另起一行
-        s->history.push_back(move(s->curr_input));
+    if (!s->curr_input.empty()) {
+        s->history.push_back(s->curr_input);
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
-    } else {
-        s->curr_input.clear();
     }
 
-    if (recover_cmdline) {
-        //! 如果没有成功，则将原来的命令重新打印出来
-        s->cursor = s->curr_input.size();
-        s->send(s->curr_input);
-    }
-
+    s->curr_input.clear();
+    s->cursor = 0;
     s->history_index = 0;
 }
 

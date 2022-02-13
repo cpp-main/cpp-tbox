@@ -48,16 +48,16 @@ class Terminal::Impl {
     void printPrompt(SessionImpl *s);
     void printHelp(SessionImpl *s);
 
-    void executeCmdline(SessionImpl *s, bool &store_in_history, bool &recover_cmdline);
+    void executeCmdline(SessionImpl *s);
 
-    bool executeCdCmd(SessionImpl *s, const Args &args);
-    bool executeHelpCmd(SessionImpl *s, const Args &args);
-    bool executeLsCmd(SessionImpl *s, const Args &args);
+    void executeCdCmd(SessionImpl *s, const Args &args);
+    void executeHelpCmd(SessionImpl *s, const Args &args);
+    void executeLsCmd(SessionImpl *s, const Args &args);
     void executeHistoryCmd(SessionImpl *s, const Args &args);
     void executeExitCmd(SessionImpl *s, const Args &args);
-    bool executeTreeCmd(SessionImpl *s, const Args &args);
+    void executeTreeCmd(SessionImpl *s, const Args &args);
     void executePwdCmd(SessionImpl *s, const Args &args);
-    bool executeUserCmd(SessionImpl *s, const Args &args);
+    void executeUserCmd(SessionImpl *s, const Args &args);
 
     bool findNode(const std::string &path, Path &node_path) const;
 
