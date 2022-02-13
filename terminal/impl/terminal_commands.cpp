@@ -1,5 +1,6 @@
 #include "terminal.h"
 
+#include <iomanip>
 #include <sstream>
 
 #include <tbox/base/log.h>
@@ -132,8 +133,15 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
             vector<NodeInfo> node_info_vec;
             top_dir_node->children(node_info_vec);
 
-            for (auto item : node_info_vec)
-                ss << item.name << "\r\n";
+            for (auto item : node_info_vec) {
+                ss << item.name;
+                auto node = nodes_.at(item.token);
+                if (node->type() == NodeType::kFunc)
+                    ss << '*';
+                ss << '\t';
+            }
+
+            ss << "\r\n";
             is_succ = true;
         } else {
             ss << path_str << " is function" << "\r\n";
@@ -149,8 +157,10 @@ bool Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
 void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
 {
     stringstream ss;
-    for (const auto &cmd : s->history)
-        ss << cmd << "\r\n";
+    for (size_t i = 0; i < s->history.size(); ++i) {
+        const auto &cmd = s->history.at(i);
+        ss << setw(2) << i << "  " << cmd << "\r\n";
+    }
     s->send(ss.str());
 }
 
