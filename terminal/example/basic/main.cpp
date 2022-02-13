@@ -68,10 +68,9 @@ void BuildNodes(TerminalBuild &term, Loop *wp_loop)
     Func func = \
         [](Session &s, const Args &args) -> bool {
             std::stringstream ss;
-            ss << "This is func. Args:";
-            for (auto a : args)
-                ss << ' ' << a;
-            ss << "\r\n";
+            ss << "This is func.\r\nArgs:\r\n";
+            for (size_t i = 0; i < args.size(); ++i)
+                ss << '[' << i << "]: " << args.at(i) << "\r\n";
             s.send(ss.str());
             return true;
         };
