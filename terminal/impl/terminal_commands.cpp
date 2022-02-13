@@ -14,18 +14,18 @@ namespace tbox::terminal {
 
 using namespace std;
 
-void Terminal::Impl::executeCmdline(SessionImpl *s)
+bool Terminal::Impl::executeCmdline(SessionImpl *s)
 {
     auto cmdline = s->curr_input;
     if (cmdline.empty())
-        return;
+        return false;
 
-    LogTrace("cmdline: %s", cmdline.c_str());
+    LogInfo("cmdline: %s", cmdline.c_str());
 
     vector<string> args;
     if (!util::SplitCmdline(cmdline, args) || args.empty()) {
         s->send("Error: parse cmdline fail!\r\n");
-        return;
+        return true;
     }
 
     const auto &cmd = args[0];
@@ -39,13 +39,17 @@ void Terminal::Impl::executeCmdline(SessionImpl *s)
         executeHelpCmd(s, args);
     } else if (cmd == "history") {
         executeHistoryCmd(s, args);
+        return false;   //! 查看历史命令不要再存历史
     } else if (cmd == "exit") {
         executeExitCmd(s, args);
     } else if (cmd == "tree") {
         executeTreeCmd(s, args);
+    } else if (cmd[0] == '!') {
+        return executeRunHistoryCmd(s, args);
     } else {
         executeUserCmd(s, args);
     }
+    return true;
 }
 
 void Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
@@ -258,6 +262,41 @@ void Terminal::Impl::executePwdCmd(SessionImpl *s, const Args &args)
     }
     ss << "\r\n";
     s->send(ss.str());
+}
+
+bool Terminal::Impl::executeRunHistoryCmd(SessionImpl *s, const Args &args)
+{
+    string sub_cmd = args[0].substr(1);
+    if (sub_cmd == "!") {
+        s->curr_input = s->history.back();
+        return executeCmdline(s);
+    }
+
+    try {
+        auto index = std::stoi(sub_cmd);
+        bool is_index_valid = false;
+        if (index >= 0) {
+            if (static_cast<size_t>(index) < s->history.size()) {
+                s->curr_input = s->history.at(index);
+                is_index_valid = true;
+            }
+        } else {
+            if (s->history.size() >= static_cast<size_t>(-index)) {
+                s->curr_input = s->history.at(s->history.size() + index);
+                is_index_valid = true;
+            }
+        }
+
+        if (is_index_valid) {
+            s->send(s->curr_input + "\r\n");
+            return executeCmdline(s);
+        } else
+            s->send("Error: index out of range\r\n");
+    } catch (const invalid_argument &e) {
+        s->send("Error: parse index fail\r\n");
+    }
+
+    return false;
 }
 
 void Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)

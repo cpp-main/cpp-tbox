@@ -38,15 +38,13 @@ void Terminal::Impl::onEnterKey(SessionImpl *s)
 {
     s->send("\r\n");
 
-    executeCmdline(s);
-
-    printPrompt(s);
-
-    if (!s->curr_input.empty()) {
+    if (executeCmdline(s)) {
         s->history.push_back(s->curr_input);
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
     }
+
+    printPrompt(s);
 
     s->curr_input.clear();
     s->cursor = 0;
