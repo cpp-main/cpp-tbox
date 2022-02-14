@@ -4,6 +4,7 @@
 
 #include <tbox/base/log.h>
 
+#include "../connection.h"
 #include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"

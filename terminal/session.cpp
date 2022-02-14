@@ -1,6 +1,7 @@
 #include "session.h"
 #include <tbox/base/log.h>
-#include "interface.h"
+
+#include "connection.h"
 
 namespace tbox {
 namespace terminal {

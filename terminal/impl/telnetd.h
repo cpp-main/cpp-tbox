@@ -6,7 +6,7 @@
 #include <map>
 
 #include "../telnetd.h"
-#include "../interface.h"
+#include "../connection.h"
 
 namespace tbox::terminal {
 

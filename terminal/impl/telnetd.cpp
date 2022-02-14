@@ -6,6 +6,8 @@
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
 
+#include "../terminal_interact.h"
+
 namespace tbox::terminal {
 
 using namespace std;

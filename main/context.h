@@ -4,7 +4,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/thread_pool.h>
 #include <tbox/eventx/timer_pool.h>
-#include <tbox/terminal/interface.h>
+#include <tbox/terminal/terminal_nodes.h>
 
 namespace tbox::main {
 

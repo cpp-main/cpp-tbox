@@ -7,6 +7,7 @@
 #include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"
+#include "../connection.h"
 
 namespace tbox::terminal {
 

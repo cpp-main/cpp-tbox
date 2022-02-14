@@ -1,7 +1,8 @@
 #ifndef TBOX_TELNETD_TERMINAL_H_20220128
 #define TBOX_TELNETD_TERMINAL_H_20220128
 
-#include "interface.h"
+#include "terminal_interact.h"
+#include "terminal_nodes.h"
 
 namespace tbox::terminal {
 

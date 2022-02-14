@@ -5,7 +5,9 @@ LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	types.h \
-	interface.h \
+	connection.h \
+	terminal_interact.h \
+	terminal_nodes.h \
 	session.h \
 	telnetd.h \
 	terminal.h \
