@@ -1,7 +1,7 @@
 #ifndef TBOX_TERMINAL_NODE_H_20220207
 #define TBOX_TERMINAL_NODE_H_20220207
 
-#include "../types.h"
+#include "inner_types.h"
 
 namespace tbox::terminal {
 
