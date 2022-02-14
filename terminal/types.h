@@ -14,7 +14,7 @@ using SessionToken = cabinet::Token;
 using NodeToken    = cabinet::Token;
 
 using Args = std::vector<std::string>;
-using Func = std::function<bool (const Session &s, const Args &)>;
+using Func = std::function<void (const Session &s, const Args &)>;
 
 }
 

@@ -1,9 +1,11 @@
 #include "context_imp.h"
 
 #include <cassert>
+#include <sstream>
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
+#include <tbox/terminal/session.h>
 
 namespace tbox::main {
 
@@ -62,6 +64,8 @@ bool ContextImp::initialize(const Json &cfg)
         }
     }
 
+    buildTerminalNodes();
+
     return true;
 }
 
@@ -83,6 +87,63 @@ void ContextImp::cleanup()
     sp_telnetd_->cleanup();
     sp_timer_pool_->cleanup();
     sp_thread_pool_->cleanup();
+}
+
+void ContextImp::buildTerminalNodes()
+{
+    using namespace terminal;
+
+    auto ctx_node = sp_terminal_->createDirNode("This is Context directory");
+    sp_terminal_->mountNode(sp_terminal_->rootNode(), ctx_node, "context");
+
+    auto loop_node = sp_terminal_->createDirNode("This is Loop directory");
+    sp_terminal_->mountNode(ctx_node, loop_node, "loop");
+
+    auto loop_stat_enable = sp_terminal_->createFuncNode(
+        [this] (const Session &s, const Args &args) {
+            std::stringstream ss;
+            if (args.size() == 2) {
+                const auto &opt = args[1];
+                if (opt == "on") {
+                    sp_loop_->setStatEnable(true);
+                    ss << "stat on\r\n";
+                } else if (opt == "off") {
+                    sp_loop_->setStatEnable(false);
+                    ss << "stat off\r\n";
+                } else {
+                    ss << "Unknown option.\r\n";
+                }
+            } else {
+                ss << "Usage: " << args[0] << " on|off\r\n";
+            }
+            s.send(ss.str());
+        }
+    , "enable or disable Loop's stat function");
+    sp_terminal_->mountNode(loop_node, loop_stat_enable, "stat_enable");
+
+    auto loop_stat_print = sp_terminal_->createFuncNode(
+        [this] (const Session &s, const Args &args) {
+            std::stringstream ss;
+            auto stat = sp_loop_->getStat();
+            ss  << "stat_time: " << stat.stat_time_us << "us\r\n"
+                << "time_cost: " << stat.time_cost_us << "us\r\n"
+                << "max_cost: " << stat.max_cost_us << "us\r\n"
+                << "event_count: " << stat.event_count << "\r\n"
+                ;
+            s.send(ss.str());
+        }
+    , "print Loop's stat data");
+    sp_terminal_->mountNode(loop_node, loop_stat_print, "stat_print");
+
+    auto loop_stat_reset = sp_terminal_->createFuncNode(
+        [this] (const Session &s, const Args &args) {
+            std::stringstream ss;
+            sp_loop_->resetStat();
+            ss << "done\r\n";
+            s.send(ss.str());
+        }
+    , "reset Loop's stat data");
+    sp_terminal_->mountNode(loop_node, loop_stat_reset, "stat_reset");
 }
 
 }

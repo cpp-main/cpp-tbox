@@ -29,6 +29,7 @@ class ContextImp : public Context {
     terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
 
   protected:
+    void buildTerminalNodes();
 
   private:
     event::Loop *sp_loop_ = nullptr;
