@@ -1,14 +1,14 @@
 #ifndef TBOX_TERMINAL_SESSION_IMP_H_20220204
 #define TBOX_TERMINAL_SESSION_IMP_H_20220204
 
-#include "key_event_scanner.h"
 #include <deque>
+
+#include "key_event_scanner.h"
 #include "../session.h"
 
 namespace tbox::terminal {
 
 struct SessionContext {
-  public:
     Connection *wp_conn = nullptr;
     SessionToken token;
 
