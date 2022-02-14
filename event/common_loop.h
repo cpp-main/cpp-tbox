@@ -9,7 +9,6 @@
 
 #ifdef ENABLE_STAT
 #include <chrono>
-using std::chrono::steady_clock;
 #endif
 
 namespace tbox {
@@ -28,14 +27,13 @@ class CommonLoop : public Loop {
     void runNext(const Func &func) override;
     void run(const Func &func) override;
 
+    void setStatEnable(bool enable) override;
     Stat getStat() const override;
     void resetStat() override;
 
   public:
-#ifdef ENABLE_STAT
-    void recordTimeCost(uint64_t cost_us);
-#endif  //ENABLE_STAT
-    void handleNextFunc();
+    void beginEventProcess();
+    void endEventProcess();
 
   protected:
     void runThisBeforeLoop();
@@ -48,26 +46,30 @@ class CommonLoop : public Loop {
     void commitRequest();
     void finishRequest();
 
+    void handleNextFunc();
+
   private:
     mutable std::recursive_mutex lock_;
 
     std::thread::id loop_thread_id_;
 
-    bool has_unhandle_req_;
-    int read_fd_, write_fd_;
-    FdEvent *sp_read_event_;
+    bool has_unhandle_req_ = false;
+    int read_fd_ = -1, write_fd_ = -1;
+    FdEvent *sp_read_event_ = nullptr;
 
     std::deque<Func> run_in_loop_func_queue_;
     std::deque<Func> run_next_func_queue_;
 
 #ifdef ENABLE_STAT
-    steady_clock::time_point stat_start_;
+    bool stat_enable_ = false;
+    std::chrono::steady_clock::time_point whole_stat_start_;
+    std::chrono::steady_clock::time_point event_stat_start_;
     uint64_t time_cost_us_ = 0;
     uint32_t event_count_ = 0;
     uint32_t max_cost_us_ = 0;
 #endif  //ENABLE_STAT
 
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

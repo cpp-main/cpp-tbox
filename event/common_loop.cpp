@@ -14,6 +14,8 @@
 namespace tbox {
 namespace event {
 
+using namespace std::chrono;
+
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
     read_fd_(-1), write_fd_(-1),
@@ -121,6 +123,29 @@ void CommonLoop::run(const Func &func)
         runInLoop(func);
 }
 
+void CommonLoop::beginEventProcess()
+{
+#ifdef  ENABLE_STAT
+    if (stat_enable_)
+        event_stat_start_ = steady_clock::now();
+#endif
+}
+
+void CommonLoop::endEventProcess()
+{
+    handleNextFunc();
+
+#ifdef  ENABLE_STAT
+    if (stat_enable_) {
+        uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
+        ++event_count_;
+        time_cost_us_ += cost_us;
+        if (max_cost_us_ < cost_us)
+            max_cost_us_ = cost_us;
+    }
+#endif
+}
+
 void CommonLoop::handleNextFunc()
 {
     while (!run_next_func_queue_.empty()) {
@@ -209,12 +234,19 @@ void CommonLoop::finishRequest()
     has_unhandle_req_ = false;
 }
 
+void CommonLoop::setStatEnable(bool enable)
+{
+#ifdef  ENABLE_STAT
+    stat_enable_ = enable;
+#endif
+}
+
 Stat CommonLoop::getStat() const
 {
     Stat stat;
 #ifdef  ENABLE_STAT
     using namespace std::chrono;
-    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - stat_start_).count();
+    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
     stat.time_cost_us = time_cost_us_;
     stat.max_cost_us = max_cost_us_;
     stat.event_count = event_count_;
@@ -226,19 +258,9 @@ void CommonLoop::resetStat()
 {
 #ifdef  ENABLE_STAT
     time_cost_us_ = max_cost_us_ = event_count_ = 0;
-    stat_start_ = steady_clock::now();
+    whole_stat_start_ = steady_clock::now();
 #endif
 }
-
-#ifdef  ENABLE_STAT
-void CommonLoop::recordTimeCost(uint64_t cost_us)
-{
-    ++event_count_;
-    time_cost_us_ += cost_us;
-    if (max_cost_us_ < cost_us)
-        max_cost_us_ = cost_us;
-}
-#endif  //ENABLE_STAT
 
 }
 }

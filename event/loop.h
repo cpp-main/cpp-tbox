@@ -74,6 +74,7 @@ class Loop {
     virtual SignalEvent* newSignalEvent() = 0;
 
     //! 统计操作
+    virtual void setStatEnable(bool enable) = 0;
     virtual Stat getStat() const = 0;
     virtual void resetStat() = 0;
 
