@@ -20,7 +20,7 @@ using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::terminal;
 
-void BuildNodes(TerminalBuild &term, Loop *wp_loop);
+void BuildNodes(TerminalNodes &term, Loop *wp_loop);
 
 int main(int argc, char **argv)
 {
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void BuildNodes(TerminalBuild &term, Loop *wp_loop)
+void BuildNodes(TerminalNodes &term, Loop *wp_loop)
 {
     Func func = \
         [](const Session &s, const Args &args) -> bool {

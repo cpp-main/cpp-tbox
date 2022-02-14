@@ -6,7 +6,7 @@
 namespace tbox::terminal {
 
 class Terminal : public TerminalInteract,
-                 public TerminalBuild {
+                 public TerminalNodes {
   public:
     Terminal();
     ~Terminal();

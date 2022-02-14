@@ -30,7 +30,7 @@ class TerminalInteract {
     virtual ~TerminalInteract() { }
 };
 
-class TerminalBuild {
+class TerminalNodes {
   public:
     virtual NodeToken createFuncNode(const Func &func, const std::string &help = "") = 0;
     virtual NodeToken createDirNode(const std::string &help = "") = 0;
@@ -41,7 +41,7 @@ class TerminalBuild {
     virtual bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) = 0;
 
   protected:
-    virtual ~TerminalBuild() { }
+    virtual ~TerminalNodes() { }
 };
 
 }

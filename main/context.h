@@ -14,7 +14,7 @@ class Context {
     virtual event::Loop* loop() const = 0;
     virtual eventx::ThreadPool* thread_pool() const = 0;
     virtual eventx::TimerPool* timer_pool() const = 0;
-    virtual terminal::TerminalBuild* terminal() const = 0;
+    virtual terminal::TerminalNodes* terminal() const = 0;
 };
 
 }
