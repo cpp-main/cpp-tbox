@@ -91,13 +91,25 @@ void Terminal::Impl::onTabKey(SessionContext *s)
     LogUndo();
 }
 
+namespace {
+void CleanupInput(SessionContext *s)
+{
+    while (s->cursor < s->curr_input.size()) {
+        s->wp_conn->send(s->token, MOVE_RIGHT_KEY);
+        s->cursor++;
+    }
+
+    while (s->cursor--)
+        s->wp_conn->send(s->token, "\b \b");
+}
+}
+
 void Terminal::Impl::onMoveUpKey(SessionContext *s)
 {
     if (s->history_index == s->history.size())
         return;
 
-    while (s->cursor--)
-        s->wp_conn->send(s->token, "\b \b");
+    CleanupInput(s);
 
     s->history_index++;
     s->curr_input = s->history[s->history.size() - s->history_index];
@@ -111,8 +123,7 @@ void Terminal::Impl::onMoveDownKey(SessionContext *s)
     if (s->history_index == 0)
         return;
 
-    while (s->cursor--)
-        s->wp_conn->send(s->token, "\b \b");
+    CleanupInput(s);
 
     s->history_index--;
     if (s->history_index > 0) {
