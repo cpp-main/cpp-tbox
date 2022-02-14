@@ -44,20 +44,6 @@ class TerminalBuild {
     virtual ~TerminalBuild() { }
 };
 
-class Session {
-  public:
-    virtual bool send(char ch) = 0;
-    virtual bool send(const std::string &str) = 0;
-    virtual void endSession() = 0;
-    virtual bool isValid() const = 0;
-
-    virtual bool window_width() const = 0;
-    virtual bool window_height() const = 0;
-
-  protected:
-    virtual ~Session() { }
-};
-
 }
 
 #endif //TBOX_TERMINAL_INTERFACE_H_20220128

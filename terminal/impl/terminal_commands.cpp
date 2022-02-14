@@ -6,7 +6,7 @@
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
 
-#include "session_imp.h"
+#include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"
 
@@ -14,7 +14,7 @@ namespace tbox::terminal {
 
 using namespace std;
 
-bool Terminal::Impl::executeCmdline(SessionImpl *s)
+bool Terminal::Impl::executeCmdline(SessionContext *s)
 {
     auto cmdline = s->curr_input;
     if (cmdline.empty())
@@ -24,7 +24,7 @@ bool Terminal::Impl::executeCmdline(SessionImpl *s)
 
     vector<string> args;
     if (!util::SplitCmdline(cmdline, args) || args.empty()) {
-        s->send("Error: parse cmdline fail!\r\n");
+        s->wp_conn->send(s->token, "Error: parse cmdline fail!\r\n");
         return true;
     }
 
@@ -52,7 +52,7 @@ bool Terminal::Impl::executeCmdline(SessionImpl *s)
     return true;
 }
 
-void Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
 {
     string path_str = "/";
     if (args.size() >= 2)
@@ -74,10 +74,10 @@ void Terminal::Impl::executeCdCmd(SessionImpl *s, const Args &args)
         ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
 {
     if (args.size() < 2) {
         printHelp(s);
@@ -97,10 +97,10 @@ void Terminal::Impl::executeHelpCmd(SessionImpl *s, const Args &args)
         ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
     if (args.size() >= 2)
@@ -134,26 +134,26 @@ void Terminal::Impl::executeLsCmd(SessionImpl *s, const Args &args)
         ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executeHistoryCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
 {
     stringstream ss;
     for (size_t i = 0; i < s->history.size(); ++i) {
         const auto &cmd = s->history.at(i);
         ss << setw(2) << i << "  " << cmd << "\r\n";
     }
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executeExitCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
 {
-    s->send("Bye!\r\n");
-    s->endSession();
+    s->wp_conn->send(s->token, "Bye!\r\n");
+    s->wp_conn->endSession(s->token);
 }
 
-void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
     if (args.size() >= 2)
@@ -248,10 +248,10 @@ void Terminal::Impl::executeTreeCmd(SessionImpl *s, const Args &args)
         ss << "Error: cannot access '" << path_str << "'\r\n";
     }
 
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executePwdCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &args)
 {
     stringstream ss;
     ss << '/';
@@ -261,10 +261,10 @@ void Terminal::Impl::executePwdCmd(SessionImpl *s, const Args &args)
             ss << '/';
     }
     ss << "\r\n";
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
-bool Terminal::Impl::executeRunHistoryCmd(SessionImpl *s, const Args &args)
+bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
 {
     string sub_cmd = args[0].substr(1);
     if (sub_cmd == "!") {
@@ -288,18 +288,18 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionImpl *s, const Args &args)
         }
 
         if (is_index_valid) {
-            s->send(s->curr_input + "\r\n");
+            s->wp_conn->send(s->token, s->curr_input + "\r\n");
             return executeCmdline(s);
         } else
-            s->send("Error: index out of range\r\n");
+            s->wp_conn->send(s->token, "Error: index out of range\r\n");
     } catch (const invalid_argument &e) {
-        s->send("Error: parse index fail\r\n");
+        s->wp_conn->send(s->token, "Error: parse index fail\r\n");
     }
 
     return false;
 }
 
-void Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
+void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
 {
     stringstream ss;
 
@@ -312,7 +312,8 @@ void Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kFunc) {
             auto top_func_node = static_cast<FuncNode*>(top_node);
-            top_func_node->execute(*s, args);
+            Session session(s->wp_conn, s->token);
+            top_func_node->execute(session, args);
         } else {
             s->path = node_path;
         }
@@ -320,7 +321,7 @@ void Terminal::Impl::executeUserCmd(SessionImpl *s, const Args &args)
         ss << "Error: " << cmd << " not found\r\n";
     }
 
-    s->send(ss.str());
+    s->wp_conn->send(s->token, ss.str());
 }
 
 }

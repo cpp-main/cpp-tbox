@@ -8,7 +8,7 @@
 
 namespace tbox::terminal {
 
-class SessionImpl;
+class SessionContext;
 
 class Terminal::Impl {
   public:
@@ -33,37 +33,37 @@ class Terminal::Impl {
     bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name);
 
   protected:
-    void onChar(SessionImpl *s, char ch);
-    void onEnterKey(SessionImpl *s);
-    void onBackspaceKey(SessionImpl *s);
-    void onDeleteKey(SessionImpl *s);
-    void onTabKey(SessionImpl *s);
-    void onMoveUpKey(SessionImpl *s);
-    void onMoveDownKey(SessionImpl *s);
-    void onMoveLeftKey(SessionImpl *s);
-    void onMoveRightKey(SessionImpl *s);
-    void onHomeKey(SessionImpl *s);
-    void onEndKey(SessionImpl *s);
+    void onChar(SessionContext *s, char ch);
+    void onEnterKey(SessionContext *s);
+    void onBackspaceKey(SessionContext *s);
+    void onDeleteKey(SessionContext *s);
+    void onTabKey(SessionContext *s);
+    void onMoveUpKey(SessionContext *s);
+    void onMoveDownKey(SessionContext *s);
+    void onMoveLeftKey(SessionContext *s);
+    void onMoveRightKey(SessionContext *s);
+    void onHomeKey(SessionContext *s);
+    void onEndKey(SessionContext *s);
 
-    void printPrompt(SessionImpl *s);
-    void printHelp(SessionImpl *s);
+    void printPrompt(SessionContext *s);
+    void printHelp(SessionContext *s);
 
-    bool executeCmdline(SessionImpl *s);
+    bool executeCmdline(SessionContext *s);
 
-    void executeCdCmd(SessionImpl *s, const Args &args);
-    void executeHelpCmd(SessionImpl *s, const Args &args);
-    void executeLsCmd(SessionImpl *s, const Args &args);
-    void executeHistoryCmd(SessionImpl *s, const Args &args);
-    void executeExitCmd(SessionImpl *s, const Args &args);
-    void executeTreeCmd(SessionImpl *s, const Args &args);
-    void executePwdCmd(SessionImpl *s, const Args &args);
-    bool executeRunHistoryCmd(SessionImpl *s, const Args &args);
-    void executeUserCmd(SessionImpl *s, const Args &args);
+    void executeCdCmd(SessionContext *s, const Args &args);
+    void executeHelpCmd(SessionContext *s, const Args &args);
+    void executeLsCmd(SessionContext *s, const Args &args);
+    void executeHistoryCmd(SessionContext *s, const Args &args);
+    void executeExitCmd(SessionContext *s, const Args &args);
+    void executeTreeCmd(SessionContext *s, const Args &args);
+    void executePwdCmd(SessionContext *s, const Args &args);
+    bool executeRunHistoryCmd(SessionContext *s, const Args &args);
+    void executeUserCmd(SessionContext *s, const Args &args);
 
     bool findNode(const std::string &path, Path &node_path) const;
 
   private:
-    cabinet::Cabinet<SessionImpl> sessions_;
+    cabinet::Cabinet<SessionContext> sessions_;
     cabinet::Cabinet<Node> nodes_;
     NodeToken root_token_;
 };

@@ -4,7 +4,7 @@
 
 #include <tbox/base/log.h>
 
-#include "session_imp.h"
+#include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"
 
@@ -20,7 +20,7 @@ Terminal::Impl::Impl()
 Terminal::Impl::~Impl()
 {
     sessions_.foreach(
-        [](SessionImpl *p) {
+        [](SessionContext *p) {
             delete p;
         }
     );
@@ -36,9 +36,10 @@ Terminal::Impl::~Impl()
 
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 {
-    auto s = new SessionImpl(wp_conn);
+    auto s = new SessionContext;
     auto t = sessions_.insert(s);
-    s->setSessionToken(t);
+    s->wp_conn = wp_conn;
+    s->token = t;
     return t;
 }
 
@@ -58,7 +59,7 @@ bool Terminal::Impl::onBegin(const SessionToken &st)
     if (s == nullptr)
         return false;
 
-    s->send("\r\nWelcome to TBox Terminal.\r\n");
+    s->wp_conn->send(st, "\r\nWelcome to TBox Terminal.\r\n");
     printPrompt(s);
 
     return true;
@@ -70,7 +71,7 @@ bool Terminal::Impl::onExit(const SessionToken &st)
     if (s == nullptr)
         return false;
 
-    s->send("Bye!");
+    s->wp_conn->send(st, "Bye!");
     return true;
 }
 
@@ -132,18 +133,19 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 {
     auto s = sessions_.at(st);
     if (s != nullptr) {
-        s->setWindowSize(w, h);
+        s->window_width = w;
+        s->window_height = h;
         return true;
     }
     return false;
 }
 
-void Terminal::Impl::printPrompt(SessionImpl *s)
+void Terminal::Impl::printPrompt(SessionContext *s)
 {
-    s->send("# ");
+    s->wp_conn->send(s->token, "# ");
 }
 
-void Terminal::Impl::printHelp(SessionImpl *s)
+void Terminal::Impl::printHelp(SessionContext *s)
 {
     const char *help_str = \
         "Buildin commands:\r\n"
@@ -154,7 +156,7 @@ void Terminal::Impl::printHelp(SessionImpl *s)
         "- help      Print help of specified node\r\n"
         "- history   List history command\r\n"
         ;
-    s->send(help_str);
+    s->wp_conn->send(s->token, help_str);
 }
 
 }

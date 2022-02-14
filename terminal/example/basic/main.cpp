@@ -14,6 +14,7 @@
 
 #include <tbox/terminal/terminal.h>
 #include <tbox/terminal/telnetd.h>
+#include <tbox/terminal/session.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -66,7 +67,7 @@ int main(int argc, char **argv)
 void BuildNodes(TerminalBuild &term, Loop *wp_loop)
 {
     Func func = \
-        [](Session &s, const Args &args) -> bool {
+        [](const Session &s, const Args &args) -> bool {
             std::stringstream ss;
             ss << "This is func.\r\nArgs:\r\n";
             for (size_t i = 0; i < args.size(); ++i)

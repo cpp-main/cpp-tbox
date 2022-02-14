@@ -5,7 +5,7 @@ FuncNode::FuncNode(const Func &func, const std::string &help) :
     Node(help), func_(func), help_(help)
 { }
 
-bool FuncNode::execute(Session &s, const Args &a) const
+bool FuncNode::execute(const Session &s, const Args &a) const
 {
     if (func_)
         return func_(s, a);

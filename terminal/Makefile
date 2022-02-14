@@ -6,12 +6,14 @@ LIB_VERSION_Z = 2
 HEAD_FILES = \
 	types.h \
 	interface.h \
+	session.h \
 	telnetd.h \
 	terminal.h \
 
 CPP_SRC_FILES = \
 	telnetd.cpp \
 	terminal.cpp \
+	session.cpp \
 	impl/terminal.cpp \
 	impl/terminal_key_events.cpp \
 	impl/terminal_commands.cpp \
