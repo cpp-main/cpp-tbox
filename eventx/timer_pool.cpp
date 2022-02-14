@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <tbox/base/log.h>
+#include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 

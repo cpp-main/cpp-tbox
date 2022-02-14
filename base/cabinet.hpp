@@ -13,40 +13,14 @@
  * - TcpServer 服务器，要管理其 TcpConnection 的生命期
  */
 
-#include <cstdlib>
 #include <cstdint>
 #include <vector>
 #include <limits>
 
+#include "cabinet_token.h"
+
 namespace tbox {
 namespace cabinet {
-
-using Id = size_t;
-using Pos = size_t;
-
-//! 凭据
-class Token {
-  public:
-    Token() { }
-    Token(Id id, Pos pos) : id_(id), pos_(pos) { }
-
-    inline Id id() const { return id_; }
-    inline Pos pos() const { return pos_; }
-
-    inline void reset() { id_ = 0; pos_ = 0; }
-    inline bool isNull() const { return id_ == 0; }
-
-    inline bool equal(const Token &other) const { return id_ == other.id_ && pos_ == other.pos_; }
-    inline bool less(const Token &other)  const { return id_ != other.id_ ? id_ < other.id_ : pos_ < other.pos_; }
-    inline size_t hash() const { return (id_ << 8) | (pos_ & 0xff); }
-
-    inline bool operator == (const Token &other) const { return equal(other); }
-    inline bool operator < (const Token &other) const { return less(other); }
-
-  private:
-    Id id_ = 0;
-    Pos pos_ = 0;
-};
 
 //! 柜子
 template <typename T> class Cabinet {

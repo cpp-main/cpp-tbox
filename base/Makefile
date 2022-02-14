@@ -11,6 +11,7 @@ HEAD_FILES = \
 	defines.h \
 	scope_exit.hpp \
 	cabinet.hpp \
+	cabinet_token.h \
 	memblock.h \
 	json_fwd.h \
 	json.hpp \

@@ -4,6 +4,7 @@
 #include <limits>
 
 #include <tbox/base/log.h>
+#include <tbox/base/cabinet.hpp>
 
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"

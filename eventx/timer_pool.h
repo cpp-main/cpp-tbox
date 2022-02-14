@@ -5,7 +5,7 @@
 #include <functional>
 #include <chrono>
 
-#include <tbox/base/cabinet.hpp>
+#include <tbox/base/cabinet_token.h>
 #include <tbox/base/defines.h>
 
 #include <tbox/event/forward.h>

@@ -1,9 +1,10 @@
 #ifndef TBOX_TERMINAL_TYPES_H_20220128
 #define TBOX_TERMINAL_TYPES_H_20220128
 
+#include <vector>
 #include <string>
 #include <functional>
-#include <tbox/base/cabinet.hpp>
+#include <tbox/base/cabinet_token.h>
 
 namespace tbox::terminal {
 

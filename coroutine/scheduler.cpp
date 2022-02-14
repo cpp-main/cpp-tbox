@@ -4,6 +4,7 @@
 #include <ucontext.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/cabinet.hpp>
 #include <cassert>
 #include <cstring>
 

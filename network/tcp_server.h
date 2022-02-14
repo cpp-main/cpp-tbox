@@ -2,7 +2,7 @@
 #define TBOX_NETWORK_TCP_SERVER_H_20180412
 
 #include <tbox/base/defines.h>
-#include <tbox/base/cabinet.hpp>
+#include <tbox/base/cabinet_token.h>
 #include <tbox/event/loop.h>
 
 #include "sockaddr.h"
