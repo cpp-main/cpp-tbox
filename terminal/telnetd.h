@@ -23,7 +23,6 @@ class Telnetd {
     Impl *impl_ = nullptr;
 };
 
-
 }
 
 #endif //TBOX_TERMINAL_TELNETD_H_20220127

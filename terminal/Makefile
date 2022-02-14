@@ -14,6 +14,7 @@ CPP_SRC_FILES = \
 	telnetd.cpp \
 	terminal.cpp \
 	session.cpp \
+	impl/telnetd.cpp \
 	impl/terminal.cpp \
 	impl/terminal_key_events.cpp \
 	impl/terminal_commands.cpp \
