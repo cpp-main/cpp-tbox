@@ -36,4 +36,14 @@ class Token {
 }
 }
 
+//! 为了支持 unordered_set 与 unordered_map 的 key
+namespace std {
+template <class T> struct hash;
+template <> struct hash <tbox::cabinet::Token> {
+    size_t operator () (const tbox::cabinet::Token &t) const {
+        return t.hash();
+    }
+};
+}
+
 #endif //TBOX_BASE_CABINET_TOKEN_H_20220214
