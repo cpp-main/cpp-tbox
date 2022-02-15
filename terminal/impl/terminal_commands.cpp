@@ -168,11 +168,13 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
+
         if (top_node->type() == NodeType::kDir) {
-            vector<vector<NodeInfo>> node_token_stack;    //! 遍历记录
-            string indent_str;
+            vector<vector<NodeInfo>> node_token_stack;    //!< 遍历栈
+            string indent_str;  //!< 缩进字串
 
             {
+                //! 先将被 tree 结点的子节点找出来，压入到 node_token_stack 中
                 auto top_dir_node = static_cast<DirNode*>(top_node);
                 vector<NodeInfo> node_info_vec;
                 top_dir_node->children(node_info_vec);
@@ -192,10 +194,12 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
  * `-- c
  *     `- ca
  */
+            //! 开始循环遍历，深度搜索
             while (!node_token_stack.empty()) {
                 auto &last_level = node_token_stack.back();
 
                 while (!last_level.empty()) {
+                    //! 取出当前层级的第一个Node进行处理
                     bool is_last_node = last_level.size() == 1;
                     const char *curr_indent_str = is_last_node ? "`-- " : "|-- ";
 
@@ -204,39 +208,43 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
 
                     auto curr_node = nodes_.at(curr_node_info.token);
                     if (curr_node->type() == NodeType::kFunc) {
+                        //! 如果是Func，就打印一下名称就可以了
                         ss << "*\r\n";
                     } else if (curr_node->type() == NodeType::kDir) {
-                        //! 查重，防止循环路径引起的死循环
-                        bool is_repeat = false;
-                        for (size_t i = 0; i < node_token_stack.size() - 1; ++i) {
-                            if (node_token_stack[i].front().token == curr_node_info.token) {
+                        //! 如果是Dir，则需要再深入地遍历其子Node
+                        //! 首先需要查重，防止循环路径引起的死循环
+                        bool is_repeat = curr_node_info.token == root_token_;
+                        for (size_t i = 0; !is_repeat && i < node_token_stack.size() - 1; ++i) {
+                            if (node_token_stack[i].front().token == curr_node_info.token)
                                 is_repeat = true;
-                                ss << "(R)";    //! 表示循环引用了
-                                break;
-                            }
                         }
+
+                        if (is_repeat)
+                            ss << "(R)";
+
                         ss << "\r\n";
 
                         if (!is_repeat) {
+                            //! 找出该Dir下所有的子Node。
                             auto curr_dir_node = static_cast<DirNode*>(curr_node);
                             vector<NodeInfo> node_info_vec;
                             curr_dir_node->children(node_info_vec);
                             if (!node_info_vec.empty()) {
-                                //! 向下延伸
+                                //! 如果存在子Node，则将Node列表压入到node_token_stack，添加新的层级
                                 node_token_stack.push_back(node_info_vec);
-                                indent_str += (is_last_node ? "    " : "|   ");
+                                indent_str += (is_last_node ? "    " : "|   "); //! 同时修改缩时字串
                                 break;
                             }
                         }
                     }
 
-                    //! 向上清理
+                    //! 运行到这里，表示已完成一个Node的处理。开始做清理操作
                     while (!node_token_stack.empty()) {
-                        node_token_stack.back().erase(node_token_stack.back().begin());
-                        if (node_token_stack.back().empty()) {
-                            node_token_stack.pop_back();
+                        node_token_stack.back().erase(node_token_stack.back().begin()); //! 删除当前Node
+                        if (node_token_stack.back().empty()) {  //! 检查当前级是否已经没有Node需要遍历了
+                            node_token_stack.pop_back();    //! 如果是，则弹出该层级
                             if (!indent_str.empty())
-                                indent_str.erase(indent_str.size() - 4);
+                                indent_str.erase(indent_str.size() - 4); //! 同步修改缩进字串
                         } else
                             break;
                     }
