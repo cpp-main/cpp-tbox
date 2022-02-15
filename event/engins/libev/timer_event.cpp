@@ -105,10 +105,7 @@ void LibevTimerEvent::OnEventCallback(struct ev_loop*, ev_timer *p_w, int events
 
 void LibevTimerEvent::onEvent()
 {
-#ifdef  ENABLE_STAT
-    using namespace std::chrono;
-    auto start = steady_clock::now();
-#endif
+    wp_loop_->beginEventProcess();
 
     if (cb_) {
         ++cb_level_;
@@ -119,13 +116,7 @@ void LibevTimerEvent::onEvent()
         LogWarn("you should specify event callback by setCallback()");
     }
 
-    auto wp_loop = wp_loop_;
-    wp_loop->handleNextFunc();
-
-#ifdef  ENABLE_STAT
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
-    wp_loop->recordTimeCost(cost_us);
-#endif
+    wp_loop_->endEventProcess();
 }
 
 }

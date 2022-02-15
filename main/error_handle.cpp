@@ -39,9 +39,16 @@ void OnErrorSignal(int signo)
 {
     LogFatal("Receive signal %d", signo);
     PrintCallStack();
-    error_exit_func();
+    if (error_exit_func)
+        error_exit_func();
     exit(EXIT_FAILURE);
 }
+
+void OnWarnSignal(int signo)
+{
+    LogWarn("Receive signal %d", signo);
+}
+
 }
 
 void RegisterSignals()
@@ -51,7 +58,7 @@ void RegisterSignals()
     signal(SIGILL,  OnErrorSignal);
     signal(SIGABRT, OnErrorSignal);
     signal(SIGBUS,  OnErrorSignal);
-    signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, OnWarnSignal);
 }
 
 }

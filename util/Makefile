@@ -9,22 +9,28 @@ HEAD_FILES = \
 	thread_wdog.h \
 	string.h \
 	fs.h \
+	argument_parser.h \
+	split_cmdline.h \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	async_data_stream.cpp \
 	pid_file.cpp \
 	thread_wdog.cpp \
 	string.cpp \
 	fs.cpp \
+	argument_parser.cpp \
+	split_cmdline.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	async_data_stream_test.cpp \
 	thread_wdog_test.cpp \
 	pid_file_test.cpp \
 	string_test.cpp \
 	fs_test.cpp \
+	argument_parser_test.cpp \
+	split_cmdline_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 

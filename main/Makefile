@@ -9,19 +9,26 @@ HEAD_FILES = \
 	context.h \
 	main.h \
 
-SRC_FILES = \
-	apps.cpp \
-	context.cpp \
+CPP_SRC_FILES = \
+	apps_imp.cpp \
+	context_imp.cpp \
 	main.cpp \
 	error_handle.cpp \
 	misc.cpp \
 	args.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
-TEST_SRC_FILES =
+TEST_CPP_SRC_FILES = \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_eventx -ltbox_event-ne -ltbox_util -ltbox_base -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) \
+	-ltbox_terminal \
+	-ltbox_network \
+	-ltbox_eventx \
+	-ltbox_event-ne \
+	-ltbox_util \
+	-ltbox_base \
+	-levent_core -lev
 
 ENABLE_SHARED_LIB = no
 

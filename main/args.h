@@ -42,9 +42,10 @@ class Args {
      * \return true     运行
      * \return false    停止运行
      */
-    bool parse(int argc, char **argv);
+    bool parse(int argc, const char * const * const argv);
 
   protected:
+    void printTips(const std::string &proc_name);
     void printHelp(const std::string &proc_name);
     void printVersion();
 

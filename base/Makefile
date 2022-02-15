@@ -11,17 +11,18 @@ HEAD_FILES = \
 	defines.h \
 	scope_exit.hpp \
 	cabinet.hpp \
+	cabinet_token.h \
 	memblock.h \
 	json_fwd.h \
 	json.hpp \
 
-SRC_FILES = \
+CPP_SRC_FILES = \
 	log_imp.cpp \
 	log_output.cpp \
 
-CCXXFLAGS += -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 	log_output_test.cpp \
 	scope_exit_test.cpp \
 	cabinet_test.cpp \

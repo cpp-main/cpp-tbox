@@ -1,6 +1,5 @@
 #include "common_loop.h"
 
-#include <mutex>
 #include <thread>
 #include <unistd.h>
 #include <fcntl.h>
@@ -14,6 +13,8 @@
 
 namespace tbox {
 namespace event {
+
+using namespace std::chrono;
 
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
@@ -29,8 +30,14 @@ CommonLoop::~CommonLoop()
 
 bool CommonLoop::isInLoopThread()
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     return std::this_thread::get_id() == loop_thread_id_;
+}
+
+bool CommonLoop::isRunning() const
+{
+    std::lock_guard<std::recursive_mutex> g(lock_);
+    return sp_read_event_ != nullptr;
 }
 
 void CommonLoop::runThisBeforeLoop()
@@ -56,7 +63,7 @@ void CommonLoop::runThisBeforeLoop()
     sp_read_event->setCallback(std::bind(&CommonLoop::onGotRunInLoopFunc, this, _1));
     sp_read_event->enable();
 
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
     read_fd_ = read_fd;
     write_fd_ = write_fd;
@@ -72,9 +79,10 @@ void CommonLoop::runThisBeforeLoop()
 
 void CommonLoop::runThisAfterLoop()
 {
-    std::lock_guard<std::mutex> g(lock_);
-    loop_thread_id_ = std::thread::id();
+    std::lock_guard<std::recursive_mutex> g(lock_);
+    cleanupDeferredTasks();
 
+    loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
     if (sp_read_event_ != nullptr) {
         delete sp_read_event_;
         close(write_fd_);
@@ -88,7 +96,7 @@ void CommonLoop::runThisAfterLoop()
 
 void CommonLoop::runInLoop(const Func &func)
 {
-    std::lock_guard<std::mutex> g(lock_);
+    std::lock_guard<std::recursive_mutex> g(lock_);
     run_in_loop_func_queue_.push_back(func);
 
     if (sp_read_event_ == nullptr)
@@ -107,6 +115,37 @@ void CommonLoop::runNext(const Func &func)
     run_next_func_queue_.push_back(func);
 }
 
+void CommonLoop::run(const Func &func)
+{
+    if (isInLoopThread())
+        run_next_func_queue_.push_back(func);
+    else
+        runInLoop(func);
+}
+
+void CommonLoop::beginEventProcess()
+{
+#ifdef  ENABLE_STAT
+    if (stat_enable_)
+        event_stat_start_ = steady_clock::now();
+#endif
+}
+
+void CommonLoop::endEventProcess()
+{
+    handleNextFunc();
+
+#ifdef  ENABLE_STAT
+    if (stat_enable_) {
+        uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
+        ++event_count_;
+        time_cost_us_ += cost_us;
+        if (max_cost_us_ < cost_us)
+            max_cost_us_ = cost_us;
+    }
+#endif
+}
+
 void CommonLoop::handleNextFunc()
 {
     while (!run_next_func_queue_.empty()) {
@@ -122,9 +161,17 @@ void CommonLoop::handleNextFunc()
 
 void CommonLoop::onGotRunInLoopFunc(short)
 {
+    /**
+     * NOTICE:
+     * 这里使用 tmp 将 run_in_loop_func_queue_ 中的内容交换出去。然后再从 tmp 逐一取任务出来执行。
+     * 其目的在于腾空 run_in_loop_func_queue_，让新 runInLoop() 的任务则会在下一轮循环中执行。
+     * 从而防止无限 runInLoop() 引起的死循环，导致其它事件得不到处理。
+     *
+     * 这点与 runNext() 不同
+     */
     std::deque<Func> tmp;
     {
-        std::lock_guard<std::mutex> g(lock_);
+        std::lock_guard<std::recursive_mutex> g(lock_);
         run_in_loop_func_queue_.swap(tmp);
         finishRequest();
     }
@@ -140,6 +187,31 @@ void CommonLoop::onGotRunInLoopFunc(short)
         }
         tmp.pop_front();
     }
+}
+
+//! 清理 run_in_loop_func_queue_ 与 run_next_func_queue_ 中的任务
+void CommonLoop::cleanupDeferredTasks()
+{
+    int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
+    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
+            && remain_loop_count-- > 0) {
+        std::deque<Func> tasks = std::move(run_next_func_queue_);
+        tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
+        run_in_loop_func_queue_.clear();
+
+        while (!tasks.empty()) {
+            Func &func = tasks.front();
+            if (func) {
+                ++cb_level_;
+                func();
+                --cb_level_;
+            }
+            tasks.pop_front();
+        }
+    }
+
+    if (remain_loop_count == 0)
+        LogWarn("found recursive actions, force quit");
 }
 
 void CommonLoop::commitRequest()
@@ -162,12 +234,31 @@ void CommonLoop::finishRequest()
     has_unhandle_req_ = false;
 }
 
+void CommonLoop::setStatEnable(bool enable)
+{
+#ifdef  ENABLE_STAT
+    if (!stat_enable_ && enable)
+        resetStat();
+
+    stat_enable_ = enable;
+#endif
+}
+
+bool CommonLoop::isStatEnabled() const
+{
+#ifdef  ENABLE_STAT
+    return stat_enable_;
+#else
+    return false;
+#endif
+}
+
 Stat CommonLoop::getStat() const
 {
     Stat stat;
 #ifdef  ENABLE_STAT
     using namespace std::chrono;
-    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - stat_start_).count();
+    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
     stat.time_cost_us = time_cost_us_;
     stat.max_cost_us = max_cost_us_;
     stat.event_count = event_count_;
@@ -179,19 +270,9 @@ void CommonLoop::resetStat()
 {
 #ifdef  ENABLE_STAT
     time_cost_us_ = max_cost_us_ = event_count_ = 0;
-    stat_start_ = steady_clock::now();
+    event_stat_start_ = whole_stat_start_ = steady_clock::now();
 #endif
 }
-
-#ifdef  ENABLE_STAT
-void CommonLoop::recordTimeCost(uint64_t cost_us)
-{
-    ++event_count_;
-    time_cost_us_ += cost_us;
-    if (max_cost_us_ < cost_us)
-        max_cost_us_ = cost_us;
-}
-#endif  //ENABLE_STAT
 
 }
 }

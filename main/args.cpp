@@ -1,82 +1,93 @@
 #include "args.h"
 
-#include <getopt.h>
 #include <iostream>
 #include <fstream>
 
 #include <tbox/base/json.hpp>
 
 #include <tbox/util/string.h>
+#include <tbox/util/argument_parser.h>
 
 namespace tbox::main {
 
 using namespace std;
 
-std::string GetAppDescribe();
-std::string GetAppBuildTime();
+string GetAppDescribe();
+string GetAppBuildTime();
 void GetAppVersion(int &major, int &minor, int &rev, int &build);
 
 Args::Args(Json &conf) :
     conf_(conf)
 { }
 
-bool Args::parse(int argc, char **argv)
+bool Args::parse(int argc, const char * const * const argv)
 {
-    const char *opt_str = "hvnpc:s:";
-    const struct option opt_list[] = {
-        { "help",    0, nullptr, 'h'},
-        { "version", 0, nullptr, 'v'},
-        { 0, 0, nullptr, 0 },
-    };
-
     bool run = true;    //!< 是否需要正常运行
     bool print_help = false;    //!< 是否需要打印帮助
+    bool print_tips = false;    //!< 是否需要打印Tips
     bool print_cfg  = false;    //!< 是否需要打印配置数据
     bool print_ver  = false;    //!< 是否需要打印配置版本信息
+    const string proc_name = argv[0];
 
-    while (true) {
-        int flag = getopt_long(argc, argv, opt_str, opt_list, nullptr);
-        if (flag == -1)
-            break;
+    using namespace tbox::util;
 
-        switch (flag) {
-            case 'h':
-            case '?':   //! 如果参数不合法
+    ArgumentParser parser(
+        [&] (char short_option, const std::string &long_option, ArgumentParser::OptionValue &option_value) {
+            if (short_option == 'h' || long_option == "help") {
                 print_help = true;
                 run = false;
-                break;
-
-            case 'v':
+            } else if (short_option == 'v' || long_option == "version") {
                 print_ver = true;
                 run = false;
-                break;
-
-            case 'n':
+            } else if (short_option == 'n') {
                 run = false;
-                break;
-
-            case 'p':
+            } else if (short_option == 'p') {
                 print_cfg = true;
-                break;
-
-            case 'c':
-                if (!load(optarg)) {
-                    print_help = true;
+            } else if (short_option == 'c') {
+                if (!option_value.valid()) {
+                    cerr << "Error: missing argument to `"<< short_option << "'" << endl;
+                    print_tips = true;
                     run = false;
+                    return false;
                 }
-                break;
-
-            case 's':
-                if (!set(optarg)) {
-                    print_help = true;
+                if (!load(option_value.get())) {
+                    print_tips = true;
                     run = false;
+                    return false;
                 }
-                break;
+            } else if (short_option == 's') {
+                if (!option_value.valid()) {
+                    cerr << "Error: missing argument to `"<< short_option << "'" << endl;
+                    print_tips = true;
+                    run = false;
+                    return false;
+                }
+                if (!set(option_value.get())) {
+                    print_tips = true;
+                    run = false;
+                    return false;
+                }
+            } else {
+                if (short_option == 0)
+                    cerr << "Error: invalid option `" << long_option << "'" << endl;
+                else
+                    cerr << "Error: invalid option `" << short_option << "'" << endl;
+                print_tips = true;
+                run = false;
+                return false;
+            }
+
+            return true;
         }
-    }
+    );
+
+    parser.parse(argc, argv);
+
+    if (print_tips)
+        printTips(proc_name);
 
     if (print_help)
-        printHelp(argv[0]);
+        printHelp(proc_name);
 
     if (print_ver)
         printVersion();
@@ -85,6 +96,11 @@ bool Args::parse(int argc, char **argv)
         cout << conf_.dump(2) << endl;
 
     return run;
+}
+
+void Args::printTips(const std::string &proc_name)
+{
+    cout << "Try '" << proc_name << " --help' for more information." << endl;
 }
 
 void Args::printHelp(const std::string &proc_name)
@@ -126,7 +142,7 @@ bool Args::load(const std::string &config_filename)
 {
     ifstream ifs(config_filename);
     if (!ifs) {
-        cerr << "Error: open config file " << config_filename << " fail." << endl;
+        cerr << "Error: can't open config file `" << config_filename << '\'' << endl;
         return false;
     }
 
@@ -134,7 +150,7 @@ bool Args::load(const std::string &config_filename)
         auto js_patch = Json::parse(ifs);
         conf_.merge_patch(js_patch);
     } catch (const exception &e) {
-        cerr << "Error: parse json fail, " << e.what() << endl;
+        cerr << "Error: parse config fail, " << e.what() << endl;
         return false;
     }
 
@@ -173,14 +189,14 @@ bool Args::set(const std::string &set_string)
 {
     vector<string> str_vec;
     if (util::string::Split(set_string, "=", str_vec) != 2) {
-        cerr << "Error: in -s --set option, TEXT format is '<KEY>=<VALUE>'" << endl;
+        cerr << "Error: invalid argument to `-s', argument format: '<KEY>=<VALUE>'" << endl;
         return false;
     }
     std::string key   = util::string::Strip(str_vec[0]);
     std::string value = util::string::Strip(str_vec[1]);
 
     if (key.empty() || value.empty()) {
-        cerr << "Error: key or value is empty";
+        cerr << "Error: KEY or VALUE is empty";
         return false;
     }
 

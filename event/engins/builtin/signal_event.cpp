@@ -100,10 +100,7 @@ Loop* EpollSignalEvent::getLoop() const
 
 void EpollSignalEvent::onEvent(short events)
 {
-#ifdef  ENABLE_STAT
-    using namespace std::chrono;
-    auto start = steady_clock::now();
-#endif
+    wp_loop_->beginEventProcess();
 
     if (!(events & FdEvent::kReadEvent))
         return;
@@ -126,13 +123,7 @@ void EpollSignalEvent::onEvent(short events)
             disable();
     }
 
-    auto wp_loop = wp_loop_;
-    wp_loop->handleNextFunc();
-
-#ifdef  ENABLE_STAT
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - start).count();
-    wp_loop->recordTimeCost(cost_us);
-#endif
+    wp_loop_->endEventProcess();
 }
 
 }

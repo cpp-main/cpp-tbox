@@ -13,6 +13,7 @@ class App : public main::App
   public:
     ~App();
 
+    void fillDefaultConfig(Json &cfg) const override;
     bool construct(tbox::main::Context &ctx) override;
     bool initialize(const tbox::Json &cfg) override;
     bool start() override;

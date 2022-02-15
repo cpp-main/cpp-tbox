@@ -5,11 +5,11 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = client.h
 
-SRC_FILES = client.cpp
+CPP_SRC_FILES = client.cpp
 
-CCXXFLAGS += -DLOG_MODULE_ID='"mqtt"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"mqtt"' $(CXXFLAGS)
 
-TEST_SRC_FILES = \
+TEST_CPP_SRC_FILES = \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -lmosquitto -levent_core -lev
 
