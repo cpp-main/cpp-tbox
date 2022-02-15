@@ -20,7 +20,9 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 - network，网络库，实现了串口、终端、UDP、TCP 通信模块；
 - coroutine，协程库，众所周知，异步框架不方便处理顺序性业务，协程弥补之；
 - mqtt，MQTT客户端库；
+- terminal, 终端，类似shell的命令终端，可实现运行时与程序进行命令交互；
 - main，应用程序框架，实现了完备的程序启动流程与框架，让开发者只需关心业务代码；
+- sample，基于main实现的应用程序示例；
 
 #### 模块间依赖
 
@@ -31,7 +33,9 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 - network --> base, event
 - coroutine --> base, event
 - mqtt --> base, event, [mosquitto]
+- terminal --> base, util, event, network
 - main --> base, util, event, eventx
+- sample --> main
 
 #### 未来规化
 
@@ -39,7 +43,6 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 - 在 event 中支持 buildin 事件驱动（进行中 feature-epoll）；
 - 在 network 中支持 TLS；
 - 实现异步日志输出模块；
-- 实现类似于 shell 的命令交互，并添加到 main 中（进行中 feature-shell）；
 - 实现使用 CMake 进行工程管理；
 - 创建 CoAP 模块，实现 CoAP 的客户端与服务端；
 - 实现Broker，使模块间可以订阅与发送消息（进行中 feature-Broker）；
