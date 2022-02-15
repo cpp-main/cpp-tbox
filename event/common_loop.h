@@ -28,6 +28,7 @@ class CommonLoop : public Loop {
     void run(const Func &func) override;
 
     void setStatEnable(bool enable) override;
+    bool isStatEnabled() const override;
     Stat getStat() const override;
     void resetStat() override;
 

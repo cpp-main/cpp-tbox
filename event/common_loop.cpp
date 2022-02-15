@@ -237,7 +237,19 @@ void CommonLoop::finishRequest()
 void CommonLoop::setStatEnable(bool enable)
 {
 #ifdef  ENABLE_STAT
+    if (!stat_enable_ && enable)
+        resetStat();
+
     stat_enable_ = enable;
+#endif
+}
+
+bool CommonLoop::isStatEnabled() const
+{
+#ifdef  ENABLE_STAT
+    return stat_enable_;
+#else
+    return false;
 #endif
 }
 
@@ -258,7 +270,7 @@ void CommonLoop::resetStat()
 {
 #ifdef  ENABLE_STAT
     time_cost_us_ = max_cost_us_ = event_count_ = 0;
-    whole_stat_start_ = steady_clock::now();
+    event_stat_start_ = whole_stat_start_ = steady_clock::now();
 #endif
 }
 

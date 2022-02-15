@@ -75,6 +75,7 @@ class Loop {
 
     //! 统计操作
     virtual void setStatEnable(bool enable) = 0;
+    virtual bool isStatEnabled() const = 0;
     virtual Stat getStat() const = 0;
     virtual void resetStat() = 0;
 

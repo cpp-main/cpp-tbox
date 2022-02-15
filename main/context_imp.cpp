@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <iomanip>
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
@@ -92,17 +93,21 @@ void ContextImp::cleanup()
 void ContextImp::buildTerminalNodes()
 {
     using namespace terminal;
+    TerminalNodes *wp_nodes = sp_terminal_;
 
-    auto ctx_node = sp_terminal_->createDirNode("This is Context directory");
-    sp_terminal_->mountNode(sp_terminal_->rootNode(), ctx_node, "context");
+    auto ctx_node = wp_nodes->createDirNode("This is Context directory");
+    wp_nodes->mountNode(wp_nodes->rootNode(), ctx_node, "context");
 
-    auto loop_node = sp_terminal_->createDirNode("This is Loop directory");
-    sp_terminal_->mountNode(ctx_node, loop_node, "loop");
+    auto loop_node = wp_nodes->createDirNode("This is Loop directory");
+    wp_nodes->mountNode(ctx_node, loop_node, "loop");
 
-    auto loop_stat_enable = sp_terminal_->createFuncNode(
+    auto loop_stat_node = wp_nodes->createDirNode();
+    wp_nodes->mountNode(loop_node, loop_stat_node, "stat");
+
+    auto loop_stat_enable_node = wp_nodes->createFuncNode(
         [this] (const Session &s, const Args &args) {
             std::stringstream ss;
-            if (args.size() == 2) {
+            if (args.size() >= 2) {
                 const auto &opt = args[1];
                 if (opt == "on") {
                     sp_loop_->setStatEnable(true);
@@ -111,31 +116,41 @@ void ContextImp::buildTerminalNodes()
                     sp_loop_->setStatEnable(false);
                     ss << "stat off\r\n";
                 } else {
-                    ss << "Unknown option.\r\n";
+                    ss << "Usage: " << args[0] << " on|off\r\n";
                 }
             } else {
-                ss << "Usage: " << args[0] << " on|off\r\n";
+                ss << (sp_loop_->isStatEnabled() ? "on" : "off") << "\r\n";
             }
             s.send(ss.str());
         }
     , "enable or disable Loop's stat function");
-    sp_terminal_->mountNode(loop_node, loop_stat_enable, "stat_enable");
+    wp_nodes->mountNode(loop_stat_node, loop_stat_enable_node, "enable");
 
-    auto loop_stat_print = sp_terminal_->createFuncNode(
+    auto loop_stat_print_node = wp_nodes->createFuncNode(
         [this] (const Session &s, const Args &args) {
             std::stringstream ss;
-            auto stat = sp_loop_->getStat();
-            ss  << "stat_time: " << stat.stat_time_us << "us\r\n"
-                << "time_cost: " << stat.time_cost_us << "us\r\n"
-                << "max_cost: " << stat.max_cost_us << "us\r\n"
-                << "event_count: " << stat.event_count << "\r\n"
-                ;
+            if (sp_loop_->isStatEnabled()) {
+                auto stat = sp_loop_->getStat();
+                ss  << "stat_time: " << stat.stat_time_us << " us\r\n"
+                    << "time_cost: " << stat.time_cost_us << " us\r\n"
+                    << "event_count: " << stat.event_count << "\r\n"
+                    << "max_cost: " << stat.max_cost_us << " us\r\n";
+
+                if (stat.event_count != 0)
+                    ss << "avg_cost: " << stat.time_cost_us / stat.event_count << " us\r\n";
+
+                if (stat.stat_time_us != 0)
+                    ss << "cpu: " << std::setprecision(1) << stat.time_cost_us * 100.0 / stat.stat_time_us << " %\r\n";
+
+            } else {
+                ss << "stat not enabled\r\n";
+            }
             s.send(ss.str());
         }
     , "print Loop's stat data");
-    sp_terminal_->mountNode(loop_node, loop_stat_print, "stat_print");
+    wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
 
-    auto loop_stat_reset = sp_terminal_->createFuncNode(
+    auto loop_stat_reset_node = wp_nodes->createFuncNode(
         [this] (const Session &s, const Args &args) {
             std::stringstream ss;
             sp_loop_->resetStat();
@@ -143,7 +158,7 @@ void ContextImp::buildTerminalNodes()
             s.send(ss.str());
         }
     , "reset Loop's stat data");
-    sp_terminal_->mountNode(loop_node, loop_stat_reset, "stat_reset");
+    wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
 }
 
 }
