@@ -152,10 +152,14 @@ void Terminal::Impl::printHelp(SessionContext *s)
         "Buildin commands:\r\n"
         "- cd        Chang directory\r\n"
         "- ls        List nodes under specified path\r\n"
+        "- pwd       print current path\r\n"
         "- tree      List all nodes as tree\r\n"
         "- exit      Exit this\r\n"
         "- help      Print help of specified node\r\n"
         "- history   List history command\r\n"
+        "- !n        run the n command of history\r\n"
+        "- !-n       run the last n command of history\r\n"
+        "- !!        run last command\r\n"
         ;
     s->wp_conn->send(s->token, help_str);
 }
