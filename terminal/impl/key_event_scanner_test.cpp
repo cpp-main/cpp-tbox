@@ -85,6 +85,14 @@ TEST(KeyEventScanner, Enter_2)
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kEnter);
 }
 
+TEST(KeyEventScanner, Enter_3)
+{
+    KeyEventScanner ks;
+    EXPECT_EQ(ks.next(0x0d), KeyEventScanner::Status::kUnsure);
+    EXPECT_EQ(ks.stop(), KeyEventScanner::Status::kEnsure);
+    EXPECT_EQ(ks.result(), KeyEventScanner::Result::kEnter);
+}
+
 TEST(KeyEventScanner, Alt)
 {
     KeyEventScanner ks;

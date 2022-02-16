@@ -206,9 +206,13 @@ KeyEventScanner::Status KeyEventScanner::stop()
     if (step_ == Step::k1b) {
         result_ = Result::kESC;
         return Status::kEnsure;
+    } else if (step_ == Step::k0d) {
+        result_ = Result::kEnter;
+        return Status::kEnsure;
+    } else {
+        step_ = Step::kNone;
+        return Status::kFail;
     }
-    step_ = Step::kNone;
-    return Status::kFail;
 }
 
 }
