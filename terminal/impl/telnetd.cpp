@@ -128,7 +128,7 @@ void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
 
 bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size)
 {
-#if 1
+#if 0
     auto hex_str = string::RawDataToHexStr(data_ptr, data_size);
     cout << ct.id() << " << send " << data_size << ": " << hex_str << endl;
 #endif
@@ -170,7 +170,7 @@ void Telnetd::Impl::sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8
 
 void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
 {
-#if 1
+#if 0
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
     cout << ct.id() << " >> recv " << buff.readableSize() << ": " << hex_str << endl;
 #endif
