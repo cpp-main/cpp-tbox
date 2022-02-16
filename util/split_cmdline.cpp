@@ -6,43 +6,32 @@ using namespace std;
 
 bool SplitCmdline(const std::string &cmd, std::vector<std::string> &args)
 {
-    string curr_str;
-    bool in_single_quote = false;
-    bool in_double_quote = false;
-
+    size_t start_pos = 0;
+    size_t end_pos = 0;
     args.clear();
 
-    for (char ch : cmd) {
-        if (ch == '\'') {
-            if (in_single_quote)
-                in_single_quote = false;
-            else if (in_double_quote)
-                curr_str.push_back(ch);
-            else
-                in_single_quote = true;
-        } else if (ch == '\"') {
-            if (in_double_quote)
-                in_double_quote = false;
-            else if (in_single_quote)
-                curr_str.push_back(ch);
-            else
-                in_double_quote = true;
-        } else if (ch == ' ') {
-            if (in_single_quote || in_double_quote) {
-                curr_str.push_back(ch);
-            } else {
-                if (!curr_str.empty())
-                    args.push_back(move(curr_str));
-            }
+    while (true) {
+        start_pos = cmd.find_first_not_of(" \t", end_pos);
+        if (start_pos == std::string::npos)
+            break;
+
+        char start_char = cmd.at(start_pos);
+        if (start_char == '\'' || start_char == '\"') {
+            end_pos = cmd.find_first_of(start_char, start_pos + 1);
+            if (end_pos == std::string::npos)
+                return false;
+
+            args.push_back(cmd.substr(start_pos + 1, end_pos - start_pos - 1));
+            ++end_pos;
         } else {
-            curr_str.push_back(ch);
+            end_pos = cmd.find_first_of(" \t", start_pos);
+            args.push_back(cmd.substr(start_pos, end_pos - start_pos));
+            if (end_pos == std::string::npos)
+                break;
         }
     }
 
-    if (!curr_str.empty())
-        args.push_back(move(curr_str));
-
-    return !(in_single_quote || in_double_quote);
+    return true;
 }
 
 }
