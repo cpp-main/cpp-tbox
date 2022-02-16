@@ -12,7 +12,7 @@ namespace tbox::terminal {
  *
  * 按键动键与对应的字符序列：
  * - Tab:       09
- * - Backspace: 7f
+ * - Backspace: 7f|08
  * - ESC:       1b
  * - Enter:     0d 00|0a
  *
