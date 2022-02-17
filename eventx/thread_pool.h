@@ -41,7 +41,7 @@ class ThreadPool {
      * \param backend_task      让worker线程执行的函数对象
      * \param prio              任务优先级[-2, -1, 0, 1, 2]，越小优先级越高
      *
-     * \return TaskToken
+     * \return TaskToken        任务Token
      */
     TaskToken execute(const NonReturnFunc &backend_task, int prio = 0);
 
@@ -52,20 +52,20 @@ class ThreadPool {
      * \param main_cb           任务完成后，由主线程执行的回调函数对象
      * \param prio              任务优先级[-2, -1, 0, 1, 2]，越小优先级越高
      *
-     * \return TaskToken
+     * \return TaskToken        任务Token
      */
     TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio = 0);
 
     /**
      * 取消任务
      *
-     * \param task_id   任务id
+     * \return task_token       任务Token
      *
      * \return  int     0: 成功
      *                  1: 没有找到该任务（已执行）
      *                  2: 该任务正在执行
      */
-    int cancel(TaskToken tt);
+    int cancel(TaskToken task_token);
 
     /**
      * 清理资源，并等待所有的worker线程结束
@@ -73,7 +73,9 @@ class ThreadPool {
     void cleanup();
 
   protected:
-    void threadProc(int id);
+    using ThreadToken = cabinet::Token;
+
+    void threadProc(ThreadToken thread_token);
     bool createWorker();
 
     bool shouldThreadExitWaiting() const;   //! 判定子线程是否需要退出条件变量的wait()函数

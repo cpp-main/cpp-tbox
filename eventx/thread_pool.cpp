@@ -33,8 +33,7 @@ struct ThreadPool::Data {
     std::set<TaskToken> doing_tasks_token;    //!< 记录正在从事的任务
 
     size_t idle_thread_num = 0;         //!< 空间线程个数
-    std::map<int/*thread_id*/, std::thread*> threads;    //!< 线程对象
-    int thread_id_alloc = 0;            //!< 工作线程的ID分配器
+    cabinet::Cabinet<std::thread> threads_cabinet;
     bool all_threads_stop_flag = false; //!< 是否所有工作线程立即停止标记
 };
 
@@ -126,7 +125,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
         d_->undo_tasks_token.at(level).push_back(token);
         //! 如果空间线程不够，且还可以再创建新的线程
         if (d_->idle_thread_num == 0 &&
-            (d_->max_thread_num == 0 || d_->threads.size() < d_->max_thread_num))
+            (d_->max_thread_num == 0 || d_->threads_cabinet.size() < d_->max_thread_num))
             createWorker();
     }
 
@@ -188,18 +187,19 @@ void ThreadPool::cleanup()
     d_->cond_var.notify_all();
 
     //! 等待所有的线程退出
-    for (auto item : d_->threads) {
-        std::thread *t = item.second;
-        t->join();
-        delete t;
-    }
-    d_->threads.clear();
+    d_->threads_cabinet.foreach(
+        [](std::thread *t) {
+            t->join();
+            delete t;
+        }
+    );
+    d_->threads_cabinet.clear();
     d_->is_ready = false;
 }
 
-void ThreadPool::threadProc(int id)
+void ThreadPool::threadProc(ThreadToken thread_token)
 {
-    LogInfo("thread %d start", id);
+    LogInfo("thread %u start", thread_token.id());
 
     while (true) {
         Task* item = nullptr;
@@ -211,15 +211,11 @@ void ThreadPool::threadProc(int id)
              * 如果当前已有空闲的线程在等待，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求
              * 则退出当前线程
              */
-            if (d_->idle_thread_num > 0 && d_->threads.size() > d_->min_thread_num) {
-                LogDbg("thread %d will exit, no more work.", id);
+            if (d_->idle_thread_num > 0 && d_->threads_cabinet.size() > d_->min_thread_num) {
+                LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
-                auto iter = d_->threads.find(id);
-                if (iter != d_->threads.end()) {
-                    std::thread *t = iter->second;
-                    d_->threads.erase(iter);
-                    d_->wp_loop->runInLoop([t]{ t->join(); delete t; });
-                }
+                auto t = d_->threads_cabinet.remove(thread_token);
+                d_->wp_loop->runInLoop([t]{ t->join(); delete t; });
                 break;
             }
 
@@ -236,7 +232,7 @@ void ThreadPool::threadProc(int id)
              * 所以，下面检查 all_threads_stop_flag 看是不是请求退出
              */
             if (d_->all_threads_stop_flag) {
-                LogDbg("thread %d will exit, stop flag.", id);
+                LogDbg("thread %u will exit, stop flag.", thread_token.id());
                 break;
             }
 
@@ -250,10 +246,10 @@ void ThreadPool::threadProc(int id)
                 d_->doing_tasks_token.insert(item->token);
             }
 
-            LogDbg("thread %d pick task %u", id, item->token.id());
+            LogDbg("thread %u pick task %u", thread_token.id(), item->token.id());
             item->backend_task();
             d_->wp_loop->runInLoop(item->main_cb);
-            LogDbg("thread %d finish task %u", id, item->token.id());
+            LogDbg("thread %u finish task %u", thread_token.id(), item->token.id());
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
@@ -263,15 +259,15 @@ void ThreadPool::threadProc(int id)
         }
     }
 
-    LogInfo("thread %d exit", id);
+    LogInfo("thread %u exit", thread_token.id());
 }
 
 bool ThreadPool::createWorker()
 {
-    int curr_thread_id = ++d_->thread_id_alloc;
-    std::thread *new_thread = new std::thread(std::bind(&ThreadPool::threadProc, this, curr_thread_id));
+    ThreadToken thread_token = d_->threads_cabinet.alloc();
+    auto *new_thread = new std::thread(std::bind(&ThreadPool::threadProc, this, thread_token));
     if (new_thread != nullptr) {
-        d_->threads.insert(std::make_pair(curr_thread_id, new_thread));
+        d_->threads_cabinet.update(thread_token, new_thread);
         return true;
 
     } else {
