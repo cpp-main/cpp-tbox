@@ -19,6 +19,8 @@ auto backend_func = \
             LogDbg("task %d run in back>>", id);
         };
 
+ThreadPool::TaskToken null_task_token;
+
 /**
  * 最小线程数为2，最大线程数为5
  */
@@ -30,7 +32,7 @@ TEST(ThreadPool, min2_max5) {
     ASSERT_TRUE(tp->initialize(2,5));
 
     for (int i = 0; i < 12; ++i) {
-        ASSERT_NE(tp->execute(std::bind(backend_func, i)), -1);
+        ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
     }
 
     LogDbg("run in main");
@@ -53,7 +55,7 @@ TEST(ThreadPool, min0_max5) {
     ASSERT_TRUE(tp->initialize(0,5));
 
     for (int i = 0; i < 12; ++i) {
-        ASSERT_NE(tp->execute(std::bind(backend_func, i)), -1);
+        ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
     }
 
     LogDbg("run in main");
@@ -78,7 +80,7 @@ TEST(ThreadPool, exit_before_finish) {
     ASSERT_TRUE(tp->initialize(1,1));
 
     for (int i = 0; i < 3; ++i) {
-        ASSERT_NE(tp->execute(std::bind(backend_func, i)), -1);
+        ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
     }
 
     LogDbg("run in main");
@@ -103,10 +105,10 @@ TEST(ThreadPool, cancel_task) {
     ThreadPool *tp = new ThreadPool(loop);
     ASSERT_TRUE(tp->initialize(1,1));
 
-    vector<int> task_ids;
+    vector<ThreadPool::TaskToken> task_ids;
     for (int i = 0; i < 3; ++i) {
-        int tid = tp->execute(std::bind(backend_func, i));
-        task_ids.push_back(tid);
+        auto token = tp->execute(std::bind(backend_func, i));
+        task_ids.push_back(token);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -114,7 +116,8 @@ TEST(ThreadPool, cancel_task) {
     EXPECT_EQ(tp->cancel(task_ids[0]), 1);  //! 第一个任务已完成
     EXPECT_EQ(tp->cancel(task_ids[1]), 2);  //! 第二个任务正在执行
     EXPECT_EQ(tp->cancel(task_ids[2]), 0);  //! 第三个任务可正常取消
-    EXPECT_EQ(tp->cancel(100), 1);  //! 任务不存在
+    ThreadPool::TaskToken invalid_token(100, 1);
+    EXPECT_EQ(tp->cancel(invalid_token), 1);  //! 任务不存在
 
     loop->exitLoop(std::chrono::seconds(4));
     loop->runLoop();

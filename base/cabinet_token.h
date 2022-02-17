@@ -25,8 +25,12 @@ class Token {
     inline bool less(const Token &other)  const { return id_ != other.id_ ? id_ < other.id_ : pos_ < other.pos_; }
     inline size_t hash() const { return (id_ << 8) | (pos_ & 0xff); }
 
-    inline bool operator == (const Token &other) const { return equal(other); }
-    inline bool operator < (const Token &other) const { return less(other); }
+    inline bool operator == (const tbox::cabinet::Token &rhs) const { return equal(rhs); }
+    inline bool operator != (const tbox::cabinet::Token &rhs) const { return !equal(rhs); }
+    inline bool operator <  (const tbox::cabinet::Token &rhs) const { return less(rhs); }
+    inline bool operator <= (const tbox::cabinet::Token &rhs) const { return less(rhs) || equal(rhs); }
+    inline bool operator >  (const tbox::cabinet::Token &rhs) const { return !less(rhs) && !equal(rhs); }
+    inline bool operator >= (const tbox::cabinet::Token &rhs) const { return !less(rhs); }
 
   private:
     Id id_ = 0;
