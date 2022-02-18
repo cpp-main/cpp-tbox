@@ -199,10 +199,10 @@ TEST(Deserializer, little_endian_stream) {
     EXPECT_EQ(u64, 0x1817161514131211ull);
 }
 
-TEST(Serializer, Deserializer)
+TEST(SerializerDeserialize, big_endian)
 {
     uint8_t buff[50];
-    Serializer s(buff, sizeof(buff));
+    Serializer s(buff, sizeof(buff), Endian::kBig);
     s << int8_t(-1) << uint8_t(2) << int16_t(-3) << uint16_t(4) << int32_t(-5) << uint32_t(6)
         << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
 
@@ -217,7 +217,40 @@ TEST(Serializer, Deserializer)
     float ff;
     double dd;
 
-    Deserializer d(buff, s.pos());
+    Deserializer d(buff, s.pos(), Endian::kBig);
+    d >> i8 >> u8 >> i16 >> u16 >> i32 >> u32 >> i64 >> u64 >> ff >> dd;
+
+    EXPECT_EQ(i8, -1);
+    EXPECT_EQ(u8, 2);
+    EXPECT_EQ(i16, -3);
+    EXPECT_EQ(u16, 4);
+    EXPECT_EQ(i32, -5);
+    EXPECT_EQ(u32, 6);
+    EXPECT_EQ(i64, -7);
+    EXPECT_EQ(u64, 8);
+    EXPECT_FLOAT_EQ(ff, 1.0);
+    EXPECT_DOUBLE_EQ(dd, 12.3);
+}
+
+TEST(SerializerDeserialize, little_endian)
+{
+    uint8_t buff[50];
+    Serializer s(buff, sizeof(buff), Endian::kLittle);
+    s << int8_t(-1) << uint8_t(2) << int16_t(-3) << uint16_t(4) << int32_t(-5) << uint32_t(6)
+        << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
+
+    int8_t i8;
+    uint8_t u8;
+    int16_t i16;
+    uint16_t u16;
+    int32_t i32;
+    uint32_t u32;
+    int64_t i64;
+    uint64_t u64;
+    float ff;
+    double dd;
+
+    Deserializer d(buff, s.pos(), Endian::kLittle);
     d >> i8 >> u8 >> i16 >> u16 >> i32 >> u32 >> i64 >> u64 >> ff >> dd;
 
     EXPECT_EQ(i8, -1);
