@@ -70,6 +70,8 @@ tbox::util::Serializer& operator << (tbox::util::Serializer &s, uint32_t in);
 tbox::util::Serializer& operator << (tbox::util::Serializer &s, int32_t in);
 tbox::util::Serializer& operator << (tbox::util::Serializer &s, uint64_t in);
 tbox::util::Serializer& operator << (tbox::util::Serializer &s, int64_t in);
+tbox::util::Serializer& operator << (tbox::util::Serializer &s, float in);
+tbox::util::Serializer& operator << (tbox::util::Serializer &s, double in);
 
 tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, tbox::util::Endian endian);
 tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, uint8_t &out);
@@ -80,5 +82,7 @@ tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, uint32_t &ou
 tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, int32_t &out);
 tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, uint64_t &out);
 tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, int64_t &out);
+tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, float &out);
+tbox::util::Deserializer& operator >> (tbox::util::Deserializer &s, double &out);
 
 #endif //TBOX_UTIL_SERIALIZER_H_20220218

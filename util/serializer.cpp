@@ -240,13 +240,15 @@ using namespace tbox::util;
 
 Serializer& operator << (Serializer &s, Endian endian) { s.setEndian(endian);  return s; }
 Serializer& operator << (Serializer &s, uint8_t in) { s.append(in); return s; }
-Serializer& operator << (Serializer &s, int8_t in) { s.append(uint8_t(in)); return s; }
+Serializer& operator << (Serializer &s, int8_t in) { s.append(static_cast<uint8_t>(in)); return s; }
 Serializer& operator << (Serializer &s, uint16_t in) { s.append(in); return s; }
-Serializer& operator << (Serializer &s, int16_t in) { s.append(uint16_t(in)); return s; }
+Serializer& operator << (Serializer &s, int16_t in) { s.append(static_cast<uint16_t>(in)); return s; }
 Serializer& operator << (Serializer &s, uint32_t in) { s.append(in); return s; }
-Serializer& operator << (Serializer &s, int32_t in) { s.append(uint32_t(in)); return s; }
+Serializer& operator << (Serializer &s, int32_t in) { s.append(static_cast<uint32_t>(in)); return s; }
 Serializer& operator << (Serializer &s, uint64_t in) { s.append(in); return s; }
-Serializer& operator << (Serializer &s, int64_t in) { s.append(uint64_t(in)); return s; }
+Serializer& operator << (Serializer &s, int64_t in) { s.append(static_cast<uint64_t>(in)); return s; }
+Serializer& operator << (Serializer &s, float in) { s.append(*reinterpret_cast<uint16_t*>(&in)); return s; }
+Serializer& operator << (Serializer &s, double in) { s.append(*reinterpret_cast<uint32_t*>(&in)); return s; }
 
 Deserializer& operator >> (Deserializer &s, Endian endian) { s.setEndian(endian); return s; }
 Deserializer& operator >> (Deserializer &s, uint8_t &out) { s.fetch(out); return s; }
@@ -257,4 +259,5 @@ Deserializer& operator >> (Deserializer &s, uint32_t &out) { s.fetch(out); retur
 Deserializer& operator >> (Deserializer &s, int32_t &out) { s.fetch(*((uint32_t*)&out)); return s; }
 Deserializer& operator >> (Deserializer &s, uint64_t &out) { s.fetch(out); return s; } 
 Deserializer& operator >> (Deserializer &s, int64_t &out) { s.fetch(*((uint64_t*)&out)); return s; }
-
+Deserializer& operator >> (Deserializer &s, float &out) { s.fetch(*reinterpret_cast<uint16_t*>(&out)); return s; }
+Deserializer& operator >> (Deserializer &s, double &out) { s.fetch(*reinterpret_cast<uint32_t*>(&out)); return s; }
