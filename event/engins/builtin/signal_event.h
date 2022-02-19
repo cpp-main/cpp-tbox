@@ -5,7 +5,8 @@
 
 struct epoll_event;
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
 
 class BuiltinLoop;
 class EpollFdEvent;
@@ -40,5 +41,7 @@ class EpollSignalEvent : public SignalEvent {
 };
 
 }
+}
 
 #endif //TBOX_EVENT_EPOLL_SINGAL_EVENT_H_20220110
+

@@ -11,7 +11,8 @@
 #include "loop.h"
 #include "fd_event.h"
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
 
 EpollSignalEvent::EpollSignalEvent(BuiltinLoop *wp_loop) :
      wp_loop_(wp_loop)
@@ -125,5 +126,5 @@ void EpollSignalEvent::onEvent(short events)
 
     wp_loop_->endEventProcess();
 }
-
+}
 }

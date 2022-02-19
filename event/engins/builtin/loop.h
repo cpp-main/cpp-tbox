@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+#include <unordered_map>
 
 #include "tbox/base/cabinet.hpp"
 #include "../../common_loop.h"
@@ -11,7 +12,10 @@
 #define DEFAULT_MAX_LOOP_ENTRIES (256)
 #endif
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
+
+class EpollFdEventImpl;
 
 class BuiltinLoop : public CommonLoop {
   public:
@@ -32,6 +36,25 @@ class BuiltinLoop : public CommonLoop {
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
+
+    inline void registerFdEvent(int fd, EpollFdEventImpl *fd_event)
+    {
+        fd_event_map_.insert(std::make_pair(fd, fd_event));
+    }
+
+    inline void unregisterFdevent(int fd)
+    {
+        fd_event_map_.erase(fd);
+    }
+
+    inline EpollFdEventImpl *queryFdevent(int fd)
+    {
+        auto it = fd_event_map_.find(fd);
+        if (it != fd_event_map_.end())
+            return it->second;
+
+        return nullptr;
+    }
 
   private:
     void onTimeExpired();
@@ -61,8 +84,11 @@ class BuiltinLoop : public CommonLoop {
 
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer *> timer_min_heap_;
+
+    std::unordered_map<int, EpollFdEventImpl*> fd_event_map_;
 };
 
+}
 }
 
 #endif //TBOX_EVENT_LIBEPOLL_LOOP_H_20220105

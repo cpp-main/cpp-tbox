@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <iostream>
+#include <cstring>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
@@ -9,10 +10,22 @@ using namespace tbox::event;
 
 void FdCallback(int fd, short event)
 {
+    cout << "on read event" << endl;
     char input_buff[200];
     int rsize = read(fd, input_buff, sizeof(input_buff));
     input_buff[rsize - 1] = '\0';
     cout << "fd: " << fd << " INPUT is [" << input_buff << "]" << endl;
+}
+
+void FdWCallback(int fd, short event)
+{
+    char input_buff[200];
+    memset(input_buff,0, sizeof(input_buff));
+    cout << "on write event"<< endl << "please input data:" << endl;
+    cin >> input_buff;
+    input_buff[sizeof(input_buff) - 1] = '\0';
+    write(fd, input_buff, sizeof(input_buff));
+    cout << endl << "write:" << "[" << input_buff << "] to fd:" << fd << endl;
 }
 
 void PrintUsage(const char *process_name)
@@ -51,9 +64,15 @@ int main(int argc, char *argv[])
     sp_fd->setCallback(std::bind(FdCallback, STDIN_FILENO, _1));
     sp_fd->enable();
 
+    FdEvent* sp_fdw = sp_loop->newFdEvent();
+    sp_fdw->initialize(STDIN_FILENO, FdEvent::kReadEvent, Event::Mode::kPersist);
+    sp_fdw->setCallback(std::bind(FdWCallback, STDIN_FILENO, _1));
+    sp_fdw->enable();
+
     sp_loop->runLoop(Loop::Mode::kForever);
 
     delete sp_fd;
+    delete sp_fdw;
     delete sp_loop;
     return 0;
 }

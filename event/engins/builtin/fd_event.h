@@ -5,9 +5,11 @@
 
 #include <sys/epoll.h>
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
 
 class BuiltinLoop;
+class EpollFdEventImpl;
 struct EventData;
 
 class EpollFdEvent : public FdEvent {
@@ -33,18 +35,18 @@ class EpollFdEvent : public FdEvent {
 
   private:
     BuiltinLoop *wp_loop_;
-    bool is_inited_{ false };
-    bool is_enabled_{ false };
     bool is_stop_after_trigger_ { false };
     CallbackFunc cb_;
-
-    int fd_ = -1;
-    struct epoll_event ev_;
-
     int cb_level_{ 0 };
+    int cb_index_{ -1 };
 
+    int fd_ { -1 };
+    uint32_t events_;
+
+    EpollFdEventImpl *impl_{ nullptr };
 };
 
+}
 }
 
 #endif //TBOX_EVENT_LIBEPOLL_FD_EVENT_H_20220110

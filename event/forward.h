@@ -1,13 +1,15 @@
 #ifndef TBOX_EVENT_FORWARD_H_20170627
 #define TBOX_EVENT_FORWARD_H_20170627
 
-namespace tbox::event {
+namespace tbox{
+namespace event {
 
 class Loop;
 class FdEvent;
 class TimerEvent;
 class SignalEvent;
 
+}
 }
 
 #endif //TBOX_EVENT_FORWARD_H_20170627

@@ -17,7 +17,8 @@
 
 #include "tbox/base/defines.h"
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
 
 namespace {
 uint64_t CurrentMilliseconds()
@@ -203,4 +204,5 @@ SignalEvent* BuiltinLoop::newSignalEvent()
     return new EpollSignalEvent(this);
 }
 
+}
 }
