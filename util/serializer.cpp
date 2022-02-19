@@ -9,14 +9,22 @@ namespace util {
 ////////////
 
 Serializer::Serializer(void *start, size_t size, Endian endian) :
+    type_(kRaw),
     start_((uint8_t *)start),
     size_(size),
     endian_(endian)
 { }
 
+Serializer::Serializer(std::vector<uint8_t> &block, Endian endian) :
+    type_(kVector),
+    start_((uint8_t *)block.data()),
+    p_block_(&block),
+    endian_(endian)
+{ }
+
 bool Serializer::append(uint8_t in)
 {
-    if (!checkSize(1))
+    if (!extendSize(1))
         return false;
 
     start_[pos_] = in;
@@ -26,7 +34,7 @@ bool Serializer::append(uint8_t in)
 
 bool Serializer::append(uint16_t in)
 {
-    if (!checkSize(2))
+    if (!extendSize(2))
         return false;
 
     uint8_t *p = start_ + pos_;
@@ -44,7 +52,7 @@ bool Serializer::append(uint16_t in)
 
 bool Serializer::append(uint32_t in)
 {
-    if (!checkSize(4))
+    if (!extendSize(4))
         return false;
 
     uint8_t *p = start_ + pos_;
@@ -66,7 +74,7 @@ bool Serializer::append(uint32_t in)
 
 bool Serializer::append(uint64_t in)
 {
-    if (!checkSize(8))
+    if (!extendSize(8))
         return false;
 
     uint8_t *p = start_ + pos_;
@@ -96,7 +104,7 @@ bool Serializer::append(uint64_t in)
 
 bool Serializer::append(const void *p_in, size_t size)
 {
-    if (!checkSize(size))
+    if (!extendSize(size))
         return false;
 
     uint8_t *p = start_ + pos_;
@@ -106,11 +114,17 @@ bool Serializer::append(const void *p_in, size_t size)
     return true;
 }
 
-bool Serializer::checkSize(size_t need_size) const
+bool Serializer::extendSize(size_t need_size)
 {
-    return (pos_ + need_size) <= size_;
+    size_t whole_size = pos_ + need_size;
+    if (type_ == kRaw)
+        return whole_size <= size_;
+    else {
+        p_block_->resize(whole_size);
+        start_ = p_block_->data();
+        return true;
+    }
 }
-
 
 //////////////
 // 反序列化 //

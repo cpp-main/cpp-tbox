@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <vector>
 
 namespace tbox {
 namespace util {
@@ -11,7 +12,8 @@ enum class Endian { kBig, kLittle };
 
 class Serializer {
   public:
-    Serializer(void *start, size_t size, Endian endian = Endian::kBig);
+    Serializer(void *start, size_t size, Endian endian = Endian::kBig);     //! 固定大小的缓冲区
+    Serializer(std::vector<uint8_t> &block, Endian endian = Endian::kBig);  //! 可变大小的vector<uint8_t>缓冲区
 
     inline void setEndian(Endian e) { endian_ = e; }
     inline size_t pos() const { return pos_; }
@@ -23,11 +25,15 @@ class Serializer {
     bool append(const void *p, size_t s);
 
   protected:
-    bool checkSize(size_t size) const;
+    bool extendSize(size_t size);
 
   private:
+    enum { kRaw, kVector } type_;
     uint8_t *start_;
-    size_t   size_;
+    union {
+        size_t  size_;
+        std::vector<uint8_t> *p_block_;
+    };
     Endian   endian_;
     size_t   pos_ = 0;
 };

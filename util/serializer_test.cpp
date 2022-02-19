@@ -3,7 +3,7 @@
 
 using namespace tbox::util;
 
-TEST(Serializer, big_endian) {
+TEST(Serializer, big_endian_raw) {
     uint8_t data_to_be[] = {
         0x01,
         0x02, 0x03,
@@ -25,6 +25,30 @@ TEST(Serializer, big_endian) {
     EXPECT_FALSE(w.append(uint8_t(1)));
 
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write, sizeof(data_be_write)));
+}
+
+TEST(Serializer, big_endian_vector) {
+    uint8_t data_to_be[] = {
+        0x01,
+        0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x21, 0x22
+    };
+
+    std::vector<uint8_t> data_be_write;
+    Serializer w(data_be_write);
+    w.setEndian(Endian::kBig);
+
+    EXPECT_TRUE(w.append(uint8_t(1)));
+    EXPECT_TRUE(w.append(uint16_t(0x0203)));
+    EXPECT_TRUE(w.append(uint32_t(0x04050607)));
+    EXPECT_TRUE(w.append(uint64_t(0x1112131415161718ull)));
+    uint8_t tmp[2] = {0x21, 0x22};
+    EXPECT_TRUE(w.append(tmp, 2));
+    EXPECT_EQ(data_be_write.size(), 17u);
+
+    EXPECT_EQ(0, memcmp(data_to_be, data_be_write.data(), sizeof(data_to_be)));
 }
 
 TEST(Serializer, big_endian_stream) {
