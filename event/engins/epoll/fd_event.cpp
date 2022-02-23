@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstring>
 #include <algorithm>
+
 #include "fd_event.h"
 #include "loop.h"
 
@@ -36,7 +37,7 @@ short LocalEventsToEpoll(short local_events)
 class EpollFdEventImpl
 {
   public:
-    explicit EpollFdEventImpl(BuiltinLoop *wp_loop)
+    explicit EpollFdEventImpl(EpollLoop *wp_loop)
         : wp_loop_(wp_loop)
     {
         memset(&ev_, 0, sizeof(ev_));
@@ -144,7 +145,7 @@ class EpollFdEventImpl
     }
 
   private:
-    BuiltinLoop *wp_loop_;
+    EpollLoop *wp_loop_;
     bool is_inited_{ false };
     bool is_enabled_{ false };
 
@@ -157,7 +158,7 @@ class EpollFdEventImpl
     int cb_index_{ 0 };
 };
 
-EpollFdEvent::EpollFdEvent(BuiltinLoop *wp_loop) :
+EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop) :
     wp_loop_(wp_loop),
     is_stop_after_trigger_(false),
     cb_level_(0)

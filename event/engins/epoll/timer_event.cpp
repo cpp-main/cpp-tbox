@@ -3,9 +3,10 @@
 #include "loop.h"
 #include "timer_event.h"
 
-namespace tbox::event {
+namespace tbox {
+namespace event {
 
-EpollTimerEvent::EpollTimerEvent(BuiltinLoop *wp_loop)
+EpollTimerEvent::EpollTimerEvent(EpollLoop *wp_loop)
     : wp_loop_(wp_loop)
 { }
 
@@ -88,4 +89,5 @@ void EpollTimerEvent::onEvent()
     wp_loop_->endEventProcess();
 }
 
+}
 }

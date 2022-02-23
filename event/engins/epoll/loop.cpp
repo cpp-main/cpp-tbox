@@ -29,19 +29,19 @@ uint64_t CurrentMilliseconds()
 
 }
 
-BuiltinLoop::BuiltinLoop() :
+EpollLoop::EpollLoop() :
     epoll_fd_(epoll_create1(EPOLL_CLOEXEC))
 {
     assert(epoll_fd_ >= 0);
 }
 
-BuiltinLoop::~BuiltinLoop()
+EpollLoop::~EpollLoop()
 {
     CHECK_CLOSE_RESET_FD(epoll_fd_);
     CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
 }
 
-int64_t BuiltinLoop::getWaitTime() const
+int64_t EpollLoop::getWaitTime() const
 {
     /// Get the top of minimum heap
     int64_t wait_time = -1;
@@ -54,7 +54,7 @@ int64_t BuiltinLoop::getWaitTime() const
     return wait_time;
 }
 
-void BuiltinLoop::onTimeExpired()
+void EpollLoop::onTimeExpired()
 {
     auto now = CurrentMilliseconds();
 
@@ -86,7 +86,7 @@ void BuiltinLoop::onTimeExpired()
     }
 }
 
-void BuiltinLoop::runLoop(Mode mode)
+void EpollLoop::runLoop(Mode mode)
 {
     if (epoll_fd_ < 0)
         return;
@@ -134,7 +134,7 @@ void BuiltinLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
+void EpollLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
     if (wait_time.count() == 0) {
         keep_running_ = false;
@@ -146,7 +146,7 @@ void BuiltinLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     }
 }
 
-cabinet::Token BuiltinLoop::addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb)
+cabinet::Token EpollLoop::addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb)
 {
     assert(cb);
 
@@ -168,7 +168,7 @@ cabinet::Token BuiltinLoop::addTimer(uint64_t interval, uint64_t repeat, const T
     return t->token;
 }
 
-void BuiltinLoop::deleteTimer(const cabinet::Token& token)
+void EpollLoop::deleteTimer(const cabinet::Token& token)
 {
     auto timer = timer_cabinet_.remove(token);
     if (timer == nullptr)
@@ -189,17 +189,17 @@ void BuiltinLoop::deleteTimer(const cabinet::Token& token)
     runNext([timer] { delete timer; }); //! Delete later, avoid delete itself
 }
 
-FdEvent* BuiltinLoop::newFdEvent()
+FdEvent* EpollLoop::newFdEvent()
 {
     return new EpollFdEvent(this);
 }
 
-TimerEvent* BuiltinLoop::newTimerEvent()
+TimerEvent* EpollLoop::newTimerEvent()
 {
     return new EpollTimerEvent(this);
 }
 
-SignalEvent* BuiltinLoop::newSignalEvent()
+SignalEvent* EpollLoop::newSignalEvent()
 {
     return new EpollSignalEvent(this);
 }

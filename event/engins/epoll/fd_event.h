@@ -1,5 +1,5 @@
-#ifndef TBOX_EVENT_LIBEPOLL_FD_EVENT_H_20220110
-#define TBOX_EVENT_LIBEPOLL_FD_EVENT_H_20220110
+#ifndef TBOX_EVENT_EPOLL_FD_EVENT_H_20220110
+#define TBOX_EVENT_EPOLL_FD_EVENT_H_20220110
 
 #include "../../fd_event.h"
 
@@ -8,13 +8,12 @@
 namespace tbox {
 namespace event {
 
-class BuiltinLoop;
+class EpollLoop;
 class EpollFdEventImpl;
-struct EventData;
 
 class EpollFdEvent : public FdEvent {
   public:
-    explicit EpollFdEvent(BuiltinLoop *wp_loop);
+    explicit EpollFdEvent(EpollLoop *wp_loop);
     virtual ~EpollFdEvent();
 
   public:
@@ -34,7 +33,7 @@ class EpollFdEvent : public FdEvent {
     void onEvent(short events);
 
   private:
-    BuiltinLoop *wp_loop_;
+    EpollLoop *wp_loop_;
     bool is_stop_after_trigger_ { false };
     CallbackFunc cb_;
     int cb_level_{ 0 };
@@ -49,4 +48,4 @@ class EpollFdEvent : public FdEvent {
 }
 }
 
-#endif //TBOX_EVENT_LIBEPOLL_FD_EVENT_H_20220110
+#endif //TBOX_EVENT_EPOLL_FD_EVENT_H_20220110

@@ -1,5 +1,5 @@
-#ifndef TBOX_EVENT_LIBEPOLL_LOOP_H_20220105
-#define TBOX_EVENT_LIBEPOLL_LOOP_H_20220105
+#ifndef TBOX_EVENT_EPOLL_LOOP_H_20220105
+#define TBOX_EVENT_EPOLL_LOOP_H_20220105
 
 #include <vector>
 #include <functional>
@@ -17,10 +17,10 @@ namespace event {
 
 class EpollFdEventImpl;
 
-class BuiltinLoop : public CommonLoop {
+class EpollLoop : public CommonLoop {
   public:
-    explicit BuiltinLoop();
-    virtual ~BuiltinLoop();
+    explicit EpollLoop();
+    virtual ~EpollLoop();
 
   public:
     virtual void runLoop(Mode mode);
@@ -37,22 +37,18 @@ class BuiltinLoop : public CommonLoop {
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
 
-    inline void registerFdEvent(int fd, EpollFdEventImpl *fd_event)
-    {
+    inline void registerFdEvent(int fd, EpollFdEventImpl *fd_event) {
         fd_event_map_.insert(std::make_pair(fd, fd_event));
     }
 
-    inline void unregisterFdevent(int fd)
-    {
+    inline void unregisterFdevent(int fd) {
         fd_event_map_.erase(fd);
     }
 
-    inline EpollFdEventImpl *queryFdevent(int fd)
-    {
+    inline EpollFdEventImpl *queryFdevent(int fd) const {
         auto it = fd_event_map_.find(fd);
         if (it != fd_event_map_.end())
             return it->second;
-
         return nullptr;
     }
 
@@ -77,13 +73,14 @@ class BuiltinLoop : public CommonLoop {
     };
 
   private:
-    int max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
-    int epoll_fd_{ -1 };
+    int  max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
+    int  epoll_fd_{ -1 };
     bool keep_running_{ true };
+
     TimerEvent *sp_exit_timer_{ nullptr };
 
     cabinet::Cabinet<Timer> timer_cabinet_;
-    std::vector<Timer *> timer_min_heap_;
+    std::vector<Timer*>     timer_min_heap_;
 
     std::unordered_map<int, EpollFdEventImpl*> fd_event_map_;
 };
@@ -91,4 +88,4 @@ class BuiltinLoop : public CommonLoop {
 }
 }
 
-#endif //TBOX_EVENT_LIBEPOLL_LOOP_H_20220105
+#endif //TBOX_EVENT_EPOLL_LOOP_H_20220105

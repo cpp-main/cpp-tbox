@@ -4,14 +4,14 @@
 #include "tbox/base/cabinet.hpp"
 #include "../../timer_event.h"
 
+namespace tbox {
+namespace event {
 
-namespace tbox::event {
-
-class BuiltinLoop;
+class EpollLoop;
 
 class EpollTimerEvent : public TimerEvent {
   public:
-    explicit EpollTimerEvent(BuiltinLoop *wp_loop);
+    explicit EpollTimerEvent(EpollLoop *wp_loop);
     virtual ~EpollTimerEvent();
 
   public:
@@ -28,7 +28,7 @@ class EpollTimerEvent : public TimerEvent {
     void onEvent();
 
   private:
-    BuiltinLoop *wp_loop_;
+    EpollLoop *wp_loop_;
     bool is_inited_{ false };
     bool is_enabled_{ false };
 
@@ -41,6 +41,7 @@ class EpollTimerEvent : public TimerEvent {
     cabinet::Token token_;
 };
 
+}
 }
 
 #endif //TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
