@@ -3,6 +3,8 @@
 
 #include <functional>
 #include <chrono>
+#include <string>
+#include <vector>
 
 #include "forward.h"
 #include "stat.h"
@@ -12,16 +14,12 @@ namespace event {
 
 class Loop {
   public:
-    enum class Engine {
-        kLibevent,
-        kLibev,
-        kLibuv,
-    };
-
     //! 创建默认类型的事件循环
     static Loop* New();
     //! 创建指定类型的事件循环
-    static Loop* New(Engine type);
+    static Loop* New(const std::string &engine_type);
+    //! 获取引擎列表
+    static std::vector<std::string> Engines();
 
     enum class Mode {
         kOnce,      //!< 仅执行一次

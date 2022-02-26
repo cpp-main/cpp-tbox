@@ -10,9 +10,11 @@ namespace event {
 
 class FdEvent : public Event {
   public:
-    static const int kReadEvent   = 0x01;
-    static const int kWriteEvent  = 0x02;
-    static const int kExceptEvent = 0x04;
+    enum Event {
+        kReadEvent   = 0x01,
+        kWriteEvent  = 0x02,
+        kExceptEvent = 0x04,
+    };
 
     virtual bool initialize(int fd, short events, Mode mode) = 0;
 

@@ -13,23 +13,6 @@
 namespace tbox {
 namespace event {
 
-Loop* Loop::New(Engine engine)
-{
-    switch (engine) {
-#ifdef ENABLE_LIBEVENT
-        case Engine::kLibevent:
-            return new LibeventLoop;
-#endif
-#ifdef ENABLE_LIBEV
-        case Engine::kLibev:
-            return new LibevLoop;
-#endif
-        default:
-            LogErr("Unsupport engine");
-    }
-    return nullptr;
-}
-
 Loop* Loop::New()
 {
 #ifdef ENABLE_LIBEVENT
@@ -38,7 +21,32 @@ Loop* Loop::New()
 #ifdef ENABLE_LIBEV
     return new LibevLoop;
 #endif
-    return NULL;
+    return nullptr;
+}
+
+Loop* Loop::New(const std::string &engine_type)
+{
+#ifdef ENABLE_LIBEVENT
+    if (engine_type == "libevent")
+        return new LibeventLoop;
+#endif
+#ifdef ENABLE_LIBEV
+    if (engine_type == "libev")
+        return new LibevLoop;
+#endif
+    return nullptr;
+}
+
+std::vector<std::string> Loop::Engines()
+{
+    std::vector<std::string> types;
+#ifdef ENABLE_LIBEVENT
+    types.push_back("libevent");
+#endif
+#ifdef ENABLE_LIBEV
+    types.push_back("libev");
+#endif
+    return types;
 }
 
 }

@@ -74,17 +74,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Loop::Engine loop_engine;
-    if (string(argv[1]) == "libevent")
-        loop_engine = Loop::Engine::kLibevent;
-    else if (string(argv[1]) == "libev")
-        loop_engine = Loop::Engine::kLibev;
-    else {
-        PrintUsage(argv[0]);
-        return 0;
-    }
-
-    Loop* sp_loop = Loop::New(loop_engine);
+    Loop* sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
         return 0;
