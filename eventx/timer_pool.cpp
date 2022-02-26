@@ -80,7 +80,7 @@ TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, const 
 TimerPool::TimerToken TimerPool::Impl::doAt(const TimePoint &time_point, const Callback &cb)
 {
     using namespace std::chrono;
-    auto d = duration_cast<Milliseconds>(time_point - system_clock::now());
+    auto d = duration_cast<Milliseconds>(time_point - steady_clock::now());
     return doAfter(d, cb);
 }
 
