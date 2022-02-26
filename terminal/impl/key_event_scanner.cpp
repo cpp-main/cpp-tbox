@@ -17,7 +17,7 @@ KeyEventScanner::Status KeyEventScanner::next(uint8_t byte)
         if (byte == 0x09) {
             result_ = Result::kTab;
             return Status::kEnsure;
-        } else if (byte == 0x07f) {
+        } else if (byte == 0x7f || byte == 0x08) {
             result_ = Result::kBackspace;
             return Status::kEnsure;
         } else if (byte == 0x0d) {
@@ -206,9 +206,13 @@ KeyEventScanner::Status KeyEventScanner::stop()
     if (step_ == Step::k1b) {
         result_ = Result::kESC;
         return Status::kEnsure;
+    } else if (step_ == Step::k0d) {
+        result_ = Result::kEnter;
+        return Status::kEnsure;
+    } else {
+        step_ = Step::kNone;
+        return Status::kFail;
     }
-    step_ = Step::kNone;
-    return Status::kFail;
 }
 
 }

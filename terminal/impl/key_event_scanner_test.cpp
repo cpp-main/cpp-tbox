@@ -47,10 +47,17 @@ TEST(KeyEventScanner, Tab)
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kTab);
 }
 
-TEST(KeyEventScanner, Backspace)
+TEST(KeyEventScanner, Backspace_1)
 {
     KeyEventScanner ks;
     EXPECT_EQ(ks.next(0x7f), KeyEventScanner::Status::kEnsure);
+    EXPECT_EQ(ks.result(), KeyEventScanner::Result::kBackspace);
+}
+
+TEST(KeyEventScanner, Backspace_2)
+{
+    KeyEventScanner ks;
+    EXPECT_EQ(ks.next(0x08), KeyEventScanner::Status::kEnsure);
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kBackspace);
 }
 
@@ -62,11 +69,27 @@ TEST(KeyEventScanner, Esc)
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kESC);
 }
 
-TEST(KeyEventScanner, Enter)
+TEST(KeyEventScanner, Enter_1)
 {
     KeyEventScanner ks;
     EXPECT_EQ(ks.next(0x0d), KeyEventScanner::Status::kUnsure);
     EXPECT_EQ(ks.next(0x00), KeyEventScanner::Status::kEnsure);
+    EXPECT_EQ(ks.result(), KeyEventScanner::Result::kEnter);
+}
+
+TEST(KeyEventScanner, Enter_2)
+{
+    KeyEventScanner ks;
+    EXPECT_EQ(ks.next(0x0d), KeyEventScanner::Status::kUnsure);
+    EXPECT_EQ(ks.next(0x0a), KeyEventScanner::Status::kEnsure);
+    EXPECT_EQ(ks.result(), KeyEventScanner::Result::kEnter);
+}
+
+TEST(KeyEventScanner, Enter_3)
+{
+    KeyEventScanner ks;
+    EXPECT_EQ(ks.next(0x0d), KeyEventScanner::Status::kUnsure);
+    EXPECT_EQ(ks.stop(), KeyEventScanner::Status::kEnsure);
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kEnter);
 }
 

@@ -59,7 +59,8 @@ TEST(SplitCmdline, RecursionDoubleQuote)
     EXPECT_EQ(str_vec[1], R"( '123 )");
 }
 
-/* 以下两个测试过不了
+#if 0
+//! 下面两个测试用例过不了，也不是必须的
 TEST(SplitCmdline, QuoteInSide)
 {
     vector<string> str_vec;
@@ -77,7 +78,7 @@ TEST(SplitCmdline, QuoteInSide1)
     EXPECT_EQ(str_vec[0], "abc");
     EXPECT_EQ(str_vec[1], R"(12'3'4)");
 }
-*/
+#endif
 
 TEST(SplitCmdline, Mix)
 {

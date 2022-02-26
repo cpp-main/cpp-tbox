@@ -27,8 +27,12 @@ template <typename T> class Cabinet {
   public:
     void reserve(size_t size);  //!< 预留指定大小的储物空间
 
+    Token alloc();
     Token insert(T *obj);         //!< 存入对象
+    bool update(const Token &token, T *obj);    //! 更换对象
+
     T*  remove(const Token &token); //!< 删除对象
+
     void clear();               //!< 清空所有对象
 
     //! 获取对象的指针
@@ -81,6 +85,30 @@ Token Cabinet<T>::insert(T *obj)
 
     ++count_;
     return new_token;
+}
+
+template <typename T>
+Token Cabinet<T>::alloc()
+{
+    Token new_token(allocId(), allocPos());
+
+    Cell &cell = cells_.at(new_token.pos());
+    cell.id = new_token.id();
+    cell.obj_ptr = nullptr;
+
+    ++count_;
+    return new_token;
+}
+
+template <typename T>
+bool Cabinet<T>::update(const Token &token, T *obj)
+{
+    Cell &cell = cells_.at(token.pos());
+    if (cell.id == token.id()) {
+        cell.obj_ptr = obj;
+        return true;
+    }
+    return false;;
 }
 
 template <typename T>

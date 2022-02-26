@@ -33,7 +33,9 @@ void Terminal::Impl::onChar(SessionContext *s, char ch)
     ss  << s->curr_input.substr(s->cursor)
         << string((s->curr_input.size() - s->cursor), '\b');
 
-    s->wp_conn->send(s->token, ss.str());
+    auto refresh_str = ss.str();
+    if (!refresh_str.empty())
+        s->wp_conn->send(s->token, refresh_str);
 }
 
 void Terminal::Impl::onEnterKey(SessionContext *s)

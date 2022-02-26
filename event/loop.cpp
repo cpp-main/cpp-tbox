@@ -14,36 +14,50 @@
 namespace tbox {
 namespace event {
 
-Loop* Loop::New(Engine engine)
+Loop* Loop::New()
 {
-    switch (engine) {
-#if defined(ENABLE_EPOLL)
-        case Engine::kEpoll:
-            return new EpollLoop;
-#elif defined(ENABLE_LIBEVENT)
-        case Engine::kLibevent:
-            return new LibeventLoop;
-#elif defined(ENABLE_LIBEV)
-        case Engine::kLibev:
-            return new LibevLoop;
+#ifdef ENABLE_EPOLL
+    return new EpollLoop;
 #endif
-        default:
-            LogErr("Unsupport engine");
-    }
-
+#ifdef ENABLE_LIBEVENT
+    return new LibeventLoop;
+#endif
+#ifdef ENABLE_LIBEV
+    return new LibevLoop;
+#endif
     return nullptr;
 }
 
-Loop* Loop::New()
+Loop* Loop::New(const std::string &engine_type)
 {
-#if defined(ENABLE_EPOLL)
-    return new EpollLoop;
-#elif defined(ENABLE_LIBEVENT)
-    return new LibeventLoop;
-#elif defined(ENABLE_LIBEV)
-    return new LibevLoop;
+#ifdef ENABLE_EPOLL
+    if (engine_type == "epoll")
+        return new EpollLoop;
 #endif
-    return NULL;
+#ifdef ENABLE_LIBEVENT
+    if (engine_type == "libevent")
+        return new LibeventLoop;
+#endif
+#ifdef ENABLE_LIBEV
+    if (engine_type == "libev")
+        return new LibevLoop;
+#endif
+    return nullptr;
+}
+
+std::vector<std::string> Loop::Engines()
+{
+    std::vector<std::string> types;
+#ifdef ENABLE_EPOLL
+    types.push_back("epoll");
+#endif
+#ifdef ENABLE_LIBEVENT
+    types.push_back("libevent");
+#endif
+#ifdef ENABLE_LIBEV
+    types.push_back("libev");
+#endif
+    return types;
 }
 
 }

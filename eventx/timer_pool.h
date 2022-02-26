@@ -19,7 +19,7 @@ class TimerPool {
     using TimerToken = cabinet::Token;
     using Callback = std::function<void(const TimerToken &)>;
     using Milliseconds = std::chrono::milliseconds;
-    using TimePoint = std::chrono::system_clock::time_point;
+    using TimePoint = std::chrono::steady_clock::time_point;
 
   public:
     explicit TimerPool(event::Loop *wp_loop);

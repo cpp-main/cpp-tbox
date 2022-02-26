@@ -78,6 +78,19 @@ TEST(Cabinet, insert_100_and_remove)
     EXPECT_EQ(oc.size(), 0u);
 }
 
+TEST(Cabinet, alloc_update)
+{
+    cabinet::Cabinet<int> c;
+    auto t = c.alloc();
+    EXPECT_EQ(c.at(t), nullptr);
+
+    int *p = new int (10);
+    c.update(t, p);
+    EXPECT_EQ(c.at(t), p);
+
+    delete p;
+}
+
 //! 测试Token可不可以用为std::set的key
 TEST(Cabinet, token_as_set_key)
 {

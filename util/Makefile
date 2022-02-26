@@ -11,6 +11,8 @@ HEAD_FILES = \
 	fs.h \
 	argument_parser.h \
 	split_cmdline.h \
+	serializer.h \
+	time_counter.h \
 
 CPP_SRC_FILES = \
 	async_data_stream.cpp \
@@ -20,6 +22,8 @@ CPP_SRC_FILES = \
 	fs.cpp \
 	argument_parser.cpp \
 	split_cmdline.cpp \
+	serializer.cpp \
+	time_counter.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -31,6 +35,8 @@ TEST_CPP_SRC_FILES = \
 	fs_test.cpp \
 	argument_parser_test.cpp \
 	split_cmdline_test.cpp \
+	serializer_test.cpp \
+	time_counter_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 

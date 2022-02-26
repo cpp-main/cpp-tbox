@@ -130,7 +130,7 @@ bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr,
 {
 #if 0
     auto hex_str = string::RawDataToHexStr(data_ptr, data_size);
-    cout << "send to " << ct.id() << " size " << data_size << ": " << hex_str << endl;
+    cout << ct.id() << " << send " << data_size << ": " << hex_str << endl;
 #endif
     return sp_tcp_->send(ct, data_ptr, data_size);
 }
@@ -172,7 +172,7 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff
 {
 #if 0
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
-    cout << "recv from " << ct.id() << " recv " << buff.readableSize() << ": " << hex_str << endl;
+    cout << ct.id() << " >> recv " << buff.readableSize() << ": " << hex_str << endl;
 #endif
     while (buff.readableSize() != 0) {
         auto begin = buff.readableBegin();
@@ -225,11 +225,17 @@ void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::st
 void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
 {
     LogTrace("cmd:%x, opt:%x", cmd, opt);
+
+    if (cmd == Cmd::kDONT)
+        sendNego(ct, Cmd::kWONT, opt);
 }
 
 void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)
 {
     LogTrace("cmd:%x", cmd);
+
+    if (cmd == Cmd::kNOP)
+        sendCmd(ct, Cmd::kNOP);
 }
 
 void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s)

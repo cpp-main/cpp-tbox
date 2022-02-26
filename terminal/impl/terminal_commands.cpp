@@ -41,7 +41,7 @@ bool Terminal::Impl::executeCmdline(SessionContext *s)
     } else if (cmd == "history") {
         executeHistoryCmd(s, args);
         return false;   //! 查看历史命令不要再存历史
-    } else if (cmd == "exit") {
+    } else if (cmd == "exit" || cmd == "quit") {
         executeExitCmd(s, args);
     } else if (cmd == "tree") {
         executeTreeCmd(s, args);
