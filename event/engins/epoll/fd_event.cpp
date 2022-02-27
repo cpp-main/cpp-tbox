@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cstring>
 #include <algorithm>
-#include <set>
+#include <vector>
 
 #include "fd_event.h"
 #include "loop.h"
@@ -13,8 +13,8 @@ namespace event {
 struct EpollFdSharedData {
     int ref = 0;    //! 引用计数
     struct epoll_event ev;
-    std::set<EpollFdEvent*> read_events;
-    std::set<EpollFdEvent*> write_events;
+    std::vector<EpollFdEvent*> read_events;
+    std::vector<EpollFdEvent*> write_events;
 };
 
 EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop) :
@@ -68,10 +68,10 @@ bool EpollFdEvent::enable()
         return true;
 
     if (events_ & kReadEvent)
-        d_->read_events.insert(this);
+        d_->read_events.push_back(this);
 
     if (events_ & kWriteEvent)
-        d_->write_events.insert(this);
+        d_->write_events.push_back(this);
 
     reloadEpoll();
 
@@ -84,11 +84,15 @@ bool EpollFdEvent::disable()
     if (d_ == nullptr || !is_enabled_)
         return true;
 
-    if (events_ & kReadEvent)
-        d_->read_events.erase(this);
+    if (events_ & kReadEvent) {
+        auto iter = std::find(d_->read_events.begin(), d_->read_events.end(), this);
+        d_->read_events.erase(iter);
+    }
 
-    if (events_ & kWriteEvent)
-        d_->write_events.erase(this);
+    if (events_ & kWriteEvent) {
+        auto iter = std::find(d_->write_events.begin(), d_->write_events.end(), this);
+        d_->write_events.erase(iter);
+    }
 
     reloadEpoll();
 
