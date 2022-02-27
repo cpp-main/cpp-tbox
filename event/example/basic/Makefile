@@ -5,7 +5,7 @@ TARGETS=io_example timer_example signal_example \
 		run_next_seq_demo delay_delete_demo
 
 CXXFLAGS += -ggdb
-#LDFLAGS += -ltbox_event-ne -ltbox_base -levent_core -lev -lpthread
+#LDFLAGS += -ltbox_event -ltbox_base -levent_core -lev -lpthread
 LDFLAGS += -ltbox_event -ltbox_base -lpthread
 
 CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer

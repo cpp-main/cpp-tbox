@@ -25,7 +25,7 @@ TEST_LDFLAGS := $(LDFLAGS) \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \
-	-ltbox_event-ne \
+	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
 	-levent_core -lev

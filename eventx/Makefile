@@ -17,7 +17,7 @@ TEST_CPP_SRC_FILES = \
 	thread_pool_test.cpp \
 	timer_pool_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event-ne -ltbox_base -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -levent_core -lev
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

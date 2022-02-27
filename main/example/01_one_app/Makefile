@@ -7,7 +7,7 @@ CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. \
 	-ltbox_main \
 	-ltbox_eventx \
-	-ltbox_event-ne \
+	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
 	-levent_core \
