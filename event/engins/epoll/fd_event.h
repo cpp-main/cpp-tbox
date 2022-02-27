@@ -9,40 +9,42 @@ namespace tbox {
 namespace event {
 
 class EpollLoop;
-class EpollFdEventImpl;
+class EpollFdSharedData;
 
 class EpollFdEvent : public FdEvent {
   public:
     explicit EpollFdEvent(EpollLoop *wp_loop);
-    virtual ~EpollFdEvent();
+    ~EpollFdEvent() override;
 
   public:
-    virtual bool initialize(int fd, short events, Mode mode);
-    virtual void setCallback(const CallbackFunc &cb);
+    bool initialize(int fd, short events, Mode mode) override;
+    void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
 
-    virtual bool isEnabled() const;
-    virtual bool enable();
-    virtual bool disable();
+    bool isEnabled() const override{ return is_enabled_; }
+    bool enable() override;
+    bool disable() override;
 
-    virtual Loop* getLoop() const;
+    Loop* getLoop() const override;
 
   public:
     static void OnEventCallback(int fd, uint32_t events, void *obj);
 
   protected:
+    void reloadEpoll();
     void onEvent(short events);
 
   private:
     EpollLoop *wp_loop_;
-    bool is_stop_after_trigger_ { false };
+    bool is_stop_after_trigger_ = false;
+
+    int fd_ = -1;
+    uint32_t events_ = 0;
+    bool is_enabled_ = false;
+
     CallbackFunc cb_;
-    int cb_level_{ 0 };
-    int cb_index_{ -1 };
+    EpollFdSharedData *d_ = nullptr;
 
-    int fd_ { -1 };
-    uint32_t events_;
-
-    EpollFdEventImpl *impl_{ nullptr };
+    int cb_level_ = 0;
 };
 
 }

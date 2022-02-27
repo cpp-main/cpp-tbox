@@ -15,7 +15,7 @@
 namespace tbox {
 namespace event {
 
-class EpollFdEventImpl;
+struct EpollFdSharedData;
 
 class EpollLoop : public CommonLoop {
   public:
@@ -37,20 +37,9 @@ class EpollLoop : public CommonLoop {
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
 
-    inline void registerFdEvent(int fd, EpollFdEventImpl *fd_event) {
-        fd_event_map_.insert(std::make_pair(fd, fd_event));
-    }
-
-    inline void unregisterFdevent(int fd) {
-        fd_event_map_.erase(fd);
-    }
-
-    inline EpollFdEventImpl *queryFdevent(int fd) const {
-        auto it = fd_event_map_.find(fd);
-        if (it != fd_event_map_.end())
-            return it->second;
-        return nullptr;
-    }
+    void addFdSharedData(int fd, EpollFdSharedData *fd_data);
+    void removeFdSharedData(int fd);
+    EpollFdSharedData *queryFdSharedData(int fd) const;
 
   private:
     void onTimeExpired();
@@ -82,7 +71,7 @@ class EpollLoop : public CommonLoop {
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
 
-    std::unordered_map<int, EpollFdEventImpl*> fd_event_map_;
+    std::unordered_map<int, EpollFdSharedData*> fd_data_map_;
 };
 
 }

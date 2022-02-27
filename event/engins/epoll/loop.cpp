@@ -192,6 +192,25 @@ void EpollLoop::deleteTimer(const cabinet::Token& token)
     run([timer] { delete timer; }); //! Delete later, avoid delete itself
 }
 
+void EpollLoop::addFdSharedData(int fd, EpollFdSharedData *fd_event)
+{
+    fd_data_map_.insert(std::make_pair(fd, fd_event));
+}
+
+void EpollLoop::removeFdSharedData(int fd)
+{
+    fd_data_map_.erase(fd);
+}
+
+EpollFdSharedData* EpollLoop::queryFdSharedData(int fd) const
+{
+    auto it = fd_data_map_.find(fd);
+    if (it != fd_data_map_.end())
+        return it->second;
+    return nullptr;
+}
+
+
 FdEvent* EpollLoop::newFdEvent()
 {
     return new EpollFdEvent(this);
