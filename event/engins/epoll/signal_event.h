@@ -1,6 +1,7 @@
 #ifndef TBOX_EVENT_EPOLL_SINGAL_EVENT_H_20220110
 #define TBOX_EVENT_EPOLL_SINGAL_EVENT_H_20220110
 
+#include <signal.h>
 #include "../../signal_event.h"
 
 struct epoll_event;
@@ -31,13 +32,16 @@ class EpollSignalEvent : public SignalEvent {
 
   private:
     EpollLoop *wp_loop_{ nullptr };
-    EpollFdEvent *signal_fd_event_{ nullptr };
 
     bool is_inited_{ false };
     bool is_stop_after_trigger_{ false };
     CallbackFunc cb_{ nullptr };
-    int cb_level_{ 0 };
-    int signal_fd_{ -1 };
+
+    int signal_fd_ = -1;
+    sigset_t sig_mask_;
+    EpollFdEvent *signal_fd_event_ = nullptr;
+
+    int cb_level_ = 0;
 };
 
 }
