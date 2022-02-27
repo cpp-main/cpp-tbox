@@ -17,7 +17,7 @@ TEST(SignalEvent, Oneshot)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
+        EXPECT_TRUE(signal_event->initialize(SIGINT, Event::Mode::kOneshot));
         EXPECT_TRUE(signal_event->enable());
 
         int run_time = 0;
@@ -26,7 +26,7 @@ TEST(SignalEvent, Oneshot)
         sp_loop->run([]
             {
                 pid_t pid = getpid();
-                kill(pid, SIGUSR1);
+                kill(pid, SIGINT);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -39,14 +39,14 @@ TEST(SignalEvent, Oneshot)
     }
 }
 
-TEST(SignalEvent, Persist)
+TEST(SignalEvent, PersistWithTimerEvent)
 {
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kPersist));
+        EXPECT_TRUE(signal_event->initialize(SIGINT, Event::Mode::kPersist));
         EXPECT_TRUE(signal_event->enable());
 
         auto timer_event = sp_loop->newTimerEvent();
@@ -58,7 +58,7 @@ TEST(SignalEvent, Persist)
                 ++count;
                 if (count <= 5) {
                     pid_t pid = getpid();
-                    kill(pid, SIGUSR1);
+                    kill(pid, SIGINT);
                 }
             }
         );
@@ -84,11 +84,11 @@ TEST(SignalEvent, IntAndTermSignal)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto int_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(int_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
+        EXPECT_TRUE(int_signal_event->initialize(SIGINT, Event::Mode::kOneshot));
         EXPECT_TRUE(int_signal_event->enable());
 
         auto term_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(term_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
+        EXPECT_TRUE(term_signal_event->initialize(SIGTERM, Event::Mode::kOneshot));
         EXPECT_TRUE(term_signal_event->enable());
 
         int int_run_time = 0;
@@ -99,8 +99,8 @@ TEST(SignalEvent, IntAndTermSignal)
         sp_loop->run([]
             {
                 pid_t pid = getpid();
-                kill(pid, SIGUSR1);
-                kill(pid, SIGUSR2);
+                kill(pid, SIGINT);
+                kill(pid, SIGTERM);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
