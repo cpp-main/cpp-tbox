@@ -25,8 +25,7 @@ TEST(SignalEvent, Oneshot)
 
         sp_loop->run([]
             {
-                pid_t pid = getpid();
-                kill(pid, SIGINT);
+                raise(SIGINT);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -57,8 +56,7 @@ TEST(SignalEvent, PersistWithTimerEvent)
             {
                 ++count;
                 if (count <= 5) {
-                    pid_t pid = getpid();
-                    kill(pid, SIGINT);
+                    raise(SIGINT);
                 }
             }
         );
@@ -98,9 +96,8 @@ TEST(SignalEvent, IntAndTermSignal)
 
         sp_loop->run([]
             {
-                pid_t pid = getpid();
-                kill(pid, SIGINT);
-                kill(pid, SIGTERM);
+                raise(SIGINT);
+                raise(SIGTERM);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
