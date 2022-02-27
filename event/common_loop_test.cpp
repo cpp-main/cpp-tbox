@@ -21,7 +21,7 @@ TEST(CommonLoop, isRunning)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run = false;
@@ -50,7 +50,7 @@ TEST(CommonLoop, isInLoopThread)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_timer_run = false;
@@ -91,9 +91,9 @@ TEST(CommonLoop, runNextInsideLoop)
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
         SetScopeExitAction(
             [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_loop;
-                delete sp_timer1;
                 delete sp_timer2;
+                delete sp_timer1;
+                delete sp_loop;
             }
         );
 
@@ -131,7 +131,7 @@ TEST(CommonLoop, runNextBeforeLoop)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         bool is_run_next_run = false;
         sp_loop->runNext([&] { is_run_next_run = true; });
@@ -188,9 +188,9 @@ TEST(CommonLoop, runInLoopInsideLoop)
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
         SetScopeExitAction(
             [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_loop;
-                delete sp_timer1;
                 delete sp_timer2;
+                delete sp_timer1;
+                delete sp_loop;
             }
         );
 
@@ -227,7 +227,7 @@ TEST(CommonLoop, runInLoopBeforeLoop)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         bool is_run = false;
         sp_loop->runInLoop([&] { is_run = true; });
@@ -256,7 +256,7 @@ TEST(CommonLoop, runInLoopCrossThread)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         bool is_thread_run = false;
         bool is_run = false;
@@ -298,9 +298,9 @@ TEST(CommonLoop, runInsideLoop)
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
         SetScopeExitAction(
             [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_loop;
-                delete sp_timer1;
                 delete sp_timer2;
+                delete sp_timer1;
+                delete sp_loop;
             }
         );
 
@@ -337,7 +337,7 @@ TEST(CommonLoop, runBeforeLoop)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         bool is_run = false;
         sp_loop->run([&] { is_run = true; });
@@ -366,7 +366,7 @@ TEST(CommonLoop, runCrossThread)
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_loop; delete sp_timer; });
+        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
 
         bool is_thread_run = false;
         bool is_run = false;
@@ -407,8 +407,8 @@ TEST(CommonLoop, cleanupDeferedTask)
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         SetScopeExitAction(
             [&]{
-                delete sp_loop;
                 delete sp_timer1;
+                delete sp_loop;
             }
         );
 
@@ -463,8 +463,8 @@ TEST(CommonLoop, runOrder)
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         SetScopeExitAction(
             [sp_loop, sp_timer1]{
-                delete sp_loop;
                 delete sp_timer1;
+                delete sp_loop;
             }
         );
 

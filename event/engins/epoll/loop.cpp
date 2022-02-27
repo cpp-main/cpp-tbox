@@ -65,9 +65,7 @@ void EpollLoop::onTimeExpired()
         if (now < t->expired)
             break;
 
-        // The top of timer was expired
-        if (t->cb)
-            t->cb();
+        auto tobe_run = t->cb;
 
         // swap first element and last element
         std::pop_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
@@ -83,6 +81,11 @@ void EpollLoop::onTimeExpired()
             if (t->repeat != 0)
                 --t->repeat;
         }
+
+        //! Q: 为什么不在L68执行？
+        //! A: 因为要尽可能地将回调放到最后执行。否则不满足测试 TEST(TimerEvent, DisableSelfInCallback)
+        if (tobe_run)
+            tobe_run();
     }
 }
 
@@ -186,7 +189,7 @@ void EpollLoop::deleteTimer(const cabinet::Token& token)
     timer_min_heap_.pop_back();
 #endif
 
-    runNext([timer] { delete timer; }); //! Delete later, avoid delete itself
+    run([timer] { delete timer; }); //! Delete later, avoid delete itself
 }
 
 FdEvent* EpollLoop::newFdEvent()

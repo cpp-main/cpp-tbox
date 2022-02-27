@@ -26,6 +26,9 @@ CommonLoop::CommonLoop() :
 CommonLoop::~CommonLoop()
 {
     assert(cb_level_ == 0);
+
+    std::lock_guard<std::recursive_mutex> g(lock_);
+    cleanupDeferredTasks();
 }
 
 bool CommonLoop::isInLoopThread()
@@ -192,7 +195,7 @@ void CommonLoop::onGotRunInLoopFunc(short)
 //! 清理 run_in_loop_func_queue_ 与 run_next_func_queue_ 中的任务
 void CommonLoop::cleanupDeferredTasks()
 {
-    int remain_loop_count = 10; //! 防止出现 runNext() 递归导致无法退出循环的问题
+    int remain_loop_count = 10; //! 限定次数，防止出现 runNext() 递归导致无法退出循环的问题
     while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
             && remain_loop_count-- > 0) {
         std::deque<Func> tasks = std::move(run_next_func_queue_);
