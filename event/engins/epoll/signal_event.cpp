@@ -9,14 +9,13 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
 #include "loop.h"
-#include "fd_event.h"
 
 namespace tbox {
 namespace event {
 
 EpollSignalEvent::EpollSignalEvent(EpollLoop *wp_loop) :
     wp_loop_(wp_loop),
-    signal_fd_event_(new EpollFdEvent(wp_loop))
+    signal_fd_event_(wp_loop)
 {
     sigemptyset(&sig_mask_);
     signal_fd_ = signalfd(-1, &sig_mask_, SFD_NONBLOCK | SFD_CLOEXEC);
@@ -28,7 +27,6 @@ EpollSignalEvent::~EpollSignalEvent()
     assert(cb_level_ == 0);
     disable();
 
-    CHECK_DELETE_RESET_OBJ(signal_fd_event_);
     CHECK_CLOSE_RESET_FD(signal_fd_);
 }
 
@@ -36,10 +34,10 @@ bool EpollSignalEvent::initialize(int signum, Mode mode)
 {
     disable();
 
-    if (!signal_fd_event_->initialize(signal_fd_, FdEvent::kReadEvent, mode))
+    if (!signal_fd_event_.initialize(signal_fd_, FdEvent::kReadEvent, mode))
         return false;
 
-    signal_fd_event_->setCallback(std::bind(&EpollSignalEvent::onEvent, this, std::placeholders::_1));
+    signal_fd_event_.setCallback(std::bind(&EpollSignalEvent::onEvent, this, std::placeholders::_1));
 
     sigaddset(&sig_mask_, signum);
 
@@ -60,7 +58,7 @@ bool EpollSignalEvent::isEnabled() const
     if (!is_inited_)
         return false;
 
-    return signal_fd_event_->isEnabled();
+    return signal_fd_event_.isEnabled();
 }
 
 bool EpollSignalEvent::enable()
@@ -71,7 +69,7 @@ bool EpollSignalEvent::enable()
     if (isEnabled())
         return true;
 
-    if (!signal_fd_event_->enable())
+    if (!signal_fd_event_.enable())
         return false;
 
     signalfd(signal_fd_, &sig_mask_, 0);
@@ -91,7 +89,7 @@ bool EpollSignalEvent::disable()
     sigprocmask(SIG_UNBLOCK, &sig_mask_, 0);
     signalfd(signal_fd_, &sig_mask_, 0);
 
-    if (!signal_fd_event_->disable())
+    if (!signal_fd_event_.disable())
         return false;
 
     return true;

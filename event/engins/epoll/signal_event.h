@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include "../../signal_event.h"
+#include "fd_event.h"
 
 struct epoll_event;
 
@@ -39,7 +40,7 @@ class EpollSignalEvent : public SignalEvent {
 
     int signal_fd_ = -1;
     sigset_t sig_mask_;
-    EpollFdEvent *signal_fd_event_ = nullptr;
+    EpollFdEvent signal_fd_event_;
 
     int cb_level_ = 0;
 };
