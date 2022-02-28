@@ -1,21 +1,18 @@
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <errno.h>
 
 #include <cassert>
-#include <cstring>
 #include <cstdint>
 
 #include <algorithm>
-#include <chrono>
-#include <limits>
 
 #include "loop.h"
 #include "timer_event.h"
 #include "fd_event.h"
 #include "signal_event.h"
 
-#include "tbox/base/defines.h"
+#include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 
 namespace tbox {
 namespace event {
@@ -223,6 +220,7 @@ TimerEvent* EpollLoop::newTimerEvent()
 
 SignalEvent* EpollLoop::newSignalEvent()
 {
+    LogWarn("EpollSignalEvent is not stable in multithread");
     return new EpollSignalEvent(this);
 }
 
