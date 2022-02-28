@@ -8,7 +8,6 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
-#include <tbox/event/signal_event.h>
 
 #include <tbox/util/thread_wdog.h>
 #include <tbox/util/pid_file.h>
