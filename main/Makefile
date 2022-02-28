@@ -13,7 +13,7 @@ CPP_SRC_FILES = \
 	apps_imp.cpp \
 	context_imp.cpp \
 	main.cpp \
-	error_handle.cpp \
+	signal.cpp \
 	misc.cpp \
 	args.cpp \
 

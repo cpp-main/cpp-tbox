@@ -1,4 +1,3 @@
-#include <signal.h>
 #include <vector>
 #include <iostream>
 
@@ -27,6 +26,7 @@ extern void RegisterApps(Apps &apps); //! 由用户去实现
 extern void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+std::function<void()> normal_stop_func; //!< 正常退出前要做的事件
 
 int Main(int argc, char **argv)
 {
@@ -111,28 +111,19 @@ int Main(int argc, char **argv)
 void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
 {
     auto feeddog_timer  = ctx.loop()->newTimerEvent();
-    auto sig_int_event  = ctx.loop()->newSignalEvent();
-    auto sig_term_event = ctx.loop()->newSignalEvent();
     //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction(
-        [feeddog_timer, sig_int_event, sig_term_event] {
-            delete sig_term_event;
-            delete sig_int_event;
-            delete feeddog_timer;
-        }
-    );
+    SetScopeExitAction([feeddog_timer] { delete feeddog_timer; });
 
-    sig_int_event->initialize(SIGINT, event::Event::Mode::kOneshot);
-    sig_term_event->initialize(SIGTERM, event::Event::Mode::kOneshot);
-    auto normal_stop_func = [&] {
-        LogInfo("Got stop signal");
-        apps.stop();
-        ctx.stop();
-        ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-        LogInfo("Loop will exit after %d sec", loop_exit_wait);
+    normal_stop_func = [&] {
+        ctx.loop()->runInLoop([&] {
+                LogInfo("Got stop signal");
+                apps.stop();
+                ctx.stop();
+                ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
+                LogInfo("Loop will exit after %d sec", loop_exit_wait);
+            }
+        );
     };
-    sig_int_event->setCallback(normal_stop_func);
-    sig_term_event->setCallback(normal_stop_func);
 
     //! 创建喂狗定时器
     feeddog_timer->initialize(std::chrono::seconds(2), event::Event::Mode::kPersist);
@@ -143,8 +134,6 @@ void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
     util::ThreadWDog::Register("main", 3);
 
     feeddog_timer->enable();
-    sig_int_event->enable();
-    sig_term_event->enable();
 
     LogInfo("Start!");
 
