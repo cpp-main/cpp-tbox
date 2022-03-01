@@ -13,6 +13,7 @@ HEAD_FILES = \
 
 CPP_SRC_FILES = \
 	loop.cpp common_loop.cpp \
+	signal_event_impl.cpp \
 	version.cpp
 
 ifeq ($(ENABLE_LIBEVENT), yes)

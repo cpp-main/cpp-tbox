@@ -4,8 +4,11 @@
 #include <deque>
 #include <mutex>
 #include <thread>
+#include <map>
+#include <set>
 
 #include "loop.h"
+#include "signal_event_impl.h"
 
 #ifdef ENABLE_STAT
 #include <chrono>
@@ -35,6 +38,12 @@ class CommonLoop : public Loop {
   public:
     void beginEventProcess();
     void endEventProcess();
+
+    //! 信号
+    bool subscribeSignal(int signal_num, SignalEventImpl *who);
+    bool unsubscribeSignal(int signal_num, SignalEventImpl *who);
+    static void HandleSignal(int signo);
+    void onSignal();
 
   protected:
     void runThisBeforeLoop();
@@ -69,6 +78,14 @@ class CommonLoop : public Loop {
     uint32_t event_count_ = 0;
     uint32_t max_cost_us_ = 0;
 #endif  //ENABLE_STAT
+
+    static std::map<int, std::set<int>> _signal_read_fds_; //! 通知 Loop 的 fd，每个 Loop 注册一个
+    static std::mutex _signal_lock_; //! 保护 _signal_read_fds_ 用
+
+    int signal_read_fd_  = -1;
+    int signal_write_fd_ = -1;
+    FdEvent *sp_signal_read_event_ = nullptr;
+    std::map<int, SignalEventImpl*> signal_subscriber_; //! signo -> SignalEventImpl*，信号的订阅者
 
     int cb_level_ = 0;
 };

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <cassert>
+#include <signal.h>
 
 #include <tbox/base/log.h>
 
@@ -15,6 +16,9 @@ namespace tbox {
 namespace event {
 
 using namespace std::chrono;
+
+std::map<int, std::set<int>> CommonLoop::_signal_read_fds_;
+std::mutex CommonLoop::_signal_lock_;
 
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
@@ -147,6 +151,68 @@ void CommonLoop::endEventProcess()
             max_cost_us_ = cost_us;
     }
 #endif
+}
+
+bool CommonLoop::subscribeSignal(int signo, SignalEventImpl *who)
+{
+    if (signal_read_fd_ == -1) {    //! 如果还没有创建对应的信号
+        int fds[2] = { 0 };
+        if (pipe2(fds, O_CLOEXEC | O_NONBLOCK) != 0) {  //!FIXME
+            LogErr("pip2() fail, ret:%d", errno);
+            return false;
+        }
+        int read_fd(fds[0]);
+        int write_fd(fds[1]);
+
+        auto read_fd_event = newFdEvent();
+        read_fd_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist);
+        read_fd_event->setCallback(std::bind(&CommonLoop::onSignal, this));
+        read_fd_event->enable();
+
+        {
+            std::unique_lock<std::mutex> _g(_signal_lock_);
+            auto iter = _signal_read_fds_.find(signo);
+            if (iter != _signal_read_fds_.end()) {
+                iter->second.insert(read_fd);
+            } else {
+                std::set<int> tmp = { read_fd };
+                _signal_read_fds_[signo] = tmp;
+                signal(signo, CommonLoop::HandleSignal);
+            }
+        }
+
+        signal_read_fd_  = read_fd;
+        signal_write_fd_ = write_fd;
+        sp_signal_read_event_ = read_fd_event;
+    }
+
+    LogUndo();  //!TODO
+
+    return false;
+}
+
+bool CommonLoop::unsubscribeSignal(int signal_num, SignalEventImpl *who)
+{
+    LogUndo();  //!TODO
+    return false;
+}
+
+void CommonLoop::HandleSignal(int signo)
+{
+    std::unique_lock<std::mutex> _g(_signal_lock_);
+    auto iter = _signal_read_fds_.find(signo);
+    if (iter != _signal_read_fds_.end()) {
+        const auto &fd_set = iter->second;
+        for (int fd : fd_set)
+            write(fd, &signo, sizeof(signo));
+    } else {
+        LogWarn("uncatch signal: %d", signo);
+    }
+}
+
+void CommonLoop::onSignal()
+{
+    LogUndo();  //!TODO
 }
 
 void CommonLoop::handleNextFunc()
