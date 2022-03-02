@@ -80,13 +80,13 @@ class CommonLoop : public Loop {
     uint32_t max_cost_us_ = 0;
 #endif  //ENABLE_STAT
 
-    static std::map<int, std::set<int>> _signal_read_fds_; //! 通知 Loop 的 fd，每个 Loop 注册一个
-    static std::mutex _signal_lock_; //! 保护 _signal_read_fds_ 用
+    static std::map<int, std::set<int>> _signal_write_fds_; //! 通知 Loop 的 fd，每个 Loop 注册一个
+    static std::mutex _signal_lock_; //! 保护 _signal_write_fds_ 用
 
     int signal_read_fd_  = -1;
     int signal_write_fd_ = -1;
     FdEvent *sp_signal_read_event_ = nullptr;
-    std::map<int, std::set<SignalSubscribuer*>> signal_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
+    std::map<int, std::set<SignalSubscribuer*>> all_signals_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
 
     int cb_level_ = 0;
 };

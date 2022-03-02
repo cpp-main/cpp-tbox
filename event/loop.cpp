@@ -3,12 +3,14 @@
 
 #if defined(ENABLE_LIBEVENT)
 #include "engins/libevent/loop.h"
-#elif defined(ENABLE_LIBEV)
+#endif
+
+#if defined(ENABLE_LIBEV)
 #include "engins/libev/loop.h"
-#elif defined(ENABLE_EPOLL)
+#endif
+
+#if defined(ENABLE_EPOLL)
 #include "engins/epoll/loop.h"
-#else
-#error("no engin specified!!!")
 #endif
 
 namespace tbox {
@@ -48,14 +50,14 @@ Loop* Loop::New(const std::string &engine_type)
 std::vector<std::string> Loop::Engines()
 {
     std::vector<std::string> types;
-#ifdef ENABLE_EPOLL
-    types.push_back("epoll");
-#endif
 #ifdef ENABLE_LIBEVENT
     types.push_back("libevent");
 #endif
 #ifdef ENABLE_LIBEV
     types.push_back("libev");
+#endif
+#ifdef ENABLE_EPOLL
+    types.push_back("epoll");
 #endif
     return types;
 }

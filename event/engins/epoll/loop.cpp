@@ -34,6 +34,8 @@ EpollLoop::EpollLoop() :
 
 EpollLoop::~EpollLoop()
 {
+    cleanupDeferredTasks();
+
     CHECK_CLOSE_RESET_FD(epoll_fd_);
     CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
 }

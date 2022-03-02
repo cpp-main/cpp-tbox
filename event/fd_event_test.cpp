@@ -236,3 +236,17 @@ TEST(FdEvent, MultiWriteOneRead)
         close(read_fd);
     }
 }
+
+
+TEST(FdEvent, DeleteLater)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        auto sp_loop = Loop::New(e);
+        auto sp_fd_event = sp_loop->newFdEvent();
+        sp_fd_event->initialize(1, FdEvent::kReadEvent, Event::Mode::kPersist);
+        sp_loop->run([=] { delete sp_fd_event; });
+        delete sp_loop;
+    }
+}

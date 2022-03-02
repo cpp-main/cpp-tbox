@@ -1,7 +1,6 @@
 include config.mk
 
 LIB_NAME = event
-LIB_NAME_EXT = -
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 1
 LIB_VERSION_Z = 0
@@ -24,7 +23,6 @@ CPP_SRC_FILES += \
 	engins/libevent/signal_event.cpp \
 	engins/libevent/common.cpp
 CXXFLAGS += -DENABLE_LIBEVENT=1
-LIB_NAME_EXT := $(LIB_NAME_EXT)n
 endif
 
 ifeq ($(ENABLE_LIBEV), yes)
@@ -34,7 +32,6 @@ CPP_SRC_FILES += \
 	engins/libev/signal_event.cpp \
 	engins/libev/timer_event.cpp
 CXXFLAGS += -DENABLE_LIBEV=1
-LIB_NAME_EXT := $(LIB_NAME_EXT)e
 endif
 
 ifeq ($(ENABLE_EPOLL), yes)
@@ -44,7 +41,6 @@ CPP_SRC_FILES += \
 	engins/epoll/signal_event.cpp \
 	engins/epoll/timer_event.cpp
 CXXFLAGS += -DENABLE_EPOLL=1
-LIB_NAME_EXT :=
 endif
 
 TEST_CPP_SRC_FILES = \

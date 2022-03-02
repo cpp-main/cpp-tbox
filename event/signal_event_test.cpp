@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <tbox/base/log_output.h>
 
 #include "loop.h"
 #include "signal_event.h"
@@ -15,12 +16,14 @@ const int kAcceptableError = 10;
 
 TEST(SignalEvent, Oneshot)
 {
+    LogOutput_Initialize("test");
+
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(signal_event->initialize(SIGINT, Event::Mode::kOneshot));
+        EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
         EXPECT_TRUE(signal_event->enable());
 
         int run_time = 0;
@@ -28,7 +31,7 @@ TEST(SignalEvent, Oneshot)
 
         sp_loop->run([]
             {
-                raise(SIGINT);
+                raise(SIGUSR1);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -48,7 +51,7 @@ TEST(SignalEvent, PersistWithTimerEvent)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(signal_event->initialize(SIGINT, Event::Mode::kPersist));
+        EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kPersist));
         EXPECT_TRUE(signal_event->enable());
 
         auto timer_event = sp_loop->newTimerEvent();
@@ -59,7 +62,7 @@ TEST(SignalEvent, PersistWithTimerEvent)
             {
                 ++count;
                 if (count <= 5) {
-                    raise(SIGINT);
+                    raise(SIGUSR1);
                 }
             }
         );
@@ -85,11 +88,11 @@ TEST(SignalEvent, IntAndTermSignal)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto int_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(int_signal_event->initialize(SIGINT, Event::Mode::kOneshot));
+        EXPECT_TRUE(int_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
         EXPECT_TRUE(int_signal_event->enable());
 
         auto term_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(term_signal_event->initialize(SIGTERM, Event::Mode::kOneshot));
+        EXPECT_TRUE(term_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
         EXPECT_TRUE(term_signal_event->enable());
 
         int int_run_time = 0;
@@ -99,8 +102,8 @@ TEST(SignalEvent, IntAndTermSignal)
 
         sp_loop->run([]
             {
-                raise(SIGINT);
-                raise(SIGTERM);
+                raise(SIGUSR1);
+                raise(SIGUSR2);
             }
         );
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -108,6 +111,7 @@ TEST(SignalEvent, IntAndTermSignal)
 
         EXPECT_EQ(int_run_time, 1);
         EXPECT_EQ(term_run_time, 1);
+
 
         delete int_signal_event;
         delete term_signal_event;
@@ -122,11 +126,11 @@ TEST(SignalEvent, MultiThread)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto int_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(int_signal_event->initialize(SIGINT, Event::Mode::kOneshot));
+        EXPECT_TRUE(int_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
         EXPECT_TRUE(int_signal_event->enable());
 
         auto term_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(term_signal_event->initialize(SIGTERM, Event::Mode::kOneshot));
+        EXPECT_TRUE(term_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
         EXPECT_TRUE(term_signal_event->enable());
 
         int int_run_time = 0;
@@ -136,8 +140,8 @@ TEST(SignalEvent, MultiThread)
 
         sp_loop->run([]
             {
-                raise(SIGINT);
-                raise(SIGTERM);
+                raise(SIGUSR1);
+                raise(SIGUSR2);
             }
         );
 
@@ -186,3 +190,20 @@ TEST(SignalEvent, MultiThread)
     }
 }
 
+//! 同一种事件被多个信号事件监听
+TEST(SignalEvent, OneSignalMultiEvents)
+{
+    //!TODO
+}
+
+//! 同多种事件被多个信号事件监听
+TEST(SignalEvent, MultiSignalMultiEvents)
+{
+    //!TODO
+}
+
+//! 多线程下多个Loop的事件监听同一个信号
+TEST(SignalEvent, OneSignalMultiLoop)
+{
+    //!TODO
+}

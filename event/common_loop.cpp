@@ -9,6 +9,7 @@
 #include <signal.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/defines.h>
 
 #include "fd_event.h"
 #include "stat.h"
@@ -18,8 +19,22 @@ namespace event {
 
 using namespace std::chrono;
 
-std::map<int, std::set<int>> CommonLoop::_signal_read_fds_;
-std::mutex CommonLoop::_signal_lock_;
+std::map<int, std::set<int>> CommonLoop::_signal_write_fds_;
+std::mutex    CommonLoop::_signal_lock_;
+
+namespace {
+bool CreateFdPair(int &read_fd, int &write_fd)
+{
+    int fds[2] = { 0 };
+    if (pipe2(fds, O_CLOEXEC | O_NONBLOCK) != 0) {  //!FIXME
+        LogErr("pip2() fail, ret:%d", errno);
+        return false;
+    }
+    read_fd = fds[0];
+    write_fd = fds[1];
+    return true;
+}
+}
 
 CommonLoop::CommonLoop() :
     has_unhandle_req_(false),
@@ -32,8 +47,6 @@ CommonLoop::~CommonLoop()
 {
     assert(cb_level_ == 0);
 
-    std::lock_guard<std::recursive_mutex> g(lock_);
-    cleanupDeferredTasks();
 }
 
 bool CommonLoop::isInLoopThread()
@@ -50,14 +63,9 @@ bool CommonLoop::isRunning() const
 
 void CommonLoop::runThisBeforeLoop()
 {
-    int fds[2] = { 0 };
-    if (pipe2(fds, O_CLOEXEC | O_NONBLOCK) != 0) {  //!FIXME
-        LogErr("pip2() fail, ret:%d", errno);
+    int read_fd = -1, write_fd = -1;
+    if (!CreateFdPair(read_fd, write_fd))
         return;
-    }
-
-    int read_fd(fds[0]);
-    int write_fd(fds[1]);
 
     FdEvent *sp_read_event = newFdEvent();
     if (!sp_read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
@@ -92,13 +100,9 @@ void CommonLoop::runThisAfterLoop()
 
     loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
     if (sp_read_event_ != nullptr) {
-        delete sp_read_event_;
-        close(write_fd_);
-        close(read_fd_);
-
-        sp_read_event_ = nullptr;
-        write_fd_ = -1;
-        read_fd_ = -1;
+        CHECK_DELETE_RESET_OBJ(sp_read_event_);
+        CHECK_CLOSE_RESET_FD(write_fd_);
+        CHECK_CLOSE_RESET_FD(read_fd_);
     }
 }
 
@@ -157,105 +161,89 @@ void CommonLoop::endEventProcess()
 bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 {
     if (signal_read_fd_ == -1) {    //! 如果还没有创建对应的信号
-        int fds[2] = { 0 };
-        if (pipe2(fds, O_CLOEXEC | O_NONBLOCK) != 0) {  //!FIXME
-            LogErr("pip2() fail, ret:%d", errno);
+        if (!CreateFdPair(signal_read_fd_, signal_write_fd_))
             return false;
-        }
-        int read_fd(fds[0]);
-        int write_fd(fds[1]);
 
-        auto read_fd_event = newFdEvent();
-        read_fd_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist);
-        read_fd_event->setCallback(std::bind(&CommonLoop::onSignal, this));
-        read_fd_event->enable();
-
-        {
-            std::unique_lock<std::mutex> _g(_signal_lock_);
-            auto iter = _signal_read_fds_.find(signo);
-            if (iter != _signal_read_fds_.end()) {
-                iter->second.insert(read_fd);
-            } else {
-                std::set<int> tmp = { read_fd };
-                _signal_read_fds_[signo] = std::move(tmp);
-                signal(signo, CommonLoop::HandleSignal);
-            }
-        }
-
-        signal_read_fd_  = read_fd;
-        signal_write_fd_ = write_fd;
-        sp_signal_read_event_ = read_fd_event;
+        sp_signal_read_event_ = newFdEvent();
+        sp_signal_read_event_->initialize(signal_read_fd_, FdEvent::kReadEvent, Event::Mode::kPersist);
+        sp_signal_read_event_->setCallback(std::bind(&CommonLoop::onSignal, this));
+        sp_signal_read_event_->enable();
     }
 
-    auto iter = signal_subscribers_.find(signo);
-    if (iter != signal_subscribers_.end()) {
-        iter->second.insert(who);
-    } else {
-        std::set<SignalSubscribuer*> tmp = { who };
-        signal_subscribers_[signo] = std::move(tmp);
+    auto &this_signal_subscribers = all_signals_subscribers_[signo];
+    if (this_signal_subscribers.empty()) {
+        //! 如果本Loop没有监听该信号，则要去 _signal_write_fds_ 中订阅
+        std::unique_lock<std::mutex> _g(_signal_lock_);
+        auto & signo_fds = _signal_write_fds_[signo];
+        if (signo_fds.empty()) {
+            signal(signo, CommonLoop::HandleSignal);
+            LogTrace("register %d", signo);
+        }
+        signo_fds.insert(signal_write_fd_);
     }
+    this_signal_subscribers.insert(who);
 
     return true;
 }
 
 bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 {
-    auto iter = signal_subscribers_.find(signo);
-    if (iter == signal_subscribers_.end())  //! 如果本来就不存在，就直接返回了
-        return true;
-
-    auto &subscriber_set = iter->second;
-    subscriber_set.erase(who);          //! 将订阅信息删除
-
-    if (!subscriber_set.empty())        //! 检查本Loop中是否已经没有SignalSubscribuer订阅该信号了
+    auto &this_signal_subscribers = all_signals_subscribers_[signo];
+    this_signal_subscribers.erase(who);          //! 将订阅信息删除
+    if (!this_signal_subscribers.empty())        //! 检查本Loop中是否已经没有SignalSubscribuer订阅该信号了
         return true;    //! 如果还有，就到此为止
 
     //! 如果本Loop已经没有SignalSubscribuer订阅该信号了
-    signal_subscribers_.erase(iter);    //! 则将该信号的订阅记录表删除
+    all_signals_subscribers_.erase(signo);    //! 则将该信号的订阅记录表删除
+    {
+        std::unique_lock<std::mutex> _g(_signal_lock_);
+        //! 并将 _signal_write_fds_ 中的记录删除
+        auto &this_signal_fds = _signal_write_fds_[signo];
+        this_signal_fds.erase(signal_write_fd_);
+        if (this_signal_fds.empty()) {
+            //! 并还原信号处理函数
+            signal(signo, SIG_DFL);
+            LogTrace("unregister %d", signo);
+            _signal_write_fds_.erase(signo);
+        }
+    }
 
-    std::unique_lock<std::mutex> _g(_signal_lock_);
-    //! 并将 _signal_read_fds_ 中的记录删除
-    auto fd_iter = _signal_read_fds_.find(signo);
-    assert(fd_iter != _signal_read_fds_.end());
-
-    auto &fd_set = fd_iter->second;
-    fd_set.erase(signal_read_fd_);
-
-    //! 检查是否还有其它的Loop订阅该信号
-    if (!fd_set.empty())
+    if (!all_signals_subscribers_.empty())
         return true;
 
-    //! 如果没有了，则删除 _signal_read_fds_ 中该信号的订阅记录表
-    _signal_read_fds_.erase(fd_iter);
+    //! 已经没有任何SignalSubscribuer订阅任何信号了
+    sp_signal_read_event_->disable();
+    CHECK_CLOSE_RESET_FD(signal_write_fd_);
+    CHECK_CLOSE_RESET_FD(signal_read_fd_);
 
-    //! 并还原信号处理函数
-    signal(signo, SIG_DFL);
+    FdEvent *tobe_delete = nullptr;
+    std::swap(tobe_delete, sp_signal_read_event_);
+    run([tobe_delete] { delete tobe_delete; });
+
     return true;
 }
 
 void CommonLoop::HandleSignal(int signo)
 {
-    //std::unique_lock<std::mutex> _g(_signal_lock_); //!FIXME: 这是在信号中执行的，是否需要加锁？
-    auto iter = _signal_read_fds_.find(signo);
-    if (iter != _signal_read_fds_.end()) {
-        const auto &fd_set = iter->second;
-        for (int fd : fd_set)
-            write(fd, &signo, sizeof(signo));
-    } else {
-        LogWarn("uncatch signal: %d", signo);
-    }
+    auto &this_signal_fds = _signal_write_fds_[signo];
+    for (int fd : this_signal_fds)
+        write(fd, &signo, sizeof(signo));
 }
 
 void CommonLoop::onSignal()
 {
-    while (true) {
-        int signo = 0;
-        auto rsize = read(signal_read_fd_, &signo, sizeof(signo));
+    while (signal_read_fd_ != -1) {
+        int signo_array[10];    //! 一次性读10个
+        auto rsize = read(signal_read_fd_, &signo_array, sizeof(signo_array));
         if (rsize > 0) {
-            auto iter = signal_subscribers_.find(signo);
-            if (iter != signal_subscribers_.end()) {
-                for (auto s : iter->second) {
-                    s->onSignal(signo);
+            const auto num = rsize / sizeof(int);
+            for (size_t i = 0; i < num; ++i) {
+                int signo = signo_array[i];
+                auto iter = all_signals_subscribers_.find(signo);
+                if (iter != all_signals_subscribers_.end()) {
+                    for (auto s : iter->second) {
+                        s->onSignal(signo);
+                    }
                 }
             }
         } else {
