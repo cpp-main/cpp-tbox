@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 
 #include "loop.h"
@@ -16,8 +17,6 @@ const int kAcceptableError = 10;
 
 TEST(SignalEvent, Oneshot)
 {
-    LogOutput_Initialize("test");
-
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
@@ -29,11 +28,8 @@ TEST(SignalEvent, Oneshot)
         int run_time = 0;
         signal_event->setCallback([&]() { ++run_time; });
 
-        sp_loop->run([]
-            {
-                raise(SIGUSR1);
-            }
-        );
+        sp_loop->run([] { raise(SIGUSR1); });
+
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
 
@@ -50,6 +46,7 @@ TEST(SignalEvent, PersistWithTimerEvent)
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
+
         auto signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kPersist));
         EXPECT_TRUE(signal_event->enable());
@@ -81,24 +78,24 @@ TEST(SignalEvent, PersistWithTimerEvent)
     }
 }
 
-TEST(SignalEvent, IntAndTermSignal)
+TEST(SignalEvent, MultiSignalMultiEvents)
 {
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
-        auto int_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(int_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
-        EXPECT_TRUE(int_signal_event->enable());
+        auto user1_signal_event = sp_loop->newSignalEvent();
+        EXPECT_TRUE(user1_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
+        EXPECT_TRUE(user1_signal_event->enable());
 
-        auto term_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(term_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
-        EXPECT_TRUE(term_signal_event->enable());
+        auto user2_signal_event = sp_loop->newSignalEvent();
+        EXPECT_TRUE(user2_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
+        EXPECT_TRUE(user2_signal_event->enable());
 
-        int int_run_time = 0;
-        int_signal_event->setCallback([&]() { ++int_run_time; });
-        int term_run_time = 0;
-        term_signal_event->setCallback([&]() { ++term_run_time; });
+        int user1_run_time = 0;
+        user1_signal_event->setCallback([&]() { ++user1_run_time; });
+        int user2_run_time = 0;
+        user2_signal_event->setCallback([&]() { ++user2_run_time; });
 
         sp_loop->run([]
             {
@@ -109,12 +106,12 @@ TEST(SignalEvent, IntAndTermSignal)
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
 
-        EXPECT_EQ(int_run_time, 1);
-        EXPECT_EQ(term_run_time, 1);
+        EXPECT_EQ(user1_run_time, 1);
+        EXPECT_EQ(user2_run_time, 1);
 
 
-        delete int_signal_event;
-        delete term_signal_event;
+        delete user1_signal_event;
+        delete user2_signal_event;
         delete sp_loop;
     }
 }
@@ -125,18 +122,18 @@ TEST(SignalEvent, MultiThread)
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
-        auto int_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(int_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
-        EXPECT_TRUE(int_signal_event->enable());
+        auto user1_signal_event = sp_loop->newSignalEvent();
+        EXPECT_TRUE(user1_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
+        EXPECT_TRUE(user1_signal_event->enable());
 
-        auto term_signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(term_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
-        EXPECT_TRUE(term_signal_event->enable());
+        auto user2_signal_event = sp_loop->newSignalEvent();
+        EXPECT_TRUE(user2_signal_event->initialize(SIGUSR2, Event::Mode::kOneshot));
+        EXPECT_TRUE(user2_signal_event->enable());
 
-        int int_run_time = 0;
-        int_signal_event->setCallback([&]() { ++int_run_time; });
-        int term_run_time = 0;
-        term_signal_event->setCallback([&]() { ++term_run_time; });
+        int user1_run_time = 0;
+        user1_signal_event->setCallback([&]() { ++user1_run_time; });
+        int user2_run_time = 0;
+        user2_signal_event->setCallback([&]() { ++user2_run_time; });
 
         sp_loop->run([]
             {
@@ -181,29 +178,141 @@ TEST(SignalEvent, MultiThread)
 
         EXPECT_TRUE(t1_run);
         EXPECT_TRUE(t2_run);
-        EXPECT_EQ(int_run_time, 1);
-        EXPECT_EQ(term_run_time, 1);
+        EXPECT_EQ(user1_run_time, 1);
+        EXPECT_EQ(user2_run_time, 1);
 
-        delete int_signal_event;
-        delete term_signal_event;
+        delete user1_signal_event;
+        delete user2_signal_event;
         delete sp_loop;
     }
 }
 
-//! 同一种事件被多个信号事件监听
+//! 同一种信号被多个事件监听
 TEST(SignalEvent, OneSignalMultiEvents)
 {
-    //!TODO
-}
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        auto sp_loop = Loop::New(e);
 
-//! 同多种事件被多个信号事件监听
-TEST(SignalEvent, MultiSignalMultiEvents)
-{
-    //!TODO
+        auto signal_event_1 = sp_loop->newSignalEvent();
+        auto signal_event_2 = sp_loop->newSignalEvent();
+
+        EXPECT_TRUE(signal_event_1->initialize(SIGUSR1, Event::Mode::kOneshot));
+        EXPECT_TRUE(signal_event_2->initialize(SIGUSR1, Event::Mode::kOneshot));
+
+        EXPECT_TRUE(signal_event_1->enable());
+        EXPECT_TRUE(signal_event_2->enable());
+
+        int run_time_1 = 0;
+        int run_time_2 = 0;
+
+        signal_event_1->setCallback([&]() { ++run_time_1; });
+        signal_event_2->setCallback([&]() { ++run_time_2; });
+
+        sp_loop->run([] { raise(SIGUSR1); });
+        sp_loop->exitLoop(std::chrono::milliseconds(100));
+        sp_loop->runLoop();
+
+        EXPECT_EQ(run_time_1, 1);
+        EXPECT_EQ(run_time_2, 1);
+
+
+        delete signal_event_1;
+        delete signal_event_2;
+        delete sp_loop;
+    }
 }
 
 //! 多线程下多个Loop的事件监听同一个信号
-TEST(SignalEvent, OneSignalMultiLoop)
+TEST(SignalEvent, OneSignalMultiLoopInMultiThread)
 {
-    //!TODO
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+
+        auto thread_func = [e] (int &run_time) {
+            auto sp_loop = Loop::New(e);
+            auto signal_event = sp_loop->newSignalEvent();
+            signal_event->initialize(SIGUSR1, Event::Mode::kPersist);
+            signal_event->enable();
+            signal_event->setCallback([&]() { ++run_time; });
+
+            sp_loop->exitLoop(std::chrono::milliseconds(200));
+            sp_loop->runLoop();
+
+            delete signal_event;
+            delete sp_loop;
+        };
+
+        int run_time_1 = 0;
+        int run_time_2 = 0;
+
+        auto t1 = std::thread(std::bind(thread_func, std::ref(run_time_1)));
+        auto t2 = std::thread(std::bind(thread_func, std::ref(run_time_2)));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        raise(SIGUSR1);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        raise(SIGUSR1);
+
+        t1.join();
+        t2.join();
+
+        EXPECT_EQ(run_time_1, 2);
+        EXPECT_EQ(run_time_2, 2);
+    }
+}
+
+//! 多线程下多个Loop的事件监听同多个信号
+TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
+{
+    LogOutput_Initialize("test");
+
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+
+        auto thread_func = [e] (int &user1_run_time, int &user2_run_time) {
+            auto sp_loop = Loop::New(e);
+
+            auto user1_signal_event = sp_loop->newSignalEvent();
+            user1_signal_event->initialize(SIGUSR1, Event::Mode::kPersist);
+            user1_signal_event->enable();
+            user1_signal_event->setCallback([&]() { ++user1_run_time; });
+
+            auto user2_signal_event = sp_loop->newSignalEvent();
+            user2_signal_event->initialize(SIGUSR2, Event::Mode::kPersist);
+            user2_signal_event->enable();
+            user2_signal_event->setCallback([&]() { ++user2_run_time; });
+
+            sp_loop->exitLoop(std::chrono::milliseconds(200));
+            sp_loop->runLoop();
+
+            delete user2_signal_event;
+            delete user1_signal_event;
+            delete sp_loop;
+        };
+
+        int user1_run_time_1 = 0, user2_run_time_1 = 0;
+        int user1_run_time_2 = 0, user2_run_time_2 = 0;
+
+        auto t1 = std::thread(std::bind(thread_func, std::ref(user1_run_time_1), std::ref(user2_run_time_1)));
+        auto t2 = std::thread(std::bind(thread_func, std::ref(user1_run_time_2), std::ref(user2_run_time_2)));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        raise(SIGUSR1);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        raise(SIGUSR2);
+
+        t1.join();
+        t2.join();
+
+        EXPECT_EQ(user1_run_time_1, 1);
+        EXPECT_EQ(user2_run_time_1, 1);
+        EXPECT_EQ(user1_run_time_2, 1);
+        EXPECT_EQ(user2_run_time_2, 1);
+    }
 }

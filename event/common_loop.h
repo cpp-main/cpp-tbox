@@ -39,12 +39,12 @@ class CommonLoop : public Loop {
     void beginEventProcess();
     void endEventProcess();
 
-    //! 信号
+    //! 信号处理相关
+    SignalEvent* newSignalEvent() override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     static void HandleSignal(int signo);
     void onSignal();
-    SignalEvent* newSignalEvent() override;
 
   protected:
     void runThisBeforeLoop();

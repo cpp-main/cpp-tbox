@@ -16,6 +16,8 @@ LibevLoop::LibevLoop() :
 
 LibevLoop::~LibevLoop()
 {
+    cleanupDeferredTasks();
+
     delete sp_exit_timer_;
     ev_loop_destroy(sp_ev_loop_);
 }

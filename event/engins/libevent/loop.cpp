@@ -17,6 +17,8 @@ LibeventLoop::LibeventLoop() :
 
 LibeventLoop::~LibeventLoop()
 {
+    cleanupDeferredTasks();
+
     event_base_free(sp_event_base_);
     sp_event_base_ = NULL;
 }
