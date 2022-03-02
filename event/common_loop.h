@@ -40,10 +40,11 @@ class CommonLoop : public Loop {
     void endEventProcess();
 
     //! 信号
-    bool subscribeSignal(int signal_num, SignalEventImpl *who);
-    bool unsubscribeSignal(int signal_num, SignalEventImpl *who);
+    bool subscribeSignal(int signal_num, SignalSubscribuer *who);
+    bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     static void HandleSignal(int signo);
     void onSignal();
+    SignalEvent* newSignalEvent() override;
 
   protected:
     void runThisBeforeLoop();
@@ -85,7 +86,7 @@ class CommonLoop : public Loop {
     int signal_read_fd_  = -1;
     int signal_write_fd_ = -1;
     FdEvent *sp_signal_read_event_ = nullptr;
-    std::map<int, SignalEventImpl*> signal_subscriber_; //! signo -> SignalEventImpl*，信号的订阅者
+    std::map<int, std::set<SignalSubscribuer*>> signal_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
 
     int cb_level_ = 0;
 };

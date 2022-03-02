@@ -19,7 +19,6 @@ class LibevLoop : public CommonLoop {
 
     virtual FdEvent* newFdEvent();
     virtual TimerEvent* newTimerEvent();
-    virtual SignalEvent* newSignalEvent();
 
   public:
     struct ev_loop* getEvLoopPtr() const { return sp_ev_loop_; }

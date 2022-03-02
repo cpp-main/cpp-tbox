@@ -218,11 +218,5 @@ TimerEvent* EpollLoop::newTimerEvent()
     return new EpollTimerEvent(this);
 }
 
-SignalEvent* EpollLoop::newSignalEvent()
-{
-    LogWarn("EpollSignalEvent is not stable in multithread");
-    return new EpollSignalEvent(this);
-}
-
 }
 }

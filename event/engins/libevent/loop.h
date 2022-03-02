@@ -19,7 +19,6 @@ class LibeventLoop : public CommonLoop {
 
     virtual FdEvent* newFdEvent();
     virtual TimerEvent* newTimerEvent();
-    virtual SignalEvent* newSignalEvent();
 
   public:
     struct event_base* getEventBasePtr() const { return sp_event_base_; }

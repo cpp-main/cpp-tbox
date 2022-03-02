@@ -48,10 +48,5 @@ TimerEvent* LibeventLoop::newTimerEvent()
     return new LibeventTimerEvent(this);
 }
 
-SignalEvent* LibeventLoop::newSignalEvent()
-{
-    return new LibeventSignalEvent(this);
-}
-
 }
 }

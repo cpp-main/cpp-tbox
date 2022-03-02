@@ -7,42 +7,56 @@ namespace event {
 
 SignalEventImpl::SignalEventImpl(CommonLoop *wp_loop) :
     wp_loop_(wp_loop)
-{
-    LogUndo();
-}
+{ }
 
 SignalEventImpl::~SignalEventImpl()
 {
-    LogUndo();
+    disable();
 }
 
-bool SignalEventImpl::initialize(int signum, Mode mode)
+bool SignalEventImpl::initialize(int signo, Mode mode)
 {
-    LogUndo();
-    return false;
-}
+    signo_ = signo;
+    mode_ = mode;
 
-bool SignalEventImpl::isEnabled() const
-{
-    LogUndo();
-    return false;
+    is_inited_ = true;
+    return true;
 }
 
 bool SignalEventImpl::enable()
 {
-    LogUndo();
+    if (is_inited_) {
+        if (wp_loop_->subscribeSignal(signo_, this)) {
+            is_enabled_ = true;
+            return true;
+        }
+    }
     return false;
 }
 
 bool SignalEventImpl::disable()
 {
-    LogUndo();
+    if (is_enabled_) {
+        if (wp_loop_->unsubscribeSignal(signo_, this)) {
+            is_enabled_ = false;
+            return true;
+        }
+    }
     return false;
 }
 
 Loop* SignalEventImpl::getLoop() const
 {
     return wp_loop_;
+}
+
+void SignalEventImpl::onSignal(int /*signo*/)
+{
+    if (mode_ == Mode::kOneshot)
+        disable();
+
+    if (cb_)
+        cb_();
 }
 
 }

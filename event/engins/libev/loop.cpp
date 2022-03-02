@@ -59,10 +59,5 @@ TimerEvent* LibevLoop::newTimerEvent()
     return new LibevTimerEvent(this);
 }
 
-SignalEvent* LibevLoop::newSignalEvent()
-{
-    return new LibevSignalEvent(this);
-}
-
 }
 }

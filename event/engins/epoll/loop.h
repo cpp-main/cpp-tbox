@@ -28,7 +28,6 @@ class EpollLoop : public CommonLoop {
 
     virtual FdEvent* newFdEvent();
     virtual TimerEvent* newTimerEvent();
-    virtual SignalEvent* newSignalEvent();
 
   public:
     inline int epollFd() const { return epoll_fd_; }
