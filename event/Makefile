@@ -20,7 +20,6 @@ CPP_SRC_FILES += \
 	engins/libevent/loop.cpp \
 	engins/libevent/fd_event.cpp \
 	engins/libevent/timer_event.cpp \
-	engins/libevent/signal_event.cpp \
 	engins/libevent/common.cpp
 CXXFLAGS += -DENABLE_LIBEVENT=1
 endif
@@ -29,7 +28,6 @@ ifeq ($(ENABLE_LIBEV), yes)
 CPP_SRC_FILES += \
 	engins/libev/loop.cpp \
 	engins/libev/fd_event.cpp \
-	engins/libev/signal_event.cpp \
 	engins/libev/timer_event.cpp
 CXXFLAGS += -DENABLE_LIBEV=1
 endif
@@ -38,7 +36,6 @@ ifeq ($(ENABLE_EPOLL), yes)
 CPP_SRC_FILES += \
 	engins/epoll/loop.cpp \
 	engins/epoll/fd_event.cpp \
-	engins/epoll/signal_event.cpp \
 	engins/epoll/timer_event.cpp
 CXXFLAGS += -DENABLE_EPOLL=1
 endif

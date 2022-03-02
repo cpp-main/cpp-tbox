@@ -5,7 +5,6 @@
 
 #include "fd_event.h"
 #include "timer_event.h"
-#include "signal_event.h"
 #include "common.h"
 
 namespace tbox {
