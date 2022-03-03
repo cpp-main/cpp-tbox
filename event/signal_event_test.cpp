@@ -360,7 +360,6 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
 //! 同一个事件，监听多个事件
 TEST(SignalEvent, OneEventMultiSignal)
 {
-    //LogOutput_Initialize("test");
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
@@ -400,4 +399,47 @@ TEST(SignalEvent, OneEventMultiSignal)
         delete sp_loop;
     }
 }
+
+//! 短时间内触发非常多的信号
+TEST(SignalEvent, LargeNumberOfSignals)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        auto sp_loop = Loop::New(e);
+        auto signal_event = sp_loop->newSignalEvent();
+        EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kPersist));
+        EXPECT_TRUE(signal_event->enable());
+
+        int user1_run_time = 0;
+        signal_event->setCallback(
+            [&](int signo) {
+                if (signo == SIGUSR1)
+                    ++user1_run_time;
+            }
+        );
+
+        int remain = 1000;
+        std::function<void()> func = \
+        [&] {
+            --remain;
+            if (remain >= 0) {
+                raise(SIGUSR1);
+                sp_loop->runInLoop(func);
+            } else {
+                sp_loop->exitLoop(std::chrono::milliseconds(10));
+            }
+        };
+        sp_loop->runInLoop(func);
+
+        sp_loop->runLoop();
+
+        EXPECT_EQ(remain, -1);
+        EXPECT_EQ(user1_run_time, 1000);
+
+        delete signal_event;
+        delete sp_loop;
+    }
+}
+
 
