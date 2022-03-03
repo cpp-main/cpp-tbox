@@ -11,8 +11,12 @@ HEAD_FILES = \
 	stat.h version.h
 
 CPP_SRC_FILES = \
-	loop.cpp common_loop.cpp \
+	loop.cpp \
+	common_loop.cpp \
+	common_loop_signal.cpp \
+	common_loop_run.cpp \
 	signal_event_impl.cpp \
+	misc.cpp \
 	version.cpp
 
 ifeq ($(ENABLE_LIBEVENT), yes)
