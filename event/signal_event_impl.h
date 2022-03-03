@@ -24,6 +24,8 @@ class SignalEventImpl : public SignalEvent,
 
   public:
     bool initialize(int signum, Mode mode) override;
+    bool initialize(const std::set<int> &sigset, Mode mode) override;
+
     void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
 
     bool isEnabled() const override { return is_enabled_; }
@@ -42,7 +44,7 @@ class SignalEventImpl : public SignalEvent,
     bool is_inited_ = false;
     bool is_enabled_ = false;
 
-    int signo_ = 0;
+    std::set<int> sigset_;
     Mode mode_ = Mode::kPersist;
 };
 

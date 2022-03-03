@@ -176,8 +176,10 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         std::unique_lock<std::mutex> _g(_signal_lock_);
         //!FIXME: 要禁止信号触发
         auto & signo_fds = _signal_write_fds_[signo];
-        if (signo_fds.empty())
+        if (signo_fds.empty()) {
             signal(signo, CommonLoop::HandleSignal);
+            //LogTrace("set signal:%d", signo);
+        }
         signo_fds.insert(signal_write_fd_);
     }
     this_signal_subscribers.insert(who);
@@ -203,6 +205,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
         if (this_signal_fds.empty()) {
             //! 并还原信号处理函数
             signal(signo, SIG_DFL);
+            //LogTrace("unset signal:%d", signo);
             _signal_write_fds_.erase(signo);
         }
     }
@@ -224,6 +227,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 
 void CommonLoop::HandleSignal(int signo)
 {
+    //LogTrace("got signal :%d", signo);
     auto &this_signal_fds = _signal_write_fds_[signo];
     for (int fd : this_signal_fds)
         write(fd, &signo, sizeof(signo));
@@ -236,8 +240,10 @@ void CommonLoop::onSignal()
         auto rsize = read(signal_read_fd_, &signo_array, sizeof(signo_array));
         if (rsize > 0) {
             const auto num = rsize / sizeof(int);
+            //LogTrace("rsize:%d, num:%u", rsize, num);
             for (size_t i = 0; i < num; ++i) {
                 int signo = signo_array[i];
+                //LogTrace("signo:%d", signo);
                 auto iter = all_signals_subscribers_.find(signo);
                 if (iter != all_signals_subscribers_.end()) {
                     for (auto s : iter->second) {
