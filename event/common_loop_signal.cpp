@@ -30,13 +30,21 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
     if (this_signal_subscribers.empty()) {
         //! 如果本Loop没有监听该信号，则要去 _signal_write_fds_ 中订阅
         std::unique_lock<std::mutex> _g(_signal_lock_);
-        //!FIXME: 要禁止信号触发
+
+        //! 要禁止信号触发
+        sigset_t new_sigmask, old_sigmask;
+        sigfillset(&new_sigmask);
+        sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
+
         auto & signo_fds = _signal_write_fds_[signo];
         if (signo_fds.empty()) {
             signal(signo, CommonLoop::HandleSignal);
             //LogTrace("set signal:%d", signo);
         }
         signo_fds.insert(signal_write_fd_);
+
+        //! 恢复信号
+        sigprocmask(SIG_SETMASK, &old_sigmask, 0);
     }
     this_signal_subscribers.insert(who);
 
@@ -54,7 +62,12 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
     all_signals_subscribers_.erase(signo);    //! 则将该信号的订阅记录表删除
     {
         std::unique_lock<std::mutex> _g(_signal_lock_);
-        //!FIXME: 要禁止信号触发
+
+        //! 要禁止信号触发
+        sigset_t new_sigmask, old_sigmask;
+        sigfillset(&new_sigmask);
+        sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
+
         //! 并将 _signal_write_fds_ 中的记录删除
         auto &this_signal_fds = _signal_write_fds_[signo];
         this_signal_fds.erase(signal_write_fd_);
@@ -64,6 +77,9 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
             //LogTrace("unset signal:%d", signo);
             _signal_write_fds_.erase(signo);
         }
+
+        //! 恢复信号
+        sigprocmask(SIG_SETMASK, &old_sigmask, 0);
     }
 
     if (!all_signals_subscribers_.empty())
@@ -81,6 +97,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
     return true;
 }
 
+//! 信号处理函数
 void CommonLoop::HandleSignal(int signo)
 {
     //LogTrace("got signal :%d", signo);
