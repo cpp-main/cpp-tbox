@@ -15,8 +15,8 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 
 - base，基础库，含日志打印、常用工具等；
 - util，工具库，在业务代码中可能会用到的库；
-- event，事件库，对 libevent2, libev 库进行了统一的封装，实现Fd,Timer,Signal三种事件驱动；
-- eventx，事件扩展库，含 ThreadPool 线程池模块，专用于处理阻塞性事务；
+- event，事件库，实现Fd,Timer,Signal三种事件驱动；
+- eventx，事件扩展库，含 ThreadPool 线程池模块，专用于处理阻塞性事务；TimerPool 定时器池模块；
 - network，网络库，实现了串口、终端、UDP、TCP 通信模块；
 - coroutine，协程库，众所周知，异步框架不方便处理顺序性业务，协程弥补之；
 - mqtt，MQTT客户端库；
@@ -29,10 +29,10 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 - base --> None
 - util --> base
 - event --> base, [libevent\_core, libev]
-- eventx --> base, event, [pthread]
+- eventx --> base, event, <pthread>
 - network --> base, event
 - coroutine --> base, event
-- mqtt --> base, event, [mosquitto]
+- mqtt --> base, event, <mosquitto>
 - terminal --> base, util, event, network
 - main --> base, util, event, eventx
 - sample --> main
@@ -40,7 +40,6 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 #### 未来规化
 
 - 创建 http 模块，实现 Http 相关的 Server 与 Client 端；
-- 在 event 中支持 buildin 事件驱动（进行中 feature-epoll）；
 - 在 network 中支持 TLS；
 - 实现异步日志输出模块；
 - 实现使用 CMake 进行工程管理；
