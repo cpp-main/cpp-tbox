@@ -11,10 +11,10 @@ void CommonLoop::runInLoop(const Func &func)
     std::lock_guard<std::recursive_mutex> g(lock_);
     run_in_loop_func_queue_.push_back(func);
 
-    if (sp_read_event_ == nullptr)
+    if (sp_run_read_event_ == nullptr)
         return;
 
-    commitRequest();
+    commitRunRequest();
 }
 
 void CommonLoop::runNext(const Func &func)
@@ -48,7 +48,7 @@ void CommonLoop::handleNextFunc()
     }
 }
 
-void CommonLoop::onGotRunInLoopFunc(short)
+void CommonLoop::handleRunInLoopRequest(short)
 {
     /**
      * NOTICE:
@@ -62,7 +62,7 @@ void CommonLoop::onGotRunInLoopFunc(short)
     {
         std::lock_guard<std::recursive_mutex> g(lock_);
         run_in_loop_func_queue_.swap(tmp);
-        finishRequest();
+        finishRunRequest();
     }
 
     while (!tmp.empty()) {
@@ -103,24 +103,24 @@ void CommonLoop::cleanupDeferredTasks()
         LogWarn("found recursive actions, force quit");
 }
 
-void CommonLoop::commitRequest()
+void CommonLoop::commitRunRequest()
 {
-    if (!has_unhandle_req_) {
+    if (!has_commit_run_req_) {
         char ch = 0;
-        ssize_t wsize = write(write_fd_, &ch, 1);
+        ssize_t wsize = write(run_write_fd_, &ch, 1);
         (void)wsize;
 
-        has_unhandle_req_ = true;
+        has_commit_run_req_ = true;
     }
 }
 
-void CommonLoop::finishRequest()
+void CommonLoop::finishRunRequest()
 {
     char ch = 0;
-    ssize_t rsize = read(read_fd_, &ch, 1);
+    ssize_t rsize = read(run_read_fd_, &ch, 1);
     (void)rsize;
 
-    has_unhandle_req_ = false;
+    has_commit_run_req_ = false;
 }
 
 }

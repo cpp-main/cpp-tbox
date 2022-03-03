@@ -360,7 +360,7 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
 //! 同一个事件，监听多个事件
 TEST(SignalEvent, OneEventMultiSignal)
 {
-    LogOutput_Initialize("test");
+    //LogOutput_Initialize("test");
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
@@ -374,7 +374,7 @@ TEST(SignalEvent, OneEventMultiSignal)
         int user2_run_time = 0;
         signal_event->setCallback(
             [&](int signo) {
-                LogTrace("signo:%d", signo);
+                //LogTrace("signo:%d", signo);
                 if (signo == SIGUSR1)
                     ++user1_run_time;
                 else if (signo == SIGUSR2)

@@ -19,7 +19,6 @@ namespace event {
 
 class CommonLoop : public Loop {
   public:
-    CommonLoop();
     ~CommonLoop() override;
 
   public:
@@ -50,24 +49,19 @@ class CommonLoop : public Loop {
     void runThisBeforeLoop();
     void runThisAfterLoop();
 
-    void onGotRunInLoopFunc(short);
-
+    void handleRunInLoopRequest(short);
     void cleanupDeferredTasks();
-
-    void commitRequest();
-    void finishRequest();
-
+    void commitRunRequest();
+    void finishRunRequest();
     void handleNextFunc();
 
   private:
     mutable std::recursive_mutex lock_;
-
     std::thread::id loop_thread_id_;
-
-    bool has_unhandle_req_ = false;
-    int read_fd_ = -1, write_fd_ = -1;
-    FdEvent *sp_read_event_ = nullptr;
-
+    bool has_commit_run_req_ = false;
+    int run_read_fd_ = -1;
+    int run_write_fd_ = -1;
+    FdEvent *sp_run_read_event_ = nullptr;
     std::deque<Func> run_in_loop_func_queue_;
     std::deque<Func> run_next_func_queue_;
 

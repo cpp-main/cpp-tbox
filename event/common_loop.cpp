@@ -17,13 +17,6 @@ namespace event {
 
 using namespace std::chrono;
 
-CommonLoop::CommonLoop() :
-    has_unhandle_req_(false),
-    read_fd_(-1), write_fd_(-1),
-    sp_read_event_(nullptr),
-    cb_level_(0)
-{ }
-
 CommonLoop::~CommonLoop()
 {
     assert(cb_level_ == 0);
@@ -38,7 +31,7 @@ bool CommonLoop::isInLoopThread()
 bool CommonLoop::isRunning() const
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
-    return sp_read_event_ != nullptr;
+    return sp_run_read_event_ != nullptr;
 }
 
 void CommonLoop::runThisBeforeLoop()
@@ -56,17 +49,17 @@ void CommonLoop::runThisBeforeLoop()
     }
 
     using std::placeholders::_1;
-    sp_read_event->setCallback(std::bind(&CommonLoop::onGotRunInLoopFunc, this, _1));
+    sp_read_event->setCallback(std::bind(&CommonLoop::handleRunInLoopRequest, this, _1));
     sp_read_event->enable();
 
     std::lock_guard<std::recursive_mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
-    read_fd_ = read_fd;
-    write_fd_ = write_fd;
-    sp_read_event_ = sp_read_event;
+    run_read_fd_ = read_fd;
+    run_write_fd_ = write_fd;
+    sp_run_read_event_ = sp_read_event;
 
     if (!run_in_loop_func_queue_.empty())
-        commitRequest();
+        commitRunRequest();
 
 #ifdef  ENABLE_STAT
     resetStat();
@@ -79,10 +72,10 @@ void CommonLoop::runThisAfterLoop()
     cleanupDeferredTasks();
 
     loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
-    if (sp_read_event_ != nullptr) {
-        CHECK_DELETE_RESET_OBJ(sp_read_event_);
-        CHECK_CLOSE_RESET_FD(write_fd_);
-        CHECK_CLOSE_RESET_FD(read_fd_);
+    if (sp_run_read_event_ != nullptr) {
+        CHECK_DELETE_RESET_OBJ(sp_run_read_event_);
+        CHECK_CLOSE_RESET_FD(run_write_fd_);
+        CHECK_CLOSE_RESET_FD(run_read_fd_);
     }
 }
 
