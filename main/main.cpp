@@ -8,6 +8,7 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
+#include <tbox/event/signal_event.h>
 
 #include <tbox/util/thread_wdog.h>
 #include <tbox/util/pid_file.h>
@@ -25,7 +26,6 @@ extern void RegisterApps(Apps &apps); //! 由用户去实现
 extern void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
-std::function<void()> normal_stop_func; //!< 正常退出前要做的事件
 
 int Main(int argc, char **argv)
 {
@@ -109,20 +109,27 @@ int Main(int argc, char **argv)
 
 void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
 {
-    auto feeddog_timer  = ctx.loop()->newTimerEvent();
-    //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction([feeddog_timer] { delete feeddog_timer; });
+    auto feeddog_timer = ctx.loop()->newTimerEvent();
+    auto stop_signal   = ctx.loop()->newSignalEvent();
 
-    normal_stop_func = [&] {
-        ctx.loop()->runInLoop([&] {
-                LogInfo("Got stop signal");
-                apps.stop();
-                ctx.stop();
-                ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-                LogInfo("Loop will exit after %d sec", loop_exit_wait);
-            }
-        );
-    };
+    //! 预定在离开时自动释放对象，确保无内存泄漏
+    SetScopeExitAction(
+        [=] {
+            delete stop_signal;
+            delete feeddog_timer;
+        }
+    );
+
+    stop_signal->initialize(std::set<int>{SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
+    stop_signal->setCallback(
+        [&] (int signo) {
+            LogInfo("Got signal %d", signo);
+            apps.stop();
+            ctx.stop();
+            ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
+            LogInfo("Loop will exit after %d sec", loop_exit_wait);
+        }
+    );
 
     //! 创建喂狗定时器
     feeddog_timer->initialize(std::chrono::seconds(2), event::Event::Mode::kPersist);
@@ -133,6 +140,7 @@ void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
     util::ThreadWDog::Register("main", 3);
 
     feeddog_timer->enable();
+    stop_signal->enable();
 
     LogInfo("Start!");
 
