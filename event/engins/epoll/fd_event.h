@@ -8,8 +8,8 @@
 namespace tbox {
 namespace event {
 
-class EpollLoop;
-class EpollFdSharedData;
+class  EpollLoop;
+struct EpollFdSharedData;
 
 class EpollFdEvent : public FdEvent {
   public:
