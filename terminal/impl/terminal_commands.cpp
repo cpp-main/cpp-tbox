@@ -5,6 +5,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
+#include <tbox/util/string.h>
 
 #include "session_context.h"
 #include "dir_node.h"
@@ -15,9 +16,21 @@ namespace tbox::terminal {
 
 using namespace std;
 
-bool Terminal::Impl::executeCmdline(SessionContext *s)
+bool Terminal::Impl::execute(SessionContext *s)
 {
-    auto cmdline = s->curr_input;
+    std::vector<std::string> cmdlines;
+    util::string::Split(s->curr_input, ";", cmdlines);
+
+    for (auto &cmdline : cmdlines) {
+        if (!executeCmd(s, cmdline))
+            return false;
+    }
+
+    return true;
+}
+
+bool Terminal::Impl::executeCmd(SessionContext *s, const std::string &cmdline)
+{
     if (cmdline.empty())
         return false;
 
@@ -278,7 +291,7 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
     string sub_cmd = args[0].substr(1);
     if (sub_cmd == "!") {
         s->curr_input = s->history.back();
-        return executeCmdline(s);
+        return execute(s);
     }
 
     try {
@@ -298,7 +311,7 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
 
         if (is_index_valid) {
             s->wp_conn->send(s->token, s->curr_input + "\r\n");
-            return executeCmdline(s);
+            return execute(s);
         } else
             s->wp_conn->send(s->token, "Error: index out of range\r\n");
     } catch (const invalid_argument &e) {

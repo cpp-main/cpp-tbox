@@ -51,7 +51,8 @@ class Terminal::Impl {
     void printPrompt(SessionContext *s);
     void printHelp(SessionContext *s);
 
-    bool executeCmdline(SessionContext *s);
+    bool execute(SessionContext *s);
+    bool executeCmd(SessionContext *s, const std::string &cmdline);
 
     void executeCdCmd(SessionContext *s, const Args &args);
     void executeHelpCmd(SessionContext *s, const Args &args);

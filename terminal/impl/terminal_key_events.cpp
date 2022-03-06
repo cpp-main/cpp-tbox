@@ -45,7 +45,7 @@ void Terminal::Impl::onEnterKey(SessionContext *s)
     if (s->options & kEnableEcho)
         s->wp_conn->send(s->token, "\r\n");
 
-    if (executeCmdline(s)) {
+    if (execute(s)) {
         s->history.push_back(s->curr_input);
         if (s->history.size() > HISTORY_MAX_SIZE)
             s->history.pop_front();
