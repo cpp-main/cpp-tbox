@@ -26,6 +26,16 @@ bool Terminal::deleteSession(const SessionToken &st)
     return impl_->deleteSession(st);
 }
 
+uint32_t Terminal::getOptions(const SessionToken &st) const
+{
+    return impl_->getOptions(st);
+}
+
+void Terminal::setOptions(const SessionToken &st, uint32_t options)
+{
+    impl_->setOptions(st, options);
+}
+
 bool Terminal::onBegin(const SessionToken &st)
 {
     return impl_->onBegin(st);

@@ -21,26 +21,29 @@ namespace {
 
 void Terminal::Impl::onChar(SessionContext *s, char ch)
 {
-    s->wp_conn->send(s->token, ch);
-
     if (s->cursor == s->curr_input.size())
         s->curr_input.push_back(ch);
     else
         s->curr_input.insert(s->cursor, 1, ch);
     s->cursor++;
 
-    stringstream ss;
-    ss  << s->curr_input.substr(s->cursor)
-        << string((s->curr_input.size() - s->cursor), '\b');
+    if (s->options & kEnableEcho) {
+        s->wp_conn->send(s->token, ch);
 
-    auto refresh_str = ss.str();
-    if (!refresh_str.empty())
-        s->wp_conn->send(s->token, refresh_str);
+        stringstream ss;
+        ss  << s->curr_input.substr(s->cursor)
+            << string((s->curr_input.size() - s->cursor), '\b');
+
+        auto refresh_str = ss.str();
+        if (!refresh_str.empty())
+            s->wp_conn->send(s->token, refresh_str);
+    }
 }
 
 void Terminal::Impl::onEnterKey(SessionContext *s)
 {
-    s->wp_conn->send(s->token, "\r\n");
+    if (s->options & kEnableEcho)
+        s->wp_conn->send(s->token, "\r\n");
 
     if (executeCmdline(s)) {
         s->history.push_back(s->curr_input);
@@ -67,11 +70,13 @@ void Terminal::Impl::onBackspaceKey(SessionContext *s)
 
     s->cursor--;
 
-    stringstream ss;
-    ss  << '\b' << s->curr_input.substr(s->cursor) << ' '
-        << string((s->curr_input.size() - s->cursor + 1), '\b');
+    if (s->options & kEnableEcho) {
+        stringstream ss;
+        ss  << '\b' << s->curr_input.substr(s->cursor) << ' '
+            << string((s->curr_input.size() - s->cursor + 1), '\b');
 
-    s->wp_conn->send(s->token, ss.str());
+        s->wp_conn->send(s->token, ss.str());
+    }
 }
 
 void Terminal::Impl::onDeleteKey(SessionContext *s)
@@ -81,11 +86,13 @@ void Terminal::Impl::onDeleteKey(SessionContext *s)
 
     s->curr_input.erase((s->cursor), 1);
 
-    stringstream ss;
-    ss  << s->curr_input.substr(s->cursor) << ' '
-        << string((s->curr_input.size() - s->cursor + 1), '\b');
+    if (s->options & kEnableEcho) {
+        stringstream ss;
+        ss  << s->curr_input.substr(s->cursor) << ' '
+            << string((s->curr_input.size() - s->cursor + 1), '\b');
 
-    s->wp_conn->send(s->token, ss.str());
+        s->wp_conn->send(s->token, ss.str());
+    }
 }
 
 void Terminal::Impl::onTabKey(SessionContext *s)

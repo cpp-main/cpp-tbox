@@ -12,6 +12,8 @@ struct SessionContext {
     Connection *wp_conn = nullptr;
     SessionToken token;
 
+    uint32_t options = 0;
+
     std::string curr_input;
     size_t cursor = 0;
 

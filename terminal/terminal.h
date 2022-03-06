@@ -16,6 +16,9 @@ class Terminal : public TerminalInteract,
     SessionToken newSession(Connection *wp_conn) override;
     bool deleteSession(const SessionToken &st) override;
 
+    uint32_t getOptions(const SessionToken &st) const override;
+    void setOptions(const SessionToken &st, uint32_t options) override;
+
     bool onBegin(const SessionToken &st) override;
     bool onRecvString(const SessionToken &st, const std::string &str) override;
     bool onRecvWindowSize(const SessionToken &st, uint16_t w, uint16_t h) override;

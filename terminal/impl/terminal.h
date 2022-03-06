@@ -19,6 +19,9 @@ class Terminal::Impl {
     SessionToken newSession(Connection *wp_conn);
     bool deleteSession(const SessionToken &st);
 
+    uint32_t getOptions(const SessionToken &st) const;
+    void setOptions(const SessionToken &st, uint32_t options);
+
     bool onBegin(const SessionToken &st);
     bool onExit(const SessionToken &st);
 

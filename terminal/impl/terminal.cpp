@@ -54,18 +54,38 @@ bool Terminal::Impl::deleteSession(const SessionToken &st)
     return false;
 }
 
+uint32_t Terminal::Impl::getOptions(const SessionToken &st) const
+{
+    auto s = sessions_.at(st);
+    if (s == nullptr)
+        return 0;
+
+    return s->options;
+}
+
+void Terminal::Impl::setOptions(const SessionToken &st, uint32_t options)
+{
+    auto s = sessions_.at(st);
+    if (s == nullptr)
+        return;
+
+    s->options = options;
+}
+
 bool Terminal::Impl::onBegin(const SessionToken &st)
 {
     auto s = sessions_.at(st);
     if (s == nullptr)
         return false;
 
-    s->wp_conn->send(st,
-        "\r\n"
-        "Welcome to CppTBox Terminal.\r\n"
-        "Type 'help' for more information.\r\n"
-        "\r\n"
-    );
+    if (s->options & kPrintWelcome) {
+        s->wp_conn->send(st,
+            "\r\n"
+            "Welcome to CppTBox Terminal.\r\n"
+            "Type 'help' for more information.\r\n"
+            "\r\n"
+        );
+    }
     printPrompt(s);
 
     return true;
@@ -161,7 +181,8 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 
 void Terminal::Impl::printPrompt(SessionContext *s)
 {
-    s->wp_conn->send(s->token, "# ");
+    if (s->options & kPrintPrompt)
+        s->wp_conn->send(s->token, "# ");
 }
 
 void Terminal::Impl::printHelp(SessionContext *s)
@@ -182,12 +203,17 @@ void Terminal::Impl::printHelp(SessionContext *s)
         "- !n        Run the n command of history\r\n"
         "- !-n       Run the last n command of history\r\n"
         "- !!        Run last command\r\n"
-        "\r\n"
-        "Besides, UP,DOWN,LEFT,RIGHT,HOME,END,DELETE keys are available.\r\n"
-        "Try them.\r\n"
-        "\r\n"
-        ;
+        "\r\n";
     s->wp_conn->send(s->token, help_str);
+
+    if (s->options & kEnableEcho) {
+        const char *extra_str = \
+            "Besides, UP,DOWN,LEFT,RIGHT,HOME,END,DELETE keys are available.\r\n"
+            "Try them.\r\n"
+            "\r\n"
+            ;
+        s->wp_conn->send(s->token, extra_str);
+    }
 }
 
 }
