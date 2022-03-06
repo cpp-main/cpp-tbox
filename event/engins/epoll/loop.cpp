@@ -9,7 +9,6 @@
 #include "loop.h"
 #include "timer_event.h"
 #include "fd_event.h"
-#include "signal_event.h"
 
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
