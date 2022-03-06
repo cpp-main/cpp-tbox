@@ -78,7 +78,7 @@ bool Terminal::Impl::onBegin(const SessionToken &st)
     if (s == nullptr)
         return false;
 
-    if (s->options & kPrintWelcome) {
+    if (!(s->options & kQuietMode)) {
         s->wp_conn->send(st,
             "\r\n"
             "Welcome to CppTBox Terminal.\r\n"
@@ -181,7 +181,7 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 
 void Terminal::Impl::printPrompt(SessionContext *s)
 {
-    if (s->options & kPrintPrompt)
+    if (!(s->options & kQuietMode))
         s->wp_conn->send(s->token, "# ");
 }
 

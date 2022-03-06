@@ -5,7 +5,8 @@
 
 #include <tbox/base/json_fwd.h>
 #include <tbox/terminal/terminal.h>
-#include <tbox/terminal/telnetd.h>
+#include <tbox/terminal/service/telnetd.h>
+#include <tbox/terminal/service/tcp_rpc.h>
 
 namespace tbox::main {
 
@@ -38,7 +39,9 @@ class ContextImp : public Context {
 
     terminal::Terminal *sp_terminal_ = nullptr;
     terminal::Telnetd  *sp_telnetd_ = nullptr;
+    terminal::TcpRpc   *sp_tcp_rpc_ = nullptr;
     bool telnetd_init_ok = false;
+    bool tcp_rpc_init_ok = false;
 };
 
 }

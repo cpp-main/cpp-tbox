@@ -5,8 +5,8 @@
 
 #include <map>
 
-#include "../service/telnetd.h"
-#include "../connection.h"
+#include "../../service/telnetd.h"
+#include "../../connection.h"
 
 namespace tbox::terminal {
 

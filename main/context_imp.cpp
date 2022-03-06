@@ -15,17 +15,20 @@ ContextImp::ContextImp() :
     sp_thread_pool_(new eventx::ThreadPool(sp_loop_)),
     sp_timer_pool_(new eventx::TimerPool(sp_loop_)),
     sp_terminal_(new terminal::Terminal),
-    sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_))
+    sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
+    sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_))
 {
     assert(sp_loop_ != nullptr);
     assert(sp_thread_pool_ != nullptr);
     assert(sp_timer_pool_ != nullptr);
     assert(sp_terminal_ != nullptr);
     assert(sp_telnetd_ != nullptr);
+    assert(sp_tcp_rpc_ != nullptr);
 }
 
 ContextImp::~ContextImp()
 {
+    delete sp_tcp_rpc_;
     delete sp_telnetd_;
     delete sp_terminal_;
     delete sp_timer_pool_;
@@ -64,6 +67,14 @@ bool ContextImp::initialize(const Json &cfg)
                 telnetd_init_ok = true;
         }
     }
+    if (cfg.contains("tcp_rpc")) {
+        auto &js_tcp_rpc = cfg["tcp_rpc"];
+        if (js_tcp_rpc.contains("bind")) {
+            auto &js_tcp_rpc_bind = js_tcp_rpc["bind"];
+            if (sp_tcp_rpc_->initialize(js_tcp_rpc_bind.get<std::string>()))
+                tcp_rpc_init_ok = true;
+        }
+    }
 
     buildTerminalNodes();
 
@@ -74,17 +85,25 @@ bool ContextImp::start()
 {
     if (telnetd_init_ok)
         sp_telnetd_->start();
+
+    if (tcp_rpc_init_ok)
+        sp_tcp_rpc_->start();
+
     return true;
 }
 
 void ContextImp::stop()
 {
+    if (tcp_rpc_init_ok)
+        sp_tcp_rpc_->stop();
+
     if (telnetd_init_ok)
         sp_telnetd_->stop();
 }
 
 void ContextImp::cleanup()
 {
+    sp_tcp_rpc_->cleanup();
     sp_telnetd_->cleanup();
     sp_timer_pool_->cleanup();
     sp_thread_pool_->cleanup();

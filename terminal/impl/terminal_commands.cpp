@@ -163,7 +163,8 @@ void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
 
 void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
 {
-    s->wp_conn->send(s->token, "Bye!\r\n");
+    if (!(s->options & kQuietMode))
+        s->wp_conn->send(s->token, "Bye!\r\n");
     s->wp_conn->endSession(s->token);
 }
 

@@ -6,7 +6,7 @@
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
 
-#include "../terminal_interact.h"
+#include "../../terminal_interact.h"
 
 namespace tbox::terminal {
 
@@ -113,7 +113,6 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     sendNego(ct, kWILL, kECHO);
     sendNego(ct, kWILL, kSGA);
 
-    wp_terminal_->setOptions(st, TerminalInteract::kPrintWelcome | TerminalInteract::kPrintPrompt);
     wp_terminal_->onBegin(st);
 }
 
