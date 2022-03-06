@@ -14,7 +14,7 @@
 #include <tbox/event/signal_event.h>
 
 #include <tbox/terminal/terminal.h>
-#include <tbox/terminal/telnetd.h>
+#include <tbox/terminal/service/tcp_rpc.h>
 #include <tbox/terminal/session.h>
 
 using namespace tbox;
@@ -35,9 +35,9 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Terminal term;
-    Telnetd telnetd(sp_loop, &term);
-    if (!telnetd.initialize(bind_addr)) {
-        std::cout << "Error: telnetd init fail" << std::endl;
+    TcpRpc rpc(sp_loop, &term);
+    if (!rpc.initialize(bind_addr)) {
+        std::cout << "Error: rpc init fail" << std::endl;
         return 0;
     }
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     //! 指定ctrl+C时要做的事务
     sp_stop_ev->setCallback(
         [&] (int) {
-            telnetd.stop();
+            rpc.stop();
             sp_loop->exitLoop();    //! (3) 退出事件循环
         }
     );
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
     BuildNodes(term, sp_loop);
 
-    telnetd.start();
+    rpc.start();
 
     LogInfo("Start");
     sp_loop->runLoop(Loop::Mode::kForever);

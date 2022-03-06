@@ -9,11 +9,11 @@ HEAD_FILES = \
 	terminal_interact.h \
 	terminal_nodes.h \
 	session.h \
-	telnetd.h \
 	terminal.h \
+	service/telnetd.h \
+	service/tcp_rpc.h \
 
 CPP_SRC_FILES = \
-	telnetd.cpp \
 	terminal.cpp \
 	session.cpp \
 	impl/telnetd.cpp \
@@ -24,6 +24,8 @@ CPP_SRC_FILES = \
 	impl/key_event_scanner.cpp \
 	impl/dir_node.cpp \
 	impl/func_node.cpp \
+	service/telnetd.cpp \
+	service/tcp_rpc.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"terminal"' $(CXXFLAGS)
 

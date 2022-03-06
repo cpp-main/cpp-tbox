@@ -1,5 +1,5 @@
 #include "telnetd.h"
-#include "impl/telnetd.h"
+#include "../impl/telnetd.h"
 
 namespace tbox::terminal {
 

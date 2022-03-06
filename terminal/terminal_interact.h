@@ -13,9 +13,8 @@ class TerminalInteract {
     virtual bool deleteSession(const SessionToken &st) = 0;
 
     enum Option : uint32_t {
-        kEnableEcho     = 0x01,
-        kPrintWelcome   = 0x02,
-        kPrintPrompt    = 0x04,
+        kEnableEcho = 0x01,
+        kQuietMode  = 0x02,
     };
     virtual uint32_t getOptions(const SessionToken &st) const = 0;
     virtual void setOptions(const SessionToken &st, uint32_t options) = 0;
