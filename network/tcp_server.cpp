@@ -137,9 +137,12 @@ bool TcpServer::send(const ClientToken &client, const void *data_ptr, size_t dat
 
 bool TcpServer::disconnect(const ClientToken &client)
 {
-    auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        return conn->disconnect();
+    auto conn = d_->conns.remove(client);
+    if (conn != nullptr) {
+        conn->disconnect();
+        d_->wp_loop->run([conn] { delete conn; });
+        return true;
+    }
     return false;
 }
 

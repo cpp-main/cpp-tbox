@@ -6,7 +6,7 @@
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
 
-#include "../terminal_interact.h"
+#include "../../terminal_interact.h"
 
 namespace tbox::terminal {
 
@@ -225,9 +225,16 @@ void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::st
 void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
 {
     LogTrace("cmd:%x, opt:%x", cmd, opt);
+    auto st = client_to_session_.at(ct);
 
     if (cmd == Cmd::kDONT)
         sendNego(ct, Cmd::kWONT, opt);
+    else if (cmd == Cmd::kDO) {
+        if (opt == Opt::kECHO) {
+            auto opts = wp_terminal_->getOptions(st);
+            wp_terminal_->setOptions(st, opts | TerminalInteract::kEnableEcho);
+        }
+    }
 }
 
 void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)

@@ -19,6 +19,9 @@ class Terminal::Impl {
     SessionToken newSession(Connection *wp_conn);
     bool deleteSession(const SessionToken &st);
 
+    uint32_t getOptions(const SessionToken &st) const;
+    void setOptions(const SessionToken &st, uint32_t options);
+
     bool onBegin(const SessionToken &st);
     bool onExit(const SessionToken &st);
 
@@ -48,7 +51,8 @@ class Terminal::Impl {
     void printPrompt(SessionContext *s);
     void printHelp(SessionContext *s);
 
-    bool executeCmdline(SessionContext *s);
+    bool execute(SessionContext *s);
+    bool executeCmd(SessionContext *s, const std::string &cmdline);
 
     void executeCdCmd(SessionContext *s, const Args &args);
     void executeHelpCmd(SessionContext *s, const Args &args);
