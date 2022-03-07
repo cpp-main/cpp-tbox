@@ -3,7 +3,8 @@
 
 #include <tbox/base/json_fwd.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 class Context;
 
@@ -89,6 +90,7 @@ class App {
     virtual void cleanup() = 0;
 };
 
+}
 }
 
 #endif //TBOX_MAIN_APP_H_20211222

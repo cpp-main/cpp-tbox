@@ -6,7 +6,8 @@
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/terminal/terminal_nodes.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 //! 进程上下文
 class Context {
@@ -17,6 +18,7 @@ class Context {
     virtual terminal::TerminalNodes* terminal() const = 0;
 };
 
+}
 }
 
 #endif //TBOX_MAIN_CONTEXT_H_20211222

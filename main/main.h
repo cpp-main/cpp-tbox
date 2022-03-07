@@ -5,7 +5,8 @@
 #include "apps.h"
 #include "context.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 //////////////////////////////////////////////////////////////////////////
 // 以下是由main库提供的
@@ -75,6 +76,7 @@ std::string GetAppBuildTime();
  */
 void GetAppVersion(int &major, int &minor, int &rev, int &build);
 
+}
 }
 
 #endif //TBOX_MAIN_MAIN_H_20211225

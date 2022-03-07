@@ -8,7 +8,8 @@
 #include <tbox/terminal/service/telnetd.h>
 #include <tbox/terminal/service/tcp_rpc.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 //! 进程上下文
 class ContextImp : public Context {
@@ -44,6 +45,7 @@ class ContextImp : public Context {
     bool tcp_rpc_init_ok = false;
 };
 
+}
 }
 
 #endif //TBOX_MAIN_CONTEXT_IMP_H_20220116

@@ -27,7 +27,8 @@
 
 #include <tbox/base/json_fwd.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 class Args {
   public:
@@ -56,6 +57,7 @@ class Args {
     Json &conf_;
 };
 
+}
 }
 
 #endif //TBOX_MAIN_ARGS_H_20211229

@@ -8,7 +8,8 @@
 #include <tbox/util/string.h>
 #include <tbox/util/argument_parser.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 using namespace std;
 
@@ -213,4 +214,5 @@ bool Args::set(const std::string &set_string)
     return true;
 }
 
+}
 }

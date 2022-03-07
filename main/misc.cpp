@@ -5,7 +5,8 @@
 #include "context.h"
 #include "apps.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 void GetVersion(int &major, int &minor, int &rev, int &build)
 {
@@ -52,4 +53,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     major = minor = rev = build = 0;
 }
 
+}
 }

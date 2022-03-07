@@ -18,7 +18,8 @@
 #include "apps_imp.h"
 #include "args.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 extern void RegisterSignals();
 extern void RegisterApps(Apps &apps); //! 由用户去实现
@@ -158,6 +159,7 @@ void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
     util::ThreadWDog::Stop();
 }
 
+}
 }
 
 __attribute__((weak))

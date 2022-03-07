@@ -8,7 +8,8 @@
 #include <tbox/base/log.h>
 #include <tbox/terminal/session.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 ContextImp::ContextImp() :
     sp_loop_(event::Loop::New()),
@@ -180,4 +181,5 @@ void ContextImp::buildTerminalNodes()
     wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
 }
 
+}
 }

@@ -6,7 +6,8 @@
 #include "apps.h"
 #include <tbox/base/json_fwd.h>
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 class App;
 class Context;
@@ -39,6 +40,7 @@ class AppsImp : public Apps {
     State state_ = State::kNone;
 };
 
+}
 }
 
 #endif //TBOX_MAIN_APPS_IMP_H_20220116

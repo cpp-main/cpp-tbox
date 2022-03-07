@@ -6,7 +6,8 @@
 
 #include "app.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 
 AppsImp::~AppsImp()
 {
@@ -109,4 +110,5 @@ void AppsImp::cleanup()
     state_ = State::kNone;
 }
 
+}
 }
