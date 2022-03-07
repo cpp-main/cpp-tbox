@@ -26,12 +26,12 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 | 库名 | 依赖模块 | 说明 | 安装方法 |
 |:----:|:--------:|:----:|:--------:|
 | googletest | 所有模块 | 单元测试要用 | apt install google-mock |
-| libevent | event | 在config.mk中开启了WITH\_LIBEVENT时依赖 | apt install libevent-dev |
-| libev | event | 在config.mk中开启了WITH\_LIBEV时依赖 | apt install libev-dev |
+| libevent | event | 在event/config.mk中开启了WITH\_LIBEVENT时依赖 | apt install libevent-dev |
+| libev | event | 在event/config.mk中开启了WITH\_LIBEV时依赖 | apt install libev-dev |
 | mosquitto | mqtt | MQTT client库 | apt install libmosquitto-dev |
 | nlohmann/json | main | 作为配置数据用 | 从github上下载json\_fwd.hpp与json.hpp 到头文件目录 |
 
-**安装命令**
+**安装命令** 
 `apt install -y g++ make google-mock libevent-dev libev-dev libmosquitto-dev`
 
 #### 模块间依赖
