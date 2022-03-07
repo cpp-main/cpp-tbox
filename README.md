@@ -3,9 +3,6 @@
 #### 介绍
 cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服务型应用开发库。
 
-#### 依赖包安装
-apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
-
 #### 适用环境
 
 - Linux 环境，主要是针对服务型应用的；
@@ -24,18 +21,35 @@ apt -y install g++ make libgtest libevent-dev libev-dev libgtest-dev
 - main，应用程序框架，实现了完备的程序启动流程与框架，让开发者只需关心业务代码；
 - sample，基于main实现的应用程序示例；
 
+#### 外部库依赖
+
+| 库名 | 依赖模块 | 说明 | 安装方法 |
+|:----:|:--------:|:----:|:--------:|
+| googletest | 所有模块 | 单元测试要用 | apt install google-mock |
+| libevent | event | 在config.mk中开启了WITH\_LIBEVENT时依赖 | apt install libevent-dev |
+| libev | event | 在config.mk中开启了WITH\_LIBEV时依赖 | apt install libev-dev |
+| mosquitto | mqtt | MQTT client库 | apt install libmosquitto-dev |
+| nlohmann/json | main | 作为配置数据用 | 从github上下载json\_fwd.hpp与json.hpp 到头文件目录 |
+
+**安装命令**
+`apt install -y g++ make google-mock libevent-dev libev-dev libmosquitto-dev`
+
 #### 模块间依赖
 
 - base --> None
 - util --> base
-- event --> base, [libevent\_core, libev]
-- eventx --> base, event, <pthread>
-- network --> base, event
-- coroutine --> base, event
-- mqtt --> base, event, <mosquitto>
-- terminal --> base, util, event, network
-- main --> base, util, event, eventx
+- event --> base, util
+- eventx --> event
+- network --> event
+- coroutine --> event
+- mqtt --> event
+- terminal --> network
+- main --> eventx, network
 - sample --> main
+
+#### 模块裁减
+
+打开 config.mk 文件，将不需要模块对应 `app_y += xxx` 屏蔽即可，但要注意模块间的依赖性。
 
 #### 未来规化
 
