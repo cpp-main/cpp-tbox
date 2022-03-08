@@ -12,17 +12,17 @@ class EpollLoop;
 class EpollTimerEvent : public TimerEvent {
   public:
     explicit EpollTimerEvent(EpollLoop *wp_loop);
-    virtual ~EpollTimerEvent();
+    ~EpollTimerEvent() override;
 
   public:
-    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);
-    virtual void setCallback(const CallbackFunc &cb);
+    bool initialize(const std::chrono::milliseconds &interval, Mode mode) override;
+    void setCallback(const CallbackFunc &cb) override;
 
-    virtual bool isEnabled() const;
-    virtual bool enable();
-    virtual bool disable();
+    bool isEnabled() const override;
+    bool enable() override;
+    bool disable() override;
 
-    virtual Loop* getLoop() const;
+    Loop* getLoop() const override;
 
   protected:
     void onEvent();

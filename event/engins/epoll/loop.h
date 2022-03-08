@@ -20,14 +20,14 @@ struct EpollFdSharedData;
 class EpollLoop : public CommonLoop {
   public:
     explicit EpollLoop();
-    virtual ~EpollLoop();
+    ~EpollLoop() override;
 
   public:
-    virtual void runLoop(Mode mode);
-    virtual void exitLoop(const std::chrono::milliseconds &wait_time);
+    void runLoop(Mode mode) override;
+    void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual FdEvent* newFdEvent();
-    virtual TimerEvent* newTimerEvent();
+    FdEvent* newFdEvent() override;
+    TimerEvent* newTimerEvent() override;
 
   public:
     inline int epollFd() const { return epoll_fd_; }
