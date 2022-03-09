@@ -39,16 +39,7 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 
 #### 模块间依赖
 
-- base --> None
-- util --> base
-- event --> base, util
-- eventx --> event
-- network --> event
-- coroutine --> event
-- mqtt --> event
-- terminal --> network
-- main --> eventx, network
-- sample --> main
+![](http://assets.processon.com/chart_image/6227efafe401fd18bcfc83e8.png)
 
 #### 模块裁减
 
