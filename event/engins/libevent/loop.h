@@ -11,14 +11,14 @@ namespace event {
 class LibeventLoop : public CommonLoop {
   public:
     explicit LibeventLoop();
-    virtual ~LibeventLoop();
+    virtual ~LibeventLoop() override;
 
   public:
-    virtual void runLoop(Mode mode);
-    virtual void exitLoop(const std::chrono::milliseconds &wait_time);
+    virtual void runLoop(Mode mode) override;
+    virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual FdEvent* newFdEvent();
-    virtual TimerEvent* newTimerEvent();
+    virtual FdEvent* newFdEvent() override;
+    virtual TimerEvent* newTimerEvent() override;
 
   public:
     struct event_base* getEventBasePtr() const { return sp_event_base_; }

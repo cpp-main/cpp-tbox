@@ -14,17 +14,17 @@ struct EpollFdSharedData;
 class EpollFdEvent : public FdEvent {
   public:
     explicit EpollFdEvent(EpollLoop *wp_loop);
-    ~EpollFdEvent() override;
+    virtual ~EpollFdEvent() override;
 
   public:
-    bool initialize(int fd, short events, Mode mode) override;
-    void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
+    virtual bool initialize(int fd, short events, Mode mode) override;
+    virtual void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
 
-    bool isEnabled() const override{ return is_enabled_; }
-    bool enable() override;
-    bool disable() override;
+    virtual bool isEnabled() const override{ return is_enabled_; }
+    virtual bool enable() override;
+    virtual bool disable() override;
 
-    Loop* getLoop() const override;
+    virtual Loop* getLoop() const override;
 
   public:
     static void OnEventCallback(int fd, uint32_t events, void *obj);
