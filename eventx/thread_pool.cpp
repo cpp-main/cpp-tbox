@@ -62,7 +62,7 @@ ThreadPool::~ThreadPool()
     delete d_;
 }
 
-bool ThreadPool::initialize(int min_thread_num, int max_thread_num)
+bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
 {
     if (d_->is_ready) {
         LogWarn("it has ready, cleanup() first");
@@ -70,8 +70,8 @@ bool ThreadPool::initialize(int min_thread_num, int max_thread_num)
     }
 
     if (max_thread_num < 0 || min_thread_num < 0 ||
-        (max_thread_num != 0 && min_thread_num > max_thread_num)) {
-        LogWarn("max_thread_num or min_thread_num invalid, max:%d, min:%d", max_thread_num, min_thread_num);
+        min_thread_num > max_thread_num || max_thread_num == 0) {
+        LogWarn("min_thread_num or max_thread_num invalid, min:%d, max:%d", min_thread_num, max_thread_num);
         return false;
     }
 
@@ -80,7 +80,7 @@ bool ThreadPool::initialize(int min_thread_num, int max_thread_num)
         d_->min_thread_num = min_thread_num;
         d_->max_thread_num = max_thread_num;
 
-        for (int i = 0; i < min_thread_num; ++i)
+        for (size_t i = 0; i < min_thread_num; ++i)
             if (!createWorker())
                 return false;
     }
@@ -124,8 +124,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
 
         d_->undo_tasks_token.at(level).push_back(token);
         //! 如果空间线程不够，且还可以再创建新的线程
-        if (d_->idle_thread_num == 0 &&
-            (d_->max_thread_num == 0 || d_->threads_cabinet.size() < d_->max_thread_num))
+        if (d_->idle_thread_num == 0 && d_->threads_cabinet.size() < d_->max_thread_num)
             createWorker();
     }
 
@@ -208,8 +207,8 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             /**
              * 为防止反复创建线程，此处做优化：
-             * 如果当前已有空闲的线程在等待，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求
-             * 则退出当前线程
+             * 如果当前已有空闲的线程在等待，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
+             * 但这也会引起另一个小问题：如果 min_thread_num = 0，那么一旦执行过一次，线程池中至少会保留一个工作线程
              */
             if (d_->idle_thread_num > 0 && d_->threads_cabinet.size() > d_->min_thread_num) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());

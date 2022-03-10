@@ -1,6 +1,7 @@
 #ifndef TBOX_THREAD_POOL_H
 #define TBOX_THREAD_POOL_H
 
+#include <limits>
 #include <functional>
 #include <tbox/event/forward.h>
 #include <tbox/base/cabinet_token.h>
@@ -27,11 +28,11 @@ class ThreadPool {
      * 初始化线程池，指定常驻线程数与最大线程数
      *
      * \param min_thread_num    常驻线程数，必须 >=0
-     * \param max_thread_num    最大线程数，必须 >=0，=0表示不限定最大线程数量
+     * \param max_thread_num    最大线程数，必须 >= min_thread_num 且 > 0
      *
      * \return bool     是否成功
      */
-    bool initialize(int min_thread_num = 0, int max_thread_num = 0);
+    bool initialize(size_t min_thread_num = 0, size_t max_thread_num = std::numeric_limits<size_t>::max());
 
     using NonReturnFunc = std::function<void ()>;
 

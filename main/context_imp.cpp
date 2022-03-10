@@ -39,7 +39,7 @@ ContextImp::~ContextImp()
 
 void ContextImp::fillDefaultConfig(Json &cfg) const
 {
-    cfg["thread_pool"] = R"({"min":1, "max":0})"_json;
+    cfg["thread_pool"] = R"({"min":1, "max":5})"_json;
 }
 
 bool ContextImp::initialize(const Json &cfg)
