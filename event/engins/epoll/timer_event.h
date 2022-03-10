@@ -29,14 +29,14 @@ class EpollTimerEvent : public TimerEvent {
 
   private:
     EpollLoop *wp_loop_;
-    bool is_inited_{ false };
-    bool is_enabled_{ false };
+    bool is_inited_  = false;
+    bool is_enabled_ = false;
 
-    std::chrono::milliseconds interval_{ 0 };
-    Mode mode_{ Mode::kOneshot };
+    std::chrono::milliseconds interval_;
+    Mode mode_ = Mode::kOneshot;
 
-    CallbackFunc cb_{ nullptr };
-    int cb_level_{ 0 };
+    CallbackFunc cb_;
+    int cb_level_ = 0;
 
     cabinet::Token token_;
 };

@@ -28,7 +28,7 @@ class LibevLoop : public CommonLoop {
 
   private:
     struct ev_loop *sp_ev_loop_;
-    TimerEvent *sp_exit_timer_;
+    TimerEvent *sp_exit_timer_ = nullptr;
 };
 
 }

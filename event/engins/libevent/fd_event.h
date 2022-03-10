@@ -32,10 +32,10 @@ class LibeventFdEvent : public FdEvent {
     LibeventLoop *wp_loop_;
 
     struct event event_;
-    bool is_inited_;
-    short events_;
+    bool is_inited_ = false;
+    short events_ = 0;
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

@@ -10,10 +10,7 @@ namespace tbox {
 namespace event {
 
 LibeventFdEvent::LibeventFdEvent(LibeventLoop *wp_loop) :
-    wp_loop_(wp_loop),
-    is_inited_(false),
-    events_(0),
-    cb_level_(0)
+    wp_loop_(wp_loop)
 {
     event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }

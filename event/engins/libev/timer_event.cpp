@@ -9,10 +9,7 @@ namespace tbox {
 namespace event {
 
 LibevTimerEvent::LibevTimerEvent(LibevLoop *wp_loop) :
-    wp_loop_(wp_loop),
-    is_inited_(false),
-    mode_(Mode::kOneshot),
-    cb_level_(0)
+    wp_loop_(wp_loop)
 {
     memset(&timer_ev_, 0, sizeof(timer_ev_));
 }

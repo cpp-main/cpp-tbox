@@ -32,10 +32,10 @@ class LibevFdEvent : public FdEvent {
   private:
     LibevLoop *wp_loop_;
     ev_io io_ev_;
-    bool is_inited_;
-    bool is_stop_after_trigger_;
+    bool is_inited_ = false;
+    bool is_stop_after_trigger_ = false;
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

@@ -32,13 +32,13 @@ class LibevTimerEvent : public TimerEvent {
   private:
     LibevLoop *wp_loop_;
     ev_timer timer_ev_;
-    bool is_inited_;
+    bool is_inited_ = false;
 
     std::chrono::milliseconds interval_;
-    Mode mode_;
+    Mode mode_ = Mode::kOneshot;
 
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

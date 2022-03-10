@@ -61,11 +61,11 @@ class EpollLoop : public CommonLoop {
     };
 
   private:
-    int  max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
-    int  epoll_fd_{ -1 };
-    bool keep_running_{ true };
+    int  max_loop_entries_ = DEFAULT_MAX_LOOP_ENTRIES;
+    int  epoll_fd_ = -1;
+    bool keep_running_ = true;
 
-    TimerEvent *sp_exit_timer_{ nullptr };
+    TimerEvent *sp_exit_timer_ = nullptr;
 
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;

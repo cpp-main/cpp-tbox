@@ -31,10 +31,10 @@ class LibeventTimerEvent : public TimerEvent {
   private:
     LibeventLoop *wp_loop_;
     struct event event_;
-    bool is_inited_;
-    struct timeval interval_;
+    bool is_inited_ = false;
+    struct timeval interval_ = { 0, 0 };
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

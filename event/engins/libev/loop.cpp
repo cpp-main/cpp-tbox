@@ -9,8 +9,7 @@ namespace tbox {
 namespace event {
 
 LibevLoop::LibevLoop() :
-    sp_ev_loop_(ev_loop_new()),
-    sp_exit_timer_(nullptr)
+    sp_ev_loop_(ev_loop_new())
 { }
 
 LibevLoop::~LibevLoop()
