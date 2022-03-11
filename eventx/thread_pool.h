@@ -57,6 +57,15 @@ class ThreadPool {
      */
     TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio = 0);
 
+    enum class TaskStatus {
+        kWaiting,   //! 等待中
+        kExecuting, //! 执行中
+        kNotFound   //! 未找到（可能已完成）
+    };
+
+    //! 获取任务的状态
+    TaskStatus getTaskStatus(TaskToken task_token) const;
+
     /**
      * 取消任务
      *

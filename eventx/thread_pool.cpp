@@ -134,6 +134,19 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     return token;
 }
 
+ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
+{
+    std::lock_guard<std::mutex> lg(d_->lock);
+
+    if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
+        return TaskStatus::kWaiting;
+
+    if (d_->doing_tasks_token.find(task_token) != d_->doing_tasks_token.end())
+        return TaskStatus::kExecuting;
+
+    return TaskStatus::kNotFound;
+}
+
 /**
  * 返回值如下：
  * 0: 取消成功
