@@ -12,17 +12,17 @@ class LibeventLoop;
 class LibeventFdEvent : public FdEvent {
   public:
     explicit LibeventFdEvent(LibeventLoop *wp_loop);
-    virtual ~LibeventFdEvent();
+    virtual ~LibeventFdEvent() override;
 
   public:
-    virtual bool initialize(int fd, short events, Mode mode);
-    virtual void setCallback(const CallbackFunc &cb);
+    virtual bool initialize(int fd, short events, Mode mode) override;
+    virtual void setCallback(const CallbackFunc &cb) override;
 
-    virtual bool isEnabled() const;
-    virtual bool enable();
-    virtual bool disable();
+    virtual bool isEnabled() const override;
+    virtual bool enable() override;
+    virtual bool disable() override;
 
-    virtual Loop* getLoop() const;
+    virtual Loop* getLoop() const override;
 
   protected:
     static void OnEventCallback(int fd, short events, void *args);
@@ -32,10 +32,10 @@ class LibeventFdEvent : public FdEvent {
     LibeventLoop *wp_loop_;
 
     struct event event_;
-    bool is_inited_;
-    short events_;
+    bool is_inited_ = false;
+    short events_ = 0;
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

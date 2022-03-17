@@ -20,14 +20,14 @@ struct EpollFdSharedData;
 class EpollLoop : public CommonLoop {
   public:
     explicit EpollLoop();
-    virtual ~EpollLoop();
+    virtual ~EpollLoop() override;
 
   public:
-    virtual void runLoop(Mode mode);
-    virtual void exitLoop(const std::chrono::milliseconds &wait_time);
+    virtual void runLoop(Mode mode) override;
+    virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual FdEvent* newFdEvent();
-    virtual TimerEvent* newTimerEvent();
+    virtual FdEvent* newFdEvent() override;
+    virtual TimerEvent* newTimerEvent() override;
 
   public:
     inline int epollFd() const { return epoll_fd_; }
@@ -61,11 +61,11 @@ class EpollLoop : public CommonLoop {
     };
 
   private:
-    int  max_loop_entries_{ DEFAULT_MAX_LOOP_ENTRIES };
-    int  epoll_fd_{ -1 };
-    bool keep_running_{ true };
+    int  max_loop_entries_ = DEFAULT_MAX_LOOP_ENTRIES;
+    int  epoll_fd_ = -1;
+    bool keep_running_ = true;
 
-    TimerEvent *sp_exit_timer_{ nullptr };
+    TimerEvent *sp_exit_timer_ = nullptr;
 
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;

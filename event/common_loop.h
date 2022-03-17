@@ -19,27 +19,27 @@ namespace event {
 
 class CommonLoop : public Loop {
   public:
-    ~CommonLoop() override;
+    virtual ~CommonLoop() override;
 
   public:
-    bool isInLoopThread() override;
-    bool isRunning() const override;
+    virtual bool isInLoopThread() override;
+    virtual bool isRunning() const override;
 
-    void runInLoop(const Func &func) override;
-    void runNext(const Func &func) override;
-    void run(const Func &func) override;
+    virtual void runInLoop(const Func &func) override;
+    virtual void runNext(const Func &func) override;
+    virtual void run(const Func &func) override;
 
-    void setStatEnable(bool enable) override;
-    bool isStatEnabled() const override;
-    Stat getStat() const override;
-    void resetStat() override;
+    virtual void setStatEnable(bool enable) override;
+    virtual bool isStatEnabled() const override;
+    virtual Stat getStat() const override;
+    virtual void resetStat() override;
 
   public:
     void beginEventProcess();
     void endEventProcess();
 
     //! 信号处理相关
-    SignalEvent* newSignalEvent() override;
+    virtual SignalEvent* newSignalEvent() override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     static void HandleSignal(int signo);

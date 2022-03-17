@@ -3,6 +3,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 
 #include "thread_pool.h"
 
@@ -164,6 +165,62 @@ TEST(ThreadPool, prio) {
 
     tp->cleanup();
 
+    delete tp;
+    delete loop;
+}
+
+/**
+ * 优先级
+ *
+ * 期望优先级最高的先被执行
+ */
+TEST(ThreadPool, getStatus) {
+    Loop *loop = Loop::New();
+
+    ThreadPool *tp = new ThreadPool(loop);
+    ASSERT_TRUE(tp->initialize(1,1));
+
+    auto task1 = tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
+    auto task2 = tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
+
+    auto t1 = loop->newTimerEvent();
+    t1->initialize(chrono::milliseconds(50), Event::Mode::kOneshot);
+    t1->enable();
+    t1->setCallback(
+        [&] {
+            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kExecuting);
+            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kWaiting);
+        }
+    );
+
+    auto t2 = loop->newTimerEvent();
+    t2->initialize(chrono::milliseconds(150), Event::Mode::kOneshot);
+    t2->enable();
+    t2->setCallback(
+        [&] {
+            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
+            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kExecuting);
+        }
+    );
+
+    auto t3 = loop->newTimerEvent();
+    t3->initialize(chrono::milliseconds(250), Event::Mode::kOneshot);
+    t3->enable();
+    t3->setCallback(
+        [&] {
+            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
+            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kNotFound);
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(300));
+    loop->runLoop();
+
+    tp->cleanup();
+
+    delete t3;
+    delete t2;
+    delete t1;
     delete tp;
     delete loop;
 }

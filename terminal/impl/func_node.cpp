@@ -2,7 +2,7 @@
 
 namespace tbox::terminal {
 FuncNode::FuncNode(const Func &func, const std::string &help) :
-    Node(help), func_(func), help_(help)
+    Node(help), func_(func)
 { }
 
 void FuncNode::execute(const Session &s, const Args &a) const

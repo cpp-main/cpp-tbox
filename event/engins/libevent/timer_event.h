@@ -12,17 +12,17 @@ class LibeventLoop;
 class LibeventTimerEvent : public TimerEvent {
   public:
     explicit LibeventTimerEvent(LibeventLoop *wp_loop);
-    virtual ~LibeventTimerEvent();
+    virtual ~LibeventTimerEvent() override;
 
   public:
-    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);
-    virtual void setCallback(const CallbackFunc &cb);
+    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode) override;
+    virtual void setCallback(const CallbackFunc &cb) override;
 
-    virtual bool isEnabled() const;
-    virtual bool enable();
-    virtual bool disable();
+    virtual bool isEnabled() const override;
+    virtual bool enable() override;
+    virtual bool disable() override;
 
-    virtual Loop* getLoop() const;
+    virtual Loop* getLoop() const override;
 
   protected:
     static void OnEventCallback(int, short, void *args);
@@ -31,10 +31,10 @@ class LibeventTimerEvent : public TimerEvent {
   private:
     LibeventLoop *wp_loop_;
     struct event event_;
-    bool is_inited_;
-    struct timeval interval_;
+    bool is_inited_ = false;
+    struct timeval interval_ = { 0, 0 };
     CallbackFunc cb_;
-    int cb_level_;
+    int cb_level_ = 0;
 };
 
 }

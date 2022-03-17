@@ -12,31 +12,31 @@ class EpollLoop;
 class EpollTimerEvent : public TimerEvent {
   public:
     explicit EpollTimerEvent(EpollLoop *wp_loop);
-    virtual ~EpollTimerEvent();
+    virtual ~EpollTimerEvent() override;
 
   public:
-    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode);
-    virtual void setCallback(const CallbackFunc &cb);
+    virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode) override;
+    virtual void setCallback(const CallbackFunc &cb) override;
 
-    virtual bool isEnabled() const;
-    virtual bool enable();
-    virtual bool disable();
+    virtual bool isEnabled() const override;
+    virtual bool enable() override;
+    virtual bool disable() override;
 
-    virtual Loop* getLoop() const;
+    virtual Loop* getLoop() const override;
 
   protected:
     void onEvent();
 
   private:
     EpollLoop *wp_loop_;
-    bool is_inited_{ false };
-    bool is_enabled_{ false };
+    bool is_inited_  = false;
+    bool is_enabled_ = false;
 
-    std::chrono::milliseconds interval_{ 0 };
-    Mode mode_{ Mode::kOneshot };
+    std::chrono::milliseconds interval_;
+    Mode mode_ = Mode::kOneshot;
 
-    CallbackFunc cb_{ nullptr };
-    int cb_level_{ 0 };
+    CallbackFunc cb_;
+    int cb_level_ = 0;
 
     cabinet::Token token_;
 };

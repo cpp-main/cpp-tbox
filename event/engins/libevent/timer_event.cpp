@@ -11,9 +11,7 @@ namespace tbox {
 namespace event {
 
 LibeventTimerEvent::LibeventTimerEvent(LibeventLoop *wp_loop) :
-    wp_loop_(wp_loop),
-    is_inited_(false),
-    cb_level_(0)
+    wp_loop_(wp_loop)
 {
     event_assign(&event_, NULL, -1, 0, NULL, NULL);
 }

@@ -121,13 +121,7 @@ void EpollLoop::runLoop(Mode mode)
         /// If the receiver array size is full, increase its size with 1.5 times.
         if (fds >= max_loop_entries_) {
             max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
-#if 0
-            std::vector<struct epoll_event> temp_events;
-            temp_events.resize(max_loop_entries_);
-            events.swap(temp_events);
-#else
             events.resize(max_loop_entries_);
-#endif
         }
 
     } while (keep_running_);

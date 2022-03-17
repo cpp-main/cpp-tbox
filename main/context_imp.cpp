@@ -39,7 +39,7 @@ ContextImp::~ContextImp()
 
 void ContextImp::fillDefaultConfig(Json &cfg) const
 {
-    cfg["thread_pool"] = R"({"min":1, "max":0})"_json;
+    cfg["thread_pool"] = R"({"min":1, "max":5})"_json;
 }
 
 bool ContextImp::initialize(const Json &cfg)
@@ -116,7 +116,7 @@ void ContextImp::buildTerminalNodes()
     TerminalNodes *wp_nodes = sp_terminal_;
 
     auto ctx_node = wp_nodes->createDirNode("This is Context directory");
-    wp_nodes->mountNode(wp_nodes->rootNode(), ctx_node, "context");
+    wp_nodes->mountNode(wp_nodes->rootNode(), ctx_node, "ctx");
 
     auto loop_node = wp_nodes->createDirNode("This is Loop directory");
     wp_nodes->mountNode(ctx_node, loop_node, "loop");

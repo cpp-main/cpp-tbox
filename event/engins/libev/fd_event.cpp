@@ -9,10 +9,7 @@ namespace tbox {
 namespace event {
 
 LibevFdEvent::LibevFdEvent(LibevLoop *wp_loop) :
-    wp_loop_(wp_loop),
-    is_inited_(false),
-    is_stop_after_trigger_(false),
-    cb_level_(0)
+    wp_loop_(wp_loop)
 {
     memset(&io_ev_, 0, sizeof(io_ev_));
 }
