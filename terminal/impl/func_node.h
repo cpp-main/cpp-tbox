@@ -15,7 +15,6 @@ class FuncNode : public Node {
 
   private:
     Func func_;
-    std::string help_;
 };
 
 }
