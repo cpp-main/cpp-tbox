@@ -10,23 +10,18 @@ StateMachine::StateMachine()
 StateMachine::~StateMachine()
 { }
 
-StateMachine::StateToken StateMachine::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
+bool StateMachine::newState(StateID state, const ActionFunc &enter_action, const ActionFunc &exit_action)
 {
     LogUndo();
-    return StateToken();
+    return false;
 }
 
-void StateMachine::setInitState(StateToken init_state)
-{
-    LogUndo();
-}
-
-void StateMachine::setTermState(StateToken init_state)
+void StateMachine::setInitState(StateID state)
 {
     LogUndo();
 }
 
-bool StateMachine::addRoute(StateToken from, EventID event, StateToken to, const GuardFunc &guard, const ActionFunc &action)
+bool StateMachine::addRoute(StateID from, EventID event, StateID to, const GuardFunc &guard, const ActionFunc &action)
 {
     LogUndo();
     return false;
