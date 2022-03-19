@@ -9,3 +9,4 @@ app_y += util
 app_y += terminal
 app_y += main
 app_y += sample
+app_y += state_machine
