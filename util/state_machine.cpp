@@ -100,9 +100,6 @@ bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_acti
     auto new_state = new State { state_id, enter_action, exit_action };
     states_[state_id] = new_state;
 
-    if (curr_state_ == nullptr)
-        curr_state_ = new_state;
-
     return true;
 }
 
