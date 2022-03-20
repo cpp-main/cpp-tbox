@@ -16,16 +16,16 @@ class StateMachine::Impl {
     ~Impl();
 
   public:
-    bool newState(StateID state, const ActionFunc &enter_action, const ActionFunc &exit_action);
-    bool addRoute(StateID from, EventID event, StateID to, const GuardFunc &guard, const ActionFunc &action);
-    bool start(StateID init_state);
-    bool run(EventID event);
+    bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
+    bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
+    bool start(StateID init_state_id);
+    bool run(EventID event_id);
     StateID currentState() const;
 
   private:
     struct Route {
         EventID event_id;
-        StateID next_state;
+        StateID next_state_id;
         GuardFunc  guard;
         ActionFunc action;
     };
@@ -37,7 +37,7 @@ class StateMachine::Impl {
         vector<Route> routes;
     };
 
-    State* findState(StateID state) const;
+    State* findState(StateID state_id) const;
 
     State *curr_state_ = nullptr;
     map<StateID, State*> states_;
@@ -53,24 +53,25 @@ StateMachine::~StateMachine()
     delete impl_;
 }
 
-bool StateMachine::newState(StateID state, const ActionFunc &enter_action, const ActionFunc &exit_action)
+bool StateMachine::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
 {
-    return impl_->newState(state, enter_action, exit_action);
+    return impl_->newState(state_id, enter_action, exit_action);
 }
 
-bool StateMachine::addRoute(StateID from, EventID event, StateID to, const GuardFunc &guard, const ActionFunc &action)
+bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
+                            const GuardFunc &guard, const ActionFunc &action)
 {
-    return impl_->addRoute(from, event, to, guard, action);
+    return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action);
 }
 
-bool StateMachine::start(StateID init_state)
+bool StateMachine::start(StateID init_state_id)
 {
-    return impl_->start(init_state);
+    return impl_->start(init_state_id);
 }
 
-bool StateMachine::run(EventID event)
+bool StateMachine::run(EventID event_id)
 {
-    return impl_->run(event);
+    return impl_->run(event_id);
 }
 
 StateMachine::StateID StateMachine::currentState() const
@@ -89,13 +90,15 @@ StateMachine::Impl::~Impl()
     states_.clear();
 }
 
-bool StateMachine::Impl::newState(StateID state, const ActionFunc &enter_action, const ActionFunc &exit_action)
+bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
 {
-    if (states_.find(state) != states_.end())
+    if (states_.find(state_id) != states_.end()) {
+        LogWarn("state %u exist", state_id);
         return false;
+    }
 
-    auto new_state = new State { state, enter_action, exit_action };
-    states_[state] = new_state;
+    auto new_state = new State { state_id, enter_action, exit_action };
+    states_[state_id] = new_state;
 
     if (curr_state_ == nullptr)
         curr_state_ = new_state;
@@ -103,49 +106,53 @@ bool StateMachine::Impl::newState(StateID state, const ActionFunc &enter_action,
     return true;
 }
 
-bool StateMachine::Impl::addRoute(StateID from, EventID event, StateID to, const GuardFunc &guard, const ActionFunc &action)
+bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
+                                  const GuardFunc &guard, const ActionFunc &action)
 {
-    auto from_state = findState(from);
-    auto to_state = findState(to);
-    if (from_state == nullptr || to_state == nullptr)
+    auto from_state = findState(from_state_id);
+    auto to_state = findState(to_state_id);
+    if (from_state == nullptr || to_state == nullptr) {
+        LogWarn("either from or to state not exist");
         return false;
+    }
 
-    from_state->routes.emplace_back(Route{event, to, guard, action});
+    from_state->routes.emplace_back(Route{ event_id, to_state_id, guard, action });
     return true;
 }
 
-bool StateMachine::Impl::start(StateID init_state)
+bool StateMachine::Impl::start(StateID init_state_id)
 {
     if (curr_state_ != nullptr) {
         LogWarn("it's already started");
         return false;
     }
 
-    auto state = findState(init_state);
-    if (state == nullptr) {
-        LogWarn("state %u not found", init_state);
+    auto init_state = findState(init_state_id);
+    if (init_state == nullptr) {
+        LogWarn("state %u not found", init_state_id);
         return false;
     }
 
     ++cb_level_;
-    if (state->enter_action)
-        state->enter_action();
+    if (init_state->enter_action)
+        init_state->enter_action();
     --cb_level_;
 
-    curr_state_ = state;
+    curr_state_ = init_state;
     return true;
 }
 
-bool StateMachine::Impl::run(EventID event)
+bool StateMachine::Impl::run(EventID event_id)
 {
     if (curr_state_ == nullptr) {
         LogWarn("need start first");
         return false;
     }
 
+    //! 找出可行的路径
     auto iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
-        [event] (const Route &item) -> bool {
-            if (item.event_id != event)
+        [event_id] (const Route &item) -> bool {
+            if (item.event_id != 0 && item.event_id != event_id)
                 return false;
             if (item.guard != nullptr && !item.guard())
                 return false;
@@ -157,7 +164,7 @@ bool StateMachine::Impl::run(EventID event)
         return false;
 
     const Route &route = *iter;
-    State *next_state = findState(route.next_state);
+    State *next_state = findState(route.next_state_id);
     assert(next_state != nullptr);
 
     ++cb_level_;
@@ -185,10 +192,10 @@ StateMachine::StateID StateMachine::Impl::currentState() const
     return curr_state_->id;
 }
 
-StateMachine::Impl::State* StateMachine::Impl::findState(StateID state) const
+StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
 {
     try {
-        return states_.at(state);
+        return states_.at(state_id);
     } catch (const out_of_range &e) {
         return nullptr;
     }
