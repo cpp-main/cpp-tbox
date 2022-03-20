@@ -28,8 +28,6 @@ class StateMachine {
      * \param   exit_action     退出该状态时的动作，nullptr表示无动作
      *
      * \return  bool    成功与否，重复创建会失败
-     *
-     * \note    默认创建的第一个状态就是初始状态
      */
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
 
@@ -69,7 +67,12 @@ class StateMachine {
      */
     bool run(EventID event_id);
 
-    //! 获取当前状态ID
+    /**
+     * \brief   获取当前状态ID
+     *
+     * \return  >0 当前状态ID
+     * \return  =0 状态机未启动
+     */
     StateID currentState() const;
 
   private:
