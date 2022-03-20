@@ -27,12 +27,11 @@ class StateMachine {
      * \param   enter_action    进入该状态时的动作
      * \param   exit_action     退出该状态时的动作
      *
-     * \return  bool    成功与否
+     * \return  bool    成功与否，重复创建会失败
+     *
+     * \note    默认创建的第一个状态就是初始状态
      */
     bool newState(StateID state, const ActionFunc &enter_action, const ActionFunc &exit_action);
-
-     //! 设置初始状态
-    void setInitState(StateID state);
 
     /**
      * \brief   添加状态转换路由
@@ -43,9 +42,14 @@ class StateMachine {
      * \param   guard   判定条件
      * \param   action  转换中执行的动作
      *
-     * \return  bool    成功与否
+     * \return  bool    成功与否，from，to状态不存在时会失败
      */
     bool addRoute(StateID from, EventID event, StateID to, const GuardFunc &guard, const ActionFunc &action);
+
+    /**
+     * \brief   启动状态机，并指定初始状态
+     */
+    bool start(StateID init_state);
 
     /**
      * \brief   运行状态机
