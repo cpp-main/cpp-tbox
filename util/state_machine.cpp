@@ -19,6 +19,7 @@ class StateMachine::Impl {
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
     bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
     bool start(StateID init_state_id);
+    void stop();
     bool run(EventID event_id);
     StateID currentState() const;
 
@@ -67,6 +68,11 @@ bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_
 bool StateMachine::start(StateID init_state_id)
 {
     return impl_->start(init_state_id);
+}
+
+void StateMachine::stop()
+{
+    impl_->stop();
 }
 
 bool StateMachine::run(EventID event_id)
@@ -137,6 +143,19 @@ bool StateMachine::Impl::start(StateID init_state_id)
 
     curr_state_ = init_state;
     return true;
+}
+
+void StateMachine::Impl::stop()
+{
+    if (curr_state_ == nullptr)
+        return;
+
+    ++cb_level_;
+    if (curr_state_->exit_action)
+        curr_state_->exit_action();
+    --cb_level_;
+
+    curr_state_ = nullptr;
 }
 
 bool StateMachine::Impl::run(EventID event_id)

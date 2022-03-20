@@ -157,3 +157,27 @@ TEST(StateMachine, AnyEvent)
     sm.run(EVENT_3);
     EXPECT_EQ(sm.currentState(), STATE_B);
 }
+
+TEST(StateMachine, Restart)
+{
+    StateMachine sm;
+
+    int a_enter_counter = 0;
+    int a_exit_counter = 0;
+    int b_enter_counter = 0;
+    int b_exit_counter = 0;
+
+    sm.newState(STATE_A, [&] { ++a_enter_counter; }, [&] { ++a_exit_counter; });
+    sm.newState(STATE_B, [&] { ++b_enter_counter; }, [&] { ++b_exit_counter; });
+
+    sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
+    sm.start(STATE_A);
+    EXPECT_EQ(a_enter_counter, 1);
+    EXPECT_TRUE(sm.run(EVENT_1));
+    EXPECT_EQ(a_exit_counter, 1);
+    EXPECT_EQ(b_enter_counter, 1);
+    sm.stop();
+    EXPECT_EQ(b_exit_counter, 1);
+    sm.start(STATE_A);
+    EXPECT_EQ(a_enter_counter, 2);
+}

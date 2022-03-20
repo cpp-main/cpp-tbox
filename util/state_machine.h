@@ -57,6 +57,9 @@ class StateMachine {
      */
     bool start(StateID init_state);
 
+    //! 停止状态机
+    void stop();
+
     /**
      * \brief   运行状态机
      *
