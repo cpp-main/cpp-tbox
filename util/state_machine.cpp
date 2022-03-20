@@ -7,7 +7,7 @@
 #include <algorithm>
 
 namespace tbox {
-namespace sm {
+namespace util {
 
 using namespace std;
 

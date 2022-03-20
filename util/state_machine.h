@@ -4,7 +4,7 @@
 #include <functional>
 
 namespace tbox {
-namespace sm {
+namespace util {
 
 //! 状态机
 class StateMachine {

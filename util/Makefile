@@ -13,6 +13,7 @@ HEAD_FILES = \
 	split_cmdline.h \
 	serializer.h \
 	time_counter.h \
+	state_machine.h \
 
 CPP_SRC_FILES = \
 	async_data_stream.cpp \
@@ -24,6 +25,7 @@ CPP_SRC_FILES = \
 	split_cmdline.cpp \
 	serializer.cpp \
 	time_counter.cpp \
+	state_machine.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -37,6 +39,7 @@ TEST_CPP_SRC_FILES = \
 	split_cmdline_test.cpp \
 	serializer_test.cpp \
 	time_counter_test.cpp \
+	state_machine_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 
