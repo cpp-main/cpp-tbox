@@ -10,7 +10,8 @@
 
 #include <tbox/event/forward.h>
 
-namespace tbox::eventx {
+namespace tbox {
+namespace eventx {
 
 //! 定时任务管理器
 //! 让开发者轻松创建定时任务而不必关心定时器的生命期
@@ -45,6 +46,7 @@ class TimerPool {
     Impl *impl_ = nullptr;
 };
 
+}
 }
 
 #endif //TBOX_EVENTX_TIMER_POOL_H_20220119

@@ -7,7 +7,8 @@
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 
-namespace tbox::eventx {
+namespace tbox {
+namespace eventx {
 
 class TimerPool::Impl {
   public:
@@ -153,4 +154,5 @@ void TimerPool::cleanup()
     impl_->cleanup();
 }
 
+}
 }
