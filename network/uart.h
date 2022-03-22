@@ -37,10 +37,10 @@ class Uart : public ByteStream {
 
   public:
     //! 实现ByteStream的接口
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
-    bool send(const void *data_ptr, size_t data_size) override;
-    void bind(ByteStream *receiver) override;
-    void unbind() override;
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual bool send(const void *data_ptr, size_t data_size) override;
+    virtual void bind(ByteStream *receiver) override;
+    virtual void unbind() override;
 
   public:
     bool enable();

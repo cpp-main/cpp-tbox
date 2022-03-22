@@ -21,10 +21,10 @@ class StdinStream : public ByteStream {
     IMMOVABLE(StdinStream);
 
   public:
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
-    bool send(const void *data_ptr, size_t data_size) override { return false; }
-    void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
-    void unbind() override { buff_fd_.unbind(); }
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual bool send(const void *data_ptr, size_t data_size) override { return false; }
+    virtual void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
+    virtual void unbind() override { buff_fd_.unbind(); }
 
     bool enable();
     bool disable();
@@ -41,10 +41,10 @@ class StdoutStream : public ByteStream {
     IMMOVABLE(StdoutStream);
 
   public:
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override { }
-    bool send(const void *data_ptr, size_t data_size) override;
-    void bind(ByteStream *receiver) override { }
-    void unbind() override { }
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override { }
+    virtual bool send(const void *data_ptr, size_t data_size) override;
+    virtual void bind(ByteStream *receiver) override { }
+    virtual void unbind() override { }
 
     bool enable();
     bool disable();
@@ -61,10 +61,10 @@ class StdioStream : public ByteStream {
     IMMOVABLE(StdioStream);
 
   public:
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
-    bool send(const void *data_ptr, size_t data_size) override;
-    void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
-    void unbind() override { in_buff_fd_.unbind(); }
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual bool send(const void *data_ptr, size_t data_size) override;
+    virtual void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
+    virtual void unbind() override { in_buff_fd_.unbind(); }
 
     bool enable();
     bool disable();

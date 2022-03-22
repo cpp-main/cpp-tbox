@@ -34,10 +34,10 @@ class TcpConnection : public ByteStream {
 
   public:
     //! 实现ByteStream的接口
-    void setReceiveCallback(const ReceiveCallback &cb, size_t threshold);
-    void bind(ByteStream *receiver);
-    void unbind() override;
-    bool send(const void *data_ptr, size_t data_size);
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual void bind(ByteStream *receiver) override;
+    virtual void unbind() override;
+    virtual bool send(const void *data_ptr, size_t data_size) override;
 
   protected:
     void onSocketClosed();
