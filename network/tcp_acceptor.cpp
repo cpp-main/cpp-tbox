@@ -106,10 +106,10 @@ void TcpAcceptor::cleanup()
 
     //! 对于Unix Domain的Socket在退出的时候要删除对应的socket文件
     if (bind_addr_.type() == SockAddr::Type::kLocal) {
-        const char *socket_file = bind_addr_.toString().c_str();
-        int ret = ::unlink(socket_file);
+        auto socket_file = bind_addr_.toString();
+        int ret = ::unlink(socket_file.c_str());
         if (ret != 0)
-            LogWarn("remove file %s fail. errno:%d, %s", socket_file, errno, strerror(errno));
+            LogWarn("remove file %s fail. errno:%d, %s", socket_file.c_str(), errno, strerror(errno));
     }
 }
 
