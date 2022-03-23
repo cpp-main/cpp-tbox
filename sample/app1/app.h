@@ -10,11 +10,11 @@ class App : public tbox::main::App
   public:
     ~App();
 
-    bool construct(tbox::main::Context &ctx) override;
-    bool initialize(const tbox::Json &cfg) override;
-    bool start() override;
-    void stop() override;
-    void cleanup() override;
+    virtual bool construct(tbox::main::Context &ctx) override;
+    virtual bool initialize(const tbox::Json &cfg) override;
+    virtual bool start() override;
+    virtual void stop() override;
+    virtual void cleanup() override;
 };
 
 }
