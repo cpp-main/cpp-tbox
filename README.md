@@ -6,12 +6,12 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 #### 适用环境
 
 - Linux 环境，主要是针对服务型应用的；
-- C++11 以上，都2021年了，C++11之前的古老版本就让它进坟墓吧。
+- C++11 以上，都2022年了，C++11之前的古老版本就让它进坟墓吧。
 
 #### 模块介绍
 
 - base，基础库，含日志打印、常用工具等；
-- util，工具库，在业务代码中可能会用到的库；
+- util，工具库，在业务代码中可能会用到的库，含`PidFile`,`Serializer`,`ArgumentParser`,`StateMachine`,`TimeCounter`等；
 - event，事件库，实现Fd,Timer,Signal三种事件驱动；
 - eventx，事件扩展库，含 ThreadPool 线程池模块，专用于处理阻塞性事务；TimerPool 定时器池模块；
 - network，网络库，实现了串口、终端、UDP、TCP 通信模块；
