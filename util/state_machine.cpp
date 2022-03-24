@@ -130,6 +130,11 @@ bool StateMachine::Impl::start(StateID init_state_id)
         return false;
     }
 
+    if (cb_level_ != 0) {
+        LogWarn("recursion invoke");
+        return false;
+    }
+
     auto init_state = findState(init_state_id);
     if (init_state == nullptr) {
         LogWarn("state %u not found", init_state_id);
@@ -150,6 +155,11 @@ void StateMachine::Impl::stop()
     if (curr_state_ == nullptr)
         return;
 
+    if (cb_level_ != 0) {
+        LogWarn("recursion invoke");
+        return;
+    }
+
     ++cb_level_;
     if (curr_state_->exit_action)
         curr_state_->exit_action();
@@ -162,6 +172,11 @@ bool StateMachine::Impl::run(EventID event_id)
 {
     if (curr_state_ == nullptr) {
         LogWarn("need start first");
+        return false;
+    }
+
+    if (cb_level_ != 0) {
+        LogWarn("recursion invoke");
         return false;
     }
 
