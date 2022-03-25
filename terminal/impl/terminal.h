@@ -6,7 +6,8 @@
 #include "../terminal.h"
 #include "node.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class SessionContext;
 
@@ -72,6 +73,7 @@ class Terminal::Impl {
     NodeToken root_token_;
 };
 
+}
 }
 
 #endif //TBOX_TELNETD_TERMINAL_IMPL_H_20220128

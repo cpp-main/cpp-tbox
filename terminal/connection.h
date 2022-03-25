@@ -3,7 +3,8 @@
 
 #include "types.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class Connection {
   public:
@@ -16,6 +17,7 @@ class Connection {
     virtual ~Connection() { }
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_CONNECTION_H_20220214

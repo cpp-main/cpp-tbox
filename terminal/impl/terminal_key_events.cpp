@@ -9,7 +9,8 @@
 #include "func_node.h"
 #include "../connection.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace std;
 
@@ -181,4 +182,5 @@ void Terminal::Impl::onEndKey(SessionContext *s)
     }
 }
 
+}
 }

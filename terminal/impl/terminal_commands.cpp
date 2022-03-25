@@ -12,7 +12,8 @@
 #include "func_node.h"
 #include "../connection.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace std;
 
@@ -347,4 +348,5 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
     s->wp_conn->send(s->token, ss.str());
 }
 
+}
 }

@@ -1,7 +1,8 @@
 #include "telnetd.h"
 #include "../impl/service/telnetd.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 Telnetd::Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
     impl_(new Impl(wp_loop, wp_terminal))
@@ -34,4 +35,5 @@ void Telnetd::cleanup()
     return impl_->cleanup();
 }
 
+}
 }

@@ -3,7 +3,8 @@
 
 #include "impl/terminal.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 Terminal::Terminal() :
     impl_(new Impl)
@@ -81,4 +82,5 @@ bool Terminal::mountNode(const NodeToken &parent, const NodeToken &child, const 
     return impl_->mountNode(parent, child, name);
 }
 
+}
 }

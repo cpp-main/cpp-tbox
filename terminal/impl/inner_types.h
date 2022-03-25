@@ -3,7 +3,8 @@
 
 #include "../types.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 enum class NodeType { kFunc, kDir };
 
@@ -18,6 +19,7 @@ struct NodeInfo {
 using PathItem  = std::pair<std::string, NodeToken>;
 using Path      = std::vector<PathItem>;
 
+}
 }
 
 #endif //TBOX_TERMINAL_INNER_TYPES_H_20220214

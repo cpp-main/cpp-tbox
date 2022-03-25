@@ -3,7 +3,8 @@
 
 #include <tbox/event/loop.h>
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class TerminalInteract;
 
@@ -23,6 +24,7 @@ class Telnetd {
     Impl *impl_ = nullptr;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_TELNETD_H_20220127

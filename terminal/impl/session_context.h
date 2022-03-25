@@ -6,7 +6,8 @@
 #include "key_event_scanner.h"
 #include "../session.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 struct SessionContext {
     Connection *wp_conn = nullptr;
@@ -27,6 +28,7 @@ struct SessionContext {
     uint16_t window_height = 0;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_SESSION_IMP_H_20220204

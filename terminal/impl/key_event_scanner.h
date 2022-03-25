@@ -3,7 +3,8 @@
 
 #include <cstdint>
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 /**
  * 关键词扫描器
@@ -95,6 +96,7 @@ class KeyEventScanner {
     Step step_ = Step::kNone;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_KEYEVENT_SCANNER_H_20220203

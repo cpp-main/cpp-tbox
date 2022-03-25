@@ -6,7 +6,8 @@
 #include "dir_node.h"
 #include "func_node.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace std;
 
@@ -89,4 +90,5 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
     return true;
 }
 
+}
 }

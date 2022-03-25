@@ -1,6 +1,7 @@
 #include "dir_node.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 bool DirNode::addChild(const NodeToken &nt, const std::string &child_name)
 {
@@ -28,4 +29,5 @@ void DirNode::children(std::vector<NodeInfo> &vec) const
     }
 }
 
+}
 }

@@ -20,7 +20,7 @@ using namespace network;
 class TcpRpc::Impl : Connection {
   public:
     Impl(Loop *wp_loop, TerminalInteract *wp_terminal);
-    virtual ~Impl();
+    virtual ~Impl() override;
 
   public:
     bool initialize(const std::string &bind_addr);
@@ -29,10 +29,10 @@ class TcpRpc::Impl : Connection {
     void cleanup();
 
   public:
-    bool send(const SessionToken &st, char ch) override;
-    bool send(const SessionToken &st, const std::string &str) override;
-    bool endSession(const SessionToken &st) override;
-    bool isValid(const SessionToken &st) const override;
+    virtual bool send(const SessionToken &st, char ch) override;
+    virtual bool send(const SessionToken &st, const std::string &str) override;
+    virtual bool endSession(const SessionToken &st) override;
+    virtual bool isValid(const SessionToken &st) const override;
 
   protected:
     bool send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size);

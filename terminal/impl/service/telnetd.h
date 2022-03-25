@@ -8,7 +8,8 @@
 #include "../../service/telnetd.h"
 #include "../../connection.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace event;
 using namespace network;
@@ -16,7 +17,7 @@ using namespace network;
 class Telnetd::Impl : public Connection {
   public:
     Impl(Loop *wp_loop, TerminalInteract *wp_terminal);
-    virtual ~Impl();
+    virtual ~Impl() override;
 
   public:
     bool initialize(const std::string &bind_addr);
@@ -25,10 +26,10 @@ class Telnetd::Impl : public Connection {
     void cleanup();
 
   public:
-    bool send(const SessionToken &st, char ch) override;
-    bool send(const SessionToken &st, const std::string &str) override;
-    bool endSession(const SessionToken &st) override;
-    bool isValid(const SessionToken &st) const override;
+    virtual bool send(const SessionToken &st, char ch) override;
+    virtual bool send(const SessionToken &st, const std::string &str) override;
+    virtual bool endSession(const SessionToken &st) override;
+    virtual bool isValid(const SessionToken &st) const override;
 
   protected:
     enum Cmd {
@@ -86,6 +87,7 @@ class Telnetd::Impl : public Connection {
     std::map<TcpServer::ClientToken, SessionToken> client_to_session_;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_TELNETD_IMPL_H_20220214

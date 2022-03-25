@@ -3,7 +3,8 @@
 
 #include "types.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class Connection;
 
@@ -28,6 +29,7 @@ class TerminalInteract {
     virtual ~TerminalInteract() { }
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_INTERACT_H_20220214

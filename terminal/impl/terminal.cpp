@@ -9,7 +9,8 @@
 #include "dir_node.h"
 #include "func_node.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace std;
 
@@ -216,4 +217,5 @@ void Terminal::Impl::printHelp(SessionContext *s)
     }
 }
 
+}
 }

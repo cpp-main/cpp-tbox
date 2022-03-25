@@ -3,7 +3,8 @@
 
 #include "types.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class TerminalNodes {
   public:
@@ -19,6 +20,7 @@ class TerminalNodes {
     virtual ~TerminalNodes() { }
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_NODES_H_20220214

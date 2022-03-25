@@ -8,7 +8,8 @@
 
 #include "../../terminal_interact.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 using namespace std;
 using namespace std::placeholders;
@@ -256,4 +257,5 @@ void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const u
     }
 }
 
+}
 }

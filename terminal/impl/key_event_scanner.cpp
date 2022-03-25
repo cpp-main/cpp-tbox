@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <cctype>
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 void KeyEventScanner::start()
 {
@@ -218,4 +219,5 @@ KeyEventScanner::Status KeyEventScanner::stop()
     }
 }
 
+}
 }

@@ -3,7 +3,8 @@
 
 #include "inner_types.h"
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class Node {
   public:
@@ -17,6 +18,7 @@ class Node {
     std::string help_;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_NODE_H_20220207

@@ -4,13 +4,14 @@
 #include "node.h"
 #include <map>
 
-namespace tbox::terminal {
+namespace tbox {
+namespace terminal {
 
 class DirNode : public Node {
   public:
     using Node::Node;
 
-    NodeType type() const override { return NodeType::kDir; }
+    virtual NodeType type() const override { return NodeType::kDir; }
 
     bool addChild(const NodeToken &nt, const std::string &child_name);
     NodeToken findChild(const std::string &child_name) const;
@@ -20,6 +21,7 @@ class DirNode : public Node {
     std::map<std::string, NodeToken> children_;
 };
 
+}
 }
 
 #endif //TBOX_TERMINAL_DIR_NODE_H_20220207
