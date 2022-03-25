@@ -16,7 +16,7 @@ using namespace std;
 
 Terminal::Impl::Impl()
 {
-    root_token_ = nodes_.insert(new DirNode("this is root node"));
+    root_token_ = nodes_.alloc(new DirNode("this is root node"));
 }
 
 Terminal::Impl::~Impl()
@@ -39,7 +39,7 @@ Terminal::Impl::~Impl()
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 {
     auto s = new SessionContext;
-    auto t = sessions_.insert(s);
+    auto t = sessions_.alloc(s);
     s->wp_conn = wp_conn;
     s->token = t;
     return t;
@@ -47,7 +47,7 @@ SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 
 bool Terminal::Impl::deleteSession(const SessionToken &st)
 {
-    auto s = sessions_.remove(st);
+    auto s = sessions_.free(st);
     if (s != nullptr) {
         delete s;
         return true;

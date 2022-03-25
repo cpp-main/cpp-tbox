@@ -14,13 +14,13 @@ using namespace std;
 NodeToken Terminal::Impl::createFuncNode(const Func &func, const string &help)
 {
     FuncNode *node = new FuncNode(func, help);
-    return nodes_.insert(node);
+    return nodes_.alloc(node);
 }
 
 NodeToken Terminal::Impl::createDirNode(const string &help)
 {
     DirNode *node = new DirNode(help);
-    return nodes_.insert(node);
+    return nodes_.alloc(node);
 }
 
 NodeToken Terminal::Impl::rootNode() const

@@ -43,7 +43,7 @@ TimerPool::TimerToken TimerPool::Impl::doEvery(const Milliseconds &m_sec, const 
     }
 
     auto new_timer = wp_loop_->newTimerEvent();
-    auto new_token = timers_.insert(new_timer);
+    auto new_token = timers_.alloc(new_timer);
     new_timer->initialize(m_sec, event::Event::Mode::kPersist);
     new_timer->setCallback(
         [new_token, cb, this] {
@@ -64,7 +64,7 @@ TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, const 
     }
 
     auto new_timer = wp_loop_->newTimerEvent();
-    auto new_token = timers_.insert(new_timer);
+    auto new_token = timers_.alloc(new_timer);
     new_timer->initialize(m_sec, event::Event::Mode::kOneshot);
     new_timer->setCallback(
         [new_token, cb, this] {
@@ -87,7 +87,7 @@ TimerPool::TimerToken TimerPool::Impl::doAt(const TimePoint &time_point, const C
 
 bool TimerPool::Impl::cancel(const TimerToken &token)
 {
-    auto timer = timers_.remove(token);
+    auto timer = timers_.free(token);
     if (timer != nullptr) {
         timer->disable();
         if (wp_loop_->isRunning())

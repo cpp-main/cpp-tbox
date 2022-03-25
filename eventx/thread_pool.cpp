@@ -120,7 +120,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     item->main_cb = main_cb;
     {
         std::lock_guard<std::mutex> lg(d_->lock);
-        item->token = token = d_->undo_tasks_cabinet.insert(item);
+        item->token = token = d_->undo_tasks_cabinet.alloc(item);
 
         d_->undo_tasks_token.at(level).push_back(token);
         //! 如果空间线程不够，且还可以再创建新的线程
@@ -168,7 +168,7 @@ int ThreadPool::cancel(TaskToken token)
             auto iter = std::find(tasks_token.begin(), tasks_token.end(), token);
             if (iter != tasks_token.end()) {
                 tasks_token.erase(iter);
-                delete d_->undo_tasks_cabinet.remove(token);
+                delete d_->undo_tasks_cabinet.free(token);
                 return 0;
             }
         }
@@ -189,7 +189,7 @@ void ThreadPool::cleanup()
             auto &tasks_token = d_->undo_tasks_token.at(i);
             while (!tasks_token.empty()) {
                 auto token = tasks_token.front();
-                delete d_->undo_tasks_cabinet.remove(token);
+                delete d_->undo_tasks_cabinet.free(token);
                 tasks_token.pop_front();
             }
         }
@@ -226,7 +226,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             if (d_->idle_thread_num > 0 && d_->threads_cabinet.size() > d_->min_thread_num) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
-                auto t = d_->threads_cabinet.remove(thread_token);
+                auto t = d_->threads_cabinet.free(thread_token);
                 d_->wp_loop->runInLoop([t]{ t->join(); delete t; });
                 break;
             }
@@ -311,7 +311,7 @@ ThreadPool::Task* ThreadPool::popOneTask()
         if (!tasks_token.empty()) {
             TaskToken token = tasks_token.front();
             tasks_token.pop_front();
-            return d_->undo_tasks_cabinet.remove(token);
+            return d_->undo_tasks_cabinet.free(token);
         }
     }
     return nullptr;

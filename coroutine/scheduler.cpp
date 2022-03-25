@@ -110,7 +110,7 @@ Scheduler::~Scheduler()
 RoutineToken Scheduler::create(const RoutineEntry &entry, bool run_now, const string &name, size_t stack_size)
 {
     Routine *new_routine = new Routine(entry, name, stack_size, *this);
-    RoutineToken token = d_->routine_cabinet.insert(new_routine);
+    RoutineToken token = d_->routine_cabinet.alloc(new_routine);
     new_routine->token = token;
     if (run_now)
         makeRoutineReady(new_routine);
@@ -143,7 +143,7 @@ void Scheduler::cleanup()
     d_->routine_cabinet.foreach(
         [this] (Routine *routine) {
             if (!routine->is_started) {
-                d_->routine_cabinet.remove(routine->token);
+                d_->routine_cabinet.free(routine->token);
                 delete routine;
             } else {
                 routine->is_canceled = true;
@@ -265,7 +265,7 @@ void Scheduler::switchToRoutine(Routine *routine)
 
     //! 检查协程状态，如果已经结束了的协程，要释放资源
     if (routine->state == Routine::State::kDead) {
-        d_->routine_cabinet.remove(routine->token);
+        d_->routine_cabinet.free(routine->token);
 
         //! 如果有其它协程在join这个协程，那么要唤醒等待的协程
         if (!d_->curr_routine->join_token.isNull())

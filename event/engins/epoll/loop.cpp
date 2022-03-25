@@ -70,7 +70,7 @@ void EpollLoop::onTimeExpired()
         if (unlikely(t->repeat == 1)) {
             // remove the last element
             timer_min_heap_.pop_back();
-            timer_cabinet_.remove(t->token);
+            timer_cabinet_.free(t->token);
             CHECK_DELETE_RESET_OBJ(t);
         } else {
             t->expired += t->interval;
@@ -150,7 +150,7 @@ cabinet::Token EpollLoop::addTimer(uint64_t interval, uint64_t repeat, const Tim
     Timer *t = new Timer;
     assert(t != nullptr);
 
-    t->token = this->timer_cabinet_.insert(t);
+    t->token = this->timer_cabinet_.alloc(t);
 
     t->expired = now + interval;
     t->interval = interval;
@@ -165,7 +165,7 @@ cabinet::Token EpollLoop::addTimer(uint64_t interval, uint64_t repeat, const Tim
 
 void EpollLoop::deleteTimer(const cabinet::Token& token)
 {
-    auto timer = timer_cabinet_.remove(token);
+    auto timer = timer_cabinet_.free(token);
     if (timer == nullptr)
         return;
 

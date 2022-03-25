@@ -27,11 +27,9 @@ template <typename T> class Cabinet {
   public:
     void reserve(size_t size);  //!< 预留指定大小的储物空间
 
-    Token alloc();
-    Token insert(T *obj);         //!< 存入对象
+    Token alloc(T *obj = nullptr);  //!< 分配空间，并存入对象
     bool update(const Token &token, T *obj);    //! 更换对象
-
-    T*  remove(const Token &token); //!< 删除对象
+    T* free(const Token &token);    //!< 释放空间
 
     void clear();               //!< 清空所有对象
 
@@ -75,26 +73,13 @@ void Cabinet<T>::reserve(size_t size)
 }
 
 template <typename T>
-Token Cabinet<T>::insert(T *obj)
+Token Cabinet<T>::alloc(T *obj)
 {
     Token new_token(allocId(), allocPos());
 
     Cell &cell = cells_.at(new_token.pos());
     cell.id = new_token.id();
     cell.obj_ptr = obj;
-
-    ++count_;
-    return new_token;
-}
-
-template <typename T>
-Token Cabinet<T>::alloc()
-{
-    Token new_token(allocId(), allocPos());
-
-    Cell &cell = cells_.at(new_token.pos());
-    cell.id = new_token.id();
-    cell.obj_ptr = nullptr;
 
     ++count_;
     return new_token;
@@ -112,7 +97,7 @@ bool Cabinet<T>::update(const Token &token, T *obj)
 }
 
 template <typename T>
-T* Cabinet<T>::remove(const Token &token)
+T* Cabinet<T>::free(const Token &token)
 {
     Cell &cell = cells_.at(token.pos());
     if (cell.id == token.id()) {

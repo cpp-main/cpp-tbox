@@ -137,7 +137,7 @@ bool TcpServer::send(const ClientToken &client, const void *data_ptr, size_t dat
 
 bool TcpServer::disconnect(const ClientToken &client)
 {
-    auto conn = d_->conns.remove(client);
+    auto conn = d_->conns.free(client);
     if (conn != nullptr) {
         conn->disconnect();
         d_->wp_loop->run([conn] { delete conn; });
@@ -166,7 +166,7 @@ TcpServer::State TcpServer::state() const
 
 void TcpServer::onTcpConnected(TcpConnection *new_conn)
 {
-    ClientToken client = d_->conns.insert(new_conn);
+    ClientToken client = d_->conns.alloc(new_conn);
     new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), d_->receive_threshold);
     new_conn->setDisconnectedCallback(std::bind(&TcpServer::onTcpDisconnected, this, client));
 
@@ -183,7 +183,7 @@ void TcpServer::onTcpDisconnected(const ClientToken &client)
         d_->disconnected_cb(client);
     --d_->cb_level;
 
-    TcpConnection *conn = d_->conns.remove(client);
+    TcpConnection *conn = d_->conns.free(client);
     d_->wp_loop->runNext([conn] { CHECK_DELETE_OBJ(conn); });
     //! 为什么先回调，再访问后面？是为了在回调中还能访问到TcpConnection对象
 }
