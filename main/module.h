@@ -8,19 +8,22 @@
 namespace tbox {
 namespace main {
 
+//! 通用模块
 class Module {
   public:
     explicit Module(Context &ctx);
     virtual ~Module();
 
     enum class State {
-        kNone,
-        kInited,
-        kRunning
+        kNone,      //!< 完成了构造，还没有initialize()
+        kInited,    //!< 已初始化，还没有start()
+        kRunning    //!< 已start()
     };
 
   public:
     bool addChild(Module *child);
+    //!注意:一旦将子Module添加到父Module，子Module的生命期就由父Module管控
+    //!     不可私自delete
 
     virtual bool initialize(const Json &js);
     virtual bool start();
