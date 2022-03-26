@@ -6,12 +6,13 @@ TARGET := sample
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. \
 	-ltbox_main \
+	-ltbox_terminal \
+	-ltbox_network \
 	-ltbox_eventx \
 	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
-	-levent_core \
-	-lev -lpthread
+	-lpthread
 
 CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
 LDFLAGS += -fsanitize=address -static-libasan
