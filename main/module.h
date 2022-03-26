@@ -42,4 +42,40 @@ class Module {
 }
 }
 
+#define MODULE_BEGIN_INITIALIZE \
+    if (state_ != State::kNone) \
+        return false;
+
+#define MODULE_END_INITIALIZE \
+    if (!Module::initialize(js)) \
+        return false; \
+    state_ = State::kInited; \
+    return true;
+
+#define MODULE_BEGIN_START \
+    if (state_ != State::kInited) \
+        return false;
+
+#define MODULE_END_START \
+    if (!Module::start()) \
+        return false; \
+    state_ = State::kRunning; \
+    return true;
+
+#define MODULE_BEGIN_STOP \
+    if (state_ != State::kRunning) \
+        return; \
+    Module::stop();
+
+#define MODULE_END_STOP \
+    state_ = State::kInited;
+
+#define MODULE_BEGIN_CLEANUP \
+    if (state_ != State::kInited) \
+        return; \
+    Module::cleanup();
+
+#define MODULE_END_CLEANUP \
+    state_ = State::kNone;
+
 #endif //TBOX_MAIN_MODULE_H_20220326
