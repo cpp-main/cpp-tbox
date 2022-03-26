@@ -8,6 +8,7 @@ HEAD_FILES = \
 	apps.h \
 	context.h \
 	main.h \
+	module.h \
 
 CPP_SRC_FILES = \
 	apps_imp.cpp \
@@ -16,6 +17,7 @@ CPP_SRC_FILES = \
 	signal.cpp \
 	misc.cpp \
 	args.cpp \
+	module.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
