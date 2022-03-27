@@ -41,12 +41,14 @@ void GetVersion(int &major, int &minor, int &rev, int &build);
  * 当程序运行起来时，用调用该函数，加载 App 应用对象。
  *
  * 实现如下例：
- * namespace tbox::main {
+ * namespace tbox {
+ * namespace main {
  *     void RegisterApps(Apps &apps)
  *     {
  *         apps.add(new MyApp1);
  *         apps.add(new MyApp2);
  *     }
+ * }
  * }
  */
 void RegisterApps(Apps &apps);

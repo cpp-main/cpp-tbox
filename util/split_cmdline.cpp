@@ -1,6 +1,7 @@
 #include "split_cmdline.h"
 
-namespace tbox::util {
+namespace tbox {
+namespace util {
 
 using namespace std;
 
@@ -34,4 +35,5 @@ bool SplitCmdline(const std::string &cmd, std::vector<std::string> &args)
     return true;
 }
 
+}
 }

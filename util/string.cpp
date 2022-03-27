@@ -3,7 +3,9 @@
 #include <iomanip>
 #include <sstream>
 
-namespace tbox::util::string {
+namespace tbox {
+namespace util {
+namespace string {
 
 size_t Split(const std::string &src_str, const std::string sep, std::vector<std::string> &str_vec)
 {
@@ -177,4 +179,6 @@ void Replace(std::string &target_str, const std::string &pattern_str, const std:
     }
 }
 
+}
+}
 }

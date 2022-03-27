@@ -3,113 +3,117 @@
 
 #include <string>
 
-namespace tbox::util::fs {
+namespace tbox {
+namespace util {
+namespace fs {
 
 ////////////////////////////////////////////////////////////////////
-// ÎÄ¼şÏà¹Ø
+// æ–‡ä»¶ç›¸å…³
 ////////////////////////////////////////////////////////////////////
 
 /**
- * ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
+ * æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
  *
- * \param filename      ÎÄ¼şÃû
+ * \param filename      æ–‡ä»¶å
  *
- * \return true     ÎÄ¼ş´æÔÚ
- * \return false    ÎÄ¼ş²»´æÔÚ
+ * \return true     æ–‡ä»¶å­˜åœ¨
+ * \return false    æ–‡ä»¶ä¸å­˜åœ¨
  */
 bool IsFileExist(const std::string &filename);
 
 /**
- * ´ÓÎÄ¼şÖĞ¶ÁÈ¡×Ö´®
+ * ä»æ–‡ä»¶ä¸­è¯»å–å­—ä¸²
  *
- * \param filename      ÎÄ¼şÃû
- * \param content       ¶ÁÈ¡µÄÎÄ±¾Êä³öµÄstd::string
+ * \param filename      æ–‡ä»¶å
+ * \param content       è¯»å–çš„æ–‡æœ¬è¾“å‡ºçš„std::string
  *
- * \return true     ³É¹¦
- * \return false    Ê§°Ü
+ * \return true     æˆåŠŸ
+ * \return false    å¤±è´¥
  */
 bool ReadStringFromTextFile(const std::string &filename, std::string &content);
 
 /**
- * ½«×Ö´®Ğ´Èëµ½ÎÄ¼ş
+ * å°†å­—ä¸²å†™å…¥åˆ°æ–‡ä»¶
  */
 bool WriteStringToTextFile(const std::string &filename, const std::string &content);
 
 /**
- * ´ÓÎÄ¼şÖĞ¶ÁÈ¡Êı¾İ
+ * ä»æ–‡ä»¶ä¸­è¯»å–æ•°æ®
  *
- * \param filename      ÎÄ¼şÃû
- * \param content       ¶ÁÈ¡µÄÊı¾İ£¬¿ÉÄÜ·Ç×Ö´®
+ * \param filename      æ–‡ä»¶å
+ * \param content       è¯»å–çš„æ•°æ®ï¼Œå¯èƒ½éå­—ä¸²
  *
- * \return true     ³É¹¦
- * \return false    Ê§°Ü
+ * \return true     æˆåŠŸ
+ * \return false    å¤±è´¥
  */
 bool ReadBinaryFromFile(const std::string &filename, std::string &content);
 
 /**
- * ½«Êı¾İĞ´Èëµ½ÎÄ¼ş
+ * å°†æ•°æ®å†™å…¥åˆ°æ–‡ä»¶
  */
 bool WriteBinaryToFile(const std::string &filename, const std::string &content);
 
 /**
- * É¾³ıÎÄ¼ş
+ * åˆ é™¤æ–‡ä»¶
  *
- * \param filename      ±»É¾³ıµÄÎÄ¼şÃû
+ * \param filename      è¢«åˆ é™¤çš„æ–‡ä»¶å
  *
- * \return true ³É¹¦
- * \return false Ê§°Ü
+ * \return true æˆåŠŸ
+ * \return false å¤±è´¥
  */
 bool RemoveFile(const std::string &filename);
 
 ////////////////////////////////////////////////////////////////////
-// Ä¿Â¼Ïà¹Ø
+// ç›®å½•ç›¸å…³
 ////////////////////////////////////////////////////////////////////
 
 /**
- * Ä¿Â¼ÊÇ·ñ´æÔÚ
+ * ç›®å½•æ˜¯å¦å­˜åœ¨
  *
- * \param dir               Ä¿Â¼
+ * \param dir               ç›®å½•
  *
- * \return true     Ä¿Â¼´æÔÚ
- * \return false    Ä¿Â¼²»´æÔÚ
+ * \return true     ç›®å½•å­˜åœ¨
+ * \return false    ç›®å½•ä¸å­˜åœ¨
  */
 bool IsDirectoryExist(const std::string &dir);
 
 /**
- * ´´½¨Ä¿Â¼
- * µÈ¼ÛÓÚshellÃüÁî "mkdir -p xxx"
+ * åˆ›å»ºç›®å½•
+ * ç­‰ä»·äºshellå‘½ä»¤ "mkdir -p xxx"
  *
- * \param dir               Ä¿Â¼
+ * \param dir               ç›®å½•
  *
- * \return true     Ä¿Â¼´´½¨³É¹¦
- * \return false    Ä¿Â¼´´½¨Ê§°Ü
+ * \return true     ç›®å½•åˆ›å»ºæˆåŠŸ
+ * \return false    ç›®å½•åˆ›å»ºå¤±è´¥
  */
 bool MakeDirectory(const std::string &dir);
 
 /**
- * É¾³ıÄ¿Â¼
+ * åˆ é™¤ç›®å½•
  *
- * \param dir               Ä¿Â¼
+ * \param dir               ç›®å½•
  *
- * \return true     Ä¿Â¼É¾³ı³É¹¦
- * \return false    Ä¿Â¼É¾³ıÊ§°Ü
+ * \return true     ç›®å½•åˆ é™¤æˆåŠŸ
+ * \return false    ç›®å½•åˆ é™¤å¤±è´¥
  */
 bool RemoveDirectory(const std::string &dir);
 
 ////////////////////////////////////////////////////////////////////
-// ÆäËü
+// å…¶å®ƒ
 ////////////////////////////////////////////////////////////////////
 
 /**
- * ¸ù¾İÂ·¾¶»ñÈ¡ÎÄ¼şÃû
+ * æ ¹æ®è·¯å¾„è·å–æ–‡ä»¶å
  */
 std::string Basename(const std::string &full_path);
 
 /**
- * ¸ù¾İÂ·¾¶»ñÈ¡Ä¿Â¼Ãû
+ * æ ¹æ®è·¯å¾„è·å–ç›®å½•å
  */
 std::string Dirname(const std::string &full_path);
 
+}
+}
 }
 
 #endif //TBOX_UTIL_FS_H_20220103

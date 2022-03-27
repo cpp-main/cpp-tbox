@@ -4,7 +4,9 @@
 #include "app2/app.h"
 #include "app3/app.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
+
 void RegisterApps(Apps &apps)
 {
     apps.add(new app1::App);
@@ -30,4 +32,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
+}
 }

@@ -9,7 +9,9 @@
 
 #include <tbox/base/log.h>
 
-namespace tbox::util::fs {
+namespace tbox {
+namespace util {
+namespace fs {
 
 using std::ifstream;
 using std::ofstream;
@@ -155,4 +157,6 @@ std::string Dirname(const std::string &full_path)
     return full_path.substr(0, pos);
 }
 
+}
+}
 }

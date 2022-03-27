@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-namespace tbox::util {
+namespace tbox {
+namespace util {
 
 namespace {
 /**
@@ -83,4 +84,5 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
     return parse(args, 0);
 }
 
+}
 }

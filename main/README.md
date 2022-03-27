@@ -15,45 +15,61 @@ main，是应用程序的启动框架。
 class App : public tbox::main::App
 {
   public:
-    App(tbox::main::Context &ctx);
     ~App();
 
-    bool initialize() override;
+    bool construct(tbox::main::Context &ctx) override;
+    bool initialize(const tbox::Json &cfg) override;
     bool start() override;
     void stop() override;
     void cleanup() override;
 };
-
 ```
 
-**第二步**：实现应用注册函数 ``tbox::main::RegisterApps()``，在该函数中创建 MyApp 类，并加入到 Apps 里；
+**第二步**：实现应用基础的几个函数`RegisterApps()`,`GetAppDescribe()`,`GetAppBuildTime()`,`GetAppVersion()`
 
 ```C++
 #include <tbox/main/main.h>
 #include "app.h"
 
-namespace tbox::main {
-void RegisterApps(Context &context, Apps &apps)
+namespace tbox {
+namespace main {
+
+void RegisterApps(Apps &apps)
 {
-    apps.add(new ::App(context));
+    apps.add(new ::App);
 }
+
+std::string GetAppDescribe()
+{
+    return "One app sample";
 }
-```
+
+std::string GetAppBuildTime()
+{
+    return __DATE__ " " __TIME__;
+}
+
+void GetAppVersion(int &major, int &minor, int &rev, int &build)
+{
+    major = 0;
+    minor = 0;
+    rev = 1;
+    build = 0;
+}
+
+}
+}```
 
 **第三步**：在 Makefile 中添加 main 所依赖的库：
 
 ```Makefile
 LDFLAGS += \
 	-ltbox_main \
+	-ltbox_terminal \
+	-ltbox_network \
 	-ltbox_eventx \
-	-ltbox_event-ne \
+	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
-	-levent_core \
-	-lev -lpthread
+	-lpthread
 ```
-
-# 未来规化
-
-1. 实现参数化，引入JSON配置文件；
-2. 引入交互命令接口 shell；

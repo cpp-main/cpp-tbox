@@ -3,7 +3,9 @@
 #include "echo_server/app.h"
 #include "nc_client/app.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
+
 void RegisterApps(Apps &apps)
 {
     apps.add(new echo_server::App);
@@ -28,4 +30,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
+}
 }

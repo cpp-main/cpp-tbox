@@ -5,7 +5,9 @@
 #include <string>
 #include <vector>
 
-namespace tbox::util::string {
+namespace tbox {
+namespace util {
+namespace string {
 
 /**
  * \brief       分隔字符串
@@ -103,6 +105,8 @@ size_t HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, co
 void Replace(std::string &target_str, const std::string &pattern_str, const std::string &replace_str,
              std::string::size_type start = 0, std::string::size_type count = 0);
 
+}
+}
 }
 
 #endif //TBOX_UTIL_STRING_H_20220103

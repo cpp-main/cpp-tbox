@@ -24,10 +24,12 @@ void RegisterApps(Apps &apps)
 #include <tbox/main/main.h>
 #include "your_app.h"
 
-namespace tbox::main {
+namespace tbox {
+namespace main {
 void RegisterApps(Apps &apps)
 {
     apps.add(new YourApp);
+}
 }
 }
 )";

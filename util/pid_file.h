@@ -24,7 +24,8 @@
 #include <string>
 #include <tbox/base/defines.h>
 
-namespace tbox::util {
+namespace tbox {
+namespace util {
 
 class PidFile {
   public:
@@ -41,6 +42,7 @@ class PidFile {
     int fd_ = -1;
 };
 
+}
 }
 
 #endif //TBOX_PID_FILE_H_20211221

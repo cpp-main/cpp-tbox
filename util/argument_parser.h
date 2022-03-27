@@ -43,7 +43,8 @@
 #include <functional>
 #include <vector>
 
-namespace tbox::util {
+namespace tbox {
+namespace util {
 
 class ArgumentParser {
   public:
@@ -121,6 +122,7 @@ class ArgumentParser {
     Handler handler_;
 };
 
+}
 }
 
 #endif //TBOX_UTIL_ARGUMENT_PARSER_H_20220105
