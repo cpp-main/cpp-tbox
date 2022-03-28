@@ -28,7 +28,7 @@ bool Module::addChild(Module *child, bool required)
     if (iter != children_.end())
         return false;
 
-    children_.emplace_back(ModuleItem{child, required});
+    children_.emplace_back(ModuleItem{ child, required });
     return true;
 }
 

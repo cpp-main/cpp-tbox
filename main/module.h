@@ -33,7 +33,7 @@ class Module {
     inline State state() const { return state_; }
     inline Context& ctx() const { return ctx_; }
 
-  private:
+  protected:
     Context &ctx_;
     struct ModuleItem {
         Module *module_ptr;
