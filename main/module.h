@@ -8,10 +8,10 @@
 namespace tbox {
 namespace main {
 
-//! 通用模块
+//! 模块
 class Module {
   public:
-    explicit Module(Context &ctx);
+    explicit Module(const std::string &name, Context &ctx);
     virtual ~Module();
 
     enum class State {
@@ -25,16 +25,24 @@ class Module {
     //!注意:一旦将子Module添加到父Module，子Module的生命期就由父Module管控
     //!     不可私自delete
 
-    virtual bool initialize(const Json &js);
-    virtual bool start();
-    virtual void stop();
-    virtual void cleanup();
+    bool initialize(const Json &js_parent);
+    bool start();
+    void stop();
+    void cleanup();
 
     inline State state() const { return state_; }
     inline Context& ctx() const { return ctx_; }
 
   protected:
+    virtual bool onInitialize(const Json &js_this) { return true; }
+    virtual bool onStart() { return true; }
+    virtual void onStop() { }
+    virtual void onCleanup() { }
+
+  private:
+    std::string name_;
     Context &ctx_;
+
     struct ModuleItem {
         Module *module_ptr;
         bool    required;   //! 是否为必须
@@ -45,44 +53,5 @@ class Module {
 
 }
 }
-
-#define MODULE_INITIALIZE_BEGIN(cfg_field_name) \
-    if (state_ != State::kNone) \
-        return false; \
-    if (!js.contains(cfg_field_name)) \
-        return false; \
-    const Json &js_this = js[cfg_field_name];
-
-#define MODULE_INITIALIZE_END() \
-    if (!Module::initialize(js_this)) \
-        return false; \
-    state_ = State::kInited; \
-    return true;
-
-#define MODULE_START_BEGIN() \
-    if (state_ != State::kInited) \
-        return false;
-
-#define MODULE_START_END() \
-    if (!Module::start()) \
-        return false; \
-    state_ = State::kRunning; \
-    return true;
-
-#define MODULE_STOP_BEGIN() \
-    if (state_ != State::kRunning) \
-        return; \
-    Module::stop();
-
-#define MODULE_STOP_END() \
-    state_ = State::kInited;
-
-#define MODULE_CLEANUP_BEGIN() \
-    if (state_ != State::kInited) \
-        return; \
-    Module::cleanup();
-
-#define MODULE_CLEANUP_END() \
-    state_ = State::kNone;
 
 #endif //TBOX_MAIN_MODULE_H_20220326
