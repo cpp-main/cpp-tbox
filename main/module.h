@@ -21,7 +21,7 @@ class Module {
     };
 
   public:
-    bool addChild(Module *child);
+    bool addChild(Module *child, bool required = true);
     //!注意:一旦将子Module添加到父Module，子Module的生命期就由父Module管控
     //!     不可私自delete
 
@@ -35,47 +35,54 @@ class Module {
 
   private:
     Context &ctx_;
-    std::vector<Module*> children_;
+    struct ModuleItem {
+        Module *module_ptr;
+        bool    required;   //! 是否为必须
+    };
+    std::vector<ModuleItem> children_;
     State state_ = State::kNone;
 };
 
 }
 }
 
-#define MODULE_BEGIN_INITIALIZE \
+#define MODULE_INITIALIZE_BEGIN(cfg_field_name) \
     if (state_ != State::kNone) \
-        return false;
+        return false; \
+    if (!js.contains(cfg_field_name)) \
+        return false; \
+    const Json &js_this = js[cfg_field_name];
 
-#define MODULE_END_INITIALIZE \
-    if (!Module::initialize(js)) \
+#define MODULE_INITIALIZE_END() \
+    if (!Module::initialize(js_this)) \
         return false; \
     state_ = State::kInited; \
     return true;
 
-#define MODULE_BEGIN_START \
+#define MODULE_START_BEGIN() \
     if (state_ != State::kInited) \
         return false;
 
-#define MODULE_END_START \
+#define MODULE_START_END() \
     if (!Module::start()) \
         return false; \
     state_ = State::kRunning; \
     return true;
 
-#define MODULE_BEGIN_STOP \
+#define MODULE_STOP_BEGIN() \
     if (state_ != State::kRunning) \
         return; \
     Module::stop();
 
-#define MODULE_END_STOP \
+#define MODULE_STOP_END() \
     state_ = State::kInited;
 
-#define MODULE_BEGIN_CLEANUP \
+#define MODULE_CLEANUP_BEGIN() \
     if (state_ != State::kInited) \
         return; \
     Module::cleanup();
 
-#define MODULE_END_CLEANUP \
+#define MODULE_CLEANUP_END() \
     state_ = State::kNone;
 
 #endif //TBOX_MAIN_MODULE_H_20220326

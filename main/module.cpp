@@ -10,28 +10,32 @@ Module::Module(Context &ctx) :
 
 Module::~Module()
 {
-    for (auto child : children_)
-        delete child;
+    for (const auto &item : children_)
+        delete item.module_ptr;
     children_.clear();
 }
 
-bool Module::addChild(Module *child)
+bool Module::addChild(Module *child, bool required)
 {
     if (child == nullptr)
         return false;
 
-    auto iter = std::find(children_.begin(), children_.end(), child);
+    auto iter = std::find_if(children_.begin(), children_.end(),
+        [child] (const ModuleItem &item) {
+            return item.module_ptr == child;
+        }
+    );
     if (iter != children_.end())
         return false;
 
-    children_.push_back(child);
+    children_.emplace_back(ModuleItem{child, required});
     return true;
 }
 
 bool Module::initialize(const Json &js)
 {
-    for (auto child : children_) {
-        if (!child->initialize(js))
+    for (const auto &item : children_) {
+        if (!item.module_ptr->initialize(js) && item.required)
             return false;
     }
     return true;
@@ -39,8 +43,8 @@ bool Module::initialize(const Json &js)
 
 bool Module::start()
 {
-    for (auto child : children_) {
-        if (!child->start())
+    for (const auto &item : children_) {
+        if (!item.module_ptr->start() && item.required)
             return false;
     }
     return true;
@@ -49,13 +53,13 @@ bool Module::start()
 void Module::stop()
 {
     for (auto i = children_.size() - 1; i >= 0; --i)
-        children_[i]->stop();
+        children_[i].module_ptr->stop();
 }
 
 void Module::cleanup()
 {
     for (auto i = children_.size() - 1; i >= 0; --i)
-        children_[i]->cleanup();
+        children_[i].module_ptr->cleanup();
 }
 
 }
