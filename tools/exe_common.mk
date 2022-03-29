@@ -76,7 +76,7 @@ print_exe_vars :
 $(EXE_OUTPUT_DIR)/$(EXE_NAME) : $(OBJECTS)
 	@echo "\033[35mBUILD $(EXE_NAME) \033[0m"
 	@install -d $(dir $@)
-	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
+	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) -rdynamic
 
 build_exe : print_exe_vars $(EXE_OUTPUT_DIR)/$(EXE_NAME)
 

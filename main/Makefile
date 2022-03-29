@@ -4,14 +4,11 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	app.h \
-	apps.h \
 	context.h \
 	main.h \
 	module.h \
 
 CPP_SRC_FILES = \
-	apps_imp.cpp \
 	context_imp.cpp \
 	main.cpp \
 	signal.cpp \

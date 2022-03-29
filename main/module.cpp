@@ -38,15 +38,25 @@ bool Module::addChild(Module *child, bool required)
     return true;
 }
 
+void Module::fillDefaultConfig(Json &js_parent)
+{
+    Json &js_this = name_.empty() ? js_parent : js_parent[name_];
+
+    onFillDefaultConfig(js_this);
+
+    for (const auto &item : children_)
+        item.module_ptr->fillDefaultConfig(js_this);
+}
+
 bool Module::initialize(const Json &js_parent)
 {
     if (state_ != State::kNone)
         return false;
 
-    if (!js_parent.contains(name_))
+    if (!name_.empty() && !js_parent.contains(name_))
         return false;
 
-    const Json &js_this = js_parent[name_];
+    const Json &js_this = name_.empty() ? js_parent : js_parent[name_];
 
     if (!onInitialize(js_this))
         return false;
@@ -82,8 +92,8 @@ void Module::stop()
     if (state_ != State::kRunning)
         return;
 
-    for (auto i = children_.size() - 1; i >= 0; --i)
-        children_[i].module_ptr->stop();
+    for (auto iter = children_.rbegin(); iter != children_.rend(); ++iter)
+        iter->module_ptr->stop();
 
     onStop();
 
@@ -95,8 +105,8 @@ void Module::cleanup()
     if (state_ == State::kNone)
         return;
 
-    for (auto i = children_.size() - 1; i >= 0; --i)
-        children_[i].module_ptr->cleanup();
+    for (auto iter = children_.rbegin(); iter != children_.rend(); ++iter)
+        iter->module_ptr->cleanup();
 
     onCleanup();
 

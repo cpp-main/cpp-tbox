@@ -1,9 +1,8 @@
 #ifndef TBOX_MAIN_MAIN_H_20211225
 #define TBOX_MAIN_MAIN_H_20211225
 
-#include "app.h"
-#include "apps.h"
 #include "context.h"
+#include "module.h"
 
 namespace tbox {
 namespace main {
@@ -43,15 +42,15 @@ void GetVersion(int &major, int &minor, int &rev, int &build);
  * 实现如下例：
  * namespace tbox {
  * namespace main {
- *     void RegisterApps(Apps &apps)
+ *     void RegisterApps(Module &apps, Context &ctx)
  *     {
- *         apps.add(new MyApp1);
- *         apps.add(new MyApp2);
+ *         apps.addChild(new MyApp1("app1", ctx));
+ *         apps.addChild(new MyApp2("app2", ctx));
  *     }
  * }
  * }
  */
-void RegisterApps(Apps &apps);
+void RegisterApps(Module &apps, Context &ctx);
 
 /**
  * 获取应用的描述

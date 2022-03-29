@@ -14,28 +14,32 @@
 #include <tbox/util/pid_file.h>
 #include <tbox/util/fs.h>
 
+#include "module.h"
 #include "context_imp.h"
-#include "apps_imp.h"
 #include "args.h"
 
 namespace tbox {
 namespace main {
 
 extern void RegisterSignals();
-extern void RegisterApps(Apps &apps); //! 由用户去实现
-
-extern void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait);
+extern void RegisterApps(Module &root, Context &ctx);
+extern void Run(ContextImp &ctx, Module &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+
+class Apps : public Module {
+  public:
+    Apps(Context &ctx) : Module("", ctx) {
+        RegisterApps(*this, ctx);
+    }
+};
 
 int Main(int argc, char **argv)
 {
     RegisterSignals();
 
-    AppsImp apps;
-    RegisterApps(apps);
-
     ContextImp ctx;
+    Apps apps(ctx);
 
     Json js_conf;
     Args args(js_conf);
@@ -79,28 +83,20 @@ int Main(int argc, char **argv)
         LogOutput_Cleanup();
     };
 
-    if (!apps.empty()) {
-        if (apps.construct(ctx)) {
-            if (ctx.initialize(js_conf)) {
-                if (apps.initialize(js_conf)) {
-                    if (ctx.start() && apps.start()) {  //! 启动所有应用
-                        Run(ctx, apps, loop_exit_wait);
-                    } else {
-                        LogWarn("Apps start fail");
-                    }
-                    apps.cleanup();  //! cleanup所有应用
-                } else {
-                    LogWarn("Apps init fail");
-                }
-                ctx.cleanup();
+    if (ctx.initialize(js_conf)) {
+        if (apps.initialize(js_conf)) {
+            if (ctx.start() && apps.start()) {  //! 启动所有应用
+                Run(ctx, apps, loop_exit_wait);
             } else {
-                LogWarn("Context init fail");
+                LogWarn("Apps start fail");
             }
+            apps.cleanup();  //! cleanup所有应用
         } else {
-            LogWarn("App construct fail");
+            LogWarn("Apps init fail");
         }
+        ctx.cleanup();
     } else {
-        LogWarn("No app found");
+        LogWarn("Context init fail");
     }
 
     LogInfo("Bye!");
@@ -108,7 +104,7 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-void Run(ContextImp &ctx, AppsImp &apps, int loop_exit_wait)
+void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
 {
     auto feeddog_timer = ctx.loop()->newTimerEvent();
     auto stop_signal   = ctx.loop()->newSignalEvent();

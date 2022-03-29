@@ -3,10 +3,10 @@
 
 namespace app2 {
 
-bool App::construct(tbox::main::Context &ctx)
+App::App(tbox::main::Context &ctx) :
+    Module("app2", ctx)
 {
     LogTag();
-    return true;
 }
 
 App::~App()
@@ -14,24 +14,24 @@ App::~App()
     LogTag();
 }
 
-bool App::initialize(const tbox::Json &cfg)
+bool App::onInitialize(const tbox::Json &cfg)
 {
     LogTag();
     return true;
 }
 
-bool App::start()
+bool App::onStart()
 {
     LogTag();
     return true;
 }
 
-void App::stop()
+void App::onStop()
 {
     LogTag();
 }
 
-void App::cleanup()
+void App::onCleanup()
 {
     LogTag();
 }

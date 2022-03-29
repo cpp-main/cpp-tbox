@@ -5,16 +5,17 @@
 
 namespace app1 {
 
-class App : public tbox::main::App
+class App : public tbox::main::Module
 {
   public:
+    App(tbox::main::Context &ctx);
     ~App();
 
-    virtual bool construct(tbox::main::Context &ctx) override;
-    virtual bool initialize(const tbox::Json &cfg) override;
-    virtual bool start() override;
-    virtual void stop() override;
-    virtual void cleanup() override;
+  protected:
+    virtual bool onInitialize(const tbox::Json &cfg) override;
+    virtual bool onStart() override;
+    virtual void onStop() override;
+    virtual void onCleanup() override;
 };
 
 }

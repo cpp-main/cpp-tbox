@@ -6,10 +6,10 @@
 namespace tbox {
 namespace main {
 
-void RegisterApps(Apps &apps)
+void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.add(new app1::App);
-    apps.add(new app2::App);
+    apps.addChild(new app1::App(ctx));
+    apps.addChild(new app2::App(ctx));
 }
 
 std::string GetAppDescribe()

@@ -25,15 +25,18 @@ class Module {
     //!注意:一旦将子Module添加到父Module，子Module的生命期就由父Module管控
     //!     不可私自delete
 
+    void fillDefaultConfig(Json &js_parent);
     bool initialize(const Json &js_parent);
     bool start();
     void stop();
     void cleanup();
 
-    inline State state() const { return state_; }
+    inline std::string name() const { return name_; }
     inline Context& ctx() const { return ctx_; }
+    inline State state() const { return state_; }
 
   protected:
+    virtual void onFillDefaultConfig(Json &js_this) { }
     virtual bool onInitialize(const Json &js_this) { return true; }
     virtual bool onStart() { return true; }
     virtual void onStop() { }
