@@ -4,7 +4,7 @@
 namespace tbox {
 namespace main {
 
-void RegisterModules(Module &apps, Context &ctx)
+void RegisterApps(Module &apps, Context &ctx)
 {
     apps.add(new ::App(ctx));
 }

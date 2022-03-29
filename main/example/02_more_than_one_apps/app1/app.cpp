@@ -1,37 +1,17 @@
 #include "app.h"
 #include <tbox/base/log.h>
+#include "sub.h"
 
 namespace app1 {
 
-bool App::construct(tbox::main::Context &ctx)
+App::App(tbox::main::Context &ctx) :
+    Module("app1", ctx)
 {
+    add(new Sub(ctx));
     LogTag();
-    return true;
 }
 
 App::~App()
-{
-    LogTag();
-}
-
-bool App::initialize(const tbox::Json &cfg)
-{
-    LogTag();
-    return true;
-}
-
-bool App::start()
-{
-    LogTag();
-    return true;
-}
-
-void App::stop()
-{
-    LogTag();
-}
-
-void App::cleanup()
 {
     LogTag();
 }

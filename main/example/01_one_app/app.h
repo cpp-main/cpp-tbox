@@ -8,7 +8,6 @@ class App : public tbox::main::Module
   public:
     App(tbox::main::Context &ctx);
     ~App();
-
   protected:
     virtual bool onInitialize(const tbox::Json &cfg) override;
     virtual bool onStart() override;
