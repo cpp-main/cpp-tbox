@@ -8,17 +8,17 @@ namespace echo_server {
 
 using namespace tbox;
 
-class App : public main::App
+class App : public main::Module
 {
   public:
+    App(main::Context &ctx);
     ~App();
 
-    void fillDefaultConfig(Json &cfg) const override;
-    bool construct(tbox::main::Context &ctx) override;
-    bool initialize(const tbox::Json &cfg) override;
-    bool start() override;
-    void stop() override;
-    void cleanup() override;
+    void onFillDefaultConfig(Json &cfg) override;
+    bool onInitialize(const tbox::Json &cfg) override;
+    bool onStart() override;
+    void onStop() override;
+    void onCleanup() override;
 
   private:
     network::TcpServer *server_ = nullptr;

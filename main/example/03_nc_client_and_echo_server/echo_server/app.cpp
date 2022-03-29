@@ -10,25 +10,24 @@ namespace echo_server {
 using namespace tbox::main;
 using namespace tbox::network;
 
-void App::fillDefaultConfig(Json &cfg) const
-{
-    cfg["echo_server"]["bind"] = "127.0.0.1:12345";
-}
-
-bool App::construct(Context &ctx)
-{
-    server_ = new TcpServer(ctx.loop());
-    return server_ != nullptr;
-}
+App::App(Context &ctx) :
+    Module("echo_server", ctx),
+    server_(new TcpServer(ctx.loop()))
+{ }
 
 App::~App()
 {
     CHECK_DELETE_RESET_OBJ(server_);
 }
 
-bool App::initialize(const tbox::Json &cfg)
+void App::onFillDefaultConfig(Json &cfg)
 {
-    auto js_bind = cfg["echo_server"]["bind"];
+    cfg["bind"] = "127.0.0.1:12345";
+}
+
+bool App::onInitialize(const tbox::Json &cfg)
+{
+    auto js_bind = cfg["bind"];
     if (!js_bind.is_string())
         return false;
 
@@ -44,17 +43,17 @@ bool App::initialize(const tbox::Json &cfg)
     return true;
 }
 
-bool App::start()
+bool App::onStart()
 {
     return server_->start();
 }
 
-void App::stop()
+void App::onStop()
 {
     server_->stop();
 }
 
-void App::cleanup()
+void App::onCleanup()
 {
     server_->cleanup();
 }

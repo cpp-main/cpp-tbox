@@ -10,18 +10,11 @@ namespace nc_client {
 using namespace tbox::main;
 using namespace tbox::network;
 
-void App::fillDefaultConfig(Json &cfg) const
-{
-    cfg["nc_client"]["server"] = "127.0.0.1:12345";
-}
-
-bool App::construct(tbox::main::Context &ctx)
-{
-    client_ = new TcpClient(ctx.loop());
-    stdio_ = new StdioStream(ctx.loop());
-
-    return (client_ != nullptr && stdio_ != nullptr);
-}
+App::App(tbox::main::Context &ctx) :
+    Module("nc_client", ctx),
+    client_(new TcpClient(ctx.loop())),
+    stdio_(new StdioStream(ctx.loop()))
+{ }
 
 App::~App()
 {
@@ -29,9 +22,14 @@ App::~App()
     CHECK_DELETE_RESET_OBJ(client_);
 }
 
-bool App::initialize(const tbox::Json &cfg)
+void App::onFillDefaultConfig(Json &cfg)
 {
-    auto js_server = cfg["nc_client"]["server"];
+    cfg["server"] = "127.0.0.1:12345";
+}
+
+bool App::onInitialize(const tbox::Json &cfg)
+{
+    auto js_server = cfg["server"];
     if (!js_server.is_string())
         return false;
 
@@ -43,19 +41,19 @@ bool App::initialize(const tbox::Json &cfg)
     return true;
 }
 
-bool App::start()
+bool App::onStart()
 {
     client_->start();
     stdio_->enable();
     return true;
 }
 
-void App::stop()
+void App::onStop()
 {
     client_->stop();
 }
 
-void App::cleanup()
+void App::onCleanup()
 {
     client_->cleanup();
 }

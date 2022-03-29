@@ -6,10 +6,10 @@
 namespace tbox {
 namespace main {
 
-void RegisterApps(Apps &apps)
+void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.add(new echo_server::App);
-    apps.add(new nc_client::App);
+    apps.add(new echo_server::App(ctx));
+    apps.add(new nc_client::App(ctx));
 }
 
 std::string GetAppDescribe()
