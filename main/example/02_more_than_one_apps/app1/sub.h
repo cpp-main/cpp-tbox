@@ -12,7 +12,7 @@ class Sub : public tbox::main::Module
     ~Sub();
 
   protected:
-    virtual bool onInitialize(const tbox::Json &cfg) override;
+    virtual bool onInit(const tbox::Json &cfg) override;
     virtual bool onStart() override;
     virtual void onStop() override;
     virtual void onCleanup() override;

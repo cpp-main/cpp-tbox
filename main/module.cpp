@@ -58,7 +58,7 @@ bool Module::initialize(const Json &js_parent)
 
     const Json &js_this = name_.empty() ? js_parent : js_parent[name_];
 
-    if (!onInitialize(js_this))
+    if (!onInit(js_this))
         return false;
 
     for (const auto &item : children_) {

@@ -20,7 +20,7 @@ void App::onFillDefaultConfig(tbox::Json &cfg)
     cfg["ok"] = true;
 }
 
-bool App::onInitialize(const tbox::Json &cfg)
+bool App::onInit(const tbox::Json &cfg)
 {
     if (!cfg.contains("ok"))
         return false;

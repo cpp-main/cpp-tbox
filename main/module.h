@@ -37,7 +37,7 @@ class Module {
 
   protected:
     virtual void onFillDefaultConfig(Json &js_this) { }
-    virtual bool onInitialize(const Json &js_this) { return true; }
+    virtual bool onInit(const Json &js_this) { return true; }
     virtual bool onStart() { return true; }
     virtual void onStop() { }
     virtual void onCleanup() { }

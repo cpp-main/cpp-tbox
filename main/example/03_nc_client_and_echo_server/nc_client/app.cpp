@@ -27,7 +27,7 @@ void App::onFillDefaultConfig(Json &cfg)
     cfg["server"] = "127.0.0.1:12345";
 }
 
-bool App::onInitialize(const tbox::Json &cfg)
+bool App::onInit(const tbox::Json &cfg)
 {
     auto js_server = cfg["server"];
     if (!js_server.is_string())

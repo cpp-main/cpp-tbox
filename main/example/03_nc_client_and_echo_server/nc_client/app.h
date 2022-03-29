@@ -16,7 +16,7 @@ class App : public main::Module
     ~App();
 
     void onFillDefaultConfig(Json &cfg) override;
-    bool onInitialize(const tbox::Json &cfg) override;
+    bool onInit(const tbox::Json &cfg) override;
     bool onStart() override;
     void onStop() override;
     void onCleanup() override;

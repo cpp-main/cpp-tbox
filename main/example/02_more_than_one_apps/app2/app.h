@@ -13,7 +13,7 @@ class App : public tbox::main::Module
 
   protected:
     virtual void onFillDefaultConfig(tbox::Json &cfg) override;
-    virtual bool onInitialize(const tbox::Json &cfg) override;
+    virtual bool onInit(const tbox::Json &cfg) override;
     virtual bool onStart() override;
     virtual void onStop() override;
     virtual void onCleanup() override;

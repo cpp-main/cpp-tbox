@@ -14,7 +14,7 @@ Sub::~Sub()
     LogTag();
 }
 
-bool Sub::onInitialize(const tbox::Json &cfg)
+bool Sub::onInit(const tbox::Json &cfg)
 {
     LogTag();
     return true;

@@ -14,7 +14,7 @@ App::~App()
     LogTag();
 }
 
-bool App::onInitialize(const tbox::Json &cfg)
+bool App::onInit(const tbox::Json &cfg)
 {
     LogTag();
     return true;
