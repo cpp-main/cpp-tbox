@@ -28,7 +28,7 @@ namespace tbox {
 namespace main {
 void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.addChild(new YourApp(ctx));
+    apps.add(new YourApp(ctx));
 }
 }
 }

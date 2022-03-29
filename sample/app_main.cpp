@@ -8,8 +8,8 @@ namespace main {
 
 void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.addChild(new app1::App(ctx));
-    apps.addChild(new app2::App(ctx));
+    apps.add(new app1::App(ctx));
+    apps.add(new app2::App(ctx));
 }
 
 std::string GetAppDescribe()

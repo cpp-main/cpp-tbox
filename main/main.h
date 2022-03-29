@@ -44,8 +44,8 @@ void GetVersion(int &major, int &minor, int &rev, int &build);
  * namespace main {
  *     void RegisterApps(Module &apps, Context &ctx)
  *     {
- *         apps.addChild(new MyApp1("app1", ctx));
- *         apps.addChild(new MyApp2("app2", ctx));
+ *         apps.add(new MyApp1("app1", ctx));
+ *         apps.add(new MyApp2("app2", ctx));
  *     }
  * }
  * }

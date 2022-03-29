@@ -18,7 +18,7 @@ Module::~Module()
     children_.clear();
 }
 
-bool Module::addChild(Module *child, bool required)
+bool Module::add(Module *child, bool required)
 {
     if (state_ != State::kNone)
         return false;

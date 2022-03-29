@@ -21,7 +21,7 @@ class Module {
     };
 
   public:
-    bool addChild(Module *child, bool required = true);
+    bool add(Module *child, bool required = true);
     //!注意:一旦将子Module添加到父Module，子Module的生命期就由父Module管控
     //!     不可私自delete
 

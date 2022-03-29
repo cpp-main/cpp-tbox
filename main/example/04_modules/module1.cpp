@@ -6,8 +6,8 @@
 Module1::Module1(tbox::main::Context &ctx)
     tbox::main::Module(ctx)
 {
-    addChild(new Module1_1(ctx), true);
-    addChild(new Module1_2(ctx), false);
+    add(new Module1_1(ctx), true);
+    add(new Module1_2(ctx), false);
 }
 
 bool Module1::initialize(const Json &js)

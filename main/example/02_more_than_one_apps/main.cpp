@@ -7,7 +7,7 @@
 namespace tbox {
 namespace main {
 
-void RegisterApps(Apps &apps)
+void RegisterApps(Apps &apps, Context &ctx)
 {
     apps.add(new app1::App);
     apps.add(new app2::App);

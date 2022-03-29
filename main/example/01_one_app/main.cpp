@@ -6,7 +6,7 @@ namespace main {
 
 void RegisterModules(Module &apps, Context &ctx)
 {
-    apps.addChild(new ::App(ctx));
+    apps.add(new ::App(ctx));
 }
 
 std::string GetAppDescribe()
