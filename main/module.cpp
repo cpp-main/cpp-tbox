@@ -1,5 +1,6 @@
 #include "module.h"
 #include <algorithm>
+#include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 
 namespace tbox {
@@ -50,20 +51,28 @@ void Module::fillDefaultConfig(Json &js_parent)
 
 bool Module::initialize(const Json &js_parent)
 {
-    if (state_ != State::kNone)
+    if (state_ != State::kNone) {
+        LogWarn("module %s's state is not State::kNone", name_.c_str());
         return false;
+    }
 
-    if (!name_.empty() && !js_parent.contains(name_))
+    if (!name_.empty() && !js_parent.contains(name_)) {
+        LogWarn("missing `%s' field in config", name_.c_str());
         return false;
+    }
 
     const Json &js_this = name_.empty() ? js_parent : js_parent[name_];
 
-    if (!onInit(js_this))
+    if (!onInit(js_this)) {
+        LogWarn("module %s init fail.", name_.c_str());
         return false;
+    }
 
     for (const auto &item : children_) {
-        if (!item.module_ptr->initialize(js_this) && item.required)
+        if (!item.module_ptr->initialize(js_this) && item.required) {
+            LogErr("required module `%s' initialize() fail", item.module_ptr->name().c_str());
             return false;
+        }
     }
 
     state_ = State::kInited;
@@ -72,15 +81,21 @@ bool Module::initialize(const Json &js_parent)
 
 bool Module::start()
 {
-    if (state_ != State::kInited)
+    if (state_ != State::kInited) {
+        LogWarn("module %s's state is not State::kInited", name_.c_str());
         return false;
+    }
 
-    if (!onStart())
+    if (!onStart()) {
+        LogWarn("module %s start fail.", name_.c_str());
         return false;
+    }
 
     for (const auto &item : children_) {
-        if (!item.module_ptr->start() && item.required)
+        if (!item.module_ptr->start() && item.required) {
+            LogErr("required module `%s' start() fail", item.module_ptr->name().c_str());
             return false;
+        }
     }
 
     state_ = State::kRunning;

@@ -88,15 +88,15 @@ int Main(int argc, char **argv)
             if (ctx.start() && apps.start()) {  //! 启动所有应用
                 Run(ctx, apps, loop_exit_wait);
             } else {
-                LogWarn("Apps start fail");
+                LogErr("Apps start fail");
             }
             apps.cleanup();  //! cleanup所有应用
         } else {
-            LogWarn("Apps init fail");
+            LogErr("Apps init fail");
         }
         ctx.cleanup();
     } else {
-        LogWarn("Context init fail");
+        LogErr("Context init fail");
     }
 
     LogInfo("Bye!");
