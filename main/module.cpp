@@ -120,6 +120,8 @@ void Module::cleanup()
     if (state_ == State::kNone)
         return;
 
+    stop();
+
     for (auto iter = children_.rbegin(); iter != children_.rend(); ++iter)
         iter->module_ptr->cleanup();
 
