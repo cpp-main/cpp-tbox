@@ -25,10 +25,10 @@ class ContextImp : public Context {
     void cleanup();
 
   public:
-    event::Loop* loop() const override { return sp_loop_; }
-    eventx::ThreadPool* thread_pool() const override { return sp_thread_pool_; }
-    eventx::TimerPool* timer_pool() const override { return sp_timer_pool_; }
-    terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
+    virtual event::Loop* loop() const override { return sp_loop_; }
+    virtual eventx::ThreadPool* thread_pool() const override { return sp_thread_pool_; }
+    virtual eventx::TimerPool* timer_pool() const override { return sp_timer_pool_; }
+    virtual terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
 
   protected:
     void buildTerminalNodes();
