@@ -60,14 +60,14 @@ std::string RawDataToHexStr(const void *data_ptr, uint16_t data_len,
 
 //! 字符不是A-Z a-z 0-9
 class NotAZaz09Exception : public std::exception {
-    const char* what() const throw() override {
+    virtual const char* what() const throw() override {
         return "character not a-z A-Z 0-9";
     }
 };
 
 //! 字串个体超过2个
 class MoreThan2CharException : public std::exception {
-    const char* what() const throw() override {
+    virtual const char* what() const throw() override {
         return "more than 2 characters";
     }
 };

@@ -12,13 +12,13 @@ class App : public main::Module
 {
   public:
     App(main::Context &ctx);
-    ~App();
+    virtual ~App() override;
 
-    void onFillDefaultConfig(Json &cfg) override;
-    bool onInit(const tbox::Json &cfg) override;
-    bool onStart() override;
-    void onStop() override;
-    void onCleanup() override;
+    virtual void onFillDefaultConfig(Json &cfg) override;
+    virtual bool onInit(const tbox::Json &cfg) override;
+    virtual bool onStart() override;
+    virtual void onStop() override;
+    virtual void onCleanup() override;
 
   private:
     network::TcpServer *server_ = nullptr;

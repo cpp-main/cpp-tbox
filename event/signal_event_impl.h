@@ -20,22 +20,22 @@ class SignalEventImpl : public SignalEvent,
                         public SignalSubscribuer {
   public:
     explicit SignalEventImpl(CommonLoop *wp_loop);
-    virtual ~SignalEventImpl();
+    virtual ~SignalEventImpl() override;
 
   public:
-    bool initialize(int signum, Mode mode) override;
-    bool initialize(const std::set<int> &sigset, Mode mode) override;
+    virtual bool initialize(int signum, Mode mode) override;
+    virtual bool initialize(const std::set<int> &sigset, Mode mode) override;
 
-    void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
+    virtual void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
 
-    bool isEnabled() const override { return is_enabled_; }
-    bool enable() override;
-    bool disable() override;
+    virtual bool isEnabled() const override { return is_enabled_; }
+    virtual bool enable() override;
+    virtual bool disable() override;
 
-    Loop* getLoop() const override;
+    virtual Loop* getLoop() const override;
 
   public:
-    void onSignal(int signo) override;
+    virtual void onSignal(int signo) override;
 
   private:
     CommonLoop *wp_loop_;
