@@ -23,7 +23,7 @@ class TcpAcceptor {
     IMMOVABLE(TcpAcceptor);
 
   public:
-    bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
+    bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
     using NewConnectionCallback = std::function<void (TcpConnection*)>;
     void setNewConnectionCallback(const NewConnectionCallback &cb) { new_conn_cb_ = cb; }

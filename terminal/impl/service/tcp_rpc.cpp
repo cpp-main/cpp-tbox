@@ -26,11 +26,11 @@ TcpRpc::Impl::~Impl()
 bool TcpRpc::Impl::initialize(const std::string &bind_addr_str)
 {
     auto bind_addr = SockAddr::FromString(bind_addr_str);
-    if (!sp_tcp_->initialize(bind_addr))
+    if (!sp_tcp_->initialize(bind_addr, 1))
         return false;
 
     sp_tcp_->setConnectedCallback(std::bind(&Impl::onTcpConnected, this, _1));
-    sp_tcp_->setReceiveCallback(std::bind(&Impl::onTcpReceived, this, _1, _2), 0);
+    sp_tcp_->setReceiveCallback(std::bind(&Impl::onTcpReceived, this, _1, _2), 1);
     sp_tcp_->setDisconnectedCallback(std::bind(&Impl::onTcpDisconnected, this, _1));
     return true;
 }

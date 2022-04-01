@@ -32,7 +32,7 @@ class TcpServer {
     };
 
     //! 设置绑定地址与backlog
-    bool initialize(const SockAddr &bind_addr, int listen_backlog = 0);
+    bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
     using ConnectedCallback     = std::function<void(const ClientToken &)>;
     using DisconnectedCallback  = std::function<void(const ClientToken &)>;
