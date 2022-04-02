@@ -4,7 +4,6 @@ app_y += eventx
 app_y += network
 app_y += coroutine
 app_y += mqtt
-app_y += log2file
 app_y += util
 app_y += terminal
 app_y += main
