@@ -12,18 +12,10 @@
 #include <condition_variable>
 #include <iostream>
 
-#define TAG \
-do { \
-    std::lock_guard<std::mutex> lg(print_mutex); \
-    std::cout << "HERE:" << __func__ << ", "<< __LINE__ << std::endl; \
-} while(false);
-
 namespace tbox {
 namespace util {
 
 using namespace std;
-
-std::mutex print_mutex;
 
 class AsyncPipe::Impl {
   public:
@@ -38,11 +30,10 @@ class AsyncPipe::Impl {
       public:
         size_t append(const void *data_ptr, size_t data_size);
 
-        inline bool   full() const { return capacity_ == size_; }
+        inline bool   full()  const { return capacity_ == size_; }
         inline bool   empty() const { return size_ == 0; }
-        inline void  *data() const { return data_; }
-        inline size_t size() const { return size_; }
-        inline size_t capacity() const { return capacity_; }
+        inline void  *data()  const { return data_; }
+        inline size_t size()  const { return size_; }
         inline void   reset() { size_ = 0; }
 
       private:
@@ -72,11 +63,11 @@ class AsyncPipe::Impl {
     bool    stop_signal_ = false;   //! 停止信号
     thread  backend_thread_;
 
-    mutex   curr_buffer_mutex_;
-    mutex   full_buffers_mutex_;
-    mutex   free_buffers_mutex_;
-    condition_variable full_buffers_cv_;
-    condition_variable free_buffers_cv_;
+    mutex   curr_buffer_mutex_;     //! 锁 curr_buffer_ 的
+    mutex   full_buffers_mutex_;    //! 锁 full_buffers_ 的
+    mutex   free_buffers_mutex_;    //! 锁 free_buffers_ 的
+    condition_variable full_buffers_cv_;    //! full_buffers_ 不为空条件变量
+    condition_variable free_buffers_cv_;    //! free_buffers_ 不为空条件变量
 };
 
 AsyncPipe::Impl::Buffer::Buffer(size_t cap) :
@@ -136,8 +127,8 @@ AsyncPipe::Impl::~Impl()
 
 bool AsyncPipe::Impl::initialize(const Config &cfg)
 {
-    if (!cfg.cb) {
-        std::cerr << "Err: AsyncPipe::Config::cb == null" << std::endl;
+    if (!cfg.backend_cb) {
+        std::cerr << "Err: AsyncPipe::Config::backend_cb == null" << std::endl;
         return false;
     }
 
@@ -240,7 +231,7 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {
                 //! 进行处理
-                cfg_.cb(buff->data(), buff->size());
+                cfg_.backend_cb(buff->data(), buff->size());
                 buff->reset();
                 //! 将处理后的缓冲放回 free_buffers_ 中
                 std::lock_guard<std::mutex> lg(free_buffers_mutex_);
@@ -262,7 +253,7 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {  //! 如果没取出来
                 //! 进行处理
-                cfg_.cb(buff->data(), buff->size());
+                cfg_.backend_cb(buff->data(), buff->size());
                 buff->reset();
                 //! 然后将处理后的buff放入到free_buffers_中
                 std::lock_guard<std::mutex> lg(free_buffers_mutex_);
@@ -271,10 +262,8 @@ void AsyncPipe::Impl::threadFunc()
             }
         }
     } while (!stop_signal_);  //! 如果是停止信号，则直接跳出循环，结束线程
-    /**
-     * stop_signal_ 信号为什么不在被唤醒时就break呢？
-     * 因为我们期望就算是退出了，Buff中的数据都应该被处理
-     */
+    //! stop_signal_ 信号为什么不在被唤醒时就break呢？
+    //! 因为我们期望就算是退出了，Buff中的数据都应该先被处理掉
 }
 
 }
