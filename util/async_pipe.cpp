@@ -12,10 +12,18 @@
 #include <condition_variable>
 #include <iostream>
 
+#define TAG \
+do { \
+    std::lock_guard<std::mutex> lg(print_mutex); \
+    std::cout << "HERE:" << __func__ << ", "<< __LINE__ << std::endl; \
+} while(false);
+
 namespace tbox {
 namespace util {
 
 using namespace std;
+
+std::mutex print_mutex;
 
 class AsyncPipe::Impl {
   public:
@@ -171,6 +179,8 @@ void AsyncPipe::Impl::cleanup()
     CHECK_DELETE_RESET_OBJ(curr_buffer_);
     for (auto item : free_buffers_)
         CHECK_DELETE_RESET_OBJ(item);
+
+    inited_ = false;
 }
 
 void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
@@ -215,7 +225,6 @@ void AsyncPipe::Impl::threadFunc()
                 }
             );
         }
-
         //! 先处理 full_buffers_ 中的数据
         for (;;) {
             Buffer *buff = nullptr;
@@ -225,7 +234,8 @@ void AsyncPipe::Impl::threadFunc()
                 if (!full_buffers_.empty()) {
                     buff = full_buffers_.front();
                     full_buffers_.pop_front();
-                }
+                } else
+                    break;
             }
 
             if (buff != nullptr) {
@@ -242,12 +252,12 @@ void AsyncPipe::Impl::threadFunc()
         //! 最后检查 curr_buffer_ 中的数据
         {
             Buffer *buff = nullptr;
-            {
-                std::lock_guard<std::mutex> lg2(curr_buffer_mutex_);
-                if (!curr_buffer_->empty()) {
+            if (curr_buffer_mutex_.try_lock()) {
+                if (curr_buffer_ != nullptr && !curr_buffer_->empty()) {
                     buff = curr_buffer_;
                     curr_buffer_ = nullptr;
                 }
+                curr_buffer_mutex_.unlock();
             }
 
             if (buff != nullptr) {  //! 如果没取出来
