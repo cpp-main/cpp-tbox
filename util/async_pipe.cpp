@@ -55,19 +55,20 @@ class AsyncPipe::Impl {
 
   private:
     Config  cfg_;
-    Buffer*         curr_buffer_ = nullptr; //!< 当前缓冲
-    vector<Buffer*> free_buffers_;  //!< 空缓冲
-    deque<Buffer*>  full_buffers_;  //!< 已满缓冲
 
-    bool    inited_ = false;        //! 是否已经启动子线程
-    bool    stop_signal_ = false;   //! 停止信号
+    Buffer*         curr_buffer_ = nullptr; //!< 当前缓冲
+    vector<Buffer*> free_buffers_;  //!< 可用缓冲数组
+    deque<Buffer*>  full_buffers_;  //!< 已满缓冲队列
+
+    bool    inited_ = false;        //!< 是否已经启动子线程
+    bool    stop_signal_ = false;   //!< 停止信号
     thread  backend_thread_;
 
-    mutex   curr_buffer_mutex_;     //! 锁 curr_buffer_ 的
-    mutex   full_buffers_mutex_;    //! 锁 full_buffers_ 的
-    mutex   free_buffers_mutex_;    //! 锁 free_buffers_ 的
-    condition_variable full_buffers_cv_;    //! full_buffers_ 不为空条件变量
-    condition_variable free_buffers_cv_;    //! free_buffers_ 不为空条件变量
+    mutex   curr_buffer_mutex_;     //!< 锁 curr_buffer_ 的
+    mutex   full_buffers_mutex_;    //!< 锁 full_buffers_ 的
+    mutex   free_buffers_mutex_;    //!< 锁 free_buffers_ 的
+    condition_variable full_buffers_cv_;    //!< full_buffers_ 不为空条件变量
+    condition_variable free_buffers_cv_;    //!< free_buffers_ 不为空条件变量
 };
 
 AsyncPipe::Impl::Buffer::Buffer(size_t cap) :
@@ -186,9 +187,13 @@ void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
             std::unique_lock<std::mutex> lk(free_buffers_mutex_);
             if (free_buffers_.empty())  //! 如里 free_buffers_ 为空，则要等
                 free_buffers_cv_.wait(lk, [this] { return !free_buffers_.empty(); });
+
             //! 将 free_buffers_ 中最后的一个弹出来，给到 curr_buffer_
             curr_buffer_ = free_buffers_.back();
             free_buffers_.pop_back();
+            //! Q: 为什么从 free_buffers_ 尾部取，而不是向 full_buffers_ 那样从头部取呢？
+            //! A: 因为 free_buffers_ 所存空闲缓冲，没有顺序要求。而 full_buffers_ 必须要有顺序性
+            //!    既然不需要顺序性，那么 vector 的尾部进出是最高效的。
         }
         auto size = curr_buffer_->append(ptr, remain_size);
         if (curr_buffer_->full()) {
@@ -244,6 +249,7 @@ void AsyncPipe::Impl::threadFunc()
         {
             Buffer *buff = nullptr;
             if (curr_buffer_mutex_.try_lock()) {
+                //! 注意：这里一定要用 try_lock()，否则会死锁
                 if (curr_buffer_ != nullptr && !curr_buffer_->empty()) {
                     buff = curr_buffer_;
                     curr_buffer_ = nullptr;
