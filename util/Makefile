@@ -4,7 +4,6 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	async_data_stream.h \
 	pid_file.h \
 	thread_wdog.h \
 	string.h \
@@ -14,9 +13,9 @@ HEAD_FILES = \
 	serializer.h \
 	time_counter.h \
 	state_machine.h \
+	async_pipe.h \
 
 CPP_SRC_FILES = \
-	async_data_stream.cpp \
 	pid_file.cpp \
 	thread_wdog.cpp \
 	string.cpp \
@@ -26,11 +25,11 @@ CPP_SRC_FILES = \
 	serializer.cpp \
 	time_counter.cpp \
 	state_machine.cpp \
+	async_pipe.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
-	async_data_stream_test.cpp \
 	thread_wdog_test.cpp \
 	pid_file_test.cpp \
 	string_test.cpp \
@@ -40,6 +39,7 @@ TEST_CPP_SRC_FILES = \
 	serializer_test.cpp \
 	time_counter_test.cpp \
 	state_machine_test.cpp \
+	async_pipe_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 
