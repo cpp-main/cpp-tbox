@@ -8,17 +8,17 @@
 using namespace tbox;
 using namespace tbox::cabinet;
 
-TEST(Cabinet, insert_1_and_remove)
+TEST(Cabinet, alloc_1_and_free)
 {
     Cabinet<int> oc;
-    auto t = oc.insert(new int(100));
+    auto t = oc.alloc(new int(100));
 
     int *i1 = oc.at(t);
     EXPECT_EQ(oc.size(), 1u);
     EXPECT_NE(i1, nullptr);
     EXPECT_EQ(*i1, 100);
 
-    oc.remove(t);
+    oc.free(t);
     EXPECT_EQ(oc.size(), 0u);
     delete i1;
 
@@ -26,7 +26,7 @@ TEST(Cabinet, insert_1_and_remove)
     EXPECT_EQ(i2, nullptr);
 }
 
-TEST(Cabinet, insert_100_and_remove)
+TEST(Cabinet, alloc_100_and_free)
 {
     using OC = Cabinet<int>;
     OC oc;
@@ -34,7 +34,7 @@ TEST(Cabinet, insert_100_and_remove)
     std::vector<Token> tokens;
     //! 插入0~74的值
     for (int i = 0; i < 75; ++i) {
-        auto t = oc.insert(new int(i));
+        auto t = oc.alloc(new int(i));
         tokens.push_back(t);
     }
     EXPECT_EQ(oc.size(), 75u);
@@ -46,7 +46,7 @@ TEST(Cabinet, insert_100_and_remove)
         EXPECT_NE(p, nullptr);
         EXPECT_EQ(*p, i);
 
-        oc.remove(t);
+        oc.free(t);
         delete p;
     }
     EXPECT_EQ(oc.size(), 25u);
@@ -60,7 +60,7 @@ TEST(Cabinet, insert_100_and_remove)
 
     //! 插入75~99的值
     for (int i = 75; i < 100; ++i) {
-        auto t = oc.insert(new int(i));
+        auto t = oc.alloc(new int(i));
         tokens.push_back(t);
     }
     EXPECT_EQ(oc.size(), 50u);
@@ -72,7 +72,7 @@ TEST(Cabinet, insert_100_and_remove)
         EXPECT_NE(p, nullptr);
         EXPECT_EQ(*p, i);
 
-        oc.remove(t);
+        oc.free(t);
         delete p;
     }
     EXPECT_EQ(oc.size(), 0u);
@@ -108,3 +108,14 @@ TEST(Cabinet, token_as_unordered_set_key)
     token_set.insert(Token(2, 0));
     EXPECT_EQ(token_set.size(), 2u);
 }
+
+TEST(Cabinet, NullToken)
+{
+    Cabinet<int> oc;
+    auto t = oc.alloc(new int(100));
+    delete oc.free(t);
+
+    cabinet::Token null_token;
+    EXPECT_EQ(oc.at(null_token), nullptr);
+}
+
