@@ -22,27 +22,24 @@ namespace {
     const int level_color_num[] = {31, 91, 93, 33, 39, 36, 35};
     std::mutex _stdout_lock;
 
-    void _GetCurrTimeString(char *timestamp)
+    void _GetCurrTimeString(const LogContent *content, char *timestamp)
     {
-        struct timeval tv;
-        struct timezone tz;
-
-        gettimeofday(&tv, &tz);
 #if 1
+        time_t ts_sec = content->timestamp.sec;
         struct tm tm;
-        localtime_r(&tv.tv_sec, &tm);
+        localtime_r(&ts_sec, &tm);
         char tmp[20];
         strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
-        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06ld", tmp, tv.tv_usec);
+        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
 #else
-        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%ld.%06ld", tv.tv_sec, tv.tv_usec);
+        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%u.%06u", content->timestamp.sec, content->timestamp.usec);
 #endif
     }
 
     void _PrintLogToStdout(LogContent *content)
     {
         char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
-        _GetCurrTimeString(timestamp);
+        _GetCurrTimeString(content, timestamp);
 
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
@@ -50,7 +47,7 @@ namespace {
         printf("\033[%dm<%c> ", level_color_num[content->level], level_name[content->level]);
 
         //! 打印时间戳、线程号、模块名
-        printf("%s %ld %s ", timestamp, ::syscall(SYS_gettid), content->module_id);
+        printf("%s %ld %s ", timestamp, content->thread_id, content->module_id);
 
         if (content->func_name != nullptr)
             printf("%s() ", content->func_name);
@@ -79,7 +76,7 @@ namespace {
 
         int write_size = buff_size;
 
-        int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", syscall(SYS_gettid), content->module_id);
+        int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", content->thread_id, content->module_id);
         write_size -= len;
 
         if (write_size > 2 && content->level == 5) {
@@ -121,17 +118,19 @@ bool __attribute((weak)) LogOutput_FilterFunc(LogContent *content);
 extern "C" {
 
     static void _LogOutput_PrintfFunc(LogContent *content);
+    static uint32_t _id = 0;
 
     void LogOutput_Initialize(const char *proc_name)
     {
-        LogSetPrintfFunc(_LogOutput_PrintfFunc);
+        _id = LogAddPrintfFunc(_LogOutput_PrintfFunc);
         openlog(proc_name, 0, LOG_USER);
     }
 
     void LogOutput_Cleanup()
     {
         closelog();
-        LogSetPrintfFunc(nullptr);
+        LogRemovePrintfFunc(_id);
+        _id = 0;
     }
 
     void LogOutput_SetMask(int output_mask)

@@ -21,7 +21,7 @@
 
 //! Define commonly macros
 #define LogPrintf(level, fmt, ...) \
-    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, fmt, ## __VA_ARGS__)
+    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, true, fmt, ## __VA_ARGS__)
 
 #define LogFatal(fmt, ...)  LogPrintf(LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
 #define LogErr(fmt, ...)    LogPrintf(LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
@@ -60,13 +60,14 @@ extern "C" {
 //! \param  file_name   File name
 //! \param  line        Code line
 //! \param  level       Log level
+//! \param  with_args   Whether with args
 //! \param  fmt         Log format string
 //!
 //! \note   We only declare this function here.
 //!         It's your duty to implement it.
 //!
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
-                   int line, int level, const char *fmt, ...);
+                   int line, int level, bool with_args, const char *fmt, ...);
 
 #ifdef __cplusplus
 }
