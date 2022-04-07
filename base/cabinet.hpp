@@ -88,6 +88,9 @@ Token Cabinet<T>::alloc(T *obj)
 template <typename T>
 bool Cabinet<T>::update(const Token &token, T *obj)
 {
+    if (token.isNull() || token.pos() >= cells_.size())
+        return false;
+
     Cell &cell = cells_.at(token.pos());
     if (cell.id == token.id()) {
         cell.obj_ptr = obj;
@@ -99,6 +102,9 @@ bool Cabinet<T>::update(const Token &token, T *obj)
 template <typename T>
 T* Cabinet<T>::free(const Token &token)
 {
+    if (token.isNull() || token.pos() >= cells_.size())
+        return nullptr;
+
     Cell &cell = cells_.at(token.pos());
     if (cell.id == token.id()) {
         T *ptr = cell.obj_ptr;
@@ -123,6 +129,9 @@ void Cabinet<T>::clear()
 template <typename T>
 T* Cabinet<T>::at(const Token &token) const
 {
+    if (token.isNull() || token.pos() >= cells_.size())
+        return nullptr;
+
     const Cell &cell = cells_.at(token.pos());
     if (cell.id == token.id())
         return cell.obj_ptr;

@@ -108,3 +108,14 @@ TEST(Cabinet, token_as_unordered_set_key)
     token_set.insert(Token(2, 0));
     EXPECT_EQ(token_set.size(), 2u);
 }
+
+TEST(Cabinet, NullToken)
+{
+    Cabinet<int> oc;
+    auto t = oc.alloc(new int(100));
+    delete oc.free(t);
+
+    cabinet::Token null_token;
+    EXPECT_EQ(oc.at(null_token), nullptr);
+}
+
