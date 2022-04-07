@@ -6,11 +6,13 @@
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
+#include <mutex>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+static std::mutex _lock;
 static uint32_t _id_alloc = 0;
 static std::vector<std::pair<uint32_t, LogPrintfFuncType>> _output_channels;
 
@@ -51,15 +53,19 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
     };
 
     va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
-    for (const auto &item : _output_channels) {
-        if (item.second)
-            item.second(&content);
+    {
+        std::lock_guard<std::mutex> lg(_lock);
+        for (const auto &item : _output_channels) {
+            if (item.second)
+                item.second(&content);
+        }
     }
     va_end(args);
 }
 
 uint32_t LogAddPrintfFunc(const LogPrintfFuncType &func)
 {
+    std::lock_guard<std::mutex> lg(_lock);
     uint32_t new_id = ++_id_alloc;
     _output_channels.push_back(std::make_pair(new_id, func));
     return new_id;
@@ -67,6 +73,7 @@ uint32_t LogAddPrintfFunc(const LogPrintfFuncType &func)
 
 bool LogRemovePrintfFunc(uint32_t id)
 {
+    std::lock_guard<std::mutex> lg(_lock);
     auto iter = std::remove_if(_output_channels.begin(), _output_channels.end(),
         [id](const std::pair<uint32_t, LogPrintfFuncType> item) {
             return (item.first == id);
