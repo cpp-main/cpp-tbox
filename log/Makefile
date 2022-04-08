@@ -14,8 +14,9 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"log"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	stdout_channel_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS)
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

@@ -2,7 +2,7 @@
 #include <functional>
 
 namespace tbox {
-namespace log_output {
+namespace log {
 
 Channel::~Channel()
 {

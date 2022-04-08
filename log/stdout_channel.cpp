@@ -2,13 +2,13 @@
 #include <sys/time.h>
 
 namespace tbox {
-namespace log_output {
+namespace log {
 
 #define TIMESTAMP_STRING_SIZE   28
 
 namespace {
 const char *level_name = "FEWNIDT";
-const int level_color_num[] = {31, 91, 93, 33, 39, 36, 35};
+const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
 
 void _GetCurrTimeString(const LogContent *content, char *timestamp)
 {
@@ -57,6 +57,8 @@ void StdoutChannel::onLog(LogContent *content)
 
     if (enable_color_)
         puts("\033[0m");    //! 恢复色彩
+    else
+        putchar('\n');
 }
 
 }

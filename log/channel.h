@@ -8,7 +8,7 @@
 #include <tbox/base/log_imp.h>
 
 namespace tbox {
-namespace log_output {
+namespace log {
 
 //! 日志打印通道类
 class Channel {

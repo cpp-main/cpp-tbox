@@ -4,7 +4,7 @@
 #include "channel.h"
 
 namespace tbox {
-namespace log_output {
+namespace log {
 
 class StdoutChannel : public Channel {
   public:
