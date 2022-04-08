@@ -2,6 +2,7 @@
 #include "syslog_channel.h"
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 using namespace std;
 using namespace tbox::log;
@@ -102,7 +103,12 @@ TEST(SyslogChannel, TimeCast)
 
     auto start_ts = chrono::steady_clock::now();
 
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 1000; ++i)
+        LogInfo("%s", tmp.c_str());
+
+    this_thread::sleep_for(chrono::milliseconds(10));
+
+    for (int i = 0; i < 1000; ++i)
         LogInfo("%s", tmp.c_str());
 
     auto end_ts = chrono::steady_clock::now();
