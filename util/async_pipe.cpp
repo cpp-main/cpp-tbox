@@ -47,6 +47,7 @@ class AsyncPipe::Impl {
     ~Impl();
 
     bool initialize(const Config &cfg);
+    void setCallback(const Callback &cb) { cb_ = cb; }
     void cleanup();
     void append(const void *data_ptr, size_t data_size);
 
@@ -54,7 +55,8 @@ class AsyncPipe::Impl {
     void threadFunc();
 
   private:
-    Config  cfg_;
+    Config      cfg_;
+    Callback    cb_;
 
     Buffer*         curr_buffer_ = nullptr; //!< 当前缓冲
     vector<Buffer*> free_buffers_;  //!< 可用缓冲数组
@@ -108,6 +110,11 @@ bool AsyncPipe::initialize(const Config &cfg)
     return impl_->initialize(cfg);
 }
 
+void AsyncPipe::setCallback(const Callback &cb)
+{
+    impl_->setCallback(cb);
+}
+
 void AsyncPipe::cleanup()
 {
     impl_->cleanup();
@@ -128,11 +135,6 @@ AsyncPipe::Impl::~Impl()
 
 bool AsyncPipe::Impl::initialize(const Config &cfg)
 {
-    if (!cfg.backend_cb) {
-        std::cerr << "Err: AsyncPipe::Config::backend_cb == null" << std::endl;
-        return false;
-    }
-
     if (cfg.buff_size == 0) {
         std::cerr << "Err: AsyncPipe::Config::buff_size == 0" << std::endl;
         return false;
@@ -172,6 +174,7 @@ void AsyncPipe::Impl::cleanup()
     for (auto item : free_buffers_)
         CHECK_DELETE_RESET_OBJ(item);
 
+    cb_ = nullptr;
     inited_ = false;
 }
 
@@ -236,7 +239,8 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {
                 //! 进行处理
-                cfg_.backend_cb(buff->data(), buff->size());
+                if (cb_)
+                    cb_(buff->data(), buff->size());
                 buff->reset();
                 //! 将处理后的缓冲放回 free_buffers_ 中
                 std::lock_guard<std::mutex> lg(free_buffers_mutex_);
@@ -259,7 +263,8 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {  //! 如果没取出来
                 //! 进行处理
-                cfg_.backend_cb(buff->data(), buff->size());
+                if (cb_)
+                    cb_(buff->data(), buff->size());
                 buff->reset();
                 //! 然后将处理后的buff放入到free_buffers_中
                 std::lock_guard<std::mutex> lg(free_buffers_mutex_);

@@ -9,6 +9,11 @@ AsyncChannel::AsyncChannel()
 AsyncChannel::~AsyncChannel()
 { }
 
+bool AsyncChannel::initialize(const Config &cfg)
+{
+    return true;
+}
+
 void AsyncChannel::onLogFrontEnd(LogContent *content)
 {
     //!TODO

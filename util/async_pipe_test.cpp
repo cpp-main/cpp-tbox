@@ -11,14 +11,17 @@ void TestByConfig(AsyncPipe::Config cfg)
     vector<uint8_t> out_data;
 
     AsyncPipe ap;
-    cfg.backend_cb = [&] (const void *ptr, size_t size) {
-        const uint8_t *p = static_cast<const uint8_t*>(ptr);
-        for (size_t i = 0; i < size; ++i)
-            out_data.push_back(p[i]);
-        this_thread::sleep_for(chrono::milliseconds(10));
-    };
-
     EXPECT_TRUE(ap.initialize(cfg));
+    ap.setCallback(
+        [&] (const void *ptr, size_t size) {
+            const uint8_t *p = static_cast<const uint8_t*>(ptr);
+            for (size_t i = 0; i < size; ++i)
+                out_data.push_back(p[i]);
+            this_thread::sleep_for(chrono::milliseconds(10));
+        }
+    );
+
+
     for (size_t i = 0; i < 256; ++i) {
         uint8_t v = i;
         ap.append(&v, 1);
@@ -116,13 +119,15 @@ TEST(AsyncPipe, PeriodSync)
     vector<uint8_t> out_data;
 
     AsyncPipe ap;
-    cfg.backend_cb = [&] (const void *ptr, size_t size) {
-        const uint8_t *p = static_cast<const uint8_t*>(ptr);
-        for (size_t i = 0; i < size; ++i)
-            out_data.push_back(p[i]);
-    };
-
     EXPECT_TRUE(ap.initialize(cfg));
+    ap.setCallback(
+        [&] (const void *ptr, size_t size) {
+            const uint8_t *p = static_cast<const uint8_t*>(ptr);
+            for (size_t i = 0; i < size; ++i)
+                out_data.push_back(p[i]);
+        }
+    );
+
     uint8_t dummy = 12;
     ap.append(&dummy, 1);
     EXPECT_EQ(out_data.size(), 0);
@@ -143,13 +148,15 @@ TEST(AsyncPipe, ForgetCleanup)
     vector<uint8_t> out_data;
 
     AsyncPipe ap;
-    cfg.backend_cb = [&] (const void *ptr, size_t size) {
-        const uint8_t *p = static_cast<const uint8_t*>(ptr);
-        for (size_t i = 0; i < size; ++i)
-            out_data.push_back(p[i]);
-    };
-
     EXPECT_TRUE(ap.initialize(cfg));
+    ap.setCallback(
+        [&] (const void *ptr, size_t size) {
+            const uint8_t *p = static_cast<const uint8_t*>(ptr);
+            for (size_t i = 0; i < size; ++i)
+                out_data.push_back(p[i]);
+        }
+    );
+
     uint8_t dummy = 12;
     ap.append(&dummy, 1);
     EXPECT_EQ(out_data.size(), 0);

@@ -1,11 +1,11 @@
 app_y += base
+app_y += util
 app_y += log
 app_y += event
 app_y += eventx
 app_y += network
 app_y += coroutine
 app_y += mqtt
-app_y += util
 app_y += terminal
 app_y += main
 app_y += sample

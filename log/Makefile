@@ -21,7 +21,7 @@ TEST_CPP_SRC_FILES = \
 	stdout_channel_test.cpp \
 	syslog_channel_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ltbox_util
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

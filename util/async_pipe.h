@@ -41,10 +41,11 @@ class AsyncPipe {
         size_t buff_size = 1024;    //!< 缓冲大小，默认1KB
         size_t buff_num = 2;        //!< 缓冲个数，默认2
         size_t interval = 1000;     //!< 同步间隔，单位ms，默认1秒
-        Callback backend_cb;        //!< 回调函数
     };
 
-    bool initialize(const Config &cfg); //! 初始化
+    bool initialize(const Config &cfg);     //! 初始化
+    void setCallback(const Callback &cb);   //! 设置回调
+
     void append(const void *data_ptr, size_t data_size); //! 异步写入
     void cleanup(); //! 清理
 

@@ -52,7 +52,7 @@ void Channel::HandleLog(LogContent *content, void *ptr)
 {
     Channel *pthis = static_cast<Channel*>(ptr);
     if (pthis->filter(content->level, content->module_id))
-        pthis->onLog(content);
+        pthis->onLogFrontEnd(content);
 }
 
 }
