@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include "stdout_channel.h"
+#include "syslog_channel.h"
 #include <iostream>
 #include <chrono>
 
 using namespace std;
 using namespace tbox::log;
 
-TEST(StdoutChannel, DefaultLevel)
+TEST(SyslogChannel, DefaultLevel)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -23,9 +23,9 @@ TEST(StdoutChannel, DefaultLevel)
     LogTag();
 }
 
-TEST(StdoutChannel, TraceLevel)
+TEST(SyslogChannel, TraceLevel)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
     ch.setLevel(LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -41,9 +41,9 @@ TEST(StdoutChannel, TraceLevel)
     LogTag();
 }
 
-TEST(StdoutChannel, WillNotPrint)
+TEST(SyslogChannel, WillNotPrint)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -57,9 +57,9 @@ TEST(StdoutChannel, WillNotPrint)
     LogTag();
 }
 
-TEST(StdoutChannel, NoColor)
+TEST(SyslogChannel, NoColor)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
     ch.enableColor(false);
     ch.setLevel(LOG_LEVEL_TRACE);
@@ -77,26 +77,26 @@ TEST(StdoutChannel, NoColor)
 }
 
 
-TEST(StdoutChannel, Format)
+TEST(SyslogChannel, Format)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
     LogInfo("%d, %f, %s", 123456, 12.345, "world");
 }
 
-TEST(StdoutChannel, LongString)
+TEST(SyslogChannel, LongString)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
 }
 
-TEST(StdoutChannel, TimeCast)
+TEST(SyslogChannel, TimeCast)
 {
-    StdoutChannel ch;
+    SyslogChannel ch;
     ch.enable();
     std::string tmp(30, 'm');
 
