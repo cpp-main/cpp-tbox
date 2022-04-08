@@ -117,12 +117,12 @@ bool __attribute((weak)) LogOutput_FilterFunc(LogContent *content);
 
 extern "C" {
 
-    static void _LogOutput_PrintfFunc(LogContent *content);
+    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr);
     static uint32_t _id = 0;
 
     void LogOutput_Initialize(const char *proc_name)
     {
-        _id = LogAddPrintfFunc(_LogOutput_PrintfFunc);
+        _id = LogAddPrintfFunc(_LogOutput_PrintfFunc, nullptr);
         openlog(proc_name, 0, LOG_USER);
     }
 
@@ -138,7 +138,7 @@ extern "C" {
         _output_mask = output_mask;
     }
 
-    static void _LogOutput_PrintfFunc(LogContent *content)
+    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr)
     {
         if ((LogOutput_FilterFunc != nullptr) &&
             !LogOutput_FilterFunc(content))

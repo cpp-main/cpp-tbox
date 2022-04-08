@@ -14,7 +14,14 @@ extern "C" {
 
 static std::mutex _lock;
 static uint32_t _id_alloc = 0;
-static std::vector<std::pair<uint32_t, LogPrintfFuncType>> _output_channels;
+
+struct OutputChannel {
+    uint32_t id;
+    LogPrintfFuncType func;
+    void *ptr;
+};
+
+static std::vector<OutputChannel> _output_channels;
 
 /**
  * \brief   日志格式化打印接口的实现
@@ -56,18 +63,23 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
     {
         std::lock_guard<std::mutex> lg(_lock);
         for (const auto &item : _output_channels) {
-            if (item.second)
-                item.second(&content);
+            if (item.func)
+                item.func(&content, item.ptr);
         }
     }
     va_end(args);
 }
 
-uint32_t LogAddPrintfFunc(const LogPrintfFuncType &func)
+uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr)
 {
     std::lock_guard<std::mutex> lg(_lock);
     uint32_t new_id = ++_id_alloc;
-    _output_channels.push_back(std::make_pair(new_id, func));
+    OutputChannel channel = {
+        .id     = new_id,
+        .func   = func,
+        .ptr    = ptr
+    };
+    _output_channels.push_back(channel);
     return new_id;
 }
 
@@ -75,8 +87,8 @@ bool LogRemovePrintfFunc(uint32_t id)
 {
     std::lock_guard<std::mutex> lg(_lock);
     auto iter = std::remove_if(_output_channels.begin(), _output_channels.end(),
-        [id](const std::pair<uint32_t, LogPrintfFuncType> item) {
-            return (item.first == id);
+        [id](const OutputChannel &item) {
+            return (item.id == id);
         }
     );
 

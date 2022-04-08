@@ -1,4 +1,5 @@
 app_y += base
+app_y += log
 app_y += event
 app_y += eventx
 app_y += network

@@ -32,10 +32,10 @@ struct LogContent {
 };
 
 //! 定义日志输出函数
-typedef void (*LogPrintfFuncType)(LogContent *content);
+typedef void (*LogPrintfFuncType)(LogContent *content, void *ptr);
 
 //! 添加与删除日志输出函数
-uint32_t LogAddPrintfFunc(const LogPrintfFuncType &func);
+uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr);
 bool     LogRemovePrintfFunc(uint32_t id);
 
 #ifdef __cplusplus

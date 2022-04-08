@@ -7,6 +7,7 @@ LIB_VERSION_Z = 0
 
 HEAD_FILES = \
 	log.h \
+	log_imp.h \
 	log_output.h \
 	defines.h \
 	scope_exit.hpp \
