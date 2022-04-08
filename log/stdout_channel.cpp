@@ -25,7 +25,7 @@ void _GetCurrTimeString(const LogContent *content, char *timestamp)
 }
 }
 
-void StdoutChannel::onLog(LogContent *content)
+void StdoutChannel::onLogFrontEnd(LogContent *content)
 {
     char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
     _GetCurrTimeString(content, timestamp);

@@ -11,7 +11,7 @@ class StdoutChannel : public Channel {
     void enableColor(bool enable) { enable_color_ = enable; }
 
   protected:
-    virtual void onLog(LogContent *content) override;
+    virtual void onLogFrontEnd(LogContent *content) override;
 
   private:
     bool enable_color_ = true;

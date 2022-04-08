@@ -23,7 +23,7 @@ class Channel {
   protected:
     virtual void onEnable() { }
     virtual void onDisable() { }
-    virtual void onLog(LogContent *content) = 0;    //!< 需要自已去实现
+    virtual void onLogFrontEnd(LogContent *content) = 0;    //!< 需要自已去实现
 
     std::mutex lock_;
 

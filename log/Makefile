@@ -5,10 +5,12 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	channel.h \
+	async_channel.h \
 	stdout_channel.h \
 
 CPP_SRC_FILES = \
 	channel.cpp \
+	async_channel.cpp \
 	stdout_channel.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"log"' $(CXXFLAGS)
