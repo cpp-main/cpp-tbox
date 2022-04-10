@@ -181,3 +181,27 @@ TEST(StateMachine, Restart)
     sm.start(STATE_A);
     EXPECT_EQ(a_enter_counter, 2);
 }
+
+//! 主要测试用 enum class 定义的状态与事件是否能编译过
+TEST(StateMachine, EnumClass)
+{
+    StateMachine sm;
+    enum class State { k1 = 1, k2 };
+    enum class Event { k1 = 1, k2 };
+
+    int enter_counter = 0;
+    int exit_counter = 0;
+
+    sm.newState(State::k1, [&] { ++enter_counter; }, [&] { ++exit_counter; });
+    sm.newState(State::k2, nullptr, nullptr);
+
+    sm.addRoute(State::k1, Event::k1, State::k2, nullptr, nullptr);
+    sm.addRoute(State::k2, Event::k2, State::k1, nullptr, nullptr);
+    sm.start(State::k1);
+    sm.run(Event::k1);
+    sm.run(Event::k2);
+    sm.stop();
+
+    EXPECT_EQ(enter_counter, 2);
+    EXPECT_EQ(exit_counter, 2);
+}

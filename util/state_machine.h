@@ -9,8 +9,8 @@ namespace util {
 //! 状态机
 class StateMachine {
   public:
-    using StateID = uint16_t;   //! 注意：StateID应大于0，StateID表示不合法的状态
-    using EventID = uint16_t;   //! 注意：EventID = 0 表示任意事件，仅在 addRoute() 时使用
+    using StateID = unsigned int;   //! 注意：StateID应大于0，StateID表示不合法的状态
+    using EventID = unsigned int;   //! 注意：EventID = 0 表示任意事件，仅在 addRoute() 时使用
 
     using ActionFunc = std::function<void()>;
     using GuardFunc  = std::function<bool()>;
@@ -31,6 +31,11 @@ class StateMachine {
      */
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
 
+    template <typename S>
+    bool newState(S state_id, const ActionFunc &enter_action, const ActionFunc &exit_action) {
+        return newState(static_cast<StateID>(state_id), enter_action, exit_action);
+    }
+
     /**
      * \brief   添加状态转换路由
      *
@@ -45,6 +50,15 @@ class StateMachine {
      */
     bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
 
+    template <typename S, typename E>
+    bool addRoute(S from_state_id, E event_id, S to_state_id, const GuardFunc &guard, const ActionFunc &action) {
+        return addRoute(static_cast<StateID>(from_state_id),
+                        static_cast<EventID>(event_id),
+                        static_cast<StateID>(to_state_id),
+                        guard, action);
+    }
+
+
     /**
      * \brief   启动状态机，并指定初始状态
      *
@@ -54,6 +68,11 @@ class StateMachine {
      *                  重复start()或init_state所指状态不存在时会不成功
      */
     bool start(StateID init_state);
+
+    template <typename S>
+    bool start(S init_state) {
+        return start(static_cast<StateID>(init_state));
+    }
 
     //! 停止状态机
     void stop();
@@ -67,6 +86,11 @@ class StateMachine {
      */
     bool run(EventID event_id);
 
+    template <typename E>
+    bool run(E event_id) {
+        return run(static_cast<EventID>(event_id));
+    }
+
     /**
      * \brief   获取当前状态ID
      *
@@ -74,6 +98,11 @@ class StateMachine {
      * \return  =0 状态机未启动
      */
     StateID currentState() const;
+
+    template <typename S>
+    S currentState() const {
+        return static_cast<S>(currentState());
+    }
 
   private:
     class Impl;
