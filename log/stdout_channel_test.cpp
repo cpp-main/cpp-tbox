@@ -95,7 +95,7 @@ TEST(StdoutChannel, LongString)
     LogInfo("%s", tmp.c_str());
 }
 
-TEST(StdoutChannel, TimeCast)
+TEST(StdoutChannel, TimeCast1)
 {
     StdoutChannel ch;
     ch.enable();
@@ -103,13 +103,28 @@ TEST(StdoutChannel, TimeCast)
 
     auto start_ts = chrono::steady_clock::now();
 
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 10000; ++i)
         LogInfo("%s", tmp.c_str());
 
-    this_thread::sleep_for(chrono::milliseconds(10));
+    auto end_ts = chrono::steady_clock::now();
+    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
+    cout << "timecost: " << time_span.count() << " us" << endl;
+}
 
-    for (int i = 0; i < 1000; ++i)
+TEST(StdoutChannel, TimeCast2)
+{
+    StdoutChannel ch;
+    ch.enable();
+    std::string tmp(30, 'm');
+
+    auto start_ts = chrono::steady_clock::now();
+
+    for (int i = 0; i < 10000; ++i) {
         LogInfo("%s", tmp.c_str());
+        if (i % 100 == 0) {
+            this_thread::sleep_for(chrono::milliseconds(10));
+        }
+    }
 
     auto end_ts = chrono::steady_clock::now();
     chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);

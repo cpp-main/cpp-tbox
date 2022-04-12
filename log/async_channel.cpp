@@ -1,6 +1,7 @@
 #include "async_channel.h"
 #include <cstring>
 #include <algorithm>
+#include <iostream>
 
 namespace tbox {
 namespace log {
@@ -26,56 +27,44 @@ bool AsyncChannel::initialize(const Config &cfg)
     return true;
 }
 
-#define TIMESTAMP_STRING_SIZE   28
-
-namespace {
-const char *level_name = "FEWNIDT";
-const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
-
-void _GetCurrTimeString(const LogContent *content, char *timestamp)
+void AsyncChannel::cleanup()
 {
-#if 1
-    time_t ts_sec = content->timestamp.sec;
-    struct tm tm;
-    localtime_r(&ts_sec, &tm);
-    char tmp[20];
-    strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
-    snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
-#else
-    snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%u.%06u", content->timestamp.sec, content->timestamp.usec);
-#endif
-}
+    async_pipe_.cleanup();
 }
 
 void AsyncChannel::onLogFrontEnd(LogContent *content)
 {
-    const int buff_size = LOG_MAX_LEN;
-    char buff[buff_size];
+    const char *level_name = "FEWNIDT";
 
-    size_t remain_size = buff_size;
+    char buff[LOG_MAX_LEN];
+    int remain_size = LOG_MAX_LEN;
 
-#define WRITE_PTR (buff + (buff_size - remain_size))
+#define WRITE_PTR (buff + (LOG_MAX_LEN - remain_size))
 
-    char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
-    _GetCurrTimeString(content, timestamp);
+#define UPDATE_REMAIN_SIZE() \
+    remain_size = (len > remain_size) ? 1 : (remain_size - len)
 
-    auto len = snprintf(WRITE_PTR, remain_size, "<%c> %s %ld %s ",
-                       level_name[content->level], timestamp, content->thread_id, content->module_id);
-    remain_size -= len;
+    udpateTimestampStr(content->timestamp.sec);
+
+    int len = snprintf(WRITE_PTR, remain_size, "<%c> %s.%06u %ld %s ",
+                       level_name[content->level],
+                       timestamp_str_, content->timestamp.usec,
+                       content->thread_id, content->module_id);
+    UPDATE_REMAIN_SIZE();
 
     if (remain_size > 2 && content->func_name != nullptr) {
-        len = snprintf(WRITE_PTR, remain_size, "%s() ", content->func_name);
-        remain_size -= len;
+        int len = snprintf(WRITE_PTR, remain_size, "%s() ", content->func_name);
+        UPDATE_REMAIN_SIZE();
     }
 
     if (remain_size > 2 && content->fmt != nullptr) {
         if (content->with_args) {
             va_list args;
             va_copy(args, content->args);    //! 同上，va_list 要被复制了使用
-            len = vsnprintf(WRITE_PTR, remain_size, content->fmt, args);
-            remain_size -= len;
+            int len = vsnprintf(WRITE_PTR, remain_size, content->fmt, args);
+            UPDATE_REMAIN_SIZE();
         } else {
-            auto len = strlen(content->fmt);
+            int len = strlen(content->fmt);
             if (len >= remain_size)
                 len = remain_size - 1;      //! 要留一个字符放'\0'
             memcpy(WRITE_PTR, content->fmt, len);
@@ -89,16 +78,17 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
     }
 
     if (remain_size > 2 && content->file_name != nullptr) {
-        len = snprintf(WRITE_PTR, remain_size, "-- %s:%d", content->file_name, content->line);
-        remain_size -= len;
+        int len = snprintf(WRITE_PTR, remain_size, "-- %s:%d", content->file_name, content->line);
+        UPDATE_REMAIN_SIZE();
     }
 
     *WRITE_PTR = '\0';  //! 追加结束符
     remain_size -= 1;
 
+#undef UPDATE_REMAIN_SIZE
 #undef WRITE_PTR
 
-    async_pipe_.append(buff, (buff_size - remain_size));
+    async_pipe_.append(buff, (LOG_MAX_LEN - remain_size));
 }
 
 void AsyncChannel::onPipeAppend(const void *data_ptr, size_t data_size)
@@ -112,13 +102,27 @@ void AsyncChannel::onPipeAppend(const void *data_ptr, size_t data_size)
             string_buff_ += start_ptr;
             start_ptr = zero_ptr + 1;
             onLogBackEnd(string_buff_);
+            string_buff_.clear();
         } else {
             std::for_each(start_ptr, end_ptr,
                 [=] (char c) {
                     string_buff_.push_back(c);
                 }
             );
+            break;
         }
+    }
+}
+
+void AsyncChannel::udpateTimestampStr(uint32_t sec)
+{
+    std::lock_guard<std::mutex> lg(lock_);
+    if (timestamp_sec_ != sec) {
+        time_t ts_sec = sec;
+        struct tm tm;
+        localtime_r(&ts_sec, &tm);
+        strftime(timestamp_str_, sizeof(timestamp_str_), "%Y-%m-%d %H:%M:%S", &tm);
+        timestamp_sec_ = sec;
     }
 }
 

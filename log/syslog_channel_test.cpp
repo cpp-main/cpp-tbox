@@ -95,7 +95,7 @@ TEST(SyslogChannel, LongString)
     LogInfo("%s", tmp.c_str());
 }
 
-TEST(SyslogChannel, TimeCast)
+TEST(SyslogChannel, TimeCast1)
 {
     SyslogChannel ch;
     ch.enable();
@@ -103,13 +103,28 @@ TEST(SyslogChannel, TimeCast)
 
     auto start_ts = chrono::steady_clock::now();
 
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 10000; ++i)
         LogInfo("%s", tmp.c_str());
 
-    this_thread::sleep_for(chrono::milliseconds(10));
+    auto end_ts = chrono::steady_clock::now();
+    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
+    cout << "timecost: " << time_span.count() << " us" << endl;
+}
 
-    for (int i = 0; i < 1000; ++i)
+TEST(SyslogChannel, TimeCast2)
+{
+    SyslogChannel ch;
+    ch.enable();
+    std::string tmp(30, 'm');
+
+    auto start_ts = chrono::steady_clock::now();
+
+    for (int i = 0; i < 10000; ++i) {
         LogInfo("%s", tmp.c_str());
+        if (i % 100 == 0) {
+            this_thread::sleep_for(chrono::milliseconds(10));
+        }
+    }
 
     auto end_ts = chrono::steady_clock::now();
     chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
