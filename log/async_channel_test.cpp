@@ -114,7 +114,7 @@ TEST(AsyncChannel, TimeCast2)
     for (int i = 0; i < 10000; ++i) {
         LogInfo("%s", tmp.c_str());
         if (i % 100 == 0) {
-            this_thread::sleep_for(chrono::milliseconds(10));
+            this_thread::sleep_for(chrono::milliseconds(50));
         }
     }
 
