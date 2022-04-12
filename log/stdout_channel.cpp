@@ -32,10 +32,10 @@ void StdoutChannel::onLogFrontEnd(LogContent *content)
 
     std::lock_guard<std::mutex> lg(lock_);
 
+    //! 开启色彩，显示日志等级
     if (enable_color_)
         printf("\033[%dm", level_color_num[content->level]);
 
-    //! 开启色彩，显示日志等级
     printf("<%c> ", level_name[content->level]);
 
     //! 打印时间戳、线程号、模块名
