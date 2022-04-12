@@ -98,4 +98,13 @@ TEST(FileAsyncChannel, FileSeparate)
     ch.cleanup();
 }
 
-
+//! 参数规范化
+TEST(FileAsyncChannel, ParamNormalize)
+{
+    FileAsyncChannel ch;
+    ch.initialize(" test ", " /tmp/tbox/   ");
+    ch.enable();
+    std::string tmp(120, 'v');
+    LogInfo("Test LogPath");
+    ch.cleanup();
+}

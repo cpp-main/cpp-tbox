@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <tbox/util/fs.h>
+#include <tbox/util/string.h>
 
 namespace tbox {
 namespace log {
@@ -18,18 +19,27 @@ FileAsyncChannel::~FileAsyncChannel()
 
 bool FileAsyncChannel::initialize(const std::string &proc_name, const std::string &log_path)
 {
-    proc_name_ = proc_name;
-    log_path_ = log_path;
-    pid_ = ::getpid();
+    proc_name_ = util::string::Strip(proc_name);
+    log_path_ = util::string::Strip(log_path);
 
-    //!FIXME:要对log_path进行规范化
+    //! 如果最后一个字符是/，就弹出
+    if (log_path_.at(log_path_.length() - 1) == '/')
+        log_path_.pop_back();
+
+    if (proc_name_.empty() || log_path_.empty())
+        return false;
 
     AsyncChannel::Config cfg;
     cfg.buff_size = 1024;
     cfg.buff_num  = 3;
     cfg.interval  = 100;
 
-    return AsyncChannel::initialize(cfg);
+    bool ok = AsyncChannel::initialize(cfg);
+    if (ok) {
+        pid_ = ::getpid();
+        return true;
+    }
+    return false;
 }
 
 void FileAsyncChannel::cleanup()
