@@ -82,11 +82,13 @@ bool IsDirectoryExist(const std::string &dir);
  * 等价于shell命令 "mkdir -p xxx"
  *
  * \param dir               目录
+ * \param enable_log        是否允许错误日志打印
+ *                          在日志模块中使用要禁用，其它默认打开即可
  *
  * \return true     目录创建成功
  * \return false    目录创建失败
  */
-bool MakeDirectory(const std::string &dir);
+bool MakeDirectory(const std::string &dir, bool enable_log = true);
 
 /**
  * 删除目录

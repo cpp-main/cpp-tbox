@@ -86,10 +86,11 @@ bool IsDirectoryExist(const std::string &dir)
     return ((::stat(dir.c_str(), &sb) == 0) && S_ISDIR(sb.st_mode));
 }
 
-bool MakeDirectory(const std::string &origin_dir_path)
+bool MakeDirectory(const std::string &origin_dir_path, bool enable_log)
 {
     if (origin_dir_path.empty()) {
-        LogWarn("origin_dir_path is empty");
+        if (enable_log)
+            LogWarn("origin_dir_path is empty");
         return false;
     }
 
@@ -115,16 +116,19 @@ bool MakeDirectory(const std::string &origin_dir_path)
             if (::stat(trimmed_dir_path.c_str(), &sb) != 0) {
                 if (errno == ENOENT) {  //! 如果trimmed_dir_path指定的inode不存在，则创建目录
                     if (::mkdir(trimmed_dir_path.c_str(), 0775) != 0) {
-                        LogWarn("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                        if (enable_log)
+                            LogWarn("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                         return false;
                     }
                 } else {    //! 如果是其它的错误
-                    LogWarn("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                    if (enable_log)
+                        LogWarn("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                     return false;
                 }
             } else {    //! 如果 trimmed_dir_path 指定的inode存在
                 if (!S_ISDIR(sb.st_mode)) {  //! 该inode并不是一个目录
-                    LogWarn("inode %s is not directory", trimmed_dir_path.c_str());
+                    if (enable_log)
+                        LogWarn("inode %s is not directory", trimmed_dir_path.c_str());
                     return false;
                 }
                 //! 存在，且是目录，则不做任何事件

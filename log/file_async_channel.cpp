@@ -65,12 +65,12 @@ bool FileAsyncChannel::checkAndCreateLogFile()
         return true;
 
     //!检查并创建路径
-    if (!util::fs::MakeDirectory(log_path_)) {
+    if (!util::fs::MakeDirectory(log_path_, false)) {
         cerr << "Err: create director " << log_path_ << " fail." << endl;
         return false;
     }
 
-    char timestamp[16];
+    char timestamp[16]; //! 固定长度16B，"20220414_071023"
     {
         time_t ts_sec = time(nullptr);
         struct tm tm;
