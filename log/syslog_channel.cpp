@@ -31,11 +31,6 @@ void SyslogChannel::onLogFrontEnd(LogContent *content)
             pos += len;
         }
 
-        if (content->level == 5) {
-            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "==TRACE== ");
-            pos += len;
-        }
-
         if (content->fmt != nullptr) {
             if (content->with_args) {
                 va_list args;

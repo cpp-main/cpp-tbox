@@ -2,7 +2,6 @@
 #include "syslog_channel.h"
 #include <iostream>
 #include <chrono>
-#include <thread>
 
 using namespace std;
 using namespace tbox::log;
@@ -93,42 +92,6 @@ TEST(SyslogChannel, LongString)
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
-}
-
-TEST(SyslogChannel, TimeCast1)
-{
-    SyslogChannel ch;
-    ch.enable();
-    std::string tmp(30, 'm');
-
-    auto start_ts = chrono::steady_clock::now();
-
-    for (int i = 0; i < 10000; ++i)
-        LogInfo("%s", tmp.c_str());
-
-    auto end_ts = chrono::steady_clock::now();
-    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
-    cout << "timecost: " << time_span.count() << " us" << endl;
-}
-
-TEST(SyslogChannel, TimeCast2)
-{
-    SyslogChannel ch;
-    ch.enable();
-    std::string tmp(30, 'm');
-
-    auto start_ts = chrono::steady_clock::now();
-
-    for (int i = 0; i < 10000; ++i) {
-        LogInfo("%s", tmp.c_str());
-        if (i % 100 == 0) {
-            this_thread::sleep_for(chrono::milliseconds(50));
-        }
-    }
-
-    auto end_ts = chrono::steady_clock::now();
-    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
-    cout << "timecost: " << time_span.count() << " us" << endl;
 }
 
 #include <tbox/event/loop.h>

@@ -38,53 +38,6 @@ TEST(FileAsyncChannel, LongString)
     ch.cleanup();
 }
 
-TEST(FileAsyncChannel, TimeCast1)
-{
-    FileAsyncChannel ch;
-    ch.initialize("test", "/tmp/tbox");
-    ch.enable();
-    std::string tmp(30, 'm');
-
-    auto start_ts = chrono::steady_clock::now();
-
-    LogInfo("start");
-    for (int i = 0; i < 10000; ++i)
-        LogInfo("%s", tmp.c_str());
-    LogInfo("done");
-
-    auto end_ts = chrono::steady_clock::now();
-
-    ch.cleanup();
-    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
-    cout << "timecost: " << time_span.count() << " us" << endl;
-}
-
-
-TEST(FileAsyncChannel, TimeCast2)
-{
-    FileAsyncChannel ch;
-    ch.initialize("test", "/tmp/tbox");
-    ch.enable();
-    std::string tmp(30, 'x');
-
-    auto start_ts = chrono::steady_clock::now();
-
-    LogInfo("start");
-    for (int i = 0; i < 10000; ++i) {
-        LogInfo("%s", tmp.c_str());
-        if (i % 100 == 0) {
-            this_thread::sleep_for(chrono::milliseconds(50));
-        }
-    }
-    LogInfo("done");
-
-    auto end_ts = chrono::steady_clock::now();
-
-    ch.cleanup();
-    chrono::microseconds time_span = chrono::duration_cast<chrono::microseconds>(end_ts - start_ts);
-    cout << "timecost: " << time_span.count() << " us" << endl;
-}
-
 //! 测试日志文件分隔
 TEST(FileAsyncChannel, FileSeparate)
 {
