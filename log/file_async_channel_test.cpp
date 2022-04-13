@@ -26,6 +26,12 @@ TEST(FileAsyncChannel, LongString)
 
     ch.initialize("test", "/tmp/tbox");
     ch.enable();
+
+    for (size_t s = 900; s < 1200; ++s) {
+        std::string tmp(s, 'z');
+        LogInfo("%s", tmp.c_str());
+    }
+
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
 
