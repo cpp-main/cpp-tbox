@@ -38,25 +38,6 @@ TEST(FileAsyncChannel, LongString)
     ch.cleanup();
 }
 
-//! 测试日志文件分隔
-TEST(FileAsyncChannel, FileSeparate)
-{
-    FileAsyncChannel ch;
-    ch.initialize("test", "/tmp/tbox");
-    ch.enable();
-    std::string tmp(120, 'v');
-
-    LogInfo("start");
-    for (int i = 0; i < 50000; ++i) {
-        LogInfo("%s", tmp.c_str());
-        if (i % 100 == 0)
-            this_thread::sleep_for(chrono::milliseconds(20));
-    }
-    LogInfo("done");
-
-    ch.cleanup();
-}
-
 //! 参数规范化
 TEST(FileAsyncChannel, ParamNormalize)
 {
