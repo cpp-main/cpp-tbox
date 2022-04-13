@@ -487,3 +487,26 @@ TEST(CommonLoop, runOrder)
         EXPECT_EQ(tag, 5);
     }
 }
+
+TEST(CommonLoop, RunInLoopBenchmark)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+        function<void()> func = [&] {
+            sp_loop->runInLoop(func);
+            ++counter;
+        };
+        sp_loop->runInLoop(func);
+
+        sp_loop->exitLoop(chrono::seconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+        cout << "10s count: " << counter << endl;
+    }
+}
+
