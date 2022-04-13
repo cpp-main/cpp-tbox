@@ -57,26 +57,6 @@ TEST(SyslogChannel, WillNotPrint)
     LogTag();
 }
 
-TEST(SyslogChannel, NoColor)
-{
-    SyslogChannel ch;
-    ch.enable();
-    ch.enableColor(false);
-    ch.setLevel(LOG_LEVEL_TRACE);
-    cout << "Should no color" << endl;
-
-    LogFatal("fatal");
-    LogErr("err");
-    LogWarn("warn");
-    LogNotice("notice");
-    LogInfo("info");
-    LogDbg("debug");
-    LogTrace("trace");
-    LogUndo();
-    LogTag();
-}
-
-
 TEST(SyslogChannel, Format)
 {
     SyslogChannel ch;
