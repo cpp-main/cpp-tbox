@@ -1,54 +1,80 @@
 #include "syslog_channel.h"
+#include <cstring>
 #include <syslog.h>
 
 namespace tbox {
 namespace log {
 
-#define TIMESTAMP_STRING_SIZE   28
-
-namespace {
-const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
-}
-
 void SyslogChannel::onLogFrontEnd(LogContent *content)
 {
-    const int buff_size = 2048;
-    char buff[buff_size];
+    const char *level_name = "FEWNIDT";
+    const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
 
-    int write_size = buff_size;
+    size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
 
-    int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", content->thread_id, content->module_id);
-    write_size -= len;
+    //! 加循环为了应对缓冲不够的情况
+    for (;;) {
+        char buff[buff_size];
+        size_t pos = 0;
 
-    if (write_size > 2 && content->level == 5) {
-        len = snprintf(buff + (buff_size - write_size), write_size, "==TRACE== ");
-        write_size -= len;
-    }
+#define REMAIN_SIZE ((buff_size > pos) ? (buff_size - pos) : 0)
+#define WRITE_PTR   (buff + pos)
 
-    if (write_size > 2 && content->func_name != nullptr) {
-        len = snprintf(buff + (buff_size - write_size), write_size, "%s() ", content->func_name);
-        write_size -= len;
-    }
+        size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %u.%06u %ld %s ",
+                              level_name[content->level],
+                              content->timestamp.sec, content->timestamp.usec,
+                              content->thread_id, content->module_id);
+        pos += len;
 
-    if (write_size > 2 && content->fmt != nullptr) {
-        va_list args;
-        va_copy(args, content->args);   //! 同上，va_list 要被复制了使用
-        len = vsnprintf(buff + (buff_size - write_size), write_size, content->fmt, args);
-        write_size -= len;
-
-        if (write_size > 2) {
-            buff[(buff_size - write_size)] = ' ';
-            buff[(buff_size - write_size) + 1] = '\0';
-            write_size -= 1;
+        if (content->func_name != nullptr) {
+            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
+            pos += len;
         }
-    }
 
-    if (write_size > 2 && content->file_name != nullptr) {
-        len = snprintf(buff + (buff_size - write_size), write_size, "-- %s:%d", content->file_name, content->line);
-        write_size -= len;
-    }
+        if (content->level == 5) {
+            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "==TRACE== ");
+            pos += len;
+        }
 
-    syslog(loglevel_to_syslog[content->level], "%s", buff);
+        if (content->fmt != nullptr) {
+            if (content->with_args) {
+                va_list args;
+                va_copy(args, content->args);    //! 同上，va_list 要被复制了使用
+                size_t len = vsnprintf(WRITE_PTR, REMAIN_SIZE, content->fmt, args);
+                pos += len;
+            } else {
+                size_t len = strlen(content->fmt);
+                if (REMAIN_SIZE >= len)
+                    memcpy(WRITE_PTR, content->fmt, len);
+                pos += len;
+            }
+
+            if (REMAIN_SIZE >= 1)    //! 追加一个空格
+                *WRITE_PTR = ' ';
+            ++pos;
+        }
+
+        if (content->file_name != nullptr) {
+            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
+            pos += len;
+        }
+
+        if (REMAIN_SIZE >= 1)
+            *WRITE_PTR = '\0';  //! 追加结束符
+        ++pos;
+
+#undef REMAIN_SIZE
+#undef WRITE_PTR
+
+        //! 如果缓冲区是够用的，就完成
+        if (pos <= buff_size) {
+            syslog(loglevel_to_syslog[content->level], "%s", buff);
+            break;
+        }
+
+        //! 否则扩展缓冲区，重来
+        buff_size = pos;
+    }
 }
 
 }

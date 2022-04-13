@@ -46,7 +46,7 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
 
         udpateTimestampStr(content->timestamp.sec);
 
-        size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "<%c> %s.%06u %ld %s ",
+        size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
                               level_name[content->level],
                               timestamp_str_, content->timestamp.usec,
                               content->thread_id, content->module_id);
