@@ -15,6 +15,7 @@ CPP_SRC_FILES = \
 	misc.cpp \
 	args.cpp \
 	module.cpp \
+	log.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
 
@@ -26,6 +27,7 @@ TEST_LDFLAGS := $(LDFLAGS) \
 	-ltbox_eventx \
 	-ltbox_event \
 	-ltbox_util \
+	-ltbox_log \
 	-ltbox_base \
 	-levent_core -lev
 

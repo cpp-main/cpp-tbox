@@ -36,7 +36,7 @@ void StdoutChannel::onLogFrontEnd(LogContent *content)
     if (enable_color_)
         printf("\033[%dm", level_color_num[content->level]);
 
-    printf("<%c> ", level_name[content->level]);
+    printf("%c ", level_name[content->level]);
 
     //! 打印时间戳、线程号、模块名
     printf("%s %ld %s ", timestamp, content->thread_id, content->module_id);
