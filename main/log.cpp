@@ -21,11 +21,60 @@ bool Log::initialize(Context &ctx, const Json &cfg)
 {
     buildTerminalNodes(*ctx.terminal());
 
-#if 0
     if (cfg.contains("log")) {
         auto &js_log = cfg.at("log");
+        if (js_log.contains("stdout")) {
+            auto &js = js_log.at("stdout");
+            if (js.contains("enable")) {
+                auto &js_enable = js.at("enable");
+                if (js_enable.is_boolean()) {
+                    if (js_enable.get<bool>())
+                        syslog_.enable();
+                    else
+                        syslog_.disable();
+                }
+            }
+        }
+
+        if (js_log.contains("syslog")) {
+            auto &js = js_log.at("syslog");
+            if (js.contains("enable")) {
+                auto &js_enable = js.at("enable");
+                if (js_enable.is_boolean()) {
+                    if (js_enable.get<bool>())
+                        syslog_.enable();
+                    else
+                        syslog_.disable();
+                }
+            }
+        }
+
+        if (js_log.contains("filelog")) {
+            auto &js = js_log.at("filelog");
+            if (js.contains("name") && js.contains("path")) {
+                auto &js_name = js.at("name");
+                auto &js_path = js.at("path");
+                if (js_name.is_string() && js_path.is_string()) {
+                    filelog_.initialize(js_name.get<std::string>(), js_path.get<std::string>());
+                }
+            }
+            if (js.contains("max_size")) {
+                auto &js_max_size = js.at("max_size");
+                if (js_max_size.is_number()) {
+                    filelog_.setFileMaxSize(js_max_size.get<int>());
+                }
+            }
+            if (js.contains("enable")) {
+                auto &js_enable = js.at("enable");
+                if (js_enable.is_boolean()) {
+                    if (js_enable.get<bool>())
+                        filelog_.enable();
+                    else
+                        filelog_.disable();
+                }
+            }
+        }
     }
-#endif
 
     return true;
 }
