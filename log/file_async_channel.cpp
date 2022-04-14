@@ -50,7 +50,7 @@ void FileAsyncChannel::cleanup()
 
 void FileAsyncChannel::onLogBackEnd(const std::string &log_text)
 {
-    if (!checkAndCreateLogFile())
+    if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
     ofs_ << log_text << endl << flush;
