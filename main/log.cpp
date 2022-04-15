@@ -17,6 +17,27 @@ Log::~Log()
     cleanup();
 }
 
+void Log::fillDefaultConfig(Json &cfg) const
+{
+    cfg["log"] = R"(
+ {
+  "stdout": {
+    "enable": true,
+    "enable_color": true
+  },
+  "syslog": {
+    "enable": false
+  },
+  "filelog": {
+    "enable": true,
+    "name": "test",
+    "path": "/tmp/tbox",
+    "max_size": 1024
+  }
+}
+)"_json;
+}
+
 bool Log::initialize(Context &ctx, const Json &cfg)
 {
     buildTerminalNodes(*ctx.terminal());
@@ -29,11 +50,19 @@ bool Log::initialize(Context &ctx, const Json &cfg)
                 auto &js_enable = js.at("enable");
                 if (js_enable.is_boolean()) {
                     if (js_enable.get<bool>())
-                        syslog_.enable();
+                        stdout_.enable();
                     else
-                        syslog_.disable();
+                        stdout_.disable();
                 }
             }
+
+            if (js.contains("enable_color")) {
+                auto &js_enable = js.at("enable_color");
+                if (js_enable.is_boolean()) {
+                    stdout_.enableColor(js_enable.get<bool>());
+                }
+            }
+
         }
 
         if (js_log.contains("syslog")) {
@@ -61,7 +90,7 @@ bool Log::initialize(Context &ctx, const Json &cfg)
             if (js.contains("max_size")) {
                 auto &js_max_size = js.at("max_size");
                 if (js_max_size.is_number()) {
-                    filelog_.setFileMaxSize(js_max_size.get<int>());
+                    filelog_.setFileMaxSize(js_max_size.get<int>() * 1024);
                 }
             }
             if (js.contains("enable")) {
@@ -200,3 +229,4 @@ void Log::buildTerminalNodes(TerminalNodes &term)
 
 }
 }
+

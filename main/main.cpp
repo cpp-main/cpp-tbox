@@ -46,6 +46,7 @@ int Main(int argc, char **argv)
     Json js_conf;
     Args args(js_conf);
 
+    log.fillDefaultConfig(js_conf);
     ctx.fillDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 

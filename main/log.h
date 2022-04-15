@@ -20,6 +20,7 @@ class Log {
     ~Log();
 
   public:
+    void fillDefaultConfig(Json &cfg) const;
     bool initialize(Context &ctx, const Json &cfg);
     void cleanup();
 
