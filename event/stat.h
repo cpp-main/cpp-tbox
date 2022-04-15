@@ -2,6 +2,7 @@
 #define TBOX_EVENT_STAT_H
 
 #include <cstdint>
+#include <ostream>
 
 namespace tbox {
 namespace event {
@@ -15,5 +16,7 @@ struct Stat {
 
 }
 }
+
+std::ostream& operator<< (std::ostream &os, const tbox::event::Stat &stat);
 
 #endif //TBOX_EVENT_STAT_H

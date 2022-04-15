@@ -150,18 +150,7 @@ void ContextImp::buildTerminalNodes()
         [this] (const Session &s, const Args &args) {
             std::stringstream ss;
             if (sp_loop_->isStatEnabled()) {
-                auto stat = sp_loop_->getStat();
-                ss  << "stat_time: " << stat.stat_time_us << " us\r\n"
-                    << "time_cost: " << stat.time_cost_us << " us\r\n"
-                    << "event_count: " << stat.event_count << "\r\n"
-                    << "max_cost: " << stat.max_cost_us << " us\r\n";
-
-                if (stat.event_count != 0)
-                    ss << "avg_cost: " << stat.time_cost_us / stat.event_count << " us\r\n";
-
-                if (stat.stat_time_us != 0)
-                    ss << "cpu: " << std::setprecision(1) << stat.time_cost_us * 100.0 / stat.stat_time_us << " %\r\n";
-
+                ss << sp_loop_->getStat();
             } else {
                 ss << "stat not enabled\r\n";
             }

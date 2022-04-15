@@ -2,7 +2,7 @@ include build_env.mk
 
 .PHONY: all clean distclean
 
-CCFLAGS := -Wall -Werror
+CCFLAGS := -Wall
 
 ifeq ($(RELEASE), 1)
 CCFLAGS += -O2 -Os
