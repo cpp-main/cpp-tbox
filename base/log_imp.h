@@ -7,6 +7,7 @@
  */
 
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,20 +15,28 @@ extern "C" {
 
 //! 日志内容
 struct LogContent {
+    long thread_id;         //!< 线程ID
+    struct {
+        uint32_t sec;       //!< 秒
+        uint32_t usec;      //!< 微秒
+    } timestamp;            //!< 时间戳
+
     const char *module_id;  //!< 模块名
     const char *func_name;  //!< 函数名
     const char *file_name;  //!< 文件名
-    int line;               //!< 行号
-    int level;              //!< 日志等级
+    int         line;       //!< 行号
+    int         level;      //!< 日志等级
+    bool        with_args;  //!< 是否有可变参数
     const char *fmt;        //!< 格式串
-    va_list args;           //!< 可变参数
+    va_list     args;       //!< 可变参数
 };
 
 //! 定义日志输出函数
-typedef void (*LogPrintfFuncType)(LogContent *content);
+typedef void (*LogPrintfFuncType)(LogContent *content, void *ptr);
 
-//! 设置日志输出函数
-void LogSetPrintfFunc(LogPrintfFuncType func);
+//! 添加与删除日志输出函数
+uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr);
+bool     LogRemovePrintfFunc(uint32_t id);
 
 #ifdef __cplusplus
 }

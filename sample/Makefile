@@ -17,6 +17,7 @@ LDFLAGS += \
 	-ltbox_eventx \
 	-ltbox_eventx \
 	-ltbox_event \
+	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
 	-lpthread

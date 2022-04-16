@@ -25,7 +25,7 @@ void TimeCounter::stop()
         return;
 
     auto cost_us = duration_cast<microseconds>(steady_clock::now() - start_time_point_).count();
-    LogPrintfFunc("TC", func_name_, file_name_, line_, LOG_LEVEL_TRACE, "timecost: %u us", cost_us);
+    LogPrintfFunc("TC", func_name_, file_name_, line_, LOG_LEVEL_TRACE, true, "timecost: %u us", cost_us);
     stoped_ = true;
 }
 

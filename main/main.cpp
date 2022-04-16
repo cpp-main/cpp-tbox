@@ -17,6 +17,7 @@
 #include "module.h"
 #include "context_imp.h"
 #include "args.h"
+#include "log.h"
 
 namespace tbox {
 namespace main {
@@ -38,12 +39,14 @@ int Main(int argc, char **argv)
 {
     RegisterSignals();
 
+    Log log;
     ContextImp ctx;
     Apps apps(ctx);
 
     Json js_conf;
     Args args(js_conf);
 
+    log.fillDefaultConfig(js_conf);
     ctx.fillDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
@@ -74,13 +77,14 @@ int Main(int argc, char **argv)
         }
     }
 
-    LogOutput_Initialize(util::fs::Basename(argv[0]).c_str());
+    log.initialize(argv[0], ctx, js_conf);
+
     LogInfo("Wellcome!");
 
     //! 注册异常退出时的动作，在异常信号触发时调用
     error_exit_func = [&] {
         //! 主要是保存日志
-        LogOutput_Cleanup();
+        log.cleanup();
     };
 
     if (ctx.initialize(js_conf)) {
@@ -100,7 +104,8 @@ int Main(int argc, char **argv)
     }
 
     LogInfo("Bye!");
-    LogOutput_Cleanup();
+
+    log.cleanup();
     return 0;
 }
 

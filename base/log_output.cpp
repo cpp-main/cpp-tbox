@@ -10,10 +10,12 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <mutex>
+#include <iostream>
 
 #include "log_imp.h"
 
 #define TIMESTAMP_STRING_SIZE   28
+#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
 
 namespace {
     int _output_mask = LOG_OUTPUT_MASK_STDOUT | LOG_OUTPUT_MASK_SYSLOG;
@@ -22,27 +24,24 @@ namespace {
     const int level_color_num[] = {31, 91, 93, 33, 39, 36, 35};
     std::mutex _stdout_lock;
 
-    void _GetCurrTimeString(char *timestamp)
+    void _GetCurrTimeString(const LogContent *content, char *timestamp)
     {
-        struct timeval tv;
-        struct timezone tz;
-
-        gettimeofday(&tv, &tz);
 #if 1
+        time_t ts_sec = content->timestamp.sec;
         struct tm tm;
-        localtime_r(&tv.tv_sec, &tm);
+        localtime_r(&ts_sec, &tm);
         char tmp[20];
         strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
-        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06ld", tmp, tv.tv_usec);
+        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
 #else
-        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%ld.%06ld", tv.tv_sec, tv.tv_usec);
+        snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%u.%06u", content->timestamp.sec, content->timestamp.usec);
 #endif
     }
 
     void _PrintLogToStdout(LogContent *content)
     {
         char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
-        _GetCurrTimeString(timestamp);
+        _GetCurrTimeString(content, timestamp);
 
         std::lock_guard<std::mutex> lg(_stdout_lock);
 
@@ -50,7 +49,7 @@ namespace {
         printf("\033[%dm<%c> ", level_color_num[content->level], level_name[content->level]);
 
         //! 打印时间戳、线程号、模块名
-        printf("%s %ld %s ", timestamp, ::syscall(SYS_gettid), content->module_id);
+        printf("%s %ld %s ", timestamp, content->thread_id, content->module_id);
 
         if (content->func_name != nullptr)
             printf("%s() ", content->func_name);
@@ -60,6 +59,8 @@ namespace {
             va_copy(args, content->args);
             vprintf(content->fmt, args);    //! 不可以直接使用 content->args，因为 va_list 只能被使用一次
             putchar(' ');
+        } else {
+            printf("%s ", content->fmt);
         }
 
         if (content->file_name != nullptr) {
@@ -69,48 +70,77 @@ namespace {
         puts("\033[0m");    //! 恢复色彩
     }
 
-    const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
-
     //! syslogd
     void _PrintLogToSyslog(LogContent *content)
     {
-        const int buff_size = 2048;
-        char buff[buff_size];
+        const char *level_name = "FEWNIDT";
+        const int loglevel_to_syslog[] = { LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG, LOG_DEBUG };
 
-        int write_size = buff_size;
+        size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
 
-        int len = snprintf(buff + (buff_size - write_size), write_size, "%ld %s ", syscall(SYS_gettid), content->module_id);
-        write_size -= len;
+        //! 加循环为了应对缓冲不够的情况
+        for (;;) {
+            char buff[buff_size];
+            size_t pos = 0;
 
-        if (write_size > 2 && content->level == 5) {
-            len = snprintf(buff + (buff_size - write_size), write_size, "==TRACE== ");
-            write_size -= len;
-        }
+#define REMAIN_SIZE ((buff_size > pos) ? (buff_size - pos) : 0)
+#define WRITE_PTR   (buff + pos)
 
-        if (write_size > 2 && content->func_name != nullptr) {
-            len = snprintf(buff + (buff_size - write_size), write_size, "%s() ", content->func_name);
-            write_size -= len;
-        }
+            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %u.%06u %ld %s ",
+                                  level_name[content->level],
+                                  content->timestamp.sec, content->timestamp.usec,
+                                  content->thread_id, content->module_id);
+            pos += len;
 
-        if (write_size > 2 && content->fmt != nullptr) {
-            va_list args;
-            va_copy(args, content->args);   //! 同上，va_list 要被复制了使用
-            len = vsnprintf(buff + (buff_size - write_size), write_size, content->fmt, args);
-            write_size -= len;
+            if (content->func_name != nullptr) {
+                size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
+                pos += len;
+            }
 
-            if (write_size > 2) {
-                buff[(buff_size - write_size)] = ' ';
-                buff[(buff_size - write_size) + 1] = '\0';
-                write_size -= 1;
+            if (content->fmt != nullptr) {
+                if (content->with_args) {
+                    va_list args;
+                    va_copy(args, content->args);    //! 同上，va_list 要被复制了使用
+                    size_t len = vsnprintf(WRITE_PTR, REMAIN_SIZE, content->fmt, args);
+                    pos += len;
+                } else {
+                    size_t len = strlen(content->fmt);
+                    if (REMAIN_SIZE >= len)
+                        memcpy(WRITE_PTR, content->fmt, len);
+                    pos += len;
+                }
+
+                if (REMAIN_SIZE >= 1)    //! 追加一个空格
+                    *WRITE_PTR = ' ';
+                ++pos;
+            }
+
+            if (content->file_name != nullptr) {
+                size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
+                pos += len;
+            }
+
+            if (REMAIN_SIZE >= 1)
+                *WRITE_PTR = '\0';  //! 追加结束符
+            ++pos;
+
+#undef REMAIN_SIZE
+#undef WRITE_PTR
+
+            //! 如果缓冲区是够用的，就完成
+            if (pos <= buff_size) {
+                syslog(loglevel_to_syslog[content->level], "%s", buff);
+                break;
+            }
+
+            //! 否则扩展缓冲区，重来
+            buff_size = pos;
+
+            if (buff_size > LOG_MAX_LEN) {
+                std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+                break;
             }
         }
-
-        if (write_size > 2 && content->file_name != nullptr) {
-            len = snprintf(buff + (buff_size - write_size), write_size, "-- %s:%d", content->file_name, content->line);
-            write_size -= len;
-        }
-
-        syslog(loglevel_to_syslog[content->level], "%s", buff);
     }
 }
 
@@ -120,18 +150,20 @@ bool __attribute((weak)) LogOutput_FilterFunc(LogContent *content);
 
 extern "C" {
 
-    static void _LogOutput_PrintfFunc(LogContent *content);
+    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr);
+    static uint32_t _id = 0;
 
     void LogOutput_Initialize(const char *proc_name)
     {
-        LogSetPrintfFunc(_LogOutput_PrintfFunc);
+        _id = LogAddPrintfFunc(_LogOutput_PrintfFunc, nullptr);
         openlog(proc_name, 0, LOG_USER);
     }
 
     void LogOutput_Cleanup()
     {
         closelog();
-        LogSetPrintfFunc(nullptr);
+        LogRemovePrintfFunc(_id);
+        _id = 0;
     }
 
     void LogOutput_SetMask(int output_mask)
@@ -139,7 +171,7 @@ extern "C" {
         _output_mask = output_mask;
     }
 
-    static void _LogOutput_PrintfFunc(LogContent *content)
+    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr)
     {
         if ((LogOutput_FilterFunc != nullptr) &&
             !LogOutput_FilterFunc(content))
