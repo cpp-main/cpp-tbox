@@ -93,5 +93,6 @@ TEST(FileAsyncChannel, Benchmark)
 
     delete sp_loop;
     cout << "count in sec: " << counter/10 << endl;
+    ch.cleanup();
 }
 

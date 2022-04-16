@@ -8,7 +8,7 @@ namespace log {
 
 class SyslogChannel : public Channel {
   protected:
-    virtual void onLogFrontEnd(LogContent *content) override;
+    virtual void onLogFrontEnd(const void *data_ptr, size_t data_size);
 };
 
 }

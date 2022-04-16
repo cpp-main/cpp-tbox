@@ -7,8 +7,6 @@
 namespace tbox {
 namespace log {
 
-#define TIMESTAMP_STRING_SIZE   20
-
 class AsyncChannel : public Channel {
   public:
     AsyncChannel();
@@ -18,23 +16,16 @@ class AsyncChannel : public Channel {
     bool initialize(const Config &cfg);
     void cleanup();
 
-    void enableColor(bool enable) { enable_color_ = enable; }
-
   protected:
-    virtual void onLogFrontEnd(LogContent *content) override;
+    virtual void onLogFrontEnd(const void *data_ptr, size_t data_size) override;
     virtual void onLogBackEnd(const std::string &log_text) = 0;
 
   private:
     void onPipeAppend(const void *data_ptr, size_t data_size);
-    void udpateTimestampStr(uint32_t sec);
 
   private:
     util::AsyncPipe async_pipe_;
     std::string string_buff_;
-
-    bool enable_color_ = false;
-    uint32_t timestamp_sec_ = 0;
-    char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30
 };
 
 }
