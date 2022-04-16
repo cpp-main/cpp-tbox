@@ -73,3 +73,29 @@ TEST(AsyncChannel, Benchmark)
     ch.cleanup();
 }
 
+TEST(AsyncChannel, Benchmark_Empty)
+{
+    EmptyTestAsyncChannel ch;
+    ch.initialize(TestAsyncChannel::Config());
+    ch.enable();
+    std::string tmp(30, 'x');
+
+    auto sp_loop = Loop::New();
+
+    int counter = 0;
+    function<void()> func = [&] {
+        for (int i = 0; i < 100; ++i)
+            LogInfo("%d %s", i, tmp.c_str());
+        sp_loop->runInLoop(func);
+        counter += 100;
+    };
+    sp_loop->runInLoop(func);
+
+    sp_loop->exitLoop(chrono::seconds(10));
+    sp_loop->runLoop();
+
+    delete sp_loop;
+    cout << "count in sec: " << counter/10 << endl;
+    ch.cleanup();
+}
+
