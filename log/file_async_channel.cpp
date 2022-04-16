@@ -78,10 +78,18 @@ bool FileAsyncChannel::checkAndCreateLogFile()
         strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm);
     }
 
-    ostringstream filename_oss;
-    filename_oss << log_path_ << '/' << log_prefix_ << '_' << pid_ << '.' << timestamp << ".log";
-    ofs_.open(filename_oss.str(), ofstream::out | ofstream::app);
+    std::string filename;
+    int postfix = 0;
+    do {
+        ostringstream filename_oss;
+        filename_oss << log_path_ << '/' << log_prefix_ << '_' << pid_ << '.' << timestamp << ".log";
+        if (postfix != 0)
+            filename_oss << "." << postfix;
+        filename = filename_oss.str();
+        ++postfix;
+    } while (util::fs::IsFileExist(filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
 
+    ofs_.open(filename, ofstream::out | ofstream::app);
     return ofs_.is_open();
 }
 

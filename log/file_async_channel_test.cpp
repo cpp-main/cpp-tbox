@@ -38,6 +38,24 @@ TEST(FileAsyncChannel, LongString)
     ch.cleanup();
 }
 
+TEST(FileAsyncChannel, FileDivide)
+{
+    FileAsyncChannel ch;
+
+    ch.initialize("/tmp/tbox", "test");
+    ch.setFileMaxSize(100);
+    ch.enable();
+
+    std::string tmp(30, 'z');
+
+    LogInfo("start");
+    for (size_t s = 0; s < 20; ++s)
+        LogInfo("%s", tmp.c_str());
+    LogInfo("end");
+
+    ch.cleanup();
+}
+
 //! 参数规范化
 TEST(FileAsyncChannel, ParamNormalize)
 {

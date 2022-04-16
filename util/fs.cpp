@@ -19,8 +19,13 @@ using std::exception;
 
 bool IsFileExist(const std::string &filename)
 {
+#if 0
     int ret = ::access(filename.c_str(), F_OK);
     return ret == 0;
+#else
+    ifstream ifs(filename);
+    return ifs.is_open();
+#endif
 }
 
 bool ReadStringFromTextFile(const std::string &filename, std::string &content)
