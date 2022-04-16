@@ -10,10 +10,12 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <mutex>
+#include <iostream>
 
 #include "log_imp.h"
 
 #define TIMESTAMP_STRING_SIZE   28
+#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
 
 namespace {
     int _output_mask = LOG_OUTPUT_MASK_STDOUT | LOG_OUTPUT_MASK_SYSLOG;
@@ -133,6 +135,11 @@ namespace {
 
             //! 否则扩展缓冲区，重来
             buff_size = pos;
+
+            if (buff_size > LOG_MAX_LEN) {
+                std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+                break;
+            }
         }
     }
 }

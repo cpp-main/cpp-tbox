@@ -21,7 +21,7 @@ class Log {
 
   public:
     void fillDefaultConfig(Json &cfg) const;
-    bool initialize(Context &ctx, const Json &cfg);
+    bool initialize(const char *proc_name, Context &ctx, const Json &cfg);
     void cleanup();
 
   protected:

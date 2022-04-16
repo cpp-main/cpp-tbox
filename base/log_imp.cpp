@@ -27,7 +27,7 @@ static std::vector<OutputChannel> _output_channels;
  * \brief   日志格式化打印接口的实现
  *
  * 1.对数据合法性进行校验;
- * 2.将日志数据打包成 LogContent，然后调用 _log_printf_func 指向的函数进行输出
+ * 2.将日志数据打包成 LogContent，然后调用 _output_channels 指向的函数进行输出
  */
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                    int line, int level, bool with_args, const char *fmt, ...)
@@ -59,7 +59,9 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .fmt = fmt
     };
 
-    va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
+    if (with_args)
+        va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
+
     {
         std::lock_guard<std::mutex> lg(_lock);
         for (const auto &item : _output_channels) {
@@ -67,7 +69,9 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
                 item.func(&content, item.ptr);
         }
     }
-    va_end(args);
+
+    if (with_args)
+        va_end(args);
 }
 
 uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr)

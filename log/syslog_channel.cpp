@@ -1,6 +1,9 @@
 #include "syslog_channel.h"
 #include <cstring>
 #include <syslog.h>
+#include <iostream>
+
+#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
 
 namespace tbox {
 namespace log {
@@ -69,6 +72,11 @@ void SyslogChannel::onLogFrontEnd(LogContent *content)
 
         //! 否则扩展缓冲区，重来
         buff_size = pos;
+
+        if (buff_size > LOG_MAX_LEN) {
+            std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+            break;
+        }
     }
 }
 

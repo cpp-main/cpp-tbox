@@ -12,7 +12,7 @@ class FileAsyncChannel : public AsyncChannel {
     virtual ~FileAsyncChannel() override;
 
   public:
-    bool initialize(const std::string &proc_name, const std::string &log_path);
+    bool initialize(const std::string &log_path, const std::string &log_prefix);
     void cleanup();
 
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
@@ -22,7 +22,7 @@ class FileAsyncChannel : public AsyncChannel {
     bool checkAndCreateLogFile();
 
   private:
-    std::string proc_name_;
+    std::string log_prefix_;
     std::string log_path_;
     size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为2MB
     pid_t pid_ = 0;

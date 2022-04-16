@@ -3,8 +3,15 @@
 #include <algorithm>
 #include <iostream>
 
+#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
+
 namespace tbox {
 namespace log {
+
+namespace {
+const char *level_name = "FEWNIDT";
+const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
+}
 
 AsyncChannel::AsyncChannel()
 {
@@ -32,8 +39,6 @@ void AsyncChannel::cleanup()
 
 void AsyncChannel::onLogFrontEnd(LogContent *content)
 {
-    const char *level_name = "FEWNIDT";
-
     size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
 
     //! 加循环为了应对缓冲不够的情况
@@ -46,14 +51,22 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
 
         udpateTimestampStr(content->timestamp.sec);
 
-        size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
-                              level_name[content->level],
-                              timestamp_str_, content->timestamp.usec,
-                              content->thread_id, content->module_id);
+        size_t len = 0;
+
+        //! 开启色彩，显示日志等级
+        if (enable_color_) {
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%dm", level_color_num[content->level]);
+            pos += len;
+        }
+
+        len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
+                       level_name[content->level],
+                       timestamp_str_, content->timestamp.usec,
+                       content->thread_id, content->module_id);
         pos += len;
 
         if (content->func_name != nullptr) {
-            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
             pos += len;
         }
 
@@ -61,10 +74,10 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
             if (content->with_args) {
                 va_list args;
                 va_copy(args, content->args);    //! 同上，va_list 要被复制了使用
-                size_t len = vsnprintf(WRITE_PTR, REMAIN_SIZE, content->fmt, args);
+                len = vsnprintf(WRITE_PTR, REMAIN_SIZE, content->fmt, args);
                 pos += len;
             } else {
-                size_t len = strlen(content->fmt);
+                len = strlen(content->fmt);
                 if (REMAIN_SIZE >= len)
                     memcpy(WRITE_PTR, content->fmt, len);
                 pos += len;
@@ -76,8 +89,14 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
         }
 
         if (content->file_name != nullptr) {
-            size_t len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
             pos += len;
+        }
+
+        if (enable_color_) {
+            if (REMAIN_SIZE >= 4)
+                memcpy(WRITE_PTR, "\033[0m", 4);
+            pos += 4;
         }
 
         if (REMAIN_SIZE >= 1)
@@ -95,6 +114,11 @@ void AsyncChannel::onLogFrontEnd(LogContent *content)
 
         //! 否则扩展缓冲区，重来
         buff_size = pos;
+
+        if (buff_size > LOG_MAX_LEN) {
+            std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+            break;
+        }
     }
 }
 

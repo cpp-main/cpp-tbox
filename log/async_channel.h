@@ -18,6 +18,8 @@ class AsyncChannel : public Channel {
     bool initialize(const Config &cfg);
     void cleanup();
 
+    void enableColor(bool enable) { enable_color_ = enable; }
+
   protected:
     virtual void onLogFrontEnd(LogContent *content) override;
     virtual void onLogBackEnd(const std::string &log_text) = 0;
@@ -30,6 +32,7 @@ class AsyncChannel : public Channel {
     util::AsyncPipe async_pipe_;
     std::string string_buff_;
 
+    bool enable_color_ = false;
     uint32_t timestamp_sec_ = 0;
     char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30
 };

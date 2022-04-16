@@ -17,16 +17,16 @@ FileAsyncChannel::~FileAsyncChannel()
         cleanup();
 }
 
-bool FileAsyncChannel::initialize(const std::string &proc_name, const std::string &log_path)
+bool FileAsyncChannel::initialize(const std::string &log_path, const std::string &log_prefix)
 {
-    proc_name_ = util::string::Strip(proc_name);
+    log_prefix_ = util::string::Strip(log_prefix);
     log_path_ = util::string::Strip(log_path);
 
     //! 如果最后一个字符是/，就弹出
     if (log_path_.at(log_path_.length() - 1) == '/')
         log_path_.pop_back();
 
-    if (proc_name_.empty() || log_path_.empty())
+    if (log_prefix_.empty() || log_path_.empty())
         return false;
 
     AsyncChannel::Config cfg;
@@ -79,7 +79,7 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     }
 
     ostringstream filename_oss;
-    filename_oss << log_path_ << '/' << proc_name_ << '_' << pid_ << '.' << timestamp << ".log";
+    filename_oss << log_path_ << '/' << log_prefix_ << '_' << pid_ << '.' << timestamp << ".log";
     ofs_.open(filename_oss.str(), ofstream::out | ofstream::app);
 
     return ofs_.is_open();

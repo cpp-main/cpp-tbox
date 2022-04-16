@@ -77,7 +77,7 @@ int Main(int argc, char **argv)
         }
     }
 
-    log.initialize(ctx, js_conf);
+    log.initialize(argv[0], ctx, js_conf);
 
     LogInfo("Wellcome!");
 

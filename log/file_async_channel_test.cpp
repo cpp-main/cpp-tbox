@@ -11,7 +11,7 @@ TEST(FileAsyncChannel, Format)
 {
     FileAsyncChannel ch;
 
-    ch.initialize("test", "/tmp/tbox");
+    ch.initialize("/tmp/tbox", "test");
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -24,7 +24,7 @@ TEST(FileAsyncChannel, LongString)
 {
     FileAsyncChannel ch;
 
-    ch.initialize("test", "/tmp/tbox");
+    ch.initialize("/tmp/tbox", "test");
     ch.enable();
 
     for (size_t s = 900; s < 1200; ++s) {
@@ -42,7 +42,7 @@ TEST(FileAsyncChannel, LongString)
 TEST(FileAsyncChannel, ParamNormalize)
 {
     FileAsyncChannel ch;
-    ch.initialize(" test ", " /tmp/tbox/   ");
+    ch.initialize("  /tmp/tbox ", " test ");
     ch.enable();
     std::string tmp(120, 'v');
     LogInfo("Test LogPath");
@@ -55,7 +55,7 @@ using namespace tbox::event;
 TEST(FileAsyncChannel, Benchmark)
 {
     FileAsyncChannel ch;
-    ch.initialize("test", "/tmp/tbox");
+    ch.initialize("/tmp/tbox", "test");
     ch.enable();
     std::string tmp(30, 'x');
 
