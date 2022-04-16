@@ -7,14 +7,8 @@ namespace tbox {
 namespace log {
 
 class StdoutChannel : public Channel {
-  public:
-    void enableColor(bool enable) { enable_color_ = enable; }
-
   protected:
-    virtual void onLogFrontEnd(LogContent *content) override;
-
-  private:
-    bool enable_color_ = true;
+    virtual void onLogFrontEnd(const void *data_ptr, size_t data_size);
 };
 
 }
