@@ -11,6 +11,11 @@ CCFLAGS += -fsanitize=address -fno-omit-frame-pointer -DDEBUG=1 -O0 -ggdb
 LDFLAGS += -fsanitize=address -static-libasan
 endif
 
+ifeq ($(ENABLE_GPROF), 1)
+CCFLAGS += -pg
+LDFLAGS += -pg
+endif
+
 CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
 CFLAGS := $(CCFLAGS) $(CFLAGS)
 APPS_DIR := $(PWD)

@@ -41,7 +41,7 @@ class EpollLoop : public CommonLoop {
     EpollFdSharedData *queryFdSharedData(int fd) const;
 
   private:
-    void onTimeExpired();
+    void handleExpiredTimers();
     int64_t getWaitTime() const;
 
   private:

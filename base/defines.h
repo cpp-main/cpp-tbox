@@ -45,12 +45,12 @@
     }
 
 //! 条件预加载宏
-#ifndef likely
-#define likely(x)   __builtin_expect(!!(x), 1)
+#ifndef LIKELY
+#define LIKELY(x)   __builtin_expect(!!(x), 1)
 #endif
 
-#ifndef unlikely
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#ifndef UNLIKELY
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #endif
 
 #endif //TBOX_BASE_DEFINES_H_20171030

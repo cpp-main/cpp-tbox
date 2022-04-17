@@ -25,7 +25,7 @@ TEST_CPP_SRC_FILES = \
 	async_channel_test.cpp \
 	file_async_channel_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../tools/lib_common.mk

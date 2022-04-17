@@ -52,13 +52,13 @@ int64_t EpollLoop::getWaitTime() const
     return wait_time;
 }
 
-void EpollLoop::onTimeExpired()
+void EpollLoop::handleExpiredTimers()
 {
     auto now = CurrentMilliseconds();
 
     while (!timer_min_heap_.empty()) {
         auto t = timer_min_heap_.front();
-        assert(t != nullptr);
+        //assert(t != nullptr);
 
         if (now < t->expired)
             break;
@@ -67,7 +67,7 @@ void EpollLoop::onTimeExpired()
 
         // swap first element and last element
         std::pop_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
-        if (unlikely(t->repeat == 1)) {
+        if (UNLIKELY(t->repeat == 1)) {
             // remove the last element
             timer_min_heap_.pop_back();
             timer_cabinet_.free(t->token);
@@ -76,13 +76,13 @@ void EpollLoop::onTimeExpired()
             t->expired += t->interval;
             // push the last element to heap again
             std::push_heap(timer_min_heap_.begin(), timer_min_heap_.end(), TimerCmp());
-            if (t->repeat != 0)
+            if (LIKELY(t->repeat != 0))
                 --t->repeat;
         }
 
         //! Q: 为什么不在L68执行？
         //! A: 因为要尽可能地将回调放到最后执行。否则不满足测试 TEST(TimerEvent, DisableSelfInCallback)
-        if (tobe_run)
+        if (LIKELY(tobe_run))
             tobe_run();
     }
 }
@@ -108,7 +108,7 @@ void EpollLoop::runLoop(Mode mode)
     do {
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), getWaitTime());
 
-        onTimeExpired();
+        handleExpiredTimers();
 
         if (fds <= 0)
             continue;
@@ -119,7 +119,7 @@ void EpollLoop::runLoop(Mode mode)
         }
 
         /// If the receiver array size is full, increase its size with 1.5 times.
-        if (fds >= max_loop_entries_) {
+        if (UNLIKELY(fds >= max_loop_entries_)) {
             max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
             events.resize(max_loop_entries_);
         }

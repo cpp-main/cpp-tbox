@@ -250,3 +250,45 @@ TEST(FdEvent, DeleteLater)
         delete sp_loop;
     }
 }
+
+TEST(FdEvent, Benchmark)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+
+        int fds[2] = { 0 };
+        ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
+
+        int read_fd(fds[0]);
+        int write_fd(fds[1]);
+
+        auto sp_loop = Loop::New(e);
+        auto read_event = sp_loop->newFdEvent();
+        read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist);
+        read_event->enable();
+
+        int run_time = 0;
+        read_event->setCallback(
+            [&] (short events) {
+                char dummy = 0;
+                write(write_fd, &dummy, 1);
+                ++run_time;
+            }
+        );
+
+        char dummy = 0;
+        write(write_fd, &dummy, 1);
+        sp_loop->exitLoop(std::chrono::seconds(10));
+        sp_loop->runLoop();
+
+        cout << "count in 10sec: " << run_time << endl;
+
+        delete read_event;
+        delete sp_loop;
+
+        close(write_fd);
+        close(read_fd);
+    }
+}
+
