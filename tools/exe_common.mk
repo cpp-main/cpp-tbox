@@ -18,7 +18,8 @@ EXE_OUTPUT_DIR = $(OUTPUT_DIR)/$(EXE_NAME)
 
 STATIC_LIB := $(EXE_NAME)
 
-TARGETS := pre_build print_vars build_exe post_build
+#TARGETS := pre_build print_vars build_exe post_build
+TARGETS := pre_build build_exe post_build
 
 all: $(TARGETS) install
 
@@ -76,9 +77,10 @@ print_exe_vars :
 $(EXE_OUTPUT_DIR)/$(EXE_NAME) : $(OBJECTS)
 	@echo "\033[35mBUILD $(EXE_NAME) \033[0m"
 	@install -d $(dir $@)
-	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) -rdynamic
+	@$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) -rdynamic
 
-build_exe : print_exe_vars $(EXE_OUTPUT_DIR)/$(EXE_NAME)
+#build_exe : print_exe_vars $(EXE_OUTPUT_DIR)/$(EXE_NAME)
+build_exe : $(EXE_OUTPUT_DIR)/$(EXE_NAME)
 
 ################################################################
 # test
@@ -108,7 +110,8 @@ $(EXE_OUTPUT_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
-test : print_vars print_test_vars $(EXE_OUTPUT_DIR)/test
+#test : print_test_vars $(EXE_OUTPUT_DIR)/test
+test : $(EXE_OUTPUT_DIR)/test
 
 ################################################################
 # install and uninstall

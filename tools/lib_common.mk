@@ -23,7 +23,7 @@ SHARED_LIB := $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y).$(LIB_VERSION
 ENABLE_STATIC_LIB ?= yes
 ENABLE_SHARED_LIB ?= yes
 
-TARGETS := pre_build print_vars
+TARGETS := pre_build #print_vars
 
 ifeq ($(ENABLE_STATIC_LIB),yes)
 	TARGETS += build_static_lib
@@ -91,7 +91,8 @@ $(LIB_OUTPUT_DIR)/$(STATIC_LIB) : $(OBJECTS)
 	@install -d $(dir $@)
 	@$(AR) rc $@ $(OBJECTS)
 
-build_static_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
+#build_static_lib : print_static_vars $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
+build_static_lib : $(LIB_OUTPUT_DIR)/$(STATIC_LIB)
 
 ################################################################
 # shared library
@@ -140,7 +141,8 @@ $(LIB_OUTPUT_DIR)/$(SHARED_LIB) : $(SHARED_OBJECTS)
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
 	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
 
-build_shared_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
+#build_shared_lib : print_shared_vars $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
+build_shared_lib : $(LIB_OUTPUT_DIR)/$(SHARED_LIB)
 
 ################################################################
 # test
@@ -170,7 +172,8 @@ $(LIB_OUTPUT_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
-test : print_vars print_test_vars $(LIB_OUTPUT_DIR)/test
+#test : print_test_vars $(LIB_OUTPUT_DIR)/test
+test : $(LIB_OUTPUT_DIR)/test
 
 ################################################################
 # install and uninstall
