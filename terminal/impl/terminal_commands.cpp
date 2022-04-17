@@ -134,11 +134,11 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
             top_dir_node->children(node_info_vec);
 
             for (auto item : node_info_vec) {
-                ss << item.name;
+                ss << "- " << item.name;
                 auto node = nodes_.at(item.token);
                 if (node->type() == NodeType::kFunc)
                     ss << '*';
-                ss << '\t';
+                ss << "\r\n";
             }
 
             ss << "\r\n";
