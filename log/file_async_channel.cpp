@@ -31,7 +31,8 @@ bool FileAsyncChannel::initialize(const std::string &log_path, const std::string
 
     AsyncChannel::Config cfg;
     cfg.buff_size = 1024;
-    cfg.buff_num  = 3;
+    cfg.buff_min_num = 2;
+    cfg.buff_max_num = 20;
     cfg.interval  = 100;
 
     bool ok = AsyncChannel::initialize(cfg);
