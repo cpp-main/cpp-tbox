@@ -61,6 +61,7 @@ class AsyncPipe::Impl {
     Buffer*         curr_buffer_ = nullptr; //!< 当前缓冲
     vector<Buffer*> free_buffers_;  //!< 可用缓冲数组
     deque<Buffer*>  full_buffers_;  //!< 已满缓冲队列
+    size_t          buff_num_;      //!< 缓冲个数
 
     bool    inited_ = false;        //!< 是否已经启动子线程
     bool    stop_signal_ = false;   //!< 停止信号
@@ -69,6 +70,7 @@ class AsyncPipe::Impl {
     mutex   curr_buffer_mutex_;     //!< 锁 curr_buffer_ 的
     mutex   full_buffers_mutex_;    //!< 锁 full_buffers_ 的
     mutex   free_buffers_mutex_;    //!< 锁 free_buffers_ 的
+    mutex   buff_num_mutex_;        //!< 锁 free_buffers_ 的
     condition_variable full_buffers_cv_;    //!< full_buffers_ 不为空条件变量
     condition_variable free_buffers_cv_;    //!< free_buffers_ 不为空条件变量
 };
@@ -140,8 +142,13 @@ bool AsyncPipe::Impl::initialize(const Config &cfg)
         return false;
     }
 
-    if (cfg.buff_num == 0) {
-        std::cerr << "Err: AsyncPipe::Config::buff_num == 0" << std::endl;
+    if (cfg.buff_min_num == 0) {
+        std::cerr << "Err: AsyncPipe::Config::buff_min_num == 0" << std::endl;
+        return false;
+    }
+
+    if (cfg.buff_min_num > cfg.buff_max_num) {
+        std::cerr << "Err: AsyncPipe::Config::buff_max_num < buff_min_num" << std::endl;
         return false;
     }
 
@@ -151,8 +158,9 @@ bool AsyncPipe::Impl::initialize(const Config &cfg)
     }
 
     cfg_ = cfg;
-    for (size_t i = 0; i < cfg.buff_num; ++i)
+    for (size_t i = 0; i < cfg.buff_min_num; ++i)
         free_buffers_.push_back(new Buffer(cfg.buff_size));
+    buff_num_ = cfg.buff_min_num;
 
     auto bt = thread(std::bind(&AsyncPipe::Impl::threadFunc, this));
     backend_thread_.swap(bt);
@@ -188,8 +196,15 @@ void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
         if (curr_buffer_ == nullptr) {
             //! 如果 curr_buffer_ 没有分配，则应该从 free_buffers_ 中取一个出来
             std::unique_lock<std::mutex> lk(free_buffers_mutex_);
-            if (free_buffers_.empty())  //! 如里 free_buffers_ 为空，则要等
-                free_buffers_cv_.wait(lk, [this] { return !free_buffers_.empty(); });
+            if (free_buffers_.empty()) {    //! 如里 free_buffers_ 为空，则要等
+                if (buff_num_ < cfg_.buff_max_num) {
+                    //! 如果缓冲数还没有达到最大限值，则可以继续申请
+                    free_buffers_.push_back(new Buffer(cfg_.buff_size));
+                    ++buff_num_;
+                } else {
+                    free_buffers_cv_.wait(lk, [this] { return !free_buffers_.empty(); });
+                }
+            }
 
             //! 将 free_buffers_ 中最后的一个弹出来，给到 curr_buffer_
             curr_buffer_ = free_buffers_.back();
@@ -242,10 +257,19 @@ void AsyncPipe::Impl::threadFunc()
                 if (cb_)
                     cb_(buff->data(), buff->size());
                 buff->reset();
-                //! 将处理后的缓冲放回 free_buffers_ 中
-                std::lock_guard<std::mutex> lg(free_buffers_mutex_);
-                free_buffers_.push_back(buff);
-                free_buffers_cv_.notify_all();
+
+                buff_num_mutex_.lock();
+                if (buff_num_ > cfg_.buff_min_num) {
+                    --buff_num_;
+                    buff_num_mutex_.unlock();
+                    delete buff;
+                } else {
+                    buff_num_mutex_.unlock();
+                    //! 将处理后的缓冲放回 free_buffers_ 中
+                    std::lock_guard<std::mutex> lg(free_buffers_mutex_);
+                    free_buffers_.push_back(buff);
+                    free_buffers_cv_.notify_all();
+                }
             }
         }
 

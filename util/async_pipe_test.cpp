@@ -38,7 +38,8 @@ TEST(AsyncPipe, Size1Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 1;
-    cfg.buff_num  = 1;
+    cfg.buff_min_num  = 1;
+    cfg.buff_max_num  = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -48,7 +49,19 @@ TEST(AsyncPipe, Size1Num2)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 1;
-    cfg.buff_num  = 2;
+    cfg.buff_min_num  = 2;
+    cfg.buff_max_num  = 2;
+    cfg.interval = 10;
+
+    TestByConfig(cfg);
+}
+
+TEST(AsyncPipe, Size1MinNum2MaxNum10)
+{
+    AsyncPipe::Config cfg;
+    cfg.buff_size = 1;
+    cfg.buff_min_num  = 2;
+    cfg.buff_max_num  = 10;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -58,7 +71,8 @@ TEST(AsyncPipe, Size2Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 2;
-    cfg.buff_num  = 1;
+    cfg.buff_min_num  = 1;
+    cfg.buff_max_num  = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -68,7 +82,8 @@ TEST(AsyncPipe, Size50Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_num  = 1;
+    cfg.buff_min_num  = 1;
+    cfg.buff_max_num  = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -78,7 +93,8 @@ TEST(AsyncPipe, Size50Num2)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_num  = 2;
+    cfg.buff_min_num  = 2;
+    cfg.buff_max_num  = 2;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -88,7 +104,8 @@ TEST(AsyncPipe, Size50Num3)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_num  = 3;
+    cfg.buff_min_num  = 3;
+    cfg.buff_max_num  = 3;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -98,7 +115,8 @@ TEST(AsyncPipe, Size500Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_num  = 1;
+    cfg.buff_min_num  = 1;
+    cfg.buff_max_num  = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -113,7 +131,8 @@ TEST(AsyncPipe, PeriodSync)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_num  = 1;
+    cfg.buff_min_num  = 1;
+    cfg.buff_max_num  = 1;
     cfg.interval = 10;
 
     vector<uint8_t> out_data;
@@ -142,7 +161,8 @@ TEST(AsyncPipe, ForgetCleanup)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_num  = 3;
+    cfg.buff_min_num  = 3;
+    cfg.buff_max_num  = 3;
     cfg.interval = 10;
 
     vector<uint8_t> out_data;
