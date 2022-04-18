@@ -39,7 +39,8 @@ class AsyncPipe {
     using Callback = std::function<void(const void *, size_t)>;
     struct Config {
         size_t buff_size = 1024;    //!< 缓冲大小，默认1KB
-        size_t buff_num = 2;        //!< 缓冲个数，默认2
+        size_t buff_min_num = 2;    //!< 缓冲保留个数，默认2
+        size_t buff_max_num = 10;   //!< 缓冲最大个数，默认5
         size_t interval = 1000;     //!< 同步间隔，单位ms，默认1秒
     };
 
