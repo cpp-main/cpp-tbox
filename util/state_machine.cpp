@@ -21,6 +21,7 @@ class StateMachine::Impl {
     bool initialize(StateID init_state_id, StateID term_state_id);
 
     bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
+    void setStateChangedCallback(const StateChangedCallback &cb);
 
     bool start();
     void stop();
@@ -53,6 +54,8 @@ class StateMachine::Impl {
     State *curr_state_ = nullptr;
     map<StateID, State*> states_;
 
+    StateChangedCallback state_changed_cb_;
+
     int cb_level_ = 0;
 };
 
@@ -83,6 +86,11 @@ bool StateMachine::initialize(StateID init_state_id, StateID term_state_id)
 bool StateMachine::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
 {
     return impl_->setSubStateMachine(state_id, wp_sub_sm);
+}
+
+void StateMachine::setStateChangedCallback(const StateChangedCallback &cb)
+{
+    impl_->setStateChangedCallback(cb);
 }
 
 bool StateMachine::start()
@@ -176,6 +184,11 @@ bool StateMachine::Impl::setSubStateMachine(StateID state_id, StateMachine *wp_s
 
     state->sub_sm = wp_sub_sm->impl_;
     return true;
+}
+
+void StateMachine::Impl::setStateChangedCallback(const StateChangedCallback &cb)
+{
+    state_changed_cb_ = cb;
 }
 
 bool StateMachine::Impl::start()
@@ -272,6 +285,7 @@ bool StateMachine::Impl::run(EventID event_id)
         next_state->enter_action();
     --cb_level_;
 
+    auto last_state = curr_state_;
     curr_state_ = next_state;
 
     //! 如果有子状态机，则给子状态机处理
@@ -279,6 +293,9 @@ bool StateMachine::Impl::run(EventID event_id)
         curr_state_->sub_sm->start();
         curr_state_->sub_sm->run(event_id);
     }
+
+    if (state_changed_cb_)
+        state_changed_cb_(last_state->id, next_state->id, event_id);
 
     return true;
 }

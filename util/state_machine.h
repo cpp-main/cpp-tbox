@@ -15,6 +15,8 @@ class StateMachine {
     using ActionFunc = std::function<void()>;
     using GuardFunc  = std::function<bool()>;
 
+    using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, EventID)>;
+
   public:
     StateMachine();
     ~StateMachine();
@@ -86,6 +88,9 @@ class StateMachine {
     bool setSubStateMachine(S state_id, StateMachine *wp_sub_sm) {
         return setSubStateMachine(static_cast<StateID>(state_id), wp_sub_sm);
     }
+
+    //! 设置状态变更回调
+    void setStateChangedCallback(const StateChangedCallback &cb);
 
     //! 启动状态机
     bool start();
