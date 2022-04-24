@@ -18,10 +18,16 @@ class StateMachine::Impl {
   public:
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
     bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
-    bool start(StateID init_state_id);
+    bool initialize(StateID init_state_id, StateID term_state_id);
+
+    bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
+
+    bool start();
     void stop();
+
     bool run(EventID event_id);
     StateID currentState() const;
+    bool isTerminated() const;
 
   private:
     struct Route {
@@ -35,10 +41,14 @@ class StateMachine::Impl {
         StateID id;
         ActionFunc enter_action;
         ActionFunc exit_action;
+        StateMachine::Impl *sub_sm; //! 子状态机
         vector<Route> routes;
     };
 
     State* findState(StateID state_id) const;
+
+    StateID init_state_id_ = 0;
+    StateID term_state_id_ = 0;
 
     State *curr_state_ = nullptr;
     map<StateID, State*> states_;
@@ -65,9 +75,19 @@ bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_
     return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action);
 }
 
-bool StateMachine::start(StateID init_state_id)
+bool StateMachine::initialize(StateID init_state_id, StateID term_state_id)
 {
-    return impl_->start(init_state_id);
+    return impl_->initialize(init_state_id, term_state_id);
+}
+
+bool StateMachine::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
+{
+    return impl_->setSubStateMachine(state_id, wp_sub_sm);
+}
+
+bool StateMachine::start()
+{
+    return impl_->start();
 }
 
 void StateMachine::stop()
@@ -85,6 +105,12 @@ StateMachine::StateID StateMachine::currentState() const
     return impl_->currentState();
 }
 
+bool StateMachine::isTerminated() const
+{
+    return impl_->isTerminated();
+}
+
+///////////////////////
 
 StateMachine::Impl::~Impl()
 {
@@ -103,7 +129,7 @@ bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_acti
         return false;
     }
 
-    auto new_state = new State { state_id, enter_action, exit_action };
+    auto new_state = new State { state_id, enter_action, exit_action, nullptr };
     states_[state_id] = new_state;
 
     return true;
@@ -123,7 +149,36 @@ bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, State
     return true;
 }
 
-bool StateMachine::Impl::start(StateID init_state_id)
+bool StateMachine::Impl::initialize(StateID init_state_id, StateID term_state_id)
+{
+    if (findState(init_state_id) == nullptr) {
+        LogWarn("init state:%u not exist", init_state_id);
+        return false;
+    }
+
+    if (term_state_id != 0 && findState(term_state_id) == nullptr) {
+        LogWarn("term state:%u not exist", term_state_id);
+        return false;
+    }
+
+    init_state_id_ = init_state_id;
+    term_state_id_ = term_state_id;
+    return true;
+}
+
+bool StateMachine::Impl::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
+{
+    auto state = findState(state_id);
+    if (state == nullptr) {
+        LogWarn("state:%u not exist", state_id);
+        return false;
+    }
+
+    state->sub_sm = wp_sub_sm->impl_;
+    return true;
+}
+
+bool StateMachine::Impl::start()
 {
     if (curr_state_ != nullptr) {
         LogWarn("it's already started");
@@ -135,9 +190,9 @@ bool StateMachine::Impl::start(StateID init_state_id)
         return false;
     }
 
-    auto init_state = findState(init_state_id);
+    auto init_state = findState(init_state_id_);
     if (init_state == nullptr) {
-        LogWarn("state %u not found", init_state_id);
+        LogWarn("state %u not found", init_state_id_);
         return false;
     }
 
@@ -180,6 +235,14 @@ bool StateMachine::Impl::run(EventID event_id)
         return false;
     }
 
+    //! 如果有子状态机，则给子状态机处理
+    if (curr_state_->sub_sm != nullptr) {
+        bool ret = curr_state_->sub_sm->run(event_id);
+        if (!curr_state_->sub_sm->isTerminated())
+            return ret;
+        curr_state_->sub_sm->stop();
+    }
+
     //! 找出可行的路径
     auto iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
         [event_id] (const Route &item) -> bool {
@@ -210,6 +273,13 @@ bool StateMachine::Impl::run(EventID event_id)
     --cb_level_;
 
     curr_state_ = next_state;
+
+    //! 如果有子状态机，则给子状态机处理
+    if (curr_state_->sub_sm != nullptr) {
+        curr_state_->sub_sm->start();
+        curr_state_->sub_sm->run(event_id);
+    }
+
     return true;
 }
 
@@ -221,6 +291,16 @@ StateMachine::StateID StateMachine::Impl::currentState() const
     }
 
     return curr_state_->id;
+}
+
+bool StateMachine::Impl::isTerminated() const
+{
+    if (curr_state_ == nullptr) {
+        LogWarn("need start first");
+        return false;
+    }
+
+    return curr_state_->id == term_state_id_;
 }
 
 StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const

@@ -58,21 +58,37 @@ class StateMachine {
                         guard, action);
     }
 
-
     /**
-     * \brief   启动状态机，并指定初始状态
+     * \brief   设置起始与终止状态
      *
-     * \param   init_state      初始状态
+     * \param   init_state_id   起始状态，必须指定
+     * \param   term_state_id   终止状态，默认为0表示无
      *
      * \return  bool    成功与否
-     *                  重复start()或init_state所指状态不存在时会不成功
+     *                  如果 init_state_id 或 term_state_id 不存在则会返回false
      */
-    bool start(StateID init_state);
+    bool initialize(StateID init_state_id, StateID term_state_id = 0);
 
     template <typename S>
-    bool start(S init_state) {
-        return start(static_cast<StateID>(init_state));
+    bool initialize(S init_state_id, S term_state_id) {
+        return initialize(static_cast<StateID>(init_state_id), static_cast<StateID>(term_state_id));
     }
+
+    template <typename S>
+    bool initialize(S init_state_id) {
+        return initialize(static_cast<StateID>(init_state_id));
+    }
+
+    //! 设置子状态机
+    bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
+
+    template <typename S>
+    bool setSubStateMachine(S state_id, StateMachine *wp_sub_sm) {
+        return setSubStateMachine(static_cast<StateID>(state_id), wp_sub_sm);
+    }
+
+    //! 启动状态机
+    bool start();
 
     //! 停止状态机
     void stop();
@@ -103,6 +119,8 @@ class StateMachine {
     S currentState() const {
         return static_cast<S>(currentState());
     }
+
+    bool isTerminated() const;
 
   private:
     class Impl;
