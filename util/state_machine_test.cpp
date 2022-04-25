@@ -226,9 +226,11 @@ TEST(StateMachine, SubStateMachine)
     sm.newState(State::kTerm, nullptr, nullptr);
 
     sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, nullptr);
+    sm.addRoute(State::kInit, Event::k2, State::k2,    nullptr, nullptr);
     sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, nullptr);
     sm.addRoute(State::k1,    Event::k2, State::k2,    nullptr, nullptr);
     sm.addRoute(State::k2,    Event::k1, State::k1,    nullptr, nullptr);
+    sm.addRoute(State::k2,    Event::k2, State::k1,    nullptr, nullptr);
 
     sm.initialize(State::kInit, State::kTerm);
 
@@ -248,7 +250,26 @@ TEST(StateMachine, SubStateMachine)
 
     sm.setSubStateMachine(State::k1, &sub_sm);
 
-    {
+    {   //! 直通
+        sm.start();
+
+        EXPECT_EQ(sm.currentState<State>(), State::kInit);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k1);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::kTerm);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.isTerminated());
+
+        sm.stop();
+    }
+
+    {   //! 在子状态机里转了一下
         sm.start();
 
         EXPECT_EQ(sm.currentState<State>(), State::kInit);
@@ -273,4 +294,38 @@ TEST(StateMachine, SubStateMachine)
 
         sm.stop();
     }
+
+    {   //! 从S2进的S1的子状态机，再出来回到S2，再进去
+        sm.start();
+
+        EXPECT_EQ(sm.currentState<State>(), State::kInit);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.run(Event::k2));
+        EXPECT_EQ(sm.currentState<State>(), State::k2);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.run(Event::k2));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k2);
+
+        EXPECT_TRUE(sm.run(Event::k2));
+        EXPECT_EQ(sm.currentState<State>(), State::k2);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.run(Event::k2));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k2);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k1);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::kTerm);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        sm.stop();
+    }
+
 }
