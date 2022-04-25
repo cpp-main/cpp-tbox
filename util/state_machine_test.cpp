@@ -327,5 +327,42 @@ TEST(StateMachine, SubStateMachine)
 
         sm.stop();
     }
+}
 
+TEST(StateMachine, StateChangedCallback)
+{
+    enum class State { kNone, kInit, k1, k2, kTerm };
+    enum class Event { kNone, k1, k2 };
+
+    StateMachine sm;
+
+    sm.newState(State::kInit, nullptr, nullptr);
+    sm.newState(State::k1,    nullptr, nullptr);
+    sm.newState(State::kTerm, nullptr, nullptr);
+
+    sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, nullptr);
+    sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, nullptr);
+
+    sm.initialize(State::kInit, State::kTerm);
+
+    State from, to;
+    Event event;
+
+    sm.setStateChangedCallback(
+        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+            from = static_cast<State>(f);
+            to = static_cast<State>(t);
+            event = static_cast<Event>(e);
+        }
+    );
+    sm.start();
+    sm.run(Event::k1);
+    EXPECT_EQ(from, State::kInit);
+    EXPECT_EQ(to, State::k1);
+    EXPECT_EQ(event, Event::k1);
+
+    sm.run(Event::k1);
+    EXPECT_EQ(from, State::k1);
+    EXPECT_EQ(to, State::kTerm);
+    EXPECT_EQ(event, Event::k1);
 }
