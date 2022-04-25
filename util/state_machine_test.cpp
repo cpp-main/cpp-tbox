@@ -212,3 +212,65 @@ TEST(StateMachine, EnumClass)
     EXPECT_EQ(enter_counter, 2);
     EXPECT_EQ(exit_counter, 2);
 }
+
+TEST(StateMachine, SubStateMachine)
+{
+    enum class State { kNone, kInit, k1, k2, kTerm };
+    enum class Event { kNone, k1, k2 };
+
+    StateMachine sm, sub_sm;
+
+    sm.newState(State::kInit, nullptr, nullptr);
+    sm.newState(State::k1,    nullptr, nullptr);
+    sm.newState(State::k2,    nullptr, nullptr);
+    sm.newState(State::kTerm, nullptr, nullptr);
+
+    sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, nullptr);
+    sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, nullptr);
+    sm.addRoute(State::k1,    Event::k2, State::k2,    nullptr, nullptr);
+    sm.addRoute(State::k2,    Event::k1, State::k1,    nullptr, nullptr);
+
+    sm.initialize(State::kInit, State::kTerm);
+
+    sub_sm.newState(State::kInit, nullptr, nullptr);
+    sub_sm.newState(State::k1,    nullptr, nullptr);
+    sub_sm.newState(State::k2,    nullptr, nullptr);
+    sub_sm.newState(State::kTerm, nullptr, nullptr);
+
+    sub_sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, nullptr);
+    sub_sm.addRoute(State::kInit, Event::k2, State::k2,    nullptr, nullptr);
+    sub_sm.addRoute(State::k1,    Event::k2, State::k2,    nullptr, nullptr);
+    sub_sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, nullptr);
+    sub_sm.addRoute(State::k2,    Event::k1, State::k1,    nullptr, nullptr);
+    sub_sm.addRoute(State::k2,    Event::k2, State::kTerm, nullptr, nullptr);
+
+    sub_sm.initialize(State::kInit, State::kTerm);
+
+    sm.setSubStateMachine(State::k1, &sub_sm);
+
+    {
+        sm.start();
+
+        EXPECT_EQ(sm.currentState<State>(), State::kInit);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k1);
+
+        EXPECT_TRUE(sm.run(Event::k2));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k2);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::k1);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::k1);
+
+        EXPECT_TRUE(sm.run(Event::k1));
+        EXPECT_EQ(sm.currentState<State>(), State::kTerm);
+        EXPECT_EQ(sub_sm.currentState<State>(), State::kNone);
+        EXPECT_TRUE(sm.isTerminated());
+
+        sm.stop();
+    }
+}
