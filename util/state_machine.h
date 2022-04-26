@@ -6,7 +6,7 @@
 namespace tbox {
 namespace util {
 
-//! 状态机
+//! HFSM，多层级有限状态机
 class StateMachine {
   public:
     using StateID = unsigned int;   //! StateID 为 0 与 1 的两个状态为特定状态
