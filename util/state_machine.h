@@ -9,7 +9,9 @@ namespace util {
 //! 状态机
 class StateMachine {
   public:
-    using StateID = unsigned int;   //! 注意：StateID应大于0，StateID表示不合法的状态
+    using StateID = unsigned int;   //! StateID为 0 与 1 的两个状态为特定状态
+                                    //! StateID = 0 的状态为终止状态，用户可以不用定义
+                                    //! StateID = 1 的状态为默认的初始状态
     using EventID = unsigned int;   //! 注意：EventID = 0 表示任意事件，仅在 addRoute() 时使用
 
     using ActionFunc = std::function<void()>;
@@ -25,7 +27,7 @@ class StateMachine {
     /**
      * \brief   创建一个状态
      *
-     * \param   state_id        状态ID号
+     * \param   state_id        状态ID号，StateID = 1 的状态默认为初始状态
      * \param   enter_action    进入该状态时的动作，nullptr表示无动作
      * \param   exit_action     退出该状态时的动作，nullptr表示无动作
      *
@@ -63,22 +65,13 @@ class StateMachine {
     /**
      * \brief   设置起始与终止状态
      *
-     * \param   init_state_id   起始状态，必须指定
-     * \param   term_state_id   终止状态，默认为0表示无
-     *
-     * \return  bool    成功与否
-     *                  如果 init_state_id 或 term_state_id 不存在则会返回false
+     * \param   init_state_id   起始状态
      */
-    bool initialize(StateID init_state_id, StateID term_state_id = 0);
+    void setInitState(StateID init_state_id);
 
     template <typename S>
-    bool initialize(S init_state_id, S term_state_id) {
-        return initialize(static_cast<StateID>(init_state_id), static_cast<StateID>(term_state_id));
-    }
-
-    template <typename S>
-    bool initialize(S init_state_id) {
-        return initialize(static_cast<StateID>(init_state_id));
+    void setInitState(S init_state_id) {
+        return setInitState(static_cast<StateID>(init_state_id));
     }
 
     //! 设置子状态机

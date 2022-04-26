@@ -18,7 +18,7 @@ class StateMachine::Impl {
   public:
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
     bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
-    bool initialize(StateID init_state_id, StateID term_state_id);
+    void setInitState(StateID init_state_id) { init_state_id_ = init_state_id; }
 
     bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
     void setStateChangedCallback(const StateChangedCallback &cb);
@@ -48,13 +48,14 @@ class StateMachine::Impl {
 
     State* findState(StateID state_id) const;
 
-    StateID init_state_id_ = 0;
-    StateID term_state_id_ = 0;
+    StateID init_state_id_ = 1;
 
     State *curr_state_ = nullptr;
     map<StateID, State*> states_;
 
     StateChangedCallback state_changed_cb_;
+
+    State _term_state_{0};
 
     int cb_level_ = 0;
 };
@@ -78,9 +79,9 @@ bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_
     return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action);
 }
 
-bool StateMachine::initialize(StateID init_state_id, StateID term_state_id)
+void StateMachine::setInitState(StateID init_state_id)
 {
-    return impl_->initialize(init_state_id, term_state_id);
+    impl_->setInitState(init_state_id);
 }
 
 bool StateMachine::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
@@ -147,30 +148,17 @@ bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, State
                                   const GuardFunc &guard, const ActionFunc &action)
 {
     auto from_state = findState(from_state_id);
-    auto to_state = findState(to_state_id);
-    if (from_state == nullptr || to_state == nullptr) {
-        LogWarn("either from or to state not exist");
+    if (from_state == nullptr) {
+        LogWarn("from_state %d not exist", from_state_id);
+        return false;
+    }
+
+    if (to_state_id != 0 && findState(to_state_id) == nullptr) {
+        LogWarn("to_state %d not exist", to_state_id);
         return false;
     }
 
     from_state->routes.emplace_back(Route{ event_id, to_state_id, guard, action });
-    return true;
-}
-
-bool StateMachine::Impl::initialize(StateID init_state_id, StateID term_state_id)
-{
-    if (findState(init_state_id) == nullptr) {
-        LogWarn("init state:%u not exist", init_state_id);
-        return false;
-    }
-
-    if (term_state_id != 0 && findState(term_state_id) == nullptr) {
-        LogWarn("term state:%u not exist", term_state_id);
-        return false;
-    }
-
-    init_state_id_ = init_state_id;
-    term_state_id_ = term_state_id;
     return true;
 }
 
@@ -205,7 +193,7 @@ bool StateMachine::Impl::start()
 
     auto init_state = findState(init_state_id_);
     if (init_state == nullptr) {
-        LogWarn("state %u not found", init_state_id_);
+        LogWarn("init state %u not exist", init_state_id_);
         return false;
     }
 
@@ -267,36 +255,45 @@ bool StateMachine::Impl::run(EventID event_id)
         }
     );
 
+    //! 如果没有跳转则直接退出
     if (iter == curr_state_->routes.end())
         return false;
 
+    //! 以下是有跳转的情况
     const Route &route = *iter;
-    State *next_state = findState(route.next_state_id);
-    assert(next_state != nullptr);
+    auto last_state = curr_state_;
 
     ++cb_level_;
+
     if (curr_state_->exit_action)
         curr_state_->exit_action();
 
     if (route.action)
         route.action();
 
-    if (next_state->enter_action)
-        next_state->enter_action();
-    --cb_level_;
+    State *next_state = findState(route.next_state_id);
+    if (next_state != nullptr) {
+        if (next_state->enter_action)
+            next_state->enter_action();
 
-    auto last_state = curr_state_;
-    curr_state_ = next_state;
+        curr_state_ = next_state;
 
-    //! 如果有子状态机，则给子状态机处理
-    if (curr_state_->sub_sm != nullptr) {
-        curr_state_->sub_sm->start();
-        curr_state_->sub_sm->run(event_id);
+        //! 如果有子状态机，则给子状态机处理
+        if (curr_state_->sub_sm != nullptr) {
+            curr_state_->sub_sm->start();
+            curr_state_->sub_sm->run(event_id);
+        }
+    } else if (route.next_state_id == 0) {
+        curr_state_ = &_term_state_;
+    } else {
+        LogErr("Should not happen");
+        return false;
     }
 
     if (state_changed_cb_)
-        state_changed_cb_(last_state->id, next_state->id, event_id);
+        state_changed_cb_(last_state->id, curr_state_->id, event_id);
 
+    --cb_level_;
     return true;
 }
 
@@ -317,7 +314,7 @@ bool StateMachine::Impl::isTerminated() const
         return false;
     }
 
-    return curr_state_->id == term_state_id_;
+    return curr_state_->id == 0;
 }
 
 StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
