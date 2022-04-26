@@ -358,6 +358,82 @@ TEST(StateMachine, StateChangedCallback)
     EXPECT_EQ(event, Event::k1);
 }
 
+//! 测试起始状态有子状态的情况
+TEST(StateMachine, InitStateHasSubMachine)
+{
+    enum class State { kTerm, kInit };
+    enum class Event { kNone, k1 };
+
+    StateMachine sm;
+    StateMachine sub_sm;
+
+    int step = 0;
+    sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 0); ++step; }, [&]{ EXPECT_EQ(step, 6); ++step; });
+    sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 8); ++step; }, [&]{ EXPECT_EQ(step, 9); ++step; });
+    sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 7); ++step; });
+
+    sub_sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 1); ++step; }, [&]{ EXPECT_EQ(step, 2); ++step; });
+    sub_sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 4); ++step; }, [&]{ EXPECT_EQ(step, 5); ++step; });
+    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 3); ++step; });
+
+    sm.setSubStateMachine(State::kInit, &sub_sm);
+#if 0
+    sm.setStateChangedCallback(
+        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+            cout << f << "-->" << t << "," << e << endl;
+        }
+    );
+    sub_sm.setStateChangedCallback(
+        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+            cout << "  " <<  f << "-->" << t << "," << e << endl;
+        }
+    );
+#endif
+    sm.start();
+    sm.run(Event::k1);
+    sm.stop();
+}
+
+//! 测试各种Action之间的执行顺序
+TEST(StateMachine, SubStateMachineActionOrder)
+{
+    enum class State { kTerm, kInit, k1};
+    enum class Event { kNone, k1 };
+
+    StateMachine sm;
+    StateMachine sub_sm;
+
+    int step = 0;
+    sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 0); ++step; }, [&]{ EXPECT_EQ(step, 1); ++step; });
+    sm.newState(State::k1,    [&]{ EXPECT_EQ(step, 3); ++step; }, [&]{ EXPECT_EQ(step, 9); ++step; });
+    sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 11); ++step; }, [&]{ EXPECT_EQ(step, 12); ++step; });
+
+    sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, [&]{ EXPECT_EQ(step, 2); ++step; });
+    sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 10); ++step; });
+
+    sub_sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 4); ++step; }, [&]{ EXPECT_EQ(step, 5); ++step; });
+    sub_sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 7); ++step; }, [&]{ EXPECT_EQ(step, 8); ++step; });
+    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 6); ++step; });
+
+    sm.setSubStateMachine(State::k1, &sub_sm);
+#if 0
+    sm.setStateChangedCallback(
+        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+            cout << f << "-->" << t << "," << e << endl;
+        }
+    );
+    sub_sm.setStateChangedCallback(
+        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+            cout << "  " <<  f << "-->" << t << "," << e << endl;
+        }
+    );
+#endif
+    sm.start();
+    sm.run(Event::k1);
+    sm.run(Event::k1);
+    sm.stop();
+}
+
 TEST(StateMachine, SetInitState)
 {
     enum class State { kTerm, k1, kInit };

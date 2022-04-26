@@ -208,6 +208,11 @@ bool StateMachine::Impl::start()
     --cb_level_;
 
     curr_state_ = init_state;
+
+    //! 如果有子状态机，在启动子状态机
+    if (curr_state_->sub_sm != nullptr)
+        curr_state_->sub_sm->start();
+
     return true;
 }
 
@@ -266,7 +271,16 @@ bool StateMachine::Impl::run(EventID event_id)
 
     //! 以下是有跳转的情况
     const Route &route = *iter;
-    auto last_state = curr_state_;
+
+    State *next_state = findState(route.next_state_id);
+    if (next_state == nullptr) {
+        if (route.next_state_id == 0) {
+            next_state = &_term_state_;
+        } else {
+            LogErr("Should not happen");
+            return false;
+        }
+    }
 
     ++cb_level_;
 
@@ -276,27 +290,19 @@ bool StateMachine::Impl::run(EventID event_id)
     if (route.action)
         route.action();
 
-    State *next_state = findState(route.next_state_id);
-    if (next_state != nullptr) {
-        if (next_state->enter_action)
-            next_state->enter_action();
+    if (next_state->enter_action)
+        next_state->enter_action();
 
-        curr_state_ = next_state;
-
-        //! 如果有子状态机，则给子状态机处理
-        if (curr_state_->sub_sm != nullptr) {
-            curr_state_->sub_sm->start();
-            curr_state_->sub_sm->run(event_id);
-        }
-    } else if (route.next_state_id == 0) {
-        curr_state_ = &_term_state_;
-    } else {
-        LogErr("Should not happen");
-        return false;
-    }
-
+    auto last_state = curr_state_;
+    curr_state_ = next_state;
     if (state_changed_cb_)
         state_changed_cb_(last_state->id, curr_state_->id, event_id);
+
+    //! 如果有子状态机，则给子状态机处理
+    if (curr_state_->sub_sm != nullptr) {
+        curr_state_->sub_sm->start();
+        curr_state_->sub_sm->run(event_id);
+    }
 
     --cb_level_;
     return true;
