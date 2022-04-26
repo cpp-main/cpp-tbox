@@ -6,14 +6,18 @@
 namespace tbox {
 namespace util {
 
-//! 状态机
+//! HFSM，多层级有限状态机
 class StateMachine {
   public:
-    using StateID = unsigned int;   //! 注意：StateID应大于0，StateID表示不合法的状态
-    using EventID = unsigned int;   //! 注意：EventID = 0 表示任意事件，仅在 addRoute() 时使用
+    using StateID = unsigned int;   //! StateID 为 0 与 1 的两个状态为特定状态
+                                    //! StateID = 0 的状态为终止状态，用户可以不用定义
+                                    //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
+    using EventID = unsigned int;   //! EventID = 0 表示任意事件，仅在 addRoute() 时使用
 
     using ActionFunc = std::function<void()>;
     using GuardFunc  = std::function<bool()>;
+
+    using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, EventID)>;
 
   public:
     StateMachine();
@@ -23,7 +27,7 @@ class StateMachine {
     /**
      * \brief   创建一个状态
      *
-     * \param   state_id        状态ID号
+     * \param   state_id        状态ID号，StateID = 1 的状态默认为初始状态
      * \param   enter_action    进入该状态时的动作，nullptr表示无动作
      * \param   exit_action     退出该状态时的动作，nullptr表示无动作
      *
@@ -58,21 +62,31 @@ class StateMachine {
                         guard, action);
     }
 
-
     /**
-     * \brief   启动状态机，并指定初始状态
+     * \brief   设置起始与终止状态
      *
-     * \param   init_state      初始状态
-     *
-     * \return  bool    成功与否
-     *                  重复start()或init_state所指状态不存在时会不成功
+     * \param   init_state_id   起始状态
      */
-    bool start(StateID init_state);
+    void setInitState(StateID init_state_id);
 
     template <typename S>
-    bool start(S init_state) {
-        return start(static_cast<StateID>(init_state));
+    void setInitState(S init_state_id) {
+        return setInitState(static_cast<StateID>(init_state_id));
     }
+
+    //! 设置子状态机
+    bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
+
+    template <typename S>
+    bool setSubStateMachine(S state_id, StateMachine *wp_sub_sm) {
+        return setSubStateMachine(static_cast<StateID>(state_id), wp_sub_sm);
+    }
+
+    //! 设置状态变更回调
+    void setStateChangedCallback(const StateChangedCallback &cb);
+
+    //! 启动状态机
+    bool start();
 
     //! 停止状态机
     void stop();
@@ -103,6 +117,8 @@ class StateMachine {
     S currentState() const {
         return static_cast<S>(currentState());
     }
+
+    bool isTerminated() const;
 
   private:
     class Impl;

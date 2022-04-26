@@ -158,6 +158,8 @@ bool AsyncPipe::Impl::initialize(const Config &cfg)
     }
 
     cfg_ = cfg;
+
+    free_buffers_.reserve(cfg.buff_min_num);
     for (size_t i = 0; i < cfg.buff_min_num; ++i)
         free_buffers_.push_back(new Buffer(cfg.buff_size));
     buff_num_ = cfg.buff_min_num;
