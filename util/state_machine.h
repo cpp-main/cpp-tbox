@@ -9,10 +9,10 @@ namespace util {
 //! 状态机
 class StateMachine {
   public:
-    using StateID = unsigned int;   //! StateID为 0 与 1 的两个状态为特定状态
+    using StateID = unsigned int;   //! StateID 为 0 与 1 的两个状态为特定状态
                                     //! StateID = 0 的状态为终止状态，用户可以不用定义
-                                    //! StateID = 1 的状态为默认的初始状态
-    using EventID = unsigned int;   //! 注意：EventID = 0 表示任意事件，仅在 addRoute() 时使用
+                                    //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
+    using EventID = unsigned int;   //! EventID = 0 表示任意事件，仅在 addRoute() 时使用
 
     using ActionFunc = std::function<void()>;
     using GuardFunc  = std::function<bool()>;

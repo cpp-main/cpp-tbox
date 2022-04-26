@@ -48,14 +48,14 @@ class StateMachine::Impl {
 
     State* findState(StateID state_id) const;
 
-    StateID init_state_id_ = 1;
+    StateID init_state_id_ = 1;     //! 初始状态
 
-    State *curr_state_ = nullptr;
-    map<StateID, State*> states_;
+    State *curr_state_ = nullptr;   //! 当前状态指针
+    map<StateID, State*> states_;   //! 状态对象表
 
     StateChangedCallback state_changed_cb_;
 
-    State _term_state_{0};
+    static State _term_state_;  //! 默认终止状态对象
 
     int cb_level_ = 0;
 };
@@ -121,6 +121,8 @@ bool StateMachine::isTerminated() const
 
 ///////////////////////
 
+StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0 };
+
 StateMachine::Impl::~Impl()
 {
     assert(cb_level_ == 0);
@@ -133,6 +135,7 @@ StateMachine::Impl::~Impl()
 
 bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
 {
+    //! 已存在的状态不能再创建了
     if (states_.find(state_id) != states_.end()) {
         LogWarn("state %u exist", state_id);
         return false;
@@ -147,12 +150,14 @@ bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_acti
 bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
                                   const GuardFunc &guard, const ActionFunc &action)
 {
+    //! 要求 from_state_id 必须是已存在的状态
     auto from_state = findState(from_state_id);
     if (from_state == nullptr) {
         LogWarn("from_state %d not exist", from_state_id);
         return false;
     }
 
+    //! 如果 to_state_id 为是终止状态，那么这个状态必须是已存在的
     if (to_state_id != 0 && findState(to_state_id) == nullptr) {
         LogWarn("to_state %d not exist", to_state_id);
         return false;

@@ -325,8 +325,8 @@ TEST(StateMachine, SubStateMachine)
 
 TEST(StateMachine, StateChangedCallback)
 {
-    enum class State { kTerm, kInit, k1, k2};
-    enum class Event { kNone, k1, k2 };
+    enum class State { kTerm, kInit, k1 };
+    enum class Event { kNone, k1 };
 
     StateMachine sm;
 
@@ -356,4 +356,32 @@ TEST(StateMachine, StateChangedCallback)
     EXPECT_EQ(from, State::k1);
     EXPECT_EQ(to, State::kTerm);
     EXPECT_EQ(event, Event::k1);
+}
+
+TEST(StateMachine, SetInitState)
+{
+    enum class State { kTerm, k1, kInit };
+    enum class Event { kNone, k1 };
+
+    StateMachine sm;
+
+    sm.setInitState(State::kInit);
+    sm.newState(State::kInit, nullptr, nullptr);
+    sm.newState(State::k1,    nullptr, nullptr);
+
+    EXPECT_TRUE(sm.start());
+    EXPECT_EQ(sm.currentState<State>(), State::kInit);
+}
+
+TEST(StateMachine, SetInitState_Fail)
+{
+    enum class State { kTerm, k1, kInit };
+    enum class Event { kNone, k1 };
+
+    StateMachine sm;
+
+    sm.setInitState(State::kInit);
+    sm.newState(State::k1,    nullptr, nullptr);
+
+    EXPECT_FALSE(sm.start());
 }
