@@ -27,7 +27,7 @@ namespace util {
 class RequestPool {
   public:
     using Token = cabinet::Token;
-    using Seconds = std::chrono::milliseconds;
+    using Duration = std::chrono::milliseconds;
     using TimeoutAction = std::function<void(void*)>;
 
   public:
@@ -37,14 +37,16 @@ class RequestPool {
     /**
      * \brief   初始化
      *
-     * \param   timeout_sec     指定超时时长，单位：秒
+     * \param   check_interval  指定检查时间间隔
+     * \param   check_times     指定检查次数
      * \param   timeout_action  指定超时的动作
      *
      * \return  bool    成功与否，通常都不会失败
      *
      * \note    请求上下文指针指向的数据需要由用户自己去释放，RequestPool不负责其生命期
      */
-    bool initialize(const Seconds &timeout_sec, const TimeoutAction &timeout_action);
+    bool initialize(const Duration &check_interval, int check_times,
+                    const TimeoutAction &timeout_action);
     bool start();
     void stop();
     void cleanup();
