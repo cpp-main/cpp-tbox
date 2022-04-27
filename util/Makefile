@@ -14,6 +14,7 @@ HEAD_FILES = \
 	time_counter.h \
 	state_machine.h \
 	async_pipe.h \
+	request_pool.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -26,6 +27,7 @@ CPP_SRC_FILES = \
 	time_counter.cpp \
 	state_machine.cpp \
 	async_pipe.cpp \
+	request_pool.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
