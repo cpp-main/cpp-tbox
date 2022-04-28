@@ -35,6 +35,7 @@ class TimeoutMonitor::Impl {
     Callback    cb_;
     int         cb_level_ = 0;
     PollItem   *curr_item_ = nullptr;
+    int         token_number_ = 0;
 };
 
 TimeoutMonitor::Impl::Impl(Loop *wp_loop) :
@@ -57,7 +58,6 @@ bool TimeoutMonitor::Impl::initialize(const Duration &check_interval, int check_
 
     sp_timer_->initialize(check_interval, Event::Mode::kPersist);
     sp_timer_->setCallback(std::bind(&TimeoutMonitor::Impl::onTimerTick, this));
-    sp_timer_->enable();
 
     //! 创建计时环
     curr_item_ = new PollItem;
@@ -75,6 +75,9 @@ bool TimeoutMonitor::Impl::initialize(const Duration &check_interval, int check_
 void TimeoutMonitor::Impl::add(const Token &token)
 {
     curr_item_->tokens.push_back(token);
+    if (token_number_ == 0)
+        sp_timer_->enable();
+    ++token_number_;
 }
 
 void TimeoutMonitor::Impl::cleanup()
@@ -82,29 +85,40 @@ void TimeoutMonitor::Impl::cleanup()
     if (curr_item_ == nullptr)
         return;
 
-    sp_timer_->disable();
+    if (token_number_ > 0)
+        sp_timer_->disable();
+    token_number_ = 0;
 
     PollItem *item = curr_item_->next;
     curr_item_->next = nullptr;
+    curr_item_ = nullptr;
+
     while (item != nullptr) {
         auto next = item->next;
         delete item;
         item = next;
     }
-    curr_item_ = nullptr;
+
     cb_ = nullptr;
 }
 
 void TimeoutMonitor::Impl::onTimerTick()
 {
     curr_item_ = curr_item_->next;
+
+    vector<Token> tobe_handle;
+    swap(tobe_handle, curr_item_->tokens);
+
+    token_number_ -= tobe_handle.size();
+    if (token_number_ == 0)
+        sp_timer_->disable();
+
     if (cb_) {
         ++cb_level_;
-        for (auto token : curr_item_->tokens)
+        for (auto token : tobe_handle)
             cb_(token);
         --cb_level_;
     }
-    curr_item_->tokens.clear();
 }
 
 /////////////////////////////////////

@@ -10,8 +10,8 @@ namespace util {
 /**
  * Token的超时监控器
  *
- * 该类通常配合RequestPool或cabinet::Cabinet使用
- * 用于管理请求的超时机制
+ * 该类通常配合cabinet::Cabinet使用，实现请求池功能
+ * 用于管理请求的超时自动处理功能
  */
 class TimeoutMonitor {
   public:
