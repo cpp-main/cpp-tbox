@@ -3,7 +3,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
-namespace util {
+namespace eventx {
 namespace {
 
 using namespace event;

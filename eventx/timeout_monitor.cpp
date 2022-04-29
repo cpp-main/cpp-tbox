@@ -6,7 +6,7 @@
 #include <tbox/event/timer_event.h>
 
 namespace tbox {
-namespace util {
+namespace eventx {
 
 using namespace std;
 using namespace event;

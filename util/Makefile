@@ -14,8 +14,6 @@ HEAD_FILES = \
 	time_counter.h \
 	state_machine.h \
 	async_pipe.h \
-	timeout_monitor.h \
-	request_pool.hpp \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -28,7 +26,6 @@ CPP_SRC_FILES = \
 	time_counter.cpp \
 	state_machine.cpp \
 	async_pipe.cpp \
-	timeout_monitor.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -43,10 +40,8 @@ TEST_CPP_SRC_FILES = \
 	time_counter_test.cpp \
 	state_machine_test.cpp \
 	async_pipe_test.cpp \
-	timeout_monitor_test.cpp \
-	request_pool_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 
 ENABLE_SHARED_LIB = no
 
