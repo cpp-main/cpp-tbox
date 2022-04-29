@@ -1,5 +1,6 @@
 #include "log.h"
 #include <iostream>
+#include <sstream>
 #include <tbox/base/json.hpp>
 #include <tbox/terminal/session.h>
 #include <tbox/util/fs.h>
