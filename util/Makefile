@@ -15,6 +15,7 @@ HEAD_FILES = \
 	state_machine.h \
 	async_pipe.h \
 	timeout_monitor.h \
+	request_pool.hpp \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -43,6 +44,7 @@ TEST_CPP_SRC_FILES = \
 	state_machine_test.cpp \
 	async_pipe_test.cpp \
 	timeout_monitor_test.cpp \
+	request_pool_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
 
