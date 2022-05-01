@@ -5,9 +5,9 @@ namespace tbox {
 namespace http {
 
 enum class Ver {
-    kHttp_1_0,
-    kHttp_1_1,
-    kHttp_1_2,
+    kHttp_1_0,  //!< http 1.0
+    kHttp_1_1,  //!< http 1.1
+    kHttp_1_2,  //!< http 1.2
 };
 
 //! 方法
