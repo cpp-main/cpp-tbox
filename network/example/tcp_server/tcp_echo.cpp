@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     server.initialize(bind_addr);
     //! 当收到数据时，直接往client指定对象发回去
     server.setReceiveCallback(
-        [&server] (const TcpServer::ClientToken &client, Buffer &buff) {
+        [&server] (const TcpServer::ConnToken &client, Buffer &buff) {
             server.send(client, buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
         }, 0

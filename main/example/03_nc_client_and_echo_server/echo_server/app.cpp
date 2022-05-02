@@ -35,7 +35,7 @@ bool App::onInit(const tbox::Json &cfg)
         return false;
 
     server_->setReceiveCallback(
-        [this] (const TcpServer::ClientToken &client, Buffer &buff) {
+        [this] (const TcpServer::ConnToken &client, Buffer &buff) {
             server_->send(client, buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
         }, 0

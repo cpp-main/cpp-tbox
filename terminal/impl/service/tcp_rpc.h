@@ -35,20 +35,20 @@ class TcpRpc::Impl : Connection {
     virtual bool isValid(const SessionToken &st) const override;
 
   protected:
-    bool send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size);
+    bool send(const TcpServer::ConnToken &ct, const void *data_ptr, size_t data_size);
 
-    void onTcpConnected(const TcpServer::ClientToken &ct);
-    void onTcpDisconnected(const TcpServer::ClientToken &ct);
-    void onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff);
-    void onRecvString(const TcpServer::ClientToken &ct, const std::string &str);
+    void onTcpConnected(const TcpServer::ConnToken &ct);
+    void onTcpDisconnected(const TcpServer::ConnToken &ct);
+    void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
+    void onRecvString(const TcpServer::ConnToken &ct, const std::string &str);
 
   private:
     Loop *wp_loop_ = nullptr;
     TerminalInteract *wp_terminal_ = nullptr;
     TcpServer *sp_tcp_ = nullptr;
 
-    map<SessionToken, TcpServer::ClientToken> session_to_client_;
-    map<TcpServer::ClientToken, SessionToken> client_to_session_;
+    map<SessionToken, TcpServer::ConnToken> session_to_client_;
+    map<TcpServer::ConnToken, SessionToken> client_to_session_;
 };
 
 }
