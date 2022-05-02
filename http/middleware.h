@@ -1,6 +1,8 @@
 #ifndef TBOX_HTTP_MIDDLEWARE_H_20220501
 #define TBOX_HTTP_MIDDLEWARE_H_20220501
 
+#include "common.h"
+
 namespace tbox {
 namespace http {
 
@@ -8,6 +10,9 @@ namespace http {
 class Middleware {
   public:
     ~Middleware() { }
+
+  public:
+    virtual void handle(RequestSptr req, RespondSptr res, const NextFunc &next) = 0;
 };
 
 }

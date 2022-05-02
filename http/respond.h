@@ -7,6 +7,8 @@ namespace tbox {
 namespace http {
 
 class Respond {
+  public:
+    using Sptr = std::shared_ptr<Respond>;
     //TODO
 };
 

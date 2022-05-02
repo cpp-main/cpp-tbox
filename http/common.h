@@ -1,6 +1,10 @@
 #ifndef TBOX_HTTP_COMMON_H_20220501
 #define TBOX_HTTP_COMMON_H_20220501
 
+#include <memory>
+#include <functional>
+#include <tbox/base/cabinet_token.h>
+
 namespace tbox {
 namespace http {
 
@@ -25,6 +29,17 @@ enum class StatusCode {
     k401_Unauthorized,
     k404_NotFound
 };
+
+class Request;
+class Respond;
+
+using RequestSptr = std::shared_ptr<Request>;
+using RespondSptr = std::shared_ptr<Respond>;
+
+using NextFunc = std::function<void()>;
+using RequestCallback = std::function<void(RequestSptr, RespondSptr, const NextFunc &)>;
+
+using ConnToken = cabinet::Token;
 
 }
 }
