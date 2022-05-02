@@ -159,6 +159,22 @@ SockAddr TcpServer::getClientAddress(const ClientToken &client) const
     return SockAddr();
 }
 
+void* TcpServer::setContext(const ClientToken &client, void* context)
+{
+    auto conn = d_->conns.at(client);
+    if (conn != nullptr)
+        return conn->setContext(context);
+    return nullptr;
+}
+
+void* TcpServer::getContext(const ClientToken &client) const
+{
+    auto conn = d_->conns.at(client);
+    if (conn != nullptr)
+        return conn->getContext();
+    return nullptr;
+}
+
 TcpServer::State TcpServer::state() const
 {
     return d_->state;

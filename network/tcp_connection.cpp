@@ -53,6 +53,13 @@ SocketFd TcpConnection::socketFd() const
     return SocketFd();
 }
 
+void* TcpConnection::setContext(void *new_context)
+{
+    auto old_context = wp_context_;
+    wp_context_ = new_context;
+    return old_context;
+}
+
 void TcpConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
     if (sp_buffered_fd_ != nullptr)

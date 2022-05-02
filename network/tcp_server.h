@@ -59,6 +59,10 @@ class TcpServer {
     //! 获取客户端的地址
     SockAddr getClientAddress(const ClientToken &client) const;
 
+    //! 设置上下文
+    void* setContext(const ClientToken &client, void* context);
+    void* getContext(const ClientToken &client) const;
+
     State state() const;
 
   protected:

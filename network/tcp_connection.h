@@ -32,6 +32,9 @@ class TcpConnection : public ByteStream {
     //! 是否已经失效了
     bool isExpired() const { return sp_buffered_fd_ == nullptr; }
 
+    void* setContext(void *new_context);
+    void* getContext() const { return wp_context_; }
+
   public:
     //! 实现ByteStream的接口
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
@@ -53,6 +56,7 @@ class TcpConnection : public ByteStream {
     SockAddr    peer_addr_;
 
     DisconnectedCallback disconnected_cb_;
+    void *wp_context_ = nullptr;
 
     int cb_level_ = 0;
 };
