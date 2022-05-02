@@ -27,8 +27,9 @@ class Server {
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
 
-  private:
     class Impl;
+
+  private:
     Impl *impl_;
 };
 

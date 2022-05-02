@@ -13,8 +13,10 @@ HEAD_FILES = \
 CPP_SRC_FILES = \
 	common.cpp \
 	request.cpp \
+	request_parser.cpp \
 	respond.cpp \
 	server.cpp \
+	server_imp.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"http"' $(CXXFLAGS)
 

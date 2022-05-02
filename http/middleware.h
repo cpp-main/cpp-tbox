@@ -12,7 +12,7 @@ class Middleware {
     ~Middleware() { }
 
   public:
-    virtual void handle(RequestSptr req, RespondSptr res, const NextFunc &next) = 0;
+    virtual void handle(ContextSptr sp_ctx, const NextFunc &next) = 0;
 };
 
 }
