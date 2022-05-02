@@ -11,7 +11,21 @@ RequestParser::~RequestParser()
 
 size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 {
-    //!TODO
+    const char *str = static_cast<const char*>(data_ptr);
+    size_t pos = 0;
+
+    if (state_ == State::kInit) {
+
+    }
+
+    if (state_ == State::kFinishedStartLine) {
+
+    }
+    
+    if (state_ == State::kFinishedHeads) {
+
+    }
+
     return 0;
 }
 
