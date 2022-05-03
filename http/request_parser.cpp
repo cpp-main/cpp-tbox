@@ -35,7 +35,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
             return pos;
         }
 
-        sp_request_->set_method(method);
+        sp_request_->method = method;
 
         //! 获取 url
         auto url_str_begin = str.find_first_not_of(' ', method_str_end);
@@ -46,7 +46,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
         auto url_str_end = str.find_first_of(' ', url_str_begin);
         auto url_str = str.substr(url_str_begin, url_str_end - url_str_begin);
-        sp_request_->set_url(url_str);
+        sp_request_->url = url_str;
 
         //! 获取版本
         auto ver_str_begin = str.find_first_not_of(' ', url_str_end);
@@ -63,7 +63,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
             return pos;
         }
 
-        sp_request_->set_http_ver(ver);
+        sp_request_->http_ver = ver;
 
         pos = end_pos + 2;
         state_ = State::kFinishedStartLine;
@@ -114,12 +114,12 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
     if (state_ == State::kFinishedHeads) {
         if (content_length_ != std::numeric_limits<size_t>::max()) { //! 如果有指定 Content-Lenght
             if ((data_size - pos) >= content_length_) {
-                sp_request_->set_body(str.substr(pos, content_length_));
+                sp_request_->body = str.substr(pos, content_length_);
                 pos += content_length_;
                 state_ = State::kFinishedAll;
             }
         } else {
-            sp_request_->set_body(str.substr(pos));
+            sp_request_->body = str.substr(pos);
             pos = data_size;
             state_ = State::kFinishedAll;
         }

@@ -10,9 +10,9 @@ using namespace std;
 TEST(Request, ToString_Get)
 {
     Request req;
-    req.set_method(Method::kGet);
-    req.set_http_ver(HttpVer::k1_1);
-    req.set_url("/index.html");
+    req.method = Method::kGet;
+    req.http_ver = HttpVer::k1_1;
+    req.url = "/index.html";
     req.headers["Content-Type"] = "plain/text";
 
     EXPECT_TRUE(req.isValid());
@@ -30,11 +30,11 @@ TEST(Request, ToString_Get)
 TEST(Request, ToString_Post)
 {
     Request req;
-    req.set_method(Method::kPost);
-    req.set_http_ver(HttpVer::k1_1);
-    req.set_url("/login.php");
+    req.method = Method::kPost;
+    req.http_ver = HttpVer::k1_1;
+    req.url = "/login.php";
     req.headers["Content-Type"] = "plain/text";
-    req.set_body("username=hevake&pwd=abc123");
+    req.body = "username=hevake&pwd=abc123";
 
     EXPECT_TRUE(req.isValid());
 

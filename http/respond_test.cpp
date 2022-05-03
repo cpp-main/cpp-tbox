@@ -10,9 +10,9 @@ using namespace std;
 TEST(Respond, ToString)
 {
     Respond rsp;
-    rsp.set_status_code(StatusCode::k200_OK);
-    rsp.set_http_ver(HttpVer::k1_1);
-    rsp.set_body("hello world!");
+    rsp.status_code = StatusCode::k200_OK;
+    rsp.http_ver = HttpVer::k1_1;
+    rsp.body = "hello world!";
     rsp.headers["Content-Type"] = "plain/text";
 
     EXPECT_TRUE(rsp.isValid());

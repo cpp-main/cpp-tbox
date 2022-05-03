@@ -6,27 +6,15 @@
 namespace tbox {
 namespace http {
 
-class Respond {
-  public:
+//! 回复
+struct Respond {
+    HttpVer http_ver = HttpVer::kUnset;
+    StatusCode status_code = StatusCode::kUnset;
+    Headers headers;
+    std::string body;
+
     bool isValid() const;
     std::string toString() const;
-
-  public:
-    void set_status_code(StatusCode code) { status_code_ = code; }
-    void set_http_ver(HttpVer http_ver) { http_ver_ = http_ver; }
-    void set_body(const std::string &body) { body_ = body; }
-
-    StatusCode status_code() const { return status_code_; }
-    HttpVer http_ver() const { return http_ver_; }
-    std::string body() const { return body_; }
-
-    Headers headers;
-
-  private:
-    StatusCode status_code_ = StatusCode::kUnset;
-    HttpVer http_ver_ = HttpVer::kUnset;
-    std::string body_;
-
 };
 
 }

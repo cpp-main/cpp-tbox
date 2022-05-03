@@ -20,12 +20,12 @@ TEST(RequestParser, Get)
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kGet);
-    EXPECT_EQ(req->url(), "/index.html");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kGet);
+    EXPECT_EQ(req->url, "/index.html");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "0");
-    EXPECT_EQ(req->body(), "");
+    EXPECT_EQ(req->body, "");
     delete req;
 }
 
@@ -49,9 +49,9 @@ TEST(RequestParser, Get_1)
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kGet);
-    EXPECT_EQ(req->url(), "/?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kGet);
+    EXPECT_EQ(req->url, "/?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Host"], "192.168.0.15:55555");
     EXPECT_EQ(req->headers["User-Agent"], "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
     EXPECT_EQ(req->headers["Accept"], "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
@@ -60,7 +60,7 @@ TEST(RequestParser, Get_1)
     EXPECT_EQ(req->headers["DNT"], "1");
     EXPECT_EQ(req->headers["Connection"], "keep-alive");
     EXPECT_EQ(req->headers["Upgrade-Insecure-Requests"], "1");
-    EXPECT_EQ(req->body(), "");
+    EXPECT_EQ(req->body, "");
     delete req;
 }
 
@@ -80,12 +80,12 @@ TEST(RequestParser, Post)
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 }
 
@@ -104,11 +104,11 @@ TEST(RequestParser, Post_NoContentLength)
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 }
 
@@ -132,24 +132,24 @@ TEST(RequestParser, GetAndPost)
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req1 = pp.getRequest();
     ASSERT_NE(req1, nullptr);
-    EXPECT_EQ(req1->method(), Method::kGet);
-    EXPECT_EQ(req1->url(), "/index.html");
-    EXPECT_EQ(req1->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req1->method, Method::kGet);
+    EXPECT_EQ(req1->url, "/index.html");
+    EXPECT_EQ(req1->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req1->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req1->headers["Content-Length"], "0");
-    EXPECT_EQ(req1->body(), "");
+    EXPECT_EQ(req1->body, "");
     delete req1;
 
     ASSERT_EQ(pp.parse(text + pos, text_len - pos), text_len - pos);
     ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
     auto req2 = pp.getRequest();
     ASSERT_NE(req2, nullptr);
-    EXPECT_EQ(req2->method(), Method::kPost);
-    EXPECT_EQ(req2->url(), "/login.php");
-    EXPECT_EQ(req2->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req2->method, Method::kPost);
+    EXPECT_EQ(req2->url, "/login.php");
+    EXPECT_EQ(req2->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req2->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req2->headers["Content-Length"], "26");
-    EXPECT_EQ(req2->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req2->body, "username=hevake&pwd=abc123");
     delete req2;
 }
 
@@ -186,12 +186,12 @@ TEST(RequestParser, PostIn3Pice)
 
     req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 }
 
@@ -214,12 +214,12 @@ TEST(RequestParser, StartLineNotEnough)
 
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 
 }
@@ -245,12 +245,12 @@ TEST(RequestParser, HeaderNotEnough)
 
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 }
 
@@ -276,12 +276,12 @@ TEST(RequestParser, BodyNotEnough)
 
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
-    EXPECT_EQ(req->method(), Method::kPost);
-    EXPECT_EQ(req->url(), "/login.php");
-    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
-    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
 }
 

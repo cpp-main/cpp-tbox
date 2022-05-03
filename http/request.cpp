@@ -7,18 +7,18 @@ namespace http {
 
 bool Request::isValid() const
 {
-    return method_ != Method::kUnset && http_ver_ != HttpVer::kUnset && !url_.empty();
+    return method != Method::kUnset && http_ver != HttpVer::kUnset && !url.empty();
 }
 
 std::string Request::toString() const
 {
     std::ostringstream oss;
-    oss << method_ << " " << url_ << " " << http_ver_ << CRLF;
+    oss << method << " " << url << " " << http_ver << CRLF;
     for (auto &head : headers)
         oss << head.first << ": " << head.second << CRLF;
-    oss << "Content-Length: " << body_.length() << CRLF;
+    oss << "Content-Length: " << body.length() << CRLF;
     oss << CRLF;
-    oss << body_;
+    oss << body;
 
     return oss.str();
 }
