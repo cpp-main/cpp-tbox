@@ -29,7 +29,7 @@ TEST_CPP_SRC_FILES = \
 	request_test.cpp \
 	request_parser_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_util -ltbox_base
 
 ENABLE_SHARED_LIB = no
 

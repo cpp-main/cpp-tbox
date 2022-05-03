@@ -64,6 +64,7 @@ TEST(RequestParser, Get_1)
     delete req;
 }
 
+//! 测试 POST 请求，即含用 body 的请求
 TEST(RequestParser, Post)
 {
     const char *text = \
@@ -84,6 +85,29 @@ TEST(RequestParser, Post)
     EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
+    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试 POST 请求，即含用 body 的请求
+TEST(RequestParser, Post_NoContentLength)
+{
+    const char *text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text, text_len), text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kPost);
+    EXPECT_EQ(req->url(), "/login.php");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
     delete req;
 }
@@ -127,6 +151,218 @@ TEST(RequestParser, GetAndPost)
     EXPECT_EQ(req2->headers["Content-Length"], "26");
     EXPECT_EQ(req2->body(), "username=hevake&pwd=abc123");
     delete req2;
+}
+
+//! 测试一个请求分多次发送的情况
+TEST(RequestParser, PostIn3Pice)
+{
+    const char *text1 = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        ;
+
+    size_t text1_len = ::strlen(text1);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text1, text1_len), text1_len);
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedStartLine);
+    auto req = pp.getRequest();
+    EXPECT_EQ(req, nullptr);
+
+    const char *text2 = \
+        "Content-Length: 26\r\n"
+        "\r\n"
+        ;
+
+    size_t text2_len = ::strlen(text2);
+    EXPECT_EQ(pp.parse(text2, text2_len), text2_len);
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedHeads);
+
+    const char *text3 = \
+        "username=hevake&pwd=abc123";
+
+    size_t text3_len = ::strlen(text3);
+    EXPECT_EQ(pp.parse(text3, text3_len), text3_len);
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+
+    req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kPost);
+    EXPECT_EQ(req->url(), "/login.php");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req->headers["Content-Length"], "26");
+    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试起始行不完整的情况
+TEST(RequestParser, StartLineNotEnough)
+{
+    RequestParser pp;
+
+    std::string text = "POST /login.php ";
+    EXPECT_EQ(pp.parse(text.c_str(), text.size()), 0);
+    EXPECT_EQ(pp.state(), RequestParser::State::kInit);
+
+    text += "HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123";
+    EXPECT_EQ(pp.parse(text.c_str(), text.size()), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kPost);
+    EXPECT_EQ(req->url(), "/login.php");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req->headers["Content-Length"], "26");
+    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    delete req;
+
+}
+
+//! 测试Head不完整的情况
+TEST(RequestParser, HeaderNotEnough)
+{
+    RequestParser pp;
+
+    std::string text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain";
+    EXPECT_EQ(pp.parse(text.c_str(), text.size()), 26);
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedStartLine);
+
+    text.erase(0, 26);
+    text += "/text\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123";
+    EXPECT_EQ(pp.parse(text.c_str(), text.size()), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kPost);
+    EXPECT_EQ(req->url(), "/login.php");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req->headers["Content-Length"], "26");
+    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试Body不完整的情况
+TEST(RequestParser, BodyNotEnough)
+{
+    RequestParser pp;
+
+    std::string text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "username=hevake&";
+
+    auto pos = pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedHeads);
+
+    text.erase(0, pos);
+    text += "pwd=abc123";
+    EXPECT_EQ(pp.parse(text.c_str(), text.size()), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kPost);
+    EXPECT_EQ(req->url(), "/login.php");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req->headers["Content-Length"], "26");
+    EXPECT_EQ(req->body(), "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试StartLine格式错误的情况
+TEST(RequestParser, StartLineError_NoMethod)
+{
+    RequestParser pp;
+
+    std::string text = 
+        "/login.php HTTP/1.1\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, StartLineError_MethodNotSupport)
+{
+    RequestParser pp;
+
+    std::string text = 
+        "XXX /login.php HTTP/1.1\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, StartLineError_NoUrl)
+{
+    RequestParser pp;
+
+    std::string text = 
+        "POST HTTP/1.1\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, StartLineError_NoVer)
+{
+    RequestParser pp;
+
+    std::string text = 
+        "POST /login.php\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, StartLineError_VerUnknow)
+{
+    RequestParser pp;
+
+    std::string text = 
+        "POST /login.php XXXX\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, HeaderError_NoColon)
+{
+    RequestParser pp;
+
+    std::string text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type plain/text\r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
+}
+
+TEST(RequestParser, HeaderError_Empty)
+{
+    RequestParser pp;
+
+    std::string text = \
+        "POST /login.php HTTP/1.1\r\n"
+        " \r\n"
+        ;
+    pp.parse(text.c_str(), text.size());
+    EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
 
 }
