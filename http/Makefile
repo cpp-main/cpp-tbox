@@ -9,6 +9,7 @@ HEAD_FILES = \
 	request.h \
 	respond.h \
 	server.h \
+	context.h \
 
 CPP_SRC_FILES = \
 	common.cpp \
@@ -17,11 +18,13 @@ CPP_SRC_FILES = \
 	respond.cpp \
 	server.cpp \
 	server_imp.cpp \
+	context.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"http"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	server_test.cpp \
+	common_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_base
 

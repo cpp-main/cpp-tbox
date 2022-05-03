@@ -47,15 +47,26 @@ using ConnToken = cabinet::Token;
 
 using Headers = std::map<std::string, std::string>;
 
+//! 字串转义处理
+
+/**
+ * \brief   将本地字串转换成Http中的字串，即将特殊字符转换成 %xx 形式
+ *          如："hello world" --> "hello%20world"
+ */
+std::string LocalToHttp(const std::string &local_str);
+
+/**
+ * \brief   将Http中的字串，转换成本地。
+ *          即将字串中%xx转换成真实的字串，如："hello%20world" -> "hello world"
+ * \note    如果遇到%x，不足两个字符的情况则会抛out_of_range异常
+ */
+std::string HttpToLocal(const std::string &http_str);   //! 注意：有可能会抛异常 out_of_range
+
 }
 }
 
 std::ostream& operator << (std::ostream &oss, tbox::http::HttpVer ver);
 std::ostream& operator << (std::ostream &oss, tbox::http::Method method);
 std::ostream& operator << (std::ostream &oss, tbox::http::StatusCode code);
-
-//! 字串转义处理
-std::string LocalToHttp(const std::string &local);
-std::string HttpToLocal(const std::string &http);
 
 #endif //TBOX_HTTP_COMMON_H_20220501

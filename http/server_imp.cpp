@@ -91,7 +91,7 @@ void Server::Impl::onTcpReceived(const ConnToken &ct, Buffer &buff)
  * 如果所提交的index不是当前需要回复的res_index，那么就先暂存起来，等前面的发送完成后再发送；
  * 如果是，则可以直接回复。然后再将暂存中的未发送的其它数据也一同发送。
  */
-void Server::Impl::commitRespond(const ConnToken &ct, int index, string &content)
+void Server::Impl::commitRespond(const ConnToken &ct, int index, string &&content)
 {
     if (!tcp_server_.isClientValid(ct))
         return;

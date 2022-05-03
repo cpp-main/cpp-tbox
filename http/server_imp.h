@@ -29,7 +29,7 @@ class Server::Impl {
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
 
-    void commitRespond(const ConnToken &ct, int index, string &content);
+    void commitRespond(const ConnToken &ct, int index, string &&content);
 
   private:
 

@@ -8,8 +8,8 @@ Context::Context(Server::Impl *wp_server, const ConnToken &ct, int req_index, Re
     wp_server_(wp_server),
     conn_token_(ct),
     req_index_(req_index),
-    req_(req),
-    res_(new Respond)
+    sp_req_(req),
+    sp_res_(new Respond)
 { }
 
 Context::~Context()
@@ -27,6 +27,7 @@ bool Context::done()
         return false;
 
     wp_server_->commitRespond(conn_token_, req_index_, sp_res_->toString());
+    return true;
 }
 
 }
