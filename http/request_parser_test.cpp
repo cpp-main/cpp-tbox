@@ -29,6 +29,41 @@ TEST(RequestParser, Get)
     delete req;
 }
 
+TEST(RequestParser, Get_1)
+{
+    const char *text = \
+        "GET /?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate HTTP/1.1\r\n"
+        "Host: 192.168.0.15:55555\r\n"
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0\r\n"
+        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n"
+        "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2\r\n"
+        "Accept-Encoding: gzip, deflate\r\n"
+        "DNT: 1\r\n"
+        "Connection: keep-alive\r\n"
+        "Upgrade-Insecure-Requests: 1\r\n"
+        "\r\n"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text, text_len), text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method(), Method::kGet);
+    EXPECT_EQ(req->url(), "/?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate");
+    EXPECT_EQ(req->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req->headers["Host"], "192.168.0.15:55555");
+    EXPECT_EQ(req->headers["User-Agent"], "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
+    EXPECT_EQ(req->headers["Accept"], "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+    EXPECT_EQ(req->headers["Accept-Language"], "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
+    EXPECT_EQ(req->headers["Accept-Encoding"], "gzip, deflate");
+    EXPECT_EQ(req->headers["DNT"], "1");
+    EXPECT_EQ(req->headers["Connection"], "keep-alive");
+    EXPECT_EQ(req->headers["Upgrade-Insecure-Requests"], "1");
+    EXPECT_EQ(req->body(), "");
+    delete req;
+}
+
 TEST(RequestParser, Post)
 {
     const char *text = \
@@ -53,6 +88,48 @@ TEST(RequestParser, Post)
     delete req;
 }
 
+//! 测试同一个连接下多次请求
+TEST(RequestParser, GetAndPost)
+{
+    const char *text = \
+        "GET /index.html HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n"
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "Content-Length: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    size_t pos = pp.parse(text, text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req1 = pp.getRequest();
+    ASSERT_NE(req1, nullptr);
+    EXPECT_EQ(req1->method(), Method::kGet);
+    EXPECT_EQ(req1->url(), "/index.html");
+    EXPECT_EQ(req1->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req1->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req1->headers["Content-Length"], "0");
+    EXPECT_EQ(req1->body(), "");
+    delete req1;
+
+    ASSERT_EQ(pp.parse(text + pos, text_len - pos), text_len - pos);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req2 = pp.getRequest();
+    ASSERT_NE(req2, nullptr);
+    EXPECT_EQ(req2->method(), Method::kPost);
+    EXPECT_EQ(req2->url(), "/login.php");
+    EXPECT_EQ(req2->http_ver(), HttpVer::k1_1);
+    EXPECT_EQ(req2->headers["Content-Type"], "plain/text");
+    EXPECT_EQ(req2->headers["Content-Length"], "26");
+    EXPECT_EQ(req2->body(), "username=hevake&pwd=abc123");
+    delete req2;
+}
+
 }
 }
 }
+
