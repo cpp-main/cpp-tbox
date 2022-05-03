@@ -1,4 +1,5 @@
 #include "request_parser.h"
+#include <limits>
 #include <tbox/base/defines.h>
 
 namespace tbox {
@@ -26,7 +27,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
     size_t pos = 0;
 
     if (state_ == State::kInit) {
-        content_length_ = 0;
+        content_length_ = std::numeric_limits<size_t>::max();
         if (sp_request_ == nullptr)
             sp_request_ = new Request;
 
@@ -45,7 +46,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         sp_request_->set_url(url_str);
 
         auto ver_str_begin = str.find_first_not_of(' ', url_str_end);
-        auto ver_str_end = str.find_first_of(' ', ver_str_begin);
+        auto ver_str_end = end_pos;
         auto ver_str = str.substr(ver_str_begin, ver_str_end - ver_str_begin);
         sp_request_->set_http_ver(StringToHttpVer(ver_str));
 
@@ -64,6 +65,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
             if (end_pos == pos) {   //! 找到了空白行
                 state_ = State::kFinishedHeads;
+                pos += 2;
                 break;
             } else if (end_pos == std::string::npos) {  //! 当前的Head不完整
                 break;
@@ -84,7 +86,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
     }
     
     if (state_ == State::kFinishedHeads) {
-        if (content_length_ != 0) { //! 如果有指定 Content-Lenght
+        if (content_length_ != std::numeric_limits<size_t>::max()) { //! 如果有指定 Content-Lenght
             if ((data_size - pos) >= content_length_) {
                 sp_request_->set_body(str.substr(pos, content_length_));
                 pos += content_length_;
