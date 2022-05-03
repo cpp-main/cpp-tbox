@@ -10,7 +10,10 @@ Context::Context(Server::Impl *wp_server, const ConnToken &ct, int req_index, Re
     req_index_(req_index),
     sp_req_(req),
     sp_res_(new Respond)
-{ }
+{
+    sp_res_->status_code = StatusCode::k404_NotFound;
+    sp_res_->http_ver = HttpVer::k1_1;
+}
 
 Context::~Context()
 {

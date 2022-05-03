@@ -80,6 +80,11 @@ void Server::Impl::onTcpReceived(const ConnToken &ct, Buffer &buff)
             Request *req = req_parser_.getRequest();
             auto sp_ctx = make_shared<Context>(this, ct, conn->req_index++, req);
             handle(sp_ctx, 0);
+
+        } else if (req_parser_.state() == RequestParser::State::kFail) {
+            tcp_server_.disconnect(ct);
+            delete conn;
+
         } else {
             break;
         }
