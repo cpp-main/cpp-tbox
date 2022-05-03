@@ -49,6 +49,7 @@ class RequestParser {
   private:
     State state_ = State::kInit;
     Request *sp_request_ = nullptr;
+    size_t content_length_ = 0;
 };
 
 }
