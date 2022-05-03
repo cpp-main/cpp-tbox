@@ -7,6 +7,7 @@
 
 namespace tbox {
 namespace http {
+namespace server {
 namespace {
 
 using namespace event;
@@ -27,6 +28,7 @@ TEST(Server, SimpleRun)
 
     srv.use(
         [=](ContextSptr ctx, const NextFunc &next) {
+            LogInfo("%s", ctx->req().toString().c_str());
             ctx->res().status_code = StatusCode::k200_OK;
             ctx->res().body = "Hello!";
         }
@@ -36,6 +38,7 @@ TEST(Server, SimpleRun)
     srv.cleanup();
 }
 
+}
 }
 }
 }

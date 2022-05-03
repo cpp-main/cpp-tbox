@@ -3,6 +3,7 @@
 
 namespace tbox {
 namespace http {
+namespace server {
 
 Server::Server(Loop *wp_loop) :
     impl_(new Impl(wp_loop))
@@ -43,5 +44,6 @@ void Server::use(Middleware *wp_middleware)
     impl_->use(wp_middleware);
 }
 
+}
 }
 }

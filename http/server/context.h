@@ -1,21 +1,22 @@
 #ifndef TBOX_HTTP_CONTEXT_H_20220502
 #define TBOX_HTTP_CONTEXT_H_20220502
 
-#include "common.h"
+#include "../common.h"
+#include "../request.h"
+#include "../respond.h"
 #include "server_imp.h"
-#include "context.h"
-#include "request.h"
-#include "respond.h"
 
 namespace tbox {
 namespace http {
+namespace server {
 
 /**
  * Http请求上下文
  */
 class Context {
   public:
-    Context(Server::Impl *wp_server, const ConnToken &ct, int req_index, Request *req);
+    Context(Server::Impl *wp_server, const TcpServer::ConnToken &ct,
+            int req_index, Request *req);
     ~Context();
 
     NONCOPYABLE(Context);
@@ -28,14 +29,15 @@ class Context {
 
   private:
     Server::Impl *wp_server_;
-    ConnToken     conn_token_;
-    int           req_index_;
+    TcpServer::ConnToken conn_token_;
+    int req_index_;
 
     Request    *sp_req_;
     Respond    *sp_res_;
     bool        is_done_ = false;
 };
 
+}
 }
 }
 

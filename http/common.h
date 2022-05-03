@@ -2,21 +2,13 @@
 #define TBOX_HTTP_COMMON_H_20220501
 
 #include <ostream>
-#include <memory>
-#include <functional>
 #include <map>
-#include <tbox/base/cabinet_token.h>
 
 #define CRLF "\r\n"
 
 namespace tbox {
 namespace http {
 
-class Context;
-using ContextSptr = std::shared_ptr<Context>;
-using NextFunc = std::function<void()>;
-using RequestCallback = std::function<void(ContextSptr, const NextFunc &)>;
-using ConnToken = cabinet::Token;
 using Headers = std::map<std::string, std::string>;
 
 enum class HttpVer {

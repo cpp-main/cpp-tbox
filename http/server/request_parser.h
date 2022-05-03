@@ -1,10 +1,11 @@
 #ifndef TBOX_HTTP_REQUEST_PARSER_H_20220502
 #define TBOX_HTTP_REQUEST_PARSER_H_20220502
 
-#include "request.h"
+#include "../request.h"
 
 namespace tbox {
 namespace http {
+namespace server {
 
 //! 请求解析器
 class RequestParser {
@@ -52,6 +53,7 @@ class RequestParser {
     size_t content_length_ = 0;
 };
 
+}
 }
 }
 

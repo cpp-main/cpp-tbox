@@ -3,12 +3,14 @@
 
 #include <vector>
 #include <map>
-#include "server.h"
 #include <tbox/network/tcp_server.h>
+
+#include "server.h"
 #include "request_parser.h"
 
 namespace tbox {
 namespace http {
+namespace server {
 
 using namespace event;
 using namespace network;
@@ -29,13 +31,13 @@ class Server::Impl {
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
 
-    void commitRespond(const ConnToken &ct, int index, string &&content);
+    void commitRespond(const TcpServer::ConnToken &ct, int index, string &&content);
 
   private:
 
-    void onTcpConnected(const ConnToken &ct);
-    void onTcpDisconnected(const ConnToken &ct);
-    void onTcpReceived(const ConnToken &ct, Buffer &buff);
+    void onTcpConnected(const TcpServer::ConnToken &ct);
+    void onTcpDisconnected(const TcpServer::ConnToken &ct);
+    void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
 
     struct Connection {
         int req_index = 0;
@@ -52,6 +54,7 @@ class Server::Impl {
     vector<RequestCallback> req_cb_;
 };
 
+}
 }
 }
 

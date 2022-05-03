@@ -4,6 +4,7 @@
 
 namespace tbox {
 namespace http {
+namespace server {
 namespace {
 
 TEST(RequestParser, Get)
@@ -365,6 +366,7 @@ TEST(RequestParser, HeaderError_Empty)
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
 
+}
 }
 }
 }

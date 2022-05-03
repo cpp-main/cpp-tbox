@@ -2,10 +2,13 @@
 
 #include <tbox/base/log.h>
 #include <tbox/network/buffer.h>
+
 #include "context.h"
+#include "middleware.h"
 
 namespace tbox {
 namespace http {
+namespace server {
 
 using namespace std;
 using namespace std::placeholders;
@@ -58,18 +61,18 @@ void Server::Impl::use(Middleware *wp_middleware)
     req_cb_.push_back(bind(&Middleware::handle, wp_middleware, _1, _2));
 }
 
-void Server::Impl::onTcpConnected(const ConnToken &ct)
+void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
     tcp_server_.setContext(ct, new Connection);
 }
 
-void Server::Impl::onTcpDisconnected(const ConnToken &ct)
+void Server::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     delete conn;
 }
 
-void Server::Impl::onTcpReceived(const ConnToken &ct, Buffer &buff)
+void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     while (buff.readableSize() > 0) {
@@ -96,7 +99,7 @@ void Server::Impl::onTcpReceived(const ConnToken &ct, Buffer &buff)
  * 如果所提交的index不是当前需要回复的res_index，那么就先暂存起来，等前面的发送完成后再发送；
  * 如果是，则可以直接回复。然后再将暂存中的未发送的其它数据也一同发送。
  */
-void Server::Impl::commitRespond(const ConnToken &ct, int index, string &&content)
+void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, string &&content)
 {
     if (!tcp_server_.isClientValid(ct))
         return;
@@ -134,5 +137,6 @@ void Server::Impl::handle(ContextSptr sp_ctx, size_t index)
         func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, index + 1));
 }
 
+}
 }
 }

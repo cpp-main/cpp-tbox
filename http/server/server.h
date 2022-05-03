@@ -4,13 +4,17 @@
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
 
-#include "common.h"
-#include "request.h"
-#include "respond.h"
-#include "middleware.h"
+#include "../common.h"
+#include "../request.h"
+#include "../respond.h"
+
+#include "types.h"
 
 namespace tbox {
 namespace http {
+namespace server {
+
+class Middleware;
 
 class Server {
   public:
@@ -33,6 +37,7 @@ class Server {
     Impl *impl_;
 };
 
+}
 }
 }
 

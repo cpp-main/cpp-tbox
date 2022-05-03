@@ -5,6 +5,7 @@
 
 namespace tbox {
 namespace http {
+namespace server {
 
 RequestParser::~RequestParser()
 {
@@ -152,5 +153,6 @@ void RequestParser::reset()
     swap(tmp);
 }
 
+}
 }
 }
