@@ -71,7 +71,12 @@ TEST(common, StateCodeToStream)
     {
         ostringstream oss;
         oss << StatusCode::k404_NotFound;
-        EXPECT_EQ(oss.str(), "404 Not found");
+        EXPECT_EQ(oss.str(), "404 Not Found");
+    }
+    {
+        ostringstream oss;
+        oss << StatusCode::k505_HTTPVersionNotSupported;
+        EXPECT_EQ(oss.str(), "505 HTTP Version Not Supported");
     }
 }
 

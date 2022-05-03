@@ -17,6 +17,7 @@ enum class HttpVer {
     k1_0,  //!< http 1.0
     k1_1,  //!< http 1.1
     k1_2,  //!< http 1.2
+    kMax
 };
 
 //! 方法
@@ -26,15 +27,61 @@ enum class Method {
     kHead,
     kPut,
     kPost, 
-    kDelete
+    kDelete,
+    kMax
 };
 
 //! 返回状态码
 enum class StatusCode {
     kUnset,
+
+    //! 正常
     k200_OK,
+    k201_Created,
+    k202_Accepted,
+    k203_NonAuthoritativeInformation,
+    k204_NoContent,
+    k205_ResetContent,
+    k206_PartialContent,
+
+    //! 重定向
+    k300_MultipleChoices,
+    k301_MovedPermanently,
+    k302_Found,
+    k303_SeeOther,
+    k304_NotModified,
+    k305_UseProxy,
+    k307_TemporaryRedirect,
+
+    //! 客户端出错
+    k400_BadRequest,
     k401_Unauthorized,
-    k404_NotFound
+    k402_PaymentRequired,
+    k403_Forbidden,
+    k404_NotFound,
+    k405_MethodNotAllowed,
+    k406_NotAcceptable,
+    k407_ProxyAuthenticationRequired,
+    k408_RequestTimeout,
+    k409_Conflict,
+    k410_Gone,
+    k411_LengthRequired,
+    k412_PreconditionFailed,
+    k413_RequestEntityTooLarge,
+    k414_RequestURITooLong,
+    k415_UnsupportedMediaType,
+    k416_RequestedRangeNotSatisfiable,
+    k417_ExpectationFailed,
+
+    //! 服务端出错
+    k500_InternalServerError,
+    k501_NotImplemented,
+    k502_BadGateway,
+    k503_ServiceUnavailable,
+    k504_GatewayTimeout,
+    k505_HTTPVersionNotSupported,
+
+    kMax
 };
 
 class Context;
