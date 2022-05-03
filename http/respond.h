@@ -15,17 +15,16 @@ class Respond {
     void set_status_code(StatusCode code) { status_code_ = code; }
     void set_http_ver(HttpVer http_ver) { http_ver_ = http_ver; }
     void set_body(const std::string &body) { body_ = body; }
-    Headers& headers() { return heads_; }
 
     StatusCode status_code() const { return status_code_; }
     HttpVer http_ver() const { return http_ver_; }
     std::string body() const { return body_; }
-    const Headers& headers() const { return heads_; }
+
+    Headers headers;
 
   private:
     StatusCode status_code_ = StatusCode::kUnset;
     HttpVer http_ver_ = HttpVer::kUnset;
-    Headers heads_;
     std::string body_;
 
 };

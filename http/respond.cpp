@@ -13,9 +13,9 @@ std::string Respond::toString() const
 {
     std::ostringstream oss;
     oss << http_ver_ << " " << status_code_ << CRLF;
-    for (auto &head : heads_)
+    for (auto &head : headers)
         oss << head.first << ": " << head.second << CRLF;
-    oss << "Content-length: " << body_.length() + 1 << CRLF;
+    oss << "Content-Length: " << body_.length() << CRLF;
     oss << CRLF;
     oss << body_;
 

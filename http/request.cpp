@@ -13,10 +13,10 @@ bool Request::isValid() const
 std::string Request::toString() const
 {
     std::ostringstream oss;
-    oss << method_ << " " << LocalToHttp(url_) << " " << http_ver_ << CRLF;
-    for (auto &head : heads_)
+    oss << method_ << " " << url_ << " " << http_ver_ << CRLF;
+    for (auto &head : headers)
         oss << head.first << ": " << head.second << CRLF;
-    oss << "Content-length: " << body_.length() + 1 << CRLF;
+    oss << "Content-Length: " << body_.length() << CRLF;
     oss << CRLF;
     oss << body_;
 

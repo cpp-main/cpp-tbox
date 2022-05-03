@@ -25,6 +25,8 @@ CXXFLAGS := -DLOG_MODULE_ID='"http"' $(CXXFLAGS)
 TEST_CPP_SRC_FILES = \
 	server_test.cpp \
 	common_test.cpp \
+	respond_test.cpp \
+	request_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_base
 
