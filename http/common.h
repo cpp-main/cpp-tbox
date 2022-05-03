@@ -7,10 +7,17 @@
 #include <map>
 #include <tbox/base/cabinet_token.h>
 
-#define CRLF "\r\n";
+#define CRLF "\r\n"
 
 namespace tbox {
 namespace http {
+
+class Context;
+using ContextSptr = std::shared_ptr<Context>;
+using NextFunc = std::function<void()>;
+using RequestCallback = std::function<void(ContextSptr, const NextFunc &)>;
+using ConnToken = cabinet::Token;
+using Headers = std::map<std::string, std::string>;
 
 enum class HttpVer {
     kUnset,
@@ -19,6 +26,9 @@ enum class HttpVer {
     k1_2,  //!< http 1.2
     kMax
 };
+
+std::string HttpVerToString(HttpVer ver);
+HttpVer     StringToHttpVer(const std::string &str);
 
 //! 方法
 enum class Method {
@@ -31,68 +41,64 @@ enum class Method {
     kMax
 };
 
+std::string MethodToString(Method ver);
+Method      StringToMethod(const std::string &str);
+
 //! 返回状态码
 enum class StatusCode {
     kUnset,
 
     //! 正常
-    k200_OK,
-    k201_Created,
-    k202_Accepted,
-    k203_NonAuthoritativeInformation,
-    k204_NoContent,
-    k205_ResetContent,
-    k206_PartialContent,
+    k200_OK = 200,
+    k201_Created = 201,
+    k202_Accepted = 202,
+    k203_NonAuthoritativeInformation = 203,
+    k204_NoContent = 204,
+    k205_ResetContent = 205,
+    k206_PartialContent = 206,
 
     //! 重定向
-    k300_MultipleChoices,
-    k301_MovedPermanently,
-    k302_Found,
-    k303_SeeOther,
-    k304_NotModified,
-    k305_UseProxy,
-    k307_TemporaryRedirect,
+    k300_MultipleChoices = 300,
+    k301_MovedPermanently = 301,
+    k302_Found = 302,
+    k303_SeeOther = 303,
+    k304_NotModified = 304,
+    k305_UseProxy = 305,
+    k307_TemporaryRedirect = 307,
 
     //! 客户端出错
-    k400_BadRequest,
-    k401_Unauthorized,
-    k402_PaymentRequired,
-    k403_Forbidden,
-    k404_NotFound,
-    k405_MethodNotAllowed,
-    k406_NotAcceptable,
-    k407_ProxyAuthenticationRequired,
-    k408_RequestTimeout,
-    k409_Conflict,
-    k410_Gone,
-    k411_LengthRequired,
-    k412_PreconditionFailed,
-    k413_RequestEntityTooLarge,
-    k414_RequestURITooLong,
-    k415_UnsupportedMediaType,
-    k416_RequestedRangeNotSatisfiable,
-    k417_ExpectationFailed,
+    k400_BadRequest = 400,
+    k401_Unauthorized = 401,
+    k402_PaymentRequired = 402,
+    k403_Forbidden = 403,
+    k404_NotFound = 404,
+    k405_MethodNotAllowed = 405,
+    k406_NotAcceptable = 406,
+    k407_ProxyAuthenticationRequired = 407,
+    k408_RequestTimeout = 408,
+    k409_Conflict = 409,
+    k410_Gone = 410,
+    k411_LengthRequired = 411,
+    k412_PreconditionFailed = 412,
+    k413_RequestEntityTooLarge = 413,
+    k414_RequestURITooLong = 414,
+    k415_UnsupportedMediaType = 415,
+    k416_RequestedRangeNotSatisfiable = 416,
+    k417_ExpectationFailed = 417,
 
     //! 服务端出错
-    k500_InternalServerError,
-    k501_NotImplemented,
-    k502_BadGateway,
-    k503_ServiceUnavailable,
-    k504_GatewayTimeout,
-    k505_HTTPVersionNotSupported,
+    k500_InternalServerError = 500,
+    k501_NotImplemented = 501,
+    k502_BadGateway = 502,
+    k503_ServiceUnavailable = 503,
+    k504_GatewayTimeout = 504,
+    k505_HTTPVersionNotSupported = 505,
 
     kMax
 };
 
-class Context;
-using ContextSptr = std::shared_ptr<Context>;
-
-using NextFunc = std::function<void()>;
-using RequestCallback = std::function<void(ContextSptr, const NextFunc &)>;
-
-using ConnToken = cabinet::Token;
-
-using Headers = std::map<std::string, std::string>;
+std::string StatusCodeToString(StatusCode ver);
+StatusCode  StringToStatusCode(const std::string &str);
 
 //! 字串转义处理
 
