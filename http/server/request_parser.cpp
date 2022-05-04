@@ -58,6 +58,11 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
         auto ver_str_end = end_pos;
         auto ver_str = str.substr(ver_str_begin, ver_str_end - ver_str_begin);
+        if (ver_str.compare(0, 5, "HTTP/") != 0) {
+            state_ = State::kFail;
+            return pos;
+        }
+
         auto ver = StringToHttpVer(ver_str);
         if (ver == HttpVer::kUnset) {
             state_ = State::kFail;
