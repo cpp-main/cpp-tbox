@@ -21,7 +21,9 @@ Server::Impl::Impl(Loop *wp_loop) :
 { }
 
 Server::Impl::~Impl()
-{ }
+{
+    cleanup();
+}
 
 bool Server::Impl::initialize(const network::SockAddr &bind_addr, int listen_backlog)
 {
@@ -32,23 +34,41 @@ bool Server::Impl::initialize(const network::SockAddr &bind_addr, int listen_bac
     tcp_server_.setDisconnectedCallback(bind(&Impl::onTcpDisconnected, this, _1));
     tcp_server_.setReceiveCallback(bind(&Impl::onTcpReceived, this, _1, _2), 0);
 
+    state_ = State::kInited;
     return true;
 }
 
 bool Server::Impl::start()
 {
-    return tcp_server_.start();
+    if (tcp_server_.start()) {
+        state_ = State::kRunning;
+        return true;
+    }
+    return false;
 }
 
 void Server::Impl::stop()
 {
-    return tcp_server_.stop();
+    if (state_ == State::kRunning) {
+        tcp_server_.stop();
+        state_ = State::kInited;
+    }
 }
 
 void Server::Impl::cleanup()
 {
-    req_cb_.clear();
-    tcp_server_.cleanup();
+    if (state_ != State::kNone) {
+        stop();
+
+        req_cb_.clear();
+        tcp_server_.cleanup();
+
+        for (auto conn : conns_)
+            delete conn;
+        conns_.clear();
+
+        state_ = State::kNone;
+    }
 }
 
 void Server::Impl::use(const RequestCallback &cb)
@@ -63,29 +83,72 @@ void Server::Impl::use(Middleware *wp_middleware)
 
 void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
-    tcp_server_.setContext(ct, new Connection);
+    auto conn = new Connection;
+    tcp_server_.setContext(ct, conn);
+    conns_.insert(conn);
 }
 
 void Server::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    conns_.erase(conn);
     delete conn;
+}
+
+namespace {
+bool IsLastRequest(const Request *req)
+{
+    auto iter = req->headers.find("Connection");
+    if (req->http_ver == HttpVer::k1_0) {
+        //! 1.0 版本默认为一连接一请求，需要特定的 Connection: Keep-Alive 才能持处
+        if (iter == req->headers.end()) {
+            return true;
+        } else {
+            return iter->second.find("keep-alive") == std::string::npos;
+        }
+    } else {
+        //! 否则为 1.1 及以上的版本，默认为持久连接；除非出现 Connection: close
+        if (iter == req->headers.end()) {
+            return false;
+        } else {
+            return iter->second.find("close") != std::string::npos;
+        }
+    }
+}
 }
 
 void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+
+    //! 如果已被标记为最后的请求，就不应该再有请求来
+    if (conn->close_index != numeric_limits<int>::max()) {
+        buff.hasReadAll();
+        LogNotice("should not recv any data");
+        return;
+    }
+
     while (buff.readableSize() > 0) {
         size_t rsize = req_parser_.parse(buff.readableBegin(), buff.readableSize());
         buff.hasRead(rsize);
 
         if (req_parser_.state() == RequestParser::State::kFinishedAll) {
             Request *req = req_parser_.getRequest();
+            LogDbg("[%s]", req->toString().c_str());
+
+            if (IsLastRequest(req)) {
+                //! 标记当前请求为close请求
+                conn->close_index = conn->req_index;
+                //!FIXME:应该关闭读部分
+                LogDbg("mark close at %d", conn->close_index);
+            }
+
             auto sp_ctx = make_shared<Context>(this, ct, conn->req_index++, req);
             handle(sp_ctx, 0);
 
         } else if (req_parser_.state() == RequestParser::State::kFail) {
             tcp_server_.disconnect(ct);
+            conns_.erase(conn);
             delete conn;
 
         } else {
@@ -104,26 +167,46 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, stri
     if (!tcp_server_.isClientValid(ct))
         return;
 
-    Connection &conn = *static_cast<Connection*>(tcp_server_.getContext(ct));
-    if (index == conn.res_index) {
+    Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    if (index == conn->res_index) {
         //! 将当前的数据直接发送出去
         tcp_server_.send(ct, content.data(), content.size());
-        ++conn.res_index;
+        LogDbg("[%s]", content.c_str());
 
-        //! 尝试发送 conn.res_buff 缓冲中的数据
-        auto &res_buff = conn.res_buff;
-        auto iter = res_buff.find(conn.res_index);
+        //! 如果当前这个回复是最后一个，则需要断开连接
+        if (index == conn->close_index) {
+            tcp_server_.disconnect(ct);
+            conns_.erase(conn);
+            delete conn;
+            return;
+        }
+
+        ++conn->res_index;
+
+        //! 尝试发送 conn->res_buff 缓冲中的数据
+        auto &res_buff = conn->res_buff;
+        auto iter = res_buff.find(conn->res_index);
 
         while (iter != res_buff.end()) {
             tcp_server_.send(ct, iter->second.data(), iter->second.size());
+            LogDbg("[%s]", iter->second.c_str());
+
+            //! 如果当前这个回复是最后一个，则需要断开连接
+            if (index == conn->close_index) {
+                tcp_server_.disconnect(ct);
+                conns_.erase(conn);
+                delete conn;
+                return;
+            }
+
             res_buff.erase(iter);
 
-            ++conn.res_index;
-            iter = res_buff.find(conn.res_index);
+            ++conn->res_index;
+            iter = res_buff.find(conn->res_index);
         }
     } else {
         //! 放入到 conn.res_buff 中暂存
-        conn.res_buff[index] = std::move(content);
+        conn->res_buff[index] = std::move(content);
     }
 }
 

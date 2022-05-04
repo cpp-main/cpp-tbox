@@ -1,10 +1,11 @@
 #include "context.h"
+#include "server_imp.h"
 
 namespace tbox {
 namespace http {
 namespace server {
 
-Context::Context(Server::Impl *wp_server, const TcpServer::ConnToken &ct,
+Context::Context(Server::Impl *wp_server, const cabinet::Token &ct,
                  int req_index, Request *req) :
     wp_server_(wp_server),
     conn_token_(ct),

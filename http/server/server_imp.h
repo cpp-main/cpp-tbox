@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <map>
+#include <set>
+#include <limits>
 #include <tbox/network/tcp_server.h>
 
 #include "server.h"
@@ -27,6 +29,8 @@ class Server::Impl {
     void stop();
     void cleanup();
 
+    State state() const { return state_; }
+
   public:
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
@@ -42,6 +46,7 @@ class Server::Impl {
     struct Connection {
         int req_index = 0;
         int res_index = 0;
+        int close_index = numeric_limits<int>::max();
         map<int, string> res_buff;
     };
 
@@ -52,6 +57,8 @@ class Server::Impl {
     TcpServer tcp_server_;
     RequestParser req_parser_;
     vector<RequestCallback> req_cb_;
+    set<Connection*> conns_;
+    State state_ = State::kNone;
 };
 
 }

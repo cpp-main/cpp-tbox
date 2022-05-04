@@ -27,6 +27,9 @@ class Server {
     void stop();
     void cleanup();
 
+    enum class State { kNone, kInited, kRunning };
+    State state() const;
+
   public:
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);

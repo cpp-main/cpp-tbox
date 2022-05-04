@@ -27,10 +27,13 @@ TEST(Server, SimpleRun)
     EXPECT_TRUE(srv.start());
 
     srv.use(
-        [=](ContextSptr ctx, const NextFunc &next) {
-            LogInfo("%s", ctx->req().toString().c_str());
+        [&](ContextSptr ctx, const NextFunc &next) {
+            LogInfo("[%s]", ctx->req().toString().c_str());
             ctx->res().status_code = StatusCode::k200_OK;
             ctx->res().body = "Hello!";
+            if (ctx->req().url == "/exit") {
+                sp_loop->exitLoop(chrono::seconds(1));
+            }
         }
     );
 

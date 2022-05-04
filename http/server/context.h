@@ -1,10 +1,13 @@
 #ifndef TBOX_HTTP_CONTEXT_H_20220502
 #define TBOX_HTTP_CONTEXT_H_20220502
 
+#include <tbox/base/defines.h>
+#include <tbox/base/cabinet_token.h>
+
 #include "../common.h"
 #include "../request.h"
 #include "../respond.h"
-#include "server_imp.h"
+#include "server.h"
 
 namespace tbox {
 namespace http {
@@ -15,7 +18,7 @@ namespace server {
  */
 class Context {
   public:
-    Context(Server::Impl *wp_server, const TcpServer::ConnToken &ct,
+    Context(Server::Impl *wp_server, const cabinet::Token &ct,
             int req_index, Request *req);
     ~Context();
 
@@ -29,7 +32,7 @@ class Context {
 
   private:
     Server::Impl *wp_server_;
-    TcpServer::ConnToken conn_token_;
+    cabinet::Token conn_token_;
     int req_index_;
 
     Request    *sp_req_;

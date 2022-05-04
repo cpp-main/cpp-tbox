@@ -34,6 +34,11 @@ void Server::cleanup()
     impl_->cleanup();
 }
 
+Server::State Server::state() const
+{
+    return impl_->state();
+}
+
 void Server::use(const RequestCallback &cb)
 {
     impl_->use(cb);
