@@ -11,6 +11,7 @@ HEAD_FILES = \
 	server/server.h \
 	server/context.h \
 	server/middleware.h \
+	client/client.h \
 
 CPP_SRC_FILES = \
 	common.cpp \
@@ -20,6 +21,7 @@ CPP_SRC_FILES = \
 	server/server.cpp \
 	server/server_imp.cpp \
 	server/context.cpp \
+	client/client.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"http"' $(CXXFLAGS)
 
