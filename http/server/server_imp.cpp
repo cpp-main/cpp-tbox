@@ -15,7 +15,8 @@ using namespace std::placeholders;
 using namespace event;
 using namespace network;
 
-Server::Impl::Impl(Loop *wp_loop) :
+Server::Impl::Impl(Server *wp_parent, Loop *wp_loop) :
+    wp_parent_(wp_parent),
     wp_loop_(wp_loop),
     tcp_server_(wp_loop)
 { }
@@ -143,7 +144,7 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
                 LogDbg("mark close at %d", conn->close_index);
             }
 
-            auto sp_ctx = make_shared<Context>(this, ct, conn->req_index++, req);
+            auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);
             handle(sp_ctx, 0);
 
         } else if (req_parser_.state() == RequestParser::State::kFail) {
@@ -210,14 +211,14 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, stri
     }
 }
 
-void Server::Impl::handle(ContextSptr sp_ctx, size_t index)
+void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
 {
-    if (index >= req_cb_.size())
+    if (cb_index >= req_cb_.size())
         return;
 
-    auto func = req_cb_.at(index);
+    auto func = req_cb_.at(cb_index);
     if (func)
-        func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, index + 1));
+        func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, cb_index + 1));
 }
 
 }

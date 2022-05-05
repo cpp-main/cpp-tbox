@@ -20,7 +20,7 @@ using namespace std;
 
 class Server::Impl {
   public:
-    Impl(event::Loop *wp_loop);
+    Impl(Server *wp_parent, event::Loop *wp_loop);
     ~Impl();
 
   public:
@@ -43,21 +43,24 @@ class Server::Impl {
     void onTcpDisconnected(const TcpServer::ConnToken &ct);
     void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
 
+    //! 连接信息
     struct Connection {
-        int req_index = 0;
-        int res_index = 0;
-        int close_index = numeric_limits<int>::max();
-        map<int, string> res_buff;
+        int req_index = 0;  //!< 下一个请求的index
+        int res_index = 0;  //!< 下一个要求回复的index，用于实现按顺序回复
+        int close_index = numeric_limits<int>::max();   //!< 需要关闭连接的index
+        map<int, string> res_buff;  //!< 暂存器
     };
 
-    void handle(ContextSptr ctx, size_t index);
+    void handle(ContextSptr ctx, size_t cb_index);
 
   private:
-    Loop *wp_loop_;
+    Server *wp_parent_;
+    Loop   *wp_loop_;
+
     TcpServer tcp_server_;
     RequestParser req_parser_;
     vector<RequestCallback> req_cb_;
-    set<Connection*> conns_;
+    set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
 };
 

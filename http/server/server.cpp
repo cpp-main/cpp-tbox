@@ -6,7 +6,7 @@ namespace http {
 namespace server {
 
 Server::Server(Loop *wp_loop) :
-    impl_(new Impl(wp_loop))
+    impl_(new Impl(this, wp_loop))
 { }
 
 Server::~Server()

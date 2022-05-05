@@ -7,37 +7,33 @@
 #include "../common.h"
 #include "../request.h"
 #include "../respond.h"
-#include "server.h"
 
 namespace tbox {
 namespace http {
 namespace server {
+
+class Server;
 
 /**
  * Http请求上下文
  */
 class Context {
   public:
-    Context(Server::Impl *wp_server, const cabinet::Token &ct,
+    Context(Server *wp_server, const cabinet::Token &ct,
             int req_index, Request *req);
     ~Context();
 
     NONCOPYABLE(Context);
 
   public:
-    Request& req() const { return *sp_req_; }
-    Respond& res() const { return *sp_res_; }
+    Request& req() const;
+    Respond& res() const;
 
     bool done();
 
   private:
-    Server::Impl *wp_server_;
-    cabinet::Token conn_token_;
-    int req_index_;
-
-    Request    *sp_req_;
-    Respond    *sp_res_;
-    bool        is_done_ = false;
+    struct Data;
+    Data *d_;
 };
 
 }

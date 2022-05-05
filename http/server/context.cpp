@@ -5,33 +5,49 @@ namespace tbox {
 namespace http {
 namespace server {
 
-Context::Context(Server::Impl *wp_server, const cabinet::Token &ct,
-                 int req_index, Request *req) :
-    wp_server_(wp_server),
-    conn_token_(ct),
-    req_index_(req_index),
-    sp_req_(req),
-    sp_res_(new Respond)
+struct Context::Data {
+    Server::Impl *wp_server;
+    cabinet::Token conn_token;
+    int req_index;
+
+    Request    *sp_req;
+    Respond    *sp_res;
+    bool        is_done;
+};
+
+Context::Context(Server *wp_server, const cabinet::Token &ct, int req_index, Request *req) :
+    d_(new Data{ wp_server->impl_, ct, req_index, req, new Respond, false })
 {
-    sp_res_->status_code = StatusCode::k404_NotFound;
-    sp_res_->http_ver = HttpVer::k1_1;
+    d_->sp_res->status_code = StatusCode::k404_NotFound;
+    d_->sp_res->http_ver = HttpVer::k1_1;
 }
 
 Context::~Context()
 {
-    if (!is_done_)
+    if (!d_->is_done)
         done();
 
-    CHECK_DELETE_RESET_OBJ(sp_req_);
-    CHECK_DELETE_RESET_OBJ(sp_res_);
+    CHECK_DELETE_RESET_OBJ(d_->sp_req);
+    CHECK_DELETE_RESET_OBJ(d_->sp_res);
+    CHECK_DELETE_RESET_OBJ(d_);
+}
+
+Request& Context::req() const
+{
+    return *(d_->sp_req);
+}
+
+Respond& Context::res() const
+{
+    return *(d_->sp_res);
 }
 
 bool Context::done()
 {
-    if (is_done_)
+    if (d_->is_done)
         return false;
 
-    wp_server_->commitRespond(conn_token_, req_index_, sp_res_->toString());
+    d_->wp_server->commitRespond(d_->conn_token, d_->req_index, d_->sp_res->toString());
     return true;
 }
 

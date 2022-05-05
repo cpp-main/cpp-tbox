@@ -17,6 +17,8 @@ namespace server {
 class Middleware;
 
 class Server {
+    friend Context;
+
   public:
     explicit Server(event::Loop *wp_loop);
     virtual ~Server();
@@ -34,9 +36,8 @@ class Server {
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
 
-    class Impl;
-
   private:
+    class Impl;
     Impl *impl_;
 };
 
