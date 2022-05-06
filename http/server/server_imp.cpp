@@ -130,11 +130,11 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
     }
 
     while (buff.readableSize() > 0) {
-        size_t rsize = req_parser_.parse(buff.readableBegin(), buff.readableSize());
+        size_t rsize = conn->req_parser.parse(buff.readableBegin(), buff.readableSize());
         buff.hasRead(rsize);
 
-        if (req_parser_.state() == RequestParser::State::kFinishedAll) {
-            Request *req = req_parser_.getRequest();
+        if (conn->req_parser.state() == RequestParser::State::kFinishedAll) {
+            Request *req = conn->req_parser.getRequest();
             LogDbg("[%s]", req->toString().c_str());
 
             if (IsLastRequest(req)) {
@@ -147,10 +147,11 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
             auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);
             handle(sp_ctx, 0);
 
-        } else if (req_parser_.state() == RequestParser::State::kFail) {
+        } else if (conn->req_parser.state() == RequestParser::State::kFail) {
             tcp_server_.disconnect(ct);
             conns_.erase(conn);
             delete conn;
+            break;
 
         } else {
             break;

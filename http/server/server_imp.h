@@ -45,6 +45,7 @@ class Server::Impl {
 
     //! 连接信息
     struct Connection {
+        RequestParser req_parser;
         int req_index = 0;  //!< 下一个请求的index
         int res_index = 0;  //!< 下一个要求回复的index，用于实现按顺序回复
         int close_index = numeric_limits<int>::max();   //!< 需要关闭连接的index
@@ -58,7 +59,6 @@ class Server::Impl {
     Loop   *wp_loop_;
 
     TcpServer tcp_server_;
-    RequestParser req_parser_;
     vector<RequestCallback> req_cb_;
     set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
