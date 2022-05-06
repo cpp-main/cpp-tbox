@@ -3,6 +3,7 @@
 #include <tbox/log/stdout_channel.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
+#include <tbox/http/server/middleware/print_log.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -45,6 +46,11 @@ int main(int argc, char **argv)
 
     srv.start();
 
+    //! 添加日志打印中间件
+    PrintLog print_log(LOG_LEVEL_DEBUG);
+    srv.use(&print_log);
+
+    //! 添加请求处理
     srv.use(
         [&](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
