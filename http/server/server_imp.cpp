@@ -164,8 +164,10 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
  */
 void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res)
 {
-    if (!tcp_server_.isClientValid(ct))
+    if (!tcp_server_.isClientValid(ct)) {
+        delete res;
         return;
+    }
 
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     if (index == conn->res_index) {
