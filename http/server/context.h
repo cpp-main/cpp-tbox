@@ -27,9 +27,7 @@ class Context {
 
   public:
     Request& req() const;
-    Respond& res() const;
-
-    bool done();
+    Respond& res() const;   //! 注意: 在 done() 之后就不可以再使用该函数
 
   private:
     struct Data;

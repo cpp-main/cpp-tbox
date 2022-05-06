@@ -3,7 +3,6 @@
 #include <tbox/base/log.h>
 #include <tbox/network/buffer.h>
 
-#include "context.h"
 #include "middleware.h"
 
 namespace tbox {
@@ -135,7 +134,6 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 
         if (conn->req_parser.state() == RequestParser::State::kFinishedAll) {
             Request *req = conn->req_parser.getRequest();
-            LogDbg("[%s]", req->toString().c_str());
 
             if (IsLastRequest(req)) {
                 //! 标记当前请求为close请求
@@ -164,7 +162,7 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
  * 如果所提交的index不是当前需要回复的res_index，那么就先暂存起来，等前面的发送完成后再发送；
  * 如果是，则可以直接回复。然后再将暂存中的未发送的其它数据也一同发送。
  */
-void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, string &&content)
+void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res)
 {
     if (!tcp_server_.isClientValid(ct))
         return;
@@ -172,8 +170,11 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, stri
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     if (index == conn->res_index) {
         //! 将当前的数据直接发送出去
-        tcp_server_.send(ct, content.data(), content.size());
-        LogDbg("[%s]", content.c_str());
+        {
+            const string &content = res->toString();
+            tcp_server_.send(ct, content.data(), content.size());
+            delete res;
+        }
 
         //! 如果当前这个回复是最后一个，则需要断开连接
         if (index == conn->close_index) {
@@ -190,8 +191,12 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, stri
         auto iter = res_buff.find(conn->res_index);
 
         while (iter != res_buff.end()) {
-            tcp_server_.send(ct, iter->second.data(), iter->second.size());
-            LogDbg("[%s]", iter->second.c_str());
+            Respond *res = iter->second;
+            {
+                const string &content = res->toString();
+                tcp_server_.send(ct, content.data(), content.size());
+                delete res;
+            }
 
             //! 如果当前这个回复是最后一个，则需要断开连接
             if (index == conn->close_index) {
@@ -208,7 +213,7 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, stri
         }
     } else {
         //! 放入到 conn.res_buff 中暂存
-        conn->res_buff[index] = std::move(content);
+        conn->res_buff[index] = res;
     }
 }
 
@@ -220,6 +225,13 @@ void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
     auto func = req_cb_.at(cb_index);
     if (func)
         func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, cb_index + 1));
+}
+
+Server::Impl::Connection::~Connection()
+{
+    //! 一定要记得清除非发送的Respond
+    for (auto & item : res_buff)
+        delete item.second;
 }
 
 }

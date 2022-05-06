@@ -7,6 +7,7 @@
 #include "../common.h"
 #include "../request.h"
 #include "../respond.h"
+#include "context.h"
 
 #include "types.h"
 

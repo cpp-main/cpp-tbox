@@ -12,6 +12,9 @@
 
 namespace tbox {
 namespace http {
+
+class Respond;
+
 namespace server {
 
 using namespace event;
@@ -35,7 +38,7 @@ class Server::Impl {
     void use(const RequestCallback &cb);
     void use(Middleware *wp_middleware);
 
-    void commitRespond(const TcpServer::ConnToken &ct, int index, string &&content);
+    void commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res);
 
   private:
 
@@ -49,7 +52,9 @@ class Server::Impl {
         int req_index = 0;  //!< 下一个请求的index
         int res_index = 0;  //!< 下一个要求回复的index，用于实现按顺序回复
         int close_index = numeric_limits<int>::max();   //!< 需要关闭连接的index
-        map<int, string> res_buff;  //!< 暂存器
+        map<int, Respond*> res_buff;  //!< 暂存器
+
+        ~Connection();
     };
 
     void handle(ContextSptr ctx, size_t cb_index);
