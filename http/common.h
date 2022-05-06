@@ -15,7 +15,7 @@ enum class HttpVer {
     kUnset,
     k1_0,  //!< http 1.0
     k1_1,  //!< http 1.1
-    k1_2,  //!< http 1.2
+    k2_0,  //!< http 2.0
     kMax
 };
 
@@ -29,6 +29,8 @@ enum class Method {
     kHead,
     kPut,
     kPost, 
+    kTrace,
+    kOptions,
     kDelete,
     kMax
 };

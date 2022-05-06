@@ -12,7 +12,7 @@ using HttpVerPair = std::pair<HttpVer, std::string>;
 HttpVerPair _http_ver_map[] = {
     { HttpVer::k1_0, "HTTP/1.0" },
     { HttpVer::k1_1, "HTTP/1.1" },
-    { HttpVer::k1_2, "HTTP/1.2" },
+    { HttpVer::k2_0, "HTTP/2.0" },
 };
 }
 
@@ -52,6 +52,8 @@ MethodPair _method_map[] = {
     { Method::kHead,    "HEAD" },
     { Method::kPut,     "PUT" },
     { Method::kPost,    "POST" },
+    { Method::kTrace,   "TRACE" },
+    { Method::kOptions, "OPTIONS" },
     { Method::kDelete,  "DELETE" },
 };
 }
