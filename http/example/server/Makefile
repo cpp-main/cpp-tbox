@@ -1,16 +1,19 @@
 include ../build_env.mk
 
-TARGET := server
+TARGET := simple async_respond
 
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"main"'
-LDFLAGS += -ltbox_http -ltbox_network -ltbox_log -ltbox_event -ltbox_util -ltbox_base
+LDFLAGS += -ltbox_http -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base
 
 CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
 LDFLAGS += -fsanitize=address -static-libasan
 
 all : $(TARGET)
 
-$(TARGET) : main.cpp
+simple : simple.o
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+async_respond : async_respond.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 clean:
