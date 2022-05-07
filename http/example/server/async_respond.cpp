@@ -59,13 +59,15 @@ int main(int argc, char **argv)
         [&](ContextSptr ctx, const NextFunc &next) {
             if (ctx->req().url == "/") {
                 ctx->res().status_code = StatusCode::k200_OK;
-                ctx->res().body = R"(
+                ctx->res().body = \
+R"(
 <head>
 </head>
 <body>
     <p> <a href="/1" target="_blank">delay</a> </p>
     <p> <a href="/2" target="_blank">now</a> </p>
-</body>)"; 
+</body>
+)";
             } else if (ctx->req().url == "/1") {
                 timers.doAfter(std::chrono::seconds(10), [ctx] (const TimerPool::TimerToken &){
                     ctx->res().status_code = StatusCode::k200_OK;
