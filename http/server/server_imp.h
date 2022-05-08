@@ -33,6 +33,7 @@ class Server::Impl {
     void cleanup();
 
     State state() const { return state_; }
+    void setContextLogEnable(bool enable) { context_log_enable_ = enable; }
 
   public:
     void use(const RequestCallback &cb);
@@ -67,6 +68,7 @@ class Server::Impl {
     vector<RequestCallback> req_cb_;
     set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
+    bool context_log_enable_ = false;
 };
 
 }

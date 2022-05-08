@@ -39,6 +39,11 @@ Server::State Server::state() const
     return impl_->state();
 }
 
+void Server::setContextLogEnable(bool enable)
+{
+    return impl_->setContextLogEnable(enable);
+}
+
 void Server::use(const RequestCallback &cb)
 {
     impl_->use(cb);

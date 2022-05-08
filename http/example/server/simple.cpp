@@ -3,7 +3,6 @@
 #include <tbox/log/stdout_channel.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
-#include <tbox/http/server/middleware/print_log.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -45,10 +44,7 @@ int main(int argc, char **argv)
     }
 
     srv.start();
-
-    //! 添加日志打印中间件
-    PrintLog print_log(LOG_LEVEL_DEBUG);
-    srv.use(&print_log);
+    srv.setContextLogEnable(true);
 
     //! 添加请求处理
     srv.use(

@@ -32,6 +32,7 @@ class Server {
 
     enum class State { kNone, kInited, kRunning };
     State state() const;
+    void setContextLogEnable(bool enable);
 
   public:
     void use(const RequestCallback &cb);

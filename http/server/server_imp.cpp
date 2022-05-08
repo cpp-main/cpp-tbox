@@ -135,17 +135,21 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
         if (conn->req_parser.state() == RequestParser::State::kFinishedAll) {
             Request *req = conn->req_parser.getRequest();
 
+            if (context_log_enable_)
+                LogDbg("REQ: [%s]", req->toString().c_str());
+
             if (IsLastRequest(req)) {
                 //! 标记当前请求为close请求
                 conn->close_index = conn->req_index;
-                //!FIXME:应该关闭读部分
                 LogDbg("mark close at %d", conn->close_index);
+                //!FIXME:应该关闭读部分
             }
 
             auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);
             handle(sp_ctx, 0);
 
         } else if (conn->req_parser.state() == RequestParser::State::kFail) {
+            LogNotice("parse http from %s fail", tcp_server_.getClientAddress(ct).toString().c_str());
             tcp_server_.disconnect(ct);
             conns_.erase(conn);
             delete conn;
@@ -176,6 +180,8 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
             const string &content = res->toString();
             tcp_server_.send(ct, content.data(), content.size());
             delete res;
+            if (context_log_enable_)
+                LogDbg("RES: [%s]", content.c_str());
         }
 
         //! 如果当前这个回复是最后一个，则需要断开连接
@@ -198,6 +204,8 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
                 const string &content = res->toString();
                 tcp_server_.send(ct, content.data(), content.size());
                 delete res;
+                if (context_log_enable_)
+                    LogDbg("RES: [%s]", content.c_str());
             }
 
             //! 如果当前这个回复是最后一个，则需要断开连接
