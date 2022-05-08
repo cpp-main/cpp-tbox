@@ -31,7 +31,6 @@ TEST_CPP_SRC_FILES = \
 	common_test.cpp \
 	respond_test.cpp \
 	request_test.cpp \
-	server/server_test.cpp \
 	server/request_parser_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_util -ltbox_base

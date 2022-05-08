@@ -22,8 +22,8 @@ TEST(common, HttpVerToStream)
     }
     {
         ostringstream oss;
-        oss << HttpVer::k1_2;
-        EXPECT_EQ(oss.str(), "HTTP/1.2");
+        oss << HttpVer::k2_0;
+        EXPECT_EQ(oss.str(), "HTTP/2.0");
     }
 }
 

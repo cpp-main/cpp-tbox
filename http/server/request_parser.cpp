@@ -22,11 +22,6 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         if (sp_request_ == nullptr)
             sp_request_ = new Request;
 
-        /* 解析："GET /index.html HTTP/1.1\r\n" */
-        auto end_pos = str.find(CRLF, 0);
-        if (end_pos == std::string::npos)   //! 如果没有找到首行 \r\n，则放弃
-            return 0;
-
         //! 获取 method
         auto method_str_end = str.find_first_of(' ', pos);
         auto method_str = str.substr(pos, method_str_end);
@@ -35,6 +30,11 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
             state_ = State::kFail;
             return pos;
         }
+
+        /* 解析："GET /index.html HTTP/1.1\r\n" */
+        auto end_pos = str.find(CRLF, method_str_end);
+        if (end_pos == std::string::npos)   //! 如果没有找到首行 \r\n，则放弃
+            return 0;
 
         sp_request_->method = method;
 
