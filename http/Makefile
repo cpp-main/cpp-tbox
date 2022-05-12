@@ -7,6 +7,7 @@ HEAD_FILES = \
 	common.h \
 	request.h \
 	respond.h \
+	url.h \
 	server/types.h \
 	server/server.h \
 	server/context.h \
@@ -18,6 +19,7 @@ CPP_SRC_FILES = \
 	common.cpp \
 	request.cpp \
 	respond.cpp \
+	url.cpp \
 	server/request_parser.cpp \
 	server/server.cpp \
 	server/server_imp.cpp \
