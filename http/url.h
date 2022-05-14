@@ -36,13 +36,13 @@ struct Url {
 std::string LocalToUrl(const std::string &local_str);
 std::string UrlToLocal(const std::string &url_str);
 
-std::string UrlToString(const Url::Host &host);
-std::string UrlToString(const Url::Path &path);
 std::string UrlToString(const Url &url);
+std::string UrlHostToString(const Url::Host &host);
+std::string UrlPathToString(const Url::Path &path);
 
 bool StringToUrl(const std::string &str, Url &url);
-bool StringToUrl(const std::string &str, Url::Host &host);
-bool StringToUrl(const std::string &str, Url::Path &path);
+bool StringToUrlHost(const std::string &str, Url::Host &host);
+bool StringToUrlPath(const std::string &str, Url::Path &path);
 
 }
 }
