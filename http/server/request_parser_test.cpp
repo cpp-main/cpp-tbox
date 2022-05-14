@@ -22,7 +22,7 @@ TEST(RequestParser, Get)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kGet);
-    EXPECT_EQ(req->url, "/index.html");
+    EXPECT_EQ(req->url.path, "/index.html");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "0");
@@ -51,7 +51,12 @@ TEST(RequestParser, Get_1)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kGet);
-    EXPECT_EQ(req->url, "/?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate");
+    EXPECT_EQ(req->url.path, "/");
+    ASSERT_EQ(req->url.query.size(), 4u);
+    EXPECT_EQ(req->url.query["sl"], "auto");
+    EXPECT_EQ(req->url.query["tl"], "en");
+    EXPECT_EQ(req->url.query["text"], "\xE5\x86\x92\xE5\x8F\xB7");
+    EXPECT_EQ(req->url.query["op"], "translate");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Host"], "192.168.0.15:55555");
     EXPECT_EQ(req->headers["User-Agent"], "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
@@ -82,7 +87,7 @@ TEST(RequestParser, Post)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
@@ -106,7 +111,7 @@ TEST(RequestParser, Post_NoContentLength)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
@@ -134,7 +139,7 @@ TEST(RequestParser, GetAndPost)
     auto req1 = pp.getRequest();
     ASSERT_NE(req1, nullptr);
     EXPECT_EQ(req1->method, Method::kGet);
-    EXPECT_EQ(req1->url, "/index.html");
+    EXPECT_EQ(req1->url.path, "/index.html");
     EXPECT_EQ(req1->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req1->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req1->headers["Content-Length"], "0");
@@ -146,7 +151,7 @@ TEST(RequestParser, GetAndPost)
     auto req2 = pp.getRequest();
     ASSERT_NE(req2, nullptr);
     EXPECT_EQ(req2->method, Method::kPost);
-    EXPECT_EQ(req2->url, "/login.php");
+    EXPECT_EQ(req2->url.path, "/login.php");
     EXPECT_EQ(req2->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req2->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req2->headers["Content-Length"], "26");
@@ -188,7 +193,7 @@ TEST(RequestParser, PostIn3Pice)
     req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
@@ -216,7 +221,7 @@ TEST(RequestParser, StartLineNotEnough)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
@@ -247,7 +252,7 @@ TEST(RequestParser, HeaderNotEnough)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");
@@ -278,7 +283,7 @@ TEST(RequestParser, BodyNotEnough)
     auto req = pp.getRequest();
     ASSERT_NE(req, nullptr);
     EXPECT_EQ(req->method, Method::kPost);
-    EXPECT_EQ(req->url, "/login.php");
+    EXPECT_EQ(req->url.path, "/login.php");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Content-Type"], "plain/text");
     EXPECT_EQ(req->headers["Content-Length"], "26");

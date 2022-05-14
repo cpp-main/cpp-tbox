@@ -2,6 +2,7 @@
 #define TBOX_HTTP_REQUEST_H_20220501
 
 #include "common.h"
+#include "url.h"
 
 namespace tbox {
 namespace http {
@@ -10,7 +11,7 @@ namespace http {
 struct Request {
     Method  method = Method::kUnset;
     HttpVer http_ver = HttpVer::kUnset;
-    std::string url;
+    Url::Path url;
     Headers headers;
     std::string body;
 

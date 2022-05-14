@@ -47,7 +47,10 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
         auto url_str_end = str.find_first_of(' ', url_str_begin);
         auto url_str = str.substr(url_str_begin, url_str_end - url_str_begin);
-        sp_request_->url = url_str;
+        if (!StringToUrlPath(url_str, sp_request_->url)) {
+            state_ = State::kFail;
+            return pos;
+        }
 
         //! 获取版本
         auto ver_str_begin = str.find_first_not_of(' ', url_str_end);

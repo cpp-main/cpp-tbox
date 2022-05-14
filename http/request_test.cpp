@@ -12,13 +12,14 @@ TEST(Request, ToString_Get)
     Request req;
     req.method = Method::kGet;
     req.http_ver = HttpVer::k1_1;
-    req.url = "/index.html";
+    req.url.path = "/get_user_info.php";
+    req.url.query["id"] = "john hans";
     req.headers["Content-Type"] = "plain/text";
 
     EXPECT_TRUE(req.isValid());
 
     const char *target_str = \
-        "GET /index.html HTTP/1.1\r\n"
+        "GET /get_user_info.php?id=john%20hans HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 0\r\n"
         "\r\n"
@@ -32,14 +33,15 @@ TEST(Request, ToString_Post)
     Request req;
     req.method = Method::kPost;
     req.http_ver = HttpVer::k1_1;
-    req.url = "/login.php";
+    req.url.path = "/login.php";
+    req.url.frag = "tag";
     req.headers["Content-Type"] = "plain/text";
     req.body = "username=hevake&pwd=abc123";
 
     EXPECT_TRUE(req.isValid());
 
     const char *target_str = \
-        "POST /login.php HTTP/1.1\r\n"
+        "POST /login.php#tag HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
