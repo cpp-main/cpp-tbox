@@ -8,22 +8,41 @@
 namespace tbox {
 namespace http {
 
+/**
+ * URL格式：<scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>#<frag>
+ */
 struct Url {
-    using StringMap = std::map<std::string, std::string>;
-
     std::string scheme;
-    std::string user;
-    std::string password;
-    std::string host;
-    uint16_t    port;
-    std::string path;
-    StringMap   params;
-    StringMap   query;
-    std::string frag;
+
+    struct Host {
+        std::string user;
+        std::string password;
+        std::string host;
+        uint16_t    port = 0;
+    };
+
+    struct Path {
+        using StringMap = std::map<std::string, std::string>;
+        std::string path;
+        StringMap   params;
+        StringMap   query;
+        std::string frag;
+    };
+
+    Host host;
+    Path path;
 };
 
-bool UrlToString(const Url &url, std::string &str);
+std::string LocalToUrl(const std::string &local_str);
+std::string UrlToLocal(const std::string &url_str);
+
+std::string UrlToString(const Url::Host &host);
+std::string UrlToString(const Url::Path &path);
+std::string UrlToString(const Url &url);
+
 bool StringToUrl(const std::string &str, Url &url);
+bool StringToUrl(const std::string &str, Url::Host &host);
+bool StringToUrl(const std::string &str, Url::Path &path);
 
 }
 }

@@ -80,19 +80,6 @@ TEST(common, StateCodeToStream)
     }
 }
 
-TEST(common, HttpToLocal)
-{
-    EXPECT_EQ(HttpToLocal("hello%20world"), "hello world");
-    EXPECT_EQ(HttpToLocal(R"(%23%25%26%2b%2f%5c%3d%3f%20%2e%3a)"), R"(#%&+/\=? .:)");
-    EXPECT_THROW(HttpToLocal("hello%2world"), std::out_of_range);
-}
-
-TEST(common, LocalToHttp)
-{
-    EXPECT_EQ(LocalToHttp("hello world"), "hello%20world");
-    EXPECT_EQ(LocalToHttp(R"(#%&+/\=? .:)"), R"(%23%25%26%2b%2f%5c%3d%3f%20%2e%3a)");
-}
-
 }
 }
 }
