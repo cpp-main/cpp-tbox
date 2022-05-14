@@ -6,7 +6,8 @@ namespace tbox {
 namespace http {
 
 namespace {
-const std::string special_chars = R"(#%&+/\=? .:)";
+const std::string full_special_chars = R"(#%&+/\=? .:)";
+const std::string path_special_chars = R"(#%&+\=? :)";
 const char *char_to_hex = R"(0123456789abcdef)";
 
 char HexCharToValue(char hex_char)
@@ -22,8 +23,10 @@ char HexCharToValue(char hex_char)
 }
 }
 
-std::string LocalToUrl(const std::string &local_str)
+std::string LocalToUrl(const std::string &local_str, bool path_mode)
 {
+    const auto& special_chars = path_mode ? path_special_chars : full_special_chars;
+
     std::string url_str;
     url_str.reserve(local_str.size() * 5 / 4); //! 预留1.25倍的空间
 
@@ -99,7 +102,7 @@ std::string UrlPathToString(const Url::Path &path)
 {
     std::ostringstream oss;
 
-    oss << path.path;
+    oss << LocalToUrl(path.path, true);
 
     for (const auto &item : path.params)
         oss << ';' << LocalToUrl(item.first) << '=' << LocalToUrl(item.second);
@@ -169,33 +172,33 @@ bool StringToUrlHost(const std::string &str, Url::Host &host)
     //! 如果没有找到，则说明只有 host:port
     auto at_pos = str.find_first_of('@');
     auto host_start_pose = 0;
-    if (at_pos != std::string::npos) {
-        auto colon_pos = str.find_first_of(':');
-        if (colon_pos == std::string::npos || colon_pos > at_pos) {
-            //! 说明没有 password
-            host.user = UrlToLocal(str.substr(0, at_pos));
-            host.password.clear();
-        } else {
-            host.user = UrlToLocal(str.substr(0, colon_pos));
-            host.password = UrlToLocal(str.substr(colon_pos + 1, at_pos - colon_pos - 1));
+    try {
+        if (at_pos != std::string::npos) {
+            auto colon_pos = str.find_first_of(':');
+            if (colon_pos == std::string::npos || colon_pos > at_pos) {
+                //! 说明没有 password
+                host.user = UrlToLocal(str.substr(0, at_pos));
+                host.password.clear();
+            } else {
+                host.user = UrlToLocal(str.substr(0, colon_pos));
+                host.password = UrlToLocal(str.substr(colon_pos + 1, at_pos - colon_pos - 1));
+            }
+            host_start_pose = at_pos + 1;
         }
-        host_start_pose = at_pos + 1;
+
+        auto colon_pos = str.find_first_of(':', host_start_pose);
+        if (colon_pos == std::string::npos) {
+            //! 说明没有 password
+            host.host = UrlToLocal(str.substr(host_start_pose));
+            host.port = 0;
+        } else {
+            host.host = UrlToLocal(str.substr(host_start_pose, colon_pos - host_start_pose));
+            host.port = std::stoi(str.substr(colon_pos + 1));
+        }
+    } catch (const std::exception &) {
+        return false;
     }
 
-    auto colon_pos = str.find_first_of(':', host_start_pose);
-    if (colon_pos == std::string::npos) {
-        //! 说明没有 password
-        host.host = UrlToLocal(str.substr(host_start_pose));
-        host.port = 0;
-    } else {
-        host.host = UrlToLocal(str.substr(host_start_pose, colon_pos - host_start_pose));
-        try {
-            //! 这里要防止数字的情况，要捕获异常
-            host.port = std::stoi(str.substr(colon_pos + 1));
-        } catch (const std::exception &e) {
-            return false;
-        }
-    }
     return true;
 }
 
@@ -218,49 +221,54 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
     else if (pound_pos != std::string::npos)
         path_end_pos = pound_pos;
 
-    path.path = UrlToLocal(str.substr(0, path_end_pos));
+    try {
+        path.path = UrlToLocal(str.substr(0, path_end_pos));
 
-    if (semi_pos != std::string::npos) {
-        //! 说明有 params
-        auto params_end_pos = std::string::npos;
-        if (query_pos != std::string::npos)
-            params_end_pos = query_pos;
-        else if (pound_pos != std::string::npos)
-            params_end_pos = pound_pos;
+        if (semi_pos != std::string::npos) {
+            //! 说明有 params
+            auto params_end_pos = std::string::npos;
+            if (query_pos != std::string::npos)
+                params_end_pos = query_pos;
+            else if (pound_pos != std::string::npos)
+                params_end_pos = pound_pos;
 
-        auto params_str = str.substr(semi_pos + 1, params_end_pos - semi_pos - 1);
-        std::vector<std::string> params_vec;
-        util::string::Split(params_str, ";", params_vec);
-        for (const auto &param_str : params_vec) {
-            std::vector<std::string> kv;
-            util::string::Split(param_str, "=", kv);
-            if (kv.size() != 2 || kv[0].empty())
-                return false;
-            path.params[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+            auto params_str = str.substr(semi_pos + 1, params_end_pos - semi_pos - 1);
+            std::vector<std::string> params_vec;
+            util::string::Split(params_str, ";", params_vec);
+            for (const auto &param_str : params_vec) {
+                std::vector<std::string> kv;
+                util::string::Split(param_str, "=", kv);
+                if (kv.size() != 2 || kv[0].empty())
+                    return false;
+                path.params[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+            }
         }
-    }
 
-    if (query_pos != std::string::npos) {
-        //! 说明有 query
-        auto querys_end_pos = std::string::npos;
-        if (pound_pos != std::string::npos)
-            querys_end_pos = pound_pos;
+        if (query_pos != std::string::npos) {
+            //! 说明有 query
+            auto querys_end_pos = std::string::npos;
+            if (pound_pos != std::string::npos)
+                querys_end_pos = pound_pos;
 
-        auto querys_str = str.substr(query_pos + 1, querys_end_pos - query_pos - 1);
-        std::vector<std::string> querys_vec;
-        util::string::Split(querys_str, "&", querys_vec);
-        for (const auto &query_str : querys_vec) {
-            std::vector<std::string> kv;
-            util::string::Split(query_str, "=", kv);
-            if (kv.size() != 2 || kv[0].empty())
-                return false;
-            path.query[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+            auto querys_str = str.substr(query_pos + 1, querys_end_pos - query_pos - 1);
+            std::vector<std::string> querys_vec;
+            util::string::Split(querys_str, "&", querys_vec);
+            for (const auto &query_str : querys_vec) {
+                std::vector<std::string> kv;
+                util::string::Split(query_str, "=", kv);
+                if (kv.size() != 2 || kv[0].empty())
+                    return false;
+                path.query[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+            }
         }
-    }
 
-    if (pound_pos != std::string::npos) {
-        //! 说明有 frag
-        path.frag = UrlToLocal(str.substr(pound_pos + 1));
+        if (pound_pos != std::string::npos) {
+            //! 说明有 frag
+            path.frag = UrlToLocal(str.substr(pound_pos + 1));
+        }
+
+    } catch (const std::exception &) {
+        return false;
     }
 
     return true;
