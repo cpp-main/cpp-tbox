@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     //! 添加请求处理
     srv.use(
         [&](ContextSptr ctx, const NextFunc &next) {
-            if (ctx->req().url == "/") {
+            if (ctx->req().url.path == "/") {
                 ctx->res().status_code = StatusCode::k200_OK;
                 ctx->res().body = \
 R"(
@@ -64,14 +64,14 @@ R"(
     <p> <a href="/2" target="_blank">now</a> </p>
 </body>
 )";
-            } else if (ctx->req().url == "/1") {
+            } else if (ctx->req().url.path == "/1") {
                 timers.doAfter(std::chrono::seconds(10), [ctx] (const TimerPool::TimerToken &){
                     ctx->res().status_code = StatusCode::k200_OK;
-                    ctx->res().body = ctx->req().url;
+                    ctx->res().body = ctx->req().url.path;
                 });
-            } else if (ctx->req().url == "/2") {
+            } else if (ctx->req().url.path == "/2") {
                 ctx->res().status_code = StatusCode::k200_OK;
-                ctx->res().body = ctx->req().url;
+                ctx->res().body = ctx->req().url.path;
             }
         }
     );

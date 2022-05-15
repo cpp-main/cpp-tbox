@@ -58,18 +58,18 @@ R"(
 <head>
 </head>
 <body>
-    <p> <a href="/1" target="_blank">delay</a> </p>
-    <p> <a href="/2" target="_blank">now</a> </p>
+    <p> <a href="/1" target="_blank">page_1</a> </p>
+    <p> <a href="/2" target="_blank">page_2</a> </p>
 </body>
 )";
         })
         .get("/1", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "<p>1</p>";
+            ctx->res().body = "<p>page 1</p>";
         })
         .get("/2", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "<p>2</p>";
+            ctx->res().body = "<p>page 2</p>";
         });
 
     sp_sig_event->setCallback(
