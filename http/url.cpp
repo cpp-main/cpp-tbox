@@ -6,9 +6,10 @@ namespace tbox {
 namespace http {
 
 namespace {
-const std::string full_special_chars = R"(#%&+/\=? .:)";
-const std::string path_special_chars = R"(#%&+\=? :)";
-const char *char_to_hex = R"(0123456789abcdef)";
+//! 根据 RFC3986, https://www.rfc-editor.org/rfc/rfc3986
+const std::string full_special_chars = R"( +&=<>"#,%{}|\^[]`;?:@$/.)";
+const std::string path_special_chars = R"( +&=<>"#,%{}|\^[]`;?:@$)";
+const char *char_to_hex = R"(0123456789ABCDEF)";
 
 char HexCharToValue(char hex_char)
 {
@@ -23,7 +24,7 @@ char HexCharToValue(char hex_char)
 }
 }
 
-std::string LocalToUrl(const std::string &local_str, bool path_mode)
+std::string UrlEncode(const std::string &local_str, bool path_mode)
 {
     const auto& special_chars = path_mode ? path_special_chars : full_special_chars;
 
@@ -31,7 +32,8 @@ std::string LocalToUrl(const std::string &local_str, bool path_mode)
     url_str.reserve(local_str.size() * 5 / 4); //! 预留1.25倍的空间
 
     for (char c : local_str) {
-        if (special_chars.find(c) != std::string::npos) {
+        //! 如果非ASCII或是特殊字符
+        if (c >= 128 || special_chars.find(c) != std::string::npos) {
             url_str.push_back('%');
             url_str.push_back(char_to_hex[c >> 4]);
             url_str.push_back(char_to_hex[c & 0xf]);
@@ -41,7 +43,7 @@ std::string LocalToUrl(const std::string &local_str, bool path_mode)
     return url_str;
 }
 
-std::string UrlToLocal(const std::string &url_str)
+std::string UrlDecode(const std::string &url_str)
 {
     std::string local_str;
     local_str.reserve(url_str.size());
@@ -102,10 +104,10 @@ std::string UrlPathToString(const Url::Path &path)
 {
     std::ostringstream oss;
 
-    oss << LocalToUrl(path.path, true);
+    oss << UrlEncode(path.path, true);
 
     for (const auto &item : path.params)
-        oss << ';' << LocalToUrl(item.first) << '=' << LocalToUrl(item.second);
+        oss << ';' << UrlEncode(item.first) << '=' << UrlEncode(item.second);
 
     if (!path.query.empty()) {
         oss << '?';
@@ -114,7 +116,7 @@ std::string UrlPathToString(const Url::Path &path)
             if (not_first)
                 oss << '&';
             not_first = true;
-            oss << LocalToUrl(item.first) << '=' << LocalToUrl(item.second);
+            oss << UrlEncode(item.first) << '=' << UrlEncode(item.second);
         }
     }
 
@@ -177,11 +179,11 @@ bool StringToUrlHost(const std::string &str, Url::Host &host)
             auto colon_pos = str.find_first_of(':');
             if (colon_pos == std::string::npos || colon_pos > at_pos) {
                 //! 说明没有 password
-                host.user = UrlToLocal(str.substr(0, at_pos));
+                host.user = UrlDecode(str.substr(0, at_pos));
                 host.password.clear();
             } else {
-                host.user = UrlToLocal(str.substr(0, colon_pos));
-                host.password = UrlToLocal(str.substr(colon_pos + 1, at_pos - colon_pos - 1));
+                host.user = UrlDecode(str.substr(0, colon_pos));
+                host.password = UrlDecode(str.substr(colon_pos + 1, at_pos - colon_pos - 1));
             }
             host_start_pose = at_pos + 1;
         }
@@ -189,10 +191,10 @@ bool StringToUrlHost(const std::string &str, Url::Host &host)
         auto colon_pos = str.find_first_of(':', host_start_pose);
         if (colon_pos == std::string::npos) {
             //! 说明没有 password
-            host.host = UrlToLocal(str.substr(host_start_pose));
+            host.host = UrlDecode(str.substr(host_start_pose));
             host.port = 0;
         } else {
-            host.host = UrlToLocal(str.substr(host_start_pose, colon_pos - host_start_pose));
+            host.host = UrlDecode(str.substr(host_start_pose, colon_pos - host_start_pose));
             host.port = std::stoi(str.substr(colon_pos + 1));
         }
     } catch (const std::exception &) {
@@ -222,7 +224,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
         path_end_pos = pound_pos;
 
     try {
-        path.path = UrlToLocal(str.substr(0, path_end_pos));
+        path.path = UrlDecode(str.substr(0, path_end_pos));
 
         if (semi_pos != std::string::npos) {
             //! 说明有 params
@@ -240,7 +242,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
                 util::string::Split(param_str, "=", kv);
                 if (kv.size() != 2 || kv[0].empty())
                     return false;
-                path.params[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+                path.params[UrlDecode(kv[0])] = UrlDecode(kv[1]);
             }
         }
 
@@ -258,13 +260,13 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
                 util::string::Split(query_str, "=", kv);
                 if (kv.size() != 2 || kv[0].empty())
                     return false;
-                path.query[UrlToLocal(kv[0])] = UrlToLocal(kv[1]);
+                path.query[UrlDecode(kv[0])] = UrlDecode(kv[1]);
             }
         }
 
         if (pound_pos != std::string::npos) {
             //! 说明有 frag
-            path.frag = UrlToLocal(str.substr(pound_pos + 1));
+            path.frag = UrlDecode(str.substr(pound_pos + 1));
         }
 
     } catch (const std::exception &) {

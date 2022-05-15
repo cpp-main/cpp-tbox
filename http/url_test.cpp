@@ -4,17 +4,18 @@
 namespace tbox {
 namespace http {
 
-TEST(Url, UrlToLocal)
+TEST(Url, UrlDecode)
 {
-    EXPECT_EQ(UrlToLocal("hello%20world"), "hello world");
-    EXPECT_EQ(UrlToLocal(R"(%23%25%26%2b%2f%5c%3d%3f%20%2e%3a)"), R"(#%&+/\=? .:)");
-    EXPECT_THROW(UrlToLocal("hello%2world"), std::out_of_range);
+    EXPECT_EQ(UrlDecode("hello%20world"), "hello world");
+    EXPECT_EQ(UrlDecode(R"(%23%25%26%2B%2F%5C%3D%3F%20%2E%3A)"), R"(#%&+/\=? .:)");
+    EXPECT_THROW(UrlDecode("hello%2world"), std::out_of_range);
 }
 
-TEST(Url, LocalToUrl)
+TEST(Url, UrlEncode)
 {
-    EXPECT_EQ(LocalToUrl("hello world"), "hello%20world");
-    EXPECT_EQ(LocalToUrl(R"(#%&+/\=? .:)"), R"(%23%25%26%2b%2f%5c%3d%3f%20%2e%3a)");
+    EXPECT_EQ(UrlEncode("hello world"), "hello%20world");
+    EXPECT_EQ(UrlEncode(R"(#%&+/\=? .:)"), R"(%23%25%26%2B%2F%5C%3D%3F%20%2E%3A)");
+    EXPECT_EQ(UrlEncode("\xA0\xB0"), R"(%A0%B0)");
 }
 
 TEST(Url, StringToUrlHost_Full)

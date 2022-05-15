@@ -1,7 +1,6 @@
 #ifndef TBOX_HTTP_COMMON_H_20220501
 #define TBOX_HTTP_COMMON_H_20220501
 
-#include <ostream>
 #include <map>
 
 #define CRLF "\r\n"
@@ -96,9 +95,5 @@ StatusCode  StringToStatusCode(const std::string &str);
 
 }
 }
-
-std::ostream& operator << (std::ostream &oss, tbox::http::HttpVer ver);
-std::ostream& operator << (std::ostream &oss, tbox::http::Method method);
-std::ostream& operator << (std::ostream &oss, tbox::http::StatusCode code);
 
 #endif //TBOX_HTTP_COMMON_H_20220501

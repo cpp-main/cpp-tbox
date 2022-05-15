@@ -1,6 +1,4 @@
 #include "common.h"
-#include <exception>
-#include <vector>
 #include <algorithm>
 #include <tbox/base/defines.h>
 
@@ -160,26 +158,5 @@ StatusCode StringToStatusCode(const std::string &str)
         return StatusCode::kUnset;
 }
 
-
 }
 }
-
-std::ostream& operator << (std::ostream &oss, tbox::http::HttpVer ver)
-{
-    oss << HttpVerToString(ver);
-    return oss;
-}
-
-std::ostream& operator << (std::ostream &oss, tbox::http::Method method)
-{
-    oss << MethodToString(method);
-    return oss;
-}
-
-std::ostream& operator << (std::ostream &oss, tbox::http::StatusCode code)
-{
-    oss << StatusCodeToString(code);
-    return oss;
-}
-
-

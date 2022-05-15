@@ -10,74 +10,26 @@ using namespace std;
 
 TEST(common, HttpVerToStream)
 {
-    {
-        ostringstream oss;
-        oss << HttpVer::k1_0;
-        EXPECT_EQ(oss.str(), "HTTP/1.0");
-    }
-    {
-        ostringstream oss;
-        oss << HttpVer::k1_1;
-        EXPECT_EQ(oss.str(), "HTTP/1.1");
-    }
-    {
-        ostringstream oss;
-        oss << HttpVer::k2_0;
-        EXPECT_EQ(oss.str(), "HTTP/2.0");
-    }
+    EXPECT_EQ(HttpVerToString(HttpVer::k1_0), "HTTP/1.0");
+    EXPECT_EQ(HttpVerToString(HttpVer::k1_1), "HTTP/1.1");
+    EXPECT_EQ(HttpVerToString(HttpVer::k2_0), "HTTP/2.0");
 }
 
 TEST(common, MethodToStream)
 {
-    {
-        ostringstream oss;
-        oss << Method::kGet;
-        EXPECT_EQ(oss.str(), "GET");
-    }
-    {
-        ostringstream oss;
-        oss << Method::kHead;
-        EXPECT_EQ(oss.str(), "HEAD");
-    }
-    {
-        ostringstream oss;
-        oss << Method::kPut;
-        EXPECT_EQ(oss.str(), "PUT");
-    }
-    {
-        ostringstream oss;
-        oss << Method::kPost;
-        EXPECT_EQ(oss.str(), "POST");
-    }
-    {
-        ostringstream oss;
-        oss << Method::kDelete;
-        EXPECT_EQ(oss.str(), "DELETE");
-    }
+    EXPECT_EQ(MethodToString(Method::kGet), "GET");
+    EXPECT_EQ(MethodToString(Method::kHead), "HEAD");
+    EXPECT_EQ(MethodToString(Method::kPut), "PUT");
+    EXPECT_EQ(MethodToString(Method::kPost), "POST");
+    EXPECT_EQ(MethodToString(Method::kDelete), "DELETE");
 }
 
 TEST(common, StateCodeToStream)
 {
-    {
-        ostringstream oss;
-        oss << StatusCode::k200_OK;
-        EXPECT_EQ(oss.str(), "200 OK");
-    }
-    {
-        ostringstream oss;
-        oss << StatusCode::k401_Unauthorized;
-        EXPECT_EQ(oss.str(), "401 Unauthorized");
-    }
-    {
-        ostringstream oss;
-        oss << StatusCode::k404_NotFound;
-        EXPECT_EQ(oss.str(), "404 Not Found");
-    }
-    {
-        ostringstream oss;
-        oss << StatusCode::k505_HTTPVersionNotSupported;
-        EXPECT_EQ(oss.str(), "505 HTTP Version Not Supported");
-    }
+    EXPECT_EQ(StatusCodeToString(StatusCode::k200_OK), "200 OK");
+    EXPECT_EQ(StatusCodeToString(StatusCode::k401_Unauthorized), "401 Unauthorized");
+    EXPECT_EQ(StatusCodeToString(StatusCode::k404_NotFound), "404 Not Found");
+    EXPECT_EQ(StatusCodeToString(StatusCode::k505_HTTPVersionNotSupported), "505 HTTP Version Not Supported");
 }
 
 }

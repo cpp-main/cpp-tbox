@@ -13,7 +13,7 @@ bool Request::isValid() const
 std::string Request::toString() const
 {
     std::ostringstream oss;
-    oss << method << " " << UrlPathToString(url) << " " << http_ver << CRLF;
+    oss << MethodToString(method) << " " << UrlPathToString(url) << " " << HttpVerToString(http_ver) << CRLF;
     for (auto &head : headers)
         oss << head.first << ": " << head.second << CRLF;
     oss << "Content-Length: " << body.length() << CRLF;

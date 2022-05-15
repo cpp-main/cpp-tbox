@@ -12,7 +12,7 @@ bool Respond::isValid() const
 std::string Respond::toString() const
 {
     std::ostringstream oss;
-    oss << http_ver << " " << status_code << CRLF;
+    oss << HttpVerToString(http_ver) << " " << StatusCodeToString(status_code) << CRLF;
     for (auto &head : headers)
         oss << head.first << ": " << head.second << CRLF;
     oss << "Content-Length: " << body.length() << CRLF;

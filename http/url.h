@@ -33,8 +33,8 @@ struct Url {
     Path path;
 };
 
-std::string LocalToUrl(const std::string &local_str, bool path_mode = false);
-std::string UrlToLocal(const std::string &url_str);
+std::string UrlEncode(const std::string &local_str, bool path_mode = false);
+std::string UrlDecode(const std::string &url_str);
 
 std::string UrlToString(const Url &url);
 std::string UrlHostToString(const Url::Host &host);
