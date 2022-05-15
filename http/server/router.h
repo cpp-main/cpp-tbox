@@ -2,6 +2,7 @@
 #define TBOX_HTTP_SERVER_ROUTER_H_20220508
 
 #include "middleware.h"
+#include "context.h"
 
 namespace tbox {
 namespace http {
@@ -13,10 +14,10 @@ class Router : public Middleware {
     ~Router();
 
   public:
-    Router& get (const std::string &url, const RequestCallback &cb);
-    Router& post(const std::string &url, const RequestCallback &cb);
-    Router& put (const std::string &url, const RequestCallback &cb);
-    Router& del (const std::string &url, const RequestCallback &cb);
+    Router& get (const std::string &path, const RequestCallback &cb);
+    Router& post(const std::string &path, const RequestCallback &cb);
+    Router& put (const std::string &path, const RequestCallback &cb);
+    Router& del (const std::string &path, const RequestCallback &cb);
 
   public:
     virtual void handle(ContextSptr sp_ctx, const NextFunc &next) override;
