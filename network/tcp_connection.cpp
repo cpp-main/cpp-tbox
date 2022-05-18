@@ -46,6 +46,16 @@ bool TcpConnection::disconnect()
     return true;
 }
 
+bool TcpConnection::shutdown(int howto)
+{
+    LogInfo("%s, %d", peer_addr_.toString().c_str(), howto);
+    if (sp_buffered_fd_ == nullptr)
+        return false;
+
+    SocketFd socket_fd = static_cast<SocketFd>(sp_buffered_fd_->fd());
+    return socket_fd.shutdown(howto) == 0;
+}
+
 SocketFd TcpConnection::socketFd() const
 {
     if (sp_buffered_fd_ != nullptr)

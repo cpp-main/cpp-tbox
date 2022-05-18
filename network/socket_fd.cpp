@@ -93,6 +93,14 @@ ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr 
     return ret;
 }
 
+int SocketFd::shutdown(int howto)
+{
+    int ret = ::shutdown(get(), howto);
+    if (ret < 0)
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    return ret;
+}
+
 bool SocketFd::getSocketOpt(int level, int optname, void *optval, socklen_t *optlen)
 {
     if (::getsockopt(get(), level, optname, optval, optlen) != 0) {

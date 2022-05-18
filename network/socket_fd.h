@@ -35,6 +35,8 @@ class SocketFd : public Fd {
     ssize_t recvFrom(void* data_ptr, size_t data_size, int flag,
                      sockaddr *dest_addr, socklen_t *addrlen);
 
+    int shutdown(int howto);
+
   public: //! socket相关的设置
     bool getSocketOpt(int level, int optname, void *optval, socklen_t *optlen);
     bool setSocketOpt(int level, int optname, int optval);

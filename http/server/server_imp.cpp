@@ -124,7 +124,7 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
     //! 如果已被标记为最后的请求，就不应该再有请求来
     if (conn->close_index != numeric_limits<int>::max()) {
         buff.hasReadAll();
-        LogNotice("should not recv any data");
+        LogWarn("should not recv any data");
         return;
     }
 
@@ -142,7 +142,8 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
                 //! 标记当前请求为close请求
                 conn->close_index = conn->req_index;
                 LogDbg("mark close at %d", conn->close_index);
-                //!FIXME:应该关闭读部分
+
+                tcp_server_.shutdown(ct, SHUT_RD);
             }
 
             auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);

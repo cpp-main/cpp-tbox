@@ -146,6 +146,14 @@ bool TcpServer::disconnect(const ConnToken &client)
     return false;
 }
 
+bool TcpServer::shutdown(const ConnToken &client, int howto)
+{
+    auto conn = d_->conns.free(client);
+    if (conn != nullptr)
+        return conn->shutdown(howto);
+    return false;
+}
+
 bool TcpServer::isClientValid(const ConnToken &client) const
 {
     return d_->conns.at(client) != nullptr;

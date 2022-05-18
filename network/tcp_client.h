@@ -46,6 +46,7 @@ class TcpClient : public ByteStream {
     bool start();   //!< 开始连接服务端
     void stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
 
+    bool shutdown(int howto);   //! 支持半关闭
     void cleanup();
 
     State state() const;

@@ -25,6 +25,7 @@ class TcpConnection : public ByteStream {
     using DisconnectedCallback = std::function<void ()>;
     void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
     bool disconnect();  //! 主动断开
+    bool shutdown(int howto);
 
     SockAddr peerAddr() const { return peer_addr_; }
     SocketFd socketFd() const;

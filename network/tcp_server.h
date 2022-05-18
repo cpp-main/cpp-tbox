@@ -53,6 +53,8 @@ class TcpServer {
     bool send(const ConnToken &client, const void *data_ptr, size_t data_size);
     //! 断开指定客户端的连接
     bool disconnect(const ConnToken &client);
+    //! 半关闭
+    bool shutdown(const ConnToken &client, int howto);
 
     //! 检查客户端的连接是否有效
     bool isClientValid(const ConnToken &client) const;
