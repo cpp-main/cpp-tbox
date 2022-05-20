@@ -139,7 +139,7 @@ bool BufferedFd::send(const void *data_ptr, size_t data_size)
                 send_buff_.append(data_ptr, data_size);
                 sp_write_event_->enable();  //! 等待可写事件
             } else {
-                LogWarn("send fail, some data drop");
+                LogWarn("send fail, drop data. errno:%d, %s", errno, strerror(errno));
                 //!TODO
             }
         }
