@@ -69,6 +69,8 @@ class Server::Impl {
     set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
     bool context_log_enable_ = false;
+
+    int cb_level_ = 0;
 };
 
 }

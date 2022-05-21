@@ -22,6 +22,7 @@ Server::Impl::Impl(Server *wp_parent, Loop *wp_loop) :
 
 Server::Impl::~Impl()
 {
+    assert(cb_level_ == 0);
     cleanup();
 }
 
@@ -234,8 +235,11 @@ void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
         return;
 
     auto func = req_cb_.at(cb_index);
+
+    ++cb_level_;
     if (func)
         func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, cb_index + 1));
+    --cb_level_;
 }
 
 Server::Impl::Connection::~Connection()
