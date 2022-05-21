@@ -52,14 +52,14 @@ bool TcpConnection::shutdown(int howto)
     if (sp_buffered_fd_ == nullptr)
         return false;
 
-    SocketFd socket_fd = static_cast<SocketFd>(sp_buffered_fd_->fd());
+    SocketFd socket_fd(sp_buffered_fd_->fd());
     return socket_fd.shutdown(howto) == 0;
 }
 
 SocketFd TcpConnection::socketFd() const
 {
     if (sp_buffered_fd_ != nullptr)
-        return static_cast<SocketFd>(sp_buffered_fd_->fd());
+        return sp_buffered_fd_->fd();
     return SocketFd();
 }
 

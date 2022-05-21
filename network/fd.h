@@ -38,7 +38,6 @@ class Fd {
   public:
     //! 获取文件描述符的值。注意谨慎使用
     inline int get() const { return (detail_ != nullptr) ? detail_->fd : -1; }
-    operator int () const { return get(); }
 
     //! 读
     ssize_t read(void *ptr, size_t size) const;

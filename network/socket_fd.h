@@ -15,6 +15,8 @@ class SocketFd : public Fd {
     using Fd::operator=;
     using Fd::swap;
 
+    SocketFd(const Fd &fd);
+
   public:
     static SocketFd CreateSocket(int domain, int type, int protocal);
     static SocketFd CreateUdpSocket();

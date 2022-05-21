@@ -8,6 +8,10 @@
 namespace tbox {
 namespace network {
 
+SocketFd::SocketFd(const Fd &fd) :
+    Fd(fd)
+{ }
+
 SocketFd SocketFd::CreateSocket(int domain, int type, int protocal)
 {
     int fd = ::socket(domain, type, protocal);
