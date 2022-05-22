@@ -1,5 +1,5 @@
-#ifndef TBOX_NETWORK_TCP_CONNECTION_H_20180113
-#define TBOX_NETWORK_TCP_CONNECTION_H_20180113
+#ifndef TBOX_NETWORK_TCP_SSL_CONNECTION_H_20220522
+#define TBOX_NETWORK_TCP_SSL_CONNECTION_H_20220522
 
 #include <tbox/event/loop.h>
 
@@ -11,15 +11,15 @@
 namespace tbox {
 namespace network {
 
-class TcpConnection : public ByteStream {
-    friend class TcpAcceptor;
-    friend class TcpConnector;
+class TcpSslConnection : public ByteStream {
+    friend class TcpSslAcceptor;
+    friend class TcpSslConnector;
 
   public:
-    virtual ~TcpConnection();
+    virtual ~TcpSslConnection();
 
-    NONCOPYABLE(TcpConnection);
-    IMMOVABLE(TcpConnection);
+    NONCOPYABLE(TcpSslConnection);
+    IMMOVABLE(TcpSslConnection);
 
   public:
     using DisconnectedCallback = std::function<void ()>;
@@ -48,7 +48,7 @@ class TcpConnection : public ByteStream {
     void onError(int errnum);
 
   private:
-    explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
+    explicit TcpSslConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
     void enable();
 
   private:
@@ -65,4 +65,4 @@ class TcpConnection : public ByteStream {
 }
 }
 
-#endif //TBOX_NETWORK_TCP_CONNECTION_H_20180113
+#endif //TBOX_NETWORK_TCP_SSL_CONNECTION_H_20220522

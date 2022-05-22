@@ -1,5 +1,5 @@
-#ifndef TBOX_NETWORK_TCP_SERVER_H_20180412
-#define TBOX_NETWORK_TCP_SERVER_H_20180412
+#ifndef TBOX_NETWORK_TCP_SSL_SERVER_H_20220522
+#define TBOX_NETWORK_TCP_SSL_SERVER_H_20220522
 
 #include <tbox/base/defines.h>
 #include <tbox/base/cabinet_token.h>
@@ -11,16 +11,16 @@
 namespace tbox {
 namespace network {
 
-class TcpAcceptor;
-class TcpConnection;
+class TcpSslAcceptor;
+class TcpSslConnection;
 
-class TcpServer {
+class TcpSslServer {
   public:
-    explicit TcpServer(event::Loop *wp_loop);
-    virtual ~TcpServer();
+    explicit TcpSslServer(event::Loop *wp_loop);
+    virtual ~TcpSslServer();
 
-    NONCOPYABLE(TcpServer);
-    IMMOVABLE(TcpServer);
+    NONCOPYABLE(TcpSslServer);
+    IMMOVABLE(TcpSslServer);
 
   public:
     using ConnToken = cabinet::Token;
@@ -64,12 +64,12 @@ class TcpServer {
     //! 设置上下文
     void* setContext(const ConnToken &client, void* context);
     void* getContext(const ConnToken &client) const;
-    //! 注意：TcpServer只是保存该指针，不负责管理期生命期
+    //! 注意：TcpSslServer只是保存该指针，不负责管理期生命期
 
     State state() const;
 
   protected:
-    void onTcpConnected(TcpConnection *new_conn);
+    void onTcpConnected(TcpSslConnection *new_conn);
     void onTcpDisconnected(const ConnToken &client);
     void onTcpReceived(const ConnToken &client, Buffer &buff);
 
@@ -81,4 +81,4 @@ class TcpServer {
 }
 }
 
-#endif //TBOX_NETWORK_TCP_SERVER_H_20180412
+#endif //TBOX_NETWORK_TCP_SSL_SERVER_H_20220522

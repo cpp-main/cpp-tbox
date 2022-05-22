@@ -1,4 +1,4 @@
-#include "tcp_acceptor.h"
+#include "tcp_ssl_acceptor.h"
 
 #include <sys/un.h>
 #include <unistd.h>
@@ -7,23 +7,23 @@
 
 #include <tbox/base/log.h>
 
-#include "tcp_connection.h"
+#include "tcp_ssl_connection.h"
 
 namespace tbox {
 namespace network {
 
-TcpAcceptor::TcpAcceptor(event::Loop *wp_loop) :
+TcpSslAcceptor::TcpSslAcceptor(event::Loop *wp_loop) :
     wp_loop_(wp_loop)
 { }
 
-TcpAcceptor::~TcpAcceptor()
+TcpSslAcceptor::~TcpSslAcceptor()
 {
     assert(cb_level_ == 0);
     if (sp_read_ev_ != nullptr)
         cleanup();
 }
 
-bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
+bool TcpSslAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
 {
     LogDbg("bind_addr:%s, backlog:%d", bind_addr.toString().c_str(), listen_backlog);
 
@@ -51,12 +51,12 @@ bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sp_read_ev_ = wp_loop_->newFdEvent();
     sp_read_ev_->initialize(sock_fd.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
-    sp_read_ev_->setCallback(std::bind(&TcpAcceptor::onSocketRead, this, std::placeholders::_1));
+    sp_read_ev_->setCallback(std::bind(&TcpSslAcceptor::onSocketRead, this, std::placeholders::_1));
 
     return true;
 }
 
-SocketFd TcpAcceptor::createSocket(SockAddr::Type addr_type)
+SocketFd TcpSslAcceptor::createSocket(SockAddr::Type addr_type)
 {
     int flags = SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC;
     if (addr_type == SockAddr::Type::kIPv4)
@@ -69,7 +69,7 @@ SocketFd TcpAcceptor::createSocket(SockAddr::Type addr_type)
     }
 }
 
-int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
+int TcpSslAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 {
     if (bind_addr.type() == SockAddr::Type::kIPv4) {
         struct sockaddr_in sock_addr;
@@ -85,21 +85,21 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
     }
 }
 
-bool TcpAcceptor::start()
+bool TcpSslAcceptor::start()
 {
     if (sp_read_ev_ != nullptr)
         return sp_read_ev_->enable();
     return false;
 }
 
-bool TcpAcceptor::stop()
+bool TcpSslAcceptor::stop()
 {
     if (sp_read_ev_ != nullptr)
         return sp_read_ev_->disable();
     return false;
 }
 
-void TcpAcceptor::cleanup()
+void TcpSslAcceptor::cleanup()
 {
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sock_fd_.close();
@@ -113,13 +113,13 @@ void TcpAcceptor::cleanup()
     }
 }
 
-void TcpAcceptor::onSocketRead(short events)
+void TcpSslAcceptor::onSocketRead(short events)
 {
     if (events & event::FdEvent::kReadEvent)
         onClientConnected();
 }
 
-void TcpAcceptor::onClientConnected()
+void TcpSslAcceptor::onClientConnected()
 {
     struct sockaddr addr;
     socklen_t addr_len = sizeof(addr);
@@ -133,7 +133,7 @@ void TcpAcceptor::onClientConnected()
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 
     if (new_conn_cb_) {
-        auto sp_connection = new TcpConnection(wp_loop_, peer_sock, peer_addr);
+        auto sp_connection = new TcpSslConnection(wp_loop_, peer_sock, peer_addr);
         sp_connection->enable();
         ++cb_level_;
         new_conn_cb_(sp_connection);

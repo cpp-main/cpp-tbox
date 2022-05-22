@@ -1,4 +1,4 @@
-#include "tcp_connection.h"
+#include "tcp_ssl_connection.h"
 
 #include <cassert>
 #include <tbox/base/log.h>
@@ -8,30 +8,30 @@ namespace network {
 
 using namespace std::placeholders;
 
-TcpConnection::TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr) :
+TcpSslConnection::TcpSslConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr) :
     wp_loop_(wp_loop),
     sp_buffered_fd_(new BufferedFd(wp_loop)),
     peer_addr_(peer_addr)
 {
     sp_buffered_fd_->initialize(fd);
-    sp_buffered_fd_->setReadZeroCallback(std::bind(&TcpConnection::onSocketClosed, this));
-    sp_buffered_fd_->setErrorCallback(std::bind(&TcpConnection::onError, this, _1));
+    sp_buffered_fd_->setReadZeroCallback(std::bind(&TcpSslConnection::onSocketClosed, this));
+    sp_buffered_fd_->setErrorCallback(std::bind(&TcpSslConnection::onError, this, _1));
 
     sp_buffered_fd_->enable();
 }
 
-TcpConnection::~TcpConnection()
+TcpSslConnection::~TcpSslConnection()
 {
     assert(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
 }
 
-void TcpConnection::enable()
+void TcpSslConnection::enable()
 {
     sp_buffered_fd_->enable();
 }
 
-bool TcpConnection::disconnect()
+bool TcpSslConnection::disconnect()
 {
     LogInfo("%s", peer_addr_.toString().c_str());
     if (sp_buffered_fd_ == nullptr)
@@ -46,7 +46,7 @@ bool TcpConnection::disconnect()
     return true;
 }
 
-bool TcpConnection::shutdown(int howto)
+bool TcpSslConnection::shutdown(int howto)
 {
     LogInfo("%s, %d", peer_addr_.toString().c_str(), howto);
     if (sp_buffered_fd_ == nullptr)
@@ -56,46 +56,46 @@ bool TcpConnection::shutdown(int howto)
     return socket_fd.shutdown(howto) == 0;
 }
 
-SocketFd TcpConnection::socketFd() const
+SocketFd TcpSslConnection::socketFd() const
 {
     if (sp_buffered_fd_ != nullptr)
         return sp_buffered_fd_->fd();
     return SocketFd();
 }
 
-void* TcpConnection::setContext(void *new_context)
+void* TcpSslConnection::setContext(void *new_context)
 {
     auto old_context = wp_context_;
     wp_context_ = new_context;
     return old_context;
 }
 
-void TcpConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
+void TcpSslConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
     if (sp_buffered_fd_ != nullptr)
         sp_buffered_fd_->setReceiveCallback(cb, threshold);
 }
 
-void TcpConnection::bind(ByteStream *receiver)
+void TcpSslConnection::bind(ByteStream *receiver)
 {
     if (sp_buffered_fd_ != nullptr)
         sp_buffered_fd_->bind(receiver);
 }
 
-void TcpConnection::unbind()
+void TcpSslConnection::unbind()
 {
     if (sp_buffered_fd_ != nullptr)
         sp_buffered_fd_->unbind();
 }
 
-bool TcpConnection::send(const void *data_ptr, size_t data_size)
+bool TcpSslConnection::send(const void *data_ptr, size_t data_size)
 {
     if (sp_buffered_fd_ != nullptr)
         return sp_buffered_fd_->send(data_ptr, data_size);
     return false;
 }
 
-void TcpConnection::onSocketClosed()
+void TcpSslConnection::onSocketClosed()
 {
     LogInfo("%s", peer_addr_.toString().c_str());
 
@@ -110,7 +110,7 @@ void TcpConnection::onSocketClosed()
     }
 }
 
-void TcpConnection::onError(int errnum)
+void TcpSslConnection::onError(int errnum)
 {
     if (errnum == ECONNRESET) {
         onSocketClosed();

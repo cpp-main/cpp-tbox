@@ -1,21 +1,21 @@
-#include "tcp_connector.h"
+#include "tcp_ssl_connector.h"
 
 #include <sys/un.h>
 #include <cassert>
 
 #include <tbox/base/log.h>
 
-#include "tcp_connection.h"
+#include "tcp_ssl_connection.h"
 
 namespace tbox {
 namespace network {
 
-TcpConnector::TcpConnector(event::Loop *wp_loop) :
+TcpSslConnector::TcpSslConnector(event::Loop *wp_loop) :
     wp_loop_(wp_loop),
     reconn_delay_calc_func_([](int) {return 1;})
 { }
 
-TcpConnector::~TcpConnector()
+TcpSslConnector::~TcpSslConnector()
 {
     assert(cb_level_ == 0);
 
@@ -25,7 +25,7 @@ TcpConnector::~TcpConnector()
     CHECK_DELETE_RESET_OBJ(sp_write_ev_);
 }
 
-void TcpConnector::checkSettingAndTryEnterIdleState()
+void TcpSslConnector::checkSettingAndTryEnterIdleState()
 {
     if (state_ == State::kNone) {
         if (server_addr_.type() != SockAddr::Type::kNone && connected_cb_)
@@ -33,34 +33,34 @@ void TcpConnector::checkSettingAndTryEnterIdleState()
     }
 }
 
-void TcpConnector::initialize(const SockAddr &server_addr)
+void TcpSslConnector::initialize(const SockAddr &server_addr)
 {
     server_addr_ = server_addr;
     checkSettingAndTryEnterIdleState();
 }
 
-void TcpConnector::setConnectedCallback(const ConnectedCallback &cb)
+void TcpSslConnector::setConnectedCallback(const ConnectedCallback &cb)
 {
     connected_cb_ = cb;
     checkSettingAndTryEnterIdleState();
 }
 
-void TcpConnector::setTryTimes(int try_times)
+void TcpSslConnector::setTryTimes(int try_times)
 {
     try_times_ = try_times;
 }
 
-void TcpConnector::setConnectFailCallback(const ConnectFailCallback &cb)
+void TcpSslConnector::setConnectFailCallback(const ConnectFailCallback &cb)
 {
     connect_fail_cb_ = cb;
 }
 
-void TcpConnector::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
+void TcpSslConnector::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
 {
     reconn_delay_calc_func_ = func;
 }
 
-bool TcpConnector::start()
+bool TcpSslConnector::start()
 {
     if (state_ != State::kInited) {
         LogWarn("not in idle state");
@@ -72,7 +72,7 @@ bool TcpConnector::start()
     return true;
 }
 
-void TcpConnector::stop()
+void TcpSslConnector::stop()
 {
     if ((state_ == State::kConnecting) || (state_ == State::kNone))
         return;
@@ -85,7 +85,7 @@ void TcpConnector::stop()
     state_ = State::kInited;
 }
 
-void TcpConnector::cleanup()
+void TcpSslConnector::cleanup()
 {
     if (state_ <= State::kNone)
         return;
@@ -101,7 +101,7 @@ void TcpConnector::cleanup()
     state_ = State::kNone;
 }
 
-SocketFd TcpConnector::createSocket(SockAddr::Type addr_type) const
+SocketFd TcpSslConnector::createSocket(SockAddr::Type addr_type) const
 {
     int flags = SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC;
 
@@ -115,7 +115,7 @@ SocketFd TcpConnector::createSocket(SockAddr::Type addr_type) const
     }
 }
 
-int TcpConnector::connect(SocketFd sock_fd, const SockAddr &addr) const
+int TcpSslConnector::connect(SocketFd sock_fd, const SockAddr &addr) const
 {
     int ret = -1;
 
@@ -133,7 +133,7 @@ int TcpConnector::connect(SocketFd sock_fd, const SockAddr &addr) const
     return ret;
 }
 
-void TcpConnector::enterConnectingState()
+void TcpSslConnector::enterConnectingState()
 {
     //! 创建Socket
     SocketFd new_sock_fd = createSocket(server_addr_.type());
@@ -155,7 +155,7 @@ void TcpConnector::enterConnectingState()
         CHECK_DELETE_RESET_OBJ(sp_write_ev_);
         sp_write_ev_ = wp_loop_->newFdEvent();
         sp_write_ev_->initialize(sock_fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
-        sp_write_ev_->setCallback(std::bind(&TcpConnector::onSocketWritable, this));
+        sp_write_ev_->setCallback(std::bind(&TcpSslConnector::onSocketWritable, this));
         sp_write_ev_->enable();
 
         state_ = State::kConnecting;
@@ -177,7 +177,7 @@ void TcpConnector::enterConnectingState()
     }
 }
 
-void TcpConnector::exitConnectingState()
+void TcpSslConnector::exitConnectingState()
 {
     sp_write_ev_->disable();
 
@@ -191,7 +191,7 @@ void TcpConnector::exitConnectingState()
     LogDbg("exit connecting state");
 }
 
-void TcpConnector::enterReconnectDelayState()
+void TcpSslConnector::enterReconnectDelayState()
 {
     //! 计算出要延时等待的时长
     ++cb_level_;
@@ -202,14 +202,14 @@ void TcpConnector::enterReconnectDelayState()
     CHECK_DELETE_RESET_OBJ(sp_delay_ev_);
     sp_delay_ev_ = wp_loop_->newTimerEvent();
     sp_delay_ev_->initialize(std::chrono::seconds(delay_sec), event::Event::Mode::kOneshot);
-    sp_delay_ev_->setCallback(std::bind(&TcpConnector::onDelayTimeout, this));
+    sp_delay_ev_->setCallback(std::bind(&TcpSslConnector::onDelayTimeout, this));
     sp_delay_ev_->enable();
 
     state_ = State::kReconnectDelay;
     LogDbg("enter reconnect delay state, delay: %d", delay_sec);
 }
 
-void TcpConnector::exitReconnectDelayState()
+void TcpSslConnector::exitReconnectDelayState()
 {
     //! 关闭定时器
     sp_delay_ev_->disable();
@@ -222,7 +222,7 @@ void TcpConnector::exitReconnectDelayState()
     LogDbg("exit reconnect delay state");
 }
 
-void TcpConnector::onConnectFail()
+void TcpSslConnector::onConnectFail()
 {
     ++conn_fail_times_;
     //! 如果设置了尝试次数，且超过了尝试次数，则回调 connect_fail_cb_ 然后回到 State::kInited
@@ -240,7 +240,7 @@ void TcpConnector::onConnectFail()
         enterReconnectDelayState();
 }
 
-void TcpConnector::onSocketWritable()
+void TcpSslConnector::onSocketWritable()
 {
     //! 读取Socket错误码
     int sock_errno = 0;
@@ -255,7 +255,7 @@ void TcpConnector::onSocketWritable()
 
             LogInfo("connect to %s success", server_addr_.toString().c_str());
             if (connected_cb_) {
-                auto sp_conn = new TcpConnection(wp_loop_, conn_sock_fd, server_addr_);
+                auto sp_conn = new TcpSslConnection(wp_loop_, conn_sock_fd, server_addr_);
                 sp_conn->enable();
                 ++cb_level_;
                 connected_cb_(sp_conn);
@@ -274,7 +274,7 @@ void TcpConnector::onSocketWritable()
     }
 }
 
-void TcpConnector::onDelayTimeout()
+void TcpSslConnector::onDelayTimeout()
 {
     //! 状态切换：kReconnectDelay --> kConnecting
     exitReconnectDelayState();

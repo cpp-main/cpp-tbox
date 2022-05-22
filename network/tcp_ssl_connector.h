@@ -1,5 +1,5 @@
-#ifndef TBOX_NETWORK_TCP_CONNECTOR_H_20180115
-#define TBOX_NETWORK_TCP_CONNECTOR_H_20180115
+#ifndef TBOX_NETWORK_TCP_SSL_CONNECTOR_H_20220522
+#define TBOX_NETWORK_TCP_SSL_CONNECTOR_H_20220522
 
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
@@ -12,15 +12,15 @@
 namespace tbox {
 namespace network {
 
-class TcpConnection;
+class TcpSslConnection;
 
-class TcpConnector {
+class TcpSslConnector {
   public:
-    explicit TcpConnector(event::Loop *wp_loop);
-    virtual ~TcpConnector();
+    explicit TcpSslConnector(event::Loop *wp_loop);
+    virtual ~TcpSslConnector();
 
-    NONCOPYABLE(TcpConnector);
-    IMMOVABLE(TcpConnector);
+    NONCOPYABLE(TcpSslConnector);
+    IMMOVABLE(TcpSslConnector);
 
     //! 状态
     enum class State {
@@ -31,7 +31,7 @@ class TcpConnector {
     };
 
     //! 函数类型定义
-    using ConnectedCallback     = std::function<void(TcpConnection*)>;
+    using ConnectedCallback     = std::function<void(TcpSslConnection*)>;
     using ConnectFailCallback   = std::function<void()>;
     using ReconnectDelayCalc    = std::function<int(int)>;
 
@@ -90,4 +90,4 @@ class TcpConnector {
 }
 }
 
-#endif //TBOX_NETWORK_TCP_CONNECTOR_H_20180115
+#endif //TBOX_NETWORK_TCP_SSL_CONNECTOR_H_20220522

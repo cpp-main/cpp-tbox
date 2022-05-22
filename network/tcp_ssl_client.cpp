@@ -1,15 +1,15 @@
-#include "tcp_client.h"
+#include "tcp_ssl_client.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/defines.h>
 
-#include "tcp_connector.h"
-#include "tcp_connection.h"
+#include "tcp_ssl_connector.h"
+#include "tcp_ssl_connection.h"
 
 namespace tbox {
 namespace network {
 
-struct TcpClient::Data {
+struct TcpSslClient::Data {
     event::Loop *wp_loop;
     State state = State::kNone;
 
@@ -20,22 +20,22 @@ struct TcpClient::Data {
     ByteStream          *wp_receiver = nullptr;
     bool reconnect_enabled = true;
 
-    TcpConnector  *sp_connector  = nullptr;
-    TcpConnection *sp_connection = nullptr;
+    TcpSslConnector  *sp_connector  = nullptr;
+    TcpSslConnection *sp_connection = nullptr;
 
     int cb_level = 0;
 };
 
-TcpClient::TcpClient(event::Loop *wp_loop) :
+TcpSslClient::TcpSslClient(event::Loop *wp_loop) :
     d_(new Data)
 {
     assert(d_ != nullptr);
 
     d_->wp_loop = wp_loop;
-    d_->sp_connector = new TcpConnector(wp_loop);
+    d_->sp_connector = new TcpSslConnector(wp_loop);
 }
 
-TcpClient::~TcpClient()
+TcpSslClient::~TcpSslClient()
 {
     assert(d_->cb_level == 0);
 
@@ -47,7 +47,7 @@ TcpClient::~TcpClient()
     delete d_;
 }
 
-bool TcpClient::initialize(const SockAddr &server_addr)
+bool TcpSslClient::initialize(const SockAddr &server_addr)
 {
     if (d_->state != State::kNone) {
         LogWarn("not in none state, cleanup first.");
@@ -56,28 +56,28 @@ bool TcpClient::initialize(const SockAddr &server_addr)
 
     using namespace std::placeholders;
     d_->sp_connector->initialize(server_addr);
-    d_->sp_connector->setConnectedCallback(std::bind(&TcpClient::onTcpConnected, this, _1));
+    d_->sp_connector->setConnectedCallback(std::bind(&TcpSslClient::onTcpConnected, this, _1));
 
     d_->state = State::kInited;
     return true;
 }
 
-void TcpClient::setConnectedCallback(const ConnectedCallback &cb)
+void TcpSslClient::setConnectedCallback(const ConnectedCallback &cb)
 {
     d_->connected_cb = cb;
 }
 
-void TcpClient::setDisconnectedCallback(const DisconnectedCallback &cb)
+void TcpSslClient::setDisconnectedCallback(const DisconnectedCallback &cb)
 {
     d_->disconnected_cb = cb;
 }
 
-void TcpClient::setAutoReconnect(bool enable)
+void TcpSslClient::setAutoReconnect(bool enable)
 {
     d_->reconnect_enabled = enable;
 }
 
-bool TcpClient::start()
+bool TcpSslClient::start()
 {
     if (d_->state != State::kInited) {
         LogWarn("not in idle state, initialize or stop first");
@@ -88,14 +88,14 @@ bool TcpClient::start()
     return d_->sp_connector->start();
 }
 
-void TcpClient::stop()
+void TcpSslClient::stop()
 {
     if (d_->state == State::kConnecting) {
         d_->state = State::kInited;
         d_->sp_connector->stop();
 
     } else if (d_->state == State::kConnected) {
-        TcpConnection *tobe_delete = nullptr;
+        TcpSslConnection *tobe_delete = nullptr;
         std::swap(tobe_delete, d_->sp_connection);
         tobe_delete->disconnect();
         d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });
@@ -103,14 +103,14 @@ void TcpClient::stop()
     }
 }
 
-bool TcpClient::shutdown(int howto)
+bool TcpSslClient::shutdown(int howto)
 {
     if (d_->state == State::kConnected)
         return d_->sp_connection->shutdown(howto);
     return false;
 }
 
-void TcpClient::cleanup()
+void TcpSslClient::cleanup()
 {
     if (d_->state <= State::kNone)
         return;
@@ -129,12 +129,12 @@ void TcpClient::cleanup()
     d_->state = State::kNone;
 }
 
-TcpClient::State TcpClient::state() const
+TcpSslClient::State TcpSslClient::state() const
 {
     return d_->state;
 }
 
-void TcpClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
+void TcpSslClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
     if (d_->sp_connection != nullptr)
         d_->sp_connection->setReceiveCallback(cb, threshold);
@@ -143,7 +143,7 @@ void TcpClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
     d_->received_threshold = threshold;
 }
 
-bool TcpClient::send(const void *data_ptr, size_t data_size)
+bool TcpSslClient::send(const void *data_ptr, size_t data_size)
 {
     if (d_->sp_connection != nullptr)
         return d_->sp_connection->send(data_ptr, data_size);
@@ -151,7 +151,7 @@ bool TcpClient::send(const void *data_ptr, size_t data_size)
     return false;
 }
 
-void TcpClient::bind(ByteStream *receiver)
+void TcpSslClient::bind(ByteStream *receiver)
 {
     if (d_->sp_connection != nullptr)
         d_->sp_connection->bind(receiver);
@@ -159,7 +159,7 @@ void TcpClient::bind(ByteStream *receiver)
     d_->wp_receiver = receiver;
 }
 
-void TcpClient::unbind()
+void TcpSslClient::unbind()
 {
     if (d_->sp_connection != nullptr)
         d_->sp_connection->unbind();
@@ -167,9 +167,9 @@ void TcpClient::unbind()
     d_->wp_receiver = nullptr;
 }
 
-void TcpClient::onTcpConnected(TcpConnection *new_conn)
+void TcpSslClient::onTcpConnected(TcpSslConnection *new_conn)
 {
-    new_conn->setDisconnectedCallback(std::bind(&TcpClient::onTcpDisconnected, this));
+    new_conn->setDisconnectedCallback(std::bind(&TcpSslClient::onTcpDisconnected, this));
     new_conn->setReceiveCallback(d_->received_cb, d_->received_threshold);
     if (d_->wp_receiver != nullptr)
         new_conn->bind(d_->wp_receiver);
@@ -187,9 +187,9 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
     }
 }
 
-void TcpClient::onTcpDisconnected()
+void TcpSslClient::onTcpDisconnected()
 {
-    TcpConnection *tobe_delete = nullptr;
+    TcpSslConnection *tobe_delete = nullptr;
     std::swap(tobe_delete, d_->sp_connection);
     //! 这里要使用延后释放，因为本函数一定是 d_->sp_connection 对象自己调用的
     d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });

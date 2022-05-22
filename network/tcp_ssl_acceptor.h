@@ -1,5 +1,5 @@
-#ifndef TBOX_NETWORK_TCP_ACCEPTOR_20180114
-#define TBOX_NETWORK_TCP_ACCEPTOR_20180114
+#ifndef TBOX_NETWORK_TCP_SSL_ACCEPTOR_20220522
+#define TBOX_NETWORK_TCP_SSL_ACCEPTOR_20220522
 
 #include <functional>
 #include <tbox/base/defines.h>
@@ -12,20 +12,20 @@
 namespace tbox {
 namespace network {
 
-class TcpConnection;
+class TcpSslConnection;
 
-class TcpAcceptor {
+class TcpSslAcceptor {
   public:
-    explicit TcpAcceptor(event::Loop *wp_loop);
-    virtual ~TcpAcceptor();
+    explicit TcpSslAcceptor(event::Loop *wp_loop);
+    virtual ~TcpSslAcceptor();
 
-    NONCOPYABLE(TcpAcceptor);
-    IMMOVABLE(TcpAcceptor);
+    NONCOPYABLE(TcpSslAcceptor);
+    IMMOVABLE(TcpSslAcceptor);
 
   public:
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
-    using NewConnectionCallback = std::function<void (TcpConnection*)>;
+    using NewConnectionCallback = std::function<void (TcpSslConnection*)>;
     void setNewConnectionCallback(const NewConnectionCallback &cb) { new_conn_cb_ = cb; }
 
     bool start();
@@ -55,4 +55,4 @@ class TcpAcceptor {
 }
 }
 
-#endif //TBOX_NETWORK_TCP_ACCEPTOR_20180114
+#endif //TBOX_NETWORK_TCP_SSL_ACCEPTOR_20220522

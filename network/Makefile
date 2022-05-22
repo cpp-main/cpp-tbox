@@ -19,6 +19,11 @@ HEAD_FILES = \
 	tcp_connector.h \
 	tcp_client.h \
 	tcp_server.h \
+	tcp_ssl_connection.h \
+	tcp_ssl_acceptor.h \
+	tcp_ssl_connector.h \
+	tcp_ssl_client.h \
+	tcp_ssl_server.h \
 
 CPP_SRC_FILES = \
 	buffer.cpp \
@@ -35,6 +40,11 @@ CPP_SRC_FILES = \
 	tcp_connector.cpp \
 	tcp_client.cpp \
 	tcp_server.cpp \
+	tcp_ssl_connection.cpp \
+	tcp_ssl_acceptor.cpp \
+	tcp_ssl_connector.cpp \
+	tcp_ssl_client.cpp \
+	tcp_ssl_server.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
 

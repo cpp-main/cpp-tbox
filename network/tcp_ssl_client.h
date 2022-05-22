@@ -1,9 +1,9 @@
-#ifndef TBOX_NETWORK_TCP_CLIENT_H_20180310
-#define TBOX_NETWORK_TCP_CLIENT_H_20180310
+#ifndef TBOX_NETWORK_TCP_SSL_CLIENT_H_20220522
+#define TBOX_NETWORK_TCP_SSL_CLIENT_H_20220522
 
 /**
- * 实现TcpClient类
- * 它封装TcpConnector与TcpConnection两个对象
+ * 实现TcpSslClient类
+ * 它封装TcpSslConnector与TcpSslConnection两个对象
  */
 
 #include "byte_stream.h"
@@ -15,16 +15,16 @@
 namespace tbox {
 namespace network {
 
-class TcpConnector;
-class TcpConnection;
+class TcpSslConnector;
+class TcpSslConnection;
 
-class TcpClient : public ByteStream {
+class TcpSslClient : public ByteStream {
   public:
-    explicit TcpClient(event::Loop *wp_loop);
-    virtual ~TcpClient();
+    explicit TcpSslClient(event::Loop *wp_loop);
+    virtual ~TcpSslClient();
 
-    NONCOPYABLE(TcpClient);
-    IMMOVABLE(TcpClient);
+    NONCOPYABLE(TcpSslClient);
+    IMMOVABLE(TcpSslClient);
 
     using ConnectedCallback    = std::function<void()>;
     using DisconnectedCallback = std::function<void()>;
@@ -58,7 +58,7 @@ class TcpClient : public ByteStream {
     virtual void unbind() override;
 
   protected:
-    void onTcpConnected(TcpConnection *new_conn);
+    void onTcpConnected(TcpSslConnection *new_conn);
     void onTcpDisconnected();
 
   private:
@@ -68,4 +68,4 @@ class TcpClient : public ByteStream {
 
 }
 }
-#endif //TBOX_NETWORK_TCP_CLIENT_H_20180310
+#endif //TBOX_NETWORK_TCP_SSL_CLIENT_H_20220522
