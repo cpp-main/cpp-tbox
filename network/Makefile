@@ -19,6 +19,8 @@ HEAD_FILES = \
 	tcp_connector.h \
 	tcp_client.h \
 	tcp_server.h \
+	ssl.h \
+	ssl_ctx.h \
 	tcp_ssl_connection.h \
 	tcp_ssl_acceptor.h \
 	tcp_ssl_connector.h \
@@ -40,6 +42,8 @@ CPP_SRC_FILES = \
 	tcp_connector.cpp \
 	tcp_client.cpp \
 	tcp_server.cpp \
+	ssl.cpp \
+	ssl_ctx.cpp \
 	tcp_ssl_connection.cpp \
 	tcp_ssl_acceptor.cpp \
 	tcp_ssl_connector.cpp \
