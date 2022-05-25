@@ -2,6 +2,7 @@
 #define TBOX_NETWORK_SSL_CTX_H_20220522
 
 #include <string>
+#include <tbox/base/defines.h>
 #include <openssl/ssl.h>
 
 namespace tbox {
@@ -13,6 +14,14 @@ class SslCtx {
   public:
     SslCtx();
     ~SslCtx();
+
+    NONCOPYABLE(SslCtx);
+
+    SslCtx(SslCtx &&);
+    SslCtx& operator = (SslCtx &&);
+
+    void swap(SslCtx &other);
+    void reset();
 
   public:
     bool useCertificateFile(const std::string &filename, int filetype);

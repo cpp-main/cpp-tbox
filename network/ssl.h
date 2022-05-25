@@ -2,6 +2,7 @@
 #define TBOX_NETWORK_SSL_H_20220524
 
 #include <openssl/ssl.h>
+#include <tbox/base/defines.h>
 
 namespace tbox {
 namespace network {
@@ -9,15 +10,24 @@ namespace network {
 //! 对openssl中的SSL对象进行接口挂装
 class Ssl {
   public:
+    Ssl();
     Ssl(SSL_CTX *ctx);
     ~Ssl();
+
+    NONCOPYABLE(Ssl);
+
+    Ssl(Ssl &&);
+    Ssl& operator = (Ssl &&);
+
+    void swap(Ssl &other);
+    void reset();
 
   public:
     int getFd() const;
     int setFd(int fd) const;
 
-    int setAcceptState() const;
-    int setConnectState() const;
+    void setAcceptState() const;
+    void setConnectState() const;
 
     int doHandshake() const;
 
@@ -37,7 +47,7 @@ class Ssl {
     int shutdown() const;
 
   public:
-    SSL *ssl_;
+    SSL *ssl_ = nullptr;
 };
 
 }

@@ -29,6 +29,13 @@ SslCtx::~SslCtx()
     }
 }
 
+void SslCtx::swap(SslCtx &other)
+{
+    std::swap(ssl_ctx_, other.ssl_ctx_);
+}
+
+IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(SslCtx)
+
 bool SslCtx::useCertificateFile(const std::string &filename, int filetype)
 {
     int ret = ::SSL_CTX_use_certificate_file(ssl_ctx_, filename.c_str(), filetype);
