@@ -29,12 +29,25 @@ SslCtx::~SslCtx()
     }
 }
 
+SslCtx::SslCtx(SslCtx &&other)
+{
+    ssl_ctx_ = other.ssl_ctx_;
+    other.ssl_ctx_ = nullptr;
+}
+
+SslCtx& SslCtx::operator = (SslCtx &&other)
+{
+    if (this != &other) {
+        ssl_ctx_ = other.ssl_ctx_;
+        other.ssl_ctx_ = nullptr;
+    }
+    return *this;
+}
+
 void SslCtx::swap(SslCtx &other)
 {
     std::swap(ssl_ctx_, other.ssl_ctx_);
 }
-
-IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(SslCtx)
 
 bool SslCtx::useCertificateFile(const std::string &filename, int filetype)
 {

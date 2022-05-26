@@ -21,7 +21,6 @@ class SslCtx {
     SslCtx& operator = (SslCtx &&);
 
     void swap(SslCtx &other);
-    void reset();
 
   public:
     bool useCertificateFile(const std::string &filename, int filetype);

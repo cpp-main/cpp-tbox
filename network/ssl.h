@@ -10,7 +10,6 @@ namespace network {
 //! 对openssl中的SSL对象进行接口挂装
 class Ssl {
   public:
-    Ssl();
     Ssl(SSL_CTX *ctx);
     ~Ssl();
 
@@ -20,7 +19,6 @@ class Ssl {
     Ssl& operator = (Ssl &&);
 
     void swap(Ssl &other);
-    void reset();
 
   public:
     int getFd() const;
