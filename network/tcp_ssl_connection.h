@@ -1,15 +1,20 @@
 #ifndef TBOX_NETWORK_TCP_SSL_CONNECTION_H_20220522
 #define TBOX_NETWORK_TCP_SSL_CONNECTION_H_20220522
 
+#include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
+#include <tbox/event/fd_event.h>
 
 #include "socket_fd.h"
-#include "buffered_fd.h"
+#include "buffer.h"
 #include "byte_stream.h"
 #include "sockaddr.h"
+#include "ssl.h"
 
 namespace tbox {
 namespace network {
+
+class TcpSslImmatureConnection;
 
 class TcpSslConnection : public ByteStream {
     friend class TcpSslAcceptor;
@@ -28,10 +33,10 @@ class TcpSslConnection : public ByteStream {
     bool shutdown(int howto);
 
     SockAddr peerAddr() const { return peer_addr_; }
-    SocketFd socketFd() const;
+    SocketFd socketFd() const { return fd_; }
 
     //! 是否已经失效了
-    bool isExpired() const { return sp_buffered_fd_ == nullptr; }
+    bool isExpired() const;
 
     void* setContext(void *new_context);
     void* getContext() const { return wp_context_; }
@@ -45,16 +50,21 @@ class TcpSslConnection : public ByteStream {
 
   protected:
     void onSocketClosed();
-    void onError(int errnum);
 
   private:
-    explicit TcpSslConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
+    explicit TcpSslConnection(TcpSslImmatureConnection &immature_conn);
     void enable();
 
   private:
     event::Loop *wp_loop_;
-    BufferedFd  *sp_buffered_fd_;
-    SockAddr    peer_addr_;
+    Ssl         *sp_ssl_;
+    SocketFd     fd_;
+    SockAddr     peer_addr_;
+
+    event::FdEvent *sp_read_event_;
+    event::FdEvent *sp_write_event_;
+
+    Buffer read_buffer_;
 
     DisconnectedCallback disconnected_cb_;
     void *wp_context_ = nullptr;

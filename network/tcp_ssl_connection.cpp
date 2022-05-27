@@ -3,64 +3,47 @@
 #include <cassert>
 #include <tbox/base/log.h>
 
+#include "tcp_ssl_immature_connection.h"
+
 namespace tbox {
 namespace network {
 
 using namespace std::placeholders;
 
-TcpSslConnection::TcpSslConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr) :
-    wp_loop_(wp_loop),
-    sp_buffered_fd_(new BufferedFd(wp_loop)),
-    peer_addr_(peer_addr)
+TcpSslConnection::TcpSslConnection(TcpSslImmatureConnection &conn) :
+    wp_loop_(conn.wp_loop_),
+    sp_ssl_(conn.sp_ssl_),
+    peer_addr_(conn.peer_addr_),
+    sp_read_event_(conn.sp_read_event_),
+    sp_write_event_(conn.sp_write_event_)
 {
-    sp_buffered_fd_->initialize(fd);
-    sp_buffered_fd_->setReadZeroCallback(std::bind(&TcpSslConnection::onSocketClosed, this));
-    sp_buffered_fd_->setErrorCallback(std::bind(&TcpSslConnection::onError, this, _1));
-
-    sp_buffered_fd_->enable();
+    conn.sp_read_event_ = nullptr;
+    conn.sp_write_event_ = nullptr;
 }
 
 TcpSslConnection::~TcpSslConnection()
 {
     assert(cb_level_ == 0);
-    CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
+    CHECK_DELETE_RESET_OBJ(sp_write_event_);
+    CHECK_DELETE_RESET_OBJ(sp_read_event_);
+    CHECK_DELETE_RESET_OBJ(sp_ssl_);
 }
 
 void TcpSslConnection::enable()
 {
-    sp_buffered_fd_->enable();
+    LogUndo();
 }
 
 bool TcpSslConnection::disconnect()
 {
-    LogInfo("%s", peer_addr_.toString().c_str());
-    if (sp_buffered_fd_ == nullptr)
-        return false;
-
-    sp_buffered_fd_->disable();
-
-    BufferedFd *tmp = nullptr;
-    std::swap(tmp, sp_buffered_fd_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
-
-    return true;
+    LogUndo();
+    return false;
 }
 
 bool TcpSslConnection::shutdown(int howto)
 {
-    LogInfo("%s, %d", peer_addr_.toString().c_str(), howto);
-    if (sp_buffered_fd_ == nullptr)
-        return false;
-
-    SocketFd socket_fd(sp_buffered_fd_->fd());
-    return socket_fd.shutdown(howto) == 0;
-}
-
-SocketFd TcpSslConnection::socketFd() const
-{
-    if (sp_buffered_fd_ != nullptr)
-        return sp_buffered_fd_->fd();
-    return SocketFd();
+    LogUndo();
+    return false;
 }
 
 void* TcpSslConnection::setContext(void *new_context)
@@ -72,26 +55,22 @@ void* TcpSslConnection::setContext(void *new_context)
 
 void TcpSslConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
-    if (sp_buffered_fd_ != nullptr)
-        sp_buffered_fd_->setReceiveCallback(cb, threshold);
+    LogUndo();
 }
 
 void TcpSslConnection::bind(ByteStream *receiver)
 {
-    if (sp_buffered_fd_ != nullptr)
-        sp_buffered_fd_->bind(receiver);
+    LogUndo();
 }
 
 void TcpSslConnection::unbind()
 {
-    if (sp_buffered_fd_ != nullptr)
-        sp_buffered_fd_->unbind();
+    LogUndo();
 }
 
 bool TcpSslConnection::send(const void *data_ptr, size_t data_size)
 {
-    if (sp_buffered_fd_ != nullptr)
-        return sp_buffered_fd_->send(data_ptr, data_size);
+    LogUndo();
     return false;
 }
 
@@ -99,23 +78,12 @@ void TcpSslConnection::onSocketClosed()
 {
     LogInfo("%s", peer_addr_.toString().c_str());
 
-    BufferedFd *tmp = nullptr;
-    std::swap(tmp, sp_buffered_fd_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+    LogUndo();
 
     if (disconnected_cb_) {
         ++cb_level_;
         disconnected_cb_();
         --cb_level_;
-    }
-}
-
-void TcpSslConnection::onError(int errnum)
-{
-    if (errnum == ECONNRESET) {
-        onSocketClosed();
-    } else {
-        LogWarn("errno:%d, %s", errnum, strerror(errnum));
     }
 }
 
