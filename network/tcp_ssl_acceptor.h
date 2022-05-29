@@ -8,6 +8,7 @@
 
 #include "sockaddr.h"
 #include "socket_fd.h"
+#include "ssl_ctx.h"
 
 namespace tbox {
 namespace network {
@@ -42,6 +43,7 @@ class TcpSslAcceptor {
 
   private:
     event::Loop *wp_loop_ = nullptr;
+    SslCtx  *sp_ssl_ctx_ = nullptr;
     SockAddr bind_addr_;
 
     NewConnectionCallback new_conn_cb_;

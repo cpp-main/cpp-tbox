@@ -12,6 +12,7 @@ namespace network {
 
 TcpSslConnector::TcpSslConnector(event::Loop *wp_loop) :
     wp_loop_(wp_loop),
+    sp_ssl_ctx_(new SslCtx),
     reconn_delay_calc_func_([](int) {return 1;})
 { }
 
@@ -23,6 +24,7 @@ TcpSslConnector::~TcpSslConnector()
 
     CHECK_DELETE_RESET_OBJ(sp_delay_ev_);
     CHECK_DELETE_RESET_OBJ(sp_write_ev_);
+    CHECK_DELETE_RESET_OBJ(sp_ssl_ctx_);
 }
 
 void TcpSslConnector::checkSettingAndTryEnterIdleState()
@@ -255,8 +257,7 @@ void TcpSslConnector::onSocketWritable()
 
             LogInfo("connect to %s success", server_addr_.toString().c_str());
             if (connected_cb_) {
-                auto sp_conn = new TcpSslConnection(wp_loop_, conn_sock_fd, server_addr_);
-                sp_conn->enable();
+                auto sp_conn = new TcpSslConnection(wp_loop_, conn_sock_fd, sp_ssl_ctx_, server_addr_, false);
                 ++cb_level_;
                 connected_cb_(sp_conn);
                 --cb_level_;

@@ -13,7 +13,8 @@ namespace tbox {
 namespace network {
 
 TcpSslAcceptor::TcpSslAcceptor(event::Loop *wp_loop) :
-    wp_loop_(wp_loop)
+    wp_loop_(wp_loop),
+    sp_ssl_ctx_(new SslCtx)
 { }
 
 TcpSslAcceptor::~TcpSslAcceptor()
@@ -21,6 +22,8 @@ TcpSslAcceptor::~TcpSslAcceptor()
     assert(cb_level_ == 0);
     if (sp_read_ev_ != nullptr)
         cleanup();
+
+    CHECK_DELETE_RESET_OBJ(sp_ssl_ctx_);
 }
 
 bool TcpSslAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
@@ -133,8 +136,7 @@ void TcpSslAcceptor::onClientConnected()
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 
     if (new_conn_cb_) {
-        auto sp_connection = new TcpSslConnection(wp_loop_, peer_sock, peer_addr);
-        sp_connection->enable();
+        auto sp_connection = new TcpSslConnection(wp_loop_, peer_sock, sp_ssl_ctx_, peer_addr, true);
         ++cb_level_;
         new_conn_cb_(sp_connection);
         --cb_level_;

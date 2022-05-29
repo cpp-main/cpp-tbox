@@ -9,12 +9,11 @@
 #include "buffer.h"
 #include "byte_stream.h"
 #include "sockaddr.h"
+#include "ssl_ctx.h"
 #include "ssl.h"
 
 namespace tbox {
 namespace network {
-
-class TcpSslImmatureConnection;
 
 class TcpSslConnection : public ByteStream {
     friend class TcpSslAcceptor;
@@ -49,26 +48,35 @@ class TcpSslConnection : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
 
   protected:
+    void onFdReadable(short);
+    void onFdWritable(short);
     void onSocketClosed();
 
+    void doHandshake();
+
   private:
-    explicit TcpSslConnection(TcpSslImmatureConnection &immature_conn);
-    void enable();
+    explicit TcpSslConnection(event::Loop *wp_loop, SocketFd fd, SslCtx *wp_ssl_ctx,
+                              const SockAddr &peer_addr, bool is_accept_state);
 
   private:
     event::Loop *wp_loop_;
-    Ssl         *sp_ssl_;
     SocketFd     fd_;
+    Ssl         *sp_ssl_;
     SockAddr     peer_addr_;
 
     event::FdEvent *sp_read_event_;
     event::FdEvent *sp_write_event_;
 
+    bool is_ssl_done_ = false;
+
     Buffer read_buffer_;
+    size_t recv_threshold_ = 0;
 
+    ReceiveCallback      recv_cb_;
     DisconnectedCallback disconnected_cb_;
-    void *wp_context_ = nullptr;
+    ByteStream  *wp_stream_ = nullptr;
 
+    void *wp_context_ = nullptr;
     int cb_level_ = 0;
 };
 

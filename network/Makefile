@@ -44,7 +44,6 @@ CPP_SRC_FILES = \
 	tcp_server.cpp \
 	ssl.cpp \
 	ssl_ctx.cpp \
-	tcp_ssl_immature_connection.cpp \
 	tcp_ssl_connection.cpp \
 	tcp_ssl_acceptor.cpp \
 	tcp_ssl_connector.cpp \
