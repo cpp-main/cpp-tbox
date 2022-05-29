@@ -134,7 +134,6 @@ void TcpAcceptor::onClientConnected()
 
     if (new_conn_cb_) {
         auto sp_connection = new TcpConnection(wp_loop_, peer_sock, peer_addr);
-        sp_connection->enable();
         ++cb_level_;
         new_conn_cb_(sp_connection);
         --cb_level_;

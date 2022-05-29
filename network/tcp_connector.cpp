@@ -256,7 +256,6 @@ void TcpConnector::onSocketWritable()
             LogInfo("connect to %s success", server_addr_.toString().c_str());
             if (connected_cb_) {
                 auto sp_conn = new TcpConnection(wp_loop_, conn_sock_fd, server_addr_);
-                sp_conn->enable();
                 ++cb_level_;
                 connected_cb_(sp_conn);
                 --cb_level_;

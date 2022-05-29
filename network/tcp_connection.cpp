@@ -16,7 +16,6 @@ TcpConnection::TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &
     sp_buffered_fd_->initialize(fd);
     sp_buffered_fd_->setReadZeroCallback(std::bind(&TcpConnection::onSocketClosed, this));
     sp_buffered_fd_->setErrorCallback(std::bind(&TcpConnection::onError, this, _1));
-
     sp_buffered_fd_->enable();
 }
 
@@ -24,11 +23,6 @@ TcpConnection::~TcpConnection()
 {
     assert(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
-}
-
-void TcpConnection::enable()
-{
-    sp_buffered_fd_->enable();
 }
 
 bool TcpConnection::disconnect()

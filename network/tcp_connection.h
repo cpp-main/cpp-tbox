@@ -49,7 +49,6 @@ class TcpConnection : public ByteStream {
 
   private:
     explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
-    void enable();
 
   private:
     event::Loop *wp_loop_;
