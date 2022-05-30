@@ -62,29 +62,29 @@ class Telnetd::Impl : public Connection {
         kSPEED = 32,
     };
 
-    bool send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size);
+    bool send(const TcpServer::ConnToken &ct, const void *data_ptr, size_t data_size);
 
-    void sendString(const TcpServer::ClientToken &ct, const std::string &str);
-    void sendNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt);
-    void sendCmd(const TcpServer::ClientToken &ct, Cmd cmd);
-    void sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8_t *p, size_t s);
+    void sendString(const TcpServer::ConnToken &ct, const std::string &str);
+    void sendNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt opt);
+    void sendCmd(const TcpServer::ConnToken &ct, Cmd cmd);
+    void sendSub(const TcpServer::ConnToken &ct, Opt o, const uint8_t *p, size_t s);
 
-    void onTcpConnected(const TcpServer::ClientToken &ct);
-    void onTcpDisconnected(const TcpServer::ClientToken &ct);
-    void onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff);
+    void onTcpConnected(const TcpServer::ConnToken &ct);
+    void onTcpDisconnected(const TcpServer::ConnToken &ct);
+    void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
 
-    void onRecvString(const TcpServer::ClientToken &ct, const std::string &str);
-    void onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt);
-    void onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd);
-    void onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s);
+    void onRecvString(const TcpServer::ConnToken &ct, const std::string &str);
+    void onRecvNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt opt);
+    void onRecvCmd(const TcpServer::ConnToken &ct, Cmd cmd);
+    void onRecvSub(const TcpServer::ConnToken &ct, Opt opt, const uint8_t *p, size_t s);
 
   private:
     Loop *wp_loop_ = nullptr;
     TerminalInteract *wp_terminal_ = nullptr;
     TcpServer *sp_tcp_ = nullptr;
 
-    std::map<SessionToken, TcpServer::ClientToken> session_to_client_;
-    std::map<TcpServer::ClientToken, SessionToken> client_to_session_;
+    std::map<SessionToken, TcpServer::ConnToken> session_to_client_;
+    std::map<TcpServer::ConnToken, SessionToken> client_to_session_;
 };
 
 }

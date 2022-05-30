@@ -154,7 +154,7 @@ void TcpConnector::enterConnectingState()
 
         CHECK_DELETE_RESET_OBJ(sp_write_ev_);
         sp_write_ev_ = wp_loop_->newFdEvent();
-        sp_write_ev_->initialize(sock_fd_, event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
+        sp_write_ev_->initialize(sock_fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
         sp_write_ev_->setCallback(std::bind(&TcpConnector::onSocketWritable, this));
         sp_write_ev_->enable();
 

@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include "scope_exit.hpp"
 
+namespace tbox {
+namespace {
+
 TEST(ScopeExitAction, no_name)
 {
     bool tag = false;
@@ -30,4 +33,7 @@ TEST(ScopeExitAction, cancel)
         a1.cancel();
     }
     EXPECT_FALSE(tag);
+}
+
+}
 }

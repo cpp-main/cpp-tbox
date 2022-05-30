@@ -23,7 +23,7 @@ class TcpServer {
     IMMOVABLE(TcpServer);
 
   public:
-    using ClientToken = cabinet::Token;
+    using ConnToken = cabinet::Token;
 
     enum class State {
         kNone,      //! 未初始化
@@ -34,9 +34,9 @@ class TcpServer {
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
-    using ConnectedCallback     = std::function<void(const ClientToken &)>;
-    using DisconnectedCallback  = std::function<void(const ClientToken &)>;
-    using ReceiveCallback       = std::function<void(const ClientToken &, Buffer &)>;
+    using ConnectedCallback     = std::function<void(const ConnToken &)>;
+    using DisconnectedCallback  = std::function<void(const ConnToken &)>;
+    using ReceiveCallback       = std::function<void(const ConnToken &, Buffer &)>;
 
     //! 设置有新客户端连接时的回调
     void setConnectedCallback(const ConnectedCallback &cb);
@@ -50,21 +50,28 @@ class TcpServer {
     void cleanup(); //!< 清理
 
     //! 向指定客户端发送数据
-    bool send(const ClientToken &client, const void *data_ptr, size_t data_size);
+    bool send(const ConnToken &client, const void *data_ptr, size_t data_size);
     //! 断开指定客户端的连接
-    bool disconnect(const ClientToken &client);
+    bool disconnect(const ConnToken &client);
+    //! 半关闭
+    bool shutdown(const ConnToken &client, int howto);
 
     //! 检查客户端的连接是否有效
-    bool isClientValid(const ClientToken &client) const;
+    bool isClientValid(const ConnToken &client) const;
     //! 获取客户端的地址
-    SockAddr getClientAddress(const ClientToken &client) const;
+    SockAddr getClientAddress(const ConnToken &client) const;
+
+    //! 设置上下文
+    void* setContext(const ConnToken &client, void* context);
+    void* getContext(const ConnToken &client) const;
+    //! 注意：TcpServer只是保存该指针，不负责管理期生命期
 
     State state() const;
 
   protected:
     void onTcpConnected(TcpConnection *new_conn);
-    void onTcpDisconnected(const ClientToken &client);
-    void onTcpReceived(const ClientToken &client, Buffer &buff);
+    void onTcpDisconnected(const ConnToken &client);
+    void onTcpReceived(const ConnToken &client, Buffer &buff);
 
   private:
     struct Data;

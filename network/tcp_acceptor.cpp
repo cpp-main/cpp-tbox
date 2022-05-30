@@ -50,7 +50,7 @@ bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
     sock_fd_ = sock_fd;
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sp_read_ev_ = wp_loop_->newFdEvent();
-    sp_read_ev_->initialize(sock_fd, event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
+    sp_read_ev_->initialize(sock_fd.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
     sp_read_ev_->setCallback(std::bind(&TcpAcceptor::onSocketRead, this, std::placeholders::_1));
 
     return true;

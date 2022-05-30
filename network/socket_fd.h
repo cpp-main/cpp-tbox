@@ -15,6 +15,8 @@ class SocketFd : public Fd {
     using Fd::operator=;
     using Fd::swap;
 
+    SocketFd(const Fd &fd);
+
   public:
     static SocketFd CreateSocket(int domain, int type, int protocal);
     static SocketFd CreateUdpSocket();
@@ -34,6 +36,8 @@ class SocketFd : public Fd {
                    const sockaddr *dest_addr, socklen_t addrlen);
     ssize_t recvFrom(void* data_ptr, size_t data_size, int flag,
                      sockaddr *dest_addr, socklen_t *addrlen);
+
+    int shutdown(int howto);
 
   public: //! socket相关的设置
     bool getSocketOpt(int level, int optname, void *optval, socklen_t *optlen);

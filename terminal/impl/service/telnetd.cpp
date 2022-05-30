@@ -100,7 +100,7 @@ bool Telnetd::Impl::isValid(const SessionToken &st) const
     return session_to_client_.find(st) != session_to_client_.end();
 }
 
-void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
+void Telnetd::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
     cout << ct.id() << " connected" << endl;
 
@@ -117,7 +117,7 @@ void Telnetd::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     wp_terminal_->onBegin(st);
 }
 
-void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
+void Telnetd::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
     cout << ct.id() << " disconnected" << endl;
 
@@ -127,7 +127,7 @@ void Telnetd::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
     wp_terminal_->deleteSession(st);
 }
 
-bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size)
+bool Telnetd::Impl::send(const TcpServer::ConnToken &ct, const void *data_ptr, size_t data_size)
 {
 #if 0
     auto hex_str = string::RawDataToHexStr(data_ptr, data_size);
@@ -136,24 +136,24 @@ bool Telnetd::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr,
     return sp_tcp_->send(ct, data_ptr, data_size);
 }
 
-void Telnetd::Impl::sendString(const TcpServer::ClientToken &ct, const std::string &str)
+void Telnetd::Impl::sendString(const TcpServer::ConnToken &ct, const std::string &str)
 {
     send(ct, str.data(), str.size());
 }
 
-void Telnetd::Impl::sendNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt o)
+void Telnetd::Impl::sendNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt o)
 {
     const uint8_t tmp[] = { Cmd::kIAC, cmd, o };
     send(ct, tmp, sizeof(tmp));
 }
 
-void Telnetd::Impl::sendCmd(const TcpServer::ClientToken &ct, Cmd cmd)
+void Telnetd::Impl::sendCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 {
     const uint8_t tmp[] = { Cmd::kIAC, cmd};
     send(ct, tmp, sizeof(tmp));
 }
 
-void Telnetd::Impl::sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8_t *p, size_t s)
+void Telnetd::Impl::sendSub(const TcpServer::ConnToken &ct, Opt o, const uint8_t *p, size_t s)
 {
     size_t size = s + 5;
     uint8_t tmp[size] = {
@@ -169,7 +169,7 @@ void Telnetd::Impl::sendSub(const TcpServer::ClientToken &ct, Opt o, const uint8
     send(ct, tmp, size);
 }
 
-void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
+void Telnetd::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
 #if 0
     auto hex_str = string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
@@ -217,13 +217,13 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff
     }
 }
 
-void Telnetd::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::string &str)
+void Telnetd::Impl::onRecvString(const TcpServer::ConnToken &ct, const std::string &str)
 {
     auto st = client_to_session_.at(ct);
     wp_terminal_->onRecvString(st, str);
 }
 
-void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt opt)
+void Telnetd::Impl::onRecvNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt opt)
 {
     LogTrace("cmd:%x, opt:%x", cmd, opt);
     auto st = client_to_session_.at(ct);
@@ -238,7 +238,7 @@ void Telnetd::Impl::onRecvNego(const TcpServer::ClientToken &ct, Cmd cmd, Opt op
     }
 }
 
-void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)
+void Telnetd::Impl::onRecvCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 {
     LogTrace("cmd:%x", cmd);
 
@@ -246,7 +246,7 @@ void Telnetd::Impl::onRecvCmd(const TcpServer::ClientToken &ct, Cmd cmd)
         sendCmd(ct, Cmd::kNOP);
 }
 
-void Telnetd::Impl::onRecvSub(const TcpServer::ClientToken &ct, Opt opt, const uint8_t *p, size_t s)
+void Telnetd::Impl::onRecvSub(const TcpServer::ConnToken &ct, Opt opt, const uint8_t *p, size_t s)
 {
     LogTrace("opt:%x, data:%s", opt, util::string::RawDataToHexStr(p, s).c_str());
     auto st = client_to_session_.at(ct);

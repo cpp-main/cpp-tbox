@@ -103,6 +103,13 @@ void TcpClient::stop()
     }
 }
 
+bool TcpClient::shutdown(int howto)
+{
+    if (d_->state == State::kConnected)
+        return d_->sp_connection->shutdown(howto);
+    return false;
+}
+
 void TcpClient::cleanup()
 {
     if (d_->state <= State::kNone)

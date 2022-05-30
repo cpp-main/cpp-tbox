@@ -5,8 +5,9 @@
 #include <set>
 #include <unordered_set>
 
-using namespace tbox;
-using namespace tbox::cabinet;
+namespace tbox {
+namespace cabinet {
+namespace {
 
 TEST(Cabinet, alloc_1_and_free)
 {
@@ -119,3 +120,6 @@ TEST(Cabinet, NullToken)
     EXPECT_EQ(oc.at(null_token), nullptr);
 }
 
+}
+}
+}

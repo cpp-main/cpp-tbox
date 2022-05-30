@@ -132,7 +132,7 @@ int Baudrate2Enum(int baudrate)
 
 bool Uart::setMode(const Mode &mode)
 {
-    if (fd_ < 0) {
+    if (fd_.get() < 0) {
         LogErr("please open first");
         return false;
     }
@@ -144,7 +144,7 @@ bool Uart::setMode(const Mode &mode)
     }
 
     struct termios options;
-    if (tcgetattr(fd_, &options) == -1) {
+    if (tcgetattr(fd_.get(), &options) == -1) {
         LogErr("tcgetattr fail, errno:%d", errno);
         return false;
     }
@@ -181,7 +181,7 @@ bool Uart::setMode(const Mode &mode)
     cfsetispeed(&options, baud);
     cfsetospeed(&options, baud);
 
-    if (tcsetattr(fd_, TCSAFLUSH, &options) == -1) {
+    if (tcsetattr(fd_.get(), TCSAFLUSH, &options) == -1) {
         LogErr("tcsetattr fail, errno:%d", errno);
         return false;
     }

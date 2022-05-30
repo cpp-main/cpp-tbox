@@ -16,6 +16,7 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 - log，日志输出库，实现了终端、syslog、文件形式的日志输出；
 - eventx，事件扩展库，含 ThreadPool 线程池模块，专用于处理阻塞性事务；TimerPool 定时器池模块；
 - network，网络库，实现了串口、终端、UDP、TCP 通信模块；
+- http，HTTP库，在network的基础上实现了HTTP的Server与Client模块；
 - coroutine，协程库，众所周知，异步框架不方便处理顺序性业务，协程弥补之；
 - mqtt，MQTT客户端库；
 - terminal, 终端，类似shell的命令终端，可实现运行时与程序进行命令交互；
@@ -48,7 +49,6 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 
 #### 未来规化
 
-- 创建 http 模块，实现 Http 相关的 Server 与 Client 端；
 - 在 network 中支持 TLS；
 - 实现使用 CMake 进行工程管理；
 - 创建 CoAP 模块，实现 CoAP 的客户端与服务端；

@@ -93,7 +93,7 @@ bool TcpRpc::Impl::isValid(const SessionToken &st) const
     return session_to_client_.find(st) != session_to_client_.end();
 }
 
-void TcpRpc::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
+void TcpRpc::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
     cout << ct.id() << " connected" << endl;
 
@@ -105,7 +105,7 @@ void TcpRpc::Impl::onTcpConnected(const TcpServer::ClientToken &ct)
     wp_terminal_->onBegin(st);
 }
 
-void TcpRpc::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
+void TcpRpc::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
     cout << ct.id() << " disconnected" << endl;
 
@@ -115,18 +115,18 @@ void TcpRpc::Impl::onTcpDisconnected(const TcpServer::ClientToken &ct)
     wp_terminal_->deleteSession(st);
 }
 
-bool TcpRpc::Impl::send(const TcpServer::ClientToken &ct, const void *data_ptr, size_t data_size)
+bool TcpRpc::Impl::send(const TcpServer::ConnToken &ct, const void *data_ptr, size_t data_size)
 {
     return sp_tcp_->send(ct, data_ptr, data_size);
 }
 
-void TcpRpc::Impl::onTcpReceived(const TcpServer::ClientToken &ct, Buffer &buff)
+void TcpRpc::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
     onRecvString(ct, std::string(reinterpret_cast<const char *>(buff.readableBegin()), buff.readableSize()));
     buff.hasReadAll();
 }
 
-void TcpRpc::Impl::onRecvString(const TcpServer::ClientToken &ct, const std::string &str)
+void TcpRpc::Impl::onRecvString(const TcpServer::ConnToken &ct, const std::string &str)
 {
     auto st = client_to_session_.at(ct);
     wp_terminal_->onRecvString(st, str);

@@ -4,6 +4,7 @@ app_y += event
 app_y += eventx
 app_y += log
 app_y += network
+app_y += http
 app_y += coroutine
 app_y += mqtt
 app_y += terminal

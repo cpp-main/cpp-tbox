@@ -46,11 +46,28 @@ bool TcpConnection::disconnect()
     return true;
 }
 
+bool TcpConnection::shutdown(int howto)
+{
+    LogInfo("%s, %d", peer_addr_.toString().c_str(), howto);
+    if (sp_buffered_fd_ == nullptr)
+        return false;
+
+    SocketFd socket_fd(sp_buffered_fd_->fd());
+    return socket_fd.shutdown(howto) == 0;
+}
+
 SocketFd TcpConnection::socketFd() const
 {
     if (sp_buffered_fd_ != nullptr)
-        return static_cast<SocketFd>(sp_buffered_fd_->fd());
+        return sp_buffered_fd_->fd();
     return SocketFd();
+}
+
+void* TcpConnection::setContext(void *new_context)
+{
+    auto old_context = wp_context_;
+    wp_context_ = new_context;
+    return old_context;
 }
 
 void TcpConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)

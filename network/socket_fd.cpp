@@ -8,6 +8,10 @@
 namespace tbox {
 namespace network {
 
+SocketFd::SocketFd(const Fd &fd) :
+    Fd(fd)
+{ }
+
 SocketFd SocketFd::CreateSocket(int domain, int type, int protocal)
 {
     int fd = ::socket(domain, type, protocal);
@@ -88,6 +92,14 @@ ssize_t SocketFd::sendTo(const void* data_ptr, size_t data_size, int flag, const
 ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr *dest_addr, socklen_t *addrlen)
 {
     ssize_t ret = ::recvfrom(get(), data_ptr, data_size, flag, dest_addr, addrlen);
+    if (ret < 0)
+        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    return ret;
+}
+
+int SocketFd::shutdown(int howto)
+{
+    int ret = ::shutdown(get(), howto);
     if (ret < 0)
         LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
