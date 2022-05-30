@@ -59,6 +59,38 @@ bool TcpSslAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
     return true;
 }
 
+bool TcpSslAcceptor::useCertificateFile(const std::string &filename, int filetype)
+{
+    if (sp_ssl_ctx_->useCertificateFile(filename, filetype)) {
+        ssl_setting_bits |= 1;
+        return true;
+    }
+    return false;
+}
+
+bool TcpSslAcceptor::usePrivateKeyFile(const std::string &filename, int filetype)
+{
+    if (sp_ssl_ctx_->usePrivateKeyFile(filename, filetype)) {
+        ssl_setting_bits |= 2;
+        return true;
+    }
+    return false;
+}
+
+bool TcpSslAcceptor::checkPrivateKey()
+{
+    if ((ssl_setting_bits & 0x03) != 0x03) {
+        LogWarn("use Certificate and private file first.");
+        return false;
+    }
+
+    if (sp_ssl_ctx_->checkPrivateKey()) {
+        ssl_setting_bits |= 4;
+        return true;
+    }
+    return false;
+}
+
 SocketFd TcpSslAcceptor::createSocket(SockAddr::Type addr_type)
 {
     int flags = SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC;
@@ -90,8 +122,14 @@ int TcpSslAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 
 bool TcpSslAcceptor::start()
 {
+    if (ssl_setting_bits != 0x07) {
+        LogWarn("SSL not set.");
+        return false;
+    }
+
     if (sp_read_ev_ != nullptr)
         return sp_read_ev_->enable();
+
     return false;
 }
 

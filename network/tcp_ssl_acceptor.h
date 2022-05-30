@@ -26,6 +26,10 @@ class TcpSslAcceptor {
   public:
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
+    bool useCertificateFile(const std::string &filename, int filetype);
+    bool usePrivateKeyFile(const std::string &filename, int filetype);
+    bool checkPrivateKey();
+
     using NewConnectionCallback = std::function<void (TcpSslConnection*)>;
     void setNewConnectionCallback(const NewConnectionCallback &cb) { new_conn_cb_ = cb; }
 
@@ -45,6 +49,8 @@ class TcpSslAcceptor {
     event::Loop *wp_loop_ = nullptr;
     SslCtx  *sp_ssl_ctx_ = nullptr;
     SockAddr bind_addr_;
+
+    uint8_t ssl_setting_bits = 0;
 
     NewConnectionCallback new_conn_cb_;
 
