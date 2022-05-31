@@ -27,8 +27,8 @@ class TcpSslAcceptor {
   public:
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
 
-    bool useCertificateFile(const std::string &filename, int filetype);
-    bool usePrivateKeyFile(const std::string &filename, int filetype);
+    bool useCertificateFile(const std::string &filename, int filetype = SSL_FILETYPE_PEM);
+    bool usePrivateKeyFile(const std::string &filename, int filetype = SSL_FILETYPE_PEM);
     bool checkPrivateKey();
 
     using NewConnectionCallback = std::function<void (TcpSslConnection*)>;

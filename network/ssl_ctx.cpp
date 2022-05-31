@@ -7,6 +7,8 @@
 namespace tbox {
 namespace network {
 
+int SslCtx::_instance_count_ = 0;
+
 SslCtx::SslCtx()
 {
     if (_instance_count_ == 0) {
@@ -61,7 +63,7 @@ bool SslCtx::useCertificateFile(const std::string &filename, int filetype)
 
 bool SslCtx::usePrivateKeyFile(const std::string &filename, int filetype)
 {
-    int ret = ::SSL_CTX_use_certificate_file(ssl_ctx_, filename.c_str(), filetype);
+    int ret = ::SSL_CTX_use_PrivateKey_file(ssl_ctx_, filename.c_str(), filetype);
     if (ret <= 0) {
         LogWarn("load private key file %s fail.", filename.c_str());
         return false;
@@ -73,7 +75,7 @@ bool SslCtx::checkPrivateKey()
 {
     int ret = ::SSL_CTX_check_private_key(ssl_ctx_);
     if (ret <= 0) {
-        LogWarn("check private key fail.");
+        LogWarn("check private key fail");
         return false;
     }
     return true;
