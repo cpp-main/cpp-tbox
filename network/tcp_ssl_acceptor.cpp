@@ -30,6 +30,11 @@ bool TcpSslAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
 {
     LogDbg("bind_addr:%s, backlog:%d", bind_addr.toString().c_str(), listen_backlog);
 
+    if (bind_addr.type() != SockAddr::Type::kIPv4) {
+        LogWarn("TcpSsl only support IPv4 and IPv6");
+        return false;
+    }
+
     bind_addr_ = bind_addr;
 
     SocketFd sock_fd = createSocket(bind_addr.type());
@@ -144,14 +149,6 @@ void TcpSslAcceptor::cleanup()
 {
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sock_fd_.close();
-
-    //! 对于Unix Domain的Socket在退出的时候要删除对应的socket文件
-    if (bind_addr_.type() == SockAddr::Type::kLocal) {
-        auto socket_file = bind_addr_.toString();
-        int ret = ::unlink(socket_file.c_str());
-        if (ret != 0)
-            LogWarn("remove file %s fail. errno:%d, %s", socket_file.c_str(), errno, strerror(errno));
-    }
 }
 
 void TcpSslAcceptor::onSocketRead(short events)
@@ -169,17 +166,25 @@ void TcpSslAcceptor::onClientConnected()
         LogWarn("accept fail");
         return;
     }
-
     SockAddr peer_addr(addr, addr_len);
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 
+#if 0
     if (new_conn_cb_) {
-        auto sp_connection = new TcpSslConnection(wp_loop_, peer_sock, sp_ssl_ctx_, peer_addr, true);
-        ++cb_level_;
-        new_conn_cb_(sp_connection);
-        --cb_level_;
+        auto new_conn = new TcpSslConnection(wp_loop_, peer_sock, sp_ssl_ctx_, peer_addr, true);
+        delete new_conn;
     } else {
         LogWarn("%s need connect cb", bind_addr_.toString().c_str());
+    }
+#endif
+}
+
+void TcpSslAcceptor::onClientSslFinished(TcpSslConnection *new_conn)
+{
+    if (new_conn_cb_) {
+        ++cb_level_;
+        new_conn_cb_(new_conn);
+        --cb_level_;
     }
 }
 

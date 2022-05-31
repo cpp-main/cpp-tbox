@@ -43,8 +43,8 @@ class TcpSslConnection : public ByteStream {
   public:
     //! 实现ByteStream的接口
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
-    virtual void bind(ByteStream *receiver) override;
-    virtual void unbind() override;
+    virtual void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
+    virtual void unbind() override { wp_receiver_ = nullptr; }
     virtual bool send(const void *data_ptr, size_t data_size) override;
 
   protected:
@@ -69,12 +69,12 @@ class TcpSslConnection : public ByteStream {
 
     bool is_ssl_done_ = false;
 
-    Buffer read_buffer_;
+    Buffer recv_buff_;
     size_t recv_threshold_ = 0;
 
     ReceiveCallback      recv_cb_;
     DisconnectedCallback disconnected_cb_;
-    ByteStream  *wp_stream_ = nullptr;
+    ByteStream  *wp_receiver_ = nullptr;
 
     void *wp_context_ = nullptr;
     int cb_level_ = 0;

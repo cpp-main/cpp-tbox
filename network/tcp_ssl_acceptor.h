@@ -44,6 +44,7 @@ class TcpSslAcceptor {
 
     void onSocketRead(short events);    //! 处理新的连接请求
     void onClientConnected();
+    void onClientSslFinished(TcpSslConnection *new_conn);
 
   private:
     event::Loop *wp_loop_ = nullptr;

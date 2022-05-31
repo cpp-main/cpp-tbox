@@ -23,7 +23,7 @@ class SockAddr {
 
     static SockAddr FromString(const std::string &add_str);
 
-    enum Type {
+    enum class Type {
         kNone,
         kIPv4,
         kLocal, //! Unix Local socket

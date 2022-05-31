@@ -69,8 +69,8 @@ bool BufferedFd::initialize(Fd fd, short events)
 
 void BufferedFd::setReceiveCallback(const ReceiveCallback &func, size_t threshold)
 {
-    receive_cb_ = func;
-    receive_threshold_ = threshold;
+    recv_cb_ = func;
+    recv_threshold_ = threshold;
 }
 
 bool BufferedFd::enable()
@@ -194,13 +194,13 @@ void BufferedFd::onReadCallback(short)
             wp_receiver_->send(recv_buff_.readableBegin(), recv_buff_.readableSize());
             recv_buff_.hasReadAll();
 
-        } else if (recv_buff_.readableSize() >= receive_threshold_) {
-            if (receive_cb_) {
+        } else if (recv_buff_.readableSize() >= recv_threshold_) {
+            if (recv_cb_) {
                 ++cb_level_;
-                receive_cb_(recv_buff_);
+                recv_cb_(recv_buff_);
                 --cb_level_;
             } else {
-                LogWarn("receive_cb_ is not set");
+                LogWarn("recv_cb_ is not set");
                 recv_buff_.hasReadAll();    //! 丢弃数据，防止堆积
             }
         }

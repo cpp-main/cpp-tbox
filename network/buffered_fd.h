@@ -80,14 +80,14 @@ class BufferedFd : public ByteStream {
     Buffer send_buff_;
     Buffer recv_buff_;
 
-    ReceiveCallback         receive_cb_;
+    ReceiveCallback         recv_cb_;
     WriteCompleteCallback   send_complete_cb_;
     ReadZeroCallback        read_zero_cb_;
     ErrorCallback           error_cb_;
 
     ByteStream  *wp_receiver_ = nullptr;
 
-    size_t  receive_threshold_ = 0;
+    size_t  recv_threshold_ = 0;
     int     cb_level_ = 0;
 };
 
