@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <tbox/base/defines.h>
+#include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
@@ -44,7 +45,7 @@ class TcpSslAcceptor {
 
     void onSocketRead(short events);    //! 处理新的连接请求
     void onClientConnected();
-    void onClientSslFinished(TcpSslConnection *new_conn);
+    void onClientSslFinished(const cabinet::Token &token);
 
   private:
     event::Loop *wp_loop_ = nullptr;
@@ -57,6 +58,8 @@ class TcpSslAcceptor {
 
     SocketFd sock_fd_;
     event::FdEvent *sp_read_ev_ = nullptr;
+
+    cabinet::Cabinet<TcpSslConnection> unfinished_conn_;
 
     int cb_level_ = 0;
 };

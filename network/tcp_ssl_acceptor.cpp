@@ -148,6 +148,7 @@ bool TcpSslAcceptor::stop()
 void TcpSslAcceptor::cleanup()
 {
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
+    unfinished_conn_.foreach([](TcpSslConnection *conn) { delete conn; });
     sock_fd_.close();
 }
 
@@ -169,22 +170,23 @@ void TcpSslAcceptor::onClientConnected()
     SockAddr peer_addr(addr, addr_len);
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 
-#if 0
-    if (new_conn_cb_) {
-        auto new_conn = new TcpSslConnection(wp_loop_, peer_sock, sp_ssl_ctx_, peer_addr, true);
-        delete new_conn;
-    } else {
-        LogWarn("%s need connect cb", bind_addr_.toString().c_str());
-    }
-#endif
+    auto new_conn = new TcpSslConnection(wp_loop_, peer_sock, sp_ssl_ctx_, peer_addr, true);
+    auto new_token = unfinished_conn_.alloc(new_conn);
+    new_conn->setSslFinishedCallback([new_token, this] () { onClientSslFinished(new_token); });
 }
 
-void TcpSslAcceptor::onClientSslFinished(TcpSslConnection *new_conn)
+void TcpSslAcceptor::onClientSslFinished(const cabinet::Token &token)
 {
-    if (new_conn_cb_) {
-        ++cb_level_;
-        new_conn_cb_(new_conn);
-        --cb_level_;
+    auto new_conn = unfinished_conn_.free(token);
+    if (new_conn->isSslDone()) {
+        LogInfo("%s connection: %s", bind_addr_.toString().c_str(), new_conn->peerAddr().toString().c_str());
+        if (new_conn_cb_) {
+            ++cb_level_;
+            new_conn_cb_(new_conn);
+            --cb_level_;
+        }
+    } else {
+        wp_loop_->runNext([new_conn] { delete new_conn; });
     }
 }
 

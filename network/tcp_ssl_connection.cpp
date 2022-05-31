@@ -94,6 +94,11 @@ void TcpSslConnection::doHandshake()
     int ret = sp_ssl_->doHandshake();
     if (ret == 1) {
         is_ssl_done_ = true;
+
+        auto cb = std::move(ssl_finished_cb_);
+        ++cb_level_;
+        cb();
+        --cb_level_;
         return;
     }
 
@@ -104,6 +109,11 @@ void TcpSslConnection::doHandshake()
         //! nothing todo
     } else {
         LogNotice("SSL handshake err:%d, errno:%d, %s", err, errno, strerror(errno));
+
+        auto cb = std::move(ssl_finished_cb_);
+        ++cb_level_;
+        cb();
+        --cb_level_;
     }
 }
 

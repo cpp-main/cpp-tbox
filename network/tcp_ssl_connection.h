@@ -58,6 +58,10 @@ class TcpSslConnection : public ByteStream {
     explicit TcpSslConnection(event::Loop *wp_loop, SocketFd fd, SslCtx *wp_ssl_ctx,
                               const SockAddr &peer_addr, bool is_accept_state);
 
+    using SslFinishedCallback = std::function<void ()>;
+    void setSslFinishedCallback(const SslFinishedCallback &cb) { ssl_finished_cb_ = cb; }
+    bool isSslDone() const { return is_ssl_done_; }
+
   private:
     event::Loop *wp_loop_;
     SocketFd     fd_;
@@ -73,8 +77,10 @@ class TcpSslConnection : public ByteStream {
     size_t recv_threshold_ = 0;
 
     ReceiveCallback      recv_cb_;
-    DisconnectedCallback disconnected_cb_;
     ByteStream  *wp_receiver_ = nullptr;
+
+    DisconnectedCallback disconnected_cb_;
+    SslFinishedCallback  ssl_finished_cb_;
 
     void *wp_context_ = nullptr;
     int cb_level_ = 0;
