@@ -19,6 +19,7 @@ TcpSslConnection::TcpSslConnection(
     sp_read_event_(wp_loop->newFdEvent()),
     sp_write_event_(wp_loop->newFdEvent())
 {
+    LogTag();
     fd_.setNonBlock(true);
     sp_ssl_->setFd(fd_.get());
 
@@ -37,6 +38,7 @@ TcpSslConnection::TcpSslConnection(
 
 TcpSslConnection::~TcpSslConnection()
 {
+    LogTag();
     assert(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_write_event_);
     CHECK_DELETE_RESET_OBJ(sp_read_event_);
@@ -53,6 +55,7 @@ void TcpSslConnection::onFdReadable(short)
     recv_buff_.ensureWritableSize(1024);
     int rsize = sp_ssl_->read(recv_buff_.writableBegin(), recv_buff_.writableSize());
     int err = sp_ssl_->getError(rsize);
+    LogTrace("rsize:%d, err:%d, errno:%d, %s", rsize, err, errno, strerror(errno));
     if (rsize > 0) {
         recv_buff_.hasWritten(rsize);
         if (wp_receiver_ != nullptr) {
@@ -70,9 +73,7 @@ void TcpSslConnection::onFdReadable(short)
             }
         }
     } else if (rsize == 0) {
-        if (err == SSL_ERROR_ZERO_RETURN) {
-            onSocketClosed();
-        }
+        onSocketClosed();
     } else {
         if (errno != EAGAIN) {
             LogWarn("read error, rsize:%d, errno:%d, %s", rsize, errno, strerror(errno));
@@ -163,7 +164,7 @@ bool TcpSslConnection::send(const void *data_ptr, size_t data_size)
 
 void TcpSslConnection::onSocketClosed()
 {
-    LogInfo("%s", peer_addr_.toString().c_str());
+    LogInfo("connection: %s", peer_addr_.toString().c_str());
 
     sp_read_event_->disable();
     if (disconnected_cb_) {

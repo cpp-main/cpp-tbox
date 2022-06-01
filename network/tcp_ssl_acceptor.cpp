@@ -179,7 +179,7 @@ void TcpSslAcceptor::onClientSslFinished(const cabinet::Token &token)
 {
     auto new_conn = unfinished_conn_.free(token);
     if (new_conn->isSslDone()) {
-        LogInfo("%s connection: %s", bind_addr_.toString().c_str(), new_conn->peerAddr().toString().c_str());
+        LogInfo("connection: %s", new_conn->peerAddr().toString().c_str());
         if (new_conn_cb_) {
             ++cb_level_;
             new_conn_cb_(new_conn);
