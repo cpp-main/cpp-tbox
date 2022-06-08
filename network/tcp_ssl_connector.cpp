@@ -62,6 +62,38 @@ void TcpSslConnector::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
     reconn_delay_calc_func_ = func;
 }
 
+bool TcpSslConnector::useCertificateFile(const std::string &filename, int filetype)
+{
+    if (sp_ssl_ctx_->useCertificateFile(filename, filetype)) {
+        ssl_setting_bits |= 1;
+        return true;
+    }
+    return false;
+}
+
+bool TcpSslConnector::usePrivateKeyFile(const std::string &filename, int filetype)
+{
+    if (sp_ssl_ctx_->usePrivateKeyFile(filename, filetype)) {
+        ssl_setting_bits |= 2;
+        return true;
+    }
+    return false;
+}
+
+bool TcpSslConnector::checkPrivateKey()
+{
+    if ((ssl_setting_bits & 0x03) != 0x03) {
+        LogWarn("use Certificate and private file first.");
+        return false;
+    }
+
+    if (sp_ssl_ctx_->checkPrivateKey()) {
+        ssl_setting_bits |= 4;
+        return true;
+    }
+    return false;
+}
+
 bool TcpSslConnector::start()
 {
     if (state_ != State::kInited) {

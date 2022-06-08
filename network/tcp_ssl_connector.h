@@ -29,6 +29,7 @@ class TcpSslConnector {
         kInited,            //!< 空闲未连接
         kReconnectDelay,    //!< 重连等待
         kConnecting,        //!< 连接中
+        kHandshaking,
     };
 
     //! 函数类型定义
@@ -44,6 +45,10 @@ class TcpSslConnector {
     void setTryTimes(int try_times);    //!< 设置连接尝试次数
     void setConnectFailCallback(const ConnectFailCallback &cb);     //!< 设置连接失败的回调
     void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func); //!< 设置用户自定义的重连延迟策略
+
+    bool useCertificateFile(const std::string &filename, int filetype = SSL_FILETYPE_PEM);
+    bool usePrivateKeyFile(const std::string &filename, int filetype = SSL_FILETYPE_PEM);
+    bool checkPrivateKey();
 
     bool start();   //!< 开始连接
     void stop();    //!< 停止连接
@@ -70,6 +75,7 @@ class TcpSslConnector {
   private:
     event::Loop *wp_loop_ = nullptr;
     SslCtx  *sp_ssl_ctx_ = nullptr;
+    uint8_t ssl_setting_bits = 0;
 
     State state_ = State::kNone;    //! 当前状态
 
