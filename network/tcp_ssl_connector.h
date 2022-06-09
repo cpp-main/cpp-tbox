@@ -67,6 +67,8 @@ class TcpSslConnector {
     void exitConnectingState();         //!< 退出连接状态的操作
     void enterReconnectDelayState();    //!< 进入重连等待状态的操作
     void exitReconnectDelayState();     //!< 退出重连等待状态的操作
+    void enterShakehandState();
+    void exitShakehandState();
 
     void onConnectFail();
     void onSocketWritable();    //!< 当连接成功时的处理
@@ -90,6 +92,8 @@ class TcpSslConnector {
 
     event::FdEvent    *sp_write_ev_ = nullptr;   //!< connect 过程的结果监听事件
     event::TimerEvent *sp_delay_ev_ = nullptr;   //!< 重连等待延时定时器
+
+    TcpSslConnection  *sp_unfinished_conn_ = nullptr;
 
     int conn_fail_times_ = 0;   //! 连续 connect 失败计数
     int cb_level_ = 0;

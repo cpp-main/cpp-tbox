@@ -256,6 +256,23 @@ void TcpSslConnector::exitReconnectDelayState()
     LogDbg("exit reconnect delay state");
 }
 
+void TcpSslConnector::enterShakehandState()
+{
+    sp_unfinished_conn_->setSslFinishedCallback([this] { exitShakehandState(); });
+    state_ = State::kHandshaking;
+}
+
+void TcpSslConnector::exitShakehandState()
+{
+    if (sp_unfinished_conn_->isSslDone()) {
+        LogInfo("connection: %s", sp_unfinished_conn_->peerAddr().toString().c_str());
+        ++cb_level_;
+        if (connected_cb_)
+            connected_cb_(sp_unfinished_conn_);
+        --cb_level_;
+    }
+}
+
 void TcpSslConnector::onConnectFail()
 {
     ++conn_fail_times_;
@@ -281,20 +298,12 @@ void TcpSslConnector::onSocketWritable()
     socklen_t optlen = sizeof(sock_errno);
     if (sock_fd_.getSocketOpt(SOL_SOCKET, SO_ERROR, &sock_errno, &optlen)) {
         if (sock_errno == 0) {  //! 连接成功
-            SocketFd conn_sock_fd = sock_fd_;
+            SocketFd conn_sock_fd = sock_fd_;   //!FIXME: 是不是可以使用std::move()呢
             sock_fd_.reset();
 
             exitConnectingState();
-            state_ = State::kInited;
-
-            LogInfo("connect to %s success", server_addr_.toString().c_str());
-            if (connected_cb_) {
-                auto sp_conn = new TcpSslConnection(wp_loop_, conn_sock_fd, sp_ssl_ctx_, server_addr_, false);
-                ++cb_level_;
-                connected_cb_(sp_conn);
-                --cb_level_;
-            } else
-                LogWarn("connected callback is not set");
+            sp_unfinished_conn_ = new TcpSslConnection(wp_loop_, conn_sock_fd, sp_ssl_ctx_, server_addr_, false);
+            enterShakehandState();
 
         } else {    //! 连接失败
             LogDbg("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));
