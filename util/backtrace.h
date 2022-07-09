@@ -1,5 +1,5 @@
-#ifndef _BACKTRACE_H
-#define _BACKTRACE_H
+#ifndef TBOX_UTIL_BACKTRACE_H_20220708
+#define TBOX_UTIL_BACKTRACE_H_20220708
 
 #include <string>
 #include <signal.h>
@@ -34,7 +34,7 @@ class Backtrace {
      *
      *  @return backtrace string
      */
-    static std::string DumpCallStack(const unsigned int max_frames, const unsigned int skip = 1);
+    static std::string DumpCallStack(const unsigned int max_frames, const unsigned int skip_frames = 1);
 
   private:
     static void HandleErrorSignal(int signal_number, siginfo_t *signal_info, void *arg);
@@ -47,4 +47,4 @@ class Backtrace {
 }
 }
 
-#endif // _BACKTRACE_H
+#endif // TBOX_UTIL_BACKTRACE_H_20220708
