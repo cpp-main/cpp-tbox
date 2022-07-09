@@ -15,9 +15,9 @@ namespace util {
  * # Examples:
  *
  *  Backtrace::instance()
- *          .maxFrames(24) // if not set, default is 32
- *          .skip(2) // if not set, default is 1
- *          .submit();
+ *          .maxFrames(24)      // if not set, default is 32
+ *          .skipFrames(2)      // if not set, default is 1
+ *          .submit({SIGSEGV, SIGABRT}); // submit SIGSEGV and SIGABRT as error
  */
 class Backtrace {
   public:
@@ -25,7 +25,7 @@ class Backtrace {
 
   public:
     Backtrace& maxFrames(unsigned int max);  // default is 32
-    Backtrace& skip(unsigned int skip);      // default is 1(will note skip)
+    Backtrace& skipFrames(unsigned int skip);      // default is 1(will note skip)
 
     void submit(std::initializer_list<int> signals);
 

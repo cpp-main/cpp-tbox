@@ -34,7 +34,7 @@ Backtrace& Backtrace::maxFrames(unsigned int max)
     return *this;
 }
 
-Backtrace& Backtrace::skip(unsigned int skip)
+Backtrace& Backtrace::skipFrames(unsigned int skip)
 {
     skip_frames_ = skip;
     return *this;
