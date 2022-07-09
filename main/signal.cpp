@@ -15,21 +15,18 @@ extern std::function<void()> error_exit_func;  //!< 出错异常退出前要做�
 
 namespace {
 
-//! 打印调用栈
-void PrintCallStack()
-{
-    std::string &&stack_str = util::Backtrace::DumpCallStack(32, 5);
-    LogFatal("\n-----call stack-----\n%s", stack_str.c_str());
-}
-
 //! 处理程序运行异常信号
 void OnErrorSignal(int signo)
 {
+    const std::string &stack_str = util::Backtrace::DumpCallStack(32, 5);
+
     LogFatal("Receive signal %d", signo);
-    PrintCallStack();
-    if (error_exit_func)
+    LogFatal("\n-----call stack-----\n%s", stack_str.c_str());
+
+    if (error_exit_func)    //! 执行一些善后处理
         error_exit_func();
-    exit(EXIT_FAILURE);
+
+    ::exit(EXIT_FAILURE);
 }
 
 void OnWarnSignal(int signo)

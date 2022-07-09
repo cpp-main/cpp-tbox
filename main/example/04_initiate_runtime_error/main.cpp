@@ -1,12 +1,11 @@
 #include <tbox/main/main.h>
-#include "app.h"
 
 namespace tbox {
 namespace main {
 
 void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.add(new ::App(ctx));
+    static_cast<uint8_t*>(nullptr)[0] = 0;
 }
 
 std::string GetAppDescribe()
