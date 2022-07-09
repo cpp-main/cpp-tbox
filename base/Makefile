@@ -16,12 +16,10 @@ HEAD_FILES = \
 	memblock.h \
 	json_fwd.h \
 	json.hpp \
-	backtrace.h
 
 CPP_SRC_FILES = \
 	log_imp.cpp \
 	log_output.cpp \
-	backtrace.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox_base"' $(CXXFLAGS)
 

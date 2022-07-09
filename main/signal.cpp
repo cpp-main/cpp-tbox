@@ -6,6 +6,7 @@
 #include <functional>
 
 #include <tbox/base/log.h>
+#include <tbox/util/backtrace.h>
 
 namespace tbox {
 namespace main {
@@ -17,22 +18,8 @@ namespace {
 //! 打印调用栈
 void PrintCallStack()
 {
-    const int buffer_size = 1024;
-
-    void *buffer[buffer_size];
-    int n = backtrace(buffer, buffer_size);
-
-    std::stringstream ss;
-    char **symbols = backtrace_symbols(buffer, n);
-    if (symbols != NULL) {
-        for (int i = 0; i < n; i++)
-            ss << '[' << i << "] " << symbols[i] << std::endl;
-        free(symbols);
-    } else {
-        ss << "<no stack symbols>" << std::endl;
-    }
-
-    LogFatal("\n-----call stack-----\n%s", ss.str().c_str());
+    std::string &&stack_str = util::Backtrace::DumpCallStack(32, 5);
+    LogFatal("\n-----call stack-----\n%s", stack_str.c_str());
 }
 
 //! 处理程序运行异常信号

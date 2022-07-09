@@ -20,7 +20,8 @@ LDFLAGS += \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
-	-lpthread
+	-lpthread \
+	-rdynamic
 
 TEST_LDFLAGS += $(LDFLAGS)
 
