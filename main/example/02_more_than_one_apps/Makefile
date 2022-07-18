@@ -12,6 +12,7 @@ include app3/app.mk
 CXXFLAGS += -ggdb -DLOG_MODULE_ID='"demo"'
 LDFLAGS += -L.. \
 	-ltbox_main \
+	-ltbox_log \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \
