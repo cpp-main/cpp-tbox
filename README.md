@@ -31,7 +31,7 @@ cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的�
 | libevent | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEVENT时依赖 | sudo apt install libevent-dev |
 | libev | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEV时依赖 | sudo apt install libev-dev |
 | mosquitto | mqtt | MQTT库 | sudo apt install libmosquitto-dev |
-| nlohmann/json | main | 作为配置数据用 | 下载[json\_fwd.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/include/nlohmann/json_fwd.hpp)与[json.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/single_include/nlohmann/json.hpp)到/usr/local/include/nlohmann/ |
+| nlohmann/json | main | 作为配置数据用 | 下载[json\_fwd.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/include/nlohmann/json_fwd.hpp)与[json.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/single_include/nlohmann/json.hpp)到头文件目录，如：/usr/local/include/nlohmann/ |
 
 **安装命令**
 
