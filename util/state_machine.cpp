@@ -4,6 +4,7 @@
 #include <cassert>
 #include <vector>
 #include <map>
+#include <stdexcept>
 #include <algorithm>
 
 namespace tbox {

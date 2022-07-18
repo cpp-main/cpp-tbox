@@ -1,6 +1,7 @@
 #ifndef TBOX_NETWORK_BYTE_STREAM_H_20171102
 #define TBOX_NETWORK_BYTE_STREAM_H_20171102
 
+#include <cstddef>
 #include <functional>
 
 namespace tbox {
