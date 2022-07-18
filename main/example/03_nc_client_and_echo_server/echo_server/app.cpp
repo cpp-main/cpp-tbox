@@ -31,7 +31,7 @@ bool App::onInit(const tbox::Json &cfg)
     if (!js_bind.is_string())
         return false;
 
-    if (!server_->initialize(SockAddr::FromString(js_bind.get<std::string>())))
+    if (!server_->initialize(SockAddr::FromString(js_bind.get<std::string>()), 2))
         return false;
 
     server_->setReceiveCallback(
