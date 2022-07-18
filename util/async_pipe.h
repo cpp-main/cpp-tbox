@@ -25,6 +25,7 @@
 #ifndef TBOX_ASYNC_PIPLE_H_20211219
 #define TBOX_ASYNC_PIPLE_H_20211219
 
+#include <cstddef>
 #include <functional>
 
 namespace tbox {
