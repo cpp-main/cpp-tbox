@@ -1,6 +1,7 @@
 #ifndef TBOX_HTTP_COMMON_H_20220501
 #define TBOX_HTTP_COMMON_H_20220501
 
+#include <string>
 #include <map>
 
 #define CRLF "\r\n"
