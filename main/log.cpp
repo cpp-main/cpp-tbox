@@ -153,6 +153,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 void Log::cleanup()
 {
     filelog_.cleanup();
+    filelog_.disable();
 }
 
 void Log::buildTerminalNodes(TerminalNodes &term)
