@@ -104,8 +104,6 @@ int Main(int argc, char **argv)
     }
 
     LogInfo("Bye!");
-
-    log.cleanup();
     return 0;
 }
 
