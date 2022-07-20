@@ -27,17 +27,20 @@ void Log::fillDefaultConfig(Json &cfg) const
  {
   "stdout": {
     "enable": true,
-    "enable_color": true
+    "enable_color": true,
+    "levels": {"":6}
   },
   "filelog": {
     "enable": true,
+    "enable_color": false,
+    "levels": {"":3},
     "prefix": "sample",
     "path": "/tmp/tbox",
-    "max_size": 1024,
-    "enable_color": false 
+    "max_size": 1024
   },
   "syslog": {
-    "enable": false
+    "enable": false,
+    "levels": {"":3}
   }
 }
 )"_json;
@@ -71,6 +74,16 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
                     cerr << "WARN: stdout.enable_color not boolean." << endl;
                 }
             }
+
+            if (js.contains("levels")) {
+                auto &js_levels = js.at("levels");
+                if (js_levels.is_object()) {
+                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
+                        stdout_.setLevel(it.value(), it.key());
+                } else {
+                    cerr << "WARN: stdout.levels not object." << endl;
+                }
+            }
         }
 
         if (js_log.contains("syslog")) {
@@ -86,6 +99,16 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
                     cerr << "WARN: syslog.enable not boolean." << endl;
                 }
             }
+
+            if (js.contains("levels")) {
+                auto &js_levels = js.at("levels");
+                if (js_levels.is_object()) {
+                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
+                        syslog_.setLevel(it.value(), it.key());
+                } else {
+                    cerr << "WARN: stdout.levels not object." << endl;
+                }
+            }
         }
 
         do {
@@ -96,6 +119,35 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
             if (!js.contains("path")) {
                 cerr << "WARN: filelog.path not found." << endl;
                 break;
+            }
+
+            if (js.contains("enable")) {
+                auto &js_enable = js.at("enable");
+                if (js_enable.is_boolean()) {
+                    if (js_enable.get<bool>())
+                        filelog_.enable();
+                    else
+                        filelog_.disable();
+                } else
+                    cerr << "WARN: filelog.enable not boolean" << endl;
+            }
+
+            if (js.contains("enable_color")) {
+                auto &js_enable = js.at("enable_color");
+                if (js_enable.is_boolean()) {
+                    filelog_.enableColor(js_enable.get<bool>());
+                } else
+                    cerr << "WARN: filelog.enable_color not boolean" << endl;
+            }
+
+            if (js.contains("levels")) {
+                auto &js_levels = js.at("levels");
+                if (js_levels.is_object()) {
+                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
+                        filelog_.setLevel(it.value(), it.key());
+                } else {
+                    cerr << "WARN: stdout.levels not object." << endl;
+                }
             }
 
             auto &js_path = js.at("path");
@@ -124,25 +176,6 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
                     filelog_.setFileMaxSize(js_max_size.get<int>() * 1024);
                 else
                     cerr << "WARN: filelog.max_size not number" << endl;
-            }
-
-            if (js.contains("enable")) {
-                auto &js_enable = js.at("enable");
-                if (js_enable.is_boolean()) {
-                    if (js_enable.get<bool>())
-                        filelog_.enable();
-                    else
-                        filelog_.disable();
-                } else
-                    cerr << "WARN: filelog.enable not boolean" << endl;
-            }
-
-            if (js.contains("enable_color")) {
-                auto &js_enable = js.at("enable_color");
-                if (js_enable.is_boolean()) {
-                    filelog_.enableColor(js_enable.get<bool>());
-                } else
-                    cerr << "WARN: filelog.enable_color not boolean" << endl;
             }
         } while (false);
     }
