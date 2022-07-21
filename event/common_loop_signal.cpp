@@ -119,7 +119,8 @@ void CommonLoop::onSignal()
                 //LogTrace("signo:%d", signo);
                 auto iter = all_signals_subscribers_.find(signo);
                 if (iter != all_signals_subscribers_.end()) {
-                    for (auto s : iter->second) {
+                    auto todo = iter->second;   //!FIXME:Crash if SignalSubscribuer be deleted in callback
+                    for (auto s : todo) {
                         s->onSignal(signo);
                     }
                 }
