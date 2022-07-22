@@ -7,7 +7,7 @@ using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 
-void SignalCallback()
+void SignalCallback(int signo)
 {
     cout << "Got interupt signal" << endl;
 }
