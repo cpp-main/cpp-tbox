@@ -122,7 +122,7 @@ bool StateMachine::isTerminated() const
 
 ///////////////////////
 
-StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0 };
+StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, nullptr, { } };
 
 StateMachine::Impl::~Impl()
 {
@@ -142,7 +142,7 @@ bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_acti
         return false;
     }
 
-    auto new_state = new State { state_id, enter_action, exit_action, nullptr };
+    auto new_state = new State { state_id, enter_action, exit_action, nullptr, { } };
     states_[state_id] = new_state;
 
     return true;
