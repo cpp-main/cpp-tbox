@@ -21,11 +21,13 @@ TimeCounter::~TimeCounter()
 
 void TimeCounter::stop()
 {
+    auto now = steady_clock::now();
+
     if (stoped_)
         return;
 
-    auto cost_us = duration_cast<microseconds>(steady_clock::now() - start_time_point_).count();
-    LogPrintfFunc("TC", func_name_, file_name_, line_, LOG_LEVEL_TRACE, true, "timecost: %u us", cost_us);
+    auto cost = now - start_time_point_;
+    LogPrintfFunc("TC", func_name_, file_name_, line_, LOG_LEVEL_TRACE, true, "timecost: %llu ns", cost.count());
     stoped_ = true;
 }
 
