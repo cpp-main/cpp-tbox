@@ -18,6 +18,7 @@ LDFLAGS += -L.. \
 	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
+	-ldl \
 	-lpthread
 
 CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
