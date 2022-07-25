@@ -26,7 +26,8 @@ class TimeCounter {
 }
 
 //! 无名计时器，用行号命名
-#define _TimeCounter_0(file,func,line) tbox::util::TimeCounter _timer_counter_at_##line(file,func,line)
+#define _TimeCounter_1(file,func,line) tbox::util::TimeCounter _timer_counter_at_##line(file,func,line)
+#define _TimeCounter_0(file,func,line) _TimeCounter_1(file,func,line)
 #define SetTimeCounter() _TimeCounter_0(__FILE__, __func__, __LINE__)
 
 //! 有名计时器

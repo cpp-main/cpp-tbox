@@ -14,6 +14,16 @@ TEST(ScopeExitAction, no_name)
     EXPECT_TRUE(tag);
 }
 
+TEST(ScopeExitAction, no_name_1)
+{
+    int count = 3;
+    {
+        SetScopeExitAction([&] { ++count; });
+        SetScopeExitAction([&] { count *= 2; });
+    }
+    EXPECT_EQ(count, 7);
+}
+
 TEST(ScopeExitAction, named)
 {
     bool tag = false;
