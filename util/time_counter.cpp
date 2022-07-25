@@ -1,9 +1,10 @@
 #include "time_counter.h"
-#include <tbox/base/log.h>
+#include <iostream>
 
 namespace tbox {
 namespace util {
 
+using namespace std;
 using namespace std::chrono;
 
 TimeCounter::TimeCounter(const char *file_name, const char *func_name, int line) :
@@ -27,7 +28,7 @@ void TimeCounter::stop()
         return;
 
     auto cost = now - start_time_point_;
-    LogPrintfFunc("TC", func_name_, file_name_, line_, LOG_LEVEL_TRACE, true, "timecost: %llu ns", cost.count());
+    cout << "TimeCounter at " << file_name_ << ",L" << line_ << " in " << func_name_ << "(): " << cost.count() << " ns" << endl;
     stoped_ = true;
 }
 
