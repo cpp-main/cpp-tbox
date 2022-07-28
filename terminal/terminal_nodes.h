@@ -2,6 +2,7 @@
 #define TBOX_TERMINAL_NODES_H_20220214
 
 #include "types.h"
+#include "session.h"
 
 namespace tbox {
 namespace terminal {
