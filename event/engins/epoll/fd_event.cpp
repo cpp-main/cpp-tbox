@@ -28,10 +28,12 @@ EpollFdEvent::~EpollFdEvent()
 
     disable();
 
-    --d_->ref;
-    if (d_->ref == 0) {
-        wp_loop_->removeFdSharedData(fd_);
-        delete d_;
+    if (d_ != nullptr) {
+        --d_->ref;
+        if (d_->ref == 0) {
+            wp_loop_->removeFdSharedData(fd_);
+            delete d_;
+        }
     }
 }
 
