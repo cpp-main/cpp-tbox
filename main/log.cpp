@@ -31,7 +31,7 @@ void Log::fillDefaultConfig(Json &cfg) const
     "levels": {"":6}
   },
   "filelog": {
-    "enable": true,
+    "enable": false,
     "enable_color": false,
     "levels": {"":3},
     "prefix": "sample",
