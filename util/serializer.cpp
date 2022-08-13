@@ -22,6 +22,18 @@ Serializer::Serializer(std::vector<uint8_t> &block, Endian endian) :
     endian_(endian)
 { }
 
+bool Serializer::extendSize(size_t need_size)
+{
+    size_t whole_size = pos_ + need_size;
+    if (type_ == kRaw)
+        return whole_size <= size_;
+    else {
+        p_block_->resize(whole_size);
+        start_ = p_block_->data();
+        return true;
+    }
+}
+
 bool Serializer::append(uint8_t in)
 {
     if (!extendSize(1))
@@ -107,24 +119,34 @@ bool Serializer::append(const void *p_in, size_t size)
     if (!extendSize(size))
         return false;
 
-    uint8_t *p = start_ + pos_;
-    memcpy(p, p_in, size);
+    uint8_t *p_out = start_ + pos_;
+    memcpy(p_out, p_in, size);
 
     pos_ += size;
     return true;
 }
 
-bool Serializer::extendSize(size_t need_size)
+bool Serializer::appendPOD(const void *p, size_t size)
 {
-    size_t whole_size = pos_ + need_size;
-    if (type_ == kRaw)
-        return whole_size <= size_;
-    else {
-        p_block_->resize(whole_size);
-        start_ = p_block_->data();
-        return true;
+    if (!extendSize(size))
+        return false;
+
+    uint8_t *p_out = start_ + pos_;
+    if (endian_ == Endian::kLittle) {
+        memcpy(p_out, p, size);
+    } else {
+        //! 倒序写入
+        const uint8_t *p_in = static_cast<const uint8_t*>(p);
+        p_out += size - 1;
+        size_t times = size;
+        while (times-- > 0)
+            *p_out-- = *p_in++;
     }
+
+    pos_ += size;
+    return true;
 }
+
 
 //////////////
 // 反序列化 //
@@ -136,6 +158,11 @@ Deserializer::Deserializer(const void *start, size_t size, Endian endian) :
     endian_(endian),
     pos_(0)
 { }
+
+bool Deserializer::checkSize(size_t need_size) const
+{
+    return (pos_ + need_size) <= size_;
+}
 
 bool Deserializer::fetch(uint8_t &out)
 {
@@ -219,13 +246,33 @@ bool Deserializer::fetch(uint64_t &out)
     return true;
 }
 
-bool Deserializer::fetch(void *p_out, size_t size)
+bool Deserializer::fetch(void *p, size_t size)
 {
     if (!checkSize(size))
         return false;
 
-    const uint8_t *p = start_ + pos_;
-    memcpy(p_out, p, size);
+    const uint8_t *p_in = start_ + pos_;
+    memcpy(p, p_in, size);
+
+    pos_ += size;
+    return true;
+}
+
+bool Deserializer::fetchPOD(void *p, size_t size)
+{
+    if (!checkSize(size))
+        return false;
+
+    const uint8_t *p_in = start_ + pos_;
+    if (endian_ == Endian::kLittle) {
+        memcpy(p, p_in, size);
+    } else {
+        //! 倒序读出
+        uint8_t *p_out = static_cast<uint8_t*>(p) + size - 1;
+        size_t times = size;
+        while (times-- > 0)
+            *p_out-- = *p_in++;
+    }
 
     pos_ += size;
     return true;
@@ -242,11 +289,6 @@ const void* Deserializer::fetchNoCopy(size_t size)
     return p;
 }
 
-bool Deserializer::checkSize(size_t need_size) const
-{
-    return (pos_ + need_size) <= size_;
-}
-
 }
 }
 
@@ -261,8 +303,8 @@ Serializer& operator << (Serializer &s, uint32_t in) { s.append(in); return s; }
 Serializer& operator << (Serializer &s, int32_t in) { s.append(static_cast<uint32_t>(in)); return s; }
 Serializer& operator << (Serializer &s, uint64_t in) { s.append(in); return s; }
 Serializer& operator << (Serializer &s, int64_t in) { s.append(static_cast<uint64_t>(in)); return s; }
-Serializer& operator << (Serializer &s, float in) { s.append(*reinterpret_cast<uint32_t*>(&in)); return s; }
-Serializer& operator << (Serializer &s, double in) { s.append(*reinterpret_cast<uint64_t*>(&in)); return s; }
+Serializer& operator << (Serializer &s, float in) { s.appendPOD(&in, sizeof(in)); return s; }
+Serializer& operator << (Serializer &s, double in) { s.appendPOD(&in, sizeof(in)); return s; }
 
 Deserializer& operator >> (Deserializer &s, Endian endian) { s.setEndian(endian); return s; }
 Deserializer& operator >> (Deserializer &s, uint8_t &out) { s.fetch(out); return s; }
@@ -273,5 +315,5 @@ Deserializer& operator >> (Deserializer &s, uint32_t &out) { s.fetch(out); retur
 Deserializer& operator >> (Deserializer &s, int32_t &out) { s.fetch(*((uint32_t*)&out)); return s; }
 Deserializer& operator >> (Deserializer &s, uint64_t &out) { s.fetch(out); return s; } 
 Deserializer& operator >> (Deserializer &s, int64_t &out) { s.fetch(*((uint64_t*)&out)); return s; }
-Deserializer& operator >> (Deserializer &s, float &out) { s.fetch(*reinterpret_cast<uint32_t*>(&out)); return s; }
-Deserializer& operator >> (Deserializer &s, double &out) { s.fetch(*reinterpret_cast<uint64_t*>(&out)); return s; }
+Deserializer& operator >> (Deserializer &s, float &out) { s.fetchPOD(&out, sizeof(out)); return s; }
+Deserializer& operator >> (Deserializer &s, double &out) { s.fetchPOD(&out, sizeof(out)); return s; }

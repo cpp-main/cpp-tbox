@@ -102,8 +102,10 @@ void CommonLoop::HandleSignal(int signo)
 {
     //LogTrace("got signal :%d", signo);
     auto &this_signal_fds = _signal_write_fds_[signo];
-    for (int fd : this_signal_fds)
-        write(fd, &signo, sizeof(signo));
+    for (int fd : this_signal_fds) {
+        auto wsize = write(fd, &signo, sizeof(signo));
+        (void)wsize;    //! 消除编译警告
+    }
 }
 
 void CommonLoop::onSignal()
