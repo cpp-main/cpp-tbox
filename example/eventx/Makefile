@@ -1,6 +1,6 @@
-subdirs := $(shell ls | grep -v Makefile)
-
 all test clean distclean:
-	@for i in $(subdirs); do \
-		$(MAKE) -C $$i $@ || exit $$? ; \
+	@for i in $(shell ls) ; do \
+		if [ -d $$i ]; then  \
+			$(MAKE) -C $$i $@ || exit $$? ; \
+		fi \
 	done
