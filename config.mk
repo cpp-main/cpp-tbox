@@ -9,4 +9,5 @@ app_y += coroutine
 app_y += mqtt
 app_y += terminal
 app_y += main
-app_y += sample
+#app_y += sample
+app_y += example
