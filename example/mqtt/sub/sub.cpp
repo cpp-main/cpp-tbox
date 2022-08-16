@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     stop_ev->enable();
     stop_ev->setCallback(
-        [sp_loop, &mqtt] {
+        [sp_loop, &mqtt] (int) {
             mqtt.stop();
             sp_loop->exitLoop();
         }
