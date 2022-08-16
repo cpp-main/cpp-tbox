@@ -1,4 +1,4 @@
-EXE_NAME := sample
+EXE_NAME := example/main/sample
 
 CPP_SRC_FILES := app_main.cpp build_time.cpp
 TEST_CPP_SRC_FILES :=
@@ -29,4 +29,4 @@ TEST_LDFLAGS += $(LDFLAGS)
 pre_build :
 	touch build_time.cpp
 
-include ../tools/exe_common.mk
+include $(TOP_DIR)/tools/exe_common.mk
