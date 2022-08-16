@@ -1,4 +1,4 @@
-EXE_NAME := example/main/sample
+EXE_NAME := sample
 
 CPP_SRC_FILES := app_main.cpp build_time.cpp
 TEST_CPP_SRC_FILES :=

@@ -8,5 +8,6 @@ LDFLAGS += \
 	-ltbox_event \
 	-ltbox_base \
 	-lmosquitto \
+	-lpthread \
 
 include ${TOP_DIR}/tools/exe_common.mk
