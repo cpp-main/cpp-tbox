@@ -1,6 +1,6 @@
 include build_env.mk
 
-.PHONY: all modules examples sample test clean distclean
+.PHONY: all modules examples test clean distclean
 
 CCFLAGS := -Wall
 
@@ -31,7 +31,7 @@ include config.mk
 
 all: modules
 
-modules examples sample:
+modules examples:
 	$(MAKE) -C $@
 
 test:
