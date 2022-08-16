@@ -51,4 +51,4 @@ TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
 
 ENABLE_SHARED_LIB = no
 
-include ../tools/lib_common.mk
+include $(TOP_DIR)/tools/lib_common.mk
