@@ -23,6 +23,7 @@ class Serializer {
     bool append(uint32_t in);
     bool append(uint64_t in);
     bool append(const void *p, size_t s);
+    bool appendPOD(const void *p, size_t s);
 
   protected:
     bool extendSize(size_t size);
@@ -50,6 +51,7 @@ class Deserializer {
     bool fetch(uint32_t &out);
     bool fetch(uint64_t &out);
     bool fetch(void *p, size_t s);
+    bool fetchPOD(void *p, size_t s);
     const void* fetchNoCopy(size_t s);
 
   protected:

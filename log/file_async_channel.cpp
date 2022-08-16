@@ -56,7 +56,7 @@ void FileAsyncChannel::onLogBackEnd(const std::string &log_text)
 
     ofs_ << log_text << endl << flush;
 
-    if (ofs_.tellp() >= file_max_size_)
+    if (static_cast<size_t>(ofs_.tellp()) >= file_max_size_)
         ofs_.close();
 }
 

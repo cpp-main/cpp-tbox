@@ -21,6 +21,7 @@ LDFLAGS += \
 	-ltbox_util \
 	-ltbox_base \
 	-lpthread \
+	-ldl \
 	-rdynamic
 
 TEST_LDFLAGS += $(LDFLAGS)
