@@ -8,12 +8,10 @@
 #include <algorithm>
 #include <mutex>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace {
 
-static std::mutex _lock;
-static uint32_t _id_alloc = 0;
+std::mutex _lock;
+uint32_t _id_alloc = 0;
 
 struct OutputChannel {
     uint32_t id;
@@ -21,7 +19,19 @@ struct OutputChannel {
     void *ptr;
 };
 
-static std::vector<OutputChannel> _output_channels;
+std::vector<OutputChannel> _output_channels;
+
+const char* Basename(const char *full_path)
+{
+    const char *p_last = full_path;
+    for (const char *p = full_path; *p; ++p) {
+        if (*p == '/')
+            p_last = p + 1;
+    }
+    return p_last;
+}
+
+}
 
 /**
  * \brief   日志格式化打印接口的实现
@@ -52,7 +62,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         },
         .module_id = module_id_be_print,
         .func_name = func_name,
-        .file_name = file_name,
+        .file_name = Basename(file_name),
         .line = line,
         .level = level,
         .with_args = with_args,
@@ -103,6 +113,3 @@ bool LogRemovePrintfFunc(uint32_t id)
     return false;
 }
 
-#ifdef __cplusplus
-}
-#endif
