@@ -1,6 +1,6 @@
 include build_env.mk
 
-.PHONY: all clean distclean
+.PHONY: all modules examples test clean distclean
 
 CCFLAGS := -Wall
 
@@ -25,13 +25,17 @@ CFLAGS := $(CCFLAGS) $(CFLAGS)
 APPS_DIR := $(PWD)
 
 export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
+export MODULES
 
 include config.mk
 
-all test:
-	@for i in $(app_y); do \
-		[ ! -d $$i ] || $(MAKE) -C $$i $@ || exit $$? ; \
-	done
+all: modules
+
+modules examples:
+	$(MAKE) -C $@
+
+test:
+	$(MAKE) -C modules test
 
 clean:
 	-rm -rf $(OUTPUT_DIR)
