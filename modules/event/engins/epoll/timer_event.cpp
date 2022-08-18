@@ -80,6 +80,11 @@ void EpollTimerEvent::onEvent()
 {
     wp_loop_->beginEventProcess();
 
+    if (mode_ == Mode::kOneshot) {
+        is_enabled_ = false;
+        token_.reset();
+    }
+
     if (cb_) {
         ++cb_level_;
         cb_();

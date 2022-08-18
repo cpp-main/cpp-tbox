@@ -141,14 +141,13 @@ void EpollFdEvent::onEvent(short events)
 {
     wp_loop_->beginEventProcess();
 
-    if (cb_) {
+    if (is_stop_after_trigger_)
+        disable();
 
+    if (cb_) {
         ++cb_level_;
         cb_(events);
         --cb_level_;
-
-        if (is_stop_after_trigger_)
-            disable();
     }
 
     wp_loop_->endEventProcess();

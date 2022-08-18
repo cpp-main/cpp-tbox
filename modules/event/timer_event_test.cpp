@@ -27,6 +27,7 @@ TEST(TimerEvent, Oneshot)
         sp_loop->runLoop();
 
         EXPECT_EQ(run_time, 1);
+        EXPECT_FALSE(timer_event->isEnabled());
 
         delete timer_event;
         delete sp_loop;
@@ -50,6 +51,7 @@ TEST(TimerEvent, Persist)
         sp_loop->runLoop();
 
         EXPECT_EQ(run_time, 10);
+        EXPECT_TRUE(timer_event->isEnabled());
 
         delete timer_event;
         delete sp_loop;
