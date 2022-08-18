@@ -72,7 +72,7 @@ TEST(Fd, close) {
 TEST(Fd, cast)
 {
     Fd fd(12);
-    EXPECT_EQ(fd, 12);
+    EXPECT_EQ(fd.get(), 12);
 }
 
 TEST(Fd, copy_construct)

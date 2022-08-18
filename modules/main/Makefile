@@ -29,7 +29,7 @@ TEST_LDFLAGS := $(LDFLAGS) \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
-	-levent_core -lev
+	-ldl \
 
 ENABLE_SHARED_LIB = no
 
