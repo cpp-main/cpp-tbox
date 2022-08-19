@@ -1,9 +1,10 @@
-EXE_NAME := example/event/03-signal
+EXE_NAME := example/network/stdio_stream/01_stdin_out
 
 CPP_SRC_FILES := main.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
+	-ltbox_network \
 	-ltbox_event \
 	-ltbox_base \
 

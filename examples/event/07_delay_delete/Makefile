@@ -1,4 +1,4 @@
-EXE_NAME := example/event/04-run-in-loop
+EXE_NAME := example/event/07_delay_delete
 
 CPP_SRC_FILES := main.cpp
 
@@ -6,6 +6,5 @@ CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_event \
 	-ltbox_base \
-	-lpthread \
 
 include ${TOP_DIR}/tools/exe_common.mk

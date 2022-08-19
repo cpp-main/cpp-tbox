@@ -1,8 +1,6 @@
-EXE_NAME := example/event/08-calc-game
+EXE_NAME := example/event/02_timer
 
-CPP_SRC_FILES := \
-	main.cpp \
-	game.cpp \
+CPP_SRC_FILES := main.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

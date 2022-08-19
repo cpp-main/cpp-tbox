@@ -29,13 +29,14 @@ export MODULES
 
 include config.mk
 
-all: modules
-
-modules examples:
+modules:
 	$(MAKE) -C $@
 
-test:
+test: modules
 	$(MAKE) -C modules test
+
+examples: modules
+	$(MAKE) -C $@
 
 clean:
 	-rm -rf $(OUTPUT_DIR)

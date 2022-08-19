@@ -1,4 +1,4 @@
-EXE_NAME := example/event/01-io
+EXE_NAME := example/event/06_stdin_timer_signal
 
 CPP_SRC_FILES := main.cpp
 
