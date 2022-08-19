@@ -365,8 +365,7 @@ TEST(SignalEvent, OneEventMultiSignal)
         cout << "engin: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        std::set<int> sigset = { SIGUSR1, SIGUSR2 };
-        EXPECT_TRUE(signal_event->initialize(sigset, Event::Mode::kPersist));
+        EXPECT_TRUE(signal_event->initialize({ SIGUSR1, SIGUSR2 }, Event::Mode::kPersist));
         EXPECT_TRUE(signal_event->enable());
 
         int user1_run_time = 0;

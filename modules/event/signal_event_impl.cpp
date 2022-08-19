@@ -32,6 +32,17 @@ bool SignalEventImpl::initialize(const std::set<int> &sigset, Mode mode)
     return true;
 }
 
+bool SignalEventImpl::initialize(const std::initializer_list<int> &sigset, Mode mode)
+{
+    for (auto signo : sigset)
+        sigset_.insert(signo);
+
+    mode_ = mode;
+
+    is_inited_ = true;
+    return true;
+}
+
 bool SignalEventImpl::enable()
 {
     if (is_inited_) {

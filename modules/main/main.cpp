@@ -120,7 +120,7 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
         }
     );
 
-    stop_signal->initialize(std::set<int>{SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
+    stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
         [&] (int signo) {
             LogInfo("Got signal %d", signo);

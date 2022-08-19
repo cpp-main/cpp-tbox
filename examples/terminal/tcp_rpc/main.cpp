@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     //! 注册ctrl+C停止信号
     auto *sp_stop_ev = sp_loop->newSignalEvent();
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
-    sp_stop_ev->initialize(std::set<int>{SIGINT,SIGTERM}, Event::Mode::kOneshot);
+    sp_stop_ev->initialize({SIGINT,SIGTERM}, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
     sp_stop_ev->setCallback(
         [&] (int) {
