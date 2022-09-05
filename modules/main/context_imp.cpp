@@ -6,6 +6,7 @@
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
+#include <tbox/util/string.h>
 #include <tbox/terminal/session.h>
 
 namespace tbox {
@@ -152,9 +153,11 @@ void ContextImp::buildTerminalNodes()
             if (sp_loop_->isStatEnabled()) {
                 ss << sp_loop_->getStat();
             } else {
-                ss << "stat not enabled\r\n";
+                ss << "stat not enabled" << std::endl;
             }
-            s.send(ss.str());
+            std::string txt = ss.str();
+            util::string::Replace(txt, "\n", "\r\n");
+            s.send(txt);
         }
     , "print Loop's stat data");
     wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
