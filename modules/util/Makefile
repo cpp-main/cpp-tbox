@@ -15,6 +15,7 @@ HEAD_FILES = \
 	state_machine.h \
 	async_pipe.h \
 	backtrace.h \
+	timestamp.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -28,6 +29,7 @@ CPP_SRC_FILES = \
 	state_machine.cpp \
 	async_pipe.cpp \
 	backtrace.cpp \
+	timestamp.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
