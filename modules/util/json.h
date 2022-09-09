@@ -18,6 +18,11 @@ bool GetField(const Json &js, const std::string &field_name, double &field_value
 //! "hello world"
 bool GetField(const Json &js, const std::string &field_name, std::string &field_value);
 
+//! 检查是否存在字段，且是对象
+bool HasObjectField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且是数组
+bool HasArrayField(const Json &js, const std::string &field_name);
+
 }
 }
 }

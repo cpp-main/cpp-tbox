@@ -60,6 +60,26 @@ bool GetField(const Json &js, const std::string &field_name, std::string &field_
     return true;
 }
 
+bool HasObjectField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    if (!js_field.is_object())
+        return false;
+    return true;
+}
+
+bool HasArrayField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    if (!js_field.is_array())
+        return false;
+    return true;
+}
+
 }
 }
 }
