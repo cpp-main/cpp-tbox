@@ -125,7 +125,7 @@ TEST(Json, HasField)
   },
   "array": [ 12, 3 ],
   "int": 12,
-  "string", "hello"
+  "string": "hello"
 })"_json;
 
   EXPECT_TRUE(json::HasObjectField(js, "object"));
