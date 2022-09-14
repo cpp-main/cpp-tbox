@@ -7,6 +7,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
 #include <tbox/util/string.h>
+#include <tbox/util/json.h>
 #include <tbox/terminal/session.h>
 
 namespace tbox {
@@ -45,35 +46,35 @@ void ContextImp::fillDefaultConfig(Json &cfg) const
 
 bool ContextImp::initialize(const Json &cfg)
 {
-    auto &js_thread_pool = cfg["thread_pool"];
-    if (js_thread_pool.is_null()) {
+    if (!util::json::HasObjectField(cfg, "thread_pool")) {
         LogWarn("cfg.thread_pool not found");
         return false;
     }
+    auto &js_thread_pool = cfg["thread_pool"];
 
-    auto &js_thread_pool_min = js_thread_pool["min"];
-    auto &js_thread_pool_max = js_thread_pool["max"];
-    if (!js_thread_pool_min.is_number() || !js_thread_pool_max.is_number()) {
+    int thread_pool_min = 0, thread_pool_max = 0;
+    if (!util::json::GetField(js_thread_pool, "min", thread_pool_min) ||
+        !util::json::GetField(js_thread_pool, "max", thread_pool_max)) {
         LogWarn("in cfg.thread_pool, min or max is not number");
         return false;
     }
 
-    if (!sp_thread_pool_->initialize(js_thread_pool_min.get<int>(), js_thread_pool_max.get<int>()))
+    if (!sp_thread_pool_->initialize(thread_pool_min, thread_pool_max))
         return false;
 
-    if (cfg.contains("telnetd")) {
+    if (util::json::HasObjectField(cfg, "telnetd")) {
         auto &js_telnetd = cfg["telnetd"];
-        if (js_telnetd.contains("bind")) {
-            auto &js_telnetd_bind = js_telnetd["bind"];
-            if (sp_telnetd_->initialize(js_telnetd_bind.get<std::string>()))
+        std::string telnetd_bind;
+        if (util::json::GetField(js_telnetd, "bind", telnetd_bind)) {
+            if (sp_telnetd_->initialize(telnetd_bind))
                 telnetd_init_ok = true;
         }
     }
-    if (cfg.contains("tcp_rpc")) {
+    if (util::json::HasObjectField(cfg, "tcp_rpc")) {
         auto &js_tcp_rpc = cfg["tcp_rpc"];
-        if (js_tcp_rpc.contains("bind")) {
-            auto &js_tcp_rpc_bind = js_tcp_rpc["bind"];
-            if (sp_tcp_rpc_->initialize(js_tcp_rpc_bind.get<std::string>()))
+        std::string tcp_rpc_bind;
+        if (util::json::GetField(js_tcp_rpc, "bind", tcp_rpc_bind)) {
+            if (sp_tcp_rpc_->initialize(tcp_rpc_bind))
                 tcp_rpc_init_ok = true;
         }
     }
