@@ -25,6 +25,7 @@ class Log {
     void cleanup();
 
   protected:
+    void initChannel(const Json &js, log::Channel &ch);
     void buildTerminalNodes(terminal::TerminalNodes &term);
 
   private:

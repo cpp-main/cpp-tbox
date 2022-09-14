@@ -4,6 +4,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/terminal/session.h>
 #include <tbox/util/fs.h>
+#include <tbox/util/json.h>
 
 namespace tbox {
 namespace main {
@@ -50,136 +51,47 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 {
     buildTerminalNodes(*ctx.terminal());
 
-    if (cfg.contains("log")) {
+    if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
-        if (js_log.contains("stdout")) {
-            auto &js = js_log.at("stdout");
-            if (js.contains("enable")) {
-                auto &js_enable = js.at("enable");
-                if (js_enable.is_boolean()) {
-                    if (js_enable.get<bool>())
-                        stdout_.enable();
-                    else
-                        stdout_.disable();
-                } else {
-                    cerr << "WARN: stdout.enable not boolean." << endl;
-                }
-            }
-
-            if (js.contains("enable_color")) {
-                auto &js_enable = js.at("enable_color");
-                if (js_enable.is_boolean()) {
-                    stdout_.enableColor(js_enable.get<bool>());
-                } else {
-                    cerr << "WARN: stdout.enable_color not boolean." << endl;
-                }
-            }
-
-            if (js.contains("levels")) {
-                auto &js_levels = js.at("levels");
-                if (js_levels.is_object()) {
-                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
-                        stdout_.setLevel(it.value(), it.key());
-                } else {
-                    cerr << "WARN: stdout.levels not object." << endl;
-                }
-            }
+        //! STDOUT
+        if (util::json::HasObjectField(js_log, "stdout")) {
+            auto &js_stdout = js_log.at("stdout");
+            initChannel(js_stdout, stdout_);
         }
 
-        if (js_log.contains("syslog")) {
-            auto &js = js_log.at("syslog");
-            if (js.contains("enable")) {
-                auto &js_enable = js.at("enable");
-                if (js_enable.is_boolean()) {
-                    if (js_enable.get<bool>())
-                        syslog_.enable();
-                    else
-                        syslog_.disable();
-                } else {
-                    cerr << "WARN: syslog.enable not boolean." << endl;
-                }
-            }
-
-            if (js.contains("levels")) {
-                auto &js_levels = js.at("levels");
-                if (js_levels.is_object()) {
-                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
-                        syslog_.setLevel(it.value(), it.key());
-                } else {
-                    cerr << "WARN: stdout.levels not object." << endl;
-                }
-            }
+        //! SYSLOG
+        if (util::json::HasObjectField(js_log, "syslog")) {
+            auto &js_syslog = js_log.at("stdout");
+            initChannel(js_syslog, syslog_);
         }
 
-        do {
-            if (!js_log.contains("filelog"))
-                break;
-
-            auto &js = js_log.at("filelog");
-            if (!js.contains("path")) {
-                cerr << "WARN: filelog.path not found." << endl;
-                break;
-            }
-
-            if (js.contains("enable")) {
-                auto &js_enable = js.at("enable");
-                if (js_enable.is_boolean()) {
-                    if (js_enable.get<bool>())
-                        filelog_.enable();
-                    else
-                        filelog_.disable();
-                } else
-                    cerr << "WARN: filelog.enable not boolean" << endl;
-            }
-
-            if (js.contains("enable_color")) {
-                auto &js_enable = js.at("enable_color");
-                if (js_enable.is_boolean()) {
-                    filelog_.enableColor(js_enable.get<bool>());
-                } else
-                    cerr << "WARN: filelog.enable_color not boolean" << endl;
-            }
-
-            if (js.contains("levels")) {
-                auto &js_levels = js.at("levels");
-                if (js_levels.is_object()) {
-                    for (auto it = js_levels.begin(); it != js_levels.end(); ++it)
-                        filelog_.setLevel(it.value(), it.key());
-                } else {
-                    cerr << "WARN: stdout.levels not object." << endl;
+        //! FILELOG
+        if (util::json::HasObjectField(js_log, "filelog")) {
+            auto &js_filelog = js_log.at("filelog");
+            do {
+                std::string path;
+                if (!util::json::GetField(js_filelog, "path", path)) {
+                    cerr << "WARN: filelog.path not found or not string." << endl;
+                    break;
                 }
-            }
 
-            auto &js_path = js.at("path");
-            if (!js_path.is_string()) {
-                cerr << "WARN: filelog.path not string." << endl;
-                break;
-            }
+                initChannel(js_filelog, filelog_);
 
-            std::string prefix = util::fs::Basename(proc_name); //! 默认前缀就是进程名
-            if (js.contains("prefix")) {
-                auto &js_prefix = js.at("prefix");
-                if (js_prefix.is_string())
-                    prefix = js_prefix.get<std::string>();
-                else
-                    cerr << "WARN: filelog.prefix not string, using proc_name instead." << endl;
-            }
+                std::string prefix = util::fs::Basename(proc_name); //! 默认前缀就是进程名
+                util::json::GetField(js_filelog, "prefix", prefix);
 
-            if (!filelog_.initialize(js_path.get<std::string>(), prefix)) {
-                cerr << "WARN: Init filelog fail." << endl;
-                break;
-            }
+                if (!filelog_.initialize(path, prefix)) {
+                    cerr << "WARN: filelog init fail" << endl;
+                    break;
+                }
 
-            if (js.contains("max_size")) {
-                auto &js_max_size = js.at("max_size");
-                if (js_max_size.is_number())
-                    filelog_.setFileMaxSize(js_max_size.get<int>() * 1024);
-                else
-                    cerr << "WARN: filelog.max_size not number" << endl;
-            }
-        } while (false);
+                unsigned int max_size = 1024;
+                if (util::json::GetField(js_filelog, "max_size", max_size))
+                    filelog_.setFileMaxSize(max_size * 1024);
+
+            } while (false);
+        }
     }
-
     return true;
 }
 
@@ -187,6 +99,27 @@ void Log::cleanup()
 {
     filelog_.cleanup();
     filelog_.disable();
+}
+
+void Log::initChannel(const Json &js, log::Channel &ch)
+{
+    bool enable = false;
+    if (util::json::GetField(js, "enable", enable)) {
+        if (enable)
+            ch.enable();
+        else
+            ch.disable();
+    }
+
+    bool enable_color = false;
+    if (util::json::GetField(js, "enable_color", enable_color))
+        ch.enableColor(enable_color);
+
+    if (util::json::HasObjectField(js, "levels")) {
+        auto &js_levels = js.at("levels");
+        for (auto &item : js_levels.items())
+            ch.setLevel(item.value(), item.key());
+    }
 }
 
 void Log::buildTerminalNodes(TerminalNodes &term)
