@@ -22,6 +22,18 @@ bool GetField(const Json &js, const std::string &field_name, std::string &field_
 bool HasObjectField(const Json &js, const std::string &field_name);
 //! 检查是否存在字段，且是数组
 bool HasArrayField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为Boolean
+bool HasBooleanField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为小数或是整数
+bool HasNumberField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为小数
+bool HasFloatField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为整数
+bool HasIntegerField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为正整数
+bool HasUnsignedField(const Json &js, const std::string &field_name);
+//! 检查是否存在字段，且为字串
+bool HasStringField(const Json &js, const std::string &field_name);
 
 }
 }

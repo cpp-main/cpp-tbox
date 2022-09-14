@@ -65,9 +65,7 @@ bool HasObjectField(const Json &js, const std::string &field_name)
     if (!js.contains(field_name))
         return false;
     auto &js_field = js.at(field_name);
-    if (!js_field.is_object())
-        return false;
-    return true;
+    return js_field.is_object();
 }
 
 bool HasArrayField(const Json &js, const std::string &field_name)
@@ -75,9 +73,55 @@ bool HasArrayField(const Json &js, const std::string &field_name)
     if (!js.contains(field_name))
         return false;
     auto &js_field = js.at(field_name);
-    if (!js_field.is_array())
+    return js_field.is_array();
+}
+
+bool HasBooleanField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
         return false;
-    return true;
+    auto &js_field = js.at(field_name);
+    return js_field.is_boolean();
+}
+
+bool HasNumberField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    return js_field.is_number();
+}
+
+bool HasFloatField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    return js_field.is_number_float();
+}
+
+bool HasIntegerField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    return js_field.is_number_integer();
+}
+
+bool HasUnsignedField(const Json &js, const std::string &field_name)
+{
+    if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    return js_field.is_number_unsigned();
+}
+
+bool HasStringField(const Json &js, const std::string &field_name)
+{
+     if (!js.contains(field_name))
+        return false;
+    auto &js_field = js.at(field_name);
+    return js_field.is_string();
 }
 
 }
