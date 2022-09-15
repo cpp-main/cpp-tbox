@@ -22,13 +22,15 @@ bool FileAsyncChannel::initialize(const std::string &log_path, const std::string
     log_prefix_ = util::string::Strip(log_prefix);
     log_path_ = util::string::Strip(log_path);
 
-    //! 如果最后一个字符是/，就弹出
-    if (log_path_.at(log_path_.length() - 1) == '/')
+    //! 确保最后没有'/'字符。如果最后一个字符是/，就弹出
+    if (log_path_.length() > 1 &&
+        log_path_.at(log_path_.length() - 1) == '/')
         log_path_.pop_back();
 
-    if (log_prefix_.empty() || log_path_.empty())
+    if (log_prefix_.empty() || log_path_.empty()) {
+        cerr << "Err: prefix or log_path is empty" << endl;
         return false;
-
+    }
     AsyncChannel::Config cfg;
     cfg.buff_size = 1024;
     cfg.buff_min_num = 2;
@@ -38,7 +40,7 @@ bool FileAsyncChannel::initialize(const std::string &log_path, const std::string
     bool ok = AsyncChannel::initialize(cfg);
     if (ok) {
         pid_ = ::getpid();
-        return true;
+        return checkAndCreateLogFile();
     }
     return false;
 }
@@ -83,7 +85,7 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     int postfix = 0;
     do {
         ostringstream filename_oss;
-        filename_oss << log_path_ << '/' << log_prefix_ << '_' << pid_ << '.' << timestamp << ".log";
+        filename_oss << log_path_ << '/' << log_prefix_ << '.' << pid_ << '.' << timestamp << ".log";
         if (postfix != 0)
             filename_oss << "." << postfix;
         filename = filename_oss.str();
