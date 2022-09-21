@@ -29,7 +29,7 @@ bool PidFile::lock(const std::string &pid_filename)
 
     pid_filename_ = pid_filename;
 
-    int fd = open(pid_filename_.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC, 0644);
+    int fd = open(pid_filename_.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC | O_TRUNC, 0644);
     if (fd < 0) {
         cerr << "Err: create pid file " << pid_filename_ << " fail. errno:" << errno << ", " << strerror(errno) <<  endl;
         return false;

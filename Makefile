@@ -29,6 +29,8 @@ export MODULES
 
 include config.mk
 
+all: modules test examples
+
 modules:
 	$(MAKE) -C $@
 
