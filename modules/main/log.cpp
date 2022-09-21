@@ -128,18 +128,37 @@ void Log::buildTerminalNodes(TerminalNodes &term)
     term.mountNode(term.rootNode(), log_node, "log");
 
     {
+        auto dir_node = term.createDirNode();
+        term.mountNode(log_node, dir_node, "stdout");
+        buildTerminalNodesForChannel(term, stdout_, dir_node);
+    }
+    {
+        auto dir_node = term.createDirNode();
+        term.mountNode(log_node, dir_node, "syslog");
+        buildTerminalNodesForChannel(term, syslog_, dir_node);
+    }
+    {
+        auto dir_node = term.createDirNode();
+        term.mountNode(log_node, dir_node, "filelog");
+        buildTerminalNodesForChannel(term, filelog_, dir_node);
+    }
+}
+
+void Log::buildTerminalNodesForChannel(terminal::TerminalNodes &term, log::Channel &log_ch, terminal::NodeToken dir_node)
+{
+    {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this, &log_ch] (const Session &s, const Args &args) {
                 std::stringstream ss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
                     const auto &opt = args[1];
                     if (opt == "on") {
-                        stdout_.enable();
+                        log_ch.enable();
                         ss << "on\r\n";
                         print_usage = false;
                     } else if (opt == "off") {
-                        stdout_.disable();
+                        log_ch.disable();
                         ss << "off\r\n";
                         print_usage = false;
                     }
@@ -150,23 +169,23 @@ void Log::buildTerminalNodes(TerminalNodes &term)
 
                 s.send(ss.str());
             }
-        , "enable or disable stdout log channel");
-        term.mountNode(log_node, func_node, "stdout_enable");
+        , "enable or disable");
+        term.mountNode(dir_node, func_node, "enable");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this, &log_ch] (const Session &s, const Args &args) {
                 std::stringstream ss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
                     const auto &opt = args[1];
                     if (opt == "on") {
-                        stdout_.enableColor(true);
+                        log_ch.enableColor(true);
                         ss << "on\r\n";
                         print_usage = false;
                     } else if (opt == "off") {
-                        stdout_.enableColor(false);
+                        log_ch.enableColor(false);
                         ss << "off\r\n";
                         print_usage = false;
                     }
@@ -177,89 +196,53 @@ void Log::buildTerminalNodes(TerminalNodes &term)
 
                 s.send(ss.str());
             }
-        , "enable or disable stdout log color");
-        term.mountNode(log_node, func_node, "stdout_color_enable");
+        , "enable or disable color");
+        term.mountNode(dir_node, func_node, "color_enable");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this, &log_ch] (const Session &s, const Args &args) {
                 std::stringstream ss;
                 bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        syslog_.enable();
-                        ss << "on\r\n";
+                if (args.size() >= 3) {
+                    do {
+                        auto &module_id = args[1];
+                        int level = 0;
+                        try {
+                            level = std::stoi(args[2]);
+                        } catch (const std::exception &e) {
+                            ss << "level must be number\r\n";
+                            break;
+                        }
+                        if (level < 0 || level > LOG_LEVEL_TRACE) {
+                            ss << "level range: [0-" << LOG_LEVEL_TRACE << "]\r\n";
+                            break;
+                        }
+
+                        log_ch.setLevel(level, module_id);
+                        ss << "done\r\n";
                         print_usage = false;
-                    } else if (opt == "off") {
-                        syslog_.disable();
-                        ss << "off\r\n";
-                        print_usage = false;
-                    }
+
+                    } while (false);
                 }
 
                 if (print_usage)
-                    ss << "Usage: " << args[0] << " on|off\r\n";
+                    ss << "Usage: " << args[0] << " <module_id:string> <level:0-6>\r\n"
+                       << "LEVEL\r\n"
+                       << " 0: Fatal\r\n"
+                       << " 1: Error\r\n"
+                       << " 2: Warn\r\n"
+                       << " 3: Notice\r\n"
+                       << " 4: Info\r\n"
+                       << " 5: Debug\r\n"
+                       << " 6: Trace\r\n"
+                       ;
 
                 s.send(ss.str());
             }
-        , "enable or disable syslog log channel");
-        term.mountNode(log_node, func_node, "syslog_enable");
-    }
-
-    {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::stringstream ss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        filelog_.enable();
-                        ss << "on\r\n";
-                        print_usage = false;
-                    } else if (opt == "off") {
-                        filelog_.disable();
-                        ss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    ss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(ss.str());
-            }
-        , "enable or disable syslog log channel");
-        term.mountNode(log_node, func_node, "filelog_enable");
-    }
-
-    {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::stringstream ss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        filelog_.enableColor(true);
-                        ss << "on\r\n";
-                        print_usage = false;
-                    } else if (opt == "off") {
-                        filelog_.enableColor(false);
-                        ss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    ss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(ss.str());
-            }
-        , "enable or disable file log color");
-        term.mountNode(log_node, func_node, "file_color_enable");
+        , "set log level");
+        term.mountNode(dir_node, func_node, "set_level");
     }
 }
 

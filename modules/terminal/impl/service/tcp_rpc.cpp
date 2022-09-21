@@ -95,7 +95,9 @@ bool TcpRpc::Impl::isValid(const SessionToken &st) const
 
 void TcpRpc::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
+#if 0
     cout << ct.id() << " connected" << endl;
+#endif
 
     auto st = wp_terminal_->newSession(this);
     client_to_session_[ct] = st;
@@ -107,7 +109,9 @@ void TcpRpc::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 
 void TcpRpc::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
+#if 0
     cout << ct.id() << " disconnected" << endl;
+#endif
 
     auto st = client_to_session_.at(ct);
     client_to_session_.erase(ct);
