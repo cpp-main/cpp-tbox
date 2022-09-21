@@ -19,7 +19,7 @@ using std::exception;
 
 bool IsFileExist(const std::string &filename)
 {
-#if 0
+#if 1
     int ret = ::access(filename.c_str(), F_OK);
     return ret == 0;
 #else

@@ -64,8 +64,11 @@ void FileAsyncChannel::onLogBackEnd(const std::string &log_text)
 
 bool FileAsyncChannel::checkAndCreateLogFile()
 {
-    if (ofs_.is_open())
-        return true;
+    if (ofs_.is_open()) {
+        if (util::fs::IsFileExist(filename_))
+            return true;
+        ofs_.close();
+    }
 
     //!检查并创建路径
     if (!util::fs::MakeDirectory(log_path_, false)) {
@@ -91,8 +94,9 @@ bool FileAsyncChannel::checkAndCreateLogFile()
         filename = filename_oss.str();
         ++postfix;
     } while (util::fs::IsFileExist(filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
+    filename_ = filename;
 
-    ofs_.open(filename, ofstream::out | ofstream::app);
+    ofs_.open(filename_, ofstream::out | ofstream::app);
     return ofs_.is_open();
 }
 

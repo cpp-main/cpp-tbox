@@ -3,8 +3,10 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <tbox/util/fs.h>
 
 using namespace std;
+using namespace tbox;
 using namespace tbox::log;
 
 TEST(FileAsyncChannel, Format)
@@ -62,8 +64,28 @@ TEST(FileAsyncChannel, ParamNormalize)
     FileAsyncChannel ch;
     ch.initialize("  /tmp/tbox ", " test ");
     ch.enable();
-    std::string tmp(120, 'v');
     LogInfo("Test LogPath");
+    ch.cleanup();
+}
+
+TEST(FileAsyncChannel, CreateFileInInit)
+{
+    FileAsyncChannel ch;
+    ch.initialize("/tmp/tbox", "create_file_init");
+    ch.enable();
+    EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
+    ch.cleanup();
+}
+
+TEST(FileAsyncChannel, RemoveLogFileDuringWriting)
+{
+    FileAsyncChannel ch;
+    ch.initialize("/tmp/tbox", "remove_log_file_during_writing");
+    ch.enable();
+    util::fs::RemoveFile(ch.currentFilename());
+    LogInfo("Hello");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
     ch.cleanup();
 }
 
