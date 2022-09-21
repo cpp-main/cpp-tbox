@@ -10,6 +10,8 @@
 #include <tbox/util/json.h>
 #include <tbox/terminal/session.h>
 
+#include "main.h"
+
 namespace tbox {
 namespace main {
 
@@ -120,58 +122,97 @@ void ContextImp::buildTerminalNodes()
     auto ctx_node = wp_nodes->createDirNode("This is Context directory");
     wp_nodes->mountNode(wp_nodes->rootNode(), ctx_node, "ctx");
 
-    auto loop_node = wp_nodes->createDirNode("This is Loop directory");
-    wp_nodes->mountNode(ctx_node, loop_node, "loop");
+    {
+        auto loop_node = wp_nodes->createDirNode("This is Loop directory");
+        wp_nodes->mountNode(ctx_node, loop_node, "loop");
 
-    auto loop_stat_node = wp_nodes->createDirNode();
-    wp_nodes->mountNode(loop_node, loop_stat_node, "stat");
+        auto loop_stat_node = wp_nodes->createDirNode();
+        wp_nodes->mountNode(loop_node, loop_stat_node, "stat");
 
-    auto loop_stat_enable_node = wp_nodes->createFuncNode(
-        [this] (const Session &s, const Args &args) {
-            std::stringstream ss;
-            if (args.size() >= 2) {
-                const auto &opt = args[1];
-                if (opt == "on") {
-                    sp_loop_->setStatEnable(true);
-                    ss << "stat on\r\n";
-                } else if (opt == "off") {
-                    sp_loop_->setStatEnable(false);
-                    ss << "stat off\r\n";
+        auto loop_stat_enable_node = wp_nodes->createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::stringstream ss;
+                if (args.size() >= 2) {
+                    const auto &opt = args[1];
+                    if (opt == "on") {
+                        sp_loop_->setStatEnable(true);
+                        ss << "stat on\r\n";
+                    } else if (opt == "off") {
+                        sp_loop_->setStatEnable(false);
+                        ss << "stat off\r\n";
+                    } else {
+                        ss << "Usage: " << args[0] << " on|off\r\n";
+                    }
                 } else {
-                    ss << "Usage: " << args[0] << " on|off\r\n";
+                    ss << (sp_loop_->isStatEnabled() ? "on" : "off") << "\r\n";
                 }
-            } else {
-                ss << (sp_loop_->isStatEnabled() ? "on" : "off") << "\r\n";
+                s.send(ss.str());
             }
-            s.send(ss.str());
-        }
-    , "enable or disable Loop's stat function");
-    wp_nodes->mountNode(loop_stat_node, loop_stat_enable_node, "enable");
+        , "enable or disable Loop's stat function");
+        wp_nodes->mountNode(loop_stat_node, loop_stat_enable_node, "enable");
 
-    auto loop_stat_print_node = wp_nodes->createFuncNode(
-        [this] (const Session &s, const Args &args) {
-            std::stringstream ss;
-            if (sp_loop_->isStatEnabled()) {
-                ss << sp_loop_->getStat();
-            } else {
-                ss << "stat not enabled" << std::endl;
+        auto loop_stat_print_node = wp_nodes->createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::stringstream ss;
+                if (sp_loop_->isStatEnabled()) {
+                    ss << sp_loop_->getStat();
+                } else {
+                    ss << "stat not enabled" << std::endl;
+                }
+                std::string txt = ss.str();
+                util::string::Replace(txt, "\n", "\r\n");
+                s.send(txt);
             }
-            std::string txt = ss.str();
-            util::string::Replace(txt, "\n", "\r\n");
-            s.send(txt);
-        }
-    , "print Loop's stat data");
-    wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
+        , "print Loop's stat data");
+        wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
 
-    auto loop_stat_reset_node = wp_nodes->createFuncNode(
-        [this] (const Session &s, const Args &args) {
-            std::stringstream ss;
-            sp_loop_->resetStat();
-            ss << "done\r\n";
-            s.send(ss.str());
+        auto loop_stat_reset_node = wp_nodes->createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::stringstream ss;
+                sp_loop_->resetStat();
+                ss << "done\r\n";
+                s.send(ss.str());
+            }
+        , "reset Loop's stat data");
+        wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
+    }
+
+    {
+        auto info_node = wp_nodes->createDirNode("Information directory");
+        wp_nodes->mountNode(wp_nodes->rootNode(), info_node, "info");
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    int major = 0, minor = 0, rev = 0, build = 0;
+                    GetVersion(major, minor, rev, build);
+                    ss << 'v' << major << '.' << minor << '.' << rev << '.' << build << "\r\n";
+                    s.send(ss.str());
+                }
+            , "Print version");
+            wp_nodes->mountNode(info_node, func_node, "ver");
         }
-    , "reset Loop's stat data");
-    wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    ss << GetAppBuildTime() << "\r\n";
+                    s.send(ss.str());
+                }
+            , "Print buildtime");
+            wp_nodes->mountNode(info_node, func_node, "time");
+        }
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    ss << GetAppDescribe() << "\r\n";
+                    s.send(ss.str());
+                }
+            , "Print app describe");
+            wp_nodes->mountNode(info_node, func_node, "desc");
+        }
+    }
 }
 
 }
