@@ -185,8 +185,8 @@ void ContextImp::buildTerminalNodes()
                 [this] (const Session &s, const Args &args) {
                     std::stringstream ss;
                     int major = 0, minor = 0, rev = 0, build = 0;
-                    GetVersion(major, minor, rev, build);
-                    ss << 'v' << major << '.' << minor << '.' << rev << '.' << build << "\r\n";
+                    GetAppVersion(major, minor, rev, build);
+                    ss << 'v' << major << '.' << minor << '.' << rev << '_' << build << "\r\n";
                     s.send(ss.str());
                 }
             , "Print version");
