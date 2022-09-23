@@ -31,8 +31,14 @@ NodeToken Terminal::Impl::rootNode() const
 NodeToken Terminal::Impl::findNode(const string &path_str) const
 {
     Path node_path;
-    bool is_found = findNode(path_str, node_path);
-    return is_found ? node_path.back().second : NodeToken();
+    if (findNode(path_str, node_path)) {
+        if (node_path.empty())
+            return root_token_;
+        else
+            return node_path.back().second;
+    } else {
+        return NodeToken();
+    }
 }
 
 bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, const string &name)
@@ -60,6 +66,7 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
     vector<string> path_str_vec;
     util::string::Split(path_str, "/", path_str_vec);
 
+    //! 如果是以 '/' 开头的路径
     if (path_str_vec[0].empty()) {
         node_path.clear();
         path_str_vec.erase(path_str_vec.begin());
