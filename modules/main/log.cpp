@@ -35,8 +35,8 @@ void Log::fillDefaultConfig(Json &cfg) const
     "enable": false,
     "enable_color": false,
     "levels": {"":3},
-    "prefix": "sample",
-    "path": "/tmp/tbox",
+    "prefix": "",
+    "path": "",
     "max_size": 1024
   },
   "syslog": {
@@ -70,15 +70,14 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
             auto &js_filelog = js_log.at("filelog");
             do {
                 std::string path;
-                if (!util::json::GetField(js_filelog, "path", path)) {
-                    cerr << "WARN: filelog.path not found or not string." << endl;
-                    break;
-                }
+                util::json::GetField(js_filelog, "path", path);
+                if (path.empty())
+                    path = "/var/log/" + util::fs::Basename(proc_name);
 
-                initChannel(js_filelog, filelog_);
-
-                std::string prefix = util::fs::Basename(proc_name); //! 默认前缀就是进程名
+                std::string prefix;
                 util::json::GetField(js_filelog, "prefix", prefix);
+                if (prefix.empty())
+                    prefix = util::fs::Basename(proc_name);
 
                 if (!filelog_.initialize(path, prefix)) {
                     cerr << "WARN: filelog init fail" << endl;
@@ -89,6 +88,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
                 if (util::json::GetField(js_filelog, "max_size", max_size))
                     filelog_.setFileMaxSize(max_size * 1024);
 
+                initChannel(js_filelog, filelog_);
             } while (false);
         }
     }
