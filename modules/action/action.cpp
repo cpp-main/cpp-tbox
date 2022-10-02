@@ -3,6 +3,8 @@
 #include <cassert>
 
 #include <tbox/base/log.h>
+#include <tbox/base/json.hpp>
+
 #include "context.h"
 
 namespace tbox {
@@ -14,6 +16,11 @@ Action::Action(Context &ctx) :
 
 Action::~Action() {
   assert(status_ == Status::kIdle);
+}
+
+void Action::toJson(Json &js) const {
+  js["type"] = type();
+  js["status"] = ToString(status_);
 }
 
 bool Action::start() {
@@ -79,6 +86,11 @@ bool Action::finish(bool is_done) {
     LogWarn("not allow");
     return false;
   }
+}
+
+std::string Action::ToString(Status status) {
+  const char *tbl[] = { "idle", "running", "pause", "done", "fail" };
+  return tbl[static_cast<size_t>(status)];
 }
 
 }

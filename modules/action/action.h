@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 
+#include <tbox/base/json_fwd.h>
 #include "event_subscriber.h"
 
 namespace tbox {
@@ -31,10 +32,14 @@ class Action : public EventSubscriber {
     using FinishCallback = std::function<void(bool is_done)>;
     void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
+    virtual void toJson(Json &js) const;
+
     virtual bool start();
     virtual bool pause();
     virtual bool resume();
     virtual bool stop();
+
+    static std::string ToString(Status status);
 
   protected:
     bool finish(bool is_succ);
