@@ -22,6 +22,15 @@ class ExecutorImpl : public Context {
     EventPublisherImpl *event_publisher_ = nullptr;
 };
 
+ExecutorImpl::ExecutorImpl(event::Loop &loop) :
+  loop_(loop),
+  event_publisher_(new EventPublisherImpl)
+{ }
+
+ExecutorImpl::~ExecutorImpl() {
+  delete event_publisher_;
+}
+
 /////////////////////////
 //
 /////////////////////////

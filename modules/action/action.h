@@ -5,12 +5,12 @@
 #include <functional>
 
 #include <tbox/base/json_fwd.h>
+
+#include "context.h"
 #include "event_subscriber.h"
 
 namespace tbox {
 namespace action {
-
-class Context;
 
 class Action : public EventSubscriber {
   public:
@@ -39,13 +39,17 @@ class Action : public EventSubscriber {
     virtual bool resume();
     virtual bool stop();
 
+    virtual bool onEvent(int event_id, void *event_data) override;
+
     static std::string ToString(Status status);
 
   protected:
     bool finish(bool is_succ);
 
-  private:
+  protected:
     Context &ctx_;
+
+  private:
     Status status_ = Status::kIdle;
     FinishCallback finish_cb_;
 };

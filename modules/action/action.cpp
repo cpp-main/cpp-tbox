@@ -15,7 +15,8 @@ Action::Action(Context &ctx) :
 {}
 
 Action::~Action() {
-  assert(status_ == Status::kIdle);
+  assert(status_ != Status::kRunning &&
+         status_ != Status::kPause);
 }
 
 void Action::toJson(Json &js) const {
@@ -73,6 +74,8 @@ bool Action::stop() {
   status_ = Status::kIdle;
   return true;
 }
+
+bool Action::onEvent(int event_id, void *event_data) { return false; }
 
 bool Action::finish(bool is_done) {
   if (status_ == Status::kRunning ||
