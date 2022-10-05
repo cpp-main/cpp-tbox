@@ -15,6 +15,7 @@ Action::Action(Context &ctx) :
 {}
 
 Action::~Action() {
+  //! 不允许在未stop之前或是未结束之前析构对象
   assert(status_ != Status::kRunning &&
          status_ != Status::kPause);
 }
@@ -75,13 +76,17 @@ bool Action::stop() {
   return true;
 }
 
-bool Action::onEvent(int event_id, void *event_data) { return false; }
+bool Action::onEvent(int event_id, void *event_data) {
+  //! 默认不处理任何事件，直接忽略
+  return false;
+}
 
 bool Action::finish(bool is_done) {
   if (status_ == Status::kRunning ||
       status_ == Status::kPause) {
     LogDbg("task %s finish, is_done: %s", type().c_str(), is_done ? "yes" : "no");
     status_ = is_done ? Status::kDone : Status::kFail; 
+    ctx_.event_publisher().unsubscribe(this);
     ctx_.loop().runInLoop(std::bind(finish_cb_, is_done));
     return true;
 

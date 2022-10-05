@@ -13,6 +13,7 @@ CPP_SRC_FILES = \
 	event_publisher_impl.cpp \
 	actions/sleep_action.cpp \
 	actions/sequence_action.cpp \
+	actions/parallel_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 

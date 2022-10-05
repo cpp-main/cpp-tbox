@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_SLEEP_ACTION_H_20221002
-#define TBOX_ACTION_SLEEP_ACTION_H_20221002
+#ifndef TBOX_ACTION_SEQUENCE_ACTION_H_20221002
+#define TBOX_ACTION_SEQUENCE_ACTION_H_20221002
 
 #include "../action.h"
 #include <chrono>
@@ -15,12 +15,15 @@ class SequenceAction : public Action {
 
     virtual std::string type() const override { return "Sequence"; }
 
-    bool append(Action *action);
+    virtual void toJson(Json &js) const;
+
+    int append(Action *action);
 
     virtual bool start() override;
     virtual bool stop() override;
 
-    Action* getFailAction() const;
+    int current() const { return index_; }
+    int failAt() const;
 
   private:
     void startOtheriseFinish();
@@ -34,4 +37,4 @@ class SequenceAction : public Action {
 }
 }
 
-#endif //TBOX_ACTION_SLEEP_ACTION_H_20221002
+#endif //TBOX_ACTION_SEQUENCE_ACTION_H_20221002

@@ -8,9 +8,6 @@ ifeq ($(RELEASE), 1)
 CCFLAGS += -O2 -Os
 else
 CCFLAGS += -DDEBUG=1 -O0 -ggdb
-endif
-
-ifeq ($(ENABLE_ASAN), 1)
 CCFLAGS += -fsanitize=address -fno-omit-frame-pointer
 LDFLAGS += -fsanitize=address -static-libasan
 endif
