@@ -40,6 +40,7 @@ bool Action::start() {
   LogDbg("task %s start", type().c_str());
   ctx_.event_publisher().subscribe(this);
   status_ = Status::kRunning;
+  result_ = Result::kUnsure;
   return true;
 }
 
@@ -74,7 +75,6 @@ bool Action::stop() {
   LogDbg("task %s|%s stop", type().c_str(), name_.c_str());
   ctx_.event_publisher().unsubscribe(this);
   status_ = Status::kIdle;
-  result_ = Result::kUnsure;
   return true;
 }
 
