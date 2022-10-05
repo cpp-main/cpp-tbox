@@ -10,8 +10,8 @@
 namespace tbox {
 namespace action {
 
-Action::Action(Context &ctx) :
-  ctx_(ctx)
+Action::Action(Context &ctx, const std::string &name) :
+  ctx_(ctx), name_(name)
 {}
 
 Action::~Action() {
@@ -21,6 +21,7 @@ Action::~Action() {
 }
 
 void Action::toJson(Json &js) const {
+  js["name"] = name_;
   js["type"] = type();
   js["status"] = ToString(status_);
 }

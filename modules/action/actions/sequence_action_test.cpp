@@ -19,16 +19,16 @@ TEST(SequenceAction, AllSucc) {
   bool action_done_1 = false;
   bool action_done_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context());
+  auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       action_done_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       EXPECT_TRUE(action_done_1);
       action_done_2 = true;
@@ -57,16 +57,16 @@ TEST(SequenceAction, FailHead) {
   bool action_done_1 = false;
   bool action_done_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context());
+  auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       action_done_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       action_done_2 = true;
       return false;
@@ -96,16 +96,16 @@ TEST(SequenceAction, FailTail) {
   bool action_done_1 = false;
   bool action_done_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context());
+  auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       action_done_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(),
+  seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
       EXPECT_TRUE(action_done_1);
       action_done_2 = true;
@@ -131,11 +131,11 @@ TEST(SequenceAction, TwoSleepAction) {
 
   Executor exec(*loop);
 
-  auto *seq_action = new SequenceAction(exec.context());
+  auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  auto *sleep_action_1 = new SleepAction(exec.context(), std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(exec.context(), std::chrono::milliseconds(200));
+  auto *sleep_action_1 = new SleepAction(exec.context(), "", std::chrono::milliseconds(300));
+  auto *sleep_action_2 = new SleepAction(exec.context(), "", std::chrono::milliseconds(200));
 
   seq_action->append(sleep_action_1);
   seq_action->append(sleep_action_2);

@@ -14,7 +14,7 @@ namespace action {
 
 class Action : public EventSubscriber {
   public:
-    explicit Action(Context &ctx);
+    explicit Action(Context &ctx, const std::string &name);
     virtual ~Action();
 
   public:
@@ -27,6 +27,7 @@ class Action : public EventSubscriber {
     };
 
     virtual std::string type() const = 0;
+    std::string name() const { return name_; }
     Status status() const { return status_; }
 
     using FinishCallback = std::function<void(bool is_done)>;
@@ -50,6 +51,7 @@ class Action : public EventSubscriber {
     Context &ctx_;
 
   private:
+    std::string name_;
     Status status_ = Status::kIdle;
     FinishCallback finish_cb_;
 };

@@ -13,7 +13,7 @@ TEST(NonDelayAction, True) {
   SetScopeExitAction([loop] { delete loop; });
 
   Executor exec(*loop);
-  NondelayAction action(exec.context(), [] { return true; });
+  NondelayAction action(exec.context(), "", [] { return true; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_done) {
@@ -33,7 +33,7 @@ TEST(NonDelayAction, False) {
   SetScopeExitAction([loop] { delete loop; });
 
   Executor exec(*loop);
-  NondelayAction action(exec.context(), [] { return false; });
+  NondelayAction action(exec.context(), "", [] { return false; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_done) {

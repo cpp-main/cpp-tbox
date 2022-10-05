@@ -10,7 +10,7 @@ namespace action {
 
 class SequenceAction : public Action {
   public:
-    explicit SequenceAction(Context &ctx);
+    explicit SequenceAction(Context &ctx, const std::string &name);
     virtual ~SequenceAction();
 
     virtual std::string type() const override { return "Sequence"; }

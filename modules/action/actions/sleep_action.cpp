@@ -6,8 +6,8 @@
 namespace tbox {
 namespace action {
 
-SleepAction::SleepAction(Context &ctx, const std::chrono::milliseconds &time_span) :
-  Action(ctx),
+SleepAction::SleepAction(Context &ctx, const std::string &name, const std::chrono::milliseconds &time_span) :
+  Action(ctx, name),
   timer_(ctx.loop().newTimerEvent())
 {
   timer_->initialize(time_span, event::Event::Mode::kOneshot);

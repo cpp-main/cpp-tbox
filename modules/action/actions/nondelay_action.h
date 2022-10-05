@@ -9,8 +9,8 @@ namespace action {
 class NondelayAction : public Action {
   public:
     using Func = std::function<bool()>;
-    explicit NondelayAction(Context &ctx, const Func &func) :
-      Action(ctx), func_(func) { }
+    explicit NondelayAction(Context &ctx, const std::string &name, const Func &func) :
+      Action(ctx, name), func_(func) { }
 
     virtual std::string type() const override { return "Nondelay"; }
 

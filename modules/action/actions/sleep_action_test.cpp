@@ -13,7 +13,7 @@ TEST(SleepAction, Basic) {
   SetScopeExitAction([loop] { delete loop; });
 
   Executor exec(*loop);
-  SleepAction action(exec.context(), std::chrono::milliseconds(10));
+  SleepAction action(exec.context(), "", std::chrono::milliseconds(10));
   bool is_finished = false;
   action.setFinishCallback(
     [loop, &is_finished] (bool is_succ) {

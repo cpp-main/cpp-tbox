@@ -8,8 +8,8 @@ namespace action {
 
 using namespace std::placeholders;
 
-ParallelAction::ParallelAction(Context &ctx) :
-  Action(ctx)
+ParallelAction::ParallelAction(Context &ctx, const std::string &name) :
+  Action(ctx, name)
 { }
 
 ParallelAction::~ParallelAction() {

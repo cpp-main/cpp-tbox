@@ -9,8 +9,8 @@ namespace action {
 
 using namespace std::placeholders;
 
-SequenceAction::SequenceAction(Context &ctx) :
-  Action(ctx)
+SequenceAction::SequenceAction(Context &ctx, const std::string &name) :
+  Action(ctx, name)
 { }
 
 SequenceAction::~SequenceAction() {

@@ -10,7 +10,7 @@ namespace action {
 
 class SleepAction : public Action {
   public:
-    SleepAction(Context &ctx, const std::chrono::milliseconds &time_span);
+    SleepAction(Context &ctx, const std::string &name, const std::chrono::milliseconds &time_span);
     ~SleepAction();
 
     virtual std::string type() const override { return "Sleep"; }

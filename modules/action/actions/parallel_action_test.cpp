@@ -16,11 +16,11 @@ TEST(ParallelAction, TwoSleepAction) {
 
   Executor exec(*loop);
 
-  auto *para_action = new ParallelAction(exec.context());
+  auto *para_action = new ParallelAction(exec.context(), "");
   SetScopeExitAction([para_action] { delete para_action; });
 
-  auto *sleep_action_1 = new SleepAction(exec.context(), std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(exec.context(), std::chrono::milliseconds(200));
+  auto *sleep_action_1 = new SleepAction(exec.context(), "", std::chrono::milliseconds(300));
+  auto *sleep_action_2 = new SleepAction(exec.context(), "", std::chrono::milliseconds(200));
 
   para_action->append(sleep_action_1);
   para_action->append(sleep_action_2);

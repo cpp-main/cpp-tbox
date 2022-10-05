@@ -11,7 +11,7 @@ namespace action {
 
 class ParallelAction : public Action {
   public:
-    explicit ParallelAction(Context &ctx);
+    explicit ParallelAction(Context &ctx, const std::string &name);
     virtual ~ParallelAction();
 
     virtual std::string type() const override { return "Parallel"; }
