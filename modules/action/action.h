@@ -22,8 +22,13 @@ class Action : public EventSubscriber {
       kIdle,
       kRunning,
       kPause,
-      kDone,
-      kFail
+      kFinished
+    };
+
+    enum class Result {
+      kUnsure,
+      kSuccess,
+      kFail,
     };
 
     virtual std::string type() const = 0;
@@ -52,8 +57,10 @@ class Action : public EventSubscriber {
 
   private:
     std::string name_;
-    Status status_ = Status::kIdle;
     FinishCallback finish_cb_;
+
+    Status status_ = Status::kIdle;
+    Result result_ = Result::kUnsure;
 };
 
 }

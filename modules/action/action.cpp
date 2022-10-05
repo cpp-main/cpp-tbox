@@ -49,7 +49,7 @@ bool Action::pause() {
     return false;
   }
 
-  LogDbg("task %s pause", type().c_str());
+  LogDbg("task %s|%s pause", type().c_str(), name_.c_str());
   ctx_.event_publisher().unsubscribe(this);
   status_ = Status::kPause;
   return true;
@@ -61,7 +61,7 @@ bool Action::resume() {
     return false;
   }
 
-  LogDbg("task %s resume", type().c_str());
+  LogDbg("task %s|%s resume", type().c_str(), name_.c_str());
   ctx_.event_publisher().subscribe(this);
   status_ = Status::kRunning;
   return true;
@@ -71,9 +71,10 @@ bool Action::stop() {
   if (status_ == Status::kIdle)
     return false;
 
-  LogDbg("task %s stop", type().c_str());
+  LogDbg("task %s|%s stop", type().c_str(), name_.c_str());
   ctx_.event_publisher().unsubscribe(this);
   status_ = Status::kIdle;
+  result_ = Result::kUnsure;
   return true;
 }
 
@@ -82,13 +83,14 @@ bool Action::onEvent(int event_id, void *event_data) {
   return false;
 }
 
-bool Action::finish(bool is_done) {
+bool Action::finish(bool is_succ) {
   if (status_ == Status::kRunning ||
       status_ == Status::kPause) {
-    LogDbg("task %s finish, is_done: %s", type().c_str(), is_done ? "yes" : "no");
-    status_ = is_done ? Status::kDone : Status::kFail; 
+    LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), name_.c_str(), is_succ? "succ" : "fail");
+    status_ = Status::kFinished;
+    result_ = is_succ ? Result::kSuccess : Result::kFail;
     ctx_.event_publisher().unsubscribe(this);
-    ctx_.loop().runInLoop(std::bind(finish_cb_, is_done));
+    ctx_.loop().runInLoop(std::bind(finish_cb_, is_succ));
     return true;
 
   } else {
@@ -98,7 +100,7 @@ bool Action::finish(bool is_done) {
 }
 
 std::string Action::ToString(Status status) {
-  const char *tbl[] = { "idle", "running", "pause", "done", "fail" };
+  const char *tbl[] = { "idle", "running", "pause", "finished" };
   return tbl[static_cast<size_t>(status)];
 }
 
