@@ -1,31 +1,30 @@
-#ifndef TBOX_ACTION_IMMEDIATE_ACTION_H_20221002
-#define TBOX_ACTION_IMMEDIATE_ACTION_H_20221002
+#ifndef TBOX_ACTION_IMMEDIATE_ACTION_H_20221003
+#define TBOX_ACTION_IMMEDIATE_ACTION_H_20221003
 
 #include "../action.h"
-#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace action {
 
-class ImmediateAction : Action {
+class ImmediateAction : public Action {
   public:
-    ImmediateAction(Context &ctx, bool is_done) :
-      Action(ctx), is_done_(is_done) { }
+    using Func = std::function<bool()>;
+    explicit ImmediateAction(Context &ctx, const Func &func) :
+      Action(ctx), func_(func) { }
 
     virtual std::string type() const override { return "Immediate"; }
 
-    virtual void toJson(Json &js) const override {
-      Action::toJson(js);
-      js["is_done"] = is_done_;
+    virtual bool start() override {
+      Action::start();
+      finish(func_());
+      return true;
     }
 
-    virtual bool start() override { return finish(is_done_); }
-
   private:
-    bool is_done_;
+    Func func_;
 };
 
 }
 }
 
-#endif //TBOX_ACTION_IMMEDIATE_ACTION_H_20221002
+#endif //TBOX_ACTION_IMMEDIATE_ACTION_H_20221003
