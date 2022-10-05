@@ -19,8 +19,9 @@ CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	actions/sleep_action_test.cpp \
+	actions/nondelay_action_test.cpp \
 	actions/sequence_action_test.cpp \
-	actions/immediate_action_test.cpp \
+	actions/parallel_action_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_action -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no

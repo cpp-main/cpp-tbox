@@ -8,7 +8,7 @@
 namespace tbox {
 namespace action {
 
-TEST(Action, SleepAction) {
+TEST(SleepAction, Basic) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
