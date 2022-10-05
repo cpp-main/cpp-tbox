@@ -23,14 +23,14 @@ TEST(SequenceAction, AllSucc) {
 
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
-      action_done_1 = true; 
+      action_done_1 = true;
       return true;
     }
   ));
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
       EXPECT_TRUE(action_done_1);
-      action_done_2 = true; 
+      action_done_2 = true;
       return true;
     }
   ));
@@ -44,7 +44,7 @@ TEST(SequenceAction, AllSucc) {
 
   loop->runLoop();
   EXPECT_TRUE(action_done_2);
-  EXPECT_EQ(seq_action->failAt(), -1);
+  EXPECT_EQ(seq_action->index(), -1);
 }
 
 TEST(SequenceAction, FailHead) {
@@ -61,13 +61,13 @@ TEST(SequenceAction, FailHead) {
 
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
-      action_done_1 = true; 
+      action_done_1 = true;
       return false;
     }
   ));
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
-      action_done_2 = true; 
+      action_done_2 = true;
       return false;
     }
   ));
@@ -82,7 +82,7 @@ TEST(SequenceAction, FailHead) {
   loop->runLoop();
   EXPECT_TRUE(action_done_1);
   EXPECT_FALSE(action_done_2);
-  EXPECT_EQ(seq_action->failAt(), 0);
+  EXPECT_EQ(seq_action->index(), 0);
 }
 
 
@@ -100,14 +100,14 @@ TEST(SequenceAction, FailTail) {
 
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
-      action_done_1 = true; 
+      action_done_1 = true;
       return true;
     }
   ));
   seq_action->append(new ImmediateAction(exec.context(),
     [&] {
       EXPECT_TRUE(action_done_1);
-      action_done_2 = true; 
+      action_done_2 = true;
       return false;
     }
   ));
@@ -121,7 +121,7 @@ TEST(SequenceAction, FailTail) {
 
   loop->runLoop();
   EXPECT_TRUE(action_done_2);
-  EXPECT_EQ(seq_action->failAt(), 1);
+  EXPECT_EQ(seq_action->index(), 1);
 }
 
 

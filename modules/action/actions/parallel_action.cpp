@@ -55,7 +55,7 @@ void ParallelAction::onChildFinished(int index, bool is_done) {
     done_set_.insert(index);
   else
     fail_set_.insert(index);
-  
+
   if (done_set_.size() == children_.size()) {
     finish(true);
   } else if ((done_set_.size() + fail_set_.size()) == children_.size()) {

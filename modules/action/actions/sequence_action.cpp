@@ -22,7 +22,7 @@ void SequenceAction::toJson(Json &js) const {
   Action::toJson(js);
   Json &js_children = js["children"];
   for (auto action : children_) {
-    Json js_child; 
+    Json js_child;
     action->toJson(js_child);
     js_children.push_back(std::move(js_child));
   }
@@ -57,12 +57,6 @@ bool SequenceAction::stop() {
     children_.at(index_)->stop();
 
   return true;
-}
-
-int SequenceAction::failAt() const {
-  if (status() == Status::kFail)
-    return index_;
-  return -1;
 }
 
 void SequenceAction::startOtheriseFinish() {

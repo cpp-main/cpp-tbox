@@ -22,8 +22,7 @@ class SequenceAction : public Action {
     virtual bool start() override;
     virtual bool stop() override;
 
-    int current() const { return index_; }
-    int failAt() const;
+    int index() const { return index_; }
 
   private:
     void startOtheriseFinish();
