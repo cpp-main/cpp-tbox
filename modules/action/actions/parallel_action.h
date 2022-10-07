@@ -21,6 +21,9 @@ class ParallelAction : public Action {
     virtual bool start() override;
     virtual bool stop() override;
 
+    std::set<int> succSet() const { return done_set_; }
+    std::set<int> failSet() const { return fail_set_; }
+
   private:
     void onChildFinished(int index, bool is_done);
 

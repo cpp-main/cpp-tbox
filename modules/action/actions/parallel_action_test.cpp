@@ -41,5 +41,45 @@ TEST(ParallelAction, TwoSleepAction) {
   EXPECT_LT(d, std::chrono::milliseconds(310));
 }
 
+TEST(ParallelAction, SleepNondelayAction) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  Executor exec(*loop);
+
+  auto *para_action = new ParallelAction(exec.context(), "");
+  SetScopeExitAction([para_action] { delete para_action; });
+
+  bool nodelay_action_done = false;
+  auto *sleep_action = new SleepAction(exec.context(), "", std::chrono::milliseconds(50));
+  auto *nondelay_action = new NondelayAction(exec.context(), "",
+    [&] {
+      nodelay_action_done = true;
+      return true;
+    }
+  );
+
+  para_action->append(sleep_action);
+  para_action->append(nondelay_action);
+
+  para_action->setFinishCallback(
+    [loop](bool is_done) {
+      EXPECT_TRUE(is_done);
+      loop->exitLoop();
+    }
+  );
+
+  auto start_time = std::chrono::steady_clock::now();
+  para_action->start();
+  loop->runLoop();
+
+  auto d = std::chrono::steady_clock::now() - start_time;
+  EXPECT_GT(d, std::chrono::milliseconds(45));
+  EXPECT_LT(d, std::chrono::milliseconds(55));
+
+  EXPECT_TRUE(nodelay_action_done);
+}
+
+
 }
 }
