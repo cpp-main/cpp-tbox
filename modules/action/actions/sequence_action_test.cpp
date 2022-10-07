@@ -16,35 +16,35 @@ TEST(SequenceAction, AllSucc) {
 
   Executor exec(*loop);
 
-  bool action_done_1 = false;
-  bool action_done_2 = false;
+  bool action_succ_1 = false;
+  bool action_succ_2 = false;
 
   auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      action_done_1 = true;
+      action_succ_1 = true;
       return true;
     }
   ));
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      EXPECT_TRUE(action_done_1);
-      action_done_2 = true;
+      EXPECT_TRUE(action_succ_1);
+      action_succ_2 = true;
       return true;
     }
   ));
   seq_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_TRUE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );
   seq_action->start();
 
   loop->runLoop();
-  EXPECT_TRUE(action_done_2);
+  EXPECT_TRUE(action_succ_2);
   EXPECT_EQ(seq_action->index(), 2);
 }
 
@@ -54,35 +54,35 @@ TEST(SequenceAction, FailHead) {
 
   Executor exec(*loop);
 
-  bool action_done_1 = false;
-  bool action_done_2 = false;
+  bool action_succ_1 = false;
+  bool action_succ_2 = false;
 
   auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      action_done_1 = true;
+      action_succ_1 = true;
       return false;
     }
   ));
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      action_done_2 = true;
+      action_succ_2 = true;
       return false;
     }
   ));
   seq_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_FALSE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_FALSE(is_succ);
       loop->exitLoop();
     }
   );
   seq_action->start();
 
   loop->runLoop();
-  EXPECT_TRUE(action_done_1);
-  EXPECT_FALSE(action_done_2);
+  EXPECT_TRUE(action_succ_1);
+  EXPECT_FALSE(action_succ_2);
   EXPECT_EQ(seq_action->index(), 0);
 }
 
@@ -93,35 +93,35 @@ TEST(SequenceAction, FailTail) {
 
   Executor exec(*loop);
 
-  bool action_done_1 = false;
-  bool action_done_2 = false;
+  bool action_succ_1 = false;
+  bool action_succ_2 = false;
 
   auto *seq_action = new SequenceAction(exec.context(), "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      action_done_1 = true;
+      action_succ_1 = true;
       return true;
     }
   ));
   seq_action->append(new NondelayAction(exec.context(), "",
     [&] {
-      EXPECT_TRUE(action_done_1);
-      action_done_2 = true;
+      EXPECT_TRUE(action_succ_1);
+      action_succ_2 = true;
       return false;
     }
   ));
   seq_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_FALSE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_FALSE(is_succ);
       loop->exitLoop();
     }
   );
   seq_action->start();
 
   loop->runLoop();
-  EXPECT_TRUE(action_done_2);
+  EXPECT_TRUE(action_succ_2);
   EXPECT_EQ(seq_action->index(), 1);
 }
 
@@ -141,8 +141,8 @@ TEST(SequenceAction, TwoSleepAction) {
   seq_action->append(sleep_action_2);
 
   seq_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_TRUE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );

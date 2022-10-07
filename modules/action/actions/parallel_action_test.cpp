@@ -26,8 +26,8 @@ TEST(ParallelAction, TwoSleepAction) {
   para_action->append(sleep_action_2);
 
   para_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_TRUE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );
@@ -50,11 +50,11 @@ TEST(ParallelAction, SleepNondelayAction) {
   auto *para_action = new ParallelAction(exec.context(), "");
   SetScopeExitAction([para_action] { delete para_action; });
 
-  bool nodelay_action_done = false;
+  bool nodelay_action_succ = false;
   auto *sleep_action = new SleepAction(exec.context(), "", std::chrono::milliseconds(50));
   auto *nondelay_action = new NondelayAction(exec.context(), "",
     [&] {
-      nodelay_action_done = true;
+      nodelay_action_succ = true;
       return true;
     }
   );
@@ -63,8 +63,8 @@ TEST(ParallelAction, SleepNondelayAction) {
   para_action->append(nondelay_action);
 
   para_action->setFinishCallback(
-    [loop](bool is_done) {
-      EXPECT_TRUE(is_done);
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );
@@ -77,7 +77,7 @@ TEST(ParallelAction, SleepNondelayAction) {
   EXPECT_GT(d, std::chrono::milliseconds(45));
   EXPECT_LT(d, std::chrono::milliseconds(55));
 
-  EXPECT_TRUE(nodelay_action_done);
+  EXPECT_TRUE(nodelay_action_succ);
 }
 
 

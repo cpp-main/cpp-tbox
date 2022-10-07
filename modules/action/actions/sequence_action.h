@@ -26,7 +26,7 @@ class SequenceAction : public Action {
 
   private:
     void startOtheriseFinish();
-    void onChildFinished(bool is_done);
+    void onChildFinished(bool is_succ);
 
   private:
     size_t index_ = 0;

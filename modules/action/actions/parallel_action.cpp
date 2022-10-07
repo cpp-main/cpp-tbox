@@ -33,7 +33,7 @@ bool ParallelAction::start() {
   if (!Action::start())
     return false;
 
-  done_set_.clear();
+  succ_set_.clear();
   fail_set_.clear();
 
   for (Action *action : children_)
@@ -50,15 +50,15 @@ bool ParallelAction::stop() {
   return true;
 }
 
-void ParallelAction::onChildFinished(int index, bool is_done) {
-  if (is_done)
-    done_set_.insert(index);
+void ParallelAction::onChildFinished(int index, bool is_succ) {
+  if (is_succ)
+    succ_set_.insert(index);
   else
     fail_set_.insert(index);
 
-  if (done_set_.size() == children_.size()) {
+  if (succ_set_.size() == children_.size()) {
     finish(true);
-  } else if ((done_set_.size() + fail_set_.size()) == children_.size()) {
+  } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
     finish(false);
   }
 }

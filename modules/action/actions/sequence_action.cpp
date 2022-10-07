@@ -67,8 +67,8 @@ void SequenceAction::startOtheriseFinish() {
   }
 }
 
-void SequenceAction::onChildFinished(bool is_done) {
-  if (is_done) {
+void SequenceAction::onChildFinished(bool is_succ) {
+  if (is_succ) {
     ++index_;
     startOtheriseFinish();
   } else {

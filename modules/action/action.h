@@ -35,7 +35,7 @@ class Action : public EventSubscriber {
     std::string name() const { return name_; }
     Status status() const { return status_; }
 
-    using FinishCallback = std::function<void(bool is_done)>;
+    using FinishCallback = std::function<void(bool is_succ)>;
     void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
     virtual void toJson(Json &js) const;

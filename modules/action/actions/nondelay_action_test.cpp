@@ -16,8 +16,8 @@ TEST(NonDelayAction, True) {
   NondelayAction action(exec.context(), "", [] { return true; });
   bool is_callback = false;
   action.setFinishCallback(
-    [&is_callback, loop] (bool is_done) {
-      EXPECT_TRUE(is_done);
+    [&is_callback, loop] (bool is_succ) {
+      EXPECT_TRUE(is_succ);
       is_callback = true;
       loop->exitLoop();
     }
@@ -36,8 +36,8 @@ TEST(NonDelayAction, False) {
   NondelayAction action(exec.context(), "", [] { return false; });
   bool is_callback = false;
   action.setFinishCallback(
-    [&is_callback, loop] (bool is_done) {
-      EXPECT_FALSE(is_done);
+    [&is_callback, loop] (bool is_succ) {
+      EXPECT_FALSE(is_succ);
       is_callback = true;
       loop->exitLoop();
     }
