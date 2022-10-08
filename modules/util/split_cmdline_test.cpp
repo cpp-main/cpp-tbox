@@ -90,6 +90,34 @@ TEST(SplitCmdline, Mix)
     EXPECT_EQ(str_vec[2], R"( "x{yz #" )");
 }
 
+TEST(SplitCmdline, LongOption)
+{
+    vector<string> str_vec;
+    ASSERT_TRUE(SplitCmdline(R"(abc --key "hello world")", str_vec));
+    ASSERT_EQ(str_vec.size(), 3u);
+    EXPECT_EQ(str_vec[0], "abc");
+    EXPECT_EQ(str_vec[1], R"(--key)");
+    EXPECT_EQ(str_vec[2], R"(hello world)");
+}
+
+TEST(SplitCmdline, LongOptionWithEqual)
+{
+    vector<string> str_vec;
+    ASSERT_TRUE(SplitCmdline(R"(abc --key="hello world")", str_vec));
+    ASSERT_EQ(str_vec.size(), 2u);
+    EXPECT_EQ(str_vec[0], "abc");
+    EXPECT_EQ(str_vec[1], R"(--key="hello world")");
+}
+
+TEST(SplitCmdline, LongOptionWithEqual_2)
+{
+    vector<string> str_vec;
+    ASSERT_TRUE(SplitCmdline(R"(abc --key="hello world"xxxx' 'yyy)", str_vec));
+    ASSERT_EQ(str_vec.size(), 2u);
+    EXPECT_EQ(str_vec[0], "abc");
+    EXPECT_EQ(str_vec[1], R"(--key="hello world"xxxx' 'yyy)");
+}
+
 TEST(SplitCmdline, ErrorUnfinishQuote1)
 {
     vector<string> str_vec;
