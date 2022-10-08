@@ -50,6 +50,17 @@ TEST(string, StripRight) {
 
 TEST(string, Strip) {
     EXPECT_EQ(Strip(" A "), "A");
+    EXPECT_EQ(Strip("  "), "");
+}
+
+TEST(string, StripQuot) {
+    EXPECT_EQ(StripQuot(R"("A")"), "A");
+    EXPECT_EQ(StripQuot(R"('A')"), "A");
+    EXPECT_EQ(StripQuot(R"(A)"), "A");
+    EXPECT_EQ(StripQuot(R"("A)"), R"("A)");
+    EXPECT_EQ(StripQuot(R"(A")"), R"(A")");
+    EXPECT_EQ(StripQuot(R"('A)"), R"('A)");
+    EXPECT_EQ(StripQuot(R"(A')"), R"(A')");
 }
 
 TEST(string, RawDataToHexStr) {

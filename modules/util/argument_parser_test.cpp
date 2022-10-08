@@ -36,6 +36,30 @@ TEST(ArgumentParser, LongOptionKeyAndValue)
     ASSERT_TRUE(parser.parse(NUMBER_OF_ARRAY(argv), argv));
 }
 
+TEST(ArgumentParser, LongOptionKeyAndValueWithQuot)
+{
+    const char* argv[] = {"any", R"(--name='Hevake Lee')", R"(--address="Shenzhen China")"};
+    bool has_name = false;
+    bool has_address = false;
+    ArgumentParser parser(
+        [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
+            if (long_opt == "name") {
+                EXPECT_TRUE(opt_value.valid());
+                EXPECT_EQ(opt_value.get(), "Hevake Lee");
+                has_name = true;
+            } else if (long_opt == "address"){
+                EXPECT_TRUE(opt_value.valid());
+                EXPECT_EQ(opt_value.get(), "Shenzhen China");
+                has_address = true;
+            }
+            return true;
+        }
+    );
+    ASSERT_TRUE(parser.parse(NUMBER_OF_ARRAY(argv), argv));
+    EXPECT_TRUE(has_name);
+    EXPECT_TRUE(has_address);
+}
+
 TEST(ArgumentParser, All)
 {
     const char* argv[] = {"test_all", "-ab", "123", "-x", "--set", "xyz", "--run", "--key=value"};

@@ -1,6 +1,7 @@
 #include "argument_parser.h"
 
 #include <cassert>
+#include "string.h"
 
 namespace tbox {
 namespace util {
@@ -16,7 +17,7 @@ bool PickKeyAndValue(const std::string &orig, std::string &key, std::string &val
         return false;
 
     key   = orig.substr(0, pos);
-    value = orig.substr(pos + 1);
+    value = string::StripQuot(orig.substr(pos + 1));
     return true;
 }
 }

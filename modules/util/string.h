@@ -44,6 +44,8 @@ std::string StripRight(const std::string &orig_str);
  */
 std::string Strip(const std::string &orig_str);
 
+std::string StripQuot(const std::string &orig_str);
+
 /**
  * \brief       将原始数据转换成HEX字串
  *

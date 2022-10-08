@@ -59,7 +59,26 @@ std::string StripRight(const std::string &orig_str)
 
 std::string Strip(const std::string &orig_str)
 {
-    return StripLeft(StripRight(orig_str));
+    size_t start_pos = orig_str.find_first_not_of(' ');
+    if (start_pos == std::string::npos)
+        return std::string();
+
+    size_t end_pos = orig_str.find_last_not_of(' ');
+    if (end_pos == std::string::npos)
+        return std::string();
+
+    return orig_str.substr(start_pos, end_pos - start_pos + 1);
+}
+
+std::string StripQuot(const std::string &orig_str)
+{
+    auto first_char = orig_str.front();
+    auto last_char = orig_str.back();
+    if (first_char == last_char && (first_char == '\'' || first_char == '\"')) {
+        return orig_str.substr(1, orig_str.length() - 2);
+    } else {
+        return orig_str;
+    }
 }
 
 std::string RawDataToHexStr(const void *data_ptr, uint16_t data_len, bool uppercase, const std::string &delimiter)
