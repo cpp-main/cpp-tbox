@@ -38,12 +38,17 @@ std::string StripLeft(const std::string &orig_str);
 std::string StripRight(const std::string &orig_str);
 
 /**
- * \brief       消除字串两右的空格符
+ * \brief       消除字串双边的空格符
  * \param orig_str  原始字串
  * \return      处理后的字串
  */
 std::string Strip(const std::string &orig_str);
 
+/**
+ * \brief       消除字串两边的引号，包括单引号与双引号
+ * \param orig_str  原始字串
+ * \return      处理后的字串
+ */
 std::string StripQuot(const std::string &orig_str);
 
 /**
