@@ -9,15 +9,28 @@ namespace util {
 //! HFSM，多层级有限状态机
 class StateMachine {
   public:
-    using StateID = unsigned int;   //! StateID 为 0 与 1 的两个状态为特定状态
-                                    //! StateID = 0 的状态为终止状态，用户可以不用定义
-                                    //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
-    using EventID = unsigned int;   //! EventID = 0 表示任意事件，仅在 addRoute() 时使用
+    using StateID = int;   //! StateID 为 0 与 1 的两个状态为特定状态
+                           //! StateID = 0 的状态为终止状态，用户可以不用定义
+                           //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
+    using EventID = int;   //! EventID = 0 表示任意事件，仅在 addRoute() 时使用
 
-    using ActionFunc = std::function<void()>;
-    using GuardFunc  = std::function<bool()>;
+    struct Event {
+      EventID id = 0;
+      void *extra = nullptr;
 
-    using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, EventID)>;
+      Event() { }
+
+      template <typename ET>
+      Event(ET e) : id(static_cast<EventID>(e)) { }
+
+      template <typename ET, typename DT>
+      Event(ET e, DT *p) : id(static_cast<EventID>(e)), extra(p) { }
+    };
+
+    using ActionFunc = std::function<void(Event)>;
+    using GuardFunc  = std::function<bool(Event)>;
+
+    using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, Event)>;
 
   public:
     StateMachine();
@@ -98,12 +111,7 @@ class StateMachine {
      *
      * \return  bool    状态是否变换
      */
-    bool run(EventID event_id);
-
-    template <typename E>
-    bool run(E event_id) {
-        return run(static_cast<EventID>(event_id));
-    }
+    bool run(Event event);
 
     /**
      * \brief   获取当前状态ID
