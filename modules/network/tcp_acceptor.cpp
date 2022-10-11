@@ -75,7 +75,11 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
         struct sockaddr_in sock_addr;
         socklen_t len = bind_addr.toSockAddr(sock_addr);
         return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
+
     } else if (bind_addr.type() == SockAddr::Type::kLocal) {
+        //! 为防止存在的同名文件导致bind失败，在bind之前要先尝试删除原有的文件
+        ::unlink(bind_addr_.toString().c_str());
+
         struct sockaddr_un sock_addr;
         socklen_t len = bind_addr.toSockAddr(sock_addr);
         return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
