@@ -3,7 +3,11 @@
 #include "state_machine.h"
 
 using namespace std;
-using namespace tbox::util;
+
+namespace tbox {
+namespace util {
+
+using SM = StateMachine;
 
 enum State {
     STATE_A = 1,
@@ -22,7 +26,7 @@ enum Event {
 //! 测试创建状态
 TEST(StateMachine, NewState)
 {
-    StateMachine sm;
+    SM sm;
     EXPECT_TRUE (sm.newState(STATE_A, nullptr, nullptr));
     EXPECT_TRUE (sm.newState(STATE_B, nullptr, nullptr));
     EXPECT_FALSE(sm.newState(STATE_A, nullptr, nullptr));
@@ -31,7 +35,7 @@ TEST(StateMachine, NewState)
 //! 测试创建事件
 TEST(StateMachine, AddRoute)
 {
-    StateMachine sm;
+    SM sm;
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
 
@@ -44,7 +48,7 @@ TEST(StateMachine, AddRoute)
 //! 测试创建两个状态，一个事件由A到B转换，没有守卫与执行函数
 TEST(StateMachine, StateWithoutGuardAndAction)
 {
-    StateMachine sm;
+    SM sm;
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
     sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
@@ -60,14 +64,14 @@ TEST(StateMachine, StateWithoutGuardAndAction)
 //! 测试创建两个状态，一个事件由A到B转换，有守卫
 TEST(StateMachine, RouteWithGuard)
 {
-    StateMachine sm;
+    SM sm;
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
     sm.newState(STATE_C, nullptr, nullptr);
 
     bool condition = false;
-    sm.addRoute(STATE_A, EVENT_1, STATE_B, [&]{ return !condition; }, nullptr);
-    sm.addRoute(STATE_A, EVENT_1, STATE_C, [&]{ return condition; },  nullptr);
+    sm.addRoute(STATE_A, EVENT_1, STATE_B, [&](SM::Event){ return !condition; }, nullptr);
+    sm.addRoute(STATE_A, EVENT_1, STATE_C, [&](SM::Event){ return condition; },  nullptr);
     sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, nullptr);
     sm.addRoute(STATE_C, EVENT_2, STATE_A, nullptr, nullptr);
     sm.setInitState(STATE_A);
@@ -93,15 +97,15 @@ TEST(StateMachine, RouteWithGuard)
 //! 测试创建两个状态，一个事件由A到B转换，有进入与退出动作
 TEST(StateMachine, StateWithEnterAndExitAction)
 {
-    StateMachine sm;
+    SM sm;
 
     int a_enter_counter = 0;
     int a_exit_counter = 0;
     int b_enter_counter = 0;
     int b_exit_counter = 0;
 
-    sm.newState(STATE_A, [&] { ++a_enter_counter; }, [&] { ++a_exit_counter; });
-    sm.newState(STATE_B, [&] { ++b_enter_counter; }, [&] { ++b_exit_counter; });
+    sm.newState(STATE_A, [&](SM::Event){ ++a_enter_counter; }, [&](SM::Event){ ++a_exit_counter; });
+    sm.newState(STATE_B, [&](SM::Event){ ++b_enter_counter; }, [&](SM::Event){ ++b_exit_counter; });
 
     sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
     sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, nullptr);
@@ -123,7 +127,7 @@ TEST(StateMachine, StateWithEnterAndExitAction)
 //! 测试创建两个状态，一个事件由A到B转换，事件有转换动作
 TEST(StateMachine, EventWithAction)
 {
-    StateMachine sm;
+    SM sm;
 
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
@@ -131,8 +135,8 @@ TEST(StateMachine, EventWithAction)
     int count_1 = 0;
     int count_2 = 0;
 
-    sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, [&]{ ++count_1; });
-    sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, [&]{ ++count_2; });
+    sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, [&](SM::Event){ ++count_1; });
+    sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, [&](SM::Event){ ++count_2; });
     sm.setInitState(STATE_A);
     sm.start();
 
@@ -145,7 +149,7 @@ TEST(StateMachine, EventWithAction)
 
 TEST(StateMachine, AnyEvent)
 {
-    StateMachine sm;
+    SM sm;
 
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
@@ -165,15 +169,15 @@ TEST(StateMachine, AnyEvent)
 
 TEST(StateMachine, Restart)
 {
-    StateMachine sm;
+    SM sm;
 
     int a_enter_counter = 0;
     int a_exit_counter = 0;
     int b_enter_counter = 0;
     int b_exit_counter = 0;
 
-    sm.newState(STATE_A, [&] { ++a_enter_counter; }, [&] { ++a_exit_counter; });
-    sm.newState(STATE_B, [&] { ++b_enter_counter; }, [&] { ++b_exit_counter; });
+    sm.newState(STATE_A, [&](SM::Event){ ++a_enter_counter; }, [&](SM::Event){ ++a_exit_counter; });
+    sm.newState(STATE_B, [&](SM::Event){ ++b_enter_counter; }, [&](SM::Event){ ++b_exit_counter; });
 
     sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
     sm.setInitState(STATE_A);
@@ -191,14 +195,14 @@ TEST(StateMachine, Restart)
 //! 主要测试用 enum class 定义的状态与事件是否能编译过
 TEST(StateMachine, EnumClass)
 {
-    StateMachine sm;
+    SM sm;
     enum class State { k1 = 1, k2 };
     enum class Event { k1 = 1, k2 };
 
     int enter_counter = 0;
     int exit_counter = 0;
 
-    sm.newState(State::k1, [&] { ++enter_counter; }, [&] { ++exit_counter; });
+    sm.newState(State::k1, [&](SM::Event){ ++enter_counter; }, [&](SM::Event){ ++exit_counter; });
     sm.newState(State::k2, nullptr, nullptr);
 
     sm.addRoute(State::k1, Event::k1, State::k2, nullptr, nullptr);
@@ -213,12 +217,12 @@ TEST(StateMachine, EnumClass)
     EXPECT_EQ(exit_counter, 2);
 }
 
-TEST(StateMachine, SubStateMachine)
+TEST(StateMachine, SubSM)
 {
     enum class State { kTerm, kInit, k1, k2 };
     enum class Event { kTerm, k1, k2 };
 
-    StateMachine sm, sub_sm;
+    SM sm, sub_sm;
 
     sm.newState(State::kInit, nullptr, nullptr);
     sm.newState(State::k1,    nullptr, nullptr);
@@ -328,7 +332,7 @@ TEST(StateMachine, StateChangedCallback)
     enum class State { kTerm, kInit, k1 };
     enum class Event { kNone, k1 };
 
-    StateMachine sm;
+    SM sm;
 
     sm.newState(State::kInit, nullptr, nullptr);
     sm.newState(State::k1,    nullptr, nullptr);
@@ -340,10 +344,10 @@ TEST(StateMachine, StateChangedCallback)
     Event event;
 
     sm.setStateChangedCallback(
-        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+        [&] (SM::StateID f, SM::StateID t, SM::Event e) {
             from = static_cast<State>(f);
             to = static_cast<State>(t);
-            event = static_cast<Event>(e);
+            event = static_cast<Event>(e.id);
         }
     );
     sm.start();
@@ -364,27 +368,27 @@ TEST(StateMachine, InitStateHasSubMachine)
     enum class State { kTerm, kInit };
     enum class Event { kNone, k1 };
 
-    StateMachine sm;
-    StateMachine sub_sm;
+    SM sm;
+    SM sub_sm;
 
     int step = 0;
-    sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 0); ++step; }, [&]{ EXPECT_EQ(step, 6); ++step; });
-    sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 8); ++step; }, [&]{ EXPECT_EQ(step, 9); ++step; });
-    sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 7); ++step; });
+    sm.newState(State::kInit, [&](SM::Event){ EXPECT_EQ(step, 0); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 6); ++step; });
+    sm.newState(State::kTerm, [&](SM::Event){ EXPECT_EQ(step, 8); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 9); ++step; });
+    sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&](SM::Event){ EXPECT_EQ(step, 7); ++step; });
 
-    sub_sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 1); ++step; }, [&]{ EXPECT_EQ(step, 2); ++step; });
-    sub_sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 4); ++step; }, [&]{ EXPECT_EQ(step, 5); ++step; });
-    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 3); ++step; });
+    sub_sm.newState(State::kInit, [&](SM::Event){ EXPECT_EQ(step, 1); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 2); ++step; });
+    sub_sm.newState(State::kTerm, [&](SM::Event){ EXPECT_EQ(step, 4); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 5); ++step; });
+    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&](SM::Event){ EXPECT_EQ(step, 3); ++step; });
 
     sm.setSubStateMachine(State::kInit, &sub_sm);
 #if 0
     sm.setStateChangedCallback(
-        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+        [&] (SM::StateID f, SM::StateID t, SM::EventID e) {
             cout << f << "-->" << t << "," << e << endl;
         }
     );
     sub_sm.setStateChangedCallback(
-        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+        [&] (SM::StateID f, SM::StateID t, SM::EventID e) {
             cout << "  " <<  f << "-->" << t << "," << e << endl;
         }
     );
@@ -395,35 +399,35 @@ TEST(StateMachine, InitStateHasSubMachine)
 }
 
 //! 测试各种Action之间的执行顺序
-TEST(StateMachine, SubStateMachineActionOrder)
+TEST(StateMachine, SubSMActionOrder)
 {
     enum class State { kTerm, kInit, k1};
     enum class Event { kNone, k1 };
 
-    StateMachine sm;
-    StateMachine sub_sm;
+    SM sm;
+    SM sub_sm;
 
     int step = 0;
-    sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 0); ++step; }, [&]{ EXPECT_EQ(step, 1); ++step; });
-    sm.newState(State::k1,    [&]{ EXPECT_EQ(step, 3); ++step; }, [&]{ EXPECT_EQ(step, 9); ++step; });
-    sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 11); ++step; }, [&]{ EXPECT_EQ(step, 12); ++step; });
+    sm.newState(State::kInit, [&](SM::Event){ EXPECT_EQ(step, 0); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 1); ++step; });
+    sm.newState(State::k1,    [&](SM::Event){ EXPECT_EQ(step, 3); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 9); ++step; });
+    sm.newState(State::kTerm, [&](SM::Event){ EXPECT_EQ(step, 11); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 12); ++step; });
 
-    sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, [&]{ EXPECT_EQ(step, 2); ++step; });
-    sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 10); ++step; });
+    sm.addRoute(State::kInit, Event::k1, State::k1,    nullptr, [&](SM::Event){ EXPECT_EQ(step, 2); ++step; });
+    sm.addRoute(State::k1,    Event::k1, State::kTerm, nullptr, [&](SM::Event){ EXPECT_EQ(step, 10); ++step; });
 
-    sub_sm.newState(State::kInit, [&]{ EXPECT_EQ(step, 4); ++step; }, [&]{ EXPECT_EQ(step, 5); ++step; });
-    sub_sm.newState(State::kTerm, [&]{ EXPECT_EQ(step, 7); ++step; }, [&]{ EXPECT_EQ(step, 8); ++step; });
-    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&]{ EXPECT_EQ(step, 6); ++step; });
+    sub_sm.newState(State::kInit, [&](SM::Event){ EXPECT_EQ(step, 4); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 5); ++step; });
+    sub_sm.newState(State::kTerm, [&](SM::Event){ EXPECT_EQ(step, 7); ++step; }, [&](SM::Event){ EXPECT_EQ(step, 8); ++step; });
+    sub_sm.addRoute(State::kInit, Event::k1, State::kTerm, nullptr, [&](SM::Event){ EXPECT_EQ(step, 6); ++step; });
 
     sm.setSubStateMachine(State::k1, &sub_sm);
 #if 0
     sm.setStateChangedCallback(
-        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+        [&] (SM::StateID f, SM::StateID t, SM::EventID e) {
             cout << f << "-->" << t << "," << e << endl;
         }
     );
     sub_sm.setStateChangedCallback(
-        [&] (StateMachine::StateID f, StateMachine::StateID t, StateMachine::EventID e) {
+        [&] (SM::StateID f, SM::StateID t, SM::EventID e) {
             cout << "  " <<  f << "-->" << t << "," << e << endl;
         }
     );
@@ -434,12 +438,73 @@ TEST(StateMachine, SubStateMachineActionOrder)
     sm.stop();
 }
 
+TEST(StateMachine, EventExtra)
+{
+    enum class State { kTerm, kInit };
+
+    SM sm;
+
+    int extra_data = 100;
+    int count = 0;
+    sm.newState(State::kInit,
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 0);
+            EXPECT_EQ(e.extra, nullptr);
+        },
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 10);
+            EXPECT_EQ(e.extra, &extra_data);
+        }
+    );
+    sm.newState(State::kTerm,
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 10);
+            EXPECT_EQ(e.extra, &extra_data);
+        },
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 0);
+            EXPECT_EQ(e.extra, nullptr);
+        }
+    );
+
+    sm.addRoute(State::kInit, 10, State::kTerm,
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 10);
+            EXPECT_EQ(e.extra, &extra_data);
+            return true;
+        },
+        [&](SM::Event e){
+            ++count;
+            EXPECT_EQ(e.id, 10);
+            EXPECT_EQ(e.extra, &extra_data);
+        }
+    );
+
+    sm.setStateChangedCallback(
+        [&] (SM::StateID f, SM::StateID t, SM::Event e) {
+            ++count;
+            EXPECT_EQ(e.id, 10);
+            EXPECT_EQ(e.extra, &extra_data);
+        }
+    );
+
+    sm.start();
+    sm.run(SM::Event(10, &extra_data));
+    sm.stop();
+    EXPECT_EQ(count, 7);
+} 
+
 TEST(StateMachine, SetInitState)
 {
     enum class State { kTerm, k1, kInit };
     enum class Event { kNone, k1 };
 
-    StateMachine sm;
+    SM sm;
 
     sm.setInitState(State::kInit);
     sm.newState(State::kInit, nullptr, nullptr);
@@ -454,10 +519,13 @@ TEST(StateMachine, SetInitState_Fail)
     enum class State { kTerm, k1, kInit };
     enum class Event { kNone, k1 };
 
-    StateMachine sm;
+    SM sm;
 
     sm.setInitState(State::kInit);
     sm.newState(State::k1,    nullptr, nullptr);
 
     EXPECT_FALSE(sm.start());
+}
+
+}
 }
