@@ -86,7 +86,7 @@ class Client {
 
     //! 订阅与取消订阅
     int subscribe(const std::string &topic, int *mid = nullptr, int qos = 0);
-    int ubsubscribe(const std::string &topic, int *mid = nullptr);
+    int unsubscribe(const std::string &topic, int *mid = nullptr);
 
     //! 发布消息
     int publish(const std::string &topic,
