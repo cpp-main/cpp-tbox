@@ -293,7 +293,7 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
     return ret == MOSQ_ERR_SUCCESS;
 }
 
-int Client::ubsubscribe(const std::string &topic, int *p_mid)
+int Client::unsubscribe(const std::string &topic, int *p_mid)
 {
     if (d_->state != State::kConnected) {
         LogWarn("broke is disconnected");
