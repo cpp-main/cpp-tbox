@@ -260,9 +260,10 @@ void Client::stop()
     if (d_->state <= State::kInited)
         return;
 
-    if (d_->state == State::kConnected) {
+    if (d_->state == State::kSockConnected ||
+        d_->state == State::kMqttConnected) {
         //! 如果已成功连接，则立即断开
-        mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnect() 中处理
+        mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnected() 中处理
     } else {
         //! 如果正在连接，则停止连接线程
         if (d_->sp_thread != nullptr) {
@@ -279,8 +280,8 @@ void Client::stop()
 
 int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 {
-    if (d_->state != State::kConnected) {
-        LogWarn("broke is disconnected");
+    if (d_->state != State::kMqttConnected) {
+        LogWarn("mqtt is not connected");
         return false;
     }
 
@@ -295,8 +296,8 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 
 int Client::unsubscribe(const std::string &topic, int *p_mid)
 {
-    if (d_->state != State::kConnected) {
-        LogWarn("broke is disconnected");
+    if (d_->state != State::kMqttConnected) {
+        LogWarn("mqtt is not connected");
         return false;
     }
 
@@ -312,8 +313,8 @@ int Client::unsubscribe(const std::string &topic, int *p_mid)
 int Client::publish(const std::string &topic, const void *payload_ptr, size_t payload_size,
                     int qos, bool retain, int *p_mid)
 {
-    if (d_->state != State::kConnected) {
-        LogWarn("broke is disconnected");
+    if (d_->state != State::kMqttConnected) {
+        LogWarn("mqtt is not connected");
         return false;
     }
 
@@ -335,7 +336,8 @@ Client::State Client::getState() const
 
 void Client::onTimerTick()
 {
-    if (d_->state == State::kConnected) {
+    if (d_->state == State::kSockConnected ||
+        d_->state == State::kMqttConnected) {
         mosquitto_loop_misc(d_->sp_mosq);
 
         if (mosquitto_socket(d_->sp_mosq) < 0) {
@@ -377,13 +379,13 @@ void Client::onSocketWrite()
 void Client::OnConnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
     Client *p_this = static_cast<Client*>(userdata);
-    p_this->onConnect(rc);
+    p_this->onConnected(rc);
 }
 
 void Client::OnDisconnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
     Client *p_this = static_cast<Client*>(userdata);
-    p_this->onDisconnect(rc);
+    p_this->onDisconnected(rc);
 }
 
 void Client::OnPublishWrapper(struct mosquitto *, void *userdata, int mid)
@@ -416,7 +418,7 @@ void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const c
     p_this->onLog(level, str);
 }
 
-void Client::onConnect(int rc)
+void Client::onConnected(int rc)
 {
     if (rc != 0) {
         LogWarn("connect fail, rc:%d", rc);
@@ -425,23 +427,29 @@ void Client::onConnect(int rc)
 
     LogInfo("connected");
 
-    ++d_->cb_level;
-    if (d_->callbacks.connected)
-        d_->callbacks.connected();
-    --d_->cb_level;
+    if (d_->state != State::kMqttConnected) {
+        d_->state = State::kMqttConnected;
+        ++d_->cb_level;
+        if (d_->callbacks.connected)
+            d_->callbacks.connected();
+        --d_->cb_level;
+    }
 }
 
-void Client::onDisconnect(int rc)
+void Client::onDisconnected(int rc)
 {
     disableSockeRead();
     disableSockeWrite();
 
     LogInfo("disconnected");
 
-    ++d_->cb_level;
-    if (d_->callbacks.disconnected)
-        d_->callbacks.disconnected();
-    --d_->cb_level;
+    if (d_->state == State::kMqttConnected) {
+        ++d_->cb_level;
+        if (d_->callbacks.disconnected)
+            d_->callbacks.disconnected();
+        --d_->cb_level;
+    }
+    d_->state = State::kConnecting;
 }
 
 void Client::onPublish(int mid)
@@ -520,7 +528,7 @@ void Client::onMosquittoConnectDone(int ret, bool first_connect)
     if (ret == MOSQ_ERR_SUCCESS) {
         enableSockeRead();
         enableSockeWriteIfNeed();
-        d_->state = State::kConnected;
+        d_->state = State::kSockConnected;
     } else {
         LogWarn("connect fail, ret:%d", ret);
     }

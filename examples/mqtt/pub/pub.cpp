@@ -35,7 +35,11 @@ int main(int argc, char **argv)
     int pub_mid = 0;
     mqtt::Client::Callbacks cbs;
     cbs.connected = [&] {
+        LogInfo("connected");
         mqtt.publish(topic, payload, strlen(payload), 0, false, &pub_mid);
+    };
+    cbs.disconnected = [] {
+        LogInfo("disconnected");
     };
     cbs.message_pub = [&] (int mid) {
         if (mid == pub_mid) {
