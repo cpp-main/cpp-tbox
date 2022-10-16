@@ -6,4 +6,4 @@ lib*.a
 lib*.so*
 /.staging
 /.install
-/.output
+/.build

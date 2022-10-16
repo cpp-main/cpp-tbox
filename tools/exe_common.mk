@@ -6,7 +6,7 @@
 # HOW TO USE:
 # before include this file. those variables need be specified.
 # C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, TEST_LDFLAGS
-# OUTPUT_DIR, INSTALL_DIR
+# BUILD_DIR, INSTALL_DIR
 #
 # TARGETS:
 # all, test, clean, distclean, install, uninstall
@@ -14,7 +14,7 @@
 
 .PHONY: all print_complie_vars print_build_var print_test_vars clean distclean install uninstall pre_build post_build
 
-EXE_OUTPUT_DIR = $(OUTPUT_DIR)/$(EXE_NAME)
+EXE_BUILD_DIR = $(BUILD_DIR)/$(EXE_NAME)
 
 STATIC_LIB := $(EXE_NAME)
 
@@ -28,7 +28,7 @@ print_vars:
 	@echo C_SRC_FILES=$(C_SRC_FILES)
 	@echo CC_SRC_FILES=$(CC_SRC_FILES)
 	@echo CPP_SRC_FILES=$(CPP_SRC_FILES)
-	@echo OUTPUT_DIR=$(OUTPUT_DIR)
+	@echo BUILD_DIR=$(BUILD_DIR)
 	@echo STAGING_DIR=$(STAGING_DIR)
 	@echo INSTALL_DIR=$(INSTALL_DIR)
 
@@ -36,9 +36,9 @@ print_vars:
 # exe
 ################################################################
 
-CPP_SOURCE_TO_OBJECT = $(EXE_OUTPUT_DIR)/$(subst .cpp,.o,$(1))
-CC_SOURCE_TO_OBJECT = $(EXE_OUTPUT_DIR)/$(subst .cc,.o,$(1))
-C_SOURCE_TO_OBJECT = $(EXE_OUTPUT_DIR)/$(subst .c,.o,$(1))
+CPP_SOURCE_TO_OBJECT = $(EXE_BUILD_DIR)/$(subst .cpp,.o,$(1))
+CC_SOURCE_TO_OBJECT = $(EXE_BUILD_DIR)/$(subst .cc,.o,$(1))
+C_SOURCE_TO_OBJECT = $(EXE_BUILD_DIR)/$(subst .c,.o,$(1))
 
 OBJECTS := $(foreach src,$(CPP_SRC_FILES),$(call CPP_SOURCE_TO_OBJECT,$(src)))
 OBJECTS += $(foreach src,$(CC_SRC_FILES),$(call CC_SOURCE_TO_OBJECT,$(src)))
@@ -74,20 +74,20 @@ print_exe_vars :
 	@echo EXE_NAME=$(EXE_NAME)
 	@echo OBJECTS=$(OBJECTS)
 
-$(EXE_OUTPUT_DIR)/$(EXE_NAME) : $(OBJECTS)
+$(EXE_BUILD_DIR)/$(EXE_NAME) : $(OBJECTS)
 	@echo "\033[35mBUILD $(EXE_NAME) \033[0m"
 	@install -d $(dir $@)
 	@$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) -rdynamic
 
-#build_exe : print_exe_vars $(EXE_OUTPUT_DIR)/$(EXE_NAME)
-build_exe : $(EXE_OUTPUT_DIR)/$(EXE_NAME)
+#build_exe : print_exe_vars $(EXE_BUILD_DIR)/$(EXE_NAME)
+build_exe : $(EXE_BUILD_DIR)/$(EXE_NAME)
 
 ################################################################
 # test
 ################################################################
 
-CPP_SOURCE_TO_TEST_OBJECT = $(EXE_OUTPUT_DIR)/$(subst .cpp,.oT,$(1))
-C_SOURCE_TO_TEST_OBJECT = $(EXE_OUTPUT_DIR)/$(subst .c,.oT,$(1))
+CPP_SOURCE_TO_TEST_OBJECT = $(EXE_BUILD_DIR)/$(subst .cpp,.oT,$(1))
+C_SOURCE_TO_TEST_OBJECT = $(EXE_BUILD_DIR)/$(subst .c,.oT,$(1))
 
 TEST_OBJECTS := $(foreach src,$(TEST_CPP_SRC_FILES),$(call CPP_SOURCE_TO_TEST_OBJECT,$(src)))
 TEST_CXXFLAGS := $(CXXFLAGS)
@@ -106,12 +106,12 @@ print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
-$(EXE_OUTPUT_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
+$(EXE_BUILD_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
 	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
-#test : print_test_vars $(EXE_OUTPUT_DIR)/test
-test : $(EXE_OUTPUT_DIR)/test
+#test : print_test_vars $(EXE_BUILD_DIR)/test
+test : $(EXE_BUILD_DIR)/test
 
 ################################################################
 # install and uninstall
@@ -130,7 +130,7 @@ $(foreach src,$(CONF_FILES),$(eval $(call CREATE_INSTALL_CONF_TARGET,$(src))))
 INSTALL_CONFS := $(foreach src,$(CONF_FILES),$(call SRC_CONF_TO_INSTALL_CONF,$(src)))
 
 INSTALL_EXE := $(INSTALL_DIR)/bin/$(EXE_NAME)
-$(INSTALL_EXE) : $(EXE_OUTPUT_DIR)/$(EXE_NAME)
+$(INSTALL_EXE) : $(EXE_BUILD_DIR)/$(EXE_NAME)
 	@install -Dm 750 $^ $@
 
 install: $(INSTALL_EXE) $(INSTALL_CONFS)
