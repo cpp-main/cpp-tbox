@@ -16,7 +16,7 @@ class EventPublisherImpl : public EventPublisher {
     virtual void unsubscribe(EventSubscriber *subscriber) override;
 
   public:
-    virtual void onEvent(int event_id, void *event_data) override;
+    virtual void onEvent(Event event) override;
 
   private:
     std::vector<EventSubscriber*> subscriber_vec_;

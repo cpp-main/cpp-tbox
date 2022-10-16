@@ -45,7 +45,7 @@ class Action : public EventSubscriber {
     virtual bool resume();
     virtual bool stop();
 
-    virtual bool onEvent(int event_id, void *event_data) override;
+    virtual bool onEvent(Event event) override;
 
     static std::string ToString(Status status);
 

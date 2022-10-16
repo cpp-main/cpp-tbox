@@ -18,11 +18,11 @@ void EventPublisherImpl::unsubscribe(EventSubscriber *subscriber) {
   subscriber_vec_.erase(iter, iter_end);
 }
 
-void EventPublisherImpl::onEvent(int event_id, void *event_data) {
+void EventPublisherImpl::onEvent(Event event) {
   auto todo_vec = subscriber_vec_;
   while (!todo_vec.empty()) {
     auto top_subscriber = todo_vec.back();
-    if (top_subscriber->onEvent(event_id, event_data))
+    if (top_subscriber->onEvent(event))
       break;
     todo_vec.pop_back();
   }

@@ -16,7 +16,7 @@ class Executor {
 
   public:
     Context& context();
-    void onEvent(int event_id, void *event_data);
+    void onEvent(Event event);
 
   private:
     ExecutorImpl *impl_;

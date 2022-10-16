@@ -78,7 +78,7 @@ bool Action::stop() {
   return true;
 }
 
-bool Action::onEvent(int event_id, void *event_data) {
+bool Action::onEvent(Event event) {
   //! 默认不处理任何事件，直接忽略
   return false;
 }

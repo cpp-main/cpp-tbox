@@ -13,8 +13,8 @@ class ExecutorImpl : public Context {
     virtual event::Loop& loop() override { return loop_; }
     virtual EventPublisher& event_publisher() override { return *event_publisher_; }
 
-    void onEvent(int event_id, void *event_data) {
-      event_publisher_->onEvent(event_id, event_data);
+    void onEvent(Event event) {
+      event_publisher_->onEvent(event);
     }
 
   private:
@@ -41,8 +41,8 @@ Executor::~Executor() { delete impl_; }
 
 Context& Executor::context() { return *impl_; }
 
-void Executor::onEvent(int event_id, void *event_data) {
-  impl_->onEvent(event_id, event_data);
+void Executor::onEvent(Event event) {
+  impl_->onEvent(event);
 }
 
 }

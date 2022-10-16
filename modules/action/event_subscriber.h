@@ -6,7 +6,7 @@ namespace action {
 
 class EventSubscriber {
   public:
-    virtual bool onEvent(int event_id, void *event_data) = 0;
+    virtual bool onEvent(Event event) = 0;
 };
 
 }
