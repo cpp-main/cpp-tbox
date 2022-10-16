@@ -93,7 +93,7 @@ bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
 
 ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int prio)
 {
-    return execute(backend_task, NonReturnFunc(), prio);
+    return execute(backend_task, nullptr, prio);
 }
 
 ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
@@ -259,9 +259,14 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             }
 
             LogDbg("thread %u pick task %u", thread_token.id(), item->token.id());
-            item->backend_task();
-            d_->wp_loop->runInLoop(item->main_cb);
+
+            if (item->backend_task)
+                item->backend_task();
+
             LogDbg("thread %u finish task %u", thread_token.id(), item->token.id());
+
+            if (item->main_cb)
+                d_->wp_loop->runInLoop(item->main_cb);
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);

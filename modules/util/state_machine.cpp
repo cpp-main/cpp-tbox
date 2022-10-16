@@ -27,7 +27,7 @@ class StateMachine::Impl {
     bool start();
     void stop();
 
-    bool run(EventID event_id);
+    bool run(Event event);
     StateID currentState() const;
     bool isTerminated() const;
 
@@ -105,9 +105,9 @@ void StateMachine::stop()
     impl_->stop();
 }
 
-bool StateMachine::run(EventID event_id)
+bool StateMachine::run(Event event)
 {
-    return impl_->run(event_id);
+    return impl_->run(event);
 }
 
 StateMachine::StateID StateMachine::currentState() const
@@ -205,7 +205,7 @@ bool StateMachine::Impl::start()
 
     ++cb_level_;
     if (init_state->enter_action)
-        init_state->enter_action();
+        init_state->enter_action(Event());
     --cb_level_;
 
     curr_state_ = init_state;
@@ -229,13 +229,13 @@ void StateMachine::Impl::stop()
 
     ++cb_level_;
     if (curr_state_->exit_action)
-        curr_state_->exit_action();
+        curr_state_->exit_action(Event());
     --cb_level_;
 
     curr_state_ = nullptr;
 }
 
-bool StateMachine::Impl::run(EventID event_id)
+bool StateMachine::Impl::run(Event event)
 {
     if (curr_state_ == nullptr) {
         LogWarn("need start first");
@@ -249,7 +249,7 @@ bool StateMachine::Impl::run(EventID event_id)
 
     //! 如果有子状态机，则给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
-        bool ret = curr_state_->sub_sm->run(event_id);
+        bool ret = curr_state_->sub_sm->run(event);
         if (!curr_state_->sub_sm->isTerminated())
             return ret;
         curr_state_->sub_sm->stop();
@@ -257,10 +257,10 @@ bool StateMachine::Impl::run(EventID event_id)
 
     //! 找出可行的路径
     auto iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
-        [event_id] (const Route &item) -> bool {
-            if (item.event_id != 0 && item.event_id != event_id)
+        [event] (const Route &item) -> bool {
+            if (item.event_id != 0 && item.event_id != event.id)
                 return false;
-            if (item.guard != nullptr && !item.guard())
+            if (item.guard != nullptr && !item.guard(event))
                 return false;
             return true;
         }
@@ -286,23 +286,23 @@ bool StateMachine::Impl::run(EventID event_id)
     ++cb_level_;
 
     if (curr_state_->exit_action)
-        curr_state_->exit_action();
+        curr_state_->exit_action(event);
 
     if (route.action)
-        route.action();
+        route.action(event);
 
     if (next_state->enter_action)
-        next_state->enter_action();
+        next_state->enter_action(event);
 
     auto last_state = curr_state_;
     curr_state_ = next_state;
     if (state_changed_cb_)
-        state_changed_cb_(last_state->id, curr_state_->id, event_id);
+        state_changed_cb_(last_state->id, curr_state_->id, event);
 
     //! 如果有子状态机，则给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
         curr_state_->sub_sm->start();
-        curr_state_->sub_sm->run(event_id);
+        curr_state_->sub_sm->run(event);
     }
 
     --cb_level_;

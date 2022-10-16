@@ -86,7 +86,7 @@ class Client {
 
     //! 订阅与取消订阅
     int subscribe(const std::string &topic, int *mid = nullptr, int qos = 0);
-    int ubsubscribe(const std::string &topic, int *mid = nullptr);
+    int unsubscribe(const std::string &topic, int *mid = nullptr);
 
     //! 发布消息
     int publish(const std::string &topic,
@@ -98,7 +98,8 @@ class Client {
         kNone = 0,      //!< 未初始化
         kInited,        //!< 已初始化
         kConnecting,    //!< 正在连接
-        kConnected,     //!< 已连接
+        kSockConnected, //!< Socket已连接
+        kMqttConnected, //!< MQTT已连接
     };
 
     State getState() const;
@@ -116,8 +117,8 @@ class Client {
     static void OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid);
     static void OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str);
 
-    void onConnect(int rc);
-    void onDisconnect(int rc);
+    void onConnected(int rc);
+    void onDisconnected(int rc);
     void onPublish(int mid);
     void onSubscribe(int mid, int qos, const int *granted_qos);
     void onUnsubscribe(int mid);

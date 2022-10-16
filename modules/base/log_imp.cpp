@@ -24,9 +24,11 @@ std::vector<OutputChannel> _output_channels;
 const char* Basename(const char *full_path)
 {
     const char *p_last = full_path;
-    for (const char *p = full_path; *p; ++p) {
-        if (*p == '/')
-            p_last = p + 1;
+    if (p_last != nullptr) {
+        for (const char *p = full_path; *p; ++p) {
+            if (*p == '/')
+                p_last = p + 1;
+        }
     }
     return p_last;
 }
