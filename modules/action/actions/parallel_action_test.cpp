@@ -80,6 +80,5 @@ TEST(ParallelAction, SleepNondelayAction) {
   EXPECT_TRUE(nodelay_action_succ);
 }
 
-
 }
 }
