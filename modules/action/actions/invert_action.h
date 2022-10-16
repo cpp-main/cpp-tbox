@@ -6,6 +6,11 @@
 namespace tbox {
 namespace action {
 
+/**
+ * bool InvertAction(child) {
+ *   return !child();
+ * }
+ */
 class InvertAction : public Action {
   public:
     explicit InvertAction(Context &ctx, const std::string &name, Action *child);

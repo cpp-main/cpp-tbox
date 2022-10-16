@@ -9,6 +9,9 @@
 namespace tbox {
 namespace action {
 
+/**
+ * return !false;
+ */
 TEST(InvertAction, _) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });

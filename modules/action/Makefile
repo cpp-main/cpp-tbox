@@ -15,6 +15,7 @@ CPP_SRC_FILES = \
 	actions/sequence_action.cpp \
 	actions/parallel_action.cpp \
 	actions/invert_action.cpp \
+	actions/if_else_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 
@@ -24,6 +25,7 @@ TEST_CPP_SRC_FILES = \
 	actions/sequence_action_test.cpp \
 	actions/parallel_action_test.cpp \
 	actions/invert_action_test.cpp \
+	actions/if_else_action_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_action -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no

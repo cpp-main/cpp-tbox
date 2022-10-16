@@ -8,6 +8,14 @@
 namespace tbox {
 namespace action {
 
+/**
+ * bool SequenceAction(acton_vec) {
+ *   for (item : action_vec)
+ *     if (!item())
+ *       return false;
+ *   return true;
+ * }
+ */
 class SequenceAction : public Action {
   public:
     explicit SequenceAction(Context &ctx, const std::string &name);
