@@ -21,7 +21,6 @@ class IfElseAction : public Action {
     virtual ~IfElseAction();
 
     virtual std::string type() const override { return "IfElse"; }
-
     virtual void toJson(Json &js) const;
 
     virtual bool start() override;
