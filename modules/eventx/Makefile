@@ -8,11 +8,13 @@ HEAD_FILES = \
 	timer_pool.h \
 	timeout_monitor.h \
 	request_pool.hpp \
+	cron_timer/cron_timer.h
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
 	timer_pool.cpp \
 	timeout_monitor.cpp \
+	cron_timer/cron_timer.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
 
