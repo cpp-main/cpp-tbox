@@ -1,20 +1,19 @@
+#include "cron_timer.h"
+
 #include <cstring>
 #include <cassert>
 #include <cstdlib>
 #include <chrono>
 #include <sys/time.h>
 
-#include "cron_timer.h"
-#include "tbox/event/timer_event.h"
-#include "tbox/event/loop.h"
+#include <tbox/event/timer_event.h>
+#include <tbox/event/loop.h>
 #include "ccronexpr.h"
 
-namespace tbox
-{
-namespace event
-{
+namespace tbox {
+namespace timer {
 
-CrontabTimer::CrontabTimer(Loop *loop) :
+CrontabTimer::CrontabTimer(event::Loop *loop) :
     wp_loop_(loop),
     sp_timer_ev_(loop->newTimerEvent())
 {
@@ -89,7 +88,7 @@ bool CrontabTimer::setNextAlarm()
     auto duration_s = next_ts - now_tv.tv_sec;
     auto duration_ms = duration_s * 1000 - now_tv.tv_usec / 1000;
 
-    sp_timer_ev_->initialize(std::chrono::milliseconds(duration_ms), Mode::kOneshot);
+    sp_timer_ev_->initialize(std::chrono::milliseconds(duration_ms), event::Event::Mode::kOneshot);
     return sp_timer_ev_->enable();
 }
 

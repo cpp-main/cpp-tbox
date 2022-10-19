@@ -9,3 +9,4 @@ MODULES += coroutine
 MODULES += mqtt
 MODULES += terminal
 MODULES += main
+MODULES += timer

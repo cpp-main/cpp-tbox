@@ -1,13 +1,13 @@
-#ifndef TBOX_CRON_TIMER_H
-#define TBOX_CRON_TIMER_H
+#ifndef TBOX_TIMER_CRON_TIMER_H
+#define TBOX_TIMER_CRON_TIMER_H
 
 #include <string>
+
 #include <functional>
-#include "tbox/event/event.h"
-#include "tbox/event/forward.h"
+#include <tbox/event/forward.h>
 
 namespace tbox {
-namespace event {
+namespace timer {
 /*
  * @brief The linux crontab timer.
  *
@@ -33,18 +33,18 @@ namespace event {
  * loop->start();
  */
 
-class CrontabTimer : public Event
+class CrontabTimer
 {
   public:
-    CrontabTimer(Loop *wp_loop);
+    CrontabTimer(event::Loop *wp_loop);
     virtual ~CrontabTimer();
 
     using Callback = std::function<void()>;
     bool initialize(const std::string &crontab_str, Callback cb);
 
-    virtual bool isEnabled() const override;
-    virtual bool enable() override;
-    virtual bool disable() override;
+    bool isEnabled() const;
+    bool enable();
+    bool disable();
 
     /*
      * @brief refresh the internal timer.
@@ -61,8 +61,8 @@ class CrontabTimer : public Event
     bool setNextAlarm();
 
   private:
-    Loop *wp_loop_;
-    TimerEvent *sp_timer_ev_;
+    event::Loop *wp_loop_;
+    event::TimerEvent *sp_timer_ev_;
     Callback cb_;
     void *sp_cron_expr_;
 };
@@ -70,4 +70,4 @@ class CrontabTimer : public Event
 }
 }
 
-#endif
+#endif //TBOX_TIMER_CRON_TIMER_H
