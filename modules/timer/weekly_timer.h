@@ -9,17 +9,18 @@
 namespace tbox {
 namespace timer {
 /*
- * @brief The linux crontab timer.
+ * @brief The linux weekly timer.
  *
- * WeeklyTimer allow the user to make plans by linux crontab expression.
+ * WeeklyTimer allow the user to make plans weekly
  *
  * code example:
  *
  * Loop *loop = Loop::New();
- * WeeklyTimer *tm = new WeeklyTimer(loop);
- * tm->initialize("0111110", (8 * 60 * 60), 0); // every day at 08:00 at 0 timezone
- * tm->enable();
- * loop->start();
+ * WeeklyTimer *tmr = new WeeklyTimer(loop);
+ * tmr->initialize("0111110", (8 * 60 * 60), 0); // every day at 08:00 at 0 timezone
+ * tmr->setCallback([] { std::cout << "time is up" << endl;});
+ * tmr->enable();
+ * loop->runLoop();
  */
 
 class WeeklyTimer
@@ -42,6 +43,11 @@ class WeeklyTimer
   private:
     event::Loop *wp_loop_;
     event::TimerEvent *sp_timer_ev_;
+
+    std::string week_mask_;
+    uint32_t seconds_of_day_;
+    int timezone_offset_minutes_;
+
     Callback cb_;
 };
 

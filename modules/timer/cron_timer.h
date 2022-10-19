@@ -11,7 +11,7 @@ namespace timer {
 /*
  * @brief The linux crontab timer.
  *
- * CrontabTimer allow the user to make plains by linux crontab expression.
+ * CrontabTimer allow the user to make plans by linux crontab expression.
  *  Linux-cron tab expression
   *    *    *    *    *    *
   -    -    -    -    -    -
@@ -27,10 +27,10 @@ namespace timer {
  * code example:
  *
  * Loop *loop = Loop::New();
- * CrontabTimer *tm = new CrontabTimer(loop);
- * tm->initialize("18 28 14 * * *", [] { std::cout << "timeout" << std::endl; }); // every day at 14:28:18
- * tm->enable();
- * loop->start();
+ * CrontabTimer *tmr = new CrontabTimer(loop);
+ * tmr->initialize("18 28 14 * * *", [] { std::cout << "timeout" << std::endl; }); // every day at 14:28:18
+ * tmr->enable();
+ * loop->runLoop();
  */
 
 class CrontabTimer
