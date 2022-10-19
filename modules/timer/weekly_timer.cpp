@@ -15,7 +15,10 @@ WeeklyTimer::WeeklyTimer(event::Loop *wp_loop) :
 {
   sp_timer_ev_->setCallback(
     [this] {
-      activeTimer();
+      state_ = State::kInited;
+      if (!week_mask_.empty())
+        activeTimer();
+
       if (cb_)
         cb_();
     }
@@ -23,39 +26,65 @@ WeeklyTimer::WeeklyTimer(event::Loop *wp_loop) :
 }
 
 WeeklyTimer::~WeeklyTimer() {
+  cleanup();
   delete sp_timer_ev_;
 }
 
 bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask, int timezone_offset_minutes) {
-  if (seconds_of_day < 0)
+  if (state_ == State::kRunning) {
+    LogWarn("timer is running state, disable first");
     return false;
+  }
 
-  if (week_mask_.size() != 7 && !week_mask_.empty())
+  if (seconds_of_day < 0) {
+    LogWarn("seconds_of_day:%d, < 0", seconds_of_day);
     return false;
+  }
+
+  if (week_mask_.size() != 7 && !week_mask_.empty()) {
+    LogWarn("week_mask:%s, invalid", week_mask.c_str());
+    return false;
+  }
 
   week_mask_ = week_mask;
   seconds_of_day_ = seconds_of_day;
-  timezone_offset_minutes_ = timezone_offset_minutes;
-  return false;
+  timezone_offset_seconds_ = timezone_offset_minutes * 60;
+  state_ = State::kInited;
+
+  return true;
 }
 
 bool WeeklyTimer::isEnabled() const {
-  return sp_timer_ev_->isEnabled();
+  return state_ == State::kRunning;
 }
 
 bool WeeklyTimer::enable() {
-  return activeTimer();
+  if (state_ == State::kInited)
+    return activeTimer();
+
+  LogWarn("need initialize first");
+  return false;
 }
 
 bool WeeklyTimer::disable() {
-  return sp_timer_ev_->disable();
+  if (state_ == State::kRunning) {
+    state_ = State::kInited;
+    return sp_timer_ev_->disable();
+  }
+  return false;
 }
 
 void WeeklyTimer::cleanup() {
+  if (state_ < State::kInited)
+    return;
+
+  disable();
+
   week_mask_.clear();
   seconds_of_day_ = 0;
-  timezone_offset_minutes_ = 0;
+  timezone_offset_seconds_ = 0;
   cb_ = nullptr;
+  state_ = State::kNone;
 }
 
 namespace {
@@ -71,7 +100,7 @@ uint32_t GetCurrentUTCSeconds() {
 
 int WeeklyTimer::calculateWaitSeconds() {
   uint32_t curr_utc_ts = GetCurrentUTCSeconds();
-  uint32_t curr_local_ts = curr_utc_ts + timezone_offset_minutes_;
+  uint32_t curr_local_ts = curr_utc_ts + timezone_offset_seconds_;
 
   int curr_week = (((curr_local_ts % kSecondsOfWeek) / kSecondsOfDay) + 4) % 7;
   int curr_seconds = curr_local_ts % kSecondsOfDay;
@@ -101,7 +130,10 @@ bool WeeklyTimer::activeTimer() {
 
   sp_timer_ev_->initialize(std::chrono::seconds(wait_seconds), event::Event::Mode::kOneshot);
   sp_timer_ev_->enable();
+
+  state_ = State::kRunning;
   return true;
 }
+
 }
 }

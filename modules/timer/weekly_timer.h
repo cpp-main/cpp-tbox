@@ -50,9 +50,16 @@ class WeeklyTimer
 
     int seconds_of_day_;
     std::string week_mask_;
-    int timezone_offset_minutes_;
+    int timezone_offset_seconds_;
 
     Callback cb_;
+
+    enum class State {
+      kNone,
+      kInited,
+      kRunning
+    };
+    State state_ = State::kNone;
 };
 
 }
