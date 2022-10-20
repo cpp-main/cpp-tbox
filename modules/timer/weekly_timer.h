@@ -41,7 +41,7 @@ class WeeklyTimer
     void cleanup();
 
   protected:
-    int calculateWaitSeconds();
+    int calculateWaitSeconds(uint32_t curr_utc_ts);
     bool activeTimer();
 
   private:
@@ -52,6 +52,7 @@ class WeeklyTimer
     std::string week_mask_;
     int timezone_offset_seconds_ = 0;
 
+    int cb_level_ = 0;
     Callback cb_;
 
     enum class State {
