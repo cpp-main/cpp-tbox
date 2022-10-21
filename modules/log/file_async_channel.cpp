@@ -88,7 +88,7 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     int postfix = 0;
     do {
         ostringstream filename_oss;
-        filename_oss << log_path_ << '/' << log_prefix_ << '.' << pid_ << '.' << timestamp << ".log";
+        filename_oss << log_path_ << '/' << log_prefix_ << '.' << timestamp << '.' << pid_ << ".log";
         if (postfix != 0)
             filename_oss << "." << postfix;
         filename = filename_oss.str();
