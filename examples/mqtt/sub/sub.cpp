@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
     if (argc < 2) {
         cout << "Usage: " << argv[0] << " <topic>" << endl
-             << "Exp  : " << argv[0] << " #" << endl;
+             << "Exp  : " << argv[0] << " '#'" << endl;
         return 0;
     }
 
@@ -34,7 +34,11 @@ int main(int argc, char **argv)
     int sub_mid = 0;
     mqtt::Client::Callbacks cbs;
     cbs.connected = [&] {
+        LogInfo("connected");
         mqtt.subscribe(topic, &sub_mid);
+    };
+    cbs.disconnected = [] {
+        LogInfo("disconnected");
     };
     cbs.subscribed = [&] (int mid, int, const int *) {
         if (mid == sub_mid)

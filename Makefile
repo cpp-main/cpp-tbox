@@ -41,7 +41,7 @@ examples: modules
 	$(MAKE) -C $@
 
 clean:
-	-rm -rf $(OUTPUT_DIR)
+	-rm -rf $(BUILD_DIR)
 
 distclean: clean
 	-rm -rf $(STAGING_DIR) $(INSTALL_DIR)

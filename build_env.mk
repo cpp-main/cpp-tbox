@@ -7,7 +7,7 @@ export STAGING_LIB := $(STAGING_DIR)/lib
 export INSTALL_DIR := $(TOP_DIR)/.install
 export INSTALL_LIB := $(INSTALL_DIR)/lib
 
-export OUTPUT_DIR := $(TOP_DIR)/.output
+export BUILD_DIR := $(TOP_DIR)/.build
 
 CCFLAGS := -I$(STAGING_INCLUDE)
 
