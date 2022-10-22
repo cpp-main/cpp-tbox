@@ -25,7 +25,7 @@ CrontabTimer::~CrontabTimer()
   free(sp_cron_expr_);
 }
 
-bool CrontabTimer::initialize(const std::string &crontab_expr, int timezone_offset_minutes)
+bool CrontabTimer::initialize(const std::string &crontab_expr)
 {
   if (state_ == State::kRunning) {
     LogWarn("timer is running state, disable first");

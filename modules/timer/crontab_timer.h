@@ -39,10 +39,10 @@ namespace timer {
 class CrontabTimer : public Timer
 {
   public:
-    CrontabTimer(event::Loop *wp_loop);
+    explicit CrontabTimer(event::Loop *wp_loop);
     virtual ~CrontabTimer();
 
-    bool initialize(const std::string &crontab_expr, int timezone_offset_minutes);
+    bool initialize(const std::string &crontab_expr);
     /*
      * @brief refresh the internal timer.
      *
