@@ -16,31 +16,7 @@ constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
 constexpr auto kMaxTimezoneOffsetMinutes = 60 * 12;
 }
 
-WeeklyTimer::WeeklyTimer(event::Loop *wp_loop) :
-  wp_loop_(wp_loop),
-  sp_timer_ev_(wp_loop->newTimerEvent())
-{
-  sp_timer_ev_->setCallback(
-    [this] {
-      state_ = State::kInited;
-      if (!week_mask_.empty())
-        activeTimer();
-
-      ++cb_level_;
-      if (cb_)
-        cb_();
-      --cb_level_;
-    }
-  );
-}
-
-WeeklyTimer::~WeeklyTimer() {
-  assert(cb_level_ == 0);
-  cleanup();
-  delete sp_timer_ev_;
-}
-
-bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask, int timezone_offset_minutes) {
+bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask) {
   if (state_ == State::kRunning) {
     LogWarn("timer is running state, disable first");
     return false;
@@ -58,52 +34,15 @@ bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask, i
 
   week_mask_ = week_mask;
   seconds_of_day_ = seconds_of_day;
-  timezone_offset_seconds_ = timezone_offset_minutes * 60;
   state_ = State::kInited;
-
   return true;
 }
 
-bool WeeklyTimer::isEnabled() const {
-  return state_ == State::kRunning;
-}
-
-bool WeeklyTimer::enable() {
-  if (state_ == State::kInited)
-    return activeTimer();
-
-  LogWarn("should initialize first");
-  return false;
-}
-
-bool WeeklyTimer::disable() {
-  if (state_ == State::kRunning) {
-    state_ = State::kInited;
-    return sp_timer_ev_->disable();
-  }
-  return false;
-}
-
-void WeeklyTimer::cleanup() {
-  if (state_ < State::kInited)
-    return;
-
-  disable();
-
-  week_mask_.clear();
-  seconds_of_day_ = 0;
-  timezone_offset_seconds_ = 0;
-  cb_ = nullptr;
-  state_ = State::kNone;
-}
-
-int WeeklyTimer::calculateWaitSeconds(uint32_t curr_utc_ts) {
-  uint32_t curr_local_ts = curr_utc_ts + timezone_offset_seconds_;
-
+int WeeklyTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
   int curr_week = (((curr_local_ts % kSecondsOfWeek) / kSecondsOfDay) + 4) % 7;
   int curr_seconds = curr_local_ts % kSecondsOfDay;
 
-#if 0
+#if 1
   LogTrace("curr_week:%d, curr_seconds:%d", curr_week, curr_seconds);
 #endif
 
@@ -120,29 +59,6 @@ int WeeklyTimer::calculateWaitSeconds(uint32_t curr_utc_ts) {
     }
     return -1;
   }
-}
-
-bool WeeklyTimer::activeTimer() {
-  struct timeval tv;
-  int ret = gettimeofday(&tv, nullptr);
-  if (ret != 0) {
-    LogWarn("gettimeofday() fail, ret:%d", ret);
-    return false;
-  }
-
-  auto wait_seconds = calculateWaitSeconds(tv.tv_sec);
-#if 0
-  LogTrace("wait_seconds:%d", wait_seconds);
-#endif
-  if (wait_seconds < 0)
-    return false;
-
-  auto wait_milliseconds = wait_seconds * 1000 - tv.tv_usec / 1000;
-  sp_timer_ev_->initialize(std::chrono::milliseconds(wait_milliseconds), event::Event::Mode::kOneshot);
-  sp_timer_ev_->enable();
-
-  state_ = State::kRunning;
-  return true;
 }
 
 }

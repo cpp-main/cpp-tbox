@@ -6,6 +6,8 @@
 #include <functional>
 #include <tbox/event/forward.h>
 
+#include "timer.h"
+
 namespace tbox {
 namespace timer {
 /*
@@ -23,44 +25,19 @@ namespace timer {
  * loop->runLoop();
  */
 
-class WeeklyTimer
+class WeeklyTimer : public Timer
 {
   public:
-    explicit WeeklyTimer(event::Loop *wp_loop);
-    virtual ~WeeklyTimer();
+    using Timer::Timer;
 
-    bool initialize(int seconds_of_day, const std::string &week_mask, int timezone_offset_minutes = 0);
-
-    using Callback = std::function<void()>;
-    void setCallback(const Callback &cb) { cb_ = cb; }
-
-    bool isEnabled() const;
-    bool enable();
-    bool disable();
-
-    void cleanup();
+    bool initialize(int seconds_of_day, const std::string &week_mask);
 
   protected:
-    int calculateWaitSeconds(uint32_t curr_utc_ts);
-    bool activeTimer();
+    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
 
   private:
-    event::Loop *wp_loop_;
-    event::TimerEvent *sp_timer_ev_;
-
     int seconds_of_day_ = 0;
     std::string week_mask_;
-    int timezone_offset_seconds_ = 0;
-
-    int cb_level_ = 0;
-    Callback cb_;
-
-    enum class State {
-      kNone,
-      kInited,
-      kRunning
-    };
-    State state_ = State::kNone;
 };
 
 }

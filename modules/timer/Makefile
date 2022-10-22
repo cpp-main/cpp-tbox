@@ -4,10 +4,12 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
+	timer.h \
 	weekly_timer.h \
 	crontab_timer.h \
 
 CPP_SRC_FILES = \
+	timer.cpp \
 	weekly_timer.cpp \
 	crontab_timer.cpp \
 	ccronexpr.cpp \

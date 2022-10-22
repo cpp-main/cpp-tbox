@@ -27,9 +27,10 @@ namespace timer {
  * code example:
  *
  * Loop *loop = Loop::New();
- * CrontabTimer *tmr = new CrontabTimer(loop);
- * tmr->initialize("18 28 14 * * *", [] { std::cout << "timeout" << std::endl; }); // every day at 14:28:18
- * tmr->enable();
+ * CrontabTimer tmr(loop);
+ * tmr.initialize("18 28 14 * * *", 480); // every day at 14:28:18 in +8 timezone
+ * tmr.setCallback([] { std::cout << "timeout" << std::endl; });
+ * tmr.enable();
  * loop->runLoop();
  */
 
@@ -39,8 +40,10 @@ class CrontabTimer
     CrontabTimer(event::Loop *wp_loop);
     virtual ~CrontabTimer();
 
+    bool initialize(const std::string &crontab_expr, int timezone_offset_minutes);
+
     using Callback = std::function<void()>;
-    bool initialize(const std::string &crontab_str, Callback cb);
+    void setCallback(const Callback &cb) { cb_ = cb; }
 
     bool isEnabled() const;
     bool enable();
@@ -63,8 +66,10 @@ class CrontabTimer
   private:
     event::Loop *wp_loop_;
     event::TimerEvent *sp_timer_ev_;
-    Callback cb_;
     void *sp_cron_expr_;
+    int timezone_offset_seconds_ = 0;
+    Callback cb_;
+    int cb_level_ = 0;
 };
 
 }
