@@ -6,6 +6,8 @@
 #include <functional>
 #include <tbox/event/forward.h>
 
+#include "timer.h"
+
 namespace tbox {
 namespace timer {
 /*
@@ -34,21 +36,13 @@ namespace timer {
  * loop->runLoop();
  */
 
-class CrontabTimer
+class CrontabTimer : public Timer
 {
   public:
     CrontabTimer(event::Loop *wp_loop);
     virtual ~CrontabTimer();
 
     bool initialize(const std::string &crontab_expr, int timezone_offset_minutes);
-
-    using Callback = std::function<void()>;
-    void setCallback(const Callback &cb) { cb_ = cb; }
-
-    bool isEnabled() const;
-    bool enable();
-    bool disable();
-
     /*
      * @brief refresh the internal timer.
      *
@@ -57,19 +51,13 @@ class CrontabTimer
      * when the system clock was changed.
      */
     void refresh();
-    void cleanup();
 
   private:
-    void onTimeExpired();
     bool setNextAlarm();
+    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
 
   private:
-    event::Loop *wp_loop_;
-    event::TimerEvent *sp_timer_ev_;
     void *sp_cron_expr_;
-    int timezone_offset_seconds_ = 0;
-    Callback cb_;
-    int cb_level_ = 0;
 };
 
 }
