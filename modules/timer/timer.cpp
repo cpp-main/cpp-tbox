@@ -28,7 +28,8 @@ Timer::Timer(event::Loop *wp_loop) :
 }
 
 Timer::~Timer() {
-  assert(cb_level_ == 0);
+  assert(cb_level_ == 0); //!< 防止回调中析构
+
   cleanup();
   delete sp_timer_ev_;
 }
@@ -75,16 +76,26 @@ void Timer::cleanup() {
   state_ = State::kNone;
 }
 
+namespace {
+//! 获取系统的时区偏移秒数
 int GetSystemTimezoneOffsetSeconds() {
-  time_t utc_ts = 12 * 3600;
+  //! 假设当前0时区的时间是 1970-1-1 12:00，即 utc_ts = 12 * 3600
+  //! 通过 localtime_r() 获取本地的时间 local_tm。
+  //! 通过 local_tm 中的 hour, min, sec 可计算出本地的时间戳 local_ts。
+  //! 再用本地的时间戳减去 utc_ts 即可得出期望的值。
+  //
+  //! 为什么选用0时区的12时，而不是其它时间点呢？
+  //! 因为在这个时间点上，计算出的任何一个时间的时间都是在 00:00 ~ 23:59 之间的
   struct tm local_tm;
+  time_t utc_ts = 12 * 3600;
   localtime_r(&utc_ts, &local_tm);
   int local_ts = local_tm.tm_hour * 3600 + local_tm.tm_min * 60 + local_tm.tm_sec;
   return (local_ts - static_cast<int>(utc_ts));
 }
+}
 
 bool Timer::activeTimer() {
-  LogTag();
+  //! 使用 gettimeofday() 获取当前0时区的时间戳，精确到微秒
   struct timeval tv;
   int ret = gettimeofday(&tv, nullptr);
   if (ret != 0) {
@@ -94,6 +105,7 @@ bool Timer::activeTimer() {
 
   int timezone_offset_seconds = using_independ_timezone_ ? \
                                 timezone_offset_seconds_ : GetSystemTimezoneOffsetSeconds();
+  //! 计算需要等待的秒数
   auto wait_seconds = calculateWaitSeconds(tv.tv_sec + timezone_offset_seconds);
 #if 1
   LogTrace("wait_seconds:%d", wait_seconds);
@@ -101,7 +113,9 @@ bool Timer::activeTimer() {
   if (wait_seconds < 0)
     return false;
 
+  //! 提升精度，计算中需要等待的毫秒数
   auto wait_milliseconds = wait_seconds * 1000 - tv.tv_usec / 1000;
+  //! 启动定时器
   sp_timer_ev_->initialize(std::chrono::milliseconds(wait_milliseconds), event::Event::Mode::kOneshot);
   sp_timer_ev_->enable();
 

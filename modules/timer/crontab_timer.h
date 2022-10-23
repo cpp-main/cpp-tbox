@@ -10,6 +10,7 @@
 
 namespace tbox {
 namespace timer {
+
 /*
  * @brief The linux crontab timer.
  *
@@ -29,13 +30,14 @@ namespace timer {
  * code example:
  *
  * Loop *loop = Loop::New();
+ *
  * CrontabTimer tmr(loop);
- * tmr.initialize("18 28 14 * * *", 480); // every day at 14:28:18 in +8 timezone
+ * tmr.initialize("18 28 14 * * *"); // every day at 14:28:18
  * tmr.setCallback([] { std::cout << "timeout" << std::endl; });
  * tmr.enable();
+ *
  * loop->runLoop();
  */
-
 class CrontabTimer : public Timer
 {
   public:
@@ -43,17 +45,8 @@ class CrontabTimer : public Timer
     virtual ~CrontabTimer();
 
     bool initialize(const std::string &crontab_expr);
-    /*
-     * @brief refresh the internal timer.
-     *
-     * In order not to affect the accuracy of the timer,
-     * you need to call this function to refresh the internal timer
-     * when the system clock was changed.
-     */
-    void refresh();
 
-  private:
-    bool setNextAlarm();
+  protected:
     virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
 
   private:

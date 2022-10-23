@@ -18,10 +18,12 @@ namespace timer {
  * code example:
  *
  * Loop *loop = Loop::New();
- * WeeklyTimer *tmr = new WeeklyTimer(loop);
- * tmr->initialize((8 * 60 * 60), "1111111", 0); // everyday at 08:00 in 0 timezone
- * tmr->setCallback([] { std::cout << "time is up" << endl;});
- * tmr->enable();
+ *
+ * WeeklyTimer tmr(loop);
+ * tmr.initialize((8 * 60 * 60), "1111111"); // everyday at 08:00
+ * tmr.setCallback([] { std::cout << "time is up" << endl;});
+ * tmr.enable();
+ *
  * loop->runLoop();
  */
 
