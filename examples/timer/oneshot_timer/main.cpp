@@ -5,18 +5,18 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include <tbox/event/loop.h>
-#include <tbox/timer/weekly_timer.h>
+#include <tbox/timer/oneshot_timer.h>
 
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 
 void PrintUsage(const char *process_name) {
-  cout << "Usage:" << process_name << " seconds_from_00 week_mask [timezone_offset_minutes]" << endl;
+  cout << "Usage:" << process_name << " seconds_from_00 [timezone_offset_minutes]" << endl;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
+    if (argc < 2) {
         PrintUsage(argv[0]);
         return 0;
     }
@@ -24,13 +24,11 @@ int main(int argc, char *argv[]) {
     LogOutput_Initialize(argv[0]);
 
     int seconds_from_00 = 0;
-    std::string week_mask;
     int timezone_offset_minutes = 0;
 
     try {
       seconds_from_00 = std::stoi(argv[1]);
-      week_mask = argv[2];
-      if (argc >= 4) {
+      if (argc >= 3) {
         timezone_offset_minutes = std::stoi(argv[3]);
       }
     } catch (const std::exception &e) {
@@ -38,13 +36,13 @@ int main(int argc, char *argv[]) {
       return 0;
     }
 
-    LogInfo("second:%d, week_mask:%s", seconds_from_00, week_mask.c_str());
+    LogInfo("second:%d", seconds_from_00);
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
-    timer::WeeklyTimer tmr(sp_loop);
-    tmr.initialize(seconds_from_00, week_mask);
+    timer::OneshotTimer tmr(sp_loop);
+    tmr.initialize(seconds_from_00);
     if (argc >= 4) {
       LogInfo("timezone:%d", timezone_offset_minutes);
       tmr.setTimezone(timezone_offset_minutes);

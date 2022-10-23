@@ -5,7 +5,6 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include <tbox/event/loop.h>
-#include <tbox/event/signal_event.h>
 #include <tbox/timer/crontab_timer.h>
 
 using namespace std;

@@ -14,17 +14,7 @@ Timer::Timer(event::Loop *wp_loop) :
   wp_loop_(wp_loop),
   sp_timer_ev_(wp_loop->newTimerEvent())
 {
-  sp_timer_ev_->setCallback(
-    [this] {
-      state_ = State::kInited;
-      activeTimer();
-
-      ++cb_level_;
-      if (cb_)
-        cb_();
-      --cb_level_;
-    }
-  );
+  sp_timer_ev_->setCallback([this] { onTimeExpired(); });
 }
 
 Timer::~Timer() {
@@ -121,6 +111,16 @@ bool Timer::activeTimer() {
 
   state_ = State::kRunning;
   return true;
+}
+
+void Timer::onTimeExpired() {
+  state_ = State::kInited;
+  activeTimer();
+
+  ++cb_level_;
+  if (cb_)
+    cb_();
+  --cb_level_;
 }
 
 }

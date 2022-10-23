@@ -51,6 +51,7 @@ class Timer
      * \note  该函数为虚函数，需要由子类对实现。具体不同类型的定时器有不同的算法
      */
     virtual int calculateWaitSeconds(uint32_t curr_local_ts) = 0;
+    virtual void onTimeExpired();
 
     //! 激活定时器
     bool activeTimer();
