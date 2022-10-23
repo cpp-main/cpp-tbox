@@ -1,4 +1,4 @@
-EXE_NAME := example/timer/crontab_timer
+EXE_NAME := example/timer/cron_timer
 
 CPP_SRC_FILES := main.cpp
 

@@ -12,9 +12,9 @@ namespace tbox {
 namespace timer {
 
 /*
- * @brief The linux crontab timer.
+ * @brief The linux cron timer.
  *
- * CrontabTimer allow the user to make plans by linux crontab expression.
+ * CronTimer allow the user to make plans by linux cron expression.
  *  Linux-cron tab expression
   *    *    *    *    *    *
   -    -    -    -    -    -
@@ -31,20 +31,20 @@ namespace timer {
  *
  * Loop *loop = Loop::New();
  *
- * CrontabTimer tmr(loop);
+ * CronTimer tmr(loop);
  * tmr.initialize("18 28 14 * * *"); // every day at 14:28:18
  * tmr.setCallback([] { std::cout << "timeout" << std::endl; });
  * tmr.enable();
  *
  * loop->runLoop();
  */
-class CrontabTimer : public Timer
+class CronTimer : public Timer
 {
   public:
-    explicit CrontabTimer(event::Loop *wp_loop);
-    virtual ~CrontabTimer();
+    explicit CronTimer(event::Loop *wp_loop);
+    virtual ~CronTimer();
 
-    bool initialize(const std::string &crontab_expr);
+    bool initialize(const std::string &cron_expr_str);
 
   protected:
     virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;

@@ -1,4 +1,4 @@
-#include "crontab_timer.h"
+#include "cron_timer.h"
 
 #include <cstring>
 #include <cassert>
@@ -12,7 +12,7 @@
 namespace tbox {
 namespace timer {
 
-CrontabTimer::CrontabTimer(event::Loop *loop) :
+CronTimer::CronTimer(event::Loop *loop) :
   Timer(loop),
   sp_cron_expr_(malloc(sizeof(cron_expr)))
 {
@@ -20,12 +20,12 @@ CrontabTimer::CrontabTimer(event::Loop *loop) :
   memset(sp_cron_expr_, 0, sizeof(cron_expr));
 }
 
-CrontabTimer::~CrontabTimer()
+CronTimer::~CronTimer()
 {
   free(sp_cron_expr_);
 }
 
-bool CrontabTimer::initialize(const std::string &crontab_expr)
+bool CronTimer::initialize(const std::string &cron_expr_str)
 {
   if (state_ == State::kRunning) {
     LogWarn("timer is running state, disable first");
@@ -35,10 +35,10 @@ bool CrontabTimer::initialize(const std::string &crontab_expr)
   const char *error_str = nullptr;
   memset(sp_cron_expr_, 0, sizeof(cron_expr));
 
-  // check validity of crontab str
-  cron_parse_expr(crontab_expr.c_str(), static_cast<cron_expr *>(sp_cron_expr_), &error_str);
+  // check validity of cron str
+  cron_parse_expr(cron_expr_str.c_str(), static_cast<cron_expr *>(sp_cron_expr_), &error_str);
   if (error_str != nullptr) { // Invalid expression.
-    LogWarn("crontab_expr error: %s", error_str);
+    LogWarn("cron_expr error: %s", error_str);
     return false;
   }
 
@@ -46,7 +46,7 @@ bool CrontabTimer::initialize(const std::string &crontab_expr)
   return true;
 }
 
-int CrontabTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
+int CronTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
   auto next_local_ts = cron_next(static_cast<cron_expr *>(sp_cron_expr_), curr_local_ts);
   return next_local_ts - curr_local_ts;
 }
