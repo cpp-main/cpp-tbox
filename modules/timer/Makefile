@@ -14,7 +14,7 @@ CPP_SRC_FILES = \
 	weekly_timer.cpp \
 	oneshot_timer.cpp \
 	cron_timer.cpp \
-	ccronexpr.cpp \
+	3rd-party/ccronexpr.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"timer"' $(CXXFLAGS)
 
