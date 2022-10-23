@@ -38,7 +38,7 @@ bool CrontabTimer::initialize(const std::string &crontab_expr)
   // check validity of crontab str
   cron_parse_expr(crontab_expr.c_str(), static_cast<cron_expr *>(sp_cron_expr_), &error_str);
   if (error_str != nullptr) { // Invalid expression.
-    LogWarn("crontab_expr error:%s", *error_str);
+    LogWarn("crontab_expr error: %s", error_str);
     return false;
   }
 
