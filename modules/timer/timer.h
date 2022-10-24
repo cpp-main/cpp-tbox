@@ -39,6 +39,8 @@ class Timer
 
     void cleanup();
 
+    void refresh();
+
   protected:
     /**
      * \brief 计算下一个定时触发时间距当前的秒数

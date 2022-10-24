@@ -66,6 +66,13 @@ void Timer::cleanup() {
   state_ = State::kNone;
 }
 
+void Timer::refresh() {
+  if (state_ == State::kRunning) {
+    sp_timer_ev_->disable();
+    activeTimer();
+  }
+}
+
 namespace {
 //! 获取系统的时区偏移秒数
 int GetSystemTimezoneOffsetSeconds() {

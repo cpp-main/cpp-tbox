@@ -8,6 +8,8 @@ HEAD_FILES = \
 	weekly_timer.h \
 	oneshot_timer.h \
 	cron_timer.h \
+	workday_timer.h \
+	workday_calendar.h \
 
 CPP_SRC_FILES = \
 	timer.cpp \
@@ -15,6 +17,8 @@ CPP_SRC_FILES = \
 	oneshot_timer.cpp \
 	cron_timer.cpp \
 	3rd-party/ccronexpr.cpp \
+	workday_timer.cpp \
+	workday_calendar.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"timer"' $(CXXFLAGS)
 
