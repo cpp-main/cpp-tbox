@@ -68,6 +68,7 @@ void Timer::cleanup() {
 
 void Timer::refresh() {
   if (state_ == State::kRunning) {
+    state_ = State::kInited;
     sp_timer_ev_->disable();
     activeTimer();
   }

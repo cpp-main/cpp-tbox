@@ -39,6 +39,13 @@ class Timer
 
     void cleanup();
 
+    /**
+     * \brief 刷新
+     *
+     * 为什么需要刷新呢？
+     * 有时系统时钟不准，在这种情况下 enable() 的定时任务是不准的。
+     * 在时钟同步完成之后应当刷新一次
+     */
     void refresh();
 
   protected:
@@ -53,6 +60,8 @@ class Timer
      * \note  该函数为虚函数，需要由子类对实现。具体不同类型的定时器有不同的算法
      */
     virtual int calculateWaitSeconds(uint32_t curr_local_ts) = 0;
+
+    //! 定时到期动作
     virtual void onTimeExpired();
 
     //! 激活定时器
