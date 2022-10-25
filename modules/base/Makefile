@@ -16,6 +16,7 @@ HEAD_FILES = \
 	memblock.h \
 	json_fwd.h \
 	json.hpp \
+	assert.h \
 
 CPP_SRC_FILES = \
 	log_imp.cpp \
