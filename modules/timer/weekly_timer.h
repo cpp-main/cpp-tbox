@@ -47,7 +47,7 @@ class WeeklyTimer : public Timer
 
   private:
     int seconds_of_day_ = 0;
-    uint8_t week_mask_ = 0x7f;
+    uint8_t week_mask_ = 0;
 };
 
 }
