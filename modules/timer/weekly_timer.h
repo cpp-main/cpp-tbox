@@ -3,9 +3,6 @@
 
 #include <string>
 
-#include <functional>
-#include <tbox/event/forward.h>
-
 #include "timer.h"
 
 namespace tbox {
@@ -50,7 +47,7 @@ class WeeklyTimer : public Timer
 
   private:
     int seconds_of_day_ = 0;
-    std::string week_mask_;
+    uint8_t week_mask_ = 0x7f;
 };
 
 }

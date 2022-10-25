@@ -31,7 +31,12 @@ bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask) {
     return false;
   }
 
-  week_mask_ = week_mask;
+  week_mask_ = 0;
+  for (int i = 0; i < 7; ++i) {
+    if (week_mask.at(i) == '1')
+      week_mask_ |= (1 << i);
+  }
+
   seconds_of_day_ = seconds_of_day;
   state_ = State::kInited;
   return true;
@@ -47,7 +52,8 @@ int WeeklyTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
 
   int wait_seconds = seconds_of_day_ - curr_seconds;
   for (int i = 0; i < 7; ++i) {
-    if (wait_seconds > 0 && week_mask_.at((i + curr_week) % 7) == '1')
+    int week = (i + curr_week) % 7;
+    if (wait_seconds > 0 && (week_mask_ & (1 << week)))
       return wait_seconds;
     wait_seconds += kSecondsOfDay;
   }

@@ -1,8 +1,6 @@
 #ifndef TBOX_TIMER_TIMER_H_20221022
 #define TBOX_TIMER_TIMER_H_20221022
 
-#include <string>
-
 #include <functional>
 #include <tbox/event/forward.h>
 
@@ -48,6 +46,9 @@ class Timer
      */
     void refresh();
 
+    //! \brief  获取剩余秒数
+    uint32_t remainSeconds() const;
+
   protected:
     /**
      * \brief 计算下一个定时触发时间距当前的秒数
@@ -69,7 +70,6 @@ class Timer
 
     virtual bool onEnable() { return true; }
     virtual bool onDisable() { return true; }
-    virtual void onCleanup() {}
 
   protected:
     event::Loop *wp_loop_;
@@ -88,6 +88,8 @@ class Timer
       kRunning  //!< 已启动
     };
     State state_ = State::kNone;  //!< 当前状态
+
+    uint32_t target_utc_ts_ = 0;
 };
 
 }

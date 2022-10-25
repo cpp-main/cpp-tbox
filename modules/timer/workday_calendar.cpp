@@ -1,6 +1,6 @@
 #include "workday_calendar.h"
 #include <algorithm>
-#include "workday_timer.h"
+#include "timer.h"
 
 namespace tbox {
 namespace timer {
@@ -17,11 +17,11 @@ void WorkdayCalendar::updateWeekMask(uint8_t week_mask) {
     timer->refresh();
 }
 
-void WorkdayCalendar::subscribe(WorkdayTimer *timer) {
+void WorkdayCalendar::subscribe(Timer *timer) {
   watch_timers_.push_back(timer);
 }
 
-void WorkdayCalendar::unsubscribe(WorkdayTimer *timer) {
+void WorkdayCalendar::unsubscribe(Timer *timer) {
   auto iter = std::remove(watch_timers_.begin(), watch_timers_.end(), timer);
   watch_timers_.erase(iter, watch_timers_.end());
 }

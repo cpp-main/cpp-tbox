@@ -5,14 +5,14 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include <tbox/event/loop.h>
-#include <tbox/timer/crontab_timer.h>
+#include <tbox/timer/cron_timer.h>
 
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 
 void PrintUsage(const char *process_name) {
-  cout << "Usage:" << process_name << " crontab_expr [timezone_offset_minutes]" << endl;
+  cout << "Usage:" << process_name << " cron_expr [timezone_offset_minutes]" << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -23,11 +23,11 @@ int main(int argc, char *argv[]) {
 
     LogOutput_Initialize(argv[0]);
 
-    std::string crontab_expr;
+    std::string cron_expr;
     int timezone_offset_minutes = 0;
 
     try {
-      crontab_expr = argv[1];
+      cron_expr = argv[1];
       if (argc >= 3) {
         timezone_offset_minutes = std::stoi(argv[2]);
       }
@@ -36,13 +36,13 @@ int main(int argc, char *argv[]) {
       return 0;
     }
 
-    LogInfo("crontab_expr:%s", crontab_expr.c_str());
+    LogInfo("cron_expr:%s", cron_expr.c_str());
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
-    timer::CrontabTimer tmr(sp_loop);
-    tmr.initialize(crontab_expr);
+    timer::CronTimer tmr(sp_loop);
+    tmr.initialize(cron_expr);
     if (argc >= 4) {
       LogInfo("timezone:%d", timezone_offset_minutes);
       tmr.setTimezone(timezone_offset_minutes);

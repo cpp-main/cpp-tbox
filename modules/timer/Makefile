@@ -22,7 +22,8 @@ CPP_SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"timer"' $(CXXFLAGS)
 
-TEST_CPP_SRC_FILES =
+TEST_CPP_SRC_FILES = \
+	workday_calendar_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no

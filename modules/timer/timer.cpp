@@ -57,13 +57,13 @@ void Timer::cleanup() {
   if (state_ < State::kInited)
     return;
 
-  onCleanup();
   disable();
 
   cb_ = nullptr;
   using_independ_timezone_ = false;
   timezone_offset_seconds_ = 0;
   state_ = State::kNone;
+  target_utc_ts_ = 0;
 }
 
 void Timer::refresh() {
@@ -72,6 +72,16 @@ void Timer::refresh() {
     sp_timer_ev_->disable();
     activeTimer();
   }
+}
+
+uint32_t Timer::remainSeconds() const {
+  if (state_ == State::kRunning) {
+    struct timeval utc_tv;
+    int ret = gettimeofday(&utc_tv, nullptr);
+    if (ret == 0)
+      return target_utc_ts_ - utc_tv.tv_sec;
+  }
+  return 0;
 }
 
 namespace {
@@ -94,8 +104,8 @@ int GetSystemTimezoneOffsetSeconds() {
 
 bool Timer::activeTimer() {
   //! 使用 gettimeofday() 获取当前0时区的时间戳，精确到微秒
-  struct timeval tv;
-  int ret = gettimeofday(&tv, nullptr);
+  struct timeval utc_tv;
+  int ret = gettimeofday(&utc_tv, nullptr);
   if (ret != 0) {
     LogWarn("gettimeofday() fail, ret:%d", ret);
     return false;
@@ -104,7 +114,7 @@ bool Timer::activeTimer() {
   int timezone_offset_seconds = using_independ_timezone_ ? \
                                 timezone_offset_seconds_ : GetSystemTimezoneOffsetSeconds();
   //! 计算需要等待的秒数
-  auto wait_seconds = calculateWaitSeconds(tv.tv_sec + timezone_offset_seconds);
+  auto wait_seconds = calculateWaitSeconds(utc_tv.tv_sec + timezone_offset_seconds);
 #if 1
   LogTrace("wait_seconds:%d", wait_seconds);
 #endif
@@ -112,12 +122,13 @@ bool Timer::activeTimer() {
     return false;
 
   //! 提升精度，计算中需要等待的毫秒数
-  auto wait_milliseconds = wait_seconds * 1000 - tv.tv_usec / 1000;
+  auto wait_milliseconds = wait_seconds * 1000 - utc_tv.tv_usec / 1000;
   //! 启动定时器
   sp_timer_ev_->initialize(std::chrono::milliseconds(wait_milliseconds), event::Event::Mode::kOneshot);
   sp_timer_ev_->enable();
 
   state_ = State::kRunning;
+  target_utc_ts_ = utc_tv.tv_sec + wait_seconds;
   return true;
 }
 

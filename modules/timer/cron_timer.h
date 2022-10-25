@@ -3,9 +3,6 @@
 
 #include <string>
 
-#include <functional>
-#include <tbox/event/forward.h>
-
 #include "timer.h"
 
 namespace tbox {

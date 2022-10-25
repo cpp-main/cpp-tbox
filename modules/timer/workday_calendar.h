@@ -7,7 +7,7 @@
 namespace tbox {
 namespace timer {
 
-class WorkdayTimer;
+class Timer;
 
 /**
  * \brief 工作日的日历
@@ -33,8 +33,8 @@ class WorkdayCalendar {
      */
     void updateWeekMask(uint8_t week_mask);
 
-    void subscribe(WorkdayTimer *timer);
-    void unsubscribe(WorkdayTimer *timer);
+    void subscribe(Timer *timer);
+    void unsubscribe(Timer *timer);
 
     /**
      * \brief 查询指定日期是否为工作日
@@ -47,9 +47,9 @@ class WorkdayCalendar {
     bool isWorkay(int day_index) const;
 
   private:
-    uint8_t week_mask_ = 0b01111110;    //!< 默认周一到周五是工作日
+    uint8_t week_mask_ = 0b00111110;    //!< 默认周一到周五是工作日
     std::map<int, bool> special_days_;  //!< 特殊的放假与补班日期
-    std::vector<WorkdayTimer*> watch_timers_;
+    std::vector<Timer*> watch_timers_;
 };
 
 }
