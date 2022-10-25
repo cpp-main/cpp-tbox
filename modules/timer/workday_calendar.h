@@ -12,22 +12,24 @@ class WorkdayTimer;
 /**
  * \brief 工作日的日历
  *
- * 它用于向 WorkdayTimer 提供指定日期是否为工作日查询的服务
+ * 它用于向 WorkdayTimer 提供指定日期是否为工作日查询的功能
  */
 class WorkdayCalendar {
   public:
     /**
      * \brief 更新特殊的节假日与补班日期列表
      *
-     * \param special_days  特殊的日期列表，key为日期，value为是否为工作日
+     * \param special_days  特殊的日期表
+     *                      key：从1970-1-1至所指定日期的天数
+     *                      value：是否为工作日，true表示工作日，false表示节假日
      */
     void updateSpecialDays(const std::map<int, bool> &special_days);
 
     /**
-     * \brief 更新一周默认的工作日掩码
+     * \brief 修改一周默认的工作日
      *
-     * 通常周一到周五是工作日，周六与周日是非工作日
-     * 通常不用设置。但是有地区存在差异，比如施行一周四天工作的地区。这种情况就得设置一下。
+     * 通常周一到周五是工作日，周六与周日是非工作日，不用去设置。
+     * 但是有地区存在差异。比如某些地区福利极好，实施一周四天工作制，则需要通过该方法修改。
      */
     void updateWeekMask(uint8_t week_mask);
 
