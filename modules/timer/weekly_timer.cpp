@@ -51,7 +51,7 @@ int WeeklyTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
 #endif
 
   int wait_seconds = seconds_of_day_ - curr_seconds;
-  for (int i = 0; i < 7; ++i) {
+  for (int i = 0; i < 8; ++i) {
     int week = (i + curr_week) % 7;
     if (wait_seconds > 0 && (week_mask_ & (1 << week)))
       return wait_seconds;
