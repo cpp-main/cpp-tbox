@@ -1,7 +1,7 @@
-#include <cassert>
 #include <cstring>
 #include <utility>
 
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 
 #include "buffer.h"

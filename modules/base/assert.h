@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include "log.h"
 
+//! WARN: Don't use this in log related module
+
 #undef assert
 
 #ifdef  NDEBUG //! 在非调试模式下，什么都不用做

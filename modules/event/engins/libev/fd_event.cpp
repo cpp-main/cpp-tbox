@@ -1,9 +1,8 @@
 #include "fd_event.h"
 
-#include <cassert>
-
 #include "loop.h"
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {

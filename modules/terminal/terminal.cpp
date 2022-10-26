@@ -1,5 +1,5 @@
 #include "terminal.h"
-#include <cassert>
+#include <tbox/base/assert.h>
 
 #include "impl/terminal.h"
 

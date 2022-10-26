@@ -3,10 +3,10 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <cassert>
 #include <cstring>
 #include <string>
 
+#include <tbox/base/assert.h>
 #include "ip_address.h"
 
 namespace tbox {

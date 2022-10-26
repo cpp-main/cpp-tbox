@@ -3,10 +3,10 @@
 #include <utility>
 #include <fcntl.h>
 #include <errno.h>
-#include <cassert>
 
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace network {

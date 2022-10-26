@@ -1,9 +1,9 @@
 #include "cron_timer.h"
 
 #include <cstring>
-#include <cassert>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/loop.h>
 

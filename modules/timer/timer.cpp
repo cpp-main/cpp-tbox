@@ -1,9 +1,9 @@
 #include "timer.h"
 
 #include <sys/time.h>
-#include <cassert>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 

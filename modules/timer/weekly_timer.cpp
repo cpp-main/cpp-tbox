@@ -1,7 +1,6 @@
 #include "weekly_timer.h"
 
 #include <sys/time.h>
-#include <cassert>
 
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>

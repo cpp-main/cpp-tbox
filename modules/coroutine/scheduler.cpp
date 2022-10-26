@@ -1,12 +1,13 @@
 #include "scheduler.h"
 
+#include <cstring>
+
 #include <queue>
 #include <ucontext.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/cabinet.hpp>
-#include <cassert>
-#include <cstring>
 
 namespace tbox {
 namespace coroutine {

@@ -1,6 +1,7 @@
 #include "tcp_client.h"
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 
 #include "tcp_connector.h"

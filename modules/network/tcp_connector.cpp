@@ -1,9 +1,9 @@
 #include "tcp_connector.h"
 
 #include <sys/un.h>
-#include <cassert>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 #include "tcp_connection.h"
 

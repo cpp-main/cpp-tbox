@@ -1,8 +1,8 @@
 #include "buffered_fd.h"
 
-#include <cassert>
 #include <cstring>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
