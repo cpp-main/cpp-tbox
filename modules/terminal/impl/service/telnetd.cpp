@@ -5,6 +5,7 @@
 
 #include <tbox/util/string.h>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 #include "../../terminal_interact.h"
 

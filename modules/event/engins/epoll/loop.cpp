@@ -1,7 +1,6 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#include <cassert>
 #include <cstdint>
 
 #include <algorithm>
@@ -12,6 +11,7 @@
 
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {

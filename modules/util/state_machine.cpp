@@ -1,11 +1,12 @@
 #include "state_machine.h"
-#include <tbox/base/log.h>
 
-#include <cassert>
 #include <vector>
 #include <map>
 #include <stdexcept>
 #include <algorithm>
+
+#include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace util {

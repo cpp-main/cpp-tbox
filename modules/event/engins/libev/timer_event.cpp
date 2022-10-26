@@ -1,9 +1,9 @@
 #include "timer_event.h"
 
-#include <cassert>
+#include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 #include "loop.h"
-#include <tbox/base/log.h>
 
 namespace tbox {
 namespace event {

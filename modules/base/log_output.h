@@ -10,14 +10,6 @@ extern "C" {
 //! \note   This function should be invoke at program begin
 void LogOutput_Initialize(const char *proc_name);
 
-//! Defines log output mask bits
-#define LOG_OUTPUT_MASK_STDOUT  1   //!< to stdout
-#define LOG_OUTPUT_MASK_SYSLOG  2   //!< to syslog
-
-//! Set log's output channel
-//! \mask   LOG_OUTPUT_MASK_SYSLOG or LOG_OUTPUT_MASK_STDOUT
-void LogOutput_SetMask(int mask);
-
 void LogOutput_Cleanup();
 
 //! You should implement this function, otherwise print all

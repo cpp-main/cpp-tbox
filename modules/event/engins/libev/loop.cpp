@@ -1,6 +1,7 @@
 #include "loop.h"
 
 #include <ev.h>
+#include <tbox/base/assert.h>
 
 #include "fd_event.h"
 #include "timer_event.h"

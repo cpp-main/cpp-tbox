@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace terminal {

@@ -2,10 +2,10 @@
 
 #include <thread>
 #include <unistd.h>
-#include <cassert>
 #include <signal.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 
 #include "fd_event.h"

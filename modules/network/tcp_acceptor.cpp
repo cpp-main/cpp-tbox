@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 #include "tcp_connection.h"
 

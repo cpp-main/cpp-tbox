@@ -1,9 +1,9 @@
 #include "tcp_server.h"
 
-#include <cassert>
 #include <limits>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/cabinet.hpp>
 
 #include "tcp_acceptor.h"

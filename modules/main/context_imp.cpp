@@ -1,11 +1,11 @@
 #include "context_imp.h"
 
-#include <cassert>
 #include <sstream>
 #include <iomanip>
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/util/string.h>
 #include <tbox/util/json.h>
 #include <tbox/terminal/session.h>

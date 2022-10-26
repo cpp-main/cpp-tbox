@@ -1,5 +1,5 @@
-#include <cassert>
 #include <sys/epoll.h>
+#include <tbox/base/assert.h>
 #include "loop.h"
 #include "timer_event.h"
 

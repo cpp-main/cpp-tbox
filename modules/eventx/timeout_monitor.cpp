@@ -1,8 +1,8 @@
 #include "timeout_monitor.h"
 
 #include <vector>
-#include <cassert>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/timer_event.h>
 
 namespace tbox {

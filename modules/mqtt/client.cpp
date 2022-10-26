@@ -1,9 +1,9 @@
 #include "client.h"
 
-#include <cassert>
 #include <thread>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/fd_event.h>
 
