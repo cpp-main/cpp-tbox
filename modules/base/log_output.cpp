@@ -77,7 +77,7 @@ extern "C" {
     static void _LogOutput_PrintfFunc(LogContent *content, void *ptr);
     static uint32_t _id = 0;
 
-    void LogOutput_Initialize(const char *proc_name)
+    void LogOutput_Initialize()
     {
         _id = LogAddPrintfFunc(_LogOutput_PrintfFunc, nullptr);
     }

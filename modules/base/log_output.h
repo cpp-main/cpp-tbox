@@ -6,9 +6,8 @@ extern "C" {
 #endif
 
 //! Initialize log output module
-//! \param  proc_name   Current program name
 //! \note   This function should be invoke at program begin
-void LogOutput_Initialize(const char *proc_name);
+void LogOutput_Initialize();
 
 void LogOutput_Cleanup();
 
