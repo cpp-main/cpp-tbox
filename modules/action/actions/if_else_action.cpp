@@ -1,6 +1,6 @@
 #include "if_else_action.h"
 
-#include <cassert>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/json.hpp>
 
@@ -9,9 +9,9 @@ namespace action {
 
 using namespace std::placeholders;
 
-IfElseAction::IfElseAction(Context &ctx, const std::string &name,
+IfElseAction::IfElseAction(event::Loop &loop, const std::string &id,
     Action *cond_action, Action *if_action, Action *else_action) :
-  Action(ctx, name),
+  Action(loop, id),
   cond_action_(cond_action),
   if_action_(if_action),
   else_action_(else_action)
@@ -44,14 +44,11 @@ void IfElseAction::toJson(Json &js) const {
     js["is_cond_succ"] = is_cond_succ_;
 }
 
-bool IfElseAction::start() {
-  return Action::start() && cond_action_->start();
+bool IfElseAction::onStart() {
+  return cond_action_->start();
 }
 
-bool IfElseAction::pause() {
-  if (!Action::pause())
-    return false;
-
+bool IfElseAction::onPause() {
   if (is_cond_done_) {
     if (is_cond_succ_)
       return if_action_->pause();
@@ -62,10 +59,7 @@ bool IfElseAction::pause() {
   }
 }
 
-bool IfElseAction::resume() {
-  if (!Action::resume())
-    return false;
-
+bool IfElseAction::onResume() {
   if (is_cond_done_) {
     if (is_cond_succ_)
       return if_action_->resume();
@@ -76,10 +70,7 @@ bool IfElseAction::resume() {
   }
 }
 
-bool IfElseAction::stop() {
-  if (!Action::stop())
-    return false;
-
+bool IfElseAction::onStop() {
   if (is_cond_done_) {
     if (is_cond_succ_)
       return if_action_->stop();

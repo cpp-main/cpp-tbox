@@ -4,7 +4,6 @@
 
 #include "if_else_action.h"
 #include "nondelay_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -13,18 +12,16 @@ TEST(IfElseAction, CondSucc) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool cond_action_run = false;
   bool if_action_run = false;
   bool else_action_run = false;
   bool if_else_action_run = false;
 
-  auto cond_action = new NondelayAction(exec.context(), "", [&] { cond_action_run = true; return true; });
-  auto if_action = new NondelayAction(exec.context(), "", [&] { if_action_run = true; return true; });
-  auto else_action = new NondelayAction(exec.context(), "", [&] { else_action_run = true; return true; });
+  auto cond_action = new NondelayAction(*loop, "", [&] { cond_action_run = true; return true; });
+  auto if_action = new NondelayAction(*loop, "", [&] { if_action_run = true; return true; });
+  auto else_action = new NondelayAction(*loop, "", [&] { else_action_run = true; return true; });
 
-  IfElseAction if_else_action(exec.context(), "", cond_action, if_action, else_action);
+  IfElseAction if_else_action(*loop, "", cond_action, if_action, else_action);
 
   if_else_action.setFinishCallback(
     [&] (bool is_succ) {
@@ -46,18 +43,16 @@ TEST(IfElseAction, CondFail) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool cond_action_run = false;
   bool if_action_run = false;
   bool else_action_run = false;
   bool if_else_action_run = false;
 
-  auto cond_action = new NondelayAction(exec.context(), "", [&] { cond_action_run = true; return false; });
-  auto if_action = new NondelayAction(exec.context(), "", [&] { if_action_run = true; return true; });
-  auto else_action = new NondelayAction(exec.context(), "", [&] { else_action_run = true; return true; });
+  auto cond_action = new NondelayAction(*loop, "", [&] { cond_action_run = true; return false; });
+  auto if_action = new NondelayAction(*loop, "", [&] { if_action_run = true; return true; });
+  auto else_action = new NondelayAction(*loop, "", [&] { else_action_run = true; return true; });
 
-  IfElseAction if_else_action(exec.context(), "", cond_action, if_action, else_action);
+  IfElseAction if_else_action(*loop, "", cond_action, if_action, else_action);
 
   if_else_action.setFinishCallback(
     [&] (bool is_succ) {
@@ -79,16 +74,14 @@ TEST(IfElseAction, CondSuccNoIfAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool cond_action_run = false;
   bool else_action_run = false;
   bool if_else_action_run = false;
 
-  auto cond_action = new NondelayAction(exec.context(), "", [&] { cond_action_run = true; return true; });
-  auto else_action = new NondelayAction(exec.context(), "", [&] { else_action_run = true; return true; });
+  auto cond_action = new NondelayAction(*loop, "", [&] { cond_action_run = true; return true; });
+  auto else_action = new NondelayAction(*loop, "", [&] { else_action_run = true; return true; });
 
-  IfElseAction if_else_action(exec.context(), "", cond_action, nullptr, else_action);
+  IfElseAction if_else_action(*loop, "", cond_action, nullptr, else_action);
 
   if_else_action.setFinishCallback(
     [&] (bool is_succ) {
@@ -109,16 +102,14 @@ TEST(IfElseAction, CondFailNoElseAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool cond_action_run = false;
   bool if_action_run = false;
   bool if_else_action_run = false;
 
-  auto cond_action = new NondelayAction(exec.context(), "", [&] { cond_action_run = true; return false; });
-  auto if_action = new NondelayAction(exec.context(), "", [&] { if_action_run = true; return true; });
+  auto cond_action = new NondelayAction(*loop, "", [&] { cond_action_run = true; return false; });
+  auto if_action = new NondelayAction(*loop, "", [&] { if_action_run = true; return true; });
 
-  IfElseAction if_else_action(exec.context(), "", cond_action, if_action, nullptr);
+  IfElseAction if_else_action(*loop, "", cond_action, if_action, nullptr);
 
   if_else_action.setFinishCallback(
     [&] (bool is_succ) {

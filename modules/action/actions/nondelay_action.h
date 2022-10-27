@@ -9,16 +9,12 @@ namespace action {
 class NondelayAction : public Action {
   public:
     using Func = std::function<bool()>;
-    explicit NondelayAction(Context &ctx, const std::string &name, const Func &func) :
-      Action(ctx, name), func_(func) { }
+    explicit NondelayAction(event::Loop &loop, const std::string &id, const Func &func);
 
     virtual std::string type() const override { return "Nondelay"; }
 
-    virtual bool start() override {
-      Action::start();
-      finish(func_());
-      return true;
-    }
+  protected:
+    virtual bool onStart() override;
 
   private:
     Func func_;

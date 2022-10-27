@@ -5,7 +5,6 @@
 #include "parallel_action.h"
 #include "nondelay_action.h"
 #include "sleep_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -14,13 +13,11 @@ TEST(ParallelAction, TwoSleepAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
-  auto *para_action = new ParallelAction(exec.context(), "");
+  auto *para_action = new ParallelAction(*loop, "");
   SetScopeExitAction([para_action] { delete para_action; });
 
-  auto *sleep_action_1 = new SleepAction(exec.context(), "", std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(exec.context(), "", std::chrono::milliseconds(200));
+  auto *sleep_action_1 = new SleepAction(*loop, "", std::chrono::milliseconds(300));
+  auto *sleep_action_2 = new SleepAction(*loop, "", std::chrono::milliseconds(200));
 
   para_action->append(sleep_action_1);
   para_action->append(sleep_action_2);
@@ -45,14 +42,12 @@ TEST(ParallelAction, SleepNondelayAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
-  auto *para_action = new ParallelAction(exec.context(), "");
+  auto *para_action = new ParallelAction(*loop, "");
   SetScopeExitAction([para_action] { delete para_action; });
 
   bool nodelay_action_succ = false;
-  auto *sleep_action = new SleepAction(exec.context(), "", std::chrono::milliseconds(50));
-  auto *nondelay_action = new NondelayAction(exec.context(), "",
+  auto *sleep_action = new SleepAction(*loop, "", std::chrono::milliseconds(50));
+  auto *nondelay_action = new NondelayAction(*loop, "",
     [&] {
       nodelay_action_succ = true;
       return true;

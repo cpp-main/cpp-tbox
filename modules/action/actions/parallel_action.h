@@ -2,27 +2,28 @@
 #define TBOX_ACTION_PARALLEL_ACTION_H_20221005
 
 #include "../action.h"
+
 #include <chrono>
 #include <set>
-#include <tbox/event/forward.h>
 
 namespace tbox {
 namespace action {
 
 class ParallelAction : public Action {
   public:
-    explicit ParallelAction(Context &ctx, const std::string &name);
+    using Action::Action;
     virtual ~ParallelAction();
 
     virtual std::string type() const override { return "Parallel"; }
 
     int append(Action *action);
 
-    virtual bool start() override;
-    virtual bool stop() override;
-
     std::set<int> succSet() const { return succ_set_; }
     std::set<int> failSet() const { return fail_set_; }
+
+  protected:
+    virtual bool onStart() override;
+    virtual bool onStop() override;
 
   private:
     void onChildFinished(int index, bool is_succ);

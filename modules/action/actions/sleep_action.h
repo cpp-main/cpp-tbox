@@ -3,20 +3,20 @@
 
 #include "../action.h"
 #include <chrono>
-#include <tbox/event/forward.h>
 
 namespace tbox {
 namespace action {
 
 class SleepAction : public Action {
   public:
-    SleepAction(Context &ctx, const std::string &name, const std::chrono::milliseconds &time_span);
+    SleepAction(event::Loop &loop, const std::string &id, const std::chrono::milliseconds &time_span);
     ~SleepAction();
 
     virtual std::string type() const override { return "Sleep"; }
 
-    virtual bool start() override;
-    virtual bool stop() override;
+  protected:
+    virtual bool onStart() override;
+    virtual bool onStop() override;
 
   private:
     event::TimerEvent *timer_;

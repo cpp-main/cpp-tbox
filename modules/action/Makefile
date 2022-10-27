@@ -5,12 +5,22 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	action.h \
-	executor.h \
+	event.h \
+	event_subscriber.h \
+	event_publisher.h \
+	event_publisher_impl.h \
+	actions/nondelay_action.h \
+	actions/sleep_action.h \
+	actions/sequence_action.h \
+	actions/parallel_action.h \
+	actions/invert_action.h \
+	actions/if_else_action.h \
+	actions/loop_action.h \
 
 CPP_SRC_FILES = \
 	action.cpp \
-	executor.cpp \
 	event_publisher_impl.cpp \
+	actions/nondelay_action.cpp \
 	actions/sleep_action.cpp \
 	actions/sequence_action.cpp \
 	actions/parallel_action.cpp \

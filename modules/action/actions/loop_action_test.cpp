@@ -5,7 +5,6 @@
 
 #include "loop_action.h"
 #include "nondelay_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -17,16 +16,15 @@ TEST(LoopAction, Forever) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
   int loop_times = 0;
-  auto nondelay_action = new NondelayAction(exec.context(), "",
+  auto nondelay_action = new NondelayAction(*loop, "",
     [&] {
       std::cout << '.' << std::endl;
       ++loop_times;
       return true;
     }
   );
-  LoopAction loop_action(exec.context(), "", nondelay_action, LoopAction::Mode::kForever);
+  LoopAction loop_action(*loop, "", nondelay_action, LoopAction::Mode::kForever);
   bool is_finished = false;
   loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 

@@ -9,10 +9,6 @@ namespace action {
 
 using namespace std::placeholders;
 
-SequenceAction::SequenceAction(Context &ctx, const std::string &name) :
-  Action(ctx, name)
-{ }
-
 SequenceAction::~SequenceAction() {
   for (auto action : children_)
     delete action;
@@ -29,6 +25,8 @@ void SequenceAction::toJson(Json &js) const {
 }
 
 int SequenceAction::append(Action *action) {
+  assert(action != nullptr);
+
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
     int index = children_.size();
     children_.push_back(action);
@@ -40,22 +38,15 @@ int SequenceAction::append(Action *action) {
   }
 }
 
-bool SequenceAction::start() {
-  if (!Action::start())
-    return false;
-
+bool SequenceAction::onStart() {
   index_ = 0;
   startOtheriseFinish();
   return true;
 }
 
-bool SequenceAction::stop() {
-  if (!Action::stop())
-    return false;
-
+bool SequenceAction::onStop() {
   if (index_ < children_.size())
     children_.at(index_)->stop();
-
   return true;
 }
 

@@ -1,17 +1,15 @@
 #include "action.h"
 
-#include <cassert>
-
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/json.hpp>
-
-#include "context.h"
+#include <tbox/event/loop.h>
 
 namespace tbox {
 namespace action {
 
-Action::Action(Context &ctx, const std::string &name) :
-  ctx_(ctx), name_(name)
+Action::Action(event::Loop &loop, const std::string &id) :
+  loop_(loop), id_(id)
 {}
 
 Action::~Action() {
@@ -21,7 +19,7 @@ Action::~Action() {
 }
 
 void Action::toJson(Json &js) const {
-  js["name"] = name_;
+  js["id"] = id_;
   js["type"] = type();
   js["status"] = ToString(status_);
 }
@@ -37,8 +35,11 @@ bool Action::start() {
     return false;
   }
 
-  LogDbg("task %s start", type().c_str());
-  ctx_.event_publisher().subscribe(this);
+  if (!onStart())
+    return false;
+
+  LogDbg("task %s|%s start", type().c_str(), id_.c_str());
+
   status_ = Status::kRunning;
   result_ = Result::kUnsure;
   return true;
@@ -50,8 +51,10 @@ bool Action::pause() {
     return false;
   }
 
-  LogDbg("task %s|%s pause", type().c_str(), name_.c_str());
-  ctx_.event_publisher().unsubscribe(this);
+  if (!onPause())
+    return false;
+
+  LogDbg("task %s|%s pause", type().c_str(), id_.c_str());
   status_ = Status::kPause;
   return true;
 }
@@ -62,8 +65,10 @@ bool Action::resume() {
     return false;
   }
 
-  LogDbg("task %s|%s resume", type().c_str(), name_.c_str());
-  ctx_.event_publisher().subscribe(this);
+  if (!onResume())
+    return false;
+
+  LogDbg("task %s|%s resume", type().c_str(), id_.c_str());
   status_ = Status::kRunning;
   return true;
 }
@@ -72,25 +77,21 @@ bool Action::stop() {
   if (status_ == Status::kIdle)
     return false;
 
-  LogDbg("task %s|%s stop", type().c_str(), name_.c_str());
-  ctx_.event_publisher().unsubscribe(this);
+  if (!onStop())
+    return false;
+
+  LogDbg("task %s|%s stop", type().c_str(), id_.c_str());
   status_ = Status::kIdle;
   return true;
-}
-
-bool Action::onEvent(Event event) {
-  //! 默认不处理任何事件，直接忽略
-  return false;
 }
 
 bool Action::finish(bool is_succ) {
   if (status_ == Status::kRunning ||
       status_ == Status::kPause) {
-    LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), name_.c_str(), is_succ? "succ" : "fail");
+    LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     status_ = Status::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
-    ctx_.event_publisher().unsubscribe(this);
-    ctx_.loop().runInLoop(std::bind(finish_cb_, is_succ));
+    loop_.runNext(std::bind(finish_cb_, is_succ));
     return true;
 
   } else {

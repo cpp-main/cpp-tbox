@@ -1,14 +1,17 @@
 #include "loop_action.h"
 #include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace action {
 
-LoopAction::LoopAction(Context &ctx, const std::string &name, Action *child, Mode mode) :
-  Action(ctx, name),
+LoopAction::LoopAction(event::Loop &loop, const std::string &id, Action *child, Mode mode) :
+  Action(loop, id),
   child_(child),
   mode_(mode)
 {
+  assert(child != nullptr);
+
   child_->setFinishCallback(
     [this] (bool is_succ) {
       if ((mode_ == Mode::kUntilSucc && is_succ) ||
@@ -30,20 +33,20 @@ void LoopAction::toJson(Json &js) const {
   child_->toJson(js["child"]);
 }
 
-bool LoopAction::start() {
-  return Action::start() && child_->start();
+bool LoopAction::onStart() {
+  return child_->start();
 }
 
-bool LoopAction::pause() {
-  return Action::pause() && child_->pause();
+bool LoopAction::onPause() {
+  return child_->pause();
 }
 
-bool LoopAction::resume() {
-  return Action::resume() && child_->resume();
+bool LoopAction::onResume() {
+  return child_->resume();
 }
 
-bool LoopAction::stop() {
-  return Action::stop() && child_->stop();
+bool LoopAction::onStop() {
+  return child_->stop();
 }
 
 }

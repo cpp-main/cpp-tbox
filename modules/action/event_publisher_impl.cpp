@@ -20,6 +20,7 @@ void EventPublisherImpl::unsubscribe(EventSubscriber *subscriber) {
 
 void EventPublisherImpl::onEvent(Event event) {
   auto todo_vec = subscriber_vec_;
+  //!FIXME:
   while (!todo_vec.empty()) {
     auto top_subscriber = todo_vec.back();
     if (top_subscriber->onEvent(event))

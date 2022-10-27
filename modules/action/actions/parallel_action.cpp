@@ -2,15 +2,12 @@
 
 #include <algorithm>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace action {
 
 using namespace std::placeholders;
-
-ParallelAction::ParallelAction(Context &ctx, const std::string &name) :
-  Action(ctx, name)
-{ }
 
 ParallelAction::~ParallelAction() {
   for (auto action : children_)
@@ -18,6 +15,8 @@ ParallelAction::~ParallelAction() {
 }
 
 int ParallelAction::append(Action *action) {
+  assert(action != nullptr);
+
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
     int index = children_.size();
     children_.push_back(action);
@@ -29,10 +28,7 @@ int ParallelAction::append(Action *action) {
   }
 }
 
-bool ParallelAction::start() {
-  if (!Action::start())
-    return false;
-
+bool ParallelAction::onStart() {
   succ_set_.clear();
   fail_set_.clear();
 
@@ -41,10 +37,7 @@ bool ParallelAction::start() {
   return true;
 }
 
-bool ParallelAction::stop() {
-  if (!Action::stop())
-    return false;
-
+bool ParallelAction::onStop() {
   for (Action *action : children_)
     action->stop();
   return true;

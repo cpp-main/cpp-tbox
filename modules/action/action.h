@@ -5,16 +5,14 @@
 #include <functional>
 
 #include <tbox/base/json_fwd.h>
-
-#include "context.h"
-#include "event_subscriber.h"
+#include <tbox/event/forward.h>
 
 namespace tbox {
 namespace action {
 
-class Action : public EventSubscriber {
+class Action {
   public:
-    explicit Action(Context &ctx, const std::string &name);
+    explicit Action(event::Loop &loop, const std::string &id);
     virtual ~Action();
 
   public:
@@ -32,31 +30,36 @@ class Action : public EventSubscriber {
     };
 
     virtual std::string type() const = 0;
-    std::string name() const { return name_; }
+
+    std::string id() const { return id_; }
     Status status() const { return status_; }
+    Result result() const { return result_; }
 
     using FinishCallback = std::function<void(bool is_succ)>;
     void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
     virtual void toJson(Json &js) const;
 
-    virtual bool start();
-    virtual bool pause();
-    virtual bool resume();
-    virtual bool stop();
-
-    virtual bool onEvent(Event event) override;
+    bool start();
+    bool pause();
+    bool resume();
+    bool stop();
 
     static std::string ToString(Status status);
 
   protected:
     bool finish(bool is_succ);
 
+    virtual bool onStart() { return true; }
+    virtual bool onPause() { return true; }
+    virtual bool onResume() { return true; }
+    virtual bool onStop() { return true; }
+
   protected:
-    Context &ctx_;
+    event::Loop &loop_;
 
   private:
-    std::string name_;
+    std::string id_;
     FinishCallback finish_cb_;
 
     Status status_ = Status::kIdle;

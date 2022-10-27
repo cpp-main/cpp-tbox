@@ -3,7 +3,6 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "nondelay_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -12,8 +11,7 @@ TEST(NonDelayAction, True) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-  NondelayAction action(exec.context(), "", [] { return true; });
+  NondelayAction action(*loop, "", [] { return true; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_succ) {
@@ -32,8 +30,7 @@ TEST(NonDelayAction, False) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-  NondelayAction action(exec.context(), "", [] { return false; });
+  NondelayAction action(*loop, "", [] { return false; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_succ) {

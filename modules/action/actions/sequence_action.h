@@ -2,8 +2,6 @@
 #define TBOX_ACTION_SEQUENCE_ACTION_H_20221002
 
 #include "../action.h"
-#include <chrono>
-#include <tbox/event/forward.h>
 
 namespace tbox {
 namespace action {
@@ -18,7 +16,7 @@ namespace action {
  */
 class SequenceAction : public Action {
   public:
-    explicit SequenceAction(Context &ctx, const std::string &name);
+    using Action::Action;
     virtual ~SequenceAction();
 
     virtual std::string type() const override { return "Sequence"; }
@@ -27,10 +25,11 @@ class SequenceAction : public Action {
 
     int append(Action *action);
 
-    virtual bool start() override;
-    virtual bool stop() override;
-
     int index() const { return index_; }
+
+  protected:
+    virtual bool onStart() override;
+    virtual bool onStop() override;
 
   private:
     void startOtheriseFinish();

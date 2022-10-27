@@ -5,7 +5,6 @@
 #include "sequence_action.h"
 #include "nondelay_action.h"
 #include "sleep_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -14,21 +13,19 @@ TEST(SequenceAction, AllSucc) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool action_succ_1 = false;
   bool action_succ_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context(), "");
+  auto *seq_action = new SequenceAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_succ_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       EXPECT_TRUE(action_succ_1);
       action_succ_2 = true;
@@ -52,21 +49,19 @@ TEST(SequenceAction, FailHead) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool action_succ_1 = false;
   bool action_succ_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context(), "");
+  auto *seq_action = new SequenceAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_succ_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_succ_2 = true;
       return false;
@@ -91,21 +86,19 @@ TEST(SequenceAction, FailTail) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
   bool action_succ_1 = false;
   bool action_succ_2 = false;
 
-  auto *seq_action = new SequenceAction(exec.context(), "");
+  auto *seq_action = new SequenceAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_succ_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(exec.context(), "",
+  seq_action->append(new NondelayAction(*loop, "",
     [&] {
       EXPECT_TRUE(action_succ_1);
       action_succ_2 = true;
@@ -129,13 +122,11 @@ TEST(SequenceAction, TwoSleepAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-
-  auto *seq_action = new SequenceAction(exec.context(), "");
+  auto *seq_action = new SequenceAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  auto *sleep_action_1 = new SleepAction(exec.context(), "", std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(exec.context(), "", std::chrono::milliseconds(200));
+  auto *sleep_action_1 = new SleepAction(*loop, "", std::chrono::milliseconds(300));
+  auto *sleep_action_2 = new SleepAction(*loop, "", std::chrono::milliseconds(200));
 
   seq_action->append(sleep_action_1);
   seq_action->append(sleep_action_2);

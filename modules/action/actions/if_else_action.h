@@ -16,17 +16,18 @@ namespace action {
  */
 class IfElseAction : public Action {
   public:
-    explicit IfElseAction(Context &ctx, const std::string &name,
+    explicit IfElseAction(event::Loop &loop, const std::string &name,
         Action *cond_action, Action *if_action, Action *else_action);
     virtual ~IfElseAction();
 
     virtual std::string type() const override { return "IfElse"; }
     virtual void toJson(Json &js) const;
 
-    virtual bool start() override;
-    virtual bool pause() override;
-    virtual bool resume() override;
-    virtual bool stop() override;
+  protected:
+    virtual bool onStart() override;
+    virtual bool onPause() override;
+    virtual bool onResume() override;
+    virtual bool onStop() override;
 
   protected:
     void onCondActionFinished(bool is_succ);

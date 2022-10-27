@@ -13,17 +13,18 @@ namespace action {
  */
 class InvertAction : public Action {
   public:
-    explicit InvertAction(Context &ctx, const std::string &name, Action *child);
+    explicit InvertAction(event::Loop &loop, const std::string &id, Action *child);
     virtual ~InvertAction();
 
     virtual std::string type() const override { return "Invert"; }
 
     virtual void toJson(Json &js) const;
 
-    virtual bool start() override;
-    virtual bool pause() override;
-    virtual bool resume() override;
-    virtual bool stop() override;
+  protected:
+    virtual bool onStart() override;
+    virtual bool onPause() override;
+    virtual bool onResume() override;
+    virtual bool onStop() override;
 
   private:
     Action *child_;

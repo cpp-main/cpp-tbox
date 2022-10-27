@@ -4,7 +4,6 @@
 
 #include "invert_action.h"
 #include "nondelay_action.h"
-#include "../executor.h"
 
 namespace tbox {
 namespace action {
@@ -16,9 +15,8 @@ TEST(InvertAction, _) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  Executor exec(*loop);
-  auto nodelay_action = new NondelayAction(exec.context(), "", [] { return true; });
-  InvertAction invert_action(exec.context(), "", nodelay_action);
+  auto nodelay_action = new NondelayAction(*loop, "", [] { return true; });
+  InvertAction invert_action(*loop, "", nodelay_action);
 
   bool is_callback = false;
   invert_action.setFinishCallback(
