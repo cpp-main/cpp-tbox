@@ -86,12 +86,11 @@ bool Action::stop() {
 }
 
 bool Action::finish(bool is_succ) {
-  if (status_ == Status::kRunning ||
-      status_ == Status::kPause) {
+  if (status_ != Status::kFinished) {
     LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     status_ = Status::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
-    loop_.runNext(std::bind(finish_cb_, is_succ));
+    loop_.runInLoop(std::bind(finish_cb_, is_succ));
     return true;
 
   } else {

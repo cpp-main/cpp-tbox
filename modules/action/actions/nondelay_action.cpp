@@ -1,5 +1,6 @@
 #include "nondelay_action.h"
 #include <tbox/base/assert.h>
+#include <tbox/event/loop.h>
 
 namespace tbox {
 namespace action {
@@ -11,7 +12,11 @@ NondelayAction::NondelayAction(event::Loop &loop, const std::string &id, const F
 }
 
 bool NondelayAction::onStart() {
-  finish(func_());
+  loop_.runInLoop(
+    [this] {
+      finish(func_());
+    }
+  );
   return true;
 }
 
