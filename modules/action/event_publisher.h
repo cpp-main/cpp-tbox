@@ -15,9 +15,7 @@ class EventPublisher {
   public:
     virtual void subscribe(EventSubscriber *subscriber) = 0;
     virtual void unsubscribe(EventSubscriber *subscriber) = 0;
-
-  public:
-    virtual void onEvent(Event event) = 0;
+    virtual void publish(Event event) = 0;
 };
 
 }
