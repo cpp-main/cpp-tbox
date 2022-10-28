@@ -8,7 +8,7 @@ struct Event {
   using ID = int;
 
   ID id = 0;
-  void *extra = nullptr;
+  const void *extra = nullptr;
 
   Event() { }
 
