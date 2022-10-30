@@ -12,11 +12,7 @@ NondelayAction::NondelayAction(event::Loop &loop, const std::string &id, const F
 }
 
 bool NondelayAction::onStart() {
-  loop_.runInLoop(
-    [this] {
-      finish(func_());
-    }
-  );
+  loop_.run([this] { finish(func_()); });
   return true;
 }
 

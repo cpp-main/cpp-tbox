@@ -244,7 +244,7 @@ bool Client::start()
                                         d_->config.base.broker.domain.c_str(),
                                         d_->config.base.broker.port,
                                         d_->config.base.keepalive);
-            d_->wp_loop->runInLoop(
+            d_->wp_loop->run(
                 [this, ret] {
                     onMosquittoConnectDone(ret, true);
                 }

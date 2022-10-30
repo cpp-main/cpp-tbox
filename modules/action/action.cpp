@@ -90,7 +90,7 @@ bool Action::finish(bool is_succ) {
     LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     status_ = Status::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
-    loop_.runInLoop(std::bind(finish_cb_, is_succ));
+    loop_.run(std::bind(finish_cb_, is_succ));
     return true;
 
   } else {
