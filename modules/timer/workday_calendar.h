@@ -1,6 +1,7 @@
 #ifndef TBOX_TIMER_WORKDAY_CALENDAR_H_20221024
 #define TBOX_TIMER_WORKDAY_CALENDAR_H_20221024
 
+#include <cstdint>
 #include <map>
 #include <vector>
 

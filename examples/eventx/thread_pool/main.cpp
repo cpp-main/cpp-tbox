@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     using namespace tbox::event;
     using namespace tbox::eventx;
 
-    LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize();
 
     Loop* sp_loop = Loop::New();
     ThreadPool *sp_tp = new ThreadPool(sp_loop);

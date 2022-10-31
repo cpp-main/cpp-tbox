@@ -6,7 +6,7 @@
 
 TEST(TimeCounter, basic)
 {
-    LogOutput_Initialize("test");
+    LogOutput_Initialize();
 
     SetTimeCounter();
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -15,7 +15,7 @@ TEST(TimeCounter, basic)
 
 TEST(TimeCounter, stop)
 {
-    LogOutput_Initialize("test");
+    LogOutput_Initialize();
 
     SetNamedTimeCounter(a);
     SetNamedTimeCounter(b);

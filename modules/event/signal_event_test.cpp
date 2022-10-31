@@ -308,7 +308,7 @@ TEST(SignalEvent, OneSignalMultiLoopInMultiThread)
 //! 多线程下多个Loop的事件监听同多个信号
 TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
 {
-    LogOutput_Initialize("test");
+    LogOutput_Initialize();
 
     auto engins = Loop::Engines();
     for (auto e : engins) {

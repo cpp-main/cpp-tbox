@@ -1,6 +1,7 @@
 #ifndef TBOX_TIMER_TIMER_H_20221022
 #define TBOX_TIMER_TIMER_H_20221022
 
+#include <cstdint>
 #include <functional>
 #include <tbox/event/forward.h>
 

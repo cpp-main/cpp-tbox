@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     }
 
     const char *topic = argv[1];
-    LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize();
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });

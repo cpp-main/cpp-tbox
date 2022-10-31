@@ -3,7 +3,7 @@
 #include <tbox/base/log_output.h>
 
 int main() {
-  LogOutput_Initialize("test");
+  LogOutput_Initialize();
   assert(12 > 0);
   assert(12 < 0);
   LogOutput_Cleanup();

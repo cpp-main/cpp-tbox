@@ -31,6 +31,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	event_publisher_impl_test.cpp \
 	actions/sleep_action_test.cpp \
 	actions/nondelay_action_test.cpp \
 	actions/sequence_action_test.cpp \

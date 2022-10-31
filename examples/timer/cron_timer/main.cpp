@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize();
 
     std::string cron_expr;
     int timezone_offset_minutes = 0;

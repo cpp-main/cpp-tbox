@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     if (argc >= 2)
         bind_addr = argv[1];
 
-    LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize();
 
     auto sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });

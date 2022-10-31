@@ -4,7 +4,7 @@
 
 TEST(Log, output_type)
 {
-    LogOutput_Initialize("test");
+    LogOutput_Initialize();
     LogFatal("fatal");
     LogErr("err");
     LogWarn("warn");

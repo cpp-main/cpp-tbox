@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    LogOutput_Initialize(argv[0]);
+    LogOutput_Initialize();
 
     SockAddr bind_addr = SockAddr::FromString(argv[1]);
 
