@@ -1,6 +1,8 @@
 #ifndef TBOX_ACTION_EVENT_SUBSCRIBER_H_20221001
 #define TBOX_ACTION_EVENT_SUBSCRIBER_H_20221001
 
+#include "event.h"
+
 namespace tbox {
 namespace action {
 

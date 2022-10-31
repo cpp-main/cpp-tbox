@@ -18,7 +18,7 @@ namespace {
 //! 处理程序运行异常信号
 void OnErrorSignal(int signo)
 {
-    const std::string &stack_str = util::Backtrace::DumpCallStack(32, 5);
+    const std::string &stack_str = util::Backtrace::DumpCallStack(32, 0);
 
     LogFatal("Receive signal %d", signo);
     LogFatal("\n-----call stack-----\n%s", stack_str.c_str());

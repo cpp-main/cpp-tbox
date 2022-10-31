@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include "event_subscriber.h"
+#include <tbox/base/log.h>
 
 namespace tbox {
 namespace action {
@@ -21,11 +22,9 @@ void EventPublisherImpl::unsubscribe(EventSubscriber *subscriber) {
     subscriber_vec_.erase(iter, iter_end);
   }
   {
-    if (!tmp_vec_.empty()) {
-      auto iter_end = tmp_vec_.end();
-      auto iter = std::remove(tmp_vec_.begin(), iter_end, subscriber);
-      tmp_vec_.erase(iter, iter_end);
-    }
+    auto iter_end = tmp_vec_.end();
+    auto iter = std::remove(tmp_vec_.begin(), iter_end, subscriber);
+    tmp_vec_.erase(iter, iter_end);
   }
 }
 
@@ -37,6 +36,7 @@ void EventPublisherImpl::publish(Event event) {
       break;
     tmp_vec_.pop_back();
   }
+  tmp_vec_.clear();
 }
 
 }

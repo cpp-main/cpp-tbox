@@ -35,10 +35,11 @@ bool Action::start() {
     return false;
   }
 
-  if (!onStart())
+  LogDbg("start task %s|%s", type().c_str(), id_.c_str());
+  if (!onStart()) {
+    LogWarn("start task %s|%s fail", type().c_str(), id_.c_str());
     return false;
-
-  LogDbg("task %s|%s start", type().c_str(), id_.c_str());
+  }
 
   status_ = Status::kRunning;
   result_ = Result::kUnsure;
@@ -51,10 +52,12 @@ bool Action::pause() {
     return false;
   }
 
-  if (!onPause())
+  LogDbg("pause task %s|%s", type().c_str(), id_.c_str());
+  if (!onPause()) {
+    LogWarn("pause task %s|%s fail", type().c_str(), id_.c_str());
     return false;
+  }
 
-  LogDbg("task %s|%s pause", type().c_str(), id_.c_str());
   status_ = Status::kPause;
   return true;
 }
@@ -65,10 +68,12 @@ bool Action::resume() {
     return false;
   }
 
-  if (!onResume())
+  LogDbg("resume task %s|%s", type().c_str(), id_.c_str());
+  if (!onResume()) {
+    LogWarn("resume task %s|%s fail", type().c_str(), id_.c_str());
     return false;
+  }
 
-  LogDbg("task %s|%s resume", type().c_str(), id_.c_str());
   status_ = Status::kRunning;
   return true;
 }
@@ -77,20 +82,24 @@ bool Action::stop() {
   if (status_ == Status::kIdle)
     return false;
 
-  if (!onStop())
+  LogDbg("stop task %s|%s", type().c_str(), id_.c_str());
+  if (!onStop()) {
+    LogWarn("stop task %s|%s fail", type().c_str(), id_.c_str());
     return false;
+  }
 
-  LogDbg("task %s|%s stop", type().c_str(), id_.c_str());
   status_ = Status::kIdle;
   return true;
 }
 
 bool Action::finish(bool is_succ) {
   if (status_ != Status::kFinished) {
-    LogDbg("task %s|%s finish, is_succ: %s", type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
+    LogDbg("task %s|%s finished, is_succ: %s",
+        type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     status_ = Status::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
     loop_.run(std::bind(finish_cb_, is_succ));
+    onFinished(is_succ);
     return true;
 
   } else {
