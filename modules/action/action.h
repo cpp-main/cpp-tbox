@@ -54,6 +54,7 @@ class Action {
     virtual bool onPause() { return true; }
     virtual bool onResume() { return true; }
     virtual bool onStop() { return true; }
+    virtual void onFinished(bool is_succ) { }
 
   protected:
     event::Loop &loop_;
