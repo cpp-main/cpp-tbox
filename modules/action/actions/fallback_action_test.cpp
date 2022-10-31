@@ -2,39 +2,39 @@
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
 
-#include "sequence_action.h"
+#include "fallback_action.h"
 #include "nondelay_action.h"
 #include "sleep_action.h"
 
 namespace tbox {
 namespace action {
 
-TEST(SequenceAction, AllSucc) {
+TEST(FallbackAction, AllFail) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_run_1 = true;
-      return true;
+      return false;
     }
   ));
   seq_action->append(new NondelayAction(*loop, "",
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
-      return true;
+      return false;
     }
   ));
   seq_action->setFinishCallback(
     [loop](bool is_succ) {
-      EXPECT_TRUE(is_succ);
+      EXPECT_FALSE(is_succ);
       loop->exitLoop();
     }
   );
@@ -45,20 +45,20 @@ TEST(SequenceAction, AllSucc) {
   EXPECT_EQ(seq_action->index(), 2);
 }
 
-TEST(SequenceAction, FailHead) {
+TEST(FallbackAction, SuccHead) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_run_1 = true;
-      return false;
+      return true;
     }
   ));
   seq_action->append(new NondelayAction(*loop, "",
@@ -69,7 +69,7 @@ TEST(SequenceAction, FailHead) {
   ));
   seq_action->setFinishCallback(
     [loop](bool is_succ) {
-      EXPECT_FALSE(is_succ);
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );
@@ -82,32 +82,32 @@ TEST(SequenceAction, FailHead) {
 }
 
 
-TEST(SequenceAction, FailTail) {
+TEST(FallbackAction, SuccTail) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop, "");
   SetScopeExitAction([seq_action] { delete seq_action; });
 
   seq_action->append(new NondelayAction(*loop, "",
     [&] {
       action_run_1 = true;
-      return true;
+      return false;
     }
   ));
   seq_action->append(new NondelayAction(*loop, "",
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
-      return false;
+      return true;
     }
   ));
   seq_action->setFinishCallback(
     [loop](bool is_succ) {
-      EXPECT_FALSE(is_succ);
+      EXPECT_TRUE(is_succ);
       loop->exitLoop();
     }
   );
@@ -116,37 +116,6 @@ TEST(SequenceAction, FailTail) {
   loop->runLoop();
   EXPECT_TRUE(action_run_2);
   EXPECT_EQ(seq_action->index(), 1);
-}
-
-TEST(SequenceAction, TwoSleepAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
-
-  auto *seq_action = new SequenceAction(*loop, "");
-  SetScopeExitAction([seq_action] { delete seq_action; });
-
-  auto *sleep_action_1 = new SleepAction(*loop, "", std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(*loop, "", std::chrono::milliseconds(200));
-
-  seq_action->append(sleep_action_1);
-  seq_action->append(sleep_action_2);
-
-  seq_action->setFinishCallback(
-    [loop](bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      loop->exitLoop();
-    }
-  );
-
-  auto start_time = std::chrono::steady_clock::now();
-  seq_action->start();
-  loop->runLoop();
-
-  auto d = std::chrono::steady_clock::now() - start_time;
-  EXPECT_GT(d, std::chrono::milliseconds(490));
-  EXPECT_LT(d, std::chrono::milliseconds(510));
-
-  EXPECT_EQ(seq_action->index(), 2);
 }
 
 }

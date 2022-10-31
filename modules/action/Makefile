@@ -12,6 +12,7 @@ HEAD_FILES = \
 	actions/nondelay_action.h \
 	actions/sleep_action.h \
 	actions/sequence_action.h \
+	actions/fallback_action.h \
 	actions/parallel_action.h \
 	actions/invert_action.h \
 	actions/if_else_action.h \
@@ -23,6 +24,7 @@ CPP_SRC_FILES = \
 	actions/nondelay_action.cpp \
 	actions/sleep_action.cpp \
 	actions/sequence_action.cpp \
+	actions/fallback_action.cpp \
 	actions/parallel_action.cpp \
 	actions/invert_action.cpp \
 	actions/if_else_action.cpp \
@@ -35,6 +37,7 @@ TEST_CPP_SRC_FILES = \
 	actions/sleep_action_test.cpp \
 	actions/nondelay_action_test.cpp \
 	actions/sequence_action_test.cpp \
+	actions/fallback_action_test.cpp \
 	actions/parallel_action_test.cpp \
 	actions/invert_action_test.cpp \
 	actions/if_else_action_test.cpp \
