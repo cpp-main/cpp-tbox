@@ -81,6 +81,19 @@ bool IfElseAction::onStop() {
   }
 }
 
+void IfElseAction::onReset() {
+  cond_action_->reset();
+
+  if (if_action_ != nullptr)
+    if_action_->reset();
+
+  if (else_action_ != nullptr)
+    else_action_->reset();
+
+  is_cond_done_ = false;
+  is_cond_succ_ = false;
+}
+
 void IfElseAction::onCondActionFinished(bool is_succ) {
   is_cond_done_ = true;
   is_cond_succ_ = is_succ;

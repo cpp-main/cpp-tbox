@@ -20,7 +20,8 @@ class Action {
       kIdle,
       kRunning,
       kPause,
-      kFinished
+      kFinished,
+      kStoped
     };
 
     enum class Result {
@@ -44,6 +45,7 @@ class Action {
     bool pause();
     bool resume();
     bool stop();
+    void reset();
 
     static std::string ToString(Status status);
 
@@ -54,6 +56,7 @@ class Action {
     virtual bool onPause() { return true; }
     virtual bool onResume() { return true; }
     virtual bool onStop() { return true; }
+    virtual void onReset() { }
     virtual void onFinished(bool is_succ) { }
 
   protected:

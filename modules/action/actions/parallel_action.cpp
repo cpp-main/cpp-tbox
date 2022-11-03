@@ -29,9 +29,6 @@ int ParallelAction::append(Action *action) {
 }
 
 bool ParallelAction::onStart() {
-  succ_set_.clear();
-  fail_set_.clear();
-
   for (Action *action : children_)
     action->start();
   return true;
@@ -41,6 +38,14 @@ bool ParallelAction::onStop() {
   for (Action *action : children_)
     action->stop();
   return true;
+}
+
+void ParallelAction::onReset() {
+  for (auto child : children_)
+    child->reset();
+
+  succ_set_.clear();
+  fail_set_.clear();
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {

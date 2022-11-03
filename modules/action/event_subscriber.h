@@ -9,6 +9,9 @@ namespace action {
 class EventSubscriber {
   public:
     virtual bool onEvent(Event event) = 0;
+
+  protected:
+    virtual ~EventSubscriber() { }
 };
 
 }

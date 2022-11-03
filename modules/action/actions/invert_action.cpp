@@ -43,5 +43,9 @@ bool InvertAction::onStop() {
   return child_->stop();
 }
 
+void InvertAction::onReset() {
+  child_->reset();
+}
+
 }
 }

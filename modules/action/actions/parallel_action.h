@@ -24,6 +24,7 @@ class ParallelAction : public Action {
   protected:
     virtual bool onStart() override;
     virtual bool onStop() override;
+    virtual void onReset() override;
 
   private:
     void onChildFinished(int index, bool is_succ);

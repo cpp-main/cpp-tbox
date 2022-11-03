@@ -39,7 +39,6 @@ int FallbackAction::append(Action *action) {
 }
 
 bool FallbackAction::onStart() {
-  index_ = 0;
   startOtheriseFinish();
   return true;
 }
@@ -48,6 +47,13 @@ bool FallbackAction::onStop() {
   if (index_ < children_.size())
     children_.at(index_)->stop();
   return true;
+}
+
+void FallbackAction::onReset() {
+  for (auto child : children_)
+    child->reset();
+
+  index_ = 0;
 }
 
 void FallbackAction::startOtheriseFinish() {

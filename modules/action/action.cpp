@@ -25,6 +25,9 @@ void Action::toJson(Json &js) const {
 }
 
 bool Action::start() {
+  if (status_ == Status::kRunning)
+    return true;
+
   if (status_ != Status::kIdle) {
     LogWarn("not allow");
     return false;
@@ -42,11 +45,13 @@ bool Action::start() {
   }
 
   status_ = Status::kRunning;
-  result_ = Result::kUnsure;
   return true;
 }
 
 bool Action::pause() {
+  if (status_ == Status::kPause)
+    return true;
+
   if (status_ != Status::kRunning) {
     LogWarn("not allow");
     return false;
@@ -63,6 +68,9 @@ bool Action::pause() {
 }
 
 bool Action::resume() {
+  if (status_ != Status::kRunning)
+    return true;
+
   if (status_ != Status::kPause) {
     LogWarn("not allow");
     return false;
@@ -79,8 +87,9 @@ bool Action::resume() {
 }
 
 bool Action::stop() {
-  if (status_ == Status::kIdle)
-    return false;
+  if (status_ != Status::kRunning &&
+      status_ != Status::kPause)
+    return true;
 
   LogDbg("stop task %s|%s", type().c_str(), id_.c_str());
   if (!onStop()) {
@@ -88,8 +97,19 @@ bool Action::stop() {
     return false;
   }
 
-  status_ = Status::kIdle;
+  status_ = Status::kStoped;
   return true;
+}
+
+void Action::reset() {
+  if (status_ == Status::kIdle)
+    return;
+
+  LogDbg("reset task %s|%s", type().c_str(), id_.c_str());
+  onReset();
+
+  status_ = Status::kIdle;
+  result_ = Result::kUnsure;
 }
 
 bool Action::finish(bool is_succ) {
@@ -98,7 +118,7 @@ bool Action::finish(bool is_succ) {
         type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     status_ = Status::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
-    loop_.run(std::bind(finish_cb_, is_succ));
+    loop_.runInLoop(std::bind(finish_cb_, is_succ));
     onFinished(is_succ);
     return true;
 
