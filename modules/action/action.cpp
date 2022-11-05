@@ -14,21 +14,21 @@ Action::Action(event::Loop &loop, const std::string &id) :
 
 Action::~Action() {
   //! 不允许在未stop之前或是未结束之前析构对象
-  assert(status_ != Status::kRunning &&
-         status_ != Status::kPause);
+  assert(state_ != State::kRunning &&
+         state_ != State::kPause);
 }
 
 void Action::toJson(Json &js) const {
   js["id"] = id_;
   js["type"] = type();
-  js["status"] = ToString(status_);
+  js["state"] = ToString(state_);
 }
 
 bool Action::start() {
-  if (status_ == Status::kRunning)
+  if (state_ == State::kRunning)
     return true;
 
-  if (status_ != Status::kIdle) {
+  if (state_ != State::kIdle) {
     LogWarn("not allow");
     return false;
   }
@@ -44,15 +44,15 @@ bool Action::start() {
     return false;
   }
 
-  status_ = Status::kRunning;
+  state_ = State::kRunning;
   return true;
 }
 
 bool Action::pause() {
-  if (status_ == Status::kPause)
+  if (state_ == State::kPause)
     return true;
 
-  if (status_ != Status::kRunning) {
+  if (state_ != State::kRunning) {
     LogWarn("not allow");
     return false;
   }
@@ -63,15 +63,15 @@ bool Action::pause() {
     return false;
   }
 
-  status_ = Status::kPause;
+  state_ = State::kPause;
   return true;
 }
 
 bool Action::resume() {
-  if (status_ != Status::kRunning)
+  if (state_ != State::kRunning)
     return true;
 
-  if (status_ != Status::kPause) {
+  if (state_ != State::kPause) {
     LogWarn("not allow");
     return false;
   }
@@ -82,13 +82,13 @@ bool Action::resume() {
     return false;
   }
 
-  status_ = Status::kRunning;
+  state_ = State::kRunning;
   return true;
 }
 
 bool Action::stop() {
-  if (status_ != Status::kRunning &&
-      status_ != Status::kPause)
+  if (state_ != State::kRunning &&
+      state_ != State::kPause)
     return true;
 
   LogDbg("stop task %s|%s", type().c_str(), id_.c_str());
@@ -97,26 +97,26 @@ bool Action::stop() {
     return false;
   }
 
-  status_ = Status::kStoped;
+  state_ = State::kStoped;
   return true;
 }
 
 void Action::reset() {
-  if (status_ == Status::kIdle)
+  if (state_ == State::kIdle)
     return;
 
   LogDbg("reset task %s|%s", type().c_str(), id_.c_str());
   onReset();
 
-  status_ = Status::kIdle;
+  state_ = State::kIdle;
   result_ = Result::kUnsure;
 }
 
 bool Action::finish(bool is_succ) {
-  if (status_ != Status::kFinished) {
+  if (state_ != State::kFinished) {
     LogDbg("task %s|%s finished, is_succ: %s",
         type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
-    status_ = Status::kFinished;
+    state_ = State::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;
     loop_.runInLoop(std::bind(finish_cb_, is_succ));
     onFinished(is_succ);
@@ -128,9 +128,9 @@ bool Action::finish(bool is_succ) {
   }
 }
 
-std::string Action::ToString(Status status) {
+std::string Action::ToString(State state) {
   const char *tbl[] = { "idle", "running", "pause", "finished" };
-  return tbl[static_cast<size_t>(status)];
+  return tbl[static_cast<size_t>(state)];
 }
 
 }

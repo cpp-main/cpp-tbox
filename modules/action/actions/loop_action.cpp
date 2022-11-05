@@ -17,7 +17,7 @@ LoopAction::LoopAction(event::Loop &loop, const std::string &id, Action *child, 
       if ((mode_ == Mode::kUntilSucc && is_succ) ||
           (mode_ == Mode::kUntilFail && !is_succ)) {
         finish(true);
-      } else if (status() == Status::kRunning) {
+      } else if (state() == State::kRunning) {
         child_->reset();
         child_->start();
       }
