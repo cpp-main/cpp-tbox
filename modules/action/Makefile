@@ -17,6 +17,7 @@ HEAD_FILES = \
 	actions/invert_action.h \
 	actions/if_else_action.h \
 	actions/loop_action.h \
+	actions/event_action.h \
 
 CPP_SRC_FILES = \
 	action.cpp \
@@ -29,6 +30,7 @@ CPP_SRC_FILES = \
 	actions/invert_action.cpp \
 	actions/if_else_action.cpp \
 	actions/loop_action.cpp \
+	actions/event_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 
