@@ -286,24 +286,30 @@ bool StateMachine::Impl::run(Event event)
 
     ++cb_level_;
 
-    if (curr_state_->exit_action)
+    if (curr_state_ != next_state) {  //! 如果状态有变更
+      if (curr_state_->exit_action)
         curr_state_->exit_action(event);
 
-    if (route.action)
+      if (route.action)
         route.action(event);
 
-    if (next_state->enter_action)
+      if (next_state->enter_action)
         next_state->enter_action(event);
 
-    auto last_state = curr_state_;
-    curr_state_ = next_state;
-    if (state_changed_cb_)
+      auto last_state = curr_state_;
+      curr_state_ = next_state;
+      if (state_changed_cb_)
         state_changed_cb_(last_state->id, curr_state_->id, event);
 
-    //! 如果有子状态机，则给子状态机处理
-    if (curr_state_->sub_sm != nullptr) {
+      //! 如果新的状态有子状态机，则启动子状态机并将事件交给子状态机处理
+      if (curr_state_->sub_sm != nullptr) {
         curr_state_->sub_sm->start();
         curr_state_->sub_sm->run(event);
+      }
+
+    } else {  //! 如果状态没变，则只执行Route的动作
+      if (route.action)
+          route.action(event);
     }
 
     --cb_level_;
