@@ -68,7 +68,7 @@ bool Action::pause() {
 }
 
 bool Action::resume() {
-  if (state_ != State::kRunning)
+  if (state_ == State::kRunning)
     return true;
 
   if (state_ != State::kPause) {
