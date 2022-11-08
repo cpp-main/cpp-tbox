@@ -17,7 +17,8 @@ LoopAction::LoopAction(event::Loop &loop, const std::string &id, Action *child, 
       if ((mode_ == Mode::kUntilSucc && is_succ) ||
           (mode_ == Mode::kUntilFail && !is_succ)) {
         finish(true);
-      } else {
+      } else if (state() == State::kRunning) {
+        child_->reset();
         child_->start();
       }
     }
@@ -47,6 +48,10 @@ bool LoopAction::onResume() {
 
 bool LoopAction::onStop() {
   return child_->stop();
+}
+
+void LoopAction::onReset() {
+  child_->reset();
 }
 
 }

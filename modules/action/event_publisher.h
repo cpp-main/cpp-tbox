@@ -10,12 +10,12 @@ class EventSubscriber;
 
 class EventPublisher {
   public:
-    virtual ~EventPublisher() { }
-
-  public:
     virtual void subscribe(EventSubscriber *subscriber) = 0;
     virtual void unsubscribe(EventSubscriber *subscriber) = 0;
     virtual void publish(Event event) = 0;
+
+  protected:
+    virtual ~EventPublisher() { }
 };
 
 }

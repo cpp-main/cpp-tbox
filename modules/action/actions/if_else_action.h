@@ -28,6 +28,7 @@ class IfElseAction : public Action {
     virtual bool onPause() override;
     virtual bool onResume() override;
     virtual bool onStop() override;
+    virtual void onReset() override;
 
   protected:
     void onCondActionFinished(bool is_succ);

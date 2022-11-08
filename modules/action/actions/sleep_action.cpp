@@ -29,5 +29,9 @@ bool SleepAction::onStop() {
   return timer_->disable();
 }
 
+void SleepAction::onReset() {
+  timer_->disable();
+}
+
 }
 }

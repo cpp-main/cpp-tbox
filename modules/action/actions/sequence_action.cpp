@@ -39,7 +39,6 @@ int SequenceAction::append(Action *action) {
 }
 
 bool SequenceAction::onStart() {
-  index_ = 0;
   startOtheriseFinish();
   return true;
 }
@@ -48,6 +47,13 @@ bool SequenceAction::onStop() {
   if (index_ < children_.size())
     children_.at(index_)->stop();
   return true;
+}
+
+void SequenceAction::onReset() {
+  for (auto child : children_)
+    child->reset();
+
+  index_ = 0;
 }
 
 void SequenceAction::startOtheriseFinish() {

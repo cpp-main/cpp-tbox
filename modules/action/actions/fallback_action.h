@@ -30,6 +30,7 @@ class FallbackAction : public Action {
   protected:
     virtual bool onStart() override;
     virtual bool onStop() override;
+    virtual void onReset() override;
 
   private:
     void startOtheriseFinish();
