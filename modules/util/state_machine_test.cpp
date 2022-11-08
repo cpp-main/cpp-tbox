@@ -499,6 +499,34 @@ TEST(StateMachine, EventExtra)
     EXPECT_EQ(count, 7);
 } 
 
+TEST(StateMachine, InnerEvent) {
+    enum class State { kTerm, k1, k2 };
+    enum class Event { kNone, k1 };
+
+    SM sm;
+
+    bool is_k1_event_run = false;
+    bool is_k2_event_run = false;
+
+    sm.setInitState(State::k1);
+    sm.newState(State::k1, nullptr, nullptr);
+    sm.newState(State::k2, nullptr, nullptr);
+    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; });
+    sm.addRoute(State::k1, Event::k1, State::k2, nullptr, nullptr);
+    sm.addEvent(State::k2, Event::k1, [&](SM::Event) { is_k2_event_run = true; });
+
+    sm.start();
+    sm.run(Event::k1);
+    EXPECT_TRUE(is_k1_event_run);
+    EXPECT_FALSE(is_k2_event_run);
+    EXPECT_EQ(sm.currentState<State>(), State::k2);
+
+    is_k1_event_run = false;
+    sm.run(Event::k1);
+    EXPECT_FALSE(is_k1_event_run);
+    EXPECT_TRUE(is_k2_event_run);
+}
+
 TEST(StateMachine, SetInitState)
 {
     enum class State { kTerm, k1, kInit };

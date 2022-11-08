@@ -76,6 +76,22 @@ class StateMachine {
     }
 
     /**
+     * \brief   添加事件
+     *
+     * \param   state_id        状态
+     * \param   event_id        事件
+     * \param   action          执行的动作
+     *
+     * \return  bool    成功与否
+     */
+    bool addEvent(StateID state_id, EventID event_id, const ActionFunc &action);
+
+    template <typename S, typename E>
+    bool addEvent(S state_id, E event_id, const ActionFunc &action) {
+        return addEvent(static_cast<StateID>(state_id), static_cast<EventID>(event_id), action);
+    }
+
+    /**
      * \brief   设置起始与终止状态
      *
      * \param   init_state_id   起始状态

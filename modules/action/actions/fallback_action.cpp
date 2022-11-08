@@ -49,12 +49,6 @@ bool FallbackAction::onStop() {
   return true;
 }
 
-bool FallbackAction::onStop() {
-  if (index_ < children_.size())
-    children_.at(index_)->stop();
-  return true;
-}
-
 bool FallbackAction::onPause() {
   if (index_ < children_.size())
     children_.at(index_)->pause();
