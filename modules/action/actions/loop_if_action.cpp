@@ -56,6 +56,11 @@ bool LoopIfAction::onStart() {
   return cond_action_->start();
 }
 
+bool LoopIfAction::onStop() {
+  auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
+  return curr_action->stop();
+}
+
 bool LoopIfAction::onPause() {
   auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
   return curr_action->pause();
@@ -64,11 +69,6 @@ bool LoopIfAction::onPause() {
 bool LoopIfAction::onResume() {
   auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
   return curr_action->resume();
-}
-
-bool LoopIfAction::onStop() {
-  auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
-  return curr_action->stop();
 }
 
 void LoopIfAction::onReset() {

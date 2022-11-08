@@ -49,6 +49,18 @@ bool SequenceAction::onStop() {
   return true;
 }
 
+bool SequenceAction::onPause() {
+  if (index_ < children_.size())
+    children_.at(index_)->pause();
+  return true;
+}
+
+bool SequenceAction::onResume() {
+  if (index_ < children_.size())
+    children_.at(index_)->resume();
+  return true;
+}
+
 void SequenceAction::onReset() {
   for (auto child : children_)
     child->reset();

@@ -38,16 +38,16 @@ bool LoopAction::onStart() {
   return child_->start();
 }
 
+bool LoopAction::onStop() {
+  return child_->stop();
+}
+
 bool LoopAction::onPause() {
   return child_->pause();
 }
 
 bool LoopAction::onResume() {
   return child_->resume();
-}
-
-bool LoopAction::onStop() {
-  return child_->stop();
 }
 
 void LoopAction::onReset() {

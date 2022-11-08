@@ -29,6 +29,16 @@ bool SleepAction::onStop() {
   return timer_->disable();
 }
 
+bool SleepAction::onPause() {
+  LogUndo();
+  return false;
+}
+
+bool SleepAction::onResume() {
+  LogUndo();
+  return false;
+}
+
 void SleepAction::onReset() {
   timer_->disable();
 }

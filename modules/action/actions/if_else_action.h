@@ -25,9 +25,9 @@ class IfElseAction : public Action {
 
   protected:
     virtual bool onStart() override;
+    virtual bool onStop() override;
     virtual bool onPause() override;
     virtual bool onResume() override;
-    virtual bool onStop() override;
     virtual void onReset() override;
 
   protected:

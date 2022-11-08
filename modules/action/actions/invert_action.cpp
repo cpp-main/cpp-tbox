@@ -31,16 +31,16 @@ bool InvertAction::onStart() {
   return child_->start();
 }
 
+bool InvertAction::onStop() {
+  return child_->stop();
+}
+
 bool InvertAction::onPause() {
   return child_->pause();
 }
 
 bool InvertAction::onResume() {
   return child_->resume();
-}
-
-bool InvertAction::onStop() {
-  return child_->stop();
 }
 
 void InvertAction::onReset() {

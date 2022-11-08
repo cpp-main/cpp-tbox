@@ -40,6 +40,16 @@ bool ParallelAction::onStop() {
   return true;
 }
 
+bool ParallelAction::onPause() {
+  LogUndo();
+  return false;
+}
+
+bool ParallelAction::onResume() {
+  LogUndo();
+  return false;
+}
+
 void ParallelAction::onReset() {
   for (auto child : children_)
     child->reset();

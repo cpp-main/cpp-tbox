@@ -48,6 +48,17 @@ bool IfElseAction::onStart() {
   return cond_action_->start();
 }
 
+bool IfElseAction::onStop() {
+  if (is_cond_done_) {
+    if (is_cond_succ_)
+      return if_action_->stop();
+    else
+      return else_action_->stop();
+  } else {
+    return cond_action_->stop();
+  }
+}
+
 bool IfElseAction::onPause() {
   if (is_cond_done_) {
     if (is_cond_succ_)
@@ -67,17 +78,6 @@ bool IfElseAction::onResume() {
       return else_action_->resume();
   } else {
     return cond_action_->resume();
-  }
-}
-
-bool IfElseAction::onStop() {
-  if (is_cond_done_) {
-    if (is_cond_succ_)
-      return if_action_->stop();
-    else
-      return else_action_->stop();
-  } else {
-    return cond_action_->stop();
   }
 }
 

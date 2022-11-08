@@ -12,6 +12,11 @@ bool EventAction::onStart() {
   return true;
 }
 
+bool EventAction::onStop() {
+  pub_.unsubscribe(this);
+  return true;
+}
+
 bool EventAction::onPause() {
   pub_.unsubscribe(this);
   return true;
@@ -19,11 +24,6 @@ bool EventAction::onPause() {
 
 bool EventAction::onResume() {
   pub_.subscribe(this);
-  return true;
-}
-
-bool EventAction::onStop() {
-  pub_.unsubscribe(this);
   return true;
 }
 
