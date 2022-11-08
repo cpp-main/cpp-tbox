@@ -79,7 +79,7 @@ class StateMachine {
      * \brief   添加事件
      *
      * \param   state_id        状态
-     * \param   event_id        事件，0表示任意事件
+     * \param   event_id        事件
      * \param   action          执行的动作
      *
      * \return  bool    成功与否
