@@ -1,7 +1,7 @@
 # cpp\_tbox
 
 #### 介绍
-cpp\_tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服务型应用开发库。
+cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服务型应用开发库。
 
 #### 适用环境
 
