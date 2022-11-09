@@ -49,6 +49,7 @@ class StateMachine::Impl {
         StateMachine::Impl *sub_sm; //! 子状态机
         vector<Route> routes;   //! 转换路由
         map<EventID, ActionFunc> events;  //! 内部事件
+        ActionFunc default_event;
     };
 
     State* findState(StateID state_id) const;
@@ -184,14 +185,18 @@ bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const Acti
         return false;
     }
 
-    //! 要求 from_state_id 必须是已存在的状态
-    auto from_state = findState(state_id);
-    if (from_state == nullptr) {
-        LogWarn("from_state %d not exist", state_id);
+    //! 要求 state_id 必须是已存在的状态
+    auto state = findState(state_id);
+    if (state == nullptr) {
+        LogWarn("state %d not exist", state_id);
         return false;
     }
 
-    from_state->events[event_id] = action;
+    if (event_id != 0)
+        state->events[event_id] = action;
+    else
+        state->default_event = action;
+
     return true;
 }
 
@@ -274,10 +279,14 @@ bool StateMachine::Impl::run(Event event)
         return false;
     }
 
+    ++cb_level_;
     //! 检查事件，并执行
     auto event_iter = curr_state_->events.find(event.id);
     if (event_iter != curr_state_->events.end())
         event_iter->second(event);
+    else if (curr_state_->default_event)
+        curr_state_->default_event(event);
+    --cb_level_;
 
     //! 如果有子状态机，则给子状态机处理
     if (curr_state_->sub_sm != nullptr) {

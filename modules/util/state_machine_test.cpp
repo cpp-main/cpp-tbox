@@ -330,7 +330,7 @@ TEST(StateMachine, SubSM)
 TEST(StateMachine, StateChangedCallback)
 {
     enum class State { kTerm, kInit, k1 };
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
 
@@ -366,7 +366,7 @@ TEST(StateMachine, StateChangedCallback)
 TEST(StateMachine, InitStateHasSubMachine)
 {
     enum class State { kTerm, kInit };
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
     SM sub_sm;
@@ -402,7 +402,7 @@ TEST(StateMachine, InitStateHasSubMachine)
 TEST(StateMachine, SubSMActionOrder)
 {
     enum class State { kTerm, kInit, k1};
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
     SM sub_sm;
@@ -501,7 +501,7 @@ TEST(StateMachine, EventExtra)
 
 TEST(StateMachine, InnerEvent) {
     enum class State { kTerm, k1, k2 };
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
 
@@ -527,10 +527,35 @@ TEST(StateMachine, InnerEvent) {
     EXPECT_TRUE(is_k2_event_run);
 }
 
+TEST(StateMachine, InnerAnyEvent) {
+    enum class State { kTerm, k1 };
+    enum class Event { kAny, k1, k2 };
+
+    SM sm;
+
+    bool is_k1_event_run = false;
+    bool is_any_event_run = false;
+
+    sm.setInitState(State::k1);
+    sm.newState(State::k1, nullptr, nullptr);
+    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; });
+    sm.addEvent(State::k1, Event::kAny, [&](SM::Event) { is_any_event_run = true; });
+
+    sm.start();
+    sm.run(Event::k1);
+    EXPECT_TRUE(is_k1_event_run);
+    EXPECT_FALSE(is_any_event_run);
+
+    is_k1_event_run = false;
+    sm.run(Event::k2);
+    EXPECT_FALSE(is_k1_event_run);
+    EXPECT_TRUE(is_any_event_run);
+}
+
 TEST(StateMachine, SetInitState)
 {
     enum class State { kTerm, k1, kInit };
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
 
@@ -545,7 +570,7 @@ TEST(StateMachine, SetInitState)
 TEST(StateMachine, SetInitState_Fail)
 {
     enum class State { kTerm, k1, kInit };
-    enum class Event { kNone, k1 };
+    enum class Event { kAny, k1 };
 
     SM sm;
 

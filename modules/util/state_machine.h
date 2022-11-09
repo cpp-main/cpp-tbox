@@ -12,7 +12,7 @@ class StateMachine {
     using StateID = int;   //! StateID 为 0 与 1 的两个状态为特定状态
                            //! StateID = 0 的状态为终止状态，用户可以不用定义
                            //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
-    using EventID = int;   //! EventID = 0 表示任意事件，仅在 addRoute() 时使用
+    using EventID = int;   //! EventID = 0 表示任意事件，仅在 addRoute(), addEvent() 时使用
 
     struct Event {
       EventID id = 0;
@@ -79,7 +79,7 @@ class StateMachine {
      * \brief   添加事件
      *
      * \param   state_id        状态
-     * \param   event_id        事件
+     * \param   event_id        事件，0表示任意事件
      * \param   action          执行的动作
      *
      * \return  bool    成功与否
