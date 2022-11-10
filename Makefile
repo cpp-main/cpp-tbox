@@ -1,6 +1,6 @@
 include build_env.mk
 
-.PHONY: all modules examples test clean distclean
+.PHONY: all modules examples test clean distclean print
 
 CCFLAGS := -Wall
 
@@ -12,16 +12,14 @@ ifeq ($(RELEASE), 1)
 CCFLAGS += -O2 -Os
 else
 CCFLAGS += -DDEBUG=1 -O0 -ggdb
-endif
-
 ifeq ($(ENABLE_ASAN), 1)
 CCFLAGS += -fsanitize=address -fno-omit-frame-pointer
 LDFLAGS += -fsanitize=address -static-libasan
 endif
-
 ifeq ($(ENABLE_GPROF), 1)
 CCFLAGS += -pg
 LDFLAGS += -pg
+endif
 endif
 
 CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
@@ -34,6 +32,10 @@ export MODULES
 include config.mk
 
 all: modules test examples
+
+print:
+	@echo "CXXFLAGS = $(CXXFLAGS)"
+	@echo "LDFLAGS  = $(LDFLAGS)"
 
 modules:
 	$(MAKE) -C $@
