@@ -38,9 +38,9 @@ bool Action::start() {
     return false;
   }
 
-  LogDbg("start task %s|%s", type().c_str(), id_.c_str());
+  LogDbg("start action %s|%s", type().c_str(), id_.c_str());
   if (!onStart()) {
-    LogWarn("start task %s|%s fail", type().c_str(), id_.c_str());
+    LogWarn("start action %s|%s fail", type().c_str(), id_.c_str());
     return false;
   }
 
@@ -57,9 +57,9 @@ bool Action::pause() {
     return false;
   }
 
-  LogDbg("pause task %s|%s", type().c_str(), id_.c_str());
+  LogDbg("pause action %s|%s", type().c_str(), id_.c_str());
   if (!onPause()) {
-    LogWarn("pause task %s|%s fail", type().c_str(), id_.c_str());
+    LogWarn("pause action %s|%s fail", type().c_str(), id_.c_str());
     return false;
   }
 
@@ -76,9 +76,9 @@ bool Action::resume() {
     return false;
   }
 
-  LogDbg("resume task %s|%s", type().c_str(), id_.c_str());
+  LogDbg("resume action %s|%s", type().c_str(), id_.c_str());
   if (!onResume()) {
-    LogWarn("resume task %s|%s fail", type().c_str(), id_.c_str());
+    LogWarn("resume action %s|%s fail", type().c_str(), id_.c_str());
     return false;
   }
 
@@ -91,9 +91,9 @@ bool Action::stop() {
       state_ != State::kPause)
     return true;
 
-  LogDbg("stop task %s|%s", type().c_str(), id_.c_str());
+  LogDbg("stop action %s|%s", type().c_str(), id_.c_str());
   if (!onStop()) {
-    LogWarn("stop task %s|%s fail", type().c_str(), id_.c_str());
+    LogWarn("stop action %s|%s fail", type().c_str(), id_.c_str());
     return false;
   }
 
@@ -105,7 +105,7 @@ void Action::reset() {
   if (state_ == State::kIdle)
     return;
 
-  LogDbg("reset task %s|%s", type().c_str(), id_.c_str());
+  LogDbg("reset action %s|%s", type().c_str(), id_.c_str());
   onReset();
 
   state_ = State::kIdle;
@@ -114,7 +114,7 @@ void Action::reset() {
 
 bool Action::finish(bool is_succ) {
   if (state_ != State::kFinished) {
-    LogDbg("task %s|%s finished, is_succ: %s",
+    LogDbg("action %s|%s finished, is_succ: %s",
         type().c_str(), id_.c_str(), is_succ? "succ" : "fail");
     state_ = State::kFinished;
     result_ = is_succ ? Result::kSuccess : Result::kFail;

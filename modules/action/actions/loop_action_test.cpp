@@ -59,10 +59,10 @@ TEST(LoopAction, SleepActionForever) {
       return true;
     }
   );
-  auto delay_10ms_action = new SleepAction(*loop, "", std::chrono::milliseconds(10));
+  auto delay_10ms_action = new SleepAction(*loop, "", std::chrono::milliseconds(100));
   auto seq_action = new SequenceAction(*loop, "");
-  seq_action->append(nondelay_action);
   seq_action->append(delay_10ms_action);
+  seq_action->append(nondelay_action);
 
   LoopAction loop_action(*loop, "", seq_action, LoopAction::Mode::kForever);
   bool is_finished = false;
@@ -73,7 +73,7 @@ TEST(LoopAction, SleepActionForever) {
   loop->runLoop();
   loop_action.stop();
   EXPECT_FALSE(is_finished);
-  EXPECT_EQ(loop_times, 100);
+  EXPECT_EQ(loop_times, 10);
 }
 
 }
