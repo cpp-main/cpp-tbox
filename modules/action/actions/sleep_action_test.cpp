@@ -11,7 +11,7 @@ TEST(SleepAction, Basic) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  SleepAction action(*loop, "", std::chrono::milliseconds(10));
+  SleepAction action(*loop, std::chrono::milliseconds(10));
   bool is_finished = false;
   action.setFinishCallback(
     [loop, &is_finished] (bool is_succ) {

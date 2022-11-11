@@ -3,8 +3,8 @@
 namespace tbox {
 namespace action {
 
-EventAction::EventAction(event::Loop &loop, const std::string &id, EventPublisher &pub) :
-  Action(loop, id), pub_(pub)
+EventAction::EventAction(event::Loop &loop, EventPublisher &pub) :
+  Action(loop), pub_(pub)
 { }
 
 bool EventAction::onStart() {

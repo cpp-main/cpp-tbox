@@ -6,9 +6,8 @@
 namespace tbox {
 namespace action {
 
-LoopIfAction::LoopIfAction(event::Loop &loop, const std::string &id,
-                           Action *cond_action, Action *exec_action) :
-  Action(loop, id),
+LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_action) :
+  Action(loop),
   cond_action_(cond_action),
   exec_action_(exec_action)
 {

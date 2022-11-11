@@ -9,9 +9,11 @@ namespace action {
 
 using namespace std::placeholders;
 
-IfElseAction::IfElseAction(event::Loop &loop, const std::string &id,
-    Action *cond_action, Action *if_action, Action *else_action) :
-  Action(loop, id),
+IfElseAction::IfElseAction(event::Loop &loop,
+                           Action *cond_action,
+                           Action *if_action,
+                           Action *else_action) :
+  Action(loop),
   cond_action_(cond_action),
   if_action_(if_action),
   else_action_(else_action)

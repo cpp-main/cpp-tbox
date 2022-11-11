@@ -16,16 +16,16 @@ TEST(FallbackAction, AllFail) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new FallbackAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -52,16 +52,16 @@ TEST(FallbackAction, SuccHead) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new FallbackAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_2 = true;
       return false;
@@ -89,16 +89,16 @@ TEST(FallbackAction, SuccTail) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new FallbackAction(*loop, "");
+  auto *seq_action = new FallbackAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;

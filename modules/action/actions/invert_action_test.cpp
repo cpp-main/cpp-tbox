@@ -15,8 +15,8 @@ TEST(InvertAction, _) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  auto nodelay_action = new NondelayAction(*loop, "", [] { return true; });
-  InvertAction invert_action(*loop, "", nodelay_action);
+  auto nodelay_action = new NondelayAction(*loop, [] { return true; });
+  InvertAction invert_action(*loop, nodelay_action);
 
   bool is_callback = false;
   invert_action.setFinishCallback(

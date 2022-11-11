@@ -6,8 +6,8 @@
 namespace tbox {
 namespace action {
 
-InvertAction::InvertAction(event::Loop &loop, const std::string &id, Action *child) :
-  Action(loop, id), child_(child)
+InvertAction::InvertAction(event::Loop &loop, Action *child) :
+  Action(loop), child_(child)
 {
   assert(child_ != nullptr);
 

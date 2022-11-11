@@ -21,9 +21,9 @@ TEST(LoopIfAction, LoopRemainTimes) {
   SetScopeExitAction([loop] { delete loop; });
 
   int remain = 10;
-  auto cond_action = new NondelayAction(*loop, "", [&] { return remain > 0; });
-  auto exec_action = new NondelayAction(*loop, "", [&] { --remain; return true; });
-  LoopIfAction loop_if_action(*loop, "", cond_action, exec_action);
+  auto cond_action = new NondelayAction(*loop, [&] { return remain > 0; });
+  auto exec_action = new NondelayAction(*loop, [&] { --remain; return true; });
+  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
   bool is_finished = false;
   loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
@@ -49,11 +49,11 @@ TEST(LoopIfAction, MultiAction) {
   SetScopeExitAction([loop] { delete loop; });
 
   int remain = 10;
-  auto cond_action = new NondelayAction(*loop, "", [&] { return remain > 0; });
-  auto exec_action = new SequenceAction(*loop, "");
-  exec_action->append(new NondelayAction(*loop, "", [&] { --remain; return true; }));
-  exec_action->append(new SleepAction(*loop, "", std::chrono::milliseconds(10)));
-  LoopIfAction loop_if_action(*loop, "", cond_action, exec_action);
+  auto cond_action = new NondelayAction(*loop, [&] { return remain > 0; });
+  auto exec_action = new SequenceAction(*loop);
+  exec_action->append(new NondelayAction(*loop, [&] { --remain; return true; }));
+  exec_action->append(new SleepAction(*loop, std::chrono::milliseconds(10)));
+  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
   bool is_finished = false;
   loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });

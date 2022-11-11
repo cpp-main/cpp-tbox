@@ -13,8 +13,7 @@ class LoopAction : public Action {
       kUntilFail,   //! while(action());
       kUntilSucc,   //! while(!action());
     };
-    explicit LoopAction(event::Loop &loop, const std::string &id,
-        Action *child, Mode mode = Mode::kForever);
+    explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
     virtual ~LoopAction();
 
     virtual std::string type() const override { return "Loop"; }

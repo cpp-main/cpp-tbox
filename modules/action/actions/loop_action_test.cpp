@@ -23,13 +23,13 @@ TEST(LoopAction, NondelayActionForever) {
   SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
-  auto nondelay_action = new NondelayAction(*loop, "",
+  auto nondelay_action = new NondelayAction(*loop,
     [&] {
       ++loop_times;
       return true;
     }
   );
-  LoopAction loop_action(*loop, "", nondelay_action, LoopAction::Mode::kForever);
+  LoopAction loop_action(*loop, nondelay_action, LoopAction::Mode::kForever);
   bool is_finished = false;
   loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 
@@ -53,18 +53,18 @@ TEST(LoopAction, SleepActionForever) {
   SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
-  auto nondelay_action = new NondelayAction(*loop, "",
+  auto nondelay_action = new NondelayAction(*loop,
     [&] {
       ++loop_times;
       return true;
     }
   );
-  auto delay_10ms_action = new SleepAction(*loop, "", std::chrono::milliseconds(100));
-  auto seq_action = new SequenceAction(*loop, "");
+  auto delay_10ms_action = new SleepAction(*loop, std::chrono::milliseconds(100));
+  auto seq_action = new SequenceAction(*loop);
   seq_action->append(delay_10ms_action);
   seq_action->append(nondelay_action);
 
-  LoopAction loop_action(*loop, "", seq_action, LoopAction::Mode::kForever);
+  LoopAction loop_action(*loop, seq_action, LoopAction::Mode::kForever);
   bool is_finished = false;
   loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 

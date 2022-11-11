@@ -16,16 +16,16 @@ TEST(SequenceAction, AllSucc) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -52,16 +52,16 @@ TEST(SequenceAction, FailHead) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_2 = true;
       return false;
@@ -89,16 +89,16 @@ TEST(SequenceAction, FailTail) {
   bool action_run_1 = false;
   bool action_run_2 = false;
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop, "",
+  seq_action->append(new NondelayAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -122,11 +122,11 @@ TEST(SequenceAction, TwoSleepAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  auto *seq_action = new SequenceAction(*loop, "");
+  auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  auto *sleep_action_1 = new SleepAction(*loop, "", std::chrono::milliseconds(300));
-  auto *sleep_action_2 = new SleepAction(*loop, "", std::chrono::milliseconds(200));
+  auto *sleep_action_1 = new SleepAction(*loop, std::chrono::milliseconds(300));
+  auto *sleep_action_2 = new SleepAction(*loop, std::chrono::milliseconds(200));
 
   seq_action->append(sleep_action_1);
   seq_action->append(sleep_action_2);

@@ -11,8 +11,7 @@ namespace action {
 class EventAction : public Action,
                     public EventSubscriber {
   public:
-    explicit EventAction(event::Loop &loop, const std::string &id,
-                         EventPublisher &pub);
+    explicit EventAction(event::Loop &loop, EventPublisher &pub);
 
   protected:
     virtual bool onStart() override;

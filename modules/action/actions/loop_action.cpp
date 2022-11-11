@@ -5,8 +5,8 @@
 namespace tbox {
 namespace action {
 
-LoopAction::LoopAction(event::Loop &loop, const std::string &id, Action *child, Mode mode) :
-  Action(loop, id),
+LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
+  Action(loop),
   child_(child),
   mode_(mode)
 {

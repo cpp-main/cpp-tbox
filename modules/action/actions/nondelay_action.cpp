@@ -5,8 +5,8 @@
 namespace tbox {
 namespace action {
 
-NondelayAction::NondelayAction(event::Loop &loop, const std::string &id, const Func &func) :
-  Action(loop, id), func_(func)
+NondelayAction::NondelayAction(event::Loop &loop, const Func &func) :
+  Action(loop), func_(func)
 {
   assert(func != nullptr);
 }

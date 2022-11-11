@@ -7,8 +7,8 @@
 namespace tbox {
 namespace action {
 
-SleepAction::SleepAction(event::Loop &loop, const std::string &id, const std::chrono::milliseconds &time_span) :
-  Action(loop, id),
+SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span) :
+  Action(loop),
   timer_(loop.newTimerEvent())
 {
   assert(timer_ != nullptr);

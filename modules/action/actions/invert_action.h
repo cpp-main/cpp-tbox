@@ -13,7 +13,7 @@ namespace action {
  */
 class InvertAction : public Action {
   public:
-    explicit InvertAction(event::Loop &loop, const std::string &id, Action *child);
+    explicit InvertAction(event::Loop &loop, Action *child);
     virtual ~InvertAction();
 
     virtual std::string type() const override { return "Invert"; }

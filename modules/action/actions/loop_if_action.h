@@ -8,8 +8,9 @@ namespace action {
 
 class LoopIfAction : public Action {
   public:
-    explicit LoopIfAction(event::Loop &loop, const std::string &id,
-        Action *cond_action, Action *exec_action);
+    explicit LoopIfAction(event::Loop &loop,
+                          Action *cond_action,
+                          Action *exec_action);
     virtual ~LoopIfAction();
 
     virtual std::string type() const override { return "LoopIf"; }
