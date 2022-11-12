@@ -6,6 +6,7 @@ LIB_VERSION_Z = 1
 HEAD_FILES = \
 	action.h \
 	event.h \
+	action_executor.h \
 	event_subscriber.h \
 	event_publisher.h \
 	event_publisher_impl.h \
@@ -22,6 +23,7 @@ HEAD_FILES = \
 
 CPP_SRC_FILES = \
 	action.cpp \
+	action_executor.cpp \
 	event_publisher_impl.cpp \
 	actions/nondelay_action.cpp \
 	actions/sleep_action.cpp \
