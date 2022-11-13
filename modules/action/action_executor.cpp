@@ -1,89 +1,144 @@
 #include "action_executor.h"
 
 #include <algorithm>
+#include <tbox/base/assert.h>
 #include "action.h"
 
 namespace tbox {
 namespace action {
 
 ActionExecutor::~ActionExecutor() {
-  for (auto item : action_deque_)
-        delete item.action;
-    action_deque_.clear();
+  for (auto &action_deque : action_deque_array_) {
+    for (auto item : action_deque)
+          delete item.action;
+      action_deque.clear();
+  }
 }
 
-ActionExecutor::ActionId ActionExecutor::append(Action *action) {
+ActionExecutor::ActionId ActionExecutor::append(Action *action, int level) {
+  assert(level > 0 && level < 3);
+  assert(action != nullptr);
+
   Item item = {
     .id = allocActionId(),
     .action = action
   };
-  action_deque_.push_back(item);
-  action->setFinishCallback([this](bool) { run(); });
-  run();
+  action_deque_array_.at(level).push_back(item);
+  action->setFinishCallback([this](bool) { schedule(); });
+  schedule();
   return item.id;
 }
 
 ActionExecutor::ActionId ActionExecutor::current() const {
-  if (action_deque_.empty())
+  if (curr_action_deque_index_ == -1)
     return -1;
-  return action_deque_.front().id;
+
+  auto &action_deque = action_deque_array_.at(curr_action_deque_index_);
+  return action_deque.front().id;
 }
 
-bool ActionExecutor::skip() {
-  if (action_deque_.empty())
+bool ActionExecutor::cancelCurrent() {
+  if (curr_action_deque_index_ == -1)
     return false;
 
-  auto item = action_deque_.front();
+  auto &action_deque = action_deque_array_.at(curr_action_deque_index_);
+  auto item = action_deque.front();
   item.action->stop();
   delete item.action;
-  action_deque_.pop_front();
-  run();
+  action_deque.pop_front();
+  schedule();
   return true;
 }
 
 bool ActionExecutor::cancel(ActionId action_id) {
-  auto iter = std::find_if(action_deque_.begin(), action_deque_.end(),
-    [action_id] (const Item &item) { return item.id == action_id; }
-  );
+  assert(action_id > 0);
 
-  if (iter != action_deque_.end()) {
-    delete iter->action;
-    action_deque_.erase(iter);
-    run();
-    return true;
+  for (auto &action_deque : action_deque_array_) {
+    auto iter = std::find_if(action_deque.begin(), action_deque.end(),
+      [action_id] (const Item &item) { return item.id == action_id; }
+    );
+
+    if (iter != action_deque.end()) {
+      delete iter->action;
+      action_deque.erase(iter);
+      schedule();
+      return true;
+    }
   }
   return false;
 }
 
-size_t ActionExecutor::size() const {
-  return action_deque_.size();
+void ActionExecutor::stop() {
+  for (auto &action_deque : action_deque_array_) {
+    if (!action_deque.empty()) {
+      auto action_item = action_deque.front();
+      action_item.action->stop();
+    }
+  }
 }
 
 ActionExecutor::ActionId ActionExecutor::allocActionId() { return ++action_id_alloc_counter_; }
 
-void ActionExecutor::run() {
-  while (!action_deque_.empty()) {
-    auto item = action_deque_.front();
-
-    if (item.action->state() == Action::State::kIdle) {
-      item.action->start();
-      if (action_started_cb_)
-        action_started_cb_(item.id);
-
-    } else if (item.action->state() == Action::State::kFinished) {
-      action_deque_.pop_front();
-      delete item.action;
-      if (action_finished_cb_)
-        action_finished_cb_(item.id);
-
-    } else {
-      break;
+void ActionExecutor::schedule() {
+  while (true) {
+    //! 找出优先级最高，且不为空的队列
+    int ready_deque_index = -1;
+    for (int i = 0; i < 3; ++i) {
+      if (!action_deque_array_.at(i).empty()) {
+        ready_deque_index = i;
+        break;
+      }
     }
-  }
 
-  if (action_deque_.empty()) {
-    if (all_finished_cb_)
-      all_finished_cb_();
+    //! 如果所有的队列都是空的，那么就直接退出
+    if (ready_deque_index == -1) {
+      if (all_finished_cb_)
+        all_finished_cb_();
+      return;
+    }
+
+    //! 如果高优先级的队列比当前队列优先级还高，则要先暂停当前队列头部的动作
+    if (curr_action_deque_index_ != -1 &&
+        ready_deque_index < curr_action_deque_index_) {
+      action_deque_array_.at(curr_action_deque_index_).front().action->pause();
+    }
+
+    auto &ready_deque = action_deque_array_.at(ready_deque_index);
+    while (!ready_deque.empty()) {
+      auto item = ready_deque.front();
+      //! 没有启动的要启动
+      if (item.action->state() == Action::State::kIdle) {
+        if (item.action->start()) {
+          curr_action_deque_index_ = ready_deque_index;
+          if (action_started_cb_)
+            action_started_cb_(item.id);
+        } else {
+          ready_deque.pop_front();
+          delete item.action;
+          curr_action_deque_index_ = -1;
+          if (action_finished_cb_)
+            action_finished_cb_(item.id);
+        }
+
+      //! 被暂停了的，要恢复
+      } else if (item.action->state() == Action::State::kPause) {
+        curr_action_deque_index_ = ready_deque_index;
+        item.action->resume();
+
+      //! 已完成了的，要删除
+      } else if (item.action->state() == Action::State::kFinished ||
+                 item.action->state() == Action::State::kStoped) {
+        ready_deque.pop_front();
+        delete item.action;
+        curr_action_deque_index_ = -1;
+        if (action_finished_cb_)
+          action_finished_cb_(item.id);
+
+      //! 其它状态：运行中，不需要处理
+      } else {
+        return;
+      }
+    }
   }
 }
 

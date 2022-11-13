@@ -22,12 +22,12 @@ class ActionExecutor {
     using ActionCallback = std::function<void(ActionId)>;
     using Callback = std::function<void()>;
 
-    ActionId append(Action *action);
+    ActionId append(Action *action, int level = 1);
     ActionId current() const;
 
-    bool skip();
+    bool cancelCurrent();
     bool cancel(ActionId action_id);
-    size_t size() const;
+    void stop();
 
     //! set callbacks
     void setActionStartedCallback(const ActionCallback &cb) { action_started_cb_ = cb; }
@@ -36,7 +36,7 @@ class ActionExecutor {
 
   private:
     ActionId allocActionId();
-    void run();
+    void schedule();
 
   private:
     struct Item {
@@ -44,8 +44,9 @@ class ActionExecutor {
       Action *action;
     };
 
-    std::deque<Item> action_deque_;
+    std::array<std::deque<Item>, 3> action_deque_array_;
     ActionId action_id_alloc_counter_ = 0;
+    int curr_action_deque_index_ = -1;  //!< 当前正在运行中的动作所在的队列，-1表示没有动作
 
     ActionCallback  action_started_cb_;
     ActionCallback  action_finished_cb_;
