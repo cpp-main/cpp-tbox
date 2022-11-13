@@ -2,7 +2,7 @@
 #define TBOX_LOOP_WDOG_H_20221110
 
 #include <string>
-#include <functional>
+#include <tbox/event/loop.h>
 
 namespace tbox {
 namespace eventx {
