@@ -16,7 +16,7 @@ ActionExecutor::~ActionExecutor() {
 }
 
 ActionExecutor::ActionId ActionExecutor::append(Action *action, int level) {
-  assert(level > 0 && level < 3);
+  assert(0 <= level && level <= 2);
   assert(action != nullptr);
 
   Item item = {
