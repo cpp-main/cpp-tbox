@@ -9,14 +9,15 @@
 #include <tbox/base/log.h>
 
 namespace tbox {
-namespace util {
+namespace eventx {
 
 namespace {
 
 void OnLoopDie(const std::string &name);
 
 struct LoopInfo {
-  LoopInfo() : tag(new bool(true)) { }
+  LoopInfo(event::Loop *l, const std::string &n) :
+    loop(l), name(n), tag(new bool(true)) { }
   ~LoopInfo() { delete tag; }
 
   event::Loop*  loop;
@@ -24,11 +25,11 @@ struct LoopInfo {
   bool *tag;
 };
 
-using LoopInfoVec = std::vector<LoopInfo*>;
+using LoopInfoVec = std::vector<LoopInfo>;
 
 LoopInfoVec     _loop_info_vec; //! 线程信息表
 std::mutex      _mutex_lock;    //! 锁
-std::thread*    _sp_thread;     //! 线程对象
+std::thread*    _sp;     //! 线程对象
 bool _keep_running = false;     //! 线程是否继续工作标记
 
 LoopWDog::LoopDieCallback _loop_die_cb = OnLoopDie;  //! 回调函数
@@ -75,13 +76,13 @@ void OnLoopDie(const std::string &name) {
 
 }
 
-void LoopWDog::SetLoopDieCallback(const LoopDieCallback &cb) { thread_die_cb = cb; }
+void LoopWDog::SetLoopDieCallback(const LoopDieCallback &cb) { _loop_die_cb = cb; }
 
 void LoopWDog::Start() {
   std::lock_guard<std::mutex> lg(_mutex_lock);
   if (!_keep_running) {
     _keep_running = true;
-    _sp_thread = new std::thread(LoopProc);
+    _sp = new std::thread(LoopProc);
   }
 }
 
@@ -89,8 +90,8 @@ void LoopWDog::Stop() {
   std::lock_guard<std::mutex> lg(_mutex_lock);
   if (_keep_running) {
     _keep_running = false;
-    _sp_thread->join();
-    delete _sp_thread;
+    _sp->join();
+    delete _sp;
     _loop_info_vec.clear();
   }
 }
@@ -104,7 +105,7 @@ void LoopWDog::Register(event::Loop *loop, const std::string &name) {
   );
 
   if (iter == _loop_info_vec.end()) { //! 如果没有找到那么创建
-    _loop_info_vec.emplace(LoopInfo{loop, name});
+    _loop_info_vec.emplace_back(LoopInfo(loop, name));
   }
 }
 
@@ -112,7 +113,7 @@ void LoopWDog::Unregister(event::Loop *loop)
 {
   std::lock_guard<std::mutex> lg(_mutex_lock);
   auto iter = std::remove_if(_loop_info_vec.begin(), _loop_info_vec.end(),
-    [loop, name] (const LoopInfo &loop_info) {
+    [loop] (const LoopInfo &loop_info) {
       return loop_info.loop == loop;
     }
   );
