@@ -10,7 +10,7 @@
 #include <tbox/event/timer_event.h>
 #include <tbox/event/signal_event.h>
 
-#include <tbox/util/thread_wdog.h>
+#include <tbox/eventx/loop_wdog.h>
 #include <tbox/util/pid_file.h>
 #include <tbox/util/fs.h>
 
@@ -109,16 +109,10 @@ int Main(int argc, char **argv)
 
 void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
 {
-    auto feeddog_timer = ctx.loop()->newTimerEvent();
     auto stop_signal   = ctx.loop()->newSignalEvent();
 
     //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction(
-        [=] {
-            delete stop_signal;
-            delete feeddog_timer;
-        }
-    );
+    SetScopeExitAction([stop_signal] { delete stop_signal; });
 
     stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
@@ -131,15 +125,10 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
         }
     );
 
-    //! 创建喂狗定时器
-    feeddog_timer->initialize(std::chrono::seconds(2), event::Event::Mode::kPersist);
-    feeddog_timer->setCallback(util::ThreadWDog::FeedDog);
-
     //! 启动前准备
-    util::ThreadWDog::Start();
-    util::ThreadWDog::Register("main", 3);
+    eventx::LoopWDog::Start();
+    eventx::LoopWDog::Register(ctx.loop(), "main");
 
-    feeddog_timer->enable();
     stop_signal->enable();
 
     LogInfo("Start!");
@@ -154,8 +143,8 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
 
     LogInfo("Stoped");
 
-    util::ThreadWDog::Unregister();
-    util::ThreadWDog::Stop();
+    eventx::LoopWDog::Unregister(ctx.loop());
+    eventx::LoopWDog::Stop();
 }
 
 }
