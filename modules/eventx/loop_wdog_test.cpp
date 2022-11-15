@@ -20,7 +20,7 @@ TEST(LoopWDog, Normal)
   LoopWDog::Register(sp_loop, "main_loop");
 
   int die_cb_count = 0;
-  LoopWDog::SetLoopDieCallback(
+  LoopWDog::SetLoopBlockCallback(
     [&](const std::string &name) { ++die_cb_count; }
   );
 
@@ -42,7 +42,7 @@ TEST(LoopWDog, MainLoopBlock)
   LoopWDog::Register(sp_loop, "main_loop");
 
   int die_cb_count = 0;
-  LoopWDog::SetLoopDieCallback(
+  LoopWDog::SetLoopBlockCallback(
     [&](const std::string &name) {
       EXPECT_EQ(name, "main_loop");
       ++die_cb_count;
@@ -75,7 +75,7 @@ TEST(LoopWDog, WorkLoopBlock)
   );
 
   int die_cb_count = 0;
-  LoopWDog::SetLoopDieCallback(
+  LoopWDog::SetLoopBlockCallback(
     [&](const std::string &name) {
       EXPECT_EQ(name, "work_loop");
       ++die_cb_count;

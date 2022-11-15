@@ -16,7 +16,7 @@ namespace eventx {
 
 namespace {
 
-void OnLoopDie(const std::string &name);
+void OnLoopBlock(const std::string &name);
 
 struct LoopInfo {
   LoopInfo(event::Loop *l, const std::string &n) :
@@ -36,7 +36,7 @@ std::mutex      _mutex_lock;    //! 锁
 std::thread*    _sp_thread = nullptr; //! 线程对象
 bool _keep_running = false;     //! 线程是否继续工作标记
 
-LoopWDog::LoopDieCallback _loop_die_cb = OnLoopDie;  //! 回调函数
+LoopWDog::LoopBlockCallback _loop_die_cb = OnLoopBlock;  //! 回调函数
 
 void SendLoopFunc() {
   std::lock_guard<std::mutex> lg(_mutex_lock);
@@ -78,13 +78,13 @@ void ThreadProc() {
 }
 
 //! 默认线程超时执行函数
-void OnLoopDie(const std::string &name) {
-  LogWarn("loop \"%s\" die!", name.c_str());
+void OnLoopBlock(const std::string &name) {
+  LogWarn("loop \"%s\" block!", name.c_str());
 }
 
 }
 
-void LoopWDog::SetLoopDieCallback(const LoopDieCallback &cb) {
+void LoopWDog::SetLoopBlockCallback(const LoopBlockCallback &cb) {
   assert(cb != nullptr);
   _loop_die_cb = cb;
 }
