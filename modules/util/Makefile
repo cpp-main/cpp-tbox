@@ -5,7 +5,6 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	pid_file.h \
-	thread_wdog.h \
 	string.h \
 	fs.h \
 	argument_parser.h \
@@ -20,7 +19,6 @@ HEAD_FILES = \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
-	thread_wdog.cpp \
 	string.cpp \
 	fs.cpp \
 	argument_parser.cpp \
@@ -36,7 +34,6 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
-	thread_wdog_test.cpp \
 	pid_file_test.cpp \
 	string_test.cpp \
 	fs_test.cpp \
