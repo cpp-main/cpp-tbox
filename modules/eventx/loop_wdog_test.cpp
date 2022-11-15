@@ -2,7 +2,8 @@
 #include <thread>
 #include "loop_wdog.h"
 #include <tbox/base/scope_exit.hpp>
-#include <tbox/base/log_output.h>
+//#include <tbox/base/log_output.h>
+//#include <tbox/base/log.h>
 
 namespace tbox {
 namespace eventx {
@@ -12,17 +13,20 @@ using namespace std::chrono;
 
 TEST(LoopWDog, Normal)
 {
+  LoopWDog::Start();
+
   auto sp_loop = Loop::New();
   SetScopeExitAction([=] {delete sp_loop;});
+  LoopWDog::Register(sp_loop, "main_loop");
 
   int die_cb_count = 0;
   LoopWDog::SetLoopDieCallback(
     [&](const std::string &name) { ++die_cb_count; }
   );
-  LoopWDog::Start();
+
   sp_loop->exitLoop(std::chrono::seconds(6));
-  LoopWDog::Register(sp_loop, "main_loop");
   sp_loop->runLoop();
+
   LoopWDog::Unregister(sp_loop);
   LoopWDog::Stop();
 
@@ -31,6 +35,8 @@ TEST(LoopWDog, Normal)
 
 TEST(LoopWDog, MainLoopBlock)
 {
+  LoopWDog::Start();
+
   auto sp_loop = Loop::New();
   SetScopeExitAction([=] {delete sp_loop;});
   LoopWDog::Register(sp_loop, "main_loop");
@@ -43,19 +49,22 @@ TEST(LoopWDog, MainLoopBlock)
     }
   );
 
-  sp_loop->runInLoop([] { std::this_thread::sleep_for(std::chrono::seconds(2)); });
-  sp_loop->exitLoop(std::chrono::seconds(7));
+  sp_loop->runInLoop([] { std::this_thread::sleep_for(std::chrono::seconds(7)); });
+  sp_loop->exitLoop(std::chrono::seconds(8));
 
-  LoopWDog::Start();
   sp_loop->runLoop();
+
+  LoopWDog::Unregister(sp_loop);
   LoopWDog::Stop();
 
   EXPECT_EQ(die_cb_count, 1);
-  LoopWDog::Unregister(sp_loop);
 }
 
 TEST(LoopWDog, WorkLoopBlock)
 {
+  //LogOutput_Initialize();
+  LoopWDog::Start();
+
   auto sp_loop = Loop::New();
   auto sp_work_loop = Loop::New();
 
@@ -76,16 +85,28 @@ TEST(LoopWDog, WorkLoopBlock)
   LoopWDog::Register(sp_loop, "main_loop");
   LoopWDog::Register(sp_work_loop, "work_loop");
 
-  sp_loop->exitLoop(std::chrono::seconds(7));
+  std::thread t([=] { sp_work_loop->runLoop(); });
+  sp_work_loop->runInLoop(
+    [] {
+      //LogTrace("begin");
+      std::this_thread::sleep_for(std::chrono::seconds(7));
+      //LogTrace("end");
+    }
+  );
 
-  LoopWDog::Start();
+  sp_loop->exitLoop(std::chrono::seconds(8));
   sp_loop->runLoop();
-  LoopWDog::Stop();
+
+  sp_work_loop->runInLoop([sp_work_loop] { sp_work_loop->exitLoop(); });
 
   LoopWDog::Unregister(sp_work_loop);
   LoopWDog::Unregister(sp_loop);
 
-  EXPECT_EQ(die_cb_count, 2);
+  t.join();
+
+  EXPECT_EQ(die_cb_count, 1);
+  LoopWDog::Stop();
+  //LogOutput_Cleanup();
 }
 
 }

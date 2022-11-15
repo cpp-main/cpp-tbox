@@ -128,7 +128,7 @@ void LoopWDog::Unregister(event::Loop *loop) {
     }
   );
 
-  if (iter == _loop_info_vec.end()) {
+  if (iter != _loop_info_vec.end()) {
     _loop_info_vec.erase(iter, _loop_info_vec.end()); 
   }
 }
