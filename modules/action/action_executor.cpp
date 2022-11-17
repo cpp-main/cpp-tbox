@@ -7,7 +7,10 @@
 namespace tbox {
 namespace action {
 
+ActionExecutor::ActionExecutor() { }
+
 ActionExecutor::~ActionExecutor() {
+  assert(cb_level_ == 0);
   for (auto &action_deque : action_deque_array_) {
     for (auto item : action_deque)
           delete item.action;
@@ -15,15 +18,15 @@ ActionExecutor::~ActionExecutor() {
   }
 }
 
-ActionExecutor::ActionId ActionExecutor::append(Action *action, int level) {
-  assert(0 <= level && level <= 2);
+ActionExecutor::ActionId ActionExecutor::append(Action *action, int prio) {
+  assert(0 <= prio && prio <= 2);
   assert(action != nullptr);
 
   Item item = {
     .id = allocActionId(),
     .action = action
   };
-  action_deque_array_.at(level).push_back(item);
+  action_deque_array_.at(prio).push_back(item);
   action->setFinishCallback([this](bool) { schedule(); });
   schedule();
   return item.id;
@@ -68,7 +71,7 @@ bool ActionExecutor::cancel(ActionId action_id) {
   return false;
 }
 
-void ActionExecutor::stop() {
+void ActionExecutor::cancelAll() {
   for (auto &action_deque : action_deque_array_) {
     if (!action_deque.empty()) {
       auto action_item = action_deque.front();
@@ -80,6 +83,8 @@ void ActionExecutor::stop() {
 ActionExecutor::ActionId ActionExecutor::allocActionId() { return ++action_id_alloc_counter_; }
 
 void ActionExecutor::schedule() {
+  assert(cb_level_ == 0);
+
   while (true) {
     //! 找出优先级最高，且不为空的队列
     int ready_deque_index = -1;
@@ -92,8 +97,10 @@ void ActionExecutor::schedule() {
 
     //! 如果所有的队列都是空的，那么就直接退出
     if (ready_deque_index == -1) {
+      ++cb_level_;
       if (all_finished_cb_)
         all_finished_cb_();
+      --cb_level_;
       return;
     }
 
@@ -110,14 +117,18 @@ void ActionExecutor::schedule() {
       if (item.action->state() == Action::State::kIdle) {
         if (item.action->start()) {
           curr_action_deque_index_ = ready_deque_index;
+          ++cb_level_;
           if (action_started_cb_)
             action_started_cb_(item.id);
+          --cb_level_;
         } else {
           ready_deque.pop_front();
           delete item.action;
           curr_action_deque_index_ = -1;
+          ++cb_level_;
           if (action_finished_cb_)
             action_finished_cb_(item.id);
+          --cb_level_;
         }
 
       //! 被暂停了的，要恢复
@@ -131,8 +142,10 @@ void ActionExecutor::schedule() {
         ready_deque.pop_front();
         delete item.action;
         curr_action_deque_index_ = -1;
+        ++cb_level_;
         if (action_finished_cb_)
           action_finished_cb_(item.id);
+        --cb_level_;
 
       //! 其它状态：运行中，不需要处理
       } else {
