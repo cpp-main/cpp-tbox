@@ -97,7 +97,11 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     filename_ = filename;
 
     ofs_.open(filename_, ofstream::out | ofstream::app);
-    return ofs_.is_open();
+    if (!ofs_.is_open()) {
+        cerr << "Err: open file " << filename_ << " fail." << endl;
+        return false;
+    }
+    return true;
 }
 
 }
