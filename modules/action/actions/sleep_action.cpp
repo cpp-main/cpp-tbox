@@ -30,13 +30,13 @@ bool SleepAction::onStop() {
 }
 
 bool SleepAction::onPause() {
-  LogUndo();
-  return false;
+  //FIXME:
+  return timer_->disable();
 }
 
 bool SleepAction::onResume() {
-  LogUndo();
-  return false;
+  //FIXME:
+  return timer_->enable();
 }
 
 void SleepAction::onReset() {
