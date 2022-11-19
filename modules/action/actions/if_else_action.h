@@ -16,10 +16,8 @@ namespace action {
  */
 class IfElseAction : public Action {
   public:
-    explicit IfElseAction(event::Loop &loop,
-                          Action *cond_action,
-                          Action *if_action,
-                          Action *else_action);
+    explicit IfElseAction(event::Loop &loop, Action *cond_action,
+                          Action *if_action, Action *else_action);
     virtual ~IfElseAction();
 
     virtual std::string type() const override { return "IfElse"; }
