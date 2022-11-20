@@ -128,9 +128,14 @@ bool Action::finish(bool is_succ) {
   }
 }
 
-std::string Action::ToString(State state) {
+std::string ToString(Action::State state) {
   const char *tbl[] = { "idle", "running", "pause", "finished" };
   return tbl[static_cast<size_t>(state)];
+}
+
+std::string ToString(Action::Result result) {
+  const char *tbl[] = { "unsure", "success", "fail" };
+  return tbl[static_cast<size_t>(result)];
 }
 
 }

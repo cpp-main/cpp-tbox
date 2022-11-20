@@ -29,9 +29,12 @@ int ParallelAction::append(Action *action) {
 }
 
 bool ParallelAction::onStart() {
-  for (Action *action : children_)
-    action->start();
-  return true;
+  for (size_t index = 0; index < children_.size(); ++index) {
+    Action *action = children_.at(index);
+    if (!action->start())
+      fail_set_.insert(index);
+  }
+  return fail_set_.size() != children_.size(); //! 如果失败的个数等于总个数，则表示全部失败了
 }
 
 bool ParallelAction::onStop() {
@@ -41,13 +44,19 @@ bool ParallelAction::onStop() {
 }
 
 bool ParallelAction::onPause() {
-  LogUndo();
-  return false;
+  for (Action *action : children_) {
+    if (action->state() == Action::State::kRunning)
+      action->pause();
+  }
+  return true;
 }
 
 bool ParallelAction::onResume() {
-  LogUndo();
-  return false;
+  for (Action *action : children_) {
+    if (action->state() == Action::State::kPause)
+      action->resume();
+  }
+  return true;
 }
 
 void ParallelAction::onReset() {

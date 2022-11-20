@@ -51,12 +51,10 @@ class Action {
     bool stop();    //!< 停止
     void reset();   //!< 重置
 
-    static std::string ToString(State state);
-
   protected:
     bool finish(bool is_succ);
 
-    virtual bool onStart() { return true; }
+    virtual bool onStart() { return true; }   //! WARN: 启动失败是一种异常，要少用
     virtual bool onPause() { return true; }
     virtual bool onResume() { return true; }
     virtual bool onStop() { return true; }
@@ -73,6 +71,9 @@ class Action {
     State state_ = State::kIdle;
     Result result_ = Result::kUnsure;
 };
+
+std::string ToString(Action::State state);
+std::string ToString(Action::Result result);
 
 }
 }
