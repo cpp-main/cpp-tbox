@@ -2,6 +2,7 @@
 
 #include <ev.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/defines.h>
 
 #include "fd_event.h"
 #include "timer_event.h"
@@ -34,6 +35,11 @@ void LibevLoop::runLoop(Mode mode)
 
 void LibevLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
+    if (sp_exit_timer_ != nullptr) {
+        sp_exit_timer_->disable();
+        CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
+    }
+
     if (wait_time.count() == 0) {
         ev_break(sp_ev_loop_, EVBREAK_ALL);
     } else {

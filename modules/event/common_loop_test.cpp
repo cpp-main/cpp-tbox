@@ -510,3 +510,18 @@ TEST(CommonLoop, RunInLoopBenchmark)
     }
 }
 
+TEST(CommonLoop, ExitLoopMultiTimes)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        sp_loop->runInLoop([sp_loop] { sp_loop->exitLoop(); });
+        sp_loop->exitLoop(chrono::seconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+    }
+}
+
