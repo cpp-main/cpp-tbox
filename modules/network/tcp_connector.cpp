@@ -264,7 +264,7 @@ void TcpConnector::onSocketWritable()
                 LogWarn("connected callback is not set");
 
         } else {    //! 连接失败
-            LogDbg("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));
+            LogNotice("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));
             //! 状态切换：kConnecting --> kReconnectDelay
             exitConnectingState();
             onConnectFail();

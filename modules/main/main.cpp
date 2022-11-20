@@ -121,7 +121,7 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
             apps.stop();
             ctx.stop();
             ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-            LogInfo("Loop will exit after %d sec", loop_exit_wait);
+            LogDbg("Loop will exit after %d sec", loop_exit_wait);
         }
     );
 
@@ -131,7 +131,7 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
 
     stop_signal->enable();
 
-    LogInfo("Start!");
+    LogDbg("Start!");
 
     try {
         ctx.loop()->runLoop();
@@ -141,7 +141,7 @@ void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
         LogErr("catch unknown execption");
     }
 
-    LogInfo("Stoped");
+    LogDbg("Stoped");
 
     eventx::LoopWDog::Unregister(ctx.loop());
     eventx::LoopWDog::Stop();
