@@ -9,7 +9,11 @@ namespace action {
 
 class SleepAction : public Action {
   public:
+    using Generator = std::function<std::chrono::milliseconds ()>;
+
     SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span);
+    SleepAction(event::Loop &loop, const Generator &gen);
+
     ~SleepAction();
 
     virtual std::string type() const override { return "Sleep"; }
@@ -23,6 +27,11 @@ class SleepAction : public Action {
 
   private:
     event::TimerEvent *timer_;
+    std::chrono::milliseconds time_span_;
+    Generator gen_;
+
+    std::chrono::steady_clock::time_point finish_time_;
+    std::chrono::milliseconds remain_time_span_;
 };
 
 }

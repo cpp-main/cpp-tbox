@@ -12,7 +12,6 @@ HEAD_FILES = \
 	event_publisher_impl.h \
 	actions/nondelay_action.h \
 	actions/sleep_action.h \
-	actions/dynamic_sleep_action.h \
 	actions/sequence_action.h \
 	actions/fallback_action.h \
 	actions/parallel_action.h \
@@ -28,7 +27,6 @@ CPP_SRC_FILES = \
 	event_publisher_impl.cpp \
 	actions/nondelay_action.cpp \
 	actions/sleep_action.cpp \
-	actions/dynamic_sleep_action.cpp \
 	actions/sequence_action.cpp \
 	actions/fallback_action.cpp \
 	actions/parallel_action.cpp \
@@ -44,7 +42,6 @@ TEST_CPP_SRC_FILES = \
 	event_publisher_impl_test.cpp \
 	action_executor_test.cpp \
 	actions/sleep_action_test.cpp \
-	actions/dynamic_sleep_action_test.cpp \
 	actions/nondelay_action_test.cpp \
 	actions/sequence_action_test.cpp \
 	actions/fallback_action_test.cpp \
