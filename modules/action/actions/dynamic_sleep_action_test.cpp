@@ -38,6 +38,21 @@ TEST(DynamicSleepAction, OneAction) {
   EXPECT_GE(millisec_count, 49);
 }
 
+//  测试以下逻辑
+//
+//  int time_tbl[] = { 50, 100, 200, 150, 10 };
+//  size_t index = 0;
+//  std::vector<std::chrono::steady_clock::time_point> ts;
+//
+//  ts.push_back(std::chrono::steady_clock::now());
+//  while (index < NUMBER_OF_ARRAY(time_tbl)) {
+//    Sleep(time_tbl[index]);
+//    ts.push_back(std::chrono::steady_clock::now());
+//    ++index;
+//  }
+//
+//  检查 ts 中相邻两个之间的时间差是否与 time_tbl 一致
+//
 TEST(DynamicSleepAction, LoopAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
