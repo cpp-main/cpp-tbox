@@ -129,7 +129,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     }
 
     d_->cond_var.notify_one();
-    LogInfo("task_id:%u", token.id());
+    LogDbg("task_id:%u", token.id());
 
     return token;
 }
@@ -211,7 +211,7 @@ void ThreadPool::cleanup()
 
 void ThreadPool::threadProc(ThreadToken thread_token)
 {
-    LogInfo("thread %u start", thread_token.id());
+    LogDbg("thread %u start", thread_token.id());
 
     while (true) {
         Task* item = nullptr;
@@ -276,7 +276,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
         }
     }
 
-    LogInfo("thread %u exit", thread_token.id());
+    LogDbg("thread %u exit", thread_token.id());
 }
 
 bool ThreadPool::createWorker()

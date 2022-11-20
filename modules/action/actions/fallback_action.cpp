@@ -45,20 +45,20 @@ bool FallbackAction::onStart() {
 
 bool FallbackAction::onStop() {
   if (index_ < children_.size())
-    children_.at(index_)->stop();
-  return true;
+    return children_.at(index_)->stop();
+  return false;
 }
 
 bool FallbackAction::onPause() {
   if (index_ < children_.size())
-    children_.at(index_)->pause();
-  return true;
+    return children_.at(index_)->pause();
+  return false;
 }
 
 bool FallbackAction::onResume() {
   if (index_ < children_.size())
-    children_.at(index_)->resume();
-  return true;
+    return children_.at(index_)->resume();
+  return false;
 }
 
 void FallbackAction::onReset() {

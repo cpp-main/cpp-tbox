@@ -504,9 +504,6 @@ void Client::onLog(int level, const char *str)
 {
     auto new_level = LOG_LEVEL_DEBUG;
     switch (level & 0x1F) {
-        case MOSQ_LOG_INFO:
-            new_level = LOG_LEVEL_INFO;
-            break;
         case MOSQ_LOG_ERR:
             new_level = LOG_LEVEL_ERROR;
             break;
@@ -516,6 +513,7 @@ void Client::onLog(int level, const char *str)
         case MOSQ_LOG_NOTICE:
             new_level = LOG_LEVEL_NOTICE;
             break;
+        default:; //! regard MOSQ_LOG_INFO as LOG_LEVEL_DEBUG
     }
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, "%s", str);
 }

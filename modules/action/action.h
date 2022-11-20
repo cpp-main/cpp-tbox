@@ -60,7 +60,7 @@ class Action {
   protected:
     bool finish(bool is_succ);
 
-    virtual bool onStart() { return true; }
+    virtual bool onStart() { return true; }   //! WARN: 启动失败是一种异常，要少用
     virtual bool onPause() { return true; }
     virtual bool onResume() { return true; }
     virtual bool onStop() { return true; }

@@ -131,6 +131,11 @@ void EpollLoop::runLoop(Mode mode)
 
 void EpollLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 {
+    if (sp_exit_timer_ != nullptr) {
+        sp_exit_timer_->disable();
+        CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
+    }
+
     if (wait_time.count() == 0) {
         keep_running_ = false;
     } else {

@@ -45,20 +45,20 @@ bool SequenceAction::onStart() {
 
 bool SequenceAction::onStop() {
   if (index_ < children_.size())
-    children_.at(index_)->stop();
-  return true;
+    return children_.at(index_)->stop();
+  return false;
 }
 
 bool SequenceAction::onPause() {
   if (index_ < children_.size())
-    children_.at(index_)->pause();
-  return true;
+    return children_.at(index_)->pause();
+  return false;
 }
 
 bool SequenceAction::onResume() {
   if (index_ < children_.size())
-    children_.at(index_)->resume();
-  return true;
+    return children_.at(index_)->resume();
+  return false;
 }
 
 void SequenceAction::onReset() {
@@ -70,7 +70,8 @@ void SequenceAction::onReset() {
 
 void SequenceAction::startOtheriseFinish() {
   if (index_ < children_.size()) {
-    children_.at(index_)->start();
+    if (!children_.at(index_)->start())
+      finish(false);
   } else {
     finish(true);
   }
