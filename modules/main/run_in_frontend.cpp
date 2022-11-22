@@ -1,18 +1,12 @@
-#include <vector>
 #include <iostream>
 
 #include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/json.hpp>
-
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
 #include <tbox/event/signal_event.h>
-
 #include <tbox/eventx/loop_wdog.h>
 #include <tbox/util/pid_file.h>
-#include <tbox/util/fs.h>
 
 #include "module.h"
 #include "context_imp.h"
@@ -24,16 +18,50 @@ namespace main {
 
 extern void RegisterSignals();
 extern void RegisterApps(Module &root, Context &ctx);
-extern void Run(ContextImp &ctx, Module &apps, int loop_exit_wait);
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
-class Apps : public Module {
-  public:
-    Apps(Context &ctx) : Module("", ctx) {
-        RegisterApps(*this, ctx);
+namespace {
+void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
+{
+    auto stop_signal = ctx.loop()->newSignalEvent();
+
+    //! 预定在离开时自动释放对象，确保无内存泄漏
+    SetScopeExitAction([stop_signal] { delete stop_signal; });
+
+    stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
+    stop_signal->setCallback(
+        [&] (int signo) {
+            LogInfo("Got signal %d", signo);
+            apps.stop();
+            ctx.stop();
+            ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
+            LogDbg("Loop will exit after %d sec", loop_exit_wait);
+        }
+    );
+
+    //! 启动前准备
+    eventx::LoopWDog::Start();
+    eventx::LoopWDog::Register(ctx.loop(), "main");
+
+    stop_signal->enable();
+
+    LogDbg("Start!");
+
+    try {
+        ctx.loop()->runLoop();
+    } catch (const std::exception &e) {
+        LogErr("catch execption: %s", e.what());
+    } catch (...) {
+        LogErr("catch unknown execption");
     }
-};
+
+    LogDbg("Stoped");
+
+    eventx::LoopWDog::Unregister(ctx.loop());
+    eventx::LoopWDog::Stop();
+}
+}
 
 int Main(int argc, char **argv)
 {
@@ -41,7 +69,7 @@ int Main(int argc, char **argv)
 
     Log log;
     ContextImp ctx;
-    Apps apps(ctx);
+    Module apps("", ctx);
 
     Json js_conf;
     Args args(js_conf);
@@ -105,46 +133,6 @@ int Main(int argc, char **argv)
 
     LogInfo("Bye!");
     return 0;
-}
-
-void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
-{
-    auto stop_signal   = ctx.loop()->newSignalEvent();
-
-    //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction([stop_signal] { delete stop_signal; });
-
-    stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
-    stop_signal->setCallback(
-        [&] (int signo) {
-            LogInfo("Got signal %d", signo);
-            apps.stop();
-            ctx.stop();
-            ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-            LogDbg("Loop will exit after %d sec", loop_exit_wait);
-        }
-    );
-
-    //! 启动前准备
-    eventx::LoopWDog::Start();
-    eventx::LoopWDog::Register(ctx.loop(), "main");
-
-    stop_signal->enable();
-
-    LogDbg("Start!");
-
-    try {
-        ctx.loop()->runLoop();
-    } catch (const std::exception &e) {
-        LogErr("catch execption: %s", e.what());
-    } catch (...) {
-        LogErr("catch unknown execption");
-    }
-
-    LogDbg("Stoped");
-
-    eventx::LoopWDog::Unregister(ctx.loop());
-    eventx::LoopWDog::Stop();
 }
 
 }

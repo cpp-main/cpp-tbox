@@ -10,7 +10,8 @@ HEAD_FILES = \
 
 CPP_SRC_FILES = \
 	context_imp.cpp \
-	main.cpp \
+	run_in_frontend.cpp \
+	run_in_backend.cpp \
 	signal.cpp \
 	misc.cpp \
 	args.cpp \

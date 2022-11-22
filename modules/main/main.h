@@ -25,6 +25,9 @@ namespace main {
  */
 int Main(int argc, char **argv);
 
+bool Start(int argc, char **argv);
+void Stop();
+
 /**
  * 获取 main 库的版本号
  */
