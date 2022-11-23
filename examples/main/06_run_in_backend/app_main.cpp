@@ -6,7 +6,7 @@ namespace main {
 
 void RegisterApps(Module &apps, Context &ctx)
 {
-    apps.add(new ::App(ctx));
+   apps.add(new ::App(ctx));
 }
 
 std::string GetAppDescribe()
