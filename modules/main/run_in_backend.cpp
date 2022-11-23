@@ -23,17 +23,17 @@ struct Runtime {
   Log log;
   ContextImp ctx;
   Module apps;
-  int loop_exit_wait = 0;
+  int loop_exit_wait = 1;
   std::thread thread;
 
   Runtime() : apps("", ctx) {}
 };
 
-std::shared_ptr<Runtime> runtime = nullptr;
+std::shared_ptr<Runtime> _runtime;
 
-void RunInThread()
+void RunInBackend()
 {
-  auto loop = runtime->ctx.loop();
+  auto loop = _runtime->ctx.loop();
 
   //! 启动前准备
   eventx::LoopWDog::Start();
@@ -57,16 +57,16 @@ void RunInThread()
 }
 
 bool Start(int argc, char **argv) {
-  if (runtime) {
+  if (_runtime) {
     std::cerr << "Err: process started" << std::endl;
     return false;
   }
 
-  runtime = std::make_shared<Runtime>();
+  _runtime = std::make_shared<Runtime>();
 
-  auto &log = runtime->log;
-  auto &ctx = runtime->ctx;
-  auto &apps = runtime->apps;
+  auto &log = _runtime->log;
+  auto &ctx = _runtime->ctx;
+  auto &apps = _runtime->apps;
 
   Json js_conf;
   Args args(js_conf);
@@ -95,7 +95,7 @@ bool Start(int argc, char **argv) {
   if (js_conf.contains("loop_exit_wait")) {
     auto js_loop_exit_wait = js_conf.at("loop_exit_wait");
     if (js_loop_exit_wait.is_number()) {
-      runtime->loop_exit_wait = js_loop_exit_wait.get<int>();
+      _runtime->loop_exit_wait = js_loop_exit_wait.get<int>();
     } else {
       std::cerr << "Warn: loop_exit_wait invaild" << std::endl;
     }
@@ -105,37 +105,51 @@ bool Start(int argc, char **argv) {
 
   LogInfo("Wellcome!");
 
-  if (!ctx.initialize(js_conf)) {
+  if (ctx.initialize(js_conf)) {
+    if (apps.initialize(js_conf)) {
+      if (ctx.start()) {  //! 启动所有应用
+        if (apps.start()) {
+          _runtime->thread = std::thread(RunInBackend);
+          return true;
+        } else {
+          LogErr("App start fail");
+        }
+        ctx.stop();
+      } else {
+        LogErr("Ctx start fail");
+      }
+      apps.cleanup();
+    } else {
+      LogErr("Apps init fail");
+    }
+    ctx.cleanup();
+  } else {
     LogErr("Context init fail");
-    return false;
   }
 
-  if (!apps.initialize(js_conf)) {
-    LogErr("Apps init fail");
-    return false;
-  }
-
-  if (!ctx.start() || !apps.start()) {  //! 启动所有应用
-    LogErr("Apps start fail");
-    return false;
-  }
-
-  runtime->thread = std::thread(RunInThread);
-  return true;
+  return false;
 }
 
 void Stop() {
-  if (!runtime) {
+  if (!_runtime) {
     std::cerr << "Err: process not start" << std::endl;
     return;
   }
 
-  runtime->ctx.loop()->exitLoop(std::chrono::seconds(runtime->loop_exit_wait));
-  runtime->thread.join();
+  _runtime->ctx.loop()->runInLoop(
+    [] {
+      _runtime->apps.stop();
+      _runtime->ctx.stop();
+      _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
+    }
+  );
+  _runtime->thread.join();
 
-  runtime->apps.cleanup();  //! cleanup所有应用
-  runtime->ctx.cleanup();
+  _runtime->apps.cleanup();  //! cleanup所有应用
+  _runtime->ctx.cleanup();
+
   LogInfo("Bye!");
+  _runtime.reset();
 }
 
 }

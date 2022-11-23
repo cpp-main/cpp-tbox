@@ -22,7 +22,7 @@ extern void RegisterApps(Module &root, Context &ctx);
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
 namespace {
-void Run(ContextImp &ctx, Module &apps, int loop_exit_wait)
+void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 {
     auto stop_signal = ctx.loop()->newSignalEvent();
 
@@ -118,7 +118,7 @@ int Main(int argc, char **argv)
     if (ctx.initialize(js_conf)) {
         if (apps.initialize(js_conf)) {
             if (ctx.start() && apps.start()) {  //! 启动所有应用
-                Run(ctx, apps, loop_exit_wait);
+                RunInFrontend(ctx, apps, loop_exit_wait);
             } else {
                 LogErr("Apps start fail");
             }
