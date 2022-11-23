@@ -141,6 +141,7 @@ void Stop() {
       _runtime->apps.stop();
       _runtime->ctx.stop();
       _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
+      LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
     }
   );
   _runtime->thread.join();
