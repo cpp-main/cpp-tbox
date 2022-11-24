@@ -12,20 +12,44 @@ namespace main {
 //////////////////////////////////////////////////////////////////////////
 
 /**
- * main框架主入口
+ * \brief   在前端运行tbox::main框架
  *
- * 正常情况下，用户无需调用它。main架构默认会调用。
+ * 正常情况下，用户无需调用它。tbox::main架构默认会调用。
  * 如果用户还想在程序启动前做些其它的动作，可以重新定义 main()，然后再调用它。
- * 例：
- * int main(int argc, char **argv)
- * {
- *     DoSomethingBeforeStart();
- *     return tbox::main::Main(argc, argv);
- * }
+ *
+ * 示例：
+ *  int main(int argc, char **argv) {
+ *    DoSomethingBeforeStart();
+ *    return tbox::main::Main(argc, argv);
+ *  }
+ *
+ * \note    该函数会阻塞，直致收到停止相关信号SIGINT,SIGTERM
  */
 int Main(int argc, char **argv);
 
+/**
+ * \brief 启动tbox::main框架，并运行在后端
+ *
+ * 与Main()相比，Start()不会阻塞。它会在后端创建独立的线程运行tbox::main框架。
+ * 它允许用户在不影响原程序框架的情况下，将tbox::main框架集成进去。
+ *
+ * 示例：
+ *  int main(int argc, char **argv) {
+ *    tbox::main::Start(argc, argv);
+ *    while (true) {
+ *      // origin framework
+ *    }
+ *    tbox::main::Stop();
+ *    return 0;
+ *  }
+ */
 bool Start(int argc, char **argv);
+
+/**
+ * \brief   停止后端运行的tbox::main框架
+ *
+ * 它给后端的tbox::main框架架发停止信号，并等待其正常退出。
+ */
 void Stop();
 
 /**

@@ -26,7 +26,9 @@ struct Runtime {
   int loop_exit_wait = 1;
   std::thread thread;
 
-  Runtime() : apps("", ctx) {}
+  Runtime() : apps("", ctx) {
+    RegisterApps(apps, ctx);
+  }
 };
 
 std::shared_ptr<Runtime> _runtime;

@@ -70,6 +70,7 @@ int Main(int argc, char **argv)
     Log log;
     ContextImp ctx;
     Module apps("", ctx);
+    RegisterApps(apps, ctx);
 
     Json js_conf;
     Args args(js_conf);
