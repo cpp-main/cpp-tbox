@@ -8,6 +8,8 @@
 #include <tbox/base/log.h>
 #include <tbox/util/backtrace.h>
 
+int main(int argc, char **argv);
+
 namespace tbox {
 namespace main {
 
@@ -21,7 +23,8 @@ void OnErrorSignal(int signo)
     const std::string &stack_str = util::Backtrace::DumpCallStack(32, 0);
 
     LogFatal("Receive signal %d", signo);
-    LogFatal("\n-----call stack-----\n%s", stack_str.c_str());
+    LogFatal("main: <%p>\n-----call stack-----\n%s",
+      ::main, stack_str.c_str());
 
     if (error_exit_func)    //! 执行一些善后处理
         error_exit_func();
