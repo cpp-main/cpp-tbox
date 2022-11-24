@@ -35,10 +35,13 @@ int Main(int argc, char **argv);
  *
  * 示例：
  *  int main(int argc, char **argv) {
- *    tbox::main::Start(argc, argv);
+ *    if (tbox::main::Start(argc, argv))
+ *      return 0;
+ *
  *    while (true) {
  *      // origin framework
  *    }
+ *
  *    tbox::main::Stop();
  *    return 0;
  *  }

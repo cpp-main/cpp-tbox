@@ -31,7 +31,7 @@ struct Runtime {
   }
 };
 
-std::shared_ptr<Runtime> _runtime;
+Runtime* _runtime = nullptr;
 
 void RunInBackend()
 {
@@ -59,12 +59,12 @@ void RunInBackend()
 }
 
 bool Start(int argc, char **argv) {
-  if (_runtime) {
+  if (_runtime != nullptr) {
     std::cerr << "Err: process started" << std::endl;
     return false;
   }
 
-  _runtime = std::make_shared<Runtime>();
+  _runtime = new Runtime;
 
   auto &log = _runtime->log;
   auto &ctx = _runtime->ctx;
@@ -78,7 +78,7 @@ bool Start(int argc, char **argv) {
   apps.fillDefaultConfig(js_conf);
 
   if (!args.parse(argc, argv))
-    return 0;
+    return false;
 
   util::PidFile pid_file;
   if (js_conf.contains("pid_file")) {
@@ -133,7 +133,7 @@ bool Start(int argc, char **argv) {
 }
 
 void Stop() {
-  if (!_runtime) {
+  if (_runtime == nullptr) {
     std::cerr << "Err: process not start" << std::endl;
     return;
   }
@@ -152,7 +152,7 @@ void Stop() {
   _runtime->ctx.cleanup();
 
   LogInfo("Bye!");
-  _runtime.reset();
+  CHECK_DELETE_RESET_OBJ(_runtime);
 }
 
 }

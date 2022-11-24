@@ -20,8 +20,11 @@ void MainLoop() {
 }
 
 int main(int argc, char **argv) {
-  tbox::main::Start(argc, argv);
+  if (!tbox::main::Start(argc, argv))
+    return 0;
+
   MainLoop();
   tbox::main::Stop();
+
   return 0;
 }
