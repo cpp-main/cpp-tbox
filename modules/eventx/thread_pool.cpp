@@ -29,7 +29,7 @@ struct ThreadPool::Data {
     std::condition_variable cond_var;   //!< 条件变量
 
     cabinet::Cabinet<Task> undo_tasks_cabinet;
-    std::array<std::deque<TaskToken>, 5> undo_tasks_token; //!< 优先级任务列表，5级
+    std::array<std::deque<TaskToken>, THREAD_POOL_PRIO_SIZE> undo_tasks_token; //!< 优先级任务列表，THREAD_POOL_PRIO_SIZE级
     std::set<TaskToken> doing_tasks_token;    //!< 记录正在从事的任务
 
     size_t idle_thread_num = 0;         //!< 空间线程个数
@@ -105,12 +105,12 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
         return token;
     }
 
-    if (prio < -2)
-        prio = -2;
-    else if (prio > 2)
-        prio = 2;
+    if (prio < THREAD_POOL_PRIO_MIN)
+        prio = THREAD_POOL_PRIO_MIN;
+    else if (prio > THREAD_POOL_PRIO_MAX)
+        prio = THREAD_POOL_PRIO_MAX;
 
-    int level = prio + 2;
+    int level = prio + THREAD_POOL_PRIO_MAX;
 
     Task *item = new Task;
     if (item == nullptr)
@@ -207,6 +207,20 @@ void ThreadPool::cleanup()
     );
     d_->threads_cabinet.clear();
     d_->is_ready = false;
+}
+
+ThreadPool::Snapshot ThreadPool::snapshot() const
+{
+    Snapshot ss;
+    std::lock_guard<std::mutex> lg(d_->lock);
+
+    ss.idle_thread_num = d_->idle_thread_num;
+    ss.thread_num = d_->threads_cabinet.size();
+    ss.doing_task_num = d_->doing_tasks_token.size();
+    for (size_t i = 0; i < THREAD_POOL_PRIO_SIZE; ++i)
+        ss.undo_task_num[i] = d_->undo_tasks_token[i].size();
+
+    return ss;
 }
 
 void ThreadPool::threadProc(ThreadToken thread_token)

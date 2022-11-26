@@ -3,11 +3,22 @@
 
 #include <limits>
 #include <functional>
+#include <array>
 #include <tbox/event/forward.h>
 #include <tbox/base/cabinet_token.h>
 
 namespace tbox {
 namespace eventx {
+
+#ifndef THREAD_POOL_PRIO_MIN
+#define THREAD_POOL_PRIO_MIN (-2)
+#endif
+
+#ifndef THREAD_POOL_PRIO_MAX
+#define THREAD_POOL_PRIO_MAX (2)
+#endif
+
+#define THREAD_POOL_PRIO_SIZE (THREAD_POOL_PRIO_MAX - THREAD_POOL_PRIO_MIN + 1)
 
 /**
  * 线程池类
@@ -81,6 +92,14 @@ class ThreadPool {
      * 清理资源，并等待所有的worker线程结束
      */
     void cleanup();
+
+    struct Snapshot {
+        size_t thread_num = 0;
+        size_t idle_thread_num = 0;
+        std::array<size_t, THREAD_POOL_PRIO_SIZE> undo_task_num;
+        size_t doing_task_num = 0;
+    };
+    Snapshot snapshot() const;
 
   protected:
     using ThreadToken = cabinet::Token;
