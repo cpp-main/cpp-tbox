@@ -178,6 +178,30 @@ void ContextImp::buildTerminalNodes()
     }
 
     {
+        auto threadpool_node = wp_nodes->createDirNode("This is ThreadPool directory");
+        wp_nodes->mountNode(ctx_node, threadpool_node, "thread_pool");
+
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::ostringstream oss;
+                    auto snapshot = sp_thread_pool_->snapshot();
+                    oss << "thread_num: " << snapshot.thread_num << "\r\n";
+                    oss << "idle_thread_num: " << snapshot.idle_thread_num << "\r\n";
+                    oss << "undo_task_num:";
+                    for (size_t i = 0; i < THREAD_POOL_PRIO_SIZE; ++i)
+                        oss << " " << snapshot.undo_task_num[i];
+                    oss << "\r\n";
+                    oss << "doing_task_num: " << snapshot.doing_task_num << "\r\n";
+                    oss << "undo_task_peak_num: " << snapshot.undo_task_peak_num << "\r\n";
+                    s.send(oss.str());
+                }
+            , "Print thread pool's snapshot");
+            wp_nodes->mountNode(threadpool_node, func_node, "snapshot");
+        }
+    }
+
+    {
         auto info_node = wp_nodes->createDirNode("Information directory");
         wp_nodes->mountNode(wp_nodes->rootNode(), info_node, "info");
         {
