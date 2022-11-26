@@ -35,6 +35,8 @@ struct ThreadPool::Data {
     size_t idle_thread_num = 0;         //!< 空间线程个数
     cabinet::Cabinet<std::thread> threads_cabinet;
     bool all_threads_stop_flag = false; //!< 是否所有工作线程立即停止标记
+
+    size_t undo_task_peak_num_ = 0;
 };
 
 /**
@@ -124,8 +126,14 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
 
         d_->undo_tasks_token.at(level).push_back(token);
         //! 如果空间线程不够，且还可以再创建新的线程
-        if (d_->idle_thread_num == 0 && d_->threads_cabinet.size() < d_->max_thread_num)
-            createWorker();
+        if (d_->idle_thread_num == 0) {
+            if (d_->threads_cabinet.size() < d_->max_thread_num) {
+                createWorker();
+            } else {
+                if (d_->undo_task_peak_num_ < d_->undo_tasks_cabinet.size())
+                    d_->undo_task_peak_num_ = d_->undo_tasks_cabinet.size();
+            }
+        }
     }
 
     d_->cond_var.notify_one();
@@ -219,6 +227,7 @@ ThreadPool::Snapshot ThreadPool::snapshot() const
     ss.doing_task_num = d_->doing_tasks_token.size();
     for (size_t i = 0; i < THREAD_POOL_PRIO_SIZE; ++i)
         ss.undo_task_num[i] = d_->undo_tasks_token[i].size();
+    ss.undo_task_peak_num = d_->undo_task_peak_num_;
 
     return ss;
 }

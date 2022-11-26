@@ -98,6 +98,7 @@ class ThreadPool {
         size_t idle_thread_num = 0;
         std::array<size_t, THREAD_POOL_PRIO_SIZE> undo_task_num;
         size_t doing_task_num = 0;
+        size_t undo_task_peak_num = 0;
     };
     Snapshot snapshot() const;
 
