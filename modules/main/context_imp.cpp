@@ -81,7 +81,7 @@ bool ContextImp::initialize(const Json &cfg)
         }
     }
 
-    buildTerminalNodes();
+    initShell();
 
     return true;
 }
@@ -114,7 +114,7 @@ void ContextImp::cleanup()
     sp_thread_pool_->cleanup();
 }
 
-void ContextImp::buildTerminalNodes()
+void ContextImp::initShell()
 {
     using namespace terminal;
     TerminalNodes *wp_nodes = sp_terminal_;

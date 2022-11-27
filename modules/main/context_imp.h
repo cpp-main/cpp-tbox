@@ -31,7 +31,7 @@ class ContextImp : public Context {
     virtual terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
 
   protected:
-    void buildTerminalNodes();
+    void initShell();
 
   private:
     event::Loop *sp_loop_ = nullptr;
