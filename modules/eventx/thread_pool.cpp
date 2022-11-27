@@ -8,6 +8,7 @@
 #include <mutex>
 #include <algorithm>
 #include <condition_variable>
+#include <chrono>
 
 #include <tbox/base/log.h>
 #include <tbox/base/cabinet.hpp>
@@ -283,10 +284,13 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             LogDbg("thread %u pick task %u", thread_token.id(), item->token.id());
 
+            auto start_time_point = std::chrono::steady_clock::now();
             if (item->backend_task)
                 item->backend_task();
+            auto time_cost = std::chrono::steady_clock::now() - start_time_point;
 
-            LogDbg("thread %u finish task %u", thread_token.id(), item->token.id());
+            LogDbg("thread %u finish task %u, cost %d us",
+                   thread_token.id(), item->token.id(), time_cost.count() / 1000);
 
             if (item->main_cb)
                 d_->wp_loop->runInLoop(item->main_cb);
