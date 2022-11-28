@@ -17,6 +17,8 @@
 namespace tbox {
 namespace eventx {
 
+using Clock = std::chrono::steady_clock;
+
 //! ThreadPool 的私有数据
 struct ThreadPool::Data {
     event::Loop *wp_loop = nullptr; //!< 主线程
@@ -47,6 +49,7 @@ struct ThreadPool::Task {
     TaskToken token;
     NonReturnFunc backend_task;   //! 任务在工作线程中执行函数
     NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
+    Clock::time_point create_time_point;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +124,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
 
     item->backend_task = backend_task;
     item->main_cb = main_cb;
+    item->create_time_point = Clock::now();
     {
         std::lock_guard<std::mutex> lg(d_->lock);
         item->token = token = d_->undo_tasks_cabinet.alloc(item);
@@ -284,17 +288,18 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             LogDbg("thread %u pick task %u", thread_token.id(), item->token.id());
 
-            //! 开始计时
-            auto start_time_point = std::chrono::steady_clock::now();
+            auto exec_time_point = Clock::now();
+            auto wait_time_cost = exec_time_point - item->create_time_point;
 
             if (item->backend_task)
                 item->backend_task();
 
-            //! 统计所耗时长
-            auto time_cost = std::chrono::steady_clock::now() - start_time_point;
+            auto exec_time_cost = Clock::now() - exec_time_point;
 
-            LogDbg("thread %u finish task %u, cost %d us",
-                   thread_token.id(), item->token.id(), time_cost.count() / 1000);
+            LogDbg("thread %u finish task %u, cost %d + %d us",
+                   thread_token.id(), item->token.id(),
+                   wait_time_cost.count() / 1000,
+                   exec_time_cost.count() / 1000);
 
             if (item->main_cb)
                 d_->wp_loop->runInLoop(item->main_cb);
