@@ -93,13 +93,16 @@ class ThreadPool {
      */
     void cleanup();
 
+    //! 快照结构
     struct Snapshot {
-        size_t thread_num = 0;
-        size_t idle_thread_num = 0;
-        std::array<size_t, THREAD_POOL_PRIO_SIZE> undo_task_num;
-        size_t doing_task_num = 0;
-        size_t undo_task_peak_num = 0;
+        size_t thread_num = 0;          //!< 当前存活线程数
+        size_t idle_thread_num = 0;     //!< 空闲线程数
+        std::array<size_t, THREAD_POOL_PRIO_SIZE> undo_task_num;  //! 各优先级等待任务数
+        size_t doing_task_num = 0;      //!< 正在执行的任务数
+        size_t undo_task_peak_num = 0;  //!< 等待任务数峰值
     };
+
+    //! 获取当前快照
     Snapshot snapshot() const;
 
   protected:

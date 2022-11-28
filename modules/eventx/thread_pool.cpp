@@ -284,9 +284,13 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             LogDbg("thread %u pick task %u", thread_token.id(), item->token.id());
 
+            //! 开始计时
             auto start_time_point = std::chrono::steady_clock::now();
+
             if (item->backend_task)
                 item->backend_task();
+
+            //! 统计所耗时长
             auto time_cost = std::chrono::steady_clock::now() - start_time_point;
 
             LogDbg("thread %u finish task %u, cost %d us",

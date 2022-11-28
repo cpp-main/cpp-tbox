@@ -182,6 +182,7 @@ void ContextImp::initShell()
         wp_nodes->mountNode(ctx_node, threadpool_node, "thread_pool");
 
         {
+            //! 打印线程池快照
             auto func_node = wp_nodes->createFuncNode(
                 [this] (const Session &s, const Args &args) {
                     std::ostringstream oss;
