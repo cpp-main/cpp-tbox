@@ -137,8 +137,8 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
         }
     }
 
+    LogDbg("create task %u", token.id());
     d_->cond_var.notify_one();
-    LogDbg("task_id:%u", token.id());
 
     return token;
 }
