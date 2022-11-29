@@ -18,6 +18,7 @@ namespace main {
 
 extern void RegisterSignals();
 extern void RegisterApps(Module &root, Context &ctx);
+extern void SayHello();
 
 std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
@@ -108,7 +109,7 @@ int Main(int argc, char **argv)
 
     log.initialize(argv[0], ctx, js_conf);
 
-    LogInfo("Wellcome!");
+    SayHello();
 
     //! 注册异常退出时的动作，在异常信号触发时调用
     error_exit_func = [&] {

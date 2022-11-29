@@ -17,6 +17,7 @@ namespace tbox {
 namespace main {
 
 extern void RegisterApps(Module &root, Context &ctx);
+extern void SayHello();
 
 namespace {
 struct Runtime {
@@ -105,7 +106,7 @@ bool Start(int argc, char **argv) {
 
   log.initialize(argv[0], ctx, js_conf);
 
-  LogInfo("Wellcome!");
+  SayHello();
 
   if (ctx.initialize(js_conf)) {
     if (apps.initialize(js_conf)) {

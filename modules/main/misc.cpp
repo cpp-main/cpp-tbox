@@ -55,5 +55,15 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     major = minor = rev = build = 0;
 }
 
+void SayHello()
+{
+    LogInfo("=== TBOX MAIN STARTUP ===");
+    LogInfo("App Describe: %s", GetAppDescribe().c_str());
+
+    int major, minor, rev, build;
+    GetAppVersion(major, minor, rev, build);
+    LogInfo("App Version : %d.%d.%d_%d", major, minor, rev, build);
+}
+
 }
 }
