@@ -73,6 +73,8 @@ SocketFd TcpAcceptor::createSocket(SockAddr::Type addr_type)
 int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 {
     if (bind_addr.type() == SockAddr::Type::kIPv4) {
+        sock_fd.setReuseAddress(true);
+
         struct sockaddr_in sock_addr;
         socklen_t len = bind_addr.toSockAddr(sock_addr);
         return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
