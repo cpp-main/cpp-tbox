@@ -10,14 +10,16 @@ namespace util {
 using SM = StateMachine;
 
 enum State {
-    STATE_A = 1,
+    STATE_TERM = 0,
+    STATE_A,
     STATE_B,
     STATE_C,
     STATE_D,
 };
 
 enum Event {
-    EVENT_1 = 1,
+    EVENT_ANY = 0,
+    EVENT_1,
     EVENT_2,
     EVENT_3,
     EVENT_4,
@@ -553,11 +555,34 @@ TEST(StateMachine, InnerAnyEvent) {
 }
 
 TEST(StateMachine, SwitchStateInEvent) {
-    enum class State { kTerm, k1, k2 };
-    enum class Event { kAny, k1, k2 };
-
     SM sm;
-    //TODO
+    sm.newState(STATE_A, nullptr, nullptr);
+    sm.newState(STATE_B, nullptr, nullptr);
+    sm.setInitState(STATE_A);
+
+    sm.addEvent(STATE_A, EVENT_ANY,
+        [](SM::Event e) -> SM::StateID {
+            if (e.id == EVENT_1)
+                return STATE_B;
+            if (e.id == EVENT_2)
+                return STATE_TERM;
+            return -1;
+        }
+    );
+    sm.addEvent(STATE_B, EVENT_1,
+        [](SM::Event e) -> SM::StateID { return STATE_A; }
+    );
+    sm.start();
+
+    EXPECT_EQ(sm.currentState(), STATE_A);
+    EXPECT_TRUE(sm.run(EVENT_1));
+    EXPECT_EQ(sm.currentState(), STATE_B);
+    EXPECT_FALSE(sm.run(EVENT_2));
+    EXPECT_TRUE(sm.run(EVENT_1));
+    EXPECT_EQ(sm.currentState(), STATE_A);
+    EXPECT_TRUE(sm.run(EVENT_2));
+    EXPECT_EQ(sm.currentState(), STATE_TERM);
+    EXPECT_TRUE(sm.isTerminated());
 }
 
 
