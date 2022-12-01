@@ -511,9 +511,9 @@ TEST(StateMachine, InnerEvent) {
     sm.setInitState(State::k1);
     sm.newState(State::k1, nullptr, nullptr);
     sm.newState(State::k2, nullptr, nullptr);
-    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; });
+    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; return -1; });
     sm.addRoute(State::k1, Event::k1, State::k2, nullptr, nullptr);
-    sm.addEvent(State::k2, Event::k1, [&](SM::Event) { is_k2_event_run = true; });
+    sm.addEvent(State::k2, Event::k1, [&](SM::Event) { is_k2_event_run = true; return -1; });
 
     sm.start();
     sm.run(Event::k1);
@@ -538,8 +538,8 @@ TEST(StateMachine, InnerAnyEvent) {
 
     sm.setInitState(State::k1);
     sm.newState(State::k1, nullptr, nullptr);
-    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; });
-    sm.addEvent(State::k1, Event::kAny, [&](SM::Event) { is_any_event_run = true; });
+    sm.addEvent(State::k1, Event::k1, [&](SM::Event) { is_k1_event_run = true; return -1; });
+    sm.addEvent(State::k1, Event::kAny, [&](SM::Event) { is_any_event_run = true; return -1; });
 
     sm.start();
     sm.run(Event::k1);
@@ -551,6 +551,15 @@ TEST(StateMachine, InnerAnyEvent) {
     EXPECT_FALSE(is_k1_event_run);
     EXPECT_TRUE(is_any_event_run);
 }
+
+TEST(StateMachine, SwitchStateInEvent) {
+    enum class State { kTerm, k1, k2 };
+    enum class Event { kAny, k1, k2 };
+
+    SM sm;
+    //TODO
+}
+
 
 TEST(StateMachine, SetInitState)
 {

@@ -29,6 +29,7 @@ class StateMachine {
 
     using ActionFunc = std::function<void(Event)>;
     using GuardFunc  = std::function<bool(Event)>;
+    using EventFunc  = std::function<StateID(Event)>;
 
     using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, Event)>;
 
@@ -84,10 +85,10 @@ class StateMachine {
      *
      * \return  bool    成功与否
      */
-    bool addEvent(StateID state_id, EventID event_id, const ActionFunc &action);
+    bool addEvent(StateID state_id, EventID event_id, const EventFunc &action);
 
     template <typename S, typename E>
-    bool addEvent(S state_id, E event_id, const ActionFunc &action) {
+    bool addEvent(S state_id, E event_id, const EventFunc &action) {
         return addEvent(static_cast<StateID>(state_id), static_cast<EventID>(event_id), action);
     }
 

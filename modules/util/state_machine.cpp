@@ -20,7 +20,7 @@ class StateMachine::Impl {
   public:
     bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
     bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
-    bool addEvent(StateID state_id, EventID event_id, const ActionFunc &action);
+    bool addEvent(StateID state_id, EventID event_id, const EventFunc &action);
 
     void setInitState(StateID init_state_id) { init_state_id_ = init_state_id; }
 
@@ -48,8 +48,8 @@ class StateMachine::Impl {
         ActionFunc exit_action;
         StateMachine::Impl *sub_sm; //! 子状态机
         vector<Route> routes;   //! 转换路由
-        map<EventID, ActionFunc> events;  //! 内部事件
-        ActionFunc default_event;
+        map<EventID, EventFunc> events;  //! 内部事件
+        EventFunc default_event;
     };
 
     State* findState(StateID state_id) const;
@@ -85,7 +85,7 @@ bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_
     return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action);
 }
 
-bool StateMachine::addEvent(StateID state_id, EventID event_id, const ActionFunc &action)
+bool StateMachine::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
 {
     return impl_->addEvent(state_id, event_id, action);
 }
@@ -178,7 +178,7 @@ bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, State
     return true;
 }
 
-bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const ActionFunc &action)
+bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
 {
     if (action == nullptr) {
         LogWarn("action is nullptr", state_id);
@@ -279,15 +279,6 @@ bool StateMachine::Impl::run(Event event)
         return false;
     }
 
-    ++cb_level_;
-    //! 检查事件，并执行
-    auto event_iter = curr_state_->events.find(event.id);
-    if (event_iter != curr_state_->events.end())
-        event_iter->second(event);
-    else if (curr_state_->default_event)
-        curr_state_->default_event(event);
-    --cb_level_;
-
     //! 如果有子状态机，则给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
         bool ret = curr_state_->sub_sm->run(event);
@@ -296,27 +287,44 @@ bool StateMachine::Impl::run(Event event)
         curr_state_->sub_sm->stop();
     }
 
-    //! 找出可行的路径
-    auto route_iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
-        [event] (const Route &item) -> bool {
-            if (item.event_id != 0 && item.event_id != event.id)
-                return false;
-            if (item.guard != nullptr && !item.guard(event))
-                return false;
-            return true;
-        }
-    );
+    StateID next_state_id = -1;
+    ActionFunc route_action;
 
-    //! 如果没有跳转则直接退出
-    if (route_iter == curr_state_->routes.end())
-        return false;
+    //! 检查事件，并执行
+    ++cb_level_;
+    auto event_iter = curr_state_->events.find(event.id);
+    if (event_iter != curr_state_->events.end())
+        next_state_id = event_iter->second(event);
+    else if (curr_state_->default_event)
+        next_state_id = curr_state_->default_event(event);
+    --cb_level_;
 
-    //! 以下是有跳转的情况
-    const Route &route = *route_iter;
+    if (next_state_id < 0) {
+        //! 找出可行的路径
+        ++cb_level_;
+        auto route_iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
+            [event] (const Route &item) -> bool {
+                if (item.event_id != 0 && item.event_id != event.id)
+                    return false;
+                if (item.guard != nullptr && !item.guard(event))
+                    return false;
+                return true;
+            }
+        );
+        --cb_level_;
 
-    State *next_state = findState(route.next_state_id);
+        //! 如果没有跳转则直接退出
+        if (route_iter == curr_state_->routes.end())
+            return false;
+
+        //! 以下是有跳转的情况
+        next_state_id = route_iter->next_state_id;
+        route_action = route_iter->action;
+    }
+
+    State *next_state = findState(next_state_id);
     if (next_state == nullptr) {
-        if (route.next_state_id == 0) {
+        if (next_state_id == 0) {
             next_state = &_term_state_;
         } else {
             LogErr("Should not happen");
@@ -325,34 +333,27 @@ bool StateMachine::Impl::run(Event event)
     }
 
     ++cb_level_;
-
-    if (curr_state_ != next_state) {  //! 如果状态有变更
-      if (curr_state_->exit_action)
+    if (curr_state_->exit_action)
         curr_state_->exit_action(event);
 
-      if (route.action)
-        route.action(event);
+    if (route_action)
+        route_action(event);
 
-      if (next_state->enter_action)
+    if (next_state->enter_action)
         next_state->enter_action(event);
 
-      auto last_state = curr_state_;
-      curr_state_ = next_state;
-      if (state_changed_cb_)
+    auto last_state = curr_state_;
+    curr_state_ = next_state;
+    if (state_changed_cb_)
         state_changed_cb_(last_state->id, curr_state_->id, event);
 
-      //! 如果新的状态有子状态机，则启动子状态机并将事件交给子状态机处理
-      if (curr_state_->sub_sm != nullptr) {
+    //! 如果新的状态有子状态机，则启动子状态机并将事件交给子状态机处理
+    if (curr_state_->sub_sm != nullptr) {
         curr_state_->sub_sm->start();
         curr_state_->sub_sm->run(event);
-      }
-
-    } else {  //! 如果状态没变，则只执行Route的动作
-      if (route.action)
-          route.action(event);
     }
-
     --cb_level_;
+
     return true;
 }
 
