@@ -29,7 +29,8 @@ void OnErrorSignal(int signo)
     if (error_exit_func)    //! 执行一些善后处理
         error_exit_func();
 
-    ::exit(EXIT_FAILURE);
+    signal(SIGABRT, SIG_DFL);
+    std::abort();
 }
 
 void OnWarnSignal(int signo)
