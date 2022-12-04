@@ -115,6 +115,12 @@ void StateMachine::stop()
     impl_->stop();
 }
 
+bool StateMachine::restart()
+{
+    impl_->stop();
+    return impl_->start();
+}
+
 bool StateMachine::run(Event event)
 {
     return impl_->run(event);

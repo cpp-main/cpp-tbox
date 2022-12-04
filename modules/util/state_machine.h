@@ -121,6 +121,8 @@ class StateMachine {
     //! 停止状态机
     void stop();
 
+    bool restart();
+
     /**
      * \brief   运行状态机
      *

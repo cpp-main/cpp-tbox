@@ -188,10 +188,10 @@ TEST(StateMachine, Restart)
     EXPECT_TRUE(sm.run(EVENT_1));
     EXPECT_EQ(a_exit_counter, 1);
     EXPECT_EQ(b_enter_counter, 1);
-    sm.stop();
+    sm.restart();
     EXPECT_EQ(b_exit_counter, 1);
-    sm.start();
     EXPECT_EQ(a_enter_counter, 2);
+    EXPECT_EQ(sm.currentState(), STATE_A);
 }
 
 //! 主要测试用 enum class 定义的状态与事件是否能编译过
@@ -584,7 +584,6 @@ TEST(StateMachine, SwitchStateInEvent) {
     EXPECT_EQ(sm.currentState(), STATE_TERM);
     EXPECT_TRUE(sm.isTerminated());
 }
-
 
 TEST(StateMachine, SetInitState)
 {
