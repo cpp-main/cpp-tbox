@@ -48,12 +48,12 @@ bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, 
 
     if (p_node == nullptr || c_node == nullptr ||
         p_node->type() != NodeType::kDir) {
-        LogWarn("parent or child is invalid, or parent not directory");
+        LogWarn("mount '%s' fail, parent or child is invalid", name.c_str());
         return false;
     }
 
     if (name.empty() || name[0] == '!') {
-        LogWarn("name is invalid");
+        LogWarn("name '%s' is invalid", name.c_str());
         return false;
     }
 
