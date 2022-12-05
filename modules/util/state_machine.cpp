@@ -367,7 +367,7 @@ StateMachine::StateID StateMachine::Impl::currentState() const
 {
     if (curr_state_ == nullptr) {
         LogWarn("need start first");
-        return 0;
+        return -1;
     }
 
     return curr_state_->id;

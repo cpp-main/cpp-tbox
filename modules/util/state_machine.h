@@ -32,7 +32,7 @@ class StateMachine {
     using ActionFunc = std::function<void(Event)>;
     //! 条件判定函数，返回true表示条件成立，false表示条件不成立
     using GuardFunc  = std::function<bool(Event)>;
-    //! 事件处理函数，返回<0表示不进行状态变更，返回>=0表示需要进行状态转换
+    //! 事件处理函数，返回<0表示不进行状态转换，返回>=0表示需要进行状态转换
     using EventFunc  = std::function<StateID(Event)>;
     //! 状态变更回调函数
     using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, Event)>;
@@ -81,7 +81,7 @@ class StateMachine {
     }
 
     /**
-     * \brief   添加事件
+     * \brief   添加状态的事件处理
      *
      * \param   state_id        状态
      * \param   event_id        事件，0表示任意事件
@@ -141,8 +141,8 @@ class StateMachine {
     /**
      * \brief   获取当前状态ID
      *
-     * \return  >0 当前状态ID
-     * \return  =0 状态机未启动
+     * \return  >=0 当前状态ID
+     * \return  -1  状态机未启动
      */
     StateID currentState() const;
 
@@ -151,6 +151,7 @@ class StateMachine {
         return static_cast<S>(currentState());
     }
 
+    //! 是否已终止
     bool isTerminated() const;
 
   private:
