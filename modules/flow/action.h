@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_ACTION_H_20221001
-#define TBOX_ACTION_ACTION_H_20221001
+#ifndef TBOX_FLOW_FLOW_H_20221001
+#define TBOX_FLOW_FLOW_H_20221001
 
 #include <string>
 #include <functional>
@@ -85,4 +85,4 @@ std::string ToString(Action::Result result);
 }
 }
 
-#endif //TBOX_ACTION_ACTION_H_20221001
+#endif //TBOX_FLOW_FLOW_H_20221001

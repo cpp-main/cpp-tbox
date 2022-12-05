@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_IF_ELSE_H_20221022
-#define TBOX_ACTION_IF_ELSE_H_20221022
+#ifndef TBOX_FLOW_IF_ELSE_H_20221022
+#define TBOX_FLOW_IF_ELSE_H_20221022
 
 #include "../action.h"
 
@@ -45,4 +45,4 @@ class IfElseAction : public Action {
 }
 }
 
-#endif //TBOX_ACTION_IF_ELSE_H_20221022
+#endif //TBOX_FLOW_IF_ELSE_H_20221022

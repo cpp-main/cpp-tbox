@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_EVENT_PUBLISHER_H_20221002
-#define TBOX_ACTION_EVENT_PUBLISHER_H_20221002
+#ifndef TBOX_FLOW_EVENT_PUBLISHER_H_20221002
+#define TBOX_FLOW_EVENT_PUBLISHER_H_20221002
 
 #include <vector>
 #include "event_publisher.h"
@@ -23,4 +23,4 @@ class EventPublisherImpl : public EventPublisher {
 }
 }
 
-#endif //TBOX_ACTION_EVENT_PUBLISHER_H_20221002
+#endif //TBOX_FLOW_EVENT_PUBLISHER_H_20221002

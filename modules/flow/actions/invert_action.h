@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_INVERT_H_20221022
-#define TBOX_ACTION_INVERT_H_20221022
+#ifndef TBOX_FLOW_INVERT_H_20221022
+#define TBOX_FLOW_INVERT_H_20221022
 
 #include "../action.h"
 
@@ -34,4 +34,4 @@ class InvertAction : public Action {
 }
 }
 
-#endif //TBOX_ACTION_INVERT_H_20221022
+#endif //TBOX_FLOW_INVERT_H_20221022

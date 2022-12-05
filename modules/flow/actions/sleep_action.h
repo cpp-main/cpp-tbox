@@ -1,5 +1,5 @@
-#ifndef TBOX_ACTION_SLEEP_ACTION_H_20221002
-#define TBOX_ACTION_SLEEP_ACTION_H_20221002
+#ifndef TBOX_FLOW_SLEEP_FLOW_H_20221002
+#define TBOX_FLOW_SLEEP_FLOW_H_20221002
 
 #include "../action.h"
 #include <chrono>
@@ -37,4 +37,4 @@ class SleepAction : public Action {
 }
 }
 
-#endif //TBOX_ACTION_SLEEP_ACTION_H_20221002
+#endif //TBOX_FLOW_SLEEP_FLOW_H_20221002

@@ -1,5 +1,5 @@
-#ifndef TBOX_STATE_MACHINE_H_20220320
-#define TBOX_STATE_MACHINE_H_20220320
+#ifndef TBOX_FLOW_STATE_MACHINE_H_20220320
+#define TBOX_FLOW_STATE_MACHINE_H_20220320
 
 #include <functional>
 #include "event.h"
@@ -150,4 +150,4 @@ class StateMachine {
 }
 }
 
-#endif //TBOX_STATE_MACHINE_H_20220320
+#endif //TBOX_FLOW_STATE_MACHINE_H_20220320
