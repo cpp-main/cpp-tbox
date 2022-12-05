@@ -12,6 +12,7 @@ class StateMachine {
     using StateID = int;   //! StateID 为 0 与 1 的两个状态为特定状态
                            //! StateID = 0 的状态为终止状态，用户可以不用定义
                            //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
+                           //! StateID < 0 表示无效状态
     using EventID = int;   //! EventID = 0 表示任意事件，仅在 addRoute(), addEvent() 时使用
 
     struct Event {
@@ -27,10 +28,13 @@ class StateMachine {
       Event(ET e, DT *p) : id(static_cast<EventID>(e)), extra(p) { }
     };
 
+    //! 动作执行函数
     using ActionFunc = std::function<void(Event)>;
+    //! 条件判定函数，返回true表示条件成立，false表示条件不成立
     using GuardFunc  = std::function<bool(Event)>;
+    //! 事件处理函数，返回<0表示不进行状态变更，返回>=0表示需要进行状态转换
     using EventFunc  = std::function<StateID(Event)>;
-
+    //! 状态变更回调函数
     using StateChangedCallback = std::function<void(StateID/*from_state_id*/, StateID/*to_state_id*/, Event)>;
 
   public:
@@ -81,7 +85,7 @@ class StateMachine {
      *
      * \param   state_id        状态
      * \param   event_id        事件，0表示任意事件
-     * \param   action          执行的动作
+     * \param   action          事件对应的动作函数
      *
      * \return  bool    成功与否
      */
@@ -121,6 +125,8 @@ class StateMachine {
     //! 停止状态机
     void stop();
 
+    //! 重启状态机
+    //! 等价于先stop()再start()
     bool restart();
 
     /**
