@@ -19,7 +19,7 @@ TcpAcceptor::TcpAcceptor(event::Loop *wp_loop) :
 
 TcpAcceptor::~TcpAcceptor()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     if (sp_read_ev_ != nullptr)
         cleanup();
 }

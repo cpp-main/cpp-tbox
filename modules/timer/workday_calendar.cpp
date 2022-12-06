@@ -21,12 +21,12 @@ void WorkdayCalendar::updateWeekMask(uint8_t week_mask) {
 }
 
 void WorkdayCalendar::subscribe(Timer *timer) {
-  assert(timer != nullptr);
+  TBOX_ASSERT(timer != nullptr);
   watch_timers_.push_back(timer);
 }
 
 void WorkdayCalendar::unsubscribe(Timer *timer) {
-  assert(timer != nullptr);
+  TBOX_ASSERT(timer != nullptr);
   auto iter = std::remove(watch_timers_.begin(), watch_timers_.end(), timer);
   watch_timers_.erase(iter, watch_timers_.end());
 }

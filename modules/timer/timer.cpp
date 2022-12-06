@@ -18,7 +18,7 @@ Timer::Timer(event::Loop *wp_loop) :
 }
 
 Timer::~Timer() {
-  assert(cb_level_ == 0); //!< 防止回调中析构
+  TBOX_ASSERT(cb_level_ == 0); //!< 防止回调中析构
 
   cleanup();
   delete sp_timer_ev_;

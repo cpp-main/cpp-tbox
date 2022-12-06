@@ -4,8 +4,8 @@
 
 int main() {
   LogOutput_Initialize();
-  assert(12 > 0);
-  assert(12 < 0);
+  TBOX_ASSERT(12 > 0);
+  TBOX_ASSERT(12 < 0);
   LogOutput_Cleanup();
   return 0;
 }

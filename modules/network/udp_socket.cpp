@@ -29,7 +29,7 @@ UdpSocket::UdpSocket(event::Loop *wp_loop, bool enable_broadcast)
 
 UdpSocket::~UdpSocket()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_socket_ev_);
 }
 

@@ -23,7 +23,7 @@ Server::Impl::Impl(Server *wp_parent, Loop *wp_loop) :
 
 Server::Impl::~Impl()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     cleanup();
 }
 

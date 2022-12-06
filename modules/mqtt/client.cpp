@@ -41,7 +41,7 @@ int Client::Data::_instance_count = 0;
 Client::Client(Loop *wp_loop) :
     d_(new Data)
 {
-    assert(d_ != nullptr);
+    TBOX_ASSERT(d_ != nullptr);
     d_->wp_loop = wp_loop;
 
     if (Data::_instance_count == 0)
@@ -63,7 +63,7 @@ Client::Client(Loop *wp_loop) :
 
 Client::~Client()
 {
-    assert(d_->cb_level == 0);
+    TBOX_ASSERT(d_->cb_level == 0);
 
     cleanup();
 

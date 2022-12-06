@@ -44,7 +44,7 @@ TimeoutMonitor::Impl::Impl(Loop *wp_loop) :
 
 TimeoutMonitor::Impl::~Impl()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     cleanup();
     delete sp_timer_;
 }

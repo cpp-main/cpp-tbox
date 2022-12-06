@@ -12,7 +12,7 @@ EpollTimerEvent::EpollTimerEvent(EpollLoop *wp_loop)
 
 EpollTimerEvent::~EpollTimerEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 

@@ -8,7 +8,7 @@ namespace terminal {
 Telnetd::Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
     impl_(new Impl(wp_loop, wp_terminal))
 {
-    assert(impl_ != nullptr);
+    TBOX_ASSERT(impl_ != nullptr);
 }
 
 Telnetd::~Telnetd()

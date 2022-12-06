@@ -14,7 +14,7 @@ Buffer::Buffer(size_t reverse_size)
     //! 如果预留空间大小，那么要为缓冲分配空间
     if (reverse_size > 0) {
         uint8_t *p_buff = new uint8_t [reverse_size];
-        assert(p_buff != nullptr);
+        TBOX_ASSERT(p_buff != nullptr);
         buffer_ptr_ = p_buff;
         buffer_size_ = reverse_size;
     }
@@ -157,7 +157,7 @@ void Buffer::cloneFrom(const Buffer &other)
     //! 如果 other 有可读数据，则要根据可读大小分配空间
     if (other.readableSize() > 0) {
         uint8_t *p_buff = new uint8_t[other.readableSize()];
-        assert(p_buff != nullptr);
+        TBOX_ASSERT(p_buff != nullptr);
         ::memcpy(p_buff, other.readableBegin(), other.readableSize());
         buffer_ptr_  = p_buff;
         buffer_size_ = write_index_ = other.readableSize();

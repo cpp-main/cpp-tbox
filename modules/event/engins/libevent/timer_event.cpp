@@ -18,7 +18,7 @@ LibeventTimerEvent::LibeventTimerEvent(LibeventLoop *wp_loop) :
 
 LibeventTimerEvent::~LibeventTimerEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 

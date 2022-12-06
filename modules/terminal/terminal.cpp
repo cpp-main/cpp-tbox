@@ -9,7 +9,7 @@ namespace terminal {
 Terminal::Terminal() :
     impl_(new Impl)
 {
-    assert(impl_ != nullptr);
+    TBOX_ASSERT(impl_ != nullptr);
 }
 
 Terminal::~Terminal()

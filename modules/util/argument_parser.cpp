@@ -71,9 +71,9 @@ bool ArgumentParser::parse(const std::vector<std::string> &args, int start)
 
 bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
 {
-    assert(argc >= 1);
-    assert(argv != nullptr);
-    assert(start >= 0);
+    TBOX_ASSERT(argc >= 1);
+    TBOX_ASSERT(argv != nullptr);
+    TBOX_ASSERT(start >= 0);
 
     std::vector<std::string> args;
     for (int i = start; i < argc; ++i) {

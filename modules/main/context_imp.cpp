@@ -23,12 +23,12 @@ ContextImp::ContextImp() :
     sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
     sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_))
 {
-    assert(sp_loop_ != nullptr);
-    assert(sp_thread_pool_ != nullptr);
-    assert(sp_timer_pool_ != nullptr);
-    assert(sp_terminal_ != nullptr);
-    assert(sp_telnetd_ != nullptr);
-    assert(sp_tcp_rpc_ != nullptr);
+    TBOX_ASSERT(sp_loop_ != nullptr);
+    TBOX_ASSERT(sp_thread_pool_ != nullptr);
+    TBOX_ASSERT(sp_timer_pool_ != nullptr);
+    TBOX_ASSERT(sp_terminal_ != nullptr);
+    TBOX_ASSERT(sp_telnetd_ != nullptr);
+    TBOX_ASSERT(sp_tcp_rpc_ != nullptr);
 }
 
 ContextImp::~ContextImp()

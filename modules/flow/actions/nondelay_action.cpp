@@ -8,7 +8,7 @@ namespace flow {
 NondelayAction::NondelayAction(event::Loop &loop, const Func &func) :
   Action(loop), func_(func)
 {
-  assert(func != nullptr);
+  TBOX_ASSERT(func != nullptr);
 }
 
 bool NondelayAction::onStart() {
