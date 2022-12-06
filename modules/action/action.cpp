@@ -14,8 +14,7 @@ Action::Action(event::Loop &loop) :
 
 Action::~Action() {
   //! 不允许在未stop之前或是未结束之前析构对象
-  assert(state_ != State::kRunning &&
-         state_ != State::kPause);
+  TBOX_ASSERT(state_ != State::kRunning && state_ != State::kPause);
 }
 
 void Action::toJson(Json &js) const {

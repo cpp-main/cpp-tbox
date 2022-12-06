@@ -19,7 +19,7 @@ using namespace std::chrono;
 
 CommonLoop::~CommonLoop()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
 }
 
 bool CommonLoop::isInLoopThread()

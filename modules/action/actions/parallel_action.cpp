@@ -15,7 +15,7 @@ ParallelAction::~ParallelAction() {
 }
 
 int ParallelAction::append(Action *action) {
-  assert(action != nullptr);
+  TBOX_ASSERT(action != nullptr);
 
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
     int index = children_.size();

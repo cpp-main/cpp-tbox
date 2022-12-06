@@ -29,7 +29,7 @@ Fd::~Fd()
     if (detail_ == nullptr)
         return;
 
-    assert(detail_->ref_count > 0);
+    TBOX_ASSERT(detail_->ref_count > 0);
 
     --detail_->ref_count;
     if (detail_->ref_count == 0) {

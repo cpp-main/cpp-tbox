@@ -15,7 +15,7 @@ LibevFdEvent::LibevFdEvent(LibevLoop *wp_loop) :
 
 LibevFdEvent::~LibevFdEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 
@@ -113,7 +113,7 @@ Loop* LibevFdEvent::getLoop() const
 
 void LibevFdEvent::OnEventCallback(struct ev_loop*, ev_io *p_w, int events)
 {
-    assert(p_w != NULL);
+    TBOX_ASSERT(p_w != NULL);
 
     LibevFdEvent *pthis = static_cast<LibevFdEvent*>(p_w->data);
     pthis->onEvent(events);

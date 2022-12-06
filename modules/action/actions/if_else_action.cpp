@@ -16,7 +16,7 @@ IfElseAction::IfElseAction(event::Loop &loop, Action *cond_action,
   if_action_(if_action),
   else_action_(else_action)
 {
-  assert(cond_action != nullptr);
+  TBOX_ASSERT(cond_action != nullptr);
 
   cond_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
   if (if_action_ != nullptr)

@@ -10,7 +10,7 @@ LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
   child_(child),
   mode_(mode)
 {
-  assert(child != nullptr);
+  TBOX_ASSERT(child != nullptr);
 
   child_->setFinishCallback(
     [this] (bool is_succ) {

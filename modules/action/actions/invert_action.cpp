@@ -9,7 +9,7 @@ namespace action {
 InvertAction::InvertAction(event::Loop &loop, Action *child) :
   Action(loop), child_(child)
 {
-  assert(child_ != nullptr);
+  TBOX_ASSERT(child_ != nullptr);
 
   child_->setFinishCallback(
     [this] (bool is_succ){

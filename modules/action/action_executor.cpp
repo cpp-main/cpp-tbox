@@ -10,7 +10,7 @@ namespace action {
 ActionExecutor::ActionExecutor() { }
 
 ActionExecutor::~ActionExecutor() {
-  assert(cb_level_ == 0);
+  TBOX_ASSERT(cb_level_ == 0);
   for (auto &action_deque : action_deque_array_) {
     for (auto item : action_deque)
           delete item.action;
@@ -19,8 +19,8 @@ ActionExecutor::~ActionExecutor() {
 }
 
 ActionExecutor::ActionId ActionExecutor::append(Action *action, int prio) {
-  assert(0 <= prio && prio <= 2);
-  assert(action != nullptr);
+  TBOX_ASSERT(0 <= prio && prio <= 2);
+  TBOX_ASSERT(action != nullptr);
 
   Item item = {
     .id = allocActionId(),
@@ -54,7 +54,7 @@ bool ActionExecutor::cancelCurrent() {
 }
 
 bool ActionExecutor::cancel(ActionId action_id) {
-  assert(action_id > 0);
+  TBOX_ASSERT(action_id > 0);
 
   for (auto &action_deque : action_deque_array_) {
     auto iter = std::find_if(action_deque.begin(), action_deque.end(),
@@ -83,7 +83,7 @@ void ActionExecutor::cancelAll() {
 ActionExecutor::ActionId ActionExecutor::allocActionId() { return ++action_id_alloc_counter_; }
 
 void ActionExecutor::schedule() {
-  assert(cb_level_ == 0);
+  TBOX_ASSERT(cb_level_ == 0);
 
   while (true) {
     //! 找出优先级最高，且不为空的队列

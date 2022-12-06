@@ -22,7 +22,7 @@ TcpConnection::TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &
 
 TcpConnection::~TcpConnection()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
 }
 

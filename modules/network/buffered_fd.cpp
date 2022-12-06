@@ -18,7 +18,7 @@ BufferedFd::BufferedFd(event::Loop *wp_loop) :
 
 BufferedFd::~BufferedFd()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
 
     if (state_ == State::kRunning)
         disable();

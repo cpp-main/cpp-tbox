@@ -16,7 +16,7 @@ CronTimer::CronTimer(event::Loop *loop) :
   Timer(loop),
   sp_cron_expr_(malloc(sizeof(cron_expr)))
 {
-  assert(sp_cron_expr_ != nullptr);
+  TBOX_ASSERT(sp_cron_expr_ != nullptr);
   memset(sp_cron_expr_, 0, sizeof(cron_expr));
 }
 

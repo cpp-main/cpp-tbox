@@ -16,7 +16,7 @@ LibevTimerEvent::LibevTimerEvent(LibevLoop *wp_loop) :
 
 LibevTimerEvent::~LibevTimerEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
 
     disable();
 }
@@ -94,7 +94,7 @@ Loop* LibevTimerEvent::getLoop() const
 
 void LibevTimerEvent::OnEventCallback(struct ev_loop*, ev_timer *p_w, int events)
 {
-    assert(p_w != NULL);
+    TBOX_ASSERT(p_w != NULL);
 
     LibevTimerEvent *pthis = static_cast<LibevTimerEvent*>(p_w->data);
     pthis->onEvent();

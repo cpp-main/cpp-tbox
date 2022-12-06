@@ -28,7 +28,7 @@ uint64_t CurrentMilliseconds()
 EpollLoop::EpollLoop() :
     epoll_fd_(epoll_create1(EPOLL_CLOEXEC))
 {
-    assert(epoll_fd_ >= 0);
+    TBOX_ASSERT(epoll_fd_ >= 0);
 }
 
 EpollLoop::~EpollLoop()
@@ -58,7 +58,7 @@ void EpollLoop::handleExpiredTimers()
 
     while (!timer_min_heap_.empty()) {
         auto t = timer_min_heap_.front();
-        //assert(t != nullptr);
+        //TBOX_ASSERT(t != nullptr);
 
         if (now < t->expired)
             break;
@@ -148,12 +148,12 @@ void EpollLoop::exitLoop(const std::chrono::milliseconds &wait_time)
 
 cabinet::Token EpollLoop::addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb)
 {
-    assert(cb);
+    TBOX_ASSERT(cb);
 
     auto now = CurrentMilliseconds();
 
     Timer *t = new Timer;
-    assert(t != nullptr);
+    TBOX_ASSERT(t != nullptr);
 
     t->token = this->timer_cabinet_.alloc(t);
 

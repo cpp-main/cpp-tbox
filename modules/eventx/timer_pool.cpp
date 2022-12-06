@@ -30,7 +30,7 @@ class TimerPool::Impl {
 
 TimerPool::Impl::~Impl()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     cleanup();
 }
 
@@ -120,7 +120,7 @@ void TimerPool::Impl::cleanup()
 TimerPool::TimerPool(event::Loop *wp_loop) :
     impl_(new Impl(wp_loop))
 {
-    assert(impl_ != nullptr);
+    TBOX_ASSERT(impl_ != nullptr);
 }
 
 TimerPool::~TimerPool()

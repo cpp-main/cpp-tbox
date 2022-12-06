@@ -35,7 +35,7 @@ class SockAddr {
 
     template <typename T>
     socklen_t toSockAddr(T &addr) const {
-        assert(len_ <= sizeof(T));
+        TBOX_ASSERT(len_ <= sizeof(T));
         ::memcpy(&addr, &addr_, len_);
         return len_;
     }

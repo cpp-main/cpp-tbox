@@ -142,7 +142,7 @@ StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullp
 
 StateMachine::Impl::~Impl()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
 
     for (auto &item : states_)
         delete item.second;

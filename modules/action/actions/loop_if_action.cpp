@@ -11,8 +11,8 @@ LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_
   cond_action_(cond_action),
   exec_action_(exec_action)
 {
-  assert(cond_action != nullptr);
-  assert(exec_action != nullptr);
+  TBOX_ASSERT(cond_action != nullptr);
+  TBOX_ASSERT(exec_action != nullptr);
 
   cond_action_->setFinishCallback(
     [this] (bool is_succ) {

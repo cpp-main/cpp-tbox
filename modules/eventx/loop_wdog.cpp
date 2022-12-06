@@ -85,7 +85,7 @@ void OnLoopBlock(const std::string &name) {
 }
 
 void LoopWDog::SetLoopBlockCallback(const LoopBlockCallback &cb) {
-  assert(cb != nullptr);
+  TBOX_ASSERT(cb != nullptr);
   _loop_die_cb = cb;
 }
 

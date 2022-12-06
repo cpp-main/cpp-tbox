@@ -14,9 +14,9 @@ TcpRpc::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
     wp_terminal_(wp_terminal),
     sp_tcp_(new TcpServer(wp_loop))
 {
-    assert(wp_loop_ != nullptr);
-    assert(wp_terminal_ != nullptr);
-    assert(sp_tcp_ != nullptr);
+    TBOX_ASSERT(wp_loop_ != nullptr);
+    TBOX_ASSERT(wp_terminal_ != nullptr);
+    TBOX_ASSERT(sp_tcp_ != nullptr);
 }
 
 TcpRpc::Impl::~Impl()

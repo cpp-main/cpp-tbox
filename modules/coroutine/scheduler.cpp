@@ -70,7 +70,7 @@ struct Routine {
         LogDbg("Routine(%u)", token.id());
 
         void *p_stack_mem = malloc(ss);
-        assert(p_stack_mem != nullptr);
+        TBOX_ASSERT(p_stack_mem != nullptr);
 
         //!TODO: 是否可以加哨兵标记，检查栈溢出
 
@@ -84,7 +84,7 @@ struct Routine {
     ~Routine()
     {
         //! 只有没有启动或是已结束的协程才能被释放
-        assert(!is_started || state == State::kDead);
+        TBOX_ASSERT(!is_started || state == State::kDead);
 
         free(ctx.uc_stack.ss_sp);
         LogDbg("~Routine(%u)", token.id());
@@ -96,7 +96,7 @@ struct Routine {
 Scheduler::Scheduler(Loop *wp_loop) :
     d_(new Data)
 {
-    assert(d_ != nullptr);
+    TBOX_ASSERT(d_ != nullptr);
     d_->wp_loop = wp_loop;
 
     ::memset(&d_->main_ctx, 0, sizeof(ucontext_t));
@@ -138,7 +138,7 @@ bool Scheduler::cancel(const RoutineToken &token)
 
 void Scheduler::cleanup()
 {
-    assert(isInMainRoutine());  //! 仅限主协程使用
+    TBOX_ASSERT(isInMainRoutine());  //! 仅限主协程使用
 
     //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
     d_->routine_cabinet.foreach(
@@ -171,7 +171,7 @@ void Scheduler::cleanup()
 
 void Scheduler::wait()
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     if (d_->curr_routine->is_canceled)
         return;
 
@@ -181,7 +181,7 @@ void Scheduler::wait()
 
 void Scheduler::yield()
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     if (d_->curr_routine->is_canceled)
         return;
 
@@ -191,7 +191,7 @@ void Scheduler::yield()
 
 bool Scheduler::join(const RoutineToken &other_routine)
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     if (d_->curr_routine->is_canceled)
         return false;
 
@@ -217,19 +217,19 @@ bool Scheduler::join(const RoutineToken &other_routine)
 
 RoutineToken Scheduler::getToken() const
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     return d_->curr_routine->token;
 }
 
 bool Scheduler::isCanceled() const
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     return d_->curr_routine->is_canceled;
 }
 
 string Scheduler::getName() const
 {
-    assert(!isInMainRoutine());
+    TBOX_ASSERT(!isInMainRoutine());
     return d_->curr_routine->name;
 }
 
@@ -255,7 +255,7 @@ bool Scheduler::makeRoutineReady(Routine *routine)
 
 void Scheduler::switchToRoutine(Routine *routine)
 {
-    assert(isInMainRoutine());
+    TBOX_ASSERT(isInMainRoutine());
 
     d_->curr_routine = routine;
     d_->curr_routine->state = Routine::State::kRunning;
@@ -280,7 +280,7 @@ void Scheduler::switchToRoutine(Routine *routine)
 
 void Scheduler::schedule()
 {
-    assert(isInMainRoutine());
+    TBOX_ASSERT(isInMainRoutine());
 
     //! 思考：为什么要定义一个 tmp 来与 ready_routines 进行交换，而不是直接使用？
     //!

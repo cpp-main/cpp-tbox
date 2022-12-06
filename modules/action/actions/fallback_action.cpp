@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace action {
@@ -25,7 +26,7 @@ void FallbackAction::toJson(Json &js) const {
 }
 
 int FallbackAction::append(Action *action) {
-  assert(action != nullptr);
+  TBOX_ASSERT(action != nullptr);
 
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
     int index = children_.size();

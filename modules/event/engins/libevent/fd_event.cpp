@@ -17,7 +17,7 @@ LibeventFdEvent::LibeventFdEvent(LibeventLoop *wp_loop) :
 
 LibeventFdEvent::~LibeventFdEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 

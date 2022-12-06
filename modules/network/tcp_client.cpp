@@ -30,7 +30,7 @@ struct TcpClient::Data {
 TcpClient::TcpClient(event::Loop *wp_loop) :
     d_(new Data)
 {
-    assert(d_ != nullptr);
+    TBOX_ASSERT(d_ != nullptr);
 
     d_->wp_loop = wp_loop;
     d_->sp_connector = new TcpConnector(wp_loop);
@@ -38,7 +38,7 @@ TcpClient::TcpClient(event::Loop *wp_loop) :
 
 TcpClient::~TcpClient()
 {
-    assert(d_->cb_level == 0);
+    TBOX_ASSERT(d_->cb_level == 0);
 
     cleanup();
 

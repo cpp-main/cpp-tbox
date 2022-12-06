@@ -24,7 +24,7 @@ EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop) :
 
 EpollFdEvent::~EpollFdEvent()
 {
-    assert(cb_level_ == 0);
+    TBOX_ASSERT(cb_level_ == 0);
 
     disable();
 
@@ -50,7 +50,7 @@ bool EpollFdEvent::initialize(int fd, short events, Mode mode)
     d_ = wp_loop_->queryFdSharedData(fd_);
     if (d_ == nullptr) {
         d_ = new EpollFdSharedData; 
-        assert(d_ != nullptr);
+        TBOX_ASSERT(d_ != nullptr);
 
         memset(&d_->ev, 0, sizeof(d_->ev));
         d_->ev.data.ptr = static_cast<void *>(d_);
