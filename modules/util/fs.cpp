@@ -72,15 +72,36 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content)
     return WriteStringToTextFile(filename, content);
 }
 
-bool RemoveFile(const std::string &filename)
+bool RemoveFile(const std::string &filename, bool allow_log_print)
 {
     int ret = ::unlink(filename.c_str());
     if (ret == 0)
         return true;
 
-    if (errno != ENOENT)
+    if (errno != ENOENT && allow_log_print)
         LogWarn("errno:%d (%s)", errno, strerror(errno));
+    return false;
+}
 
+bool MakeSymbolLink(const std::string &old_path, const std::string &new_path, bool allow_log_print)
+{
+    int ret = ::symlink(old_path.c_str(), new_path.c_str());
+    if (ret == 0)
+        return true;
+
+    if (allow_log_print)
+        LogWarn("errno:%d (%s)", errno, strerror(errno));
+    return false;
+}
+
+bool MakeLink(const std::string &old_path, const std::string &new_path, bool allow_log_print)
+{
+    int ret = ::link(old_path.c_str(), new_path.c_str());
+    if (ret == 0)
+        return true;
+
+    if (allow_log_print)
+        LogWarn("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
@@ -91,10 +112,10 @@ bool IsDirectoryExist(const std::string &dir)
     return ((::stat(dir.c_str(), &sb) == 0) && S_ISDIR(sb.st_mode));
 }
 
-bool MakeDirectory(const std::string &origin_dir_path, bool enable_log)
+bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
 {
     if (origin_dir_path.empty()) {
-        if (enable_log)
+        if (allow_log_print)
             LogWarn("origin_dir_path is empty");
         return false;
     }
@@ -121,18 +142,18 @@ bool MakeDirectory(const std::string &origin_dir_path, bool enable_log)
             if (::stat(trimmed_dir_path.c_str(), &sb) != 0) {
                 if (errno == ENOENT) {  //! 如果trimmed_dir_path指定的inode不存在，则创建目录
                     if (::mkdir(trimmed_dir_path.c_str(), 0775) != 0) {
-                        if (enable_log)
+                        if (allow_log_print)
                             LogWarn("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                         return false;
                     }
                 } else {    //! 如果是其它的错误
-                    if (enable_log)
+                    if (allow_log_print)
                         LogWarn("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                     return false;
                 }
             } else {    //! 如果 trimmed_dir_path 指定的inode存在
                 if (!S_ISDIR(sb.st_mode)) {  //! 该inode并不是一个目录
-                    if (enable_log)
+                    if (allow_log_print)
                         LogWarn("inode %s is not directory", trimmed_dir_path.c_str());
                     return false;
                 }

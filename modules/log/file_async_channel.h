@@ -16,7 +16,7 @@ class FileAsyncChannel : public AsyncChannel {
     void cleanup();
 
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
-    std::string currentFilename() const { return filename_; }
+    std::string currentFilename() const { return log_filename_; }
 
   protected:
     virtual void onLogBackEnd(const std::string &log_text) override;
@@ -29,7 +29,9 @@ class FileAsyncChannel : public AsyncChannel {
     pid_t pid_ = 0;
 
     std::ofstream ofs_;
-    std::string filename_;
+    std::string filename_prefix_;
+    std::string sym_filename_;
+    std::string log_filename_;
 };
 
 }

@@ -61,7 +61,11 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content);
  * \return true 成功
  * \return false 失败
  */
-bool RemoveFile(const std::string &filename);
+bool RemoveFile(const std::string &filename, bool allow_log_print = true);
+
+bool MakeSymbolLink(const std::string &old_path, const std::string &new_path, bool allow_log_print = true);
+
+bool MakeLink(const std::string &old_path, const std::string &new_path, bool allow_log_print = true);
 
 ////////////////////////////////////////////////////////////////////
 // 目录相关
@@ -82,13 +86,13 @@ bool IsDirectoryExist(const std::string &dir);
  * 等价于shell命令 "mkdir -p xxx"
  *
  * \param dir               目录
- * \param enable_log        是否允许错误日志打印
+ * \param allow_log_print   是否允许错误日志打印
  *                          在日志模块中使用要禁用，其它默认打开即可
  *
  * \return true     目录创建成功
  * \return false    目录创建失败
  */
-bool MakeDirectory(const std::string &dir, bool enable_log = true);
+bool MakeDirectory(const std::string &dir, bool allow_log_print = true);
 
 /**
  * 删除目录
