@@ -244,7 +244,7 @@ bool Client::start()
                                         d_->config.base.broker.domain.c_str(),
                                         d_->config.base.broker.port,
                                         d_->config.base.keepalive);
-            d_->wp_loop->run(
+            d_->wp_loop->runInLoop(
                 [this, ret] {
                     onMosquittoConnectDone(ret, true);
                 }
@@ -520,6 +520,9 @@ void Client::onLog(int level, const char *str)
 
 void Client::onMosquittoConnectDone(int ret, bool first_connect)
 {
+    if (d_->sp_thread == nullptr)
+        return;
+
     d_->sp_thread->join();
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 
