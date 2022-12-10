@@ -21,9 +21,8 @@ cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服
 - mqtt，MQTT客户端库；
 - terminal, 终端，类似shell的命令终端，可实现运行时与程序进行命令交互；
 - main，应用程序框架，实现了完备的程序启动流程与框架，让开发者只需关心业务代码；
-- sample，基于main实现的应用程序示例；
 - timer，定时器模块，实现了4种常用的定时器：CRON定时器、单次定时器、星期定时器、工作日定时器；
-- action，动作模块，解决异步模式下的顺序性动作执行困难问题；
+- flow，动作模块，解决异步模式下的顺序性动作执行困难问题；
 
 #### 外部库依赖
 
@@ -43,7 +42,11 @@ cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服
 
 **如果构建**
 
-进入到cpp-tbox的顶层目录，执行命令: `STAGING_DIR=$HOME/.local make modules RELEASE=1`。
+进入到cpp-tbox的顶层目录，执行命令:  
+```
+STAGING_DIR=$HOME/.local make modules RELEASE=1
+```
+
 完成之后，所有的头文件导出到 `$HOME/.local/include/`，所有的库文件输出到 `$HOME/.local/lib/`。
 如果你没有指定 `STAGING_DIR` 参数，它默认为 `.staging`。
 
