@@ -41,19 +41,18 @@ cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服
 |:----:|:------:|
 | Ubuntu/Debian | `apt install -y g++ make google-mock libevent-dev libev-dev libmosquitto-dev` |
 
-**How to build**
-Enter cpp-tbox top path, run this command:
-```
-STAGING_DIR=$HOME/.local make modules RELEASE=1
-```
-Then all include files will install in $HOME/.local/include/, all libs will install in $HOME/.local/lib/
-If you didn't specifiy `STAGING_DIR`, its default value is `.staging`.
+**如果构建**
 
-in your own project Makefile, you need add this:
+进入到cpp-tbox的顶层目录，执行命令: `STAGING_DIR=$HOME/.local make modules RELEASE=1`。
+完成之后，所有的头文件导出到 `$HOME/.local/include/`，所有的库文件输出到 `$HOME/.local/lib/`。
+如果你没有指定 `STAGING_DIR` 参数，它默认为 `.staging`。
+
+在你自己工程的 Makefile 中，你需要添加以下的内容:
 ```
 CXXFLAGS += -I$(HOME)/.local/include
 LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
 ```
+然后就可以使用tbox的组件了。
 
 #### 模块间依赖
 
