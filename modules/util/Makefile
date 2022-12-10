@@ -11,7 +11,6 @@ HEAD_FILES = \
 	split_cmdline.h \
 	serializer.h \
 	time_counter.h \
-	state_machine.h \
 	async_pipe.h \
 	backtrace.h \
 	timestamp.h \
@@ -25,7 +24,6 @@ CPP_SRC_FILES = \
 	split_cmdline.cpp \
 	serializer.cpp \
 	time_counter.cpp \
-	state_machine.cpp \
 	async_pipe.cpp \
 	backtrace.cpp \
 	timestamp.cpp \
@@ -41,7 +39,6 @@ TEST_CPP_SRC_FILES = \
 	split_cmdline_test.cpp \
 	serializer_test.cpp \
 	time_counter_test.cpp \
-	state_machine_test.cpp \
 	async_pipe_test.cpp \
 	json_test.cpp \
 
