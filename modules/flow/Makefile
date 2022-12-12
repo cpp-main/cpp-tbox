@@ -54,7 +54,7 @@ TEST_CPP_SRC_FILES = \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_action -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_common.mk
