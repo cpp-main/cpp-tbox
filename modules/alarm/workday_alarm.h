@@ -1,19 +1,19 @@
-#ifndef TBOX_TIMER_WORKDAY_TIMER_H_20221024
-#define TBOX_TIMER_WORKDAY_TIMER_H_20221024
+#ifndef TBOX_ALARM_WORKDAY_ALARM_H_20221024
+#define TBOX_ALARM_WORKDAY_ALARM_H_20221024
 
-#include "timer.h"
+#include "alarm.h"
 #include "workday_calendar.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 /**
  * \brief 工作日、节假日定时器
  */
-class WorkdayTimer : public Timer
+class WorkdayAlarm : public Alarm
 {
   public:
-    using Timer::Timer;
+    using Alarm::Alarm;
 
     /**
      * \brief 初始化
@@ -26,7 +26,7 @@ class WorkdayTimer : public Timer
      * \return  true    成功
      *          false   失败
      *
-     * \warnning  必须要确保 wp_calendar 指向的日历对象的生命期比本 WorkdayTimer 长
+     * \warnning  必须要确保 wp_calendar 指向的日历对象的生命期比本 WorkdayAlarm 长
      *            否则会出异常
      */
     bool initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday);
@@ -45,4 +45,4 @@ class WorkdayTimer : public Timer
 }
 }
 
-#endif //TBOX_TIMER_WORKDAY_TIMER_H_20221024
+#endif //TBOX_ALARM_WORKDAY_ALARM_H_20221024

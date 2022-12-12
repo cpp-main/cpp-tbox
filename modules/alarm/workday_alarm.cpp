@@ -1,24 +1,23 @@
-#include "workday_timer.h"
+#include "workday_alarm.h"
 
 #include <sys/time.h>
 
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
 
 #include "workday_calendar.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 namespace {
 constexpr auto kSecondsOfDay = 60 * 60 * 24;
 constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
 }
 
-bool WorkdayTimer::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday) {
+bool WorkdayAlarm::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday) {
   if (state_ == State::kRunning) {
-    LogWarn("timer is running state, disable first");
+    LogWarn("alarm is running state, disable first");
     return false;
   }
 
@@ -40,7 +39,7 @@ bool WorkdayTimer::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, 
   return true;
 }
 
-int WorkdayTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
+int WorkdayAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
   int curr_days = curr_local_ts / kSecondsOfDay;
   int curr_seconds = curr_local_ts % kSecondsOfDay;
 
@@ -58,12 +57,12 @@ int WorkdayTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
   return -1;
 }
 
-bool WorkdayTimer::onEnable() {
+bool WorkdayAlarm::onEnable() {
   wp_calendar_->subscribe(this);
   return true;
 }
 
-bool WorkdayTimer::onDisable() {
+bool WorkdayAlarm::onDisable() {
   wp_calendar_->unsubscribe(this);
   return true;
 }

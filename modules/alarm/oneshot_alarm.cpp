@@ -1,21 +1,20 @@
-#include "oneshot_timer.h"
+#include "oneshot_alarm.h"
 
 #include <sys/time.h>
 
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 namespace {
 constexpr auto kSecondsOfDay = 60 * 60 * 24;
 }
 
-bool OneshotTimer::initialize(int seconds_of_day) {
+bool OneshotAlarm::initialize(int seconds_of_day) {
   if (state_ == State::kRunning) {
-    LogWarn("timer is running state, disable first");
+    LogWarn("alarm is running state, disable first");
     return false;
   }
 
@@ -29,7 +28,7 @@ bool OneshotTimer::initialize(int seconds_of_day) {
   return true;
 }
 
-int OneshotTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
+int OneshotAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
   int curr_seconds = curr_local_ts % kSecondsOfDay;
 
 #if 1
@@ -42,7 +41,7 @@ int OneshotTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
   return wait_seconds;
 }
 
-void OneshotTimer::onTimeExpired() {
+void OneshotAlarm::onTimeExpired() {
   state_ = State::kInited;
 
   ++cb_level_;

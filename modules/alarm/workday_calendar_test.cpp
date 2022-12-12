@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 //! 模拟 2022年国庆的放假
 TEST(WorkdayCalendar, Base) {

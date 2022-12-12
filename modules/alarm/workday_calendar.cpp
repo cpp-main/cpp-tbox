@@ -3,32 +3,32 @@
 #include <algorithm>
 #include <tbox/base/assert.h>
 
-#include "timer.h"
+#include "alarm.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 void WorkdayCalendar::updateSpecialDays(const std::map<int, bool> &special_days) {
   special_days_ = special_days;
-  for (auto timer : watch_timers_)
-    timer->refresh();
+  for (auto alarm : watch_alarms_)
+    alarm->refresh();
 }
 
 void WorkdayCalendar::updateWeekMask(uint8_t week_mask) {
   week_mask_ = week_mask;
-  for (auto timer : watch_timers_)
-    timer->refresh();
+  for (auto alarm : watch_alarms_)
+    alarm->refresh();
 }
 
-void WorkdayCalendar::subscribe(Timer *timer) {
-  TBOX_ASSERT(timer != nullptr);
-  watch_timers_.push_back(timer);
+void WorkdayCalendar::subscribe(Alarm *alarm) {
+  TBOX_ASSERT(alarm != nullptr);
+  watch_alarms_.push_back(alarm);
 }
 
-void WorkdayCalendar::unsubscribe(Timer *timer) {
-  TBOX_ASSERT(timer != nullptr);
-  auto iter = std::remove(watch_timers_.begin(), watch_timers_.end(), timer);
-  watch_timers_.erase(iter, watch_timers_.end());
+void WorkdayCalendar::unsubscribe(Alarm *alarm) {
+  TBOX_ASSERT(alarm != nullptr);
+  auto iter = std::remove(watch_alarms_.begin(), watch_alarms_.end(), alarm);
+  watch_alarms_.erase(iter, watch_alarms_.end());
 }
 
 bool WorkdayCalendar::isWorkay(int day_index) const {

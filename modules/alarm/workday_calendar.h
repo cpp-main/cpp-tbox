@@ -1,19 +1,19 @@
-#ifndef TBOX_TIMER_WORKDAY_CALENDAR_H_20221024
-#define TBOX_TIMER_WORKDAY_CALENDAR_H_20221024
+#ifndef TBOX_ALARM_WORKDAY_CALENDAR_H_20221024
+#define TBOX_ALARM_WORKDAY_CALENDAR_H_20221024
 
 #include <cstdint>
 #include <map>
 #include <vector>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
-class Timer;
+class Alarm;
 
 /**
  * \brief 工作日的日历
  *
- * 它用于向 WorkdayTimer 提供指定日期是否为工作日查询的功能
+ * 它用于向 WorkdayAlarm 提供指定日期是否为工作日查询的功能
  */
 class WorkdayCalendar {
   public:
@@ -34,8 +34,8 @@ class WorkdayCalendar {
      */
     void updateWeekMask(uint8_t week_mask);
 
-    void subscribe(Timer *timer);
-    void unsubscribe(Timer *timer);
+    void subscribe(Alarm *alarm);
+    void unsubscribe(Alarm *alarm);
 
     /**
      * \brief 查询指定日期是否为工作日
@@ -50,10 +50,10 @@ class WorkdayCalendar {
   private:
     uint8_t week_mask_ = 0b00111110;    //!< 默认周一到周五是工作日
     std::map<int, bool> special_days_;  //!< 特殊的放假与补班日期
-    std::vector<Timer*> watch_timers_;
+    std::vector<Alarm*> watch_alarms_;
 };
 
 }
 }
 
-#endif //TBOX_TIMER_WORKDAY_CALENDAR_H_20221024
+#endif //TBOX_ALARM_WORKDAY_CALENDAR_H_20221024

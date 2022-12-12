@@ -1,26 +1,26 @@
-LIB_NAME = timer
+LIB_NAME = alarm
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	timer.h \
-	weekly_timer.h \
-	oneshot_timer.h \
-	cron_timer.h \
-	workday_timer.h \
+	alarm.h \
+	weekly_alarm.h \
+	oneshot_alarm.h \
+	cron_alarm.h \
+	workday_alarm.h \
 	workday_calendar.h \
 
 CPP_SRC_FILES = \
-	timer.cpp \
-	weekly_timer.cpp \
-	oneshot_timer.cpp \
-	cron_timer.cpp \
+	alarm.cpp \
+	weekly_alarm.cpp \
+	oneshot_alarm.cpp \
+	cron_alarm.cpp \
 	3rd-party/ccronexpr.cpp \
-	workday_timer.cpp \
+	workday_alarm.cpp \
 	workday_calendar.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"timer"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"alarm"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	workday_calendar_test.cpp \

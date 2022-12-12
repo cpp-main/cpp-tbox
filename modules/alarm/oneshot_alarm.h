@@ -1,15 +1,15 @@
-#ifndef TBOX_TIMER_ONESHOT_TIMER_H_20221023
-#define TBOX_TIMER_ONESHOT_TIMER_H_20221023
+#ifndef TBOX_ALARM_ONESHOT_ALARM_H_20221023
+#define TBOX_ALARM_ONESHOT_ALARM_H_20221023
 
-#include "timer.h"
+#include "alarm.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 /*
- * @brief The oneshot timer.
+ * @brief The oneshot alarm.
  *
- * OneshotTimer allow the user to make plans which execute at today or tomorrow
+ * OneshotAlarm allow the user to make plans which execute at today or tomorrow
  * If the specified time is later than the local time, the system will execute today.
  * Otherwise it will be executed tomorrow.
  *
@@ -17,17 +17,17 @@ namespace timer {
  *
  * Loop *loop = Loop::New();
  *
- * OneshotTimer tmr(loop);
+ * OneshotAlarm tmr(loop);
  * tmr.initialize(30600); // at 08:30
  * tmr.setCallback([] { std::cout << "time is up" << endl;});
  * tmr.enable();
  *
  * loop->runLoop();
  */
-class OneshotTimer : public Timer
+class OneshotAlarm : public Alarm
 {
   public:
-    using Timer::Timer;
+    using Alarm::Alarm;
 
     /**
      * \brief 初始化
@@ -48,4 +48,4 @@ class OneshotTimer : public Timer
 }
 }
 
-#endif //TBOX_TIMER_ONESHOT_TIMER_H_20221023
+#endif //TBOX_ALARM_ONESHOT_ALARM_H_20221023

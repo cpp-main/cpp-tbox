@@ -1,4 +1,4 @@
-#include "timer.h"
+#include "alarm.h"
 
 #include <sys/time.h>
 
@@ -8,32 +8,32 @@
 #include <tbox/event/timer_event.h>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
-Timer::Timer(event::Loop *wp_loop) :
+Alarm::Alarm(event::Loop *wp_loop) :
   wp_loop_(wp_loop),
   sp_timer_ev_(wp_loop->newTimerEvent())
 {
   sp_timer_ev_->setCallback([this] { onTimeExpired(); });
 }
 
-Timer::~Timer() {
+Alarm::~Alarm() {
   TBOX_ASSERT(cb_level_ == 0); //!< 防止回调中析构
 
   cleanup();
   delete sp_timer_ev_;
 }
 
-void Timer::setTimezone(int offset_minutes) {
+void Alarm::setTimezone(int offset_minutes) {
   timezone_offset_seconds_ = offset_minutes * 60;
   using_independ_timezone_ = true;
 }
 
-bool Timer::isEnabled() const {
+bool Alarm::isEnabled() const {
   return state_ == State::kRunning;
 }
 
-bool Timer::enable() {
+bool Alarm::enable() {
   if (state_ == State::kInited) {
     if (onEnable())
       return activeTimer();
@@ -43,7 +43,7 @@ bool Timer::enable() {
   return false;
 }
 
-bool Timer::disable() {
+bool Alarm::disable() {
   if (state_ == State::kRunning) {
     if (onDisable()) {
       state_ = State::kInited;
@@ -53,7 +53,7 @@ bool Timer::disable() {
   return false;
 }
 
-void Timer::cleanup() {
+void Alarm::cleanup() {
   if (state_ < State::kInited)
     return;
 
@@ -66,7 +66,7 @@ void Timer::cleanup() {
   target_utc_ts_ = 0;
 }
 
-void Timer::refresh() {
+void Alarm::refresh() {
   if (state_ == State::kRunning) {
     state_ = State::kInited;
     sp_timer_ev_->disable();
@@ -74,7 +74,7 @@ void Timer::refresh() {
   }
 }
 
-uint32_t Timer::remainSeconds() const {
+uint32_t Alarm::remainSeconds() const {
   if (state_ == State::kRunning) {
     struct timeval utc_tv;
     int ret = gettimeofday(&utc_tv, nullptr);
@@ -102,7 +102,7 @@ int GetSystemTimezoneOffsetSeconds() {
 }
 }
 
-bool Timer::activeTimer() {
+bool Alarm::activeTimer() {
   //! 使用 gettimeofday() 获取当前0时区的时间戳，精确到微秒
   struct timeval utc_tv;
   int ret = gettimeofday(&utc_tv, nullptr);
@@ -132,7 +132,7 @@ bool Timer::activeTimer() {
   return true;
 }
 
-void Timer::onTimeExpired() {
+void Alarm::onTimeExpired() {
   state_ = State::kInited;
   activeTimer();
 

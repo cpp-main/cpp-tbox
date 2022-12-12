@@ -1,17 +1,17 @@
-#ifndef TBOX_TIMER_CRON_TIMER_H
-#define TBOX_TIMER_CRON_TIMER_H
+#ifndef TBOX_ALARM_CRON_ALARM_H
+#define TBOX_ALARM_CRON_ALARM_H
 
 #include <string>
 
-#include "timer.h"
+#include "alarm.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 /*
- * @brief The linux cron timer.
+ * @brief The linux cron alarm.
  *
- * CronTimer allow the user to make plans by linux cron expression.
+ * CronAlarm allow the user to make plans by linux cron expression.
  *  Linux-cron tab expression
   *    *    *    *    *    *
   -    -    -    -    -    -
@@ -28,18 +28,18 @@ namespace timer {
  *
  * Loop *loop = Loop::New();
  *
- * CronTimer tmr(loop);
+ * CronAlarm tmr(loop);
  * tmr.initialize("18 28 14 * * *"); // every day at 14:28:18
  * tmr.setCallback([] { std::cout << "timeout" << std::endl; });
  * tmr.enable();
  *
  * loop->runLoop();
  */
-class CronTimer : public Timer
+class CronAlarm : public Alarm
 {
   public:
-    explicit CronTimer(event::Loop *wp_loop);
-    virtual ~CronTimer();
+    explicit CronAlarm(event::Loop *wp_loop);
+    virtual ~CronAlarm();
 
     bool initialize(const std::string &cron_expr_str);
 
@@ -53,4 +53,4 @@ class CronTimer : public Timer
 }
 }
 
-#endif //TBOX_TIMER_CRON_TIMER_H
+#endif //TBOX_ALARM_CRON_ALARM_H

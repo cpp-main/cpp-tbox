@@ -1,22 +1,21 @@
-#include "weekly_timer.h"
+#include "weekly_alarm.h"
 
 #include <sys/time.h>
 
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 namespace {
 constexpr auto kSecondsOfDay = 60 * 60 * 24;
 constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
 }
 
-bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask) {
+bool WeeklyAlarm::initialize(int seconds_of_day, const std::string &week_mask) {
   if (state_ == State::kRunning) {
-    LogWarn("timer is running state, disable first");
+    LogWarn("alarm is running state, disable first");
     return false;
   }
 
@@ -41,7 +40,7 @@ bool WeeklyTimer::initialize(int seconds_of_day, const std::string &week_mask) {
   return true;
 }
 
-int WeeklyTimer::calculateWaitSeconds(uint32_t curr_local_ts) {
+int WeeklyAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
   int curr_week = (((curr_local_ts % kSecondsOfWeek) / kSecondsOfDay) + 4) % 7;
   int curr_seconds = curr_local_ts % kSecondsOfDay;
 
