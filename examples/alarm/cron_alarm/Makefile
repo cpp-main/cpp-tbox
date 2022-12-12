@@ -1,10 +1,10 @@
-EXE_NAME := example/timer/cron_timer
+EXE_NAME := example/alarm/cron_alarm
 
 CPP_SRC_FILES := main.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
-	-ltbox_timer \
+	-ltbox_alarm \
 	-ltbox_event \
 	-ltbox_base \
 

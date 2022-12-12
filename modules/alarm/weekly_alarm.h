@@ -1,23 +1,23 @@
-#ifndef TBOX_TIMER_WEEKLY_TIMER_H_20221019
-#define TBOX_TIMER_WEEKLY_TIMER_H_20221019
+#ifndef TBOX_ALARM_WEEKLY_ALARM_H_20221019
+#define TBOX_ALARM_WEEKLY_ALARM_H_20221019
 
 #include <string>
 
-#include "timer.h"
+#include "alarm.h"
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 /*
- * @brief The weekly timer.
+ * @brief The weekly alarm.
  *
- * WeeklyTimer allow the user to make plans weekly.
+ * WeeklyAlarm allow the user to make plans weekly.
  *
  * code example:
  *
  * Loop *loop = Loop::New();
  *
- * WeeklyTimer tmr(loop);
+ * WeeklyAlarm tmr(loop);
  * tmr.initialize(30600, "1111111"); // everyday at 08:30
  * tmr.setCallback([] { std::cout << "time is up" << endl;});
  * tmr.enable();
@@ -25,10 +25,10 @@ namespace timer {
  * loop->runLoop();
  */
 
-class WeeklyTimer : public Timer
+class WeeklyAlarm : public Alarm
 {
   public:
-    using Timer::Timer;
+    using Alarm::Alarm;
 
     /**
      * \brief 初始化
@@ -53,4 +53,4 @@ class WeeklyTimer : public Timer
 }
 }
 
-#endif //TBOX_TIMER_WEEKLY_TIMER_H_20221019
+#endif //TBOX_ALARM_WEEKLY_ALARM_H_20221019

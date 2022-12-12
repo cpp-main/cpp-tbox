@@ -5,14 +5,14 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include <tbox/event/loop.h>
-#include <tbox/timer/cron_timer.h>
+#include <tbox/alarm/oneshot_alarm.h>
 
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 
 void PrintUsage(const char *process_name) {
-  cout << "Usage:" << process_name << " cron_expr [timezone_offset_minutes]" << endl;
+  cout << "Usage:" << process_name << " seconds_from_00 [timezone_offset_minutes]" << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -23,26 +23,26 @@ int main(int argc, char *argv[]) {
 
     LogOutput_Initialize();
 
-    std::string cron_expr;
+    int seconds_from_00 = 0;
     int timezone_offset_minutes = 0;
 
     try {
-      cron_expr = argv[1];
+      seconds_from_00 = std::stoi(argv[1]);
       if (argc >= 3) {
-        timezone_offset_minutes = std::stoi(argv[2]);
+        timezone_offset_minutes = std::stoi(argv[3]);
       }
     } catch (const std::exception &e) {
       PrintUsage(argv[0]);
       return 0;
     }
 
-    LogInfo("cron_expr:%s", cron_expr.c_str());
+    LogInfo("second:%d", seconds_from_00);
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
-    timer::CronTimer tmr(sp_loop);
-    tmr.initialize(cron_expr);
+    alarm::OneshotAlarm tmr(sp_loop);
+    tmr.initialize(seconds_from_00);
     if (argc >= 4) {
       LogInfo("timezone:%d", timezone_offset_minutes);
       tmr.setTimezone(timezone_offset_minutes);

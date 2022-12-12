@@ -10,4 +10,4 @@ MODULES += mqtt
 MODULES += terminal
 MODULES += main
 MODULES += flow
-MODULES += timer
+MODULES += alarm

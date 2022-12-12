@@ -1,21 +1,21 @@
-#ifndef TBOX_TIMER_TIMER_H_20221022
-#define TBOX_TIMER_TIMER_H_20221022
+#ifndef TBOX_ALARM_ALARM_H_20221022
+#define TBOX_ALARM_ALARM_H_20221022
 
 #include <cstdint>
 #include <functional>
 #include <tbox/event/forward.h>
 
 namespace tbox {
-namespace timer {
+namespace alarm {
 
 /**
  * 定时器基类
  */
-class Timer
+class Alarm
 {
   public:
-    explicit Timer(event::Loop *wp_loop);
-    virtual ~Timer();
+    explicit Alarm(event::Loop *wp_loop);
+    virtual ~Alarm();
 
     using Callback = std::function<void()>;
     void setCallback(const Callback &cb) { cb_ = cb; }
@@ -96,4 +96,4 @@ class Timer
 }
 }
 
-#endif //TBOX_TIMER_TIMER_H_20221022
+#endif //TBOX_ALARM_ALARM_H_20221022
