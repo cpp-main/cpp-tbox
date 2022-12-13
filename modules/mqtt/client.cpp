@@ -1,6 +1,7 @@
 #include "client.h"
 
 #include <thread>
+#include <memory>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
@@ -33,6 +34,33 @@ struct Client::Data {
 
     std::thread *sp_thread = nullptr;
 
+    std::shared_ptr<bool> alive_tag;  //!< 对像存活标签
+    /// Q1: 为什么需要定义它？
+    ///
+    /// 因为在下面使用了runInLoop()函数注册了延后执行的回调函数。在该函数中将this指针捕获了。
+    /// 在它真正执行的时候如果 this 指针所指向的对象就已经被 delete 了，那么如果我们还继续
+    /// 访问那么就一定会触发访问失效的内存地址，行为不可预知。
+    ///
+    /// 怎么解决呢？
+    /// 方法一：在对象析构的时候，撤消之前通过 runInLoop() 注册的回调函数；
+    /// 方法二：在回调函数真正执行的时候，判定一下 this 所指的对象是否有效。
+    ///
+    /// 这里，我们采用了方法二。
+    /// 那怎么实现在后期能知晓 this 指针是否有效呢？
+    /// 通用的方案是：将 this 指针用 std::shared_ptr 进行管理。传入回调函数中的是它的 weak_ptr
+    /// 这样，在使用 this 指针的时候就能得知它是否有效了。
+    ///
+    /// 这么做有一个缺点：这个对象必须继续于 enable_this_shared_ptr 类，而且实例化它的时候必须
+    /// 使用 std::make_shared<T>() 才有效。这样种会给使用者造成一定的负担。
+    /// 除此之外，还有没有别的方法？于是，我想到了 alive_tag。
+    /// 由于对象的成员的生命期与对象自身是一致的，判定一个对象是否有效，可以通过判定它的某个成
+    /// 员生命期是否有效即可。内部附带一个任意类型的智能指针。于是，我在这里定义了一个 alive_tag
+    /// 的智能指针。它的类型可以是任意的，这里就选定了bool。
+    /// 无所谓它的类型，反正我们也不会往里写内容。
+    /// 在 runInLoop() 注册回调函数的时候，就通过 alive_tag 生成对应的 std::weak_ptr 并传入。
+    /// 在回调函数执行之前，检查一下这个 std::weak_ptr 是否过期就可以得知 this 指针是否有效。
+    /// 进而避免继续访问到无效 this 指向的内容。
+
     static int _instance_count;
 };
 
@@ -59,6 +87,8 @@ Client::Client(Loop *wp_loop) :
 
     d_->sp_sock_write_ev = wp_loop->newFdEvent();
     d_->sp_sock_write_ev->setCallback(std::bind(&Client::onSocketWrite, this));
+
+    d_->alive_tag = std::make_shared<bool>(true);
 }
 
 Client::~Client()
@@ -237,15 +267,19 @@ bool Client::start()
     d_->state = State::kConnecting;
 
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
+    std::weak_ptr<bool> alive_tag(d_->alive_tag); //! 原理见Q1
+
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
     d_->sp_thread = new thread(
-        [this] {
+        [this, alive_tag] {
             int ret = mosquitto_connect(d_->sp_mosq,
                                         d_->config.base.broker.domain.c_str(),
                                         d_->config.base.broker.port,
                                         d_->config.base.keepalive);
             d_->wp_loop->runInLoop(
-                [this, ret] {
+                [this, ret, alive_tag] {
+                    if (alive_tag.expired())  //!< 判定this指针是否有效
+                        return;
                     onMosquittoConnectDone(ret, true);
                 }
             );
@@ -350,11 +384,14 @@ void Client::onTimerTick()
 
     if (d_->state == State::kConnecting) {
         if (d_->sp_thread == nullptr) {
+            std::weak_ptr<bool> alive_tag(d_->alive_tag); //! 原理见Q1
             d_->sp_thread = new thread(
-                [this] {
+                [this, alive_tag] {
                     int ret = mosquitto_reconnect(d_->sp_mosq);
                     d_->wp_loop->runInLoop(
-                        [this, ret] {
+                        [this, ret, alive_tag] {
+                            if (alive_tag.expired())  //!< 判定this指针是否有效
+                                return;
                             onMosquittoConnectDone(ret, false);
                         }
                     );
