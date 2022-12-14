@@ -324,7 +324,7 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
     if (p_mid != nullptr)
         *p_mid = mid;
 
-    enableSockeWriteIfNeed();
+    enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
 }
 
@@ -340,7 +340,7 @@ int Client::unsubscribe(const std::string &topic, int *p_mid)
     if (p_mid != nullptr)
         *p_mid = mid;
 
-    enableSockeWriteIfNeed();
+    enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
 }
 
@@ -359,7 +359,7 @@ int Client::publish(const std::string &topic, const void *payload_ptr, size_t pa
     if (p_mid != nullptr)
         *p_mid = mid;
 
-    enableSockeWriteIfNeed();
+    enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
 }
 
@@ -378,7 +378,7 @@ void Client::onTimerTick()
             LogInfo("disconnected with broker, retry.");
             d_->state = State::kConnecting;
         } else {
-            enableSockeWriteIfNeed();
+            enableSocketWriteIfNeed();
         }
     }
 
@@ -404,13 +404,13 @@ void Client::onTimerTick()
 void Client::onSocketRead()
 {
     mosquitto_loop_read(d_->sp_mosq, 1);
-    enableSockeWriteIfNeed();
+    enableSocketWriteIfNeed();
 }
 
 void Client::onSocketWrite()
 {
     mosquitto_loop_write(d_->sp_mosq, 1);
-    enableSockeWriteIfNeed();
+    enableSocketWriteIfNeed();
 }
 
 void Client::OnConnectWrapper(struct mosquitto *, void *userdata, int rc)
@@ -475,8 +475,8 @@ void Client::onConnected(int rc)
 
 void Client::onDisconnected(int rc)
 {
-    disableSockeRead();
-    disableSockeWrite();
+    disableSocketRead();
+    disableSocketWrite();
 
     LogInfo("disconnected");
 
@@ -566,8 +566,8 @@ void Client::onTcpConnectDone(int ret, bool first_connect)
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 
     if (ret == MOSQ_ERR_SUCCESS) {
-        enableSockeRead();
-        enableSockeWriteIfNeed();
+        enableSocketRead();
+        enableSocketWriteIfNeed();
         d_->state = State::kTcpConnected;
     } else {
         LogWarn("connect fail, ret:%d", ret);
@@ -578,7 +578,7 @@ void Client::onTcpConnectDone(int ret, bool first_connect)
         enableTimer();
 }
 
-void Client::enableSockeRead()
+void Client::enableSocketRead()
 {
     if (mosquitto_socket(d_->sp_mosq) < 0)
         return;
@@ -590,7 +590,7 @@ void Client::enableSockeRead()
     d_->sp_sock_read_ev->enable();
 }
 
-void Client::enableSockeWrite()
+void Client::enableSocketWrite()
 {
     if (mosquitto_socket(d_->sp_mosq) < 0)
         return;
@@ -602,10 +602,10 @@ void Client::enableSockeWrite()
     d_->sp_sock_write_ev->enable();
 }
 
-void Client::enableSockeWriteIfNeed()
+void Client::enableSocketWriteIfNeed()
 {
     if (mosquitto_want_write(d_->sp_mosq))
-        enableSockeWrite();
+        enableSocketWrite();
 }
 
 void Client::enableTimer()
@@ -613,12 +613,12 @@ void Client::enableTimer()
     d_->sp_timer_ev->enable();
 }
 
-void Client::disableSockeRead()
+void Client::disableSocketRead()
 {
     d_->sp_sock_read_ev->disable();
 }
 
-void Client::disableSockeWrite()
+void Client::disableSocketWrite()
 {
     d_->sp_sock_write_ev->disable();
 }

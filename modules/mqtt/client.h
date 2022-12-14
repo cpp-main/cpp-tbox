@@ -127,13 +127,13 @@ class Client {
 
     void onTcpConnectDone(int ret, bool first_connect);
 
-    void enableSockeRead();
-    void enableSockeWrite();
-    void enableSockeWriteIfNeed();
+    void enableSocketRead();
+    void enableSocketWrite();
+    void enableSocketWriteIfNeed();
     void enableTimer();
 
-    void disableSockeRead();
-    void disableSockeWrite();
+    void disableSocketRead();
+    void disableSocketWrite();
     void disableTimer();
 
   private:
