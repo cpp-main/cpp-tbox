@@ -280,7 +280,7 @@ bool Client::start()
                 [this, ret, alive_tag] {
                     if (alive_tag.expired())  //!< 判定this指针是否有效
                         return;
-                    onMosquittoConnectDone(ret, true);
+                    onTcpConnectDone(ret, true);
                 }
             );
         }
@@ -294,7 +294,7 @@ void Client::stop()
     if (d_->state <= State::kInited)
         return;
 
-    if (d_->state == State::kSockConnected ||
+    if (d_->state == State::kTcpConnected ||
         d_->state == State::kMqttConnected) {
         //! 如果已成功连接，则立即断开
         mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnected() 中处理
@@ -370,7 +370,7 @@ Client::State Client::getState() const
 
 void Client::onTimerTick()
 {
-    if (d_->state == State::kSockConnected ||
+    if (d_->state == State::kTcpConnected ||
         d_->state == State::kMqttConnected) {
         mosquitto_loop_misc(d_->sp_mosq);
 
@@ -392,7 +392,7 @@ void Client::onTimerTick()
                         [this, ret, alive_tag] {
                             if (alive_tag.expired())  //!< 判定this指针是否有效
                                 return;
-                            onMosquittoConnectDone(ret, false);
+                            onTcpConnectDone(ret, false);
                         }
                     );
                 }
@@ -480,13 +480,15 @@ void Client::onDisconnected(int rc)
 
     LogInfo("disconnected");
 
-    if (d_->state == State::kMqttConnected) {
-        ++d_->cb_level;
-        if (d_->callbacks.disconnected)
-            d_->callbacks.disconnected();
-        --d_->cb_level;
+    if (d_->state >= State::kTcpConnected) {
+        if (d_->state == State::kMqttConnected) {
+            ++d_->cb_level;
+            if (d_->callbacks.disconnected)
+                d_->callbacks.disconnected();
+            --d_->cb_level;
+        }
+        d_->state = State::kConnecting;
     }
-    d_->state = State::kConnecting;
 }
 
 void Client::onPublish(int mid)
@@ -555,7 +557,7 @@ void Client::onLog(int level, const char *str)
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, "%s", str);
 }
 
-void Client::onMosquittoConnectDone(int ret, bool first_connect)
+void Client::onTcpConnectDone(int ret, bool first_connect)
 {
     if (d_->sp_thread == nullptr)
         return;
@@ -566,7 +568,7 @@ void Client::onMosquittoConnectDone(int ret, bool first_connect)
     if (ret == MOSQ_ERR_SUCCESS) {
         enableSockeRead();
         enableSockeWriteIfNeed();
-        d_->state = State::kSockConnected;
+        d_->state = State::kTcpConnected;
     } else {
         LogWarn("connect fail, ret:%d", ret);
     }

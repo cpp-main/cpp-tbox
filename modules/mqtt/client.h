@@ -98,7 +98,7 @@ class Client {
         kNone = 0,      //!< 未初始化
         kInited,        //!< 已初始化
         kConnecting,    //!< 正在连接
-        kSockConnected, //!< Socket已连接
+        kTcpConnected,  //!< TCP已连接
         kMqttConnected, //!< MQTT已连接
     };
 
@@ -125,7 +125,7 @@ class Client {
     void onMessage(const struct mosquitto_message *msg);
     void onLog(int level, const char *str);
 
-    void onMosquittoConnectDone(int ret, bool first_connect);
+    void onTcpConnectDone(int ret, bool first_connect);
 
     void enableSockeRead();
     void enableSockeWrite();
