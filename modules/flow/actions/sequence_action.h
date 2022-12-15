@@ -7,14 +7,26 @@ namespace tbox {
 namespace flow {
 
 /**
- * bool SequenceAction(acton_vec) {
- *   for (item : action_vec)
- *     if (!item())
- *       return false;
+ * bool SequenceAction(acton_vec, finish_condition) {
+ *   for (item : action_vec) {
+ *     auto is_succ = item();
+ *     if (finish_condition == AnySucc && is_succ)
+ *       return is_succ;
+ *     if (finish_condition == AnyFail && !is_succ)
+ *       return is_succ;
+ *   }
  *   return true;
  * }
  */
 class SequenceAction : public Action {
+  public:
+    //! 结束条件
+    enum class FinishCondition {
+      kAllFinish, //!< 全部结束
+      kAnyFail,   //!< 任一失败
+      kAnySucc,   //!< 任一成功
+    };
+
   public:
     using Action::Action;
     virtual ~SequenceAction();
@@ -25,7 +37,11 @@ class SequenceAction : public Action {
 
     int append(Action *action);
 
-    int index() const { return index_; }
+    inline void setFinishCondition(FinishCondition finish_condition) {
+      finish_condition_ = finish_condition;
+    }
+
+    inline int index() const { return index_; }
 
   protected:
     virtual bool onStart() override;
@@ -39,6 +55,7 @@ class SequenceAction : public Action {
     void onChildFinished(bool is_succ);
 
   private:
+    FinishCondition finish_condition_ = FinishCondition::kAllFinish;
     size_t index_ = 0;
     std::vector<Action*> children_;
 };

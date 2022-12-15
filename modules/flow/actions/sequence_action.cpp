@@ -79,11 +79,12 @@ void SequenceAction::startOtheriseFinish() {
 }
 
 void SequenceAction::onChildFinished(bool is_succ) {
-  if (is_succ) {
+  if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
+      (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
+    finish(is_succ);
+  } else {
     ++index_;
     startOtheriseFinish();
-  } else {
-    finish(false);
   }
 }
 
