@@ -17,6 +17,7 @@ HEAD_FILES = \
 	json_fwd.h \
 	json.hpp \
 	assert.h \
+	lifetime_tag.hpp \
 
 CPP_SRC_FILES = \
 	log_imp.cpp \
@@ -29,6 +30,7 @@ TEST_CPP_SRC_FILES = \
 	scope_exit_test.cpp \
 	cabinet_test.cpp \
 	json_test.cpp \
+	lifetime_tag_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS)
 
