@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/log_output.h>
+#include <tbox/base/log.h>
 
 #include "sleep_action.h"
-#include "loop_action.h"
+#include "loop_if_action.h"
 #include "nondelay_action.h"
 #include "sequence_action.h"
 
@@ -118,21 +120,22 @@ TEST(SleepAction, GenLoopAction) {
   ts.push_back(std::chrono::steady_clock::now());
 
   auto gen_time = [&] { return std::chrono::milliseconds(time_tbl[index]); };
-  auto seq_action = new SequenceAction(*loop);
+  auto cond_action = new NondelayAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
+  auto body_action = new SequenceAction(*loop);
 
-  seq_action->append(new SleepAction(*loop, gen_time));
-  seq_action->append(
+  body_action->append(new SleepAction(*loop, gen_time));
+  body_action->append(
     new NondelayAction(*loop,
       [&] {
         ts.push_back(std::chrono::steady_clock::now());
         ++index;
-        return index < NUMBER_OF_ARRAY(time_tbl);
+        return true;
       }
     )
   );
-  LoopAction loop_action(*loop, seq_action, LoopAction::Mode::kUntilFail);
-  loop_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
-  loop_action.start();
+  LoopIfAction loop_if_action(*loop, cond_action, body_action);
+  loop_if_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
+  loop_if_action.start();
 
   loop->runLoop();
 
