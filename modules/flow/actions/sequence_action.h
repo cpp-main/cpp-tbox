@@ -7,7 +7,8 @@ namespace tbox {
 namespace flow {
 
 /**
- * bool SequenceAction(acton_vec, finish_condition) {
+ * 模拟实现以下流程
+ * bool SequenceAction(action_vec, finish_condition == AllFinish) {
  *   for (item : action_vec) {
  *     auto is_succ = item();
  *     if ((finish_condition == AnySucc && is_succ) ||
