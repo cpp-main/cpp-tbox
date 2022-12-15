@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include <chrono>
 
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
@@ -49,6 +50,8 @@ class Action {
     using FinishCallback = std::function<void(bool is_succ)>;
     inline void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
+    void setTimeout(std::chrono::milliseconds ms);
+
     virtual void toJson(Json &js) const;
 
     bool start();   //!< 开始
@@ -66,6 +69,7 @@ class Action {
     virtual bool onStop() { return true; }
     virtual void onReset() { }
     virtual void onFinished(bool is_succ) { }
+    virtual void onTimeout() { finish(false); }
 
   protected:
     event::Loop &loop_;
@@ -76,6 +80,8 @@ class Action {
 
     State state_ = State::kIdle;      //!< 状态
     Result result_ = Result::kUnsure; //!< 运行结果
+
+    event::TimerEvent *timer_ev_ = nullptr;
 };
 
 //! 枚举转字串

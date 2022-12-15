@@ -40,6 +40,7 @@ CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	state_machine_test.cpp \
+	action_test.cpp \
 	event_publisher_impl_test.cpp \
 	action_executor_test.cpp \
 	actions/sleep_action_test.cpp \
