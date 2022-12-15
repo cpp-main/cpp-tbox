@@ -10,9 +10,8 @@ namespace flow {
  * bool SequenceAction(acton_vec, finish_condition) {
  *   for (item : action_vec) {
  *     auto is_succ = item();
- *     if (finish_condition == AnySucc && is_succ)
- *       return is_succ;
- *     if (finish_condition == AnyFail && !is_succ)
+ *     if ((finish_condition == AnySucc && is_succ) ||
+ *         (finish_condition == AnyFail && !is_succ))
  *       return is_succ;
  *   }
  *   return true;
