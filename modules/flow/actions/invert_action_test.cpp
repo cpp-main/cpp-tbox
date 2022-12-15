@@ -3,7 +3,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "invert_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 
 namespace tbox {
 namespace flow {
@@ -15,7 +15,7 @@ TEST(InvertAction, _) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  auto nodelay_action = new NondelayAction(*loop, [] { return true; });
+  auto nodelay_action = new FunctionAction(*loop, [] { return true; });
   InvertAction invert_action(*loop, nodelay_action);
 
   bool is_callback = false;

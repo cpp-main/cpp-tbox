@@ -3,7 +3,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "sequence_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sleep_action.h"
 
 namespace tbox {
@@ -19,13 +19,13 @@ TEST(SequenceAction, FinishIfAnyFail_AllSucc) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -56,13 +56,13 @@ TEST(SequenceAction, FinishIfAnyFail_FailHead) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_2 = true;
       return false;
@@ -94,13 +94,13 @@ TEST(SequenceAction, FinishIfAnyFail_FailTail) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -162,13 +162,13 @@ TEST(SequenceAction, FinishIfAnySucc_AllFail) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -199,13 +199,13 @@ TEST(SequenceAction, FinishIfAnySucc_SuccHead) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_2 = true;
       return false;
@@ -236,13 +236,13 @@ TEST(SequenceAction, FinishIfAnySucc_SuccTail) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -273,13 +273,13 @@ TEST(SequenceAction, FinishIfAllFinish_AllFail) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -310,13 +310,13 @@ TEST(SequenceAction, FinishIfAllFinish_AllSucc) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;

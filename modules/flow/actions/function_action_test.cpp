@@ -2,7 +2,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
 
-#include "nondelay_action.h"
+#include "function_action.h"
 
 namespace tbox {
 namespace flow {
@@ -11,7 +11,7 @@ TEST(NonDelayAction, True) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  NondelayAction action(*loop, [] { return true; });
+  FunctionAction action(*loop, [] { return true; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_succ) {
@@ -30,7 +30,7 @@ TEST(NonDelayAction, False) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  NondelayAction action(*loop, [] { return false; });
+  FunctionAction action(*loop, [] { return false; });
   bool is_callback = false;
   action.setFinishCallback(
     [&is_callback, loop] (bool is_succ) {

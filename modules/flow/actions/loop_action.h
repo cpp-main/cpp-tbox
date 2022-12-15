@@ -1,5 +1,5 @@
-#ifndef TBOX_FLOW_LOOP_FLOW_H_20221017
-#define TBOX_FLOW_LOOP_FLOW_H_20221017
+#ifndef TBOX_FLOW_LOOP_ACTION_H_20221017
+#define TBOX_FLOW_LOOP_ACTION_H_20221017
 
 #include "../action.h"
 
@@ -34,4 +34,4 @@ class LoopAction : public Action {
 }
 }
 
-#endif //TBOX_FLOW_LOOP_FLOW_H_20221017
+#endif //TBOX_FLOW_LOOP_ACTION_H_20221017

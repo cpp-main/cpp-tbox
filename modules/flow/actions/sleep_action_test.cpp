@@ -6,7 +6,7 @@
 
 #include "sleep_action.h"
 #include "loop_if_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sequence_action.h"
 
 namespace tbox {
@@ -120,12 +120,12 @@ TEST(SleepAction, GenLoopAction) {
   ts.push_back(std::chrono::steady_clock::now());
 
   auto gen_time = [&] { return std::chrono::milliseconds(time_tbl[index]); };
-  auto cond_action = new NondelayAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
+  auto cond_action = new FunctionAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
   auto body_action = new SequenceAction(*loop);
 
   body_action->append(new SleepAction(*loop, gen_time));
   body_action->append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&] {
         ts.push_back(std::chrono::steady_clock::now());
         ++index;

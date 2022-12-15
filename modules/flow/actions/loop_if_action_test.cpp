@@ -3,7 +3,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "loop_if_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sleep_action.h"
 #include "sequence_action.h"
 
@@ -21,8 +21,8 @@ TEST(LoopIfAction, LoopRemainTimes) {
   SetScopeExitAction([loop] { delete loop; });
 
   int remain = 10;
-  auto cond_action = new NondelayAction(*loop, [&] { return remain > 0; });
-  auto exec_action = new NondelayAction(*loop, [&] { --remain; return true; });
+  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
+  auto exec_action = new FunctionAction(*loop, [&] { --remain; return true; });
   LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
   bool is_finished = false;
@@ -49,9 +49,9 @@ TEST(LoopIfAction, MultiAction) {
   SetScopeExitAction([loop] { delete loop; });
 
   int remain = 10;
-  auto cond_action = new NondelayAction(*loop, [&] { return remain > 0; });
+  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
   auto exec_action = new SequenceAction(*loop);
-  exec_action->append(new NondelayAction(*loop, [&] { --remain; return true; }));
+  exec_action->append(new FunctionAction(*loop, [&] { --remain; return true; }));
   exec_action->append(new SleepAction(*loop, std::chrono::milliseconds(10)));
   LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
