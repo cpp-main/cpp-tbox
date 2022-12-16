@@ -130,6 +130,8 @@ void Action::reset() {
 }
 
 void Action::setTimeout(std::chrono::milliseconds ms) {
+  LogDbg("set action %s(%s) timeout: %d", type().c_str(), name_.c_str(), ms.count());
+
   if (timer_ev_ == nullptr) {
     timer_ev_ = loop_.newTimerEvent();
     timer_ev_->setCallback(
@@ -141,6 +143,7 @@ void Action::setTimeout(std::chrono::milliseconds ms) {
   } else {
     timer_ev_->disable();
   }
+
   timer_ev_->initialize(ms, event::Event::Mode::kOneshot);
 }
 
