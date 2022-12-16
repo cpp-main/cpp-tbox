@@ -4,7 +4,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "action_executor.h"
-#include "actions/nondelay_action.h"
+#include "actions/function_action.h"
 #include "actions/sleep_action.h"
 
 namespace tbox {
@@ -35,7 +35,7 @@ TEST(ActionExecutor, OneAction) {
 
   exec.setAllFinishedCallback([loop]{ loop->exitLoop(); });
 
-  exec.append(new NondelayAction(*loop, [&]{ is_run = true; return true; }));
+  exec.append(new FunctionAction(*loop, [&]{ is_run = true; return true; }));
 
   loop->runLoop();
   EXPECT_TRUE(is_run);
@@ -54,7 +54,7 @@ TEST(ActionExecutor, TwoActions) {
   bool is_run_2 = false;
 
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run_1 = true;
         EXPECT_FALSE(is_run_2);
@@ -63,7 +63,7 @@ TEST(ActionExecutor, TwoActions) {
     )
   );
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run_2 = true;
         EXPECT_TRUE(is_run_1);
@@ -90,7 +90,7 @@ TEST(ActionExecutor, CancelAction)
   bool is_run_3 = false;
 
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run_1 = true;
         EXPECT_FALSE(is_run_2);
@@ -100,7 +100,7 @@ TEST(ActionExecutor, CancelAction)
     )
   );
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run_2 = true;
         return true;
@@ -108,7 +108,7 @@ TEST(ActionExecutor, CancelAction)
     )
   );
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run_3 = true;
         EXPECT_TRUE(is_run_1);
@@ -162,7 +162,7 @@ TEST(ActionExecutor, Prio)
 
   //! 加入低优先级动作2
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         EXPECT_EQ(index, 3);
         ++index;
@@ -174,7 +174,7 @@ TEST(ActionExecutor, Prio)
 
   //! 加入中优先级动作3
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         EXPECT_EQ(index, 1);
         ++index;
@@ -185,7 +185,7 @@ TEST(ActionExecutor, Prio)
   );
   //! 加入中优先级动作4
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         EXPECT_EQ(index, 2);
         ++index;
@@ -197,7 +197,7 @@ TEST(ActionExecutor, Prio)
 
   //! 加入高优先级动作5
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         EXPECT_EQ(index, 0);
         ++index;
@@ -233,7 +233,7 @@ TEST(ActionExecutor, Prio)
  * 测试运行过程中取消当前任务
  *
  * 1.加入一个1秒的延迟；
- * 2.加入一个NondelayAction，在该动作中记录执行时间点exec_ts；
+ * 2.加入一个FunctionAction，在该动作中记录执行时间点exec_ts；
  * 3.创建一个定时器，20ms后触发；
  * 4.在执行loop之前，记录start_ts
  * 5.检查 start_ts 到 exec_ts 的时间差，正常情况下就在20ms左右
@@ -252,7 +252,7 @@ TEST(ActionExecutor, CancelCurrent) {
 
   exec.append(new SleepAction(*loop, std::chrono::seconds(1)));
   exec.append(
-    new NondelayAction(*loop,
+    new FunctionAction(*loop,
       [&]{
         is_run = true;
         exec_ts = std::chrono::steady_clock::now();

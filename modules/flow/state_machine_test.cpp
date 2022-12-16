@@ -254,7 +254,7 @@ TEST(StateMachine, SubSM)
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.run(EventId::k1));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k1);
@@ -262,7 +262,7 @@ TEST(StateMachine, SubSM)
 
         EXPECT_TRUE(sm.run(EventId::k1));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kTerm);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.isTerminated());
 
@@ -273,7 +273,7 @@ TEST(StateMachine, SubSM)
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.run(EventId::k1));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k1);
@@ -289,7 +289,7 @@ TEST(StateMachine, SubSM)
 
         EXPECT_TRUE(sm.run(EventId::k1));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kTerm);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
         EXPECT_TRUE(sm.isTerminated());
 
         sm.stop();
@@ -299,11 +299,11 @@ TEST(StateMachine, SubSM)
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.run(EventId::k2));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k2);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.run(EventId::k2));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k1);
@@ -311,7 +311,7 @@ TEST(StateMachine, SubSM)
 
         EXPECT_TRUE(sm.run(EventId::k2));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k2);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         EXPECT_TRUE(sm.run(EventId::k2));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::k1);
@@ -323,7 +323,7 @@ TEST(StateMachine, SubSM)
 
         EXPECT_TRUE(sm.run(EventId::k1));
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kTerm);
-        EXPECT_EQ(sub_sm.currentState<StateId>(), StateId::kTerm);
+        EXPECT_EQ(sub_sm.currentState(), -1);
 
         sm.stop();
     }

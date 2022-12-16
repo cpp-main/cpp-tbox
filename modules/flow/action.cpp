@@ -4,6 +4,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/json.hpp>
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 
 namespace tbox {
 namespace flow {
@@ -15,6 +16,7 @@ Action::Action(event::Loop &loop) :
 Action::~Action() {
   //! 不允许在未stop之前或是未结束之前析构对象
   TBOX_ASSERT(state_ != State::kRunning && state_ != State::kPause);
+  CHECK_DELETE_RESET_OBJ(timer_ev_);
 }
 
 void Action::toJson(Json &js) const {
@@ -44,6 +46,9 @@ bool Action::start() {
     return false;
   }
 
+  if (timer_ev_ != nullptr)
+    timer_ev_->enable();
+
   state_ = State::kRunning;
   return true;
 }
@@ -62,6 +67,9 @@ bool Action::pause() {
     LogWarn("pause action %s(%s) fail", type().c_str(), name_.c_str());
     return false;
   }
+
+  if (timer_ev_ != nullptr)
+    timer_ev_->disable();
 
   state_ = State::kPause;
   return true;
@@ -82,6 +90,9 @@ bool Action::resume() {
     return false;
   }
 
+  if (timer_ev_ != nullptr)
+    timer_ev_->enable();
+
   state_ = State::kRunning;
   return true;
 }
@@ -97,6 +108,9 @@ bool Action::stop() {
     return false;
   }
 
+  if (timer_ev_ != nullptr)
+    timer_ev_->disable();
+
   state_ = State::kStoped;
   return true;
 }
@@ -108,8 +122,29 @@ void Action::reset() {
   LogDbg("reset action %s(%s)", type().c_str(), name_.c_str());
   onReset();
 
+  if (timer_ev_ != nullptr)
+    timer_ev_->disable();
+
   state_ = State::kIdle;
   result_ = Result::kUnsure;
+}
+
+void Action::setTimeout(std::chrono::milliseconds ms) {
+  LogDbg("set action %s(%s) timeout: %d", type().c_str(), name_.c_str(), ms.count());
+
+  if (timer_ev_ == nullptr) {
+    timer_ev_ = loop_.newTimerEvent();
+    timer_ev_->setCallback(
+      [this] {
+        LogDbg("action %s(%s) timeout", type().c_str(), name_.c_str());
+        onTimeout();
+      }
+    );
+  } else {
+    timer_ev_->disable();
+  }
+
+  timer_ev_->initialize(ms, event::Event::Mode::kOneshot);
 }
 
 bool Action::finish(bool is_succ) {
@@ -117,6 +152,10 @@ bool Action::finish(bool is_succ) {
     LogDbg("action %s(%s) finished, is_succ: %s", type().c_str(),
            name_.c_str(), is_succ? "succ" : "fail");
     state_ = State::kFinished;
+
+    if (timer_ev_ != nullptr)
+      timer_ev_->disable();
+
     result_ = is_succ ? Result::kSuccess : Result::kFail;
     loop_.runInLoop(std::bind(finish_cb_, is_succ));
     onFinished(is_succ);

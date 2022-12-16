@@ -3,7 +3,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "parallel_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sleep_action.h"
 
 namespace tbox {
@@ -38,7 +38,7 @@ TEST(ParallelAction, TwoSleepAction) {
   EXPECT_LT(d, std::chrono::milliseconds(310));
 }
 
-TEST(ParallelAction, SleepNondelayAction) {
+TEST(ParallelAction, SleepFunctionAction) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
@@ -47,7 +47,7 @@ TEST(ParallelAction, SleepNondelayAction) {
 
   bool nodelay_action_succ = false;
   auto *sleep_action = new SleepAction(*loop, std::chrono::milliseconds(50));
-  auto *nondelay_action = new NondelayAction(*loop,
+  auto *function_action = new FunctionAction(*loop,
     [&] {
       nodelay_action_succ = true;
       return true;
@@ -55,7 +55,7 @@ TEST(ParallelAction, SleepNondelayAction) {
   );
 
   para_action->append(sleep_action);
-  para_action->append(nondelay_action);
+  para_action->append(function_action);
 
   para_action->setFinishCallback(
     [loop](bool is_succ) {

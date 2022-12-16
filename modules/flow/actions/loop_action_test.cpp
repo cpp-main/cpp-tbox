@@ -4,7 +4,7 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "loop_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sleep_action.h"
 #include "sequence_action.h"
 
@@ -18,18 +18,18 @@ namespace flow {
  *    return true;
  *  }
  */
-TEST(LoopAction, NondelayActionForever) {
+TEST(LoopAction, FunctionActionForever) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
-  auto nondelay_action = new NondelayAction(*loop,
+  auto function_action = new FunctionAction(*loop,
     [&] {
       ++loop_times;
       return true;
     }
   );
-  LoopAction loop_action(*loop, nondelay_action, LoopAction::Mode::kForever);
+  LoopAction loop_action(*loop, function_action, LoopAction::Mode::kForever);
   bool is_finished = false;
   loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 
@@ -53,7 +53,7 @@ TEST(LoopAction, SleepActionForever) {
   SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
-  auto nondelay_action = new NondelayAction(*loop,
+  auto function_action = new FunctionAction(*loop,
     [&] {
       ++loop_times;
       return true;
@@ -62,7 +62,7 @@ TEST(LoopAction, SleepActionForever) {
   auto delay_10ms_action = new SleepAction(*loop, std::chrono::milliseconds(100));
   auto seq_action = new SequenceAction(*loop);
   seq_action->append(delay_10ms_action);
-  seq_action->append(nondelay_action);
+  seq_action->append(function_action);
 
   LoopAction loop_action(*loop, seq_action, LoopAction::Mode::kForever);
   bool is_finished = false;

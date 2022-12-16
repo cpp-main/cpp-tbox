@@ -11,10 +11,9 @@ HEAD_FILES = \
 	event_subscriber.h \
 	event_publisher.h \
 	event_publisher_impl.h \
-	actions/nondelay_action.h \
+	actions/function_action.h \
 	actions/sleep_action.h \
 	actions/sequence_action.h \
-	actions/fallback_action.h \
 	actions/parallel_action.h \
 	actions/invert_action.h \
 	actions/if_else_action.h \
@@ -27,10 +26,9 @@ CPP_SRC_FILES = \
 	action.cpp \
 	action_executor.cpp \
 	event_publisher_impl.cpp \
-	actions/nondelay_action.cpp \
+	actions/function_action.cpp \
 	actions/sleep_action.cpp \
 	actions/sequence_action.cpp \
-	actions/fallback_action.cpp \
 	actions/parallel_action.cpp \
 	actions/invert_action.cpp \
 	actions/if_else_action.cpp \
@@ -38,16 +36,16 @@ CPP_SRC_FILES = \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"action"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"flow"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	state_machine_test.cpp \
+	action_test.cpp \
 	event_publisher_impl_test.cpp \
 	action_executor_test.cpp \
 	actions/sleep_action_test.cpp \
-	actions/nondelay_action_test.cpp \
+	actions/function_action_test.cpp \
 	actions/sequence_action_test.cpp \
-	actions/fallback_action_test.cpp \
 	actions/parallel_action_test.cpp \
 	actions/invert_action_test.cpp \
 	actions/if_else_action_test.cpp \

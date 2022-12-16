@@ -3,13 +3,13 @@
 #include <tbox/base/scope_exit.hpp>
 
 #include "sequence_action.h"
-#include "nondelay_action.h"
+#include "function_action.h"
 #include "sleep_action.h"
 
 namespace tbox {
 namespace flow {
 
-TEST(SequenceAction, AllSucc) {
+TEST(SequenceAction, FinishIfAnyFail_AllSucc) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
@@ -19,13 +19,13 @@ TEST(SequenceAction, AllSucc) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -38,6 +38,7 @@ TEST(SequenceAction, AllSucc) {
       loop->exitLoop();
     }
   );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
   seq_action->start();
 
   loop->runLoop();
@@ -45,7 +46,7 @@ TEST(SequenceAction, AllSucc) {
   EXPECT_EQ(seq_action->index(), 2);
 }
 
-TEST(SequenceAction, FailHead) {
+TEST(SequenceAction, FinishIfAnyFail_FailHead) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
@@ -55,13 +56,13 @@ TEST(SequenceAction, FailHead) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return false;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_2 = true;
       return false;
@@ -73,6 +74,7 @@ TEST(SequenceAction, FailHead) {
       loop->exitLoop();
     }
   );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
   seq_action->start();
 
   loop->runLoop();
@@ -82,7 +84,7 @@ TEST(SequenceAction, FailHead) {
 }
 
 
-TEST(SequenceAction, FailTail) {
+TEST(SequenceAction, FinishIfAnyFail_FailTail) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
@@ -92,13 +94,13 @@ TEST(SequenceAction, FailTail) {
   auto *seq_action = new SequenceAction(*loop);
   SetScopeExitAction([seq_action] { delete seq_action; });
 
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       action_run_1 = true;
       return true;
     }
   ));
-  seq_action->append(new NondelayAction(*loop,
+  seq_action->append(new FunctionAction(*loop,
     [&] {
       EXPECT_TRUE(action_run_1);
       action_run_2 = true;
@@ -111,6 +113,7 @@ TEST(SequenceAction, FailTail) {
       loop->exitLoop();
     }
   );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
   seq_action->start();
 
   loop->runLoop();
@@ -146,6 +149,191 @@ TEST(SequenceAction, TwoSleepAction) {
   EXPECT_GT(d, std::chrono::milliseconds(490));
   EXPECT_LT(d, std::chrono::milliseconds(510));
 
+  EXPECT_EQ(seq_action->index(), 2);
+}
+
+TEST(SequenceAction, FinishIfAnySucc_AllFail) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  bool action_run_1 = false;
+  bool action_run_2 = false;
+
+  auto *seq_action = new SequenceAction(*loop);
+  SetScopeExitAction([seq_action] { delete seq_action; });
+
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_1 = true;
+      return false;
+    }
+  ));
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      EXPECT_TRUE(action_run_1);
+      action_run_2 = true;
+      return false;
+    }
+  ));
+  seq_action->setFinishCallback(
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      loop->exitLoop();
+    }
+  );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+  seq_action->start();
+
+  loop->runLoop();
+  EXPECT_TRUE(action_run_2);
+  EXPECT_EQ(seq_action->index(), 2);
+}
+
+TEST(SequenceAction, FinishIfAnySucc_SuccHead) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  bool action_run_1 = false;
+  bool action_run_2 = false;
+
+  auto *seq_action = new SequenceAction(*loop);
+  SetScopeExitAction([seq_action] { delete seq_action; });
+
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_1 = true;
+      return true;
+    }
+  ));
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_2 = true;
+      return false;
+    }
+  ));
+  seq_action->setFinishCallback(
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      loop->exitLoop();
+    }
+  );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+  seq_action->start();
+
+  loop->runLoop();
+  EXPECT_TRUE(action_run_1);
+  EXPECT_FALSE(action_run_2);
+  EXPECT_EQ(seq_action->index(), 0);
+}
+
+TEST(SequenceAction, FinishIfAnySucc_SuccTail) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  bool action_run_1 = false;
+  bool action_run_2 = false;
+
+  auto *seq_action = new SequenceAction(*loop);
+  SetScopeExitAction([seq_action] { delete seq_action; });
+
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_1 = true;
+      return false;
+    }
+  ));
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      EXPECT_TRUE(action_run_1);
+      action_run_2 = true;
+      return true;
+    }
+  ));
+  seq_action->setFinishCallback(
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      loop->exitLoop();
+    }
+  );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+  seq_action->start();
+
+  loop->runLoop();
+  EXPECT_TRUE(action_run_2);
+  EXPECT_EQ(seq_action->index(), 1);
+}
+
+TEST(SequenceAction, FinishIfAllFinish_AllFail) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  bool action_run_1 = false;
+  bool action_run_2 = false;
+
+  auto *seq_action = new SequenceAction(*loop);
+  SetScopeExitAction([seq_action] { delete seq_action; });
+
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_1 = true;
+      return false;
+    }
+  ));
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      EXPECT_TRUE(action_run_1);
+      action_run_2 = true;
+      return false;
+    }
+  ));
+  seq_action->setFinishCallback(
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      loop->exitLoop();
+    }
+  );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAllFinish);
+  seq_action->start();
+
+  loop->runLoop();
+  EXPECT_TRUE(action_run_2);
+  EXPECT_EQ(seq_action->index(), 2);
+}
+
+TEST(SequenceAction, FinishIfAllFinish_AllSucc) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  bool action_run_1 = false;
+  bool action_run_2 = false;
+
+  auto *seq_action = new SequenceAction(*loop);
+  SetScopeExitAction([seq_action] { delete seq_action; });
+
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      action_run_1 = true;
+      return true;
+    }
+  ));
+  seq_action->append(new FunctionAction(*loop,
+    [&] {
+      EXPECT_TRUE(action_run_1);
+      action_run_2 = true;
+      return true;
+    }
+  ));
+  seq_action->setFinishCallback(
+    [loop](bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      loop->exitLoop();
+    }
+  );
+  seq_action->setFinishCondition(SequenceAction::FinishCondition::kAllFinish);
+  seq_action->start();
+
+  loop->runLoop();
+  EXPECT_TRUE(action_run_2);
   EXPECT_EQ(seq_action->index(), 2);
 }
 
