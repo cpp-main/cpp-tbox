@@ -9,21 +9,22 @@ namespace tbox {
 class LifetimeTag {
  private:
   struct Detail {
-    bool alive = true;
-    int watcher_counter = 0;
+    bool  alive = true;
+    int   watcher_counter = 0;
   };
   Detail *d_;
 
  public:
-  LifetimeTag() : d_(new Detail) { }
   ~LifetimeTag() {
     if (d_->watcher_counter == 0)
       delete d_;
     else
       d_->alive = false;
   }
+
+  inline LifetimeTag() : d_(new Detail) { }
   inline LifetimeTag(const LifetimeTag &) : d_(new Detail) { }
-  inline LifetimeTag(LifetimeTag &&other) : d_(other.d_) { other.d_ = nullptr; }
+  inline LifetimeTag(LifetimeTag &&other) : d_(new Detail) { swap(other); }
 
   inline LifetimeTag& operator = (const LifetimeTag &) { return *this; }
   LifetimeTag& operator = (LifetimeTag &&other) {
@@ -34,17 +35,19 @@ class LifetimeTag {
     return *this;
   }
 
-  inline void swap(LifetimeTag &other) { std::swap(d_, other.d_); }
   inline void reset() { LifetimeTag tmp; swap(tmp); }
+  inline void swap(LifetimeTag &other) { std::swap(d_, other.d_); }
 
  public:
   class Watcher {
    public:
     Watcher() { }
     ~Watcher() {
-      --d_->watcher_counter;
-      if (d_->watcher_counter == 0 && !d_->alive)
-        delete d_;
+      if (d_ != nullptr) {
+        --d_->watcher_counter;
+        if (d_->watcher_counter == 0 && !d_->alive)
+          delete d_;
+      }
     }
     Watcher(const LifetimeTag &tag) : d_(tag.d_) { ++d_->watcher_counter; }
     Watcher(const Watcher &other) : d_(other.d_) { ++d_->watcher_counter; }
@@ -84,6 +87,8 @@ class LifetimeTag {
    private:
     Detail *d_ = nullptr;
   };
+
+  inline Watcher get() const { return Watcher(*this); }
 };
 
 }
