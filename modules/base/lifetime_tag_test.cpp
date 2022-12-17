@@ -31,10 +31,10 @@ TEST(LifetimeTag, LifetimeTagMoveConstruct) {
     w1 = tag1;
     LifetimeTag tag2(std::move(tag1));
     w2 = tag2;
-    EXPECT_FALSE(w1);
+    EXPECT_TRUE(w1);
     EXPECT_TRUE(w2);
   }
-  EXPECT_FALSE(w1);
+  EXPECT_TRUE(w1);
   EXPECT_FALSE(w2);
 }
 
