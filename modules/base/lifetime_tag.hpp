@@ -25,10 +25,10 @@ class LifetimeTag {
       }
     }
 
-    Watcher() { }
-    Watcher(const LifetimeTag &tag) : d_(tag.d_) { ++d_->watcher_counter; }
-    Watcher(const Watcher &other) : d_(other.d_) { ++d_->watcher_counter; }
-    Watcher(Watcher &&other) : d_(other.d_) { other.d_ = nullptr; }
+    inline Watcher() { }
+    inline Watcher(const LifetimeTag &tag) : d_(tag.d_) { ++d_->watcher_counter; }
+    inline Watcher(const Watcher &other) : d_(other.d_) { ++d_->watcher_counter; }
+    inline Watcher(Watcher &&other) : d_(other.d_) { other.d_ = nullptr; }
 
     Watcher& operator = (const LifetimeTag &tag) {
       reset();
@@ -78,7 +78,7 @@ class LifetimeTag {
   inline LifetimeTag(LifetimeTag &&) : d_(new Detail) { }
 
   inline LifetimeTag& operator = (const LifetimeTag &) { return *this; }
-  LifetimeTag& operator = (LifetimeTag &&) { return *this; }
+  inline LifetimeTag& operator = (LifetimeTag &&) { return *this; }
 
   inline Watcher get() const { return *this; }
 };
