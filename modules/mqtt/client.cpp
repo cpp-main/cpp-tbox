@@ -1,10 +1,10 @@
 #include "client.h"
 
 #include <thread>
-#include <memory>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/lifetime_tag.hpp>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/fd_event.h>
 
@@ -34,7 +34,7 @@ struct Client::Data {
 
     std::thread *sp_thread = nullptr;
 
-    std::shared_ptr<bool> alive_tag;  //!< 对像存活标签
+    LifetimeTag alive_tag;  //!< 对像存活标签
     /// Q1: 为什么需要定义它？
     ///
     /// 因为在下面使用了runInLoop()函数注册了延后执行的回调函数。在该函数中将this指针捕获了。
@@ -87,8 +87,6 @@ Client::Client(Loop *wp_loop) :
 
     d_->sp_sock_write_ev = wp_loop->newFdEvent();
     d_->sp_sock_write_ev->setCallback(std::bind(&Client::onSocketWrite, this));
-
-    d_->alive_tag = std::make_shared<bool>(true);
 }
 
 Client::~Client()
@@ -267,18 +265,18 @@ bool Client::start()
     d_->state = State::kConnecting;
 
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
-    std::weak_ptr<bool> alive_tag(d_->alive_tag); //! 原理见Q1
+    auto is_alive = d_->alive_tag.get();  //! 原理见Q1
 
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
     d_->sp_thread = new thread(
-        [this, alive_tag] {
+        [this, is_alive] {
             int ret = mosquitto_connect(d_->sp_mosq,
                                         d_->config.base.broker.domain.c_str(),
                                         d_->config.base.broker.port,
                                         d_->config.base.keepalive);
             d_->wp_loop->runInLoop(
-                [this, ret, alive_tag] {
-                    if (alive_tag.expired())  //!< 判定this指针是否有效
+                [this, is_alive, ret] {
+                    if (!is_alive)  //!< 判定this指针是否有效
                         return;
                     onTcpConnectDone(ret, true);
                 }
@@ -384,13 +382,13 @@ void Client::onTimerTick()
 
     if (d_->state == State::kConnecting) {
         if (d_->sp_thread == nullptr) {
-            std::weak_ptr<bool> alive_tag(d_->alive_tag); //! 原理见Q1
+            auto is_alive = d_->alive_tag.get();  //! 原理见Q1
             d_->sp_thread = new thread(
-                [this, alive_tag] {
+                [this, is_alive] {
                     int ret = mosquitto_reconnect(d_->sp_mosq);
                     d_->wp_loop->runInLoop(
-                        [this, ret, alive_tag] {
-                            if (alive_tag.expired())  //!< 判定this指针是否有效
+                        [this, is_alive, ret] {
+                            if (!is_alive)  //!< 判定this指针是否有效
                                 return;
                             onTcpConnectDone(ret, false);
                         }
