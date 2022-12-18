@@ -14,7 +14,7 @@ CXXFLAGS := -DLOG_MODULE_ID='"tbox_crypto"' $(CXXFLAGS)
 TEST_CPP_SRC_FILES = \
 	md5_test.cpp
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base
 
 ENABLE_SHARED_LIB = no
 

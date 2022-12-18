@@ -1,6 +1,7 @@
 #include "md5.h"
 
 #include <cstring>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace crypto {
@@ -230,7 +231,8 @@ MD5::MD5()
 
 void MD5::update(const void* plain_text_ptr, size_t plain_text_len)
 {
-    const uint8_t *plain_text_u8_ptr = static_cast<const uint8_t*>(plain_text_ptr);
+    TBOX_ASSERT(plain_text_ptr != nullptr);
+    TBOX_ASSERT(!is_finished_);
 
     //! index：当前状态的位数对64取余，其单位是字节
     uint32_t index = (count_[0] >> 3) & 0x3F;
@@ -248,6 +250,8 @@ void MD5::update(const void* plain_text_ptr, size_t plain_text_len)
         count_[1]++;
 
     count_[1] += plain_text_len >> 29;
+
+    const uint8_t *plain_text_u8_ptr = static_cast<const uint8_t*>(plain_text_ptr);
 
     uint32_t i = 0;
     //! 当其输入字节数的大于其可以补足64字节的字节数，进行补足
@@ -273,6 +277,8 @@ void MD5::update(const void* plain_text_ptr, size_t plain_text_len)
 
 void MD5::finish(uint8_t digest[16])
 {
+    TBOX_ASSERT(digest != nullptr);
+
     uint32_t index = (count_[0] >> 3) & 0x3F;
     //! 因为要填充满足使其位长对512求余的结果等于448（56位）
     //! 所以当其所剩余的数小于56字节，则填充56-index字节，
@@ -295,6 +301,8 @@ void MD5::finish(uint8_t digest[16])
 
     //! 把最终得到的加密信息变成字符输出，共16字节
     Encode(digest, state_, 16);
+
+    is_finished_ = true;
 }
 
 }
