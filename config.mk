@@ -11,3 +11,4 @@ MODULES += terminal
 MODULES += main
 MODULES += flow
 MODULES += alarm
+MODULES += crypto
