@@ -9,8 +9,8 @@ namespace network {
 
 class IPAddress {
   public:
-    IPAddress(uint32_t ip = 0) : ip_(ip) { }
-    IPAddress(const std::string &ip_str);
+    explicit IPAddress(uint32_t ip = 0) : ip_(ip) { }
+    explicit IPAddress(const std::string &ip_str);
 
     IPAddress& operator = (uint32_t ip) { ip_ = ip; return *this; }
     inline operator uint32_t () const { return ip_; }

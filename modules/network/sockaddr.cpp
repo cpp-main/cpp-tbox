@@ -31,13 +31,14 @@ SockAddr::SockAddr(const IPAddress &ip, uint16_t port)
     len_ = sizeof(struct sockaddr_in);
 }
 
-SockAddr::SockAddr(const string &sock_path)
+SockAddr::SockAddr(const DomainSockPath &path)
 {
     bzero(&addr_, sizeof(addr_));
 
     struct sockaddr_un *p_addr = (struct sockaddr_un *)&addr_;
     p_addr->sun_family = AF_LOCAL;
 
+    auto &sock_path = path.get();
     //!NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
     ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size() + 1);
     len_ = kSockAddrUnHeadSize + sock_path.size() + 1;
@@ -81,13 +82,13 @@ SockAddr SockAddr::FromString(const string &addr_str)
 
         try {
             uint16_t port = stoi(port_str);
-            return SockAddr(ipv4_str, port);
+            return SockAddr(IPAddress(ipv4_str), port);
         } catch (const std::exception &e) {
             return SockAddr();
         }
     } else {
         //! 作为Local处理
-        return SockAddr(addr_str);
+        return SockAddr(DomainSockPath(addr_str));
     }
 }
 
