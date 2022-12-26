@@ -15,6 +15,7 @@ HEAD_FILES = \
 	backtrace.h \
 	timestamp.h \
 	json.h \
+	json_loader.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -28,6 +29,7 @@ CPP_SRC_FILES = \
 	backtrace.cpp \
 	timestamp.cpp \
 	json.cpp \
+	json_loader.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
