@@ -19,6 +19,7 @@ HEAD_FILES = \
 	tcp_connector.h \
 	tcp_client.h \
 	tcp_server.h \
+	net_if.h \
 
 CPP_SRC_FILES = \
 	buffer.cpp \
@@ -35,6 +36,7 @@ CPP_SRC_FILES = \
 	tcp_connector.cpp \
 	tcp_client.cpp \
 	tcp_server.cpp \
+	net_if.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
 
@@ -46,6 +48,7 @@ TEST_CPP_SRC_FILES = \
 	ip_address_test.cpp \
 	sockaddr_test.cpp \
 	udp_socket_test.cpp \
+	net_if_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
 
