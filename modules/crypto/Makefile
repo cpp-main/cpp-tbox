@@ -6,10 +6,12 @@ LIB_VERSION_Z = 1
 HEAD_FILES = \
 	md5.h \
 	aes.h \
+	base64.h
 
 CPP_SRC_FILES = \
 	md5.cpp \
 	aes.cpp \
+	base64.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox_crypto"' $(CXXFLAGS)
 
