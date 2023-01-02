@@ -218,7 +218,7 @@ size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen)
 
 size_t DecodeLength(const char *encode_str, size_t encode_str_len)
 {
-    if (encode_str_len < 4)
+    if (encode_str_len == 0 || (encode_str_len & 0x3) != 0)
         return 0;
 
     size_t len = encode_str_len / 4 * 3;
