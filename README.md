@@ -64,3 +64,9 @@ LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
 #### 模块裁减
 
 打开 config.mk 文件，将不需要模块对应 `app_y += xxx` 屏蔽即可，但要注意模块间的依赖性。
+
+#### 未来规划
+
+- 实现IPv6
+- 实现TLS的支持
+
