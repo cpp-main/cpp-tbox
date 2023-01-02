@@ -1,14 +1,27 @@
 #ifndef TBOX_CRYPTO_BASE64_H_20221229
 #define TBOX_CRYPTO_BASE64_H_20221229
+
+#include <string>
+
 namespace tbox {
 namespace crypto {
+namespace base64 {
 
-class Base64 {
-  public:
-    static unsigned int Encode(const unsigned char *in, unsigned int inlen, char *out);
-    static unsigned int Decode(const char *in, unsigned int inlen, unsigned char *out);
-};
+constexpr size_t EncodeLength(size_t plain_text_length) {
+    return (plain_text_length + 2) / 3 * 4;
+}
 
+size_t DecodeLength(const char *encode_str, size_t encode_str_len);
+size_t DecodeLength(const char *encode_str);
+size_t DecodeLength(const std::string &encode_str);
+
+
+size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen);
+std::string Encode(const uint8_t *in, size_t inlen);
+
+size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen);
+
+}
 }
 }
 #endif

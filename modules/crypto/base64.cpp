@@ -1,7 +1,11 @@
 #include "base64.h"
 
+#include <cstring>
+#include <tbox/base/assert.h>
+
 namespace tbox {
 namespace crypto {
+namespace base64 {
 
 namespace {
 
@@ -20,7 +24,7 @@ const char base64en[] = {
 };
 
 /* ASCII order for BASE 64 decode, 255 in unused character */
-const unsigned char base64de[] = {
+const uint8_t base64de[] = {
     /* nul, soh, stx, etx, eot, enq, ack, bel, */
     255, 255, 255, 255, 255, 255, 255, 255,
 
@@ -71,32 +75,35 @@ const unsigned char base64de[] = {
 };
 }
 
-unsigned int Encode(const unsigned char *in, unsigned int inlen, char *out)
+size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen)
 {
-    int s;
-    unsigned int i;
-    unsigned int j;
-    unsigned char c;
-    unsigned char l;
+    TBOX_ASSERT(in != nullptr);
+    TBOX_ASSERT(out != nullptr);
 
-    s = 0;
-    l = 0;
-    for (i = j = 0; i < inlen; i++) {
-        c = in[i];
+    if (EncodeLength(inlen) > outlen)
+        return 0;
+
+    int s = 0;
+    uint8_t l = 0;
+
+    size_t w_pos = 0;
+
+    for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
+        uint8_t c = in[r_pos];
 
         switch (s) {
             case 0:
                 s = 1;
-                out[j++] = base64en[(c >> 2) & 0x3F];
+                out[w_pos++] = base64en[(c >> 2) & 0x3F];
                 break;
             case 1:
                 s = 2;
-                out[j++] = base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
+                out[w_pos++] = base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
                 break;
             case 2:
                 s = 0;
-                out[j++] = base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
-                out[j++] = base64en[c & 0x3F];
+                out[w_pos++] = base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
+                out[w_pos++] = base64en[c & 0x3F];
                 break;
         }
         l = c;
@@ -104,65 +111,135 @@ unsigned int Encode(const unsigned char *in, unsigned int inlen, char *out)
 
     switch (s) {
         case 1:
-            out[j++] = base64en[(l & 0x3) << 4];
-            out[j++] = BASE64_PAD;
-            out[j++] = BASE64_PAD;
+            out[w_pos++] = base64en[(l & 0x3) << 4];
+            out[w_pos++] = BASE64_PAD;
+            out[w_pos++] = BASE64_PAD;
             break;
         case 2:
-            out[j++] = base64en[(l & 0xF) << 2];
-            out[j++] = BASE64_PAD;
+            out[w_pos++] = base64en[(l & 0xF) << 2];
+            out[w_pos++] = BASE64_PAD;
             break;
     }
 
-    out[j] = 0;
-
-    return j;
+    return w_pos;
 }
 
-unsigned int Decode(const char *in, unsigned int inlen, unsigned char *out)
+std::string Encode(const uint8_t *in, size_t inlen)
 {
-    unsigned int i;
-    unsigned int j;
-    unsigned char c;
+    TBOX_ASSERT(in != nullptr);
 
-    if (inlen & 0x3) {
-        return 0;
-    }
+    std::string base64_str;
+    auto base64_len = EncodeLength(inlen);
+    base64_str.reserve(base64_len);
 
-    for (i = j = 0; i < inlen; i++) {
-        if (in[i] == BASE64_PAD) {
-            break;
-        }
-        if (in[i] < 0) {
-            return 0;
-        }
+    uint8_t l = 0;
+    uint8_t s = 0;
 
-        c = base64de[(int)in[i]];
-        if (c == 255) {
-            return 0;
-        }
+    for (size_t r_pos = 0; r_pos < inlen; ++r_pos) {
+        uint8_t c = in[r_pos];
 
-        switch (i & 0x3) {
+        switch (s) {
             case 0:
-                out[j] = (c << 2) & 0xFF;
+                s = 1;
+                base64_str.push_back(base64en[(c >> 2) & 0x3F]);
                 break;
             case 1:
-                out[j++] |= (c >> 4) & 0x3;
-                out[j] = (c & 0xF) << 4;
+                s = 2;
+                base64_str.push_back(base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)]);
                 break;
             case 2:
-                out[j++] |= (c >> 2) & 0xF;
-                out[j] = (c & 0x3) << 6;
+                s = 0;
+                base64_str.push_back(base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)]);
+                base64_str.push_back(base64en[c & 0x3F]);
+                break;
+        }
+        l = c;
+    }
+
+    switch (s) {
+        case 1:
+            base64_str.push_back(base64en[(l & 0x3) << 4]);
+            base64_str.push_back(BASE64_PAD);
+            base64_str.push_back(BASE64_PAD);
+            break;
+        case 2:
+            base64_str.push_back(base64en[(l & 0xF) << 2]);
+            base64_str.push_back(BASE64_PAD);
+            break;
+    }
+
+    return base64_str;
+}
+
+size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen)
+{
+    TBOX_ASSERT(in != nullptr);
+    TBOX_ASSERT(out != nullptr);
+
+    if (inlen & 0x3)
+        return 0;
+
+    if (DecodeLength(in, inlen) > outlen)
+        return 0;
+
+    size_t w_pos = 0;
+
+    for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
+        if (in[r_pos] == BASE64_PAD)
+            break;
+
+        if (in[r_pos] < 0)
+            return 0;
+
+        uint8_t c = base64de[(int)in[r_pos]];
+        if (c == 255)
+            return 0;
+
+        switch (r_pos & 0x3) {
+            case 0:
+                out[w_pos] = (c << 2) & 0xFF;
+                break;
+            case 1:
+                out[w_pos++] |= (c >> 4) & 0x3;
+                out[w_pos] = (c & 0xF) << 4;
+                break;
+            case 2:
+                out[w_pos++] |= (c >> 2) & 0xF;
+                out[w_pos] = (c & 0x3) << 6;
                 break;
             case 3:
-                out[j++] |= c;
+                out[w_pos++] |= c;
                 break;
         }
     }
-    out[j] = '\0';
 
-    return j;
+    return w_pos;
 }
 
+size_t DecodeLength(const char *encode_str, size_t encode_str_len)
+{
+    if (encode_str_len < 4)
+        return 0;
+
+    size_t len = encode_str_len / 4 * 3;
+    //! 检查字串尾部的=符号
+    if (encode_str[encode_str_len - 1] == BASE64_PAD)
+        --len;
+    if (encode_str[encode_str_len - 2] == BASE64_PAD)
+        --len;
+    return len;
+}
+
+size_t DecodeLength(const char *encode_str)
+{
+    return DecodeLength(encode_str, ::strlen(encode_str));
+}
+
+size_t DecodeLength(const std::string &encode_str)
+{
+    return DecodeLength(encode_str.data(), encode_str.length());
+}
+
+}
 }
 }

@@ -18,6 +18,7 @@ CXXFLAGS := -DLOG_MODULE_ID='"tbox_crypto"' $(CXXFLAGS)
 TEST_CPP_SRC_FILES = \
 	md5_test.cpp \
 	aes_test.cpp \
+	base64_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base
 
