@@ -15,6 +15,7 @@ HEAD_FILES = \
 	backtrace.h \
 	timestamp.h \
 	json.h \
+	base64.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -28,6 +29,7 @@ CPP_SRC_FILES = \
 	backtrace.cpp \
 	timestamp.cpp \
 	json.cpp \
+	base64.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -41,6 +43,7 @@ TEST_CPP_SRC_FILES = \
 	time_counter_test.cpp \
 	async_pipe_test.cpp \
 	json_test.cpp \
+	base64_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

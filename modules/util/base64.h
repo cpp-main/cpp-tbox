@@ -1,10 +1,10 @@
-#ifndef TBOX_CRYPTO_BASE64_H_20221229
-#define TBOX_CRYPTO_BASE64_H_20221229
+#ifndef TBOX_UTIL_BASE64_H_20221229
+#define TBOX_UTIL_BASE64_H_20221229
 
 #include <string>
 
 namespace tbox {
-namespace crypto {
+namespace util {
 namespace base64 {
 
 constexpr size_t EncodeLength(size_t plain_text_length) {

@@ -2,7 +2,7 @@
 #include "base64.h"
 
 namespace tbox {
-namespace crypto {
+namespace util {
 namespace base64 {
 
 TEST(Base64, EncodeLength) {

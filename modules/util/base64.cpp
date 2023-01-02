@@ -4,7 +4,7 @@
 #include <tbox/base/assert.h>
 
 namespace tbox {
-namespace crypto {
+namespace util {
 namespace base64 {
 
 namespace {
