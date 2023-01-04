@@ -16,6 +16,8 @@ HEAD_FILES = \
 	timestamp.h \
 	json.h \
 	base64.h \
+	checksum.h \
+	crc.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -30,6 +32,8 @@ CPP_SRC_FILES = \
 	timestamp.cpp \
 	json.cpp \
 	base64.cpp \
+	checksum.cpp \
+	crc.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
@@ -44,6 +48,8 @@ TEST_CPP_SRC_FILES = \
 	async_pipe_test.cpp \
 	json_test.cpp \
 	base64_test.cpp \
+	checksum_test.cpp \
+	crc_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
