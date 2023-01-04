@@ -75,7 +75,7 @@ const uint8_t base64de[] = {
 };
 }
 
-size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen)
+size_t Encode(const void *in, size_t inlen, char *out, size_t outlen)
 {
     TBOX_ASSERT(in != nullptr);
     TBOX_ASSERT(out != nullptr);
@@ -85,11 +85,11 @@ size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen)
 
     int s = 0;
     uint8_t l = 0;
-
     size_t w_pos = 0;
+    const uint8_t *in_bytes = static_cast<const uint8_t*>(in);
 
     for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
-        uint8_t c = in[r_pos];
+        uint8_t c = in_bytes[r_pos];
 
         switch (s) {
             case 0:
@@ -124,7 +124,7 @@ size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen)
     return w_pos;
 }
 
-std::string Encode(const uint8_t *in, size_t inlen)
+std::string Encode(const void *in, size_t inlen)
 {
     TBOX_ASSERT(in != nullptr);
 
@@ -134,9 +134,10 @@ std::string Encode(const uint8_t *in, size_t inlen)
 
     uint8_t l = 0;
     uint8_t s = 0;
+    const uint8_t *in_bytes = static_cast<const uint8_t*>(in);
 
     for (size_t r_pos = 0; r_pos < inlen; ++r_pos) {
-        uint8_t c = in[r_pos];
+        uint8_t c = in_bytes[r_pos];
 
         switch (s) {
             case 0:
@@ -171,7 +172,7 @@ std::string Encode(const uint8_t *in, size_t inlen)
     return base64_str;
 }
 
-size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen)
+size_t Decode(const char *in, size_t inlen, void *out, size_t outlen)
 {
     TBOX_ASSERT(in != nullptr);
     TBOX_ASSERT(out != nullptr);
@@ -183,6 +184,7 @@ size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen)
         return 0;
 
     size_t w_pos = 0;
+    uint8_t *out_bytes = static_cast<uint8_t*>(out);
 
     for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
         if (in[r_pos] == BASE64_PAD)
@@ -197,18 +199,18 @@ size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen)
 
         switch (r_pos & 0x3) {
             case 0:
-                out[w_pos] = (c << 2) & 0xFF;
+                out_bytes[w_pos] = (c << 2) & 0xFF;
                 break;
             case 1:
-                out[w_pos++] |= (c >> 4) & 0x3;
-                out[w_pos] = (c & 0xF) << 4;
+                out_bytes[w_pos++] |= (c >> 4) & 0x3;
+                out_bytes[w_pos] = (c & 0xF) << 4;
                 break;
             case 2:
-                out[w_pos++] |= (c >> 2) & 0xF;
-                out[w_pos] = (c & 0x3) << 6;
+                out_bytes[w_pos++] |= (c >> 2) & 0xF;
+                out_bytes[w_pos] = (c & 0x3) << 6;
                 break;
             case 3:
-                out[w_pos++] |= c;
+                out_bytes[w_pos++] |= c;
                 break;
         }
     }

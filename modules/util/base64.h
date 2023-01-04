@@ -28,7 +28,7 @@ size_t DecodeLength(const std::string &encode_str);
  *
  * \note    不会主动加字串结束符
  */
-size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen);
+size_t Encode(const void *in, size_t inlen, char *out, size_t outlen);
 
 /**
  * \brief   编码，返回std::string的base64字串
@@ -38,7 +38,7 @@ size_t Encode(const uint8_t *in, size_t inlen, char *out, size_t outlen);
  *
  * \return  std::string base64字串
  */
-std::string Encode(const uint8_t *in, size_t inlen);
+std::string Encode(const void *in, size_t inlen);
 
 /**
  * \brief   解码，写到指定缓存
@@ -51,7 +51,7 @@ std::string Encode(const uint8_t *in, size_t inlen);
  * \return  >0      实际明文输出大小
  * \return  =0      outlen不够
  */
-size_t Decode(const char *in, size_t inlen, uint8_t *out, size_t outlen);
+size_t Decode(const char *in, size_t inlen, void *out, size_t outlen);
 
 }
 }
