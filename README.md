@@ -1,6 +1,7 @@
 # cpp-tbox
 
 #### 介绍
+
 cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服务型应用开发库。
 
 #### 适用环境
@@ -26,35 +27,42 @@ cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服
 
 #### 外部库依赖
 
-| 库名 | 依赖模块 | 说明 | 安装方法 |
-|:----:|:--------:|:----:|:--------:|
-| googletest | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install google-mock |
-| libevent | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEVENT时依赖 | sudo apt install libevent-dev |
-| libev | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEV时依赖 | sudo apt install libev-dev |
-| mosquitto | mqtt | MQTT库 | sudo apt install libmosquitto-dev |
-| nlohmann/json | main | 作为配置数据用 | 下载[json\_fwd.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/include/nlohmann/json_fwd.hpp)与[json.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/single_include/nlohmann/json.hpp)到头文件目录，如：/usr/local/include/nlohmann/ |
+| 库名            | 依赖模块  | 说明                                          | 安装方法                                                                                                                                                                                                                                               |
+|:-------------:|:-----:|:-------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| googletest    | 所有模块  | 单元测试用，如果不进行单元测试可忽略                          | sudo apt install google-mock                                                                                                                                                                                                                       |
+| libevent      | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEVENT时依赖 | sudo apt install libevent-dev                                                                                                                                                                                                                      |
+| libev         | event | 默认不依赖，在event/config.mk中开启了WITH\_LIBEV时依赖    | sudo apt install libev-dev                                                                                                                                                                                                                         |
+| mosquitto     | mqtt  | MQTT库                                       | sudo apt install libmosquitto-dev                                                                                                                                                                                                                  |
+| nlohmann/json | main  | 作为配置数据用                                     | 下载[json\_fwd.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/include/nlohmann/json_fwd.hpp)与[json.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/single_include/nlohmann/json.hpp)到头文件目录，如：/usr/local/include/nlohmann/ |
 
 **安装命令**
 
-| 系统 | 安装命令 |
-|:----:|:------:|
-| Ubuntu/Debian | `apt install -y g++ make google-mock libevent-dev libev-dev libmosquitto-dev` |
+| 系统            | 安装命令                                                                                                                                                                              |
+|:-------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Ubuntu/Debian | `apt install -y g++ make google-mock libgtest-dev libevent-dev libev-dev libmosquitto-dev autotools-dev m4 autoconf autobook autoconf-archive gnu-standards autoconf-doc libtool` |
 
 **如果构建**
 
-进入到cpp-tbox的顶层目录，执行命令:  
-```
-STAGING_DIR=$HOME/.local make modules RELEASE=1
-```
+进入到cpp-tbox的顶层目录，执行命令:
 
-完成之后，所有的头文件导出到 `$HOME/.local/include/`，所有的库文件输出到 `$HOME/.local/lib/`。
-如果你没有指定 `STAGING_DIR` 参数，它默认为 `.staging`。
+```
+./configure && make && make install
+```
+使用 ```./configure --help``` 查看更多帮助
+
+完成之后，默认安装在 /usr/local 中，如果需要自定义安装目录,需要指定prefix，请参考
+
+```
+./configure --prefix=xxx
+```
 
 在你自己工程的 Makefile 中，你需要添加以下的内容:
+
 ```
-CXXFLAGS += -I$(HOME)/.local/include
-LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
+CXXFLAGS += -Ipath_to_install/include
+LDFLAGS += -Lpath_to_install/lib -ltbox_xxxxx
 ```
+
 然后就可以使用tbox的组件了。
 
 #### 模块间依赖
@@ -63,10 +71,15 @@ LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
 
 #### 模块裁减
 
-打开 config.mk 文件，将不需要模块对应 `app_y += xxx` 屏蔽即可，但要注意模块间的依赖性。
+执行
+
+```
+./configure --help
+```
+
+按需进行裁剪编译即可
 
 #### 未来规划
 
 - 实现IPv6
 - 实现TLS的支持
-

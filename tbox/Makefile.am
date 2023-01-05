@@ -1,0 +1,69 @@
+BUILD_MODULES =
+
+if BUILD_BASE
+BUILD_MODULES += base
+endif
+
+if BUILD_EVENT
+BUILD_MODULES += event
+endif
+
+if BUILD_EVENTX
+BUILD_MODULES += eventx
+endif
+
+if BUILD_ALARM
+BUILD_MODULES += alarm
+endif
+
+if BUILD_COROUTINE
+BUILD_MODULES += coroutine
+endif
+
+if BUILD_CRYPTO
+BUILD_MODULES += crypto
+endif
+
+if BUILD_FLOW
+BUILD_MODULES += flow
+endif
+
+if BUILD_NETWORK
+BUILD_MODULES += network
+endif
+
+if BUILD_HTTP
+BUILD_MODULES += http
+endif
+
+if BUILD_LOG
+BUILD_MODULES += log
+endif
+
+if BUILD_TERMINAL
+BUILD_MODULES += terminal
+endif
+
+if BUILD_UTIL
+BUILD_MODULES += util
+endif
+
+if BUILD_MAIN
+BUILD_MODULES += main
+endif
+
+if BUILD_MQTT
+BUILD_MODULES += mqtt
+endif
+
+if BUILD_TESTS
+BUILD_MODULES += tests
+endif
+
+if BUILD_SAMPLES
+BUILD_MODULES += samples
+endif
+
+MAINTAINERCLEANFILES = Makefile.in
+
+SUBDIRS = $(BUILD_MODULES)

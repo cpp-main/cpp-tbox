@@ -1,0 +1,6 @@
+libtbox_crypto_la-base64.lo: base64.cpp /usr/include/stdc-predef.h \
+ base64.h
+
+/usr/include/stdc-predef.h:
+
+base64.h:
