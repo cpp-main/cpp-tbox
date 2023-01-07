@@ -33,25 +33,35 @@ class Broker {
         void       *out_ptr;    //! 数据地址
     };
 
+    enum class Mode {
+        kAsync, //!< 异步
+        kSync   //!< 同步
+    };
+
     using MessageCallback = std::function<void(const Message &msg)>;
     using RequestCallback = std::function<void(const Request &req)>;
 
-    //! 订阅
+    //! 订阅消息
     Token subscribe(const std::string &topic, const MessageCallback &cb);
     //! 取消订阅
     bool unsubscribe(const Token &token);
 
     //! 发布消息
-    void publish(const std::string &topic, const void *msg_ptr = nullptr, size_t msg_size = 0);
+    void publish(const std::string &topic,          //!< 消息topic
+                 const void *msg_ptr = nullptr,     //!< 消息内容地址
+                 size_t msg_size = 0,               //!< 消息内容长度
+                 Mode mode = Mode::kAsync);         //!< 模式：异步或同步
 
 
-    //! 注册
+    //! 注册调用
     Token reg(const std::string &topic, const RequestCallback &cb);
-    //! 注销
+    //! 注销调用
     bool unreg(const Token &token);
 
     //! 调用
-    size_t invoke(const std::string &topic, const void *in_ptr = nullptr, void *out_ptr = nullptr) const;
+    size_t invoke(const std::string &topic,         //!< 调用topic
+                  const void *in_ptr = nullptr,     //!< 输入内容地址
+                  void *out_ptr = nullptr) const;   //!< 输出内容地址
 
     //! 清理
     void cleanup();
