@@ -8,7 +8,7 @@ App::App(tbox::main::Context &ctx) :
 
 bool App::onStart() {
   timer_ = ctx().timer_pool()->doEvery(
-    std::chrono::seconds(1),
+    std::chrono::seconds(5),
     [] (tbox::eventx::TimerPool::TimerToken) {
       LogDbg("begin sleep 2s");
       std::this_thread::sleep_for(std::chrono::seconds(2));
