@@ -45,13 +45,15 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
     return false;
 }
 
-bool WriteStringToTextFile(const std::string &filename, const std::string &content)
+bool WriteStringToTextFile(const std::string &filename, const std::string &content, bool flush_now)
 {
     ofstream ofs;
     try {
         ofs.open(filename, ofstream::out | ofstream::trunc);
         if (ofs.is_open()) {
             ofs << content;
+            if (flush_now)
+                ofs << std::flush;
             return true;
         } else {
             LogWarn("open failed, %s", filename.c_str());
@@ -67,9 +69,9 @@ bool ReadBinaryFromFile(const std::string &filename, std::string &content)
     return ReadStringFromTextFile(filename, content);
 }
 
-bool WriteBinaryToFile(const std::string &filename, const std::string &content)
+bool WriteBinaryToFile(const std::string &filename, const std::string &content, bool flush_now)
 {
-    return WriteStringToTextFile(filename, content);
+    return WriteStringToTextFile(filename, content, flush_now);
 }
 
 bool RemoveFile(const std::string &filename, bool allow_log_print)
