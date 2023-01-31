@@ -75,21 +75,21 @@ bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, boo
         flag |= O_SYNC; //! 加了这个参数后，相当于每次write()操作都执行了一次fsync(fd)
 
     int fd = ::open(filename, flag, S_IRUSR | S_IWUSR);
-    if (fd > 0) {
+    if (fd >= 0) {
         SetScopeExitAction([fd] { close(fd); });  //! 确保退出时一定会close(fd)
 
         auto wsize = ::write(fd, data_ptr, data_size);
-        if (wsize != static_cast<ssize_t>(data_size)) {
-            if (wsize == -1)
-                LogWarn("write errno:%d, %s", errno, strerror(errno));
-            else
-                LogWarn("wsize:%d, size:%d", wsize, data_size);
-        }
-        return true;
+        if (wsize == static_cast<ssize_t>(data_size))
+            return true;
 
-    } else {
+        if (wsize == -1)
+            LogWarn("write errno:%d, %s", errno, strerror(errno));
+        else
+            LogWarn("wsize:%d, size:%d", wsize, data_size);
+
+    } else
         LogWarn("open %s failed, %d, %s", filename, errno, strerror(errno));
-    }
+
     return false;
 }
 
