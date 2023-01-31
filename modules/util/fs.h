@@ -34,8 +34,15 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content);
 
 /**
  * 将字串写入到文件
+ *
+ * \param filename      文件名
+ * \param content       将要写入的字串内容
+ * \param sync_now      是否需要立即sync
+ *
+ * \return true     成功
+ * \return false    失败
  */
-bool WriteStringToTextFile(const std::string &filename, const std::string &content);
+bool WriteStringToTextFile(const std::string &filename, const std::string &content, bool sync_now = false);
 
 /**
  * 从文件中读取数据
@@ -50,8 +57,27 @@ bool ReadBinaryFromFile(const std::string &filename, std::string &content);
 
 /**
  * 将数据写入到文件
+ *
+ * \param filename      文件名
+ * \param content       将要写入的数据内容
+ * \param sync_now      是否需要立即sync
+ *
+ * \return true     成功
+ * \return false    失败
  */
-bool WriteBinaryToFile(const std::string &filename, const std::string &content);
+bool WriteBinaryToFile(const std::string &filename, const std::string &content, bool sync_now = false);
+
+/**
+ * 将数据写入到文件
+ *
+ * \param filename      文件名
+ * \param content       将要写入的数据内容
+ * \param sync_now      是否需要立即sync
+ *
+ * \return true     成功
+ * \return false    失败
+ */
+bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now = false);
 
 /**
  * 删除文件
@@ -63,8 +89,26 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content);
  */
 bool RemoveFile(const std::string &filename, bool allow_log_print = true);
 
+/// 创建符号链接文件
+/**
+ * \param old_path      源路径
+ * \param new_path      符号链接文件的路径
+ * \param allow_log_print   是否允许错误日志打印
+ *
+ * \return true 成功
+ * \return false 失败
+ */
 bool MakeSymbolLink(const std::string &old_path, const std::string &new_path, bool allow_log_print = true);
 
+/// 创建链接文件
+/**
+ * \param old_path      源路径
+ * \param new_path      符号链接文件的路径
+ * \param allow_log_print   是否允许错误日志打印
+ *
+ * \return true 成功
+ * \return false 失败
+ */
 bool MakeLink(const std::string &old_path, const std::string &new_path, bool allow_log_print = true);
 
 ////////////////////////////////////////////////////////////////////

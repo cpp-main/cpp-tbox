@@ -4,10 +4,13 @@
 #include <exception>
 #include <fstream>
 #include <errno.h>
-#include <string.h>
+#include <cstring>
+
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
 namespace util {
@@ -45,21 +48,9 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
     return false;
 }
 
-bool WriteStringToTextFile(const std::string &filename, const std::string &content)
+bool WriteStringToTextFile(const std::string &filename, const std::string &content, bool sync_now)
 {
-    ofstream ofs;
-    try {
-        ofs.open(filename, ofstream::out | ofstream::trunc);
-        if (ofs.is_open()) {
-            ofs << content;
-            return true;
-        } else {
-            LogWarn("open failed, %s", filename.c_str());
-        }
-    } catch (const exception &e) {
-        LogWarn("catch exception: %s", e.what());
-    }
-    return false;
+    return WriteFile(filename.c_str(), content.data(), content.size(), sync_now);
 }
 
 bool ReadBinaryFromFile(const std::string &filename, std::string &content)
@@ -67,9 +58,34 @@ bool ReadBinaryFromFile(const std::string &filename, std::string &content)
     return ReadStringFromTextFile(filename, content);
 }
 
-bool WriteBinaryToFile(const std::string &filename, const std::string &content)
+bool WriteBinaryToFile(const std::string &filename, const std::string &content, bool sync_now)
 {
-    return WriteStringToTextFile(filename, content);
+    return WriteFile(filename.c_str(), content.data(), content.size(), sync_now);
+}
+
+bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now)
+{
+    int flag = O_CREAT | O_WRONLY | O_TRUNC;
+    if (sync_now)
+        flag |= O_SYNC;
+
+    int fd = ::open(filename, flag, S_IRUSR | S_IWUSR);
+    if (fd > 0) {
+        SetScopeExitAction([fd] { close(fd); });
+
+        auto wsize = ::write(fd, data_ptr, data_size);
+        if (wsize != static_cast<ssize_t>(data_size)) {
+            if (wsize == -1)
+                LogWarn("write errno:%d, %s", errno, strerror(errno));
+            else
+                LogWarn("wsize:%d, size:%d", wsize, data_size);
+        }
+        return true;
+
+    } else {
+        LogWarn("open %s failed, %d, %s", filename, errno, strerror(errno));
+    }
+    return false;
 }
 
 bool RemoveFile(const std::string &filename, bool allow_log_print)
