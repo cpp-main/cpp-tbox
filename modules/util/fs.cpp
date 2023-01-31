@@ -65,13 +65,18 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content, 
 
 bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now)
 {
+    //! 这里采用原始系统接口，是为了解决Linux下往文件写数据不会立即同步到外存的问题。
+    //! 这个问题会在导致写入数据之后，系统宕机或设备断电，重启后文件中数据丢失的故障。
+    //! 为保证数据一定写入到外存，需要在写入数据之后，调用一次fsync(fd)。
+    //! 然而，标准C++的ofstream无法提供文件对象的fd。所以不得不使用原始的文件操作。
+
     int flag = O_CREAT | O_WRONLY | O_TRUNC;
     if (sync_now)
-        flag |= O_SYNC;
+        flag |= O_SYNC; //! 加了这个参数后，相当于每次write()操作都执行了一次fsync(fd)
 
     int fd = ::open(filename, flag, S_IRUSR | S_IWUSR);
     if (fd > 0) {
-        SetScopeExitAction([fd] { close(fd); });
+        SetScopeExitAction([fd] { close(fd); });  //! 确保退出时一定会close(fd)
 
         auto wsize = ::write(fd, data_ptr, data_size);
         if (wsize != static_cast<ssize_t>(data_size)) {
