@@ -71,7 +71,8 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content, 
  * 将数据写入到文件
  *
  * \param filename      文件名
- * \param content       将要写入的数据内容
+ * \param data_ptr      将要写入的数据地址
+ * \param data_size     将要写入的数据长度
  * \param sync_now      是否需要立即sync
  *
  * \return true     成功
