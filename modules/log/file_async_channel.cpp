@@ -1,8 +1,11 @@
 #include "file_async_channel.h"
 
 #include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
 #include <iostream>
 #include <sstream>
+#include <tbox/base/defines.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
 
@@ -60,18 +63,23 @@ void FileAsyncChannel::onLogBackEnd(const std::string &log_text)
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
-    ofs_ << log_text << endl << flush;
+    const char endline = '\n';
+    ::write(fd_, log_text.c_str(), log_text.size());
+    ::write(fd_, &endline, 1);
+    ::fsync(fd_);
 
-    if (static_cast<size_t>(ofs_.tellp()) >= file_max_size_)
-        ofs_.close();
+    total_write_size_ += log_text.size() + 1;
+
+    if (total_write_size_ >= file_max_size_)
+        CHECK_CLOSE_RESET_FD(fd_);
 }
 
 bool FileAsyncChannel::checkAndCreateLogFile()
 {
-    if (ofs_.is_open()) {
+    if (fd_ >= 0) {
         if (util::fs::IsFileExist(log_filename_))
             return true;
-        ofs_.close();
+        CHECK_CLOSE_RESET_FD(fd_);
     }
 
     //!检查并创建路径
@@ -100,12 +108,13 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     } while (util::fs::IsFileExist(log_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
     log_filename_ = log_filename;
 
-    ofs_.open(log_filename_, ofstream::out | ofstream::app);
-    if (!ofs_.is_open()) {
-        cerr << "Err: open file " << log_filename_ << " fail." << endl;
+    fd_ = ::open(log_filename_.c_str(), O_CREAT | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR);
+    if (fd_ < 0) {
+        cerr << "Err: open file " << log_filename_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;
     }
 
+    total_write_size_ = 0;
     util::fs::RemoveFile(sym_filename_, false);
     util::fs::MakeSymbolLink(log_filename, sym_filename_, false);
 
