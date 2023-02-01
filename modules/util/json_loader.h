@@ -16,9 +16,9 @@ class JsonLoader {
     explicit ParseJsonFileError(const std::string &filename, const std::string &detail) :
       std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
   };
-  struct IncludeTypeInvalid: public std::runtime_error {
-    explicit IncludeTypeInvalid() :
-      std::runtime_error("include filename type error, it should be string") { }
+  struct IncludeDescriptorTypeInvalid: public std::runtime_error {
+    explicit IncludeDescriptorTypeInvalid() :
+      std::runtime_error("include descriptor type error, it should be string") { }
   };
   struct RecursiveIncludeError : public std::runtime_error {
     explicit RecursiveIncludeError(const std::string &include_file) :
@@ -32,7 +32,7 @@ class JsonLoader {
  protected:
   void traverse(Json &js);
   void handleInclude(const Json &js_include, Json &js_parent);
-  void includeSubFile(const std::string &filename, Json &js);
+  void includeByDescriptor(const std::string &descriptor, Json &js);
   bool checkRecursiveInclude(const std::string &filename) const;
 
  private:

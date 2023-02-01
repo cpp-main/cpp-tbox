@@ -69,23 +69,35 @@ void JsonLoader::traverse(Json &js) {
 
 void JsonLoader::handleInclude(const Json &js_include, Json &js_parent) {
   if (js_include.is_string()) {
-    includeSubFile(js_include.get<std::string>(), js_parent);
+    includeByDescriptor(js_include.get<std::string>(), js_parent);
   } else if (js_include.is_array()) {
     for (auto &js_item : js_include) {
       if (js_item.is_string())
-        includeSubFile(js_item.get<std::string>(), js_parent);
+        includeByDescriptor(js_item.get<std::string>(), js_parent);
       else
-        throw IncludeTypeInvalid();
+        throw IncludeDescriptorTypeInvalid();
     }
   } else {
-    throw IncludeTypeInvalid();
+    throw IncludeDescriptorTypeInvalid();
   }
 }
 
-void JsonLoader::includeSubFile(const std::string &filename, Json &js) {
-  LogTrace("%s", filename.c_str());
+void JsonLoader::includeByDescriptor(const std::string &descriptor, Json &js) {
+  LogTrace("%s", descriptor.c_str());
+  std::vector<std::string> str_vec;
+  string::Split(descriptor, "=>", str_vec);
+  std::string filename = string::Strip(str_vec.at(0));
+
   auto js_load = load(filename);
-  js.merge_patch(std::move(js_load));
+
+  if (str_vec.size() >= 2) {
+    auto keyname = string::Strip(str_vec.at(1));
+    LogTrace("[%s]=%s", keyname.c_str(), js_load.dump().c_str());
+    js[keyname] = std::move(js_load);
+  } else {
+    LogTrace("%s", js_load.dump().c_str());
+    js.merge_patch(std::move(js_load));
+  }
 }
 
 bool JsonLoader::checkRecursiveInclude(const std::string &filename) const {
