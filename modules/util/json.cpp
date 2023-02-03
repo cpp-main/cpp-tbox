@@ -1,4 +1,7 @@
 #include "json.h"
+
+#include <fstream>
+
 #include <tbox/base/json.hpp>
 
 namespace tbox {

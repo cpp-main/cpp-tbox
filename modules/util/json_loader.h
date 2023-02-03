@@ -5,28 +5,27 @@
 
 namespace tbox {
 namespace util {
+namespace js {
 
-class JsonLoader {
- public:
-  struct OpenFileError : public std::runtime_error {
+struct OpenFileError : public std::runtime_error {
     explicit OpenFileError(const std::string &filename) :
-      std::runtime_error("open file " + filename + " fail") { }
-  };
-  struct ParseJsonFileError : public std::runtime_error {
+        std::runtime_error("open file " + filename + " fail") { }
+};
+struct ParseJsonFileError : public std::runtime_error {
     explicit ParseJsonFileError(const std::string &filename, const std::string &detail) :
-      std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
-  };
-  struct IncludeDescriptorTypeInvalid: public std::runtime_error {
+        std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
+};
+struct IncludeDescriptorTypeInvalid: public std::runtime_error {
     explicit IncludeDescriptorTypeInvalid() :
-      std::runtime_error("include descriptor type error, it should be string") { }
-  };
-  struct RecursiveIncludeError : public std::runtime_error {
+        std::runtime_error("include descriptor type error, it should be string") { }
+};
+struct RecursiveIncludeError : public std::runtime_error {
     explicit RecursiveIncludeError(const std::string &include_file) :
-      std::runtime_error("recursive include file:" + include_file) { }
-  };
+        std::runtime_error("recursive include file:" + include_file) { }
+};
 
+class Loader {
  public:
-  explicit JsonLoader(const std::string &directory);
   Json load(const std::string &filename);
 
  protected:
@@ -36,10 +35,32 @@ class JsonLoader {
   bool checkRecursiveInclude(const std::string &filename) const;
 
  private:
-  std::string directory_;
   std::vector<std::string> files_;
 };
 
+/// 加载JSON文件
+/**
+ * \param filename  JSON文件名
+ * \return Json     解析所得的Json对象
+ *
+ * \throw OpenFileError
+ *        ParseJsonFileError
+ */
+Json Load(const std::string &filename);
+
+/// 加载JSON文件，支持 "__include__" 关键字
+/**
+ * \param filename  JSON文件名
+ * \return Json     解析所得的Json对象
+ *
+ * \throw OpenFileError,
+ *        ParseJsonFileError,
+ *        IncludeDescriptorTypeInvalid,
+ *        RecursiveIncludeError
+ */
+Json LoadEx(const std::string &filename);
+
+}
 }
 }
 
