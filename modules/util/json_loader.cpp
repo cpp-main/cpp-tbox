@@ -2,10 +2,9 @@
 #include <fstream>
 
 #include <tbox/base/json.hpp>
-#include <tbox/base/log.h>
-#include <tbox/util/json.h>
-#include <tbox/util/string.h>
-#include <tbox/util/fs.h>
+#include "json.h"
+#include "string.h"
+#include "fs.h"
 
 namespace {
     const std::string kInclude = "__include__";
@@ -13,11 +12,11 @@ namespace {
 
 namespace tbox {
 namespace util {
-namespace js {
+namespace json {
 
 Json DeepLoader::load(const std::string &filename) {
-    if (checkRecursiveInclude(filename))
-        throw RecursiveIncludeError(filename);
+    if (checkDuplicateInclude(filename))
+        throw DuplicateIncludeError(filename);
 
     files_.push_back(filename);
     Json js = Load(filename);
@@ -87,25 +86,8 @@ void DeepLoader::includeByDescriptor(const std::string &descriptor, Json &js) {
     }
 }
 
-bool DeepLoader::checkRecursiveInclude(const std::string &filename) const {
+bool DeepLoader::checkDuplicateInclude(const std::string &filename) const {
     return std::find(files_.begin(), files_.end(), filename) != files_.end();
-}
-
-Json Load(const std::string &filename)
-{
-    Json js;
-    std::ifstream input_json_file(filename);
-    if (input_json_file.is_open()) {
-        try {
-            input_json_file >> js;
-        } catch (const std::exception &e) {
-            throw ParseJsonFileError(filename, e.what());
-        }
-    } else {
-        throw OpenFileError(filename);
-    }
-
-    return js;
 }
 
 Json LoadDeeply(const std::string &filename) {

@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     const char *filename = argv[1];
 
     try {
-        auto json = tbox::util::js::LoadDeeply(filename);
+        auto json = tbox::util::json::LoadDeeply(filename);
         cout << json.dump(2) << endl;
     } catch (const std::exception &e) {
         cerr << "Catch: " << e.what() << endl;

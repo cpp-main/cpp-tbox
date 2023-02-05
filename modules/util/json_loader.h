@@ -5,23 +5,17 @@
 
 namespace tbox {
 namespace util {
-namespace js {
+namespace json {
 
-struct OpenFileError : public std::runtime_error {
-    explicit OpenFileError(const std::string &filename) :
-        std::runtime_error("open file " + filename + " fail") { }
-};
-struct ParseJsonFileError : public std::runtime_error {
-    explicit ParseJsonFileError(const std::string &filename, const std::string &detail) :
-        std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
-};
+//! include描述类型不合法，不是string
 struct IncludeDescriptorTypeInvalid: public std::runtime_error {
     explicit IncludeDescriptorTypeInvalid() :
         std::runtime_error("include descriptor type error, it should be string") { }
 };
-struct RecursiveIncludeError : public std::runtime_error {
-    explicit RecursiveIncludeError(const std::string &include_file) :
-        std::runtime_error("recursive include file:" + include_file) { }
+//! 重复include同一个文件
+struct DuplicateIncludeError : public std::runtime_error {
+    explicit DuplicateIncludeError(const std::string &include_file) :
+        std::runtime_error("duplicate include file:" + include_file) { }
 };
 
 class DeepLoader {
@@ -32,31 +26,21 @@ class DeepLoader {
   void traverse(Json &js);
   void handleInclude(const Json &js_include, Json &js_parent);
   void includeByDescriptor(const std::string &descriptor, Json &js);
-  bool checkRecursiveInclude(const std::string &filename) const;
+  bool checkDuplicateInclude(const std::string &filename) const;
 
  private:
   std::vector<std::string> files_;
 };
 
-/// 加载JSON文件
+/// 加载JSON文件，并支持深度加载
 /**
  * \param filename  JSON文件名
  * \return Json     解析所得的Json对象
  *
  * \throw OpenFileError
  *        ParseJsonFileError
- */
-Json Load(const std::string &filename);
-
-/// 加载JSON文件，支持 "__include__" 导入其它的JSON文件
-/**
- * \param filename  JSON文件名
- * \return Json     解析所得的Json对象
- *
- * \throw OpenFileError,
- *        ParseJsonFileError,
- *        IncludeDescriptorTypeInvalid,
- *        RecursiveIncludeError
+ *        IncludeDescriptorTypeInvalid
+ *        DuplicateIncludeError
  */
 Json LoadDeeply(const std::string &filename);
 
