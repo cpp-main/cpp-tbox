@@ -35,6 +35,27 @@ bool HasUnsignedField(const Json &js, const std::string &field_name);
 //! 检查是否存在字段，且为字串
 bool HasStringField(const Json &js, const std::string &field_name);
 
+//! 打开文件失败异常
+struct OpenFileError : public std::runtime_error {
+    explicit OpenFileError(const std::string &filename) :
+        std::runtime_error("open file " + filename + " fail") { }
+};
+//! 解析JSON文件失败异常
+struct ParseJsonFileError : public std::runtime_error {
+    explicit ParseJsonFileError(const std::string &filename, const std::string &detail) :
+        std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
+};
+
+/// 加载JSON文件
+/**
+ * \param filename  JSON文件名
+ * \return Json     解析所得的Json对象
+ *
+ * \throw OpenFileError
+ *        ParseJsonFileError
+ */
+Json Load(const std::string &filename);
+
 }
 }
 }

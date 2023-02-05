@@ -119,10 +119,16 @@ TEST(fs, MakeDirectory) {
 }
 
 TEST(fs, Dirname) {
-    EXPECT_EQ(Dirname("./a/b/c"), "./a/b");
-    EXPECT_EQ(Dirname("./a/b/"), "./a/b");
-    EXPECT_EQ(Dirname("abcdef"), "");
-    EXPECT_EQ(Dirname(""), "");
+    EXPECT_EQ(Dirname("a"), ".");
+    EXPECT_EQ(Dirname("a/"), "a");
+    EXPECT_EQ(Dirname("a/b"), "a");
+    EXPECT_EQ(Dirname("a/b/"), "a/b");
+    EXPECT_EQ(Dirname(" a/b "), "a");
+    EXPECT_EQ(Dirname(""), ".");
+    EXPECT_EQ(Dirname(" a "), ".");
+    EXPECT_EQ(Dirname("/"), "/");
+    EXPECT_EQ(Dirname("/a"), "/");
+    EXPECT_EQ(Dirname("/a/"), "/a");
 }
 
 TEST(fs, Basename) {

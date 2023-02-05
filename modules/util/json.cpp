@@ -1,4 +1,7 @@
 #include "json.h"
+
+#include <fstream>
+
 #include <tbox/base/json.hpp>
 
 namespace tbox {
@@ -122,6 +125,23 @@ bool HasStringField(const Json &js, const std::string &field_name)
         return false;
     auto &js_field = js.at(field_name);
     return js_field.is_string();
+}
+
+Json Load(const std::string &filename)
+{
+    Json js;
+    std::ifstream input_json_file(filename);
+    if (input_json_file.is_open()) {
+        try {
+            input_json_file >> js;
+        } catch (const std::exception &e) {
+            throw ParseJsonFileError(filename, e.what());
+        }
+    } else {
+        throw OpenFileError(filename);
+    }
+
+    return js;
 }
 
 }

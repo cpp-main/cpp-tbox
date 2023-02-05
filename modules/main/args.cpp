@@ -7,6 +7,7 @@
 
 #include <tbox/util/string.h>
 #include <tbox/util/argument_parser.h>
+#include <tbox/util/json_deep_loader.h>
 
 namespace tbox {
 namespace main {
@@ -141,14 +142,8 @@ void Args::printVersion()
 
 bool Args::load(const std::string &config_filename)
 {
-    ifstream ifs(config_filename);
-    if (!ifs) {
-        cerr << "Error: can't open config file `" << config_filename << '\'' << endl;
-        return false;
-    }
-
     try {
-        auto js_patch = Json::parse(ifs);
+        auto js_patch = util::json::LoadDeeply(config_filename);
         conf_.merge_patch(js_patch);
     } catch (const exception &e) {
         cerr << "Error: parse config fail, " << e.what() << endl;
