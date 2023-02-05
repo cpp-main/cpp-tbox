@@ -8,14 +8,26 @@ using namespace tbox::log;
 
 class TestAsyncChannel : public AsyncChannel {
   protected:
-    virtual void onLogBackEnd(const std::string &log_text) override {
-        cout << log_text << endl;
+    virtual void onLogBackEnd(const void *data_ptr, size_t data_size) override {
+        const char *start_ptr = static_cast<const char *>(data_ptr);
+        if (buffer_.size() < (data_size + 1))
+            buffer_.resize(data_size + 1);
+
+        std::transform(start_ptr, start_ptr + data_size, buffer_.begin(),
+            [](char ch) { return ch == 0 ? '\n' : ch; }
+        );
+
+        buffer_[data_size] = 0;
+        cout << buffer_.data();
     }
+
+  private:
+    std::vector<char> buffer_;
 };
 
 class EmptyTestAsyncChannel : public AsyncChannel {
   protected:
-    virtual void onLogBackEnd(const std::string &log_text) override { }
+    virtual void onLogBackEnd(const void *, size_t) override {}
 };
 
 

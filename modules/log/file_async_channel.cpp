@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <tbox/base/defines.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
@@ -39,7 +40,7 @@ bool FileAsyncChannel::initialize(const std::string &log_path, const std::string
     sym_filename_ = filename_prefix_ + "latest.log";
 
     AsyncChannel::Config cfg;
-    cfg.buff_size = 1024;
+    cfg.buff_size = 10240;
     cfg.buff_min_num = 2;
     cfg.buff_max_num = 20;
     cfg.interval  = 100;
@@ -58,17 +59,26 @@ void FileAsyncChannel::cleanup()
     pid_ = 0;
 }
 
-void FileAsyncChannel::onLogBackEnd(const std::string &log_text)
+void FileAsyncChannel::onLogBackEnd(const void *data_ptr, size_t data_size)
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
-    const char endline = '\n';
-    ::write(fd_, log_text.c_str(), log_text.size());
-    ::write(fd_, &endline, 1);
-    ::fsync(fd_);
+    const char *start_ptr = static_cast<const char *>(data_ptr);
+    if (buffer_.size() < (data_size + 1))
+        buffer_.resize(data_size + 1);
 
-    total_write_size_ += log_text.size() + 1;
+    std::transform(start_ptr, start_ptr + data_size, buffer_.begin(),
+        [](char ch) { return ch == 0 ? '\n' : ch; }
+    );
+
+    auto wsize = ::write(fd_, buffer_.data(), data_size);
+    if (wsize != static_cast<ssize_t>(data_size)) {
+        cerr << "Err: write file error." << endl;
+        return;
+    }
+
+    total_write_size_ += data_size;
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
@@ -108,7 +118,7 @@ bool FileAsyncChannel::checkAndCreateLogFile()
     } while (util::fs::IsFileExist(log_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
     log_filename_ = log_filename;
 
-    fd_ = ::open(log_filename_.c_str(), O_CREAT | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR);
+    fd_ = ::open(log_filename_.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_DSYNC, S_IRUSR | S_IWUSR);
     if (fd_ < 0) {
         cerr << "Err: open file " << log_filename_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;

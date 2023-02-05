@@ -3,6 +3,8 @@
 
 #include "async_channel.h"
 
+#include <vector>
+
 namespace tbox {
 namespace log {
 
@@ -18,7 +20,7 @@ class FileAsyncChannel : public AsyncChannel {
     std::string currentFilename() const { return log_filename_; }
 
   protected:
-    virtual void onLogBackEnd(const std::string &log_text) override;
+    virtual void onLogBackEnd(const void *data_ptr, size_t data_size) override;
     bool checkAndCreateLogFile();
 
   private:
@@ -33,6 +35,8 @@ class FileAsyncChannel : public AsyncChannel {
 
     int fd_ = -1;
     size_t total_write_size_ = 0;
+
+    std::vector<char> buffer_;
 };
 
 }

@@ -18,14 +18,10 @@ class AsyncChannel : public Channel {
 
   protected:
     virtual void onLogFrontEnd(const void *data_ptr, size_t data_size) override;
-    virtual void onLogBackEnd(const std::string &log_text) = 0;
-
-  private:
-    void onPipeAppend(const void *data_ptr, size_t data_size);
+    virtual void onLogBackEnd(const void *data_ptr, size_t data_size) = 0;
 
   private:
     util::AsyncPipe async_pipe_;
-    std::string string_buff_;
 };
 
 }
