@@ -1,4 +1,4 @@
-EXE_NAME := example/util/json_loader
+EXE_NAME := example/util/json_deep_loader
 
 CPP_SRC_FILES := main.cpp
 
