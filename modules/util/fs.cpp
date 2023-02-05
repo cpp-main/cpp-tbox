@@ -199,13 +199,33 @@ std::string Basename(const std::string &full_path)
     return full_path.substr(pos + 1);
 }
 
+/**
+ * 目标:
+ * "a" -> "."
+ * "a/" -> "a"
+ * "a/b" -> "a"
+ * "a/b/" -> "a/b"
+ * " a/b " -> "a"
+ * "" -> "."
+ * "abc" -> "."
+ * "/" -> "/"
+ * "/a" -> "/"
+ * "/a/" -> "/a"
+ */
 std::string Dirname(const std::string &full_path)
 {
-    auto const pos = full_path.find_last_of('/');
-    if (pos == std::string::npos)
-        return std::string();
+    auto start_pos = full_path.find_first_not_of("\t ");    //! 去除左边的空白符
+    auto end_pos = full_path.find_last_of('/');
 
-    return full_path.substr(0, pos);
+    //! 如果全是空白符或没有找到/，则推测为当前目录
+    if (start_pos == std::string::npos || end_pos == std::string::npos)
+        return ".";
+
+    //! 对以/开头的要特征处理，否则 "/a" 就会被处理成 ""
+    if (start_pos == end_pos)
+        return "/";
+
+    return full_path.substr(start_pos, end_pos - start_pos);
 }
 
 }

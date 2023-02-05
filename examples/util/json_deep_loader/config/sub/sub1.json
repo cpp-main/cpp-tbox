@@ -1,0 +1,4 @@
+{
+  "sub1.a": 1,
+  "__include__": "sub2.json => sub2"
+}

@@ -18,6 +18,7 @@ HEAD_FILES = \
 	base64.h \
 	checksum.h \
 	crc.h \
+	json_deep_loader.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -34,6 +35,7 @@ CPP_SRC_FILES = \
 	base64.cpp \
 	checksum.cpp \
 	crc.cpp \
+	json_deep_loader.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
 
