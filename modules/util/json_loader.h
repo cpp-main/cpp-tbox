@@ -24,7 +24,7 @@ struct RecursiveIncludeError : public std::runtime_error {
         std::runtime_error("recursive include file:" + include_file) { }
 };
 
-class Loader {
+class DeepLoader {
  public:
   Json load(const std::string &filename);
 
@@ -48,7 +48,7 @@ class Loader {
  */
 Json Load(const std::string &filename);
 
-/// 加载JSON文件，支持 "__include__" 关键字
+/// 加载JSON文件，支持 "__include__" 导入其它的JSON文件
 /**
  * \param filename  JSON文件名
  * \return Json     解析所得的Json对象
@@ -58,7 +58,7 @@ Json Load(const std::string &filename);
  *        IncludeDescriptorTypeInvalid,
  *        RecursiveIncludeError
  */
-Json LoadEx(const std::string &filename);
+Json LoadDeeply(const std::string &filename);
 
 }
 }

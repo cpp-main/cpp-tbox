@@ -1,0 +1,27 @@
+#include <iostream>
+
+#include <tbox/base/json.hpp>
+#include <tbox/util/json_loader.h>
+
+using namespace std;
+
+void PrintUsage(const char *proc) {
+    cout << "Usage: " << proc << " your.json" << endl;
+}
+
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        PrintUsage(argv[0]);
+        return 0;
+    }
+
+    const char *filename = argv[1];
+
+    try {
+        auto json = tbox::util::js::LoadDeeply(filename);
+        cout << json.dump(2) << endl;
+    } catch (const std::exception &e) {
+        cerr << "Catch: " << e.what() << endl;
+    }
+    return 0;
+}
