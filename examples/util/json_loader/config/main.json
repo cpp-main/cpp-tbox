@@ -1,0 +1,4 @@
+ {
+   "main.a": 1,
+   "__include__":["sub/sub1.json => sub1", "common.json"]
+ }

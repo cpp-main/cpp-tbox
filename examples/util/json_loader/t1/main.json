@@ -1,6 +1,0 @@
-{
-  "__include__": ["a.json => a", "sub.json=>sub"],
-  "b": "Hevake",
-  "C": [1, "hi", 3, {"__include__": "c.json"}, 4],
-  "d": 3
-}
