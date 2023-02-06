@@ -291,8 +291,15 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             auto exec_time_point = Clock::now();
             auto wait_time_cost = exec_time_point - item->create_time_point;
 
-            if (item->backend_task)
-                item->backend_task();
+            if (item->backend_task) {
+                try {
+                    item->backend_task();
+                } catch (const std::exception &e) {
+                    LogErr("catch execption: %s", e.what());
+                } catch (...) {
+                    LogErr("catch unknown execption");
+                }
+            }
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 
