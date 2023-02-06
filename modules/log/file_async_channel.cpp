@@ -65,8 +65,8 @@ void FileAsyncChannel::onLogBackEnd(const void *data_ptr, size_t data_size)
         return;
 
     const char *start_ptr = static_cast<const char *>(data_ptr);
-    if (buffer_.size() < (data_size + 1))
-        buffer_.resize(data_size + 1);
+    if (buffer_.size() < data_size)
+        buffer_.resize(data_size);
 
     std::transform(start_ptr, start_ptr + data_size, buffer_.begin(),
         [](char ch) { return ch == 0 ? '\n' : ch; }

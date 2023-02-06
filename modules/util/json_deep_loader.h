@@ -61,6 +61,7 @@
  *
  */
 
+#include <stdexcept>
 #include <tbox/base/json_fwd.h>
 
 namespace tbox {
