@@ -20,6 +20,7 @@ HEAD_FILES = \
 	tcp_client.h \
 	tcp_server.h \
 	net_if.h \
+	dns_request.h \
 
 CPP_SRC_FILES = \
 	buffer.cpp \
@@ -37,6 +38,7 @@ CPP_SRC_FILES = \
 	tcp_client.cpp \
 	tcp_server.cpp \
 	net_if.cpp \
+	dns_request.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
 
