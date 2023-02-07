@@ -51,8 +51,9 @@ TEST_CPP_SRC_FILES = \
 	sockaddr_test.cpp \
 	udp_socket_test.cpp \
 	net_if_test.cpp \
+	dns_request_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base
 
 ENABLE_SHARED_LIB = no
 

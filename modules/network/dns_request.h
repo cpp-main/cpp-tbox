@@ -2,6 +2,7 @@
 #define TBOX_NETWORK_DNS_REQUEST_H_20230207
 
 #include <tbox/event/loop.h>
+#include "udp_socket.h"
 
 namespace tbox {
 namespace network {
@@ -16,16 +17,19 @@ class DnsRequest {
     };
 
     explicit DnsRequest(event::Loop *wp_loop);
+    virtual ~DnsRequest();
 
-    bool initialize(const std::string &domain);
-    bool start();
-    void stop();
-    void cleanup();
+    bool request(const std::string &domain);
+    void cancel();
 
     State state() const { return state_; }
 
+  protected:
+    void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
+
   private:
     State state_ = State::kIdle;
+    UdpSocket udp_;
 };
 
 }
