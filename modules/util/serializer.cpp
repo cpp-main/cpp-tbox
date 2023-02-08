@@ -161,7 +161,7 @@ Deserializer::Deserializer(const void *start, size_t size, Endian endian) :
 
 bool Deserializer::checkSize(size_t need_size) const
 {
-    return (pos_ + need_size) <= size_;
+    return (size_ == 0) || ((pos_ + need_size) <= size_);
 }
 
 bool Deserializer::fetch(uint8_t &out)

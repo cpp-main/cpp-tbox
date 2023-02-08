@@ -41,7 +41,7 @@ class Serializer {
 
 class Deserializer {
   public:
-    Deserializer(const void *start, size_t size, Endian endian = Endian::kBig);
+    Deserializer(const void *start, size_t size = 0, Endian endian = Endian::kBig);
 
     inline void setEndian(Endian e) { endian_ = e; }
     inline size_t pos() const { return pos_; }

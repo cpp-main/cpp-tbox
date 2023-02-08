@@ -17,7 +17,7 @@ TEST(DnsRequest, request)
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
 
     DnsRequest dns(sp_loop);
-    dns.request("www.baidu.com");
+    dns.request("cn.bing.com");
     sp_loop->exitLoop(std::chrono::seconds(1));
     sp_loop->runLoop();
 
