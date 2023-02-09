@@ -22,6 +22,13 @@ Serializer::Serializer(std::vector<uint8_t> &block, Endian endian) :
     endian_(endian)
 { }
 
+Endian Serializer::setEndian(Endian e)
+{
+    auto old = endian_;
+    endian_ = e;
+    return old;
+}
+
 bool Serializer::extendSize(size_t need_size)
 {
     size_t whole_size = pos_ + need_size;
@@ -159,9 +166,24 @@ Deserializer::Deserializer(const void *start, size_t size, Endian endian) :
     pos_(0)
 { }
 
+Endian Deserializer::setEndian(Endian e)
+{
+    auto old = endian_;
+    endian_ = e;
+    return old;
+}
+
 bool Deserializer::checkSize(size_t need_size) const
 {
-    return (size_ == 0) || ((pos_ + need_size) <= size_);
+    return (pos_ + need_size) <= size_;
+}
+
+bool Deserializer::set_pos(size_t pos) {
+    if (pos < size_) {
+        pos_ = pos;
+        return true;
+    }
+    return false;
 }
 
 bool Deserializer::fetch(uint8_t &out)
@@ -287,6 +309,14 @@ const void* Deserializer::fetchNoCopy(size_t size)
     pos_ += size;
 
     return p;
+}
+
+bool Deserializer::skip(size_t size) {
+    if (!checkSize(size))
+        return false;
+
+    pos_ += size;
+    return true;
 }
 
 }

@@ -7,9 +7,6 @@
 namespace tbox {
 namespace network {
 
-constexpr uint16_t DNS_TYPE_A = 0x0001;
-constexpr uint16_t DNS_TYPE_CNAME = 0x0005;
-
 DnsRequest::DnsRequest(event::Loop *wp_loop) :
     udp_(wp_loop)
 {
@@ -23,6 +20,10 @@ DnsRequest::~DnsRequest() {
 }
 
 namespace {
+
+constexpr uint16_t DNS_TYPE_A = 0x0001;
+constexpr uint16_t DNS_TYPE_CNAME = 0x0005;
+
 void AppendDomain(util::Serializer &dump, const std::string domain) {
     std::vector<std::string> str_vec;
     util::string::Split(domain, ".", str_vec);
@@ -34,23 +35,26 @@ void AppendDomain(util::Serializer &dump, const std::string domain) {
     dump << uint8_t(0);
 }
 
-std::string FetchDomain(util::Deserializer &parser, const uint8_t *start_ptr) {
+std::string FetchDomain(util::Deserializer &parser) {
     std::ostringstream oss;
     bool first = true;
     for (;;) {
-        if (!first) oss << '.';
+        uint8_t len = 0;
+        parser >> len;
+        if (len == 0)
+            break;
+
+        if (!first)
+            oss << '.';
         first = false;
 
-        uint8_t len;
-        parser >> len;
-        if (len == 0) {
-            break;
-        } else if ((len & 0xc0) == 0xc0) {
-            uint8_t offset_low;
+        if ((len & 0xc0) == 0xc0) {
+            uint8_t offset_low = 0;
             parser >> offset_low;
             uint16_t offset = (len & 0x3f) << 8 | offset_low;
-            util::Deserializer sub_parser(start_ptr + offset);
-            oss << FetchDomain(sub_parser, start_ptr);
+            util::Deserializer sub_parser(parser);
+            sub_parser.set_pos(offset);
+            oss << FetchDomain(sub_parser);
             break;
         } else {
             char str[len + 1] = { 0 };
@@ -60,6 +64,7 @@ std::string FetchDomain(util::Deserializer &parser, const uint8_t *start_ptr) {
     }
     return oss.str();
 }
+
 }
 
 bool DnsRequest::request(const std::string &domain) {
@@ -107,11 +112,10 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     LogDbg("id:%d, flags:%04x, qd_count:%d, an_count:%d, ns_count:%d, ar_count:%d",
            id, flags, qd_count, an_count, an_count, ns_count, ar_count);
 
-    const uint8_t *byte_ptr = static_cast<const uint8_t*>(data_ptr);
     //! 解析Question字段
     LogDbg("=== questions ===");
     for (uint16_t i = 0; i < qd_count; ++i) {
-        std::string domain = FetchDomain(parser, byte_ptr);
+        std::string domain = FetchDomain(parser);
         LogInfo("domin:%s", domain.c_str());
 
         uint16_t dns_type, dns_class;
@@ -121,23 +125,30 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
 
     LogDbg("=== answers ===");
     for (uint16_t i = 0; i < an_count; ++i) {
-        std::string domain = FetchDomain(parser, byte_ptr);
+        std::string domain = FetchDomain(parser);
         LogDbg("domain:%s", domain.c_str());
-        uint16_t an_type, an_class, an_length;
+        uint16_t an_type, an_class, an_len;
         uint32_t an_ttl;
-        parser >> an_type >> an_class >> an_ttl >> an_length;
+        parser >> an_type >> an_class >> an_ttl >> an_len;
 
-        LogDbg("type:%d, class:%d, ttl:%d", an_type, an_class, an_ttl);
+        LogDbg("type:%d, class:%d, ttl:%d, len:%d", an_type, an_class, an_ttl, an_len);
         if (an_type == DNS_TYPE_A) {
             uint32_t ip_value;
+            auto old_endian = parser.setEndian(util::Endian::kLittle);
             parser >> ip_value;
+            parser.setEndian(old_endian);
             IPAddress ip(ip_value);
-            LogDbg("A:%s", ip.toString().c_str());
+            LogDbg("A:%08x, %s", ip_value, ip.toString().c_str());
+
         } else if (an_type == DNS_TYPE_CNAME) {
-            std::string domain = FetchDomain(parser, byte_ptr);
+            std::string domain = FetchDomain(parser);
             LogDbg("CNAME:%s", domain.c_str());
+
+        } else {
+            LogNotice("unknow type:%d", an_type);
+            parser.skip(an_len);
         }
-        LogDbg("--------");
+        LogDbg("-------");
     }
 }
 

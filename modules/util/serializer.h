@@ -15,7 +15,8 @@ class Serializer {
     Serializer(void *start, size_t size, Endian endian = Endian::kBig);     //! 固定大小的缓冲区
     Serializer(std::vector<uint8_t> &block, Endian endian = Endian::kBig);  //! 可变大小的vector<uint8_t>缓冲区
 
-    inline void setEndian(Endian e) { endian_ = e; }
+    Endian setEndian(Endian e);
+
     inline size_t pos() const { return pos_; }
 
     bool append(uint8_t in);
@@ -41,10 +42,15 @@ class Serializer {
 
 class Deserializer {
   public:
-    Deserializer(const void *start, size_t size = 0, Endian endian = Endian::kBig);
+    Deserializer(const void *start, size_t size, Endian endian = Endian::kBig);
 
-    inline void setEndian(Endian e) { endian_ = e; }
+    Endian setEndian(Endian e);
+
     inline size_t pos() const { return pos_; }
+    bool set_pos(size_t pos);
+
+    inline const uint8_t* start() const { return start_; }
+    inline size_t size() const { return size_; }
 
     bool fetch(uint8_t &out);
     bool fetch(uint16_t &out);
@@ -53,6 +59,8 @@ class Deserializer {
     bool fetch(void *p, size_t s);
     bool fetchPOD(void *p, size_t s);
     const void* fetchNoCopy(size_t s);
+
+    bool skip(size_t s);
 
   protected:
     bool checkSize(size_t size) const;
