@@ -1,6 +1,7 @@
 #ifndef TBOX_UTIL_JSON_H_20220908
 #define TBOX_UTIL_JSON_H_20220908
 
+#include <stdexcept>
 #include <tbox/base/json_fwd.h>
 
 namespace tbox {
