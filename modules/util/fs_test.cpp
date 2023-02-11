@@ -32,6 +32,20 @@ TEST(fs, TextFileReadWrite_Ok) {
     EXPECT_FALSE(IsFileExist(test_filename));
 }
 
+TEST(fs, TextFileReadEachLine) {
+    ::unlink(test_filename);  //! 先删一次
+    const std::string text_tobe_write = "first_line\nsecond_line";
+    EXPECT_TRUE(WriteStringToTextFile(test_filename, text_tobe_write)); //! 写入数据
+    std::vector<std::string> str_vec;
+    bool ret = ReadEachLineFromTextFile(test_filename,
+        [&](const std::string &line) { str_vec.push_back(line); }
+    );
+    EXPECT_TRUE(ret);
+    ASSERT_EQ(str_vec.size(), 2u);
+    EXPECT_EQ(str_vec[0], "first_line");
+    EXPECT_EQ(str_vec[1], "second_line");
+}
+
 TEST(fs, FileFail) {
     EXPECT_FALSE(WriteStringToTextFile(test_filename_cannot_access, "Hello"));
     std::string text_tobe_read;
