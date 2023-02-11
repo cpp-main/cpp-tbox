@@ -48,6 +48,24 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
     return false;
 }
 
+bool ReadEachLineFromTextFile(const std::string &filename, const std::function<void(const std::string&)> &line_handle_func)
+{
+    try {
+        ifstream f(filename);
+        if (f) {
+            std::string line;
+            while (std::getline(f, line))
+                line_handle_func(line);
+            return true;
+        } else {
+            LogWarn("open failed, %s", filename.c_str());
+        }
+    } catch (const exception &e) {
+        LogWarn("catch exception: %s", e.what());
+    }
+    return false;
+}
+
 bool WriteStringToTextFile(const std::string &filename, const std::string &content, bool sync_now)
 {
     return WriteFile(filename.c_str(), content.data(), content.size(), sync_now);
