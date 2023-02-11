@@ -34,17 +34,20 @@ class DnsRequest {
     bool request(const DomainName &domain, const Callback &cb);
     void cancel();
 
-    bool isRunning() const { return req_id_ != 0; }
+    bool isRunning() const;
 
   protected:
     void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
+
+    void sendRequestTo(const IPAddressVec &dns_srv_ip_vec);
 
   private:
     UdpSocket udp_;
 
     uint16_t req_id_alloc_ = 0;
-    uint16_t req_id_ = 0;
-    Callback cb_;
+
+    struct Request;
+    Request *req_ = nullptr;
 };
 
 }

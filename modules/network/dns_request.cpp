@@ -1,6 +1,10 @@
 #include "dns_request.h"
+
 #include <unistd.h>
 #include <sstream>
+#include <map>
+
+#include <tbox/base/assert.h>
 #include <tbox/util/serializer.h>
 #include <tbox/util/string.h>
 
@@ -9,6 +13,9 @@ namespace network {
 
 namespace {
 
+constexpr const char *HOSTS_FILE = "/etc/hosts";
+constexpr const char *RESOLV_FILE = "/etc/resolv.conf";
+
 constexpr uint16_t DNS_TYPE_A = 0x0001;
 constexpr uint16_t DNS_TYPE_CNAME = 0x0005;
 
@@ -16,7 +23,8 @@ constexpr uint16_t DNS_TYPE_CNAME = 0x0005;
 /**
  * "www.baidu.com\x0" --> "\x03www\0x5baidu\0x3com\0x0"
  */
-void AppendDomain(util::Serializer &dump, const std::string domain) {
+void AppendDomain(util::Serializer &dump, const std::string domain)
+{
     std::vector<std::string> str_vec;
     util::string::Split(domain, ".", str_vec);
 
@@ -28,7 +36,8 @@ void AppendDomain(util::Serializer &dump, const std::string domain) {
 }
 
 /// 从缓冲中提取domain，与AppendDomain()相反
-std::string FetchDomain(util::Deserializer &parser) {
+std::string FetchDomain(util::Deserializer &parser)
+{
     std::ostringstream oss;
     bool first = true;
     for (;;) {
@@ -59,7 +68,27 @@ std::string FetchDomain(util::Deserializer &parser) {
     return oss.str();
 }
 
+/// 从 hosts 文件中读取已有记录
+bool ReadHostsFile(std::map<DomainName, IPAddress> domain_ip_map)
+{
+    LogUndo();
+    return false;
 }
+
+/// 从 resolv.conf 文件中读取DNS服务器IP地址
+bool ReadResolvConfFile(std::vector<IPAddress> dns_srv_ip_vec)
+{
+    LogUndo();
+    return false;
+}
+
+}
+
+struct DnsRequest::Request {
+    std::string domain_name;
+    uint16_t id;
+    Callback cb;
+};
 
 DnsRequest::DnsRequest(event::Loop *wp_loop) :
     udp_(wp_loop)
@@ -70,65 +99,48 @@ DnsRequest::DnsRequest(event::Loop *wp_loop) :
 
 DnsRequest::~DnsRequest() {
     udp_.disable();
+    CHECK_DELETE_RESET_OBJ(req_);
 }
 
 bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
-    if (req_id_ != 0) {
+    if (req_ != nullptr) {
         LogWarn("already underway");
         return false;
     }
 
-    req_id_ = ++req_id_alloc_;
+    req_ = new Request;
+    TBOX_ASSERT(req_ != nullptr);
 
-    std::vector<uint8_t> send_buff;
-    util::Serializer dump(send_buff);
+    req_->id = ++req_id_alloc_;
+    req_->cb = cb;
+    req_->domain_name = domain.toString();
 
-    uint16_t id = req_id_;
-    uint16_t flags = 0x0100;
-    uint16_t qd_count = 1;
-    uint16_t an_count = 0;
-    uint16_t ns_count = 0;
-    uint16_t ar_count = 0;
-    uint16_t dns_type = 1;
-    uint16_t dns_class = 1;
+    IPAddressVec dns_ip_vec = {
+        IPAddress("114.114.114.114"),
+        IPAddress("8.8.8.8")
+    };
+    sendRequestTo(dns_ip_vec);
 
-    dump << id
-         << flags
-         << qd_count
-         << an_count
-         << ns_count
-         << ar_count;
-
-    AppendDomain(dump, domain.toString());
-
-    dump << dns_type
-         << dns_class;
-
-    SockAddr dns_srv(IPAddress("114.114.114.114"), 53);
-    std::string hex_str = util::string::RawDataToHexStr(send_buff.data(), send_buff.size());
-    LogInfo("send to %s : %s", dns_srv.toString().c_str(), hex_str.c_str());
-
-    udp_.send(send_buff.data(), send_buff.size(), dns_srv);
-    udp_.enable();
-
-    cb_ = cb;
     return true;
 }
 
 void DnsRequest::cancel() {
     udp_.disable();
-    req_id_ = 0;
-    cb_ = nullptr;
+    CHECK_DELETE_RESET_OBJ(req_);
 }
 
 void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from) {
     std::string hex_str = util::string::RawDataToHexStr(data_ptr, data_size);
     LogInfo("recv from %s : %s", from.toString().c_str(), hex_str.c_str());
+
+    if (req_ == nullptr)
+        return;
+
     util::Deserializer parser(data_ptr, data_size);
 
     uint16_t id, flags;
     parser >> id >> flags;
-    if (id != req_id_)
+    if (id != req_->id)
         return;
 
     Result result;
@@ -177,12 +189,47 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
         LogDbg("-------");
     }
 
-    req_id_ = 0;
+    if (req_->cb)
+        req_->cb(result);
 
-    if (cb_) {
-        cb_(result);
-        cb_ = nullptr;
+    CHECK_DELETE_RESET_OBJ(req_);
+}
+
+void DnsRequest::sendRequestTo(const IPAddressVec &dns_srv_ip_vec)
+{
+    std::vector<uint8_t> send_buff;
+    util::Serializer dump(send_buff);
+
+    uint16_t id = req_->id;
+    uint16_t flags = 0x0100;
+    uint16_t qd_count = 1;
+    uint16_t an_count = 0;
+    uint16_t ns_count = 0;
+    uint16_t ar_count = 0;
+    uint16_t dns_type = 1;
+    uint16_t dns_class = 1;
+
+    dump << id
+         << flags
+         << qd_count
+         << an_count
+         << ns_count
+         << ar_count;
+
+    AppendDomain(dump, req_->domain_name);
+
+    dump << dns_type
+         << dns_class;
+
+    std::string hex_str = util::string::RawDataToHexStr(send_buff.data(), send_buff.size());
+
+    for (auto &ip : dns_srv_ip_vec) {
+        SockAddr dns_srv(ip, 53);
+        udp_.send(send_buff.data(), send_buff.size(), dns_srv);
+        LogInfo("send to %s : %s", dns_srv.toString().c_str(), hex_str.c_str());
     }
+
+    udp_.enable();
 }
 
 }
