@@ -7,6 +7,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/util/serializer.h>
 #include <tbox/util/string.h>
+#include <tbox/util/fs.h>
 
 namespace tbox {
 namespace network {
@@ -68,18 +69,49 @@ std::string FetchDomain(util::Deserializer &parser)
     return oss.str();
 }
 
+/// 剃除注释："xxxx #this is comment" --> "xxx "
+std::string StripComment(const std::string &str)
+{
+    auto end_pos = str.find_first_of('#');
+    if (end_pos == std::string::npos)
+        return str;
+    return str.substr(0, end_pos);
+}
+
 /// 从 hosts 文件中读取已有记录
 bool ReadHostsFile(std::map<DomainName, IPAddress> domain_ip_map)
 {
-    LogUndo();
-    return false;
+    bool ret = util::fs::ReadEachLineFromTextFile(HOSTS_FILE,
+        [&] (const std::string &line) {
+            auto striped_line = StripComment(line);
+            std::vector<std::string> str_vec;
+            util::string::SplitBySpace(striped_line, str_vec);
+            if (str_vec.size() == 2u) {
+                try {
+                    domain_ip_map[DomainName(str_vec[1])] = IPAddress::FromString(str_vec[0]);
+                } catch (const std::exception &e) { }
+            }
+        }
+    );
+    return ret;
 }
 
 /// 从 resolv.conf 文件中读取DNS服务器IP地址
 bool ReadResolvConfFile(std::vector<IPAddress> dns_srv_ip_vec)
 {
-    LogUndo();
-    return false;
+    bool ret = util::fs::ReadEachLineFromTextFile(HOSTS_FILE,
+        [&] (const std::string &line) {
+            auto striped_line = StripComment(line);
+            std::vector<std::string> str_vec;
+            util::string::SplitBySpace(striped_line, str_vec);
+            if (str_vec.size() == 2u && str_vec[0] == "nameserver") {
+                try {
+                    dns_srv_ip_vec.push_back(IPAddress::FromString(str_vec[1]));
+                } catch (const std::exception &e) { }
+            }
+        }
+    );
+    return ret;
 }
 
 }
@@ -116,8 +148,8 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
     req_->domain_name = domain.toString();
 
     IPAddressVec dns_ip_vec = {
-        IPAddress("114.114.114.114"),
-        IPAddress("8.8.8.8")
+        IPAddress::FromString("114.114.114.114"),
+        IPAddress::FromString("8.8.8.8")
     };
     sendRequestTo(dns_ip_vec);
 

@@ -82,7 +82,7 @@ SockAddr SockAddr::FromString(const string &addr_str)
 
         try {
             uint16_t port = stoi(port_str);
-            return SockAddr(IPAddress(ipv4_str), port);
+            return SockAddr(IPAddress::FromString(ipv4_str), port);
         } catch (const std::exception &e) {
             return SockAddr();
         }

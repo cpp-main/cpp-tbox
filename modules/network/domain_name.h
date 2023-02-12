@@ -10,6 +10,8 @@ class DomainName {
     explicit DomainName(const std::string &name) : name_(name) { }
     const std::string& toString() const { return name_; }
 
+    bool operator < (const DomainName &dn) const { return name_ < dn.name_; }
+
   private:
     std::string name_;
 };
