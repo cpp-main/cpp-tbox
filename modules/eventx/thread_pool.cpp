@@ -303,7 +303,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 
-            LogDbg("thread %u finish task %u, cost %d + %d us",
+            LogDbg("thread %u finish task %u, cost %" PRIu64 " + %" PRIu64 " us",
                    thread_token.id(), item->token.id(),
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);

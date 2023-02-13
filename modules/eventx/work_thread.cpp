@@ -194,7 +194,7 @@ void WorkThread::threadProc()
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 
-            LogDbg("thread finish task %u, cost %d + %d us",
+            LogDbg("thread finish task %u, cost %" PRIu64 " + %" PRIu64 " us",
                    item->token.id(),
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
