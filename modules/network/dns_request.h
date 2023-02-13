@@ -2,6 +2,7 @@
 #define TBOX_NETWORK_DNS_REQUEST_H_20230207
 
 #include <tbox/event/loop.h>
+#include <tbox/eventx/work_thread.h>
 #include "udp_socket.h"
 #include "domain_name.h"
 
@@ -39,10 +40,13 @@ class DnsRequest {
   protected:
     void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
 
+    void readHostFile();
+    void readResolvConfFile();
     void sendRequestTo(const IPAddressVec &dns_srv_ip_vec);
 
   private:
     UdpSocket udp_;
+    eventx::WorkThread work_thread_;
 
     uint16_t req_id_alloc_ = 0;
 
