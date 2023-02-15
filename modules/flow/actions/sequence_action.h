@@ -51,7 +51,7 @@ class SequenceAction : public Action {
     virtual void onReset() override;
 
   private:
-    void startOtheriseFinish();
+    void startOtheriseFinish(bool is_succ);
     void onChildFinished(bool is_succ);
 
   private:
