@@ -11,19 +11,19 @@ namespace network {
 
 class DnsRequest {
   public:
-    explicit DnsRequest(event::Loop *wp_loop);
-    virtual ~DnsRequest();
-
     using IPAddressVec  = std::vector<IPAddress>;
     using DomainNameVec = std::vector<DomainName>;
+
+  public:
+    explicit DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_srv_ip_vec);
+    virtual ~DnsRequest();
 
     //! 结果
     struct Result {
         enum class Status {
             kSuccess,           //!< 成功
-            kCantReadResolvConf,//!< 读取 /etc/resolv.conf 失败
             kNoDnsServer,       //!< 没有提供DNS服务器IP地址
-            kAllDnsNotRespond,  //!< 所有的DNS都没有回复
+            kTimeout,           //!< 所有的DNS回复超时
         };
 
         Status status = Status::kSuccess;
@@ -38,15 +38,13 @@ class DnsRequest {
     bool isRunning() const;
 
   protected:
+    void sendRequest();
     void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
 
-    void readHostFile();
-    void readResolvConfFile();
-    void sendRequestTo(const IPAddressVec &dns_srv_ip_vec);
-
   private:
+    IPAddressVec dns_srv_ip_vec_;
+
     UdpSocket udp_;
-    eventx::WorkThread work_thread_;
 
     uint16_t req_id_alloc_ = 0;
 

@@ -10,6 +10,12 @@ using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::network;
 
+const std::vector<IPAddress> dns_srv_ip_vec = {
+    IPAddress::FromString("114.114.114.114"),
+    IPAddress::FromString("8.8.8.8")
+};
+
+
 TEST(DnsRequest, request_baidu)
 {
     LogOutput_Initialize();
@@ -17,7 +23,7 @@ TEST(DnsRequest, request_baidu)
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
 
-    DnsRequest dns(sp_loop);
+    DnsRequest dns(sp_loop, dns_srv_ip_vec);
     dns.request(DomainName("www.baidu.com"),
         [](const DnsRequest::Result &result) {
             for (auto &a : result.a_vec)
@@ -39,7 +45,7 @@ TEST(DnsRequest, request_not_exist_domain)
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
 
-    DnsRequest dns(sp_loop);
+    DnsRequest dns(sp_loop, dns_srv_ip_vec);
     dns.request(DomainName("wwww.this_domain_should_not_exist.com"),
         [](const DnsRequest::Result &result) {
             for (auto &a : result.a_vec)
