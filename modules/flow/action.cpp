@@ -23,7 +23,8 @@ void Action::toJson(Json &js) const {
   js["type"] = type();
   js["state"] = ToString(state_);
   js["result"] = ToString(result_);
-  js["name"] = name_;
+  if (!name_.empty())
+    js["name"] = name_;
 }
 
 bool Action::start() {
