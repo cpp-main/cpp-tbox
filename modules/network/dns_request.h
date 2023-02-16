@@ -13,8 +13,6 @@ namespace network {
 /// DNS请求，用于发送DNS请求
 class DnsRequest {
   public:
-    using IPAddressVec  = std::vector<IPAddress>;
-
     struct A {
         uint32_t ttl;
         IPAddress ip;
@@ -25,12 +23,7 @@ class DnsRequest {
         DomainName cname;
     };
 
-  public:
-    explicit DnsRequest(event::Loop *wp_loop);
-    explicit DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec);
-    virtual ~DnsRequest();
-
-    //! 结果状态
+    //! 查询结果
     struct Result {
         enum class Status {
             kSuccess,           //!< 成功
@@ -45,9 +38,18 @@ class DnsRequest {
         std::vector<A>      a_vec;      //!< A记录列表
         std::vector<CNAME>  cname_vec;  //!< CNAME记录列表
     };
+
+    using IPAddressVec  = std::vector<IPAddress>;
+
     /// 请求结束回调
     using Callback = std::function<void(const Result &result)>;
 
+  public:
+    explicit DnsRequest(event::Loop *wp_loop);
+    explicit DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec);
+    virtual ~DnsRequest();
+
+  public:
     /// 设置DNS IP地址
     void setDnsIPAddesses(const IPAddressVec &dns_ip_vec);
 
