@@ -2,6 +2,7 @@
 #define TBOX_NETWORK_DNS_REQUEST_H_20230207
 
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 #include <tbox/eventx/work_thread.h>
 #include "udp_socket.h"
 #include "domain_name.h"
@@ -22,8 +23,10 @@ class DnsRequest {
     struct Result {
         enum class Status {
             kSuccess,           //!< 成功
-            kNoDnsServer,       //!< 没有提供DNS服务器IP地址
+            kDomainError,       //!< 域名错误
+            kAllDnsFail,        //!< 所有服务器都失败
             kTimeout,           //!< 所有的DNS回复超时
+            kFail,              //!< 其它错误
         };
 
         Status status = Status::kSuccess;
@@ -38,8 +41,8 @@ class DnsRequest {
     bool isRunning() const;
 
   protected:
-    void sendRequest();
     void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
+    void onTimeout();
 
   private:
     IPAddressVec dns_srv_ip_vec_;
@@ -50,6 +53,7 @@ class DnsRequest {
 
     struct Request;
     Request *req_ = nullptr;
+    event::TimerEvent *timeout_timer_ = nullptr;
 };
 
 }
