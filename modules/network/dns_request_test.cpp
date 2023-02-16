@@ -30,9 +30,9 @@ TEST(DnsRequest, request_baidu)
             EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
             tag = true;
             for (auto &a : result.a_vec)
-                cout << "A:" << a.toString() << endl;
+                cout << "A:" << a.ip.toString() << ", TTL:" << a.ttl << endl;
             for (auto &cname : result.cname_vec)
-                cout << "CNAME:" << cname.toString() << endl;
+                cout << "CNAME:" << cname.cname.toString() << ", TTL:" << cname.ttl << endl;
         }
     );
     sp_loop->exitLoop(std::chrono::seconds(1));

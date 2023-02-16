@@ -19,8 +19,18 @@ constexpr const char *HOSTS_FILE = "/etc/hosts";
 constexpr const char *RESOLV_FILE = "/etc/resolv.conf";
 
 enum DNS_TYPE {
-    DNS_TYPE_A = 0x0001,
-    DNS_TYPE_CNAME = 0x0005,
+    DNS_TYPE_A      = 1,    //!< 期望获得查询名的IP地址
+    DNS_TYPE_NS     = 2,    //!< 一个授权的域名服务器
+    DNS_TYPE_CNAME  = 5,    //!< 规范名称
+    DNS_TYPE_PTR    = 12,   //!< 指针记录
+    DNS_TYPE_HINFO  = 13,   //!< 主机信息
+    DNS_TYPE_MX     = 15,   //!< 邮件交换记录
+    DNS_TYPE_AXFR   = 252,  //!< 对区域转换的请求
+    DNS_TYPE_ANY    = 255,  //!< 对所有记录的请求
+};
+
+enum DNS_CLASS {
+    DNS_CLASS_IN    = 1,    //!< 互联网地址
 };
 
 enum DNS_RC {
@@ -91,16 +101,19 @@ struct DnsRequest::Request {
     Result result;
 };
 
-DnsRequest::DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_srv_ip_vec) :
-    dns_srv_ip_vec_(dns_srv_ip_vec),
+DnsRequest::DnsRequest(event::Loop *wp_loop) :
     udp_(wp_loop),
     timeout_timer_(wp_loop->newTimerEvent())
 {
-    using namespace std::placeholders;
-    udp_.setRecvCallback(std::bind(&DnsRequest::onUdpRecv, this, _1, _2, _3));
+    init();
+}
 
-    timeout_timer_->initialize(std::chrono::seconds(5), event::Event::Mode::kOneshot);
-    timeout_timer_->setCallback(std::bind(&DnsRequest::onTimeout, this));
+DnsRequest::DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec) :
+    udp_(wp_loop),
+    timeout_timer_(wp_loop->newTimerEvent()),
+    dns_ip_vec_(dns_ip_vec)
+{
+    init();
 }
 
 DnsRequest::~DnsRequest() {
@@ -109,9 +122,29 @@ DnsRequest::~DnsRequest() {
     CHECK_DELETE_RESET_OBJ(req_);
 }
 
-bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
+void DnsRequest::init()
+{
+    using namespace std::placeholders;
+    udp_.setRecvCallback(std::bind(&DnsRequest::onUdpRecv, this, _1, _2, _3));
+
+    timeout_timer_->initialize(std::chrono::seconds(5), event::Event::Mode::kOneshot);
+    timeout_timer_->setCallback(std::bind(&DnsRequest::onTimeout, this));
+}
+
+void DnsRequest::setDnsIPAddesses(const IPAddressVec &dns_ip_vec)
+{
+    dns_ip_vec_ = dns_ip_vec;
+}
+
+bool DnsRequest::request(const DomainName &domain, const Callback &cb)
+{
     if (req_ != nullptr) {
         LogWarn("already underway");
+        return false;
+    }
+
+    if (dns_ip_vec_.empty()) {
+        LogWarn("dns srv ip not specify");
         return false;
     }
 
@@ -126,13 +159,11 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
     util::Serializer dump(send_buff);
 
     uint16_t id = req_->id;
-    uint16_t flags = 0x0100;
+    uint16_t flags = 0x0100; //!< QR:请求, OPCODE:标准查询, RA:期望递归
     uint16_t qd_count = 1;
     uint16_t an_count = 0;
     uint16_t ns_count = 0;
     uint16_t ar_count = 0;
-    uint16_t dns_type = 1;
-    uint16_t dns_class = 1;
 
     dump << id
          << flags
@@ -143,6 +174,9 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
 
     AppendDomain(dump, req_->domain_name);
 
+    uint16_t dns_type  = DNS_TYPE_A;
+    uint16_t dns_class = DNS_CLASS_IN;
+
     dump << dns_type
          << dns_class;
 
@@ -151,11 +185,9 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
     LogTrace("send data: %s", hex_str.c_str());
 #endif
 
-    for (auto &ip : dns_srv_ip_vec_) {
-        LogTag();
+    for (auto &ip : dns_ip_vec_) {
         SockAddr dns_srv(ip, 53);
         udp_.send(send_buff.data(), send_buff.size(), dns_srv);
-        //LogTrace("send to: %s", ip.toString().c_str());
     }
 
     udp_.enable();
@@ -163,17 +195,20 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb) {
     return true;
 }
 
-void DnsRequest::cancel() {
+void DnsRequest::cancel()
+{
     timeout_timer_->disable();
     udp_.disable();
     CHECK_DELETE_RESET_OBJ(req_);
 }
 
-bool DnsRequest::isRunning() const {
+bool DnsRequest::isRunning() const
+{
     return req_ != nullptr;
 }
 
-void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from) {
+void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from)
+{
 #if 0
     std::string hex_str = util::string::RawDataToHexStr(data_ptr, data_size);
     LogTrace("recv from %s : %s", from.toString().c_str(), hex_str.c_str());
@@ -198,45 +233,45 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     if (rcode == 0) {   //! 正常
         uint16_t qd_count, an_count, ns_count, ar_count;
         parser >> qd_count >> an_count >> ns_count >> ar_count;
-        LogDbg("id:%d, flags:%04x, qd_count:%d, an_count:%d, ns_count:%d, ar_count:%d",
-                id, flags, qd_count, an_count, an_count, ns_count, ar_count);
+
+#if 0
+        LogTrace("id:%d, flags:%04x, qd_count:%d, an_count:%d, ns_count:%d, ar_count:%d",
+               id, flags, qd_count, an_count, an_count, ns_count, ar_count);
+#endif
 
         //! 解析Question字段
-        LogDbg("=== questions ===");
         for (uint16_t i = 0; i < qd_count; ++i) {
-            std::string domain = FetchDomain(parser);
-            LogInfo("domin:%s", domain.c_str());
-
+            FetchDomain(parser);
             uint16_t dns_type, dns_class;
             parser >> dns_type >> dns_class;
-            LogDbg("dns_type:%d, dns_class:%d", dns_type, dns_class);
         }
 
-        LogDbg("=== answers ===");
         for (uint16_t i = 0; i < an_count; ++i) {
-            std::string domain = FetchDomain(parser);
-            LogDbg("domain:%s", domain.c_str());
+            FetchDomain(parser);
             uint16_t an_type, an_class, an_len;
             uint32_t an_ttl;
             parser >> an_type >> an_class >> an_ttl >> an_len;
 
-            LogDbg("type:%d, class:%d, ttl:%d, len:%d", an_type, an_class, an_ttl, an_len);
+#if 0
+            LogTrace("type:%d, class:%d, ttl:%d, len:%d", an_type, an_class, an_ttl, an_len);
+#endif
             if (an_type == DNS_TYPE_A) {
                 uint32_t ip_value;
                 auto old_endian = parser.setEndian(util::Endian::kLittle);
                 parser >> ip_value;
                 parser.setEndian(old_endian);
-                req_->result.a_vec.emplace_back(ip_value);
+                A a = { an_ttl, IPAddress(ip_value) };
+                req_->result.a_vec.push_back(a);
 
             } else if (an_type == DNS_TYPE_CNAME) {
                 std::string domain = FetchDomain(parser);
-                req_->result.cname_vec.emplace_back(domain);
+                CNAME cname = { an_ttl, DomainName(domain) };
+                req_->result.cname_vec.push_back(cname);
 
             } else {
                 LogNotice("unknow type:%d", an_type);
                 parser.skip(an_len);
             }
-            LogDbg("-------");
         }
     } else {
         //! 出现异常
@@ -249,7 +284,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
         } else {
             //! 如果是服务器的问题，则略过当前数据，等待其它服务器的数据
             ++req_->response_count;
-            if (req_->response_count < dns_srv_ip_vec_.size())
+            if (req_->response_count < dns_ip_vec_.size())
                 return;
             req_->result.status = Result::Status::kAllDnsFail;
         }
@@ -262,7 +297,8 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     timeout_timer_->disable();
 }
 
-void DnsRequest::onTimeout() {
+void DnsRequest::onTimeout()
+{
     if (req_ == nullptr)
         return;
 
