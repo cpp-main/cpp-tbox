@@ -17,10 +17,10 @@ namespace tbox {
 namespace event {
 
 namespace {
-uint64_t CurrentMilliseconds()
+uint64_t GetCurrentSteadyClockMilliseconds()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds> \
-        (std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        (std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 }
@@ -44,7 +44,7 @@ int64_t EpollLoop::getWaitTime() const
     /// Get the top of minimum heap
     int64_t wait_time = -1;
     if (!timer_min_heap_.empty()) {
-        wait_time = timer_min_heap_.front()->expired - CurrentMilliseconds();
+        wait_time = timer_min_heap_.front()->expired - GetCurrentSteadyClockMilliseconds();
         if (wait_time < 0) //! If expired is little than now, then we consider this timer invalid and trigger it immediately.
             wait_time = 0;
     }
@@ -54,7 +54,7 @@ int64_t EpollLoop::getWaitTime() const
 
 void EpollLoop::handleExpiredTimers()
 {
-    auto now = CurrentMilliseconds();
+    auto now = GetCurrentSteadyClockMilliseconds();
 
     while (!timer_min_heap_.empty()) {
         auto t = timer_min_heap_.front();
@@ -150,7 +150,7 @@ cabinet::Token EpollLoop::addTimer(uint64_t interval, uint64_t repeat, const Tim
 {
     TBOX_ASSERT(cb);
 
-    auto now = CurrentMilliseconds();
+    auto now = GetCurrentSteadyClockMilliseconds();
 
     Timer *t = new Timer;
     TBOX_ASSERT(t != nullptr);
