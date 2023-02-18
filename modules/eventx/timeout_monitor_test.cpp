@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "timeout_monitor.h"
+#include "timeout_monitor.hpp"
 #include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
@@ -14,15 +14,14 @@ TEST(TimeoutMonitor, Basic)
     auto sp_loop = Loop::New();
     SetScopeExitAction([=] {delete sp_loop;});
 
-    TimeoutMonitor tm(sp_loop);
+    TimeoutMonitor<int> tm(sp_loop);
     tm.initialize(milliseconds(100), 10);
 
     auto start_time = steady_clock::now();
 
-    cabinet::Token pushed_token(100, 1);
     bool run = false;
-    tm.setCallback([&] (const cabinet::Token &token) {
-        EXPECT_EQ(token, pushed_token);
+    tm.setCallback([&] (int value) {
+        EXPECT_EQ(value, 100);
 
         auto d = steady_clock::now() - start_time;
         EXPECT_GT(d, milliseconds(900));
@@ -30,7 +29,7 @@ TEST(TimeoutMonitor, Basic)
         run = true;
     });
 
-    tm.add(pushed_token);
+    tm.add(100);
     sp_loop->exitLoop(milliseconds(1200));
     sp_loop->runLoop();
 

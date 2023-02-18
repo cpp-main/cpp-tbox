@@ -177,7 +177,7 @@ TEST(SequenceAction, FinishIfAnySucc_AllFail) {
   ));
   seq_action->setFinishCallback(
     [loop](bool is_succ) {
-      EXPECT_TRUE(is_succ);
+      EXPECT_FALSE(is_succ);
       loop->exitLoop();
     }
   );
@@ -288,7 +288,7 @@ TEST(SequenceAction, FinishIfAllFinish_AllFail) {
   ));
   seq_action->setFinishCallback(
     [loop](bool is_succ) {
-      EXPECT_TRUE(is_succ);
+      EXPECT_FALSE(is_succ);
       loop->exitLoop();
     }
   );

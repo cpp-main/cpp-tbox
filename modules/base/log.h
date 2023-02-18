@@ -3,6 +3,7 @@
 #define TBOX_LOG_H_20170512
 
 #include <stdlib.h>
+#include <inttypes.h>
 
 //! Define log levels
 #define LOG_LEVEL_FATAL     0   //!< Program will crash

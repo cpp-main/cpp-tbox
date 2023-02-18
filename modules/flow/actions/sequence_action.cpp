@@ -40,7 +40,7 @@ int SequenceAction::append(Action *action) {
 }
 
 bool SequenceAction::onStart() {
-  startOtheriseFinish();
+  startOtheriseFinish(true);
   return true;
 }
 
@@ -69,12 +69,12 @@ void SequenceAction::onReset() {
   index_ = 0;
 }
 
-void SequenceAction::startOtheriseFinish() {
+void SequenceAction::startOtheriseFinish(bool is_succ) {
   if (index_ < children_.size()) {
     if (!children_.at(index_)->start())
       finish(false);
   } else {
-    finish(true);
+    finish(is_succ);
   }
 }
 
@@ -84,7 +84,7 @@ void SequenceAction::onChildFinished(bool is_succ) {
     finish(is_succ);
   } else {
     ++index_;
-    startOtheriseFinish();
+    startOtheriseFinish(is_succ);
   }
 }
 
