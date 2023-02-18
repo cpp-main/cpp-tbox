@@ -6,7 +6,8 @@ LIB_VERSION_Z = 1
 HEAD_FILES = \
 	thread_pool.h \
 	timer_pool.h \
-	timeout_monitor.h \
+	timeout_monitor.hpp \
+	timeout_monitor_impl.hpp \
 	request_pool.hpp \
 	loop_wdog.h \
 	work_thread.h \
@@ -14,7 +15,6 @@ HEAD_FILES = \
 CPP_SRC_FILES = \
 	thread_pool.cpp \
 	timer_pool.cpp \
-	timeout_monitor.cpp \
 	loop_wdog.cpp \
 	work_thread.cpp \
 

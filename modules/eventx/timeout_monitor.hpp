@@ -1,23 +1,24 @@
-#ifndef TBOX_UTIL_TIMEOUT_MONITOR_H_20220428
-#define TBOX_UTIL_TIMEOUT_MONITOR_H_20220428
+#ifndef TBOX_UTIL_TIMEOUT_MONITOR_HPP_20230218
+#define TBOX_UTIL_TIMEOUT_MONITOR_HPP_20230218
 
-#include <tbox/base/cabinet_token.h>
+#include <vector>
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 
 namespace tbox {
 namespace eventx {
 
 /**
- * Token的超时监控器
+ * 超时监控器
  *
  * 该类通常配合cabinet::Cabinet使用，实现请求池功能
  * 用于管理请求的超时自动处理功能
  */
+template <typename T>
 class TimeoutMonitor {
   public:
-    using Token = cabinet::Token;
     using Duration = std::chrono::milliseconds;
-    using Callback = std::function<void(const Token&)>;
+    using Callback = std::function<void(const T&)>;
 
   public:
     explicit TimeoutMonitor(event::Loop *wp_loop);
@@ -34,18 +35,32 @@ class TimeoutMonitor {
      * \note    尽要权衡，不要让check_times太大
      */
     bool initialize(const Duration &check_interval, int check_times);
-    void setCallback(const Callback &cb);
+    void setCallback(const Callback &cb) { cb_ = cb; }
 
-    void add(const Token &token);
+    void add(const T &value);
 
     void cleanup();
 
+  protected:
+    void onTimerTick();
+
+    struct PollItem {
+        PollItem *next = nullptr;
+        std::vector<T> items;
+    };
+
   private:
-    class Impl;
-    Impl *impl_;
+    event::TimerEvent *sp_timer_;
+    Callback    cb_;
+    int         cb_level_ = 0;
+    PollItem   *curr_item_ = nullptr;
+    int         value_number_ = 0;
 };
 
 }
 }
 
-#endif //TBOX_UTIL_TIMEOUT_MONITOR_H_20220428
+/// Template implementations
+#include "timeout_monitor_impl.hpp"
+
+#endif //TBOX_UTIL_TIMEOUT_MONITOR_HPP_20230218

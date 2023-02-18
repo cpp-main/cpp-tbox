@@ -3,7 +3,7 @@
 
 #include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
-#include "timeout_monitor.h"
+#include "timeout_monitor.hpp"
 
 namespace tbox {
 namespace eventx {
@@ -101,8 +101,8 @@ class RequestPool {
     }
 
   private:
-    cabinet::Cabinet<T> req_ctx_cabinet_;
-    TimeoutMonitor timeout_monitor_;
+    cabinet::Cabinet<T>     req_ctx_cabinet_;
+    TimeoutMonitor<Token>   timeout_monitor_;
 };
 
 }
