@@ -92,34 +92,23 @@ std::string FetchDomain(util::Deserializer &parser)
 
 }
 
-//! 请求数据
-struct DnsRequest::Request {
-    std::string domain_name;
-    Callback cb;
-    uint16_t id = 0;
-    size_t response_count = 0;
-    Result result;
-};
-
 DnsRequest::DnsRequest(event::Loop *wp_loop) :
     udp_(wp_loop),
-    timeout_timer_(wp_loop->newTimerEvent())
+    timeout_monitor_(wp_loop)
 {
     init();
 }
 
 DnsRequest::DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec) :
     udp_(wp_loop),
-    timeout_timer_(wp_loop->newTimerEvent()),
+    timeout_monitor_(wp_loop),
     dns_ip_vec_(dns_ip_vec)
 {
     init();
 }
 
 DnsRequest::~DnsRequest() {
-    CHECK_DELETE_RESET_OBJ(timeout_timer_);
     udp_.disable();
-    CHECK_DELETE_RESET_OBJ(req_);
 }
 
 void DnsRequest::init()
@@ -127,8 +116,8 @@ void DnsRequest::init()
     using namespace std::placeholders;
     udp_.setRecvCallback(std::bind(&DnsRequest::onUdpRecv, this, _1, _2, _3));
 
-    timeout_timer_->initialize(std::chrono::seconds(5), event::Event::Mode::kOneshot);
-    timeout_timer_->setCallback(std::bind(&DnsRequest::onTimeout, this));
+    timeout_monitor_.initialize(std::chrono::seconds(1), 5);
+    timeout_monitor_.setCallback(std::bind(&DnsRequest::onRequestTimeout, this, _1));
 }
 
 void DnsRequest::setDnsIPAddesses(const IPAddressVec &dns_ip_vec)
@@ -136,43 +125,32 @@ void DnsRequest::setDnsIPAddesses(const IPAddressVec &dns_ip_vec)
     dns_ip_vec_ = dns_ip_vec;
 }
 
-bool DnsRequest::request(const DomainName &domain, const Callback &cb)
+DnsRequest::ReqId DnsRequest::request(const DomainName &domain, const Callback &cb)
 {
-    if (req_ != nullptr) {
-        LogWarn("already underway");
-        return false;
-    }
-
     if (dns_ip_vec_.empty()) {
         LogWarn("dns srv ip not specify");
         return false;
     }
 
-    req_ = new Request;
-    TBOX_ASSERT(req_ != nullptr);
-
-    req_->id = ++req_id_alloc_;
-    req_->cb = cb;
-    req_->domain_name = domain.toString();
-
+    ReqId req_id = ++req_id_alloc_;
     std::vector<uint8_t> send_buff;
+
     util::Serializer dump(send_buff);
 
-    uint16_t id = req_->id;
     uint16_t flags = 0x0100; //!< QR:请求, OPCODE:标准查询, RA:期望递归
     uint16_t qd_count = 1;
     uint16_t an_count = 0;
     uint16_t ns_count = 0;
     uint16_t ar_count = 0;
 
-    dump << id
+    dump << req_id
          << flags
          << qd_count
          << an_count
          << ns_count
          << ar_count;
 
-    AppendDomain(dump, req_->domain_name);
+    AppendDomain(dump, domain.toString());
 
     uint16_t dns_type  = DNS_TYPE_A;
     uint16_t dns_class = DNS_CLASS_IN;
@@ -190,21 +168,19 @@ bool DnsRequest::request(const DomainName &domain, const Callback &cb)
         udp_.send(send_buff.data(), send_buff.size(), dns_srv);
     }
 
-    udp_.enable();
-    timeout_timer_->enable();
-    return true;
+    addRequest(req_id, cb);
+    return req_id;
 }
 
-void DnsRequest::cancel()
+bool DnsRequest::cancel(ReqId req_id)
 {
-    timeout_timer_->disable();
-    udp_.disable();
-    CHECK_DELETE_RESET_OBJ(req_);
+    return deleteRequest(req_id);
 }
 
-bool DnsRequest::isRunning() const
+bool DnsRequest::isRunning(ReqId req_id) const
 {
-    return req_ != nullptr;
+    auto iter = requests_.find(req_id);
+    return iter != requests_.end();
 }
 
 void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from)
@@ -214,14 +190,16 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     LogTrace("recv from %s : %s", from.toString().c_str(), hex_str.c_str());
 #endif
 
-    if (req_ == nullptr)
+    if (requests_.empty())
         return;
 
     util::Deserializer parser(data_ptr, data_size);
 
-    uint16_t id, flags;
-    parser >> id >> flags;
-    if (id != req_->id)
+    uint16_t req_id, flags;
+    parser >> req_id >> flags;
+
+    Request *req = findRequest(req_id);
+    if (req == nullptr)
         return;
 
     if ((flags & 0x8000) == 0)   //! 必须是回复包
@@ -229,6 +207,8 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
 
     //! 检查flags
     uint8_t rcode = flags & 0x000f;
+
+    Result result;
 
     if (rcode == 0) {   //! 正常
         uint16_t qd_count, an_count, ns_count, ar_count;
@@ -261,12 +241,12 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
                 parser >> ip_value;
                 parser.setEndian(old_endian);
                 A a = { an_ttl, IPAddress(ip_value) };
-                req_->result.a_vec.push_back(a);
+                result.a_vec.push_back(a);
 
             } else if (an_type == DNS_TYPE_CNAME) {
                 std::string domain = FetchDomain(parser);
                 CNAME cname = { an_ttl, DomainName(domain) };
-                req_->result.cname_vec.push_back(cname);
+                result.cname_vec.push_back(cname);
 
             } else {
                 LogNotice("unknow type:%d", an_type);
@@ -277,35 +257,70 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
         //! 出现异常
         if (rcode == DNS_RC_NAME_ERROR) {
             //! 如果是域名自身的问题，则直接返回失败
-            req_->result.status = Result::Status::kDomainError;
+            result.status = Result::Status::kDomainError;
         } else if (rcode == DNS_RC_FORMAT_ERROR) {
             LogNotice("dns packet error");    //! 不应该发生
-            req_->result.status = Result::Status::kFail;
+            result.status = Result::Status::kFail;
         } else {
             //! 如果是服务器的问题，则略过当前数据，等待其它服务器的数据
-            ++req_->response_count;
-            if (req_->response_count < dns_ip_vec_.size())
+            ++req->response_count;
+            if (req->response_count < dns_ip_vec_.size())
                 return;
-            req_->result.status = Result::Status::kAllDnsFail;
+            result.status = Result::Status::kAllDnsFail;
         }
     }
 
-    if (req_->cb)
-        req_->cb(req_->result);
+    if (req->cb)
+        req->cb(result);
 
-    CHECK_DELETE_RESET_OBJ(req_);
-    timeout_timer_->disable();
+    deleteRequest(req_id);
 }
 
-void DnsRequest::onTimeout()
+void DnsRequest::onRequestTimeout(ReqId req_id)
 {
-    if (req_ == nullptr)
+    auto req = findRequest(req_id);
+    if (req == nullptr)
         return;
 
-    req_->result.status = Result::Status::kTimeout;
-    if (req_->cb)
-        req_->cb(req_->result);
-    CHECK_DELETE_RESET_OBJ(req_);
+    Result result;
+    result.status = Result::Status::kTimeout;
+
+    if (req->cb)
+        req->cb(result);
+
+    deleteRequest(req_id);
+}
+
+void DnsRequest::addRequest(ReqId req_id, const Callback &cb)
+{
+    if (requests_.empty())
+        udp_.enable();
+
+    Request req;
+    req.cb = cb;
+
+    requests_[req_id] = req;
+    timeout_monitor_.add(req_id);
+}
+
+DnsRequest::Request* DnsRequest::findRequest(ReqId req_id)
+{
+    auto iter = requests_.find(req_id);
+    if (iter != requests_.end())
+        return &(iter->second);
+    return nullptr;
+}
+
+bool DnsRequest::deleteRequest(ReqId req_id)
+{
+    auto iter = requests_.find(req_id);
+    if (iter != requests_.end()) {
+        requests_.erase(iter);
+        if (requests_.empty())
+            udp_.disable();
+        return true;
+    }
+    return false;
 }
 
 }

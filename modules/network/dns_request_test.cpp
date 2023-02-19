@@ -28,11 +28,15 @@ TEST(DnsRequest, request_baidu)
     dns.request(DomainName("www.baidu.com"),
         [&](const DnsRequest::Result &result) {
             EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
+            EXPECT_NE(result.a_vec.size(), 0);
             tag = true;
+#if 0
+            cout << "== www.baidu.com ==" << endl;
             for (auto &a : result.a_vec)
                 cout << "A:" << a.ip.toString() << ", TTL:" << a.ttl << endl;
             for (auto &cname : result.cname_vec)
                 cout << "CNAME:" << cname.cname.toString() << ", TTL:" << cname.ttl << endl;
+#endif
         }
     );
     sp_loop->exitLoop(std::chrono::seconds(1));
@@ -41,6 +45,87 @@ TEST(DnsRequest, request_baidu)
     EXPECT_TRUE(tag);
     LogOutput_Cleanup();
 }
+
+TEST(DnsRequest, request_baidu_and_bing)
+{
+    LogOutput_Initialize();
+
+    Loop *sp_loop = Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop; });
+
+    bool baidu_tag = false;
+    DnsRequest dns(sp_loop, dns_srv_ip_vec);
+    dns.request(DomainName("www.baidu.com"),
+        [&](const DnsRequest::Result &result) {
+            EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
+            EXPECT_NE(result.a_vec.size(), 0);
+            baidu_tag = true;
+#if 0
+            cout << "== www.baidu.com ==" << endl;
+            for (auto &a : result.a_vec)
+                cout << "A:" << a.ip.toString() << ", TTL:" << a.ttl << endl;
+            for (auto &cname : result.cname_vec)
+                cout << "CNAME:" << cname.cname.toString() << ", TTL:" << cname.ttl << endl;
+#endif
+        }
+    );
+    bool bing_tag = false;
+    dns.request(DomainName("cn.bing.com"),
+        [&](const DnsRequest::Result &result) {
+            EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
+            EXPECT_NE(result.a_vec.size(), 0);
+            bing_tag = true;
+#if 0
+            cout << "== cn.bing.com ==" << endl;
+            for (auto &a : result.a_vec)
+                cout << "A:" << a.ip.toString() << ", TTL:" << a.ttl << endl;
+            for (auto &cname : result.cname_vec)
+                cout << "CNAME:" << cname.cname.toString() << ", TTL:" << cname.ttl << endl;
+#endif
+        }
+    );
+
+    sp_loop->exitLoop(std::chrono::seconds(1));
+    sp_loop->runLoop();
+
+    EXPECT_TRUE(baidu_tag);
+    EXPECT_TRUE(bing_tag);
+    LogOutput_Cleanup();
+}
+
+TEST(DnsRequest, request_baidu_and_bing_cancel_baidu)
+{
+    LogOutput_Initialize();
+
+    Loop *sp_loop = Loop::New();
+    SetScopeExitAction([sp_loop]{ delete sp_loop; });
+
+    bool baidu_tag = false;
+    DnsRequest dns(sp_loop, dns_srv_ip_vec);
+    auto baidu_req_id = dns.request(DomainName("www.baidu.com"),
+        [&](const DnsRequest::Result &result) {
+            EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
+            baidu_tag = true;
+        }
+    );
+    bool bing_tag = false;
+    dns.request(DomainName("cn.bing.com"),
+        [&](const DnsRequest::Result &result) {
+            EXPECT_EQ(result.status, DnsRequest::Result::Status::kSuccess);
+            bing_tag = true;
+        }
+    );
+
+    dns.cancel(baidu_req_id);
+
+    sp_loop->exitLoop(std::chrono::seconds(1));
+    sp_loop->runLoop();
+
+    EXPECT_FALSE(baidu_tag);
+    EXPECT_TRUE(bing_tag);
+    LogOutput_Cleanup();
+}
+
 
 TEST(DnsRequest, request_not_exist_domain)
 {

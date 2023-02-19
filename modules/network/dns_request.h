@@ -1,16 +1,18 @@
 #ifndef TBOX_NETWORK_DNS_REQUEST_H_20230207
 #define TBOX_NETWORK_DNS_REQUEST_H_20230207
 
+#include <map>
 #include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
-#include <tbox/eventx/work_thread.h>
+#include <tbox/eventx/timeout_monitor.hpp>
 #include "udp_socket.h"
 #include "domain_name.h"
 
 namespace tbox {
 namespace network {
 
-/// DNS请求，用于发送DNS请求
+/// DNS请求
+///
+/// 用于发送DNS请求，支持并行发送多个DNS清求
 class DnsRequest {
   public:
     struct A {
@@ -44,6 +46,8 @@ class DnsRequest {
     /// 请求结束回调
     using Callback = std::function<void(const Result &result)>;
 
+    using ReqId = uint16_t;
+
   public:
     explicit DnsRequest(event::Loop *wp_loop);
     explicit DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec);
@@ -54,28 +58,36 @@ class DnsRequest {
     void setDnsIPAddesses(const IPAddressVec &dns_ip_vec);
 
     /// 向DNS服务器发送查询请求
-    bool request(const DomainName &domain, const Callback &cb);
+    ReqId request(const DomainName &domain, const Callback &cb);
 
     /// 取消当前的查询请求
-    void cancel();
+    bool cancel(ReqId req_id);
 
     /// 检查当前是否处于查询中
-    bool isRunning() const;
+    bool isRunning(ReqId req_id) const;
 
   protected:
+    struct Request {
+        Callback cb;
+        size_t response_count = 0;
+    };
+
     void init();
     void onUdpRecv(const void *data_ptr, size_t data_size, const SockAddr &from);
-    void onTimeout();
+    void onRequestTimeout(ReqId req_id);
+
+    void addRequest(ReqId req_id, const Callback &cb);
+    Request* findRequest(ReqId req_id);
+    bool deleteRequest(ReqId req_id);
 
   private:
     UdpSocket udp_;
-    event::TimerEvent *timeout_timer_ = nullptr;
+    eventx::TimeoutMonitor<ReqId> timeout_monitor_;
 
     IPAddressVec dns_ip_vec_;
-    uint16_t req_id_alloc_ = 0;
+    ReqId req_id_alloc_ = 0;
 
-    struct Request;
-    Request *req_ = nullptr;
+    std::map<ReqId, Request> requests_;
 };
 
 }
