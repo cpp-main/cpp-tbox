@@ -12,7 +12,6 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
   mode_(mode)
 {
   TBOX_ASSERT(child != nullptr);
-  TBOX_ASSERT(times != 0);
 
   child_->setFinishCallback(
     [this] (bool is_succ) {
@@ -44,7 +43,7 @@ void RepeatAction::toJson(Json &js) const {
 }
 
 bool RepeatAction::onStart() {
-  remain_times_ = repeat_times_;
+  remain_times_ = repeat_times_ - 1;
   return child_->start();
 }
 

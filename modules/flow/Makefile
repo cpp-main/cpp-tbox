@@ -53,6 +53,7 @@ TEST_CPP_SRC_FILES = \
 	actions/if_else_action_test.cpp \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
+	actions/repeat_action_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no
