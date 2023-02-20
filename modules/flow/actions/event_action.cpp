@@ -8,6 +8,11 @@ EventAction::EventAction(event::Loop &loop, const std::string &type, EventPublis
   pub_(pub)
 { }
 
+EventAction::~EventAction() {
+  if (state_ == State::kRunning)
+    pub_.unsubscribe(this);
+}
+
 bool EventAction::onStart() {
   pub_.subscribe(this);
   return true;

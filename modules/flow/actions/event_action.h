@@ -12,6 +12,7 @@ class EventAction : public Action,
                     public EventSubscriber {
   public:
     explicit EventAction(event::Loop &loop, const std::string &type, EventPublisher &pub);
+    virtual ~EventAction();
 
   protected:
     virtual bool onStart() override;
