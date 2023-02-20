@@ -20,6 +20,7 @@ HEAD_FILES = \
 	actions/loop_action.h \
 	actions/loop_if_action.h \
 	actions/event_action.h \
+	actions/repeat_action.h \
 
 CPP_SRC_FILES = \
 	state_machine.cpp \
@@ -35,6 +36,7 @@ CPP_SRC_FILES = \
 	actions/loop_action.cpp \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
+	actions/repeat_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"flow"' $(CXXFLAGS)
 

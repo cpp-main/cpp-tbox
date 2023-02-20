@@ -9,7 +9,7 @@ EventAction::EventAction(event::Loop &loop, const std::string &type, EventPublis
 { }
 
 EventAction::~EventAction() {
-  if (state_ == State::kRunning)
+  if (state() == State::kRunning)
     pub_.unsubscribe(this);
 }
 

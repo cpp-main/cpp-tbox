@@ -16,7 +16,7 @@ LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
     [this] (bool is_succ) {
       if ((mode_ == Mode::kUntilSucc && is_succ) ||
           (mode_ == Mode::kUntilFail && !is_succ)) {
-        finish(true);
+        finish(is_succ);
       } else if (state() == State::kRunning) {
         child_->reset();
         child_->start();
