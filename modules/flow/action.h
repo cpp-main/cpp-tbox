@@ -46,8 +46,7 @@ class Action {
     /// 是否正在进行中
     /// 表示已启动，但还没有结束或终止的状态
     inline bool isUnderway() const {
-        return state_ != State::kRunning &&
-               state_ != State::kPause;
+        return state_ == State::kRunning || state_ == State::kPause;
     }
 
     inline void set_name(const std::string &name) { name_ = name; }
