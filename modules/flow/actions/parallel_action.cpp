@@ -9,6 +9,10 @@ namespace flow {
 
 using namespace std::placeholders;
 
+ParallelAction::ParallelAction(event::Loop &loop) :
+  Action(loop, "Parallel")
+{ }
+
 ParallelAction::~ParallelAction() {
   for (auto action : children_)
     delete action;

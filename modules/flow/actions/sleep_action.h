@@ -16,8 +16,6 @@ class SleepAction : public Action {
 
     ~SleepAction();
 
-    virtual std::string type() const override { return "Sleep"; }
-
   protected:
     virtual bool onStart() override;
     virtual bool onStop() override;

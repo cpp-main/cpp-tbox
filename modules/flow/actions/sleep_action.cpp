@@ -8,7 +8,7 @@ namespace tbox {
 namespace flow {
 
 SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span) :
-  Action(loop),
+  Action(loop, "Sleep"),
   timer_(loop.newTimerEvent()),
   time_span_(time_span)
 {
@@ -17,7 +17,7 @@ SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &tim
 }
 
 SleepAction::SleepAction(event::Loop &loop, const Generator &gen) :
-  Action(loop),
+  Action(loop, "Sleep"),
   timer_(loop.newTimerEvent()),
   gen_(gen)
 {

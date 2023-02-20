@@ -11,10 +11,8 @@ namespace flow {
 
 class ParallelAction : public Action {
   public:
-    using Action::Action;
+    explicit ParallelAction(event::Loop &loop);
     virtual ~ParallelAction();
-
-    virtual std::string type() const override { return "Parallel"; }
 
     int append(Action *action);
 

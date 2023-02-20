@@ -12,8 +12,7 @@ TEST(Action, Timeout) {
 
   class TestAction : public Action {
     public:
-      using Action::Action;
-      virtual std::string type() const override { return "TestAction"; }
+      explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
   };
 
   TestAction action(*loop);

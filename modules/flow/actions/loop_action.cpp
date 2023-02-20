@@ -6,7 +6,7 @@ namespace tbox {
 namespace flow {
 
 LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
-  Action(loop),
+  Action(loop, "Loop"),
   child_(child),
   mode_(mode)
 {

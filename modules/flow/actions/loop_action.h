@@ -16,7 +16,6 @@ class LoopAction : public Action {
     explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
     virtual ~LoopAction();
 
-    virtual std::string type() const override { return "Loop"; }
     virtual void toJson(Json &js) const;
 
   protected:

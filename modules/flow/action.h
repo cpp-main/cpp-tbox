@@ -15,7 +15,7 @@ namespace flow {
 //! 动作类
 class Action {
   public:
-    explicit Action(event::Loop &loop);
+    explicit Action(event::Loop &loop, const std::string &type);
     virtual ~Action();
 
     NONCOPYABLE(Action);
@@ -38,13 +38,20 @@ class Action {
       kFail,      //!< 失败
     };
 
-    virtual std::string type() const = 0;
+    inline const std::string& type() { return type_; }
 
     inline State state() const { return state_; }
     inline Result result() const { return result_; }
 
+    /// 是否正在进行中
+    /// 表示已启动，但还没有结束或终止的状态
+    inline bool isUnderway() const {
+        return state_ != State::kRunning &&
+               state_ != State::kPause;
+    }
+
     inline void set_name(const std::string &name) { name_ = name; }
-    inline std::string name() const { return name_; }
+    inline const std::string& name() const { return name_; }
 
     //!< 设置结束回调
     using FinishCallback = std::function<void(bool is_succ)>;
@@ -75,6 +82,7 @@ class Action {
     event::Loop &loop_;
 
   private:
+    std::string type_;
     std::string name_;
     FinishCallback finish_cb_;
 

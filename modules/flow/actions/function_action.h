@@ -11,8 +11,6 @@ class FunctionAction : public Action {
     using Func = std::function<bool()>;
     explicit FunctionAction(event::Loop &loop, const Func &func);
 
-    virtual std::string type() const override { return "Function"; }
-
   protected:
     virtual bool onStart() override;
 

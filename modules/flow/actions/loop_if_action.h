@@ -13,7 +13,6 @@ class LoopIfAction : public Action {
                           Action *exec_action);
     virtual ~LoopIfAction();
 
-    virtual std::string type() const override { return "LoopIf"; }
     virtual void toJson(Json &js) const;
 
     //! 默认结束结果是true，如果需要可以设定

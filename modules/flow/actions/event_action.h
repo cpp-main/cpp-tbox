@@ -11,7 +11,7 @@ namespace flow {
 class EventAction : public Action,
                     public EventSubscriber {
   public:
-    explicit EventAction(event::Loop &loop, EventPublisher &pub);
+    explicit EventAction(event::Loop &loop, const std::string &type, EventPublisher &pub);
 
   protected:
     virtual bool onStart() override;

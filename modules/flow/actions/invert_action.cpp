@@ -7,7 +7,7 @@ namespace tbox {
 namespace flow {
 
 InvertAction::InvertAction(event::Loop &loop, Action *child) :
-  Action(loop), child_(child)
+  Action(loop, "Invert"), child_(child)
 {
   TBOX_ASSERT(child_ != nullptr);
 

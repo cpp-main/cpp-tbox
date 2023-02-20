@@ -16,8 +16,6 @@ class InvertAction : public Action {
     explicit InvertAction(event::Loop &loop, Action *child);
     virtual ~InvertAction();
 
-    virtual std::string type() const override { return "Invert"; }
-
     virtual void toJson(Json &js) const;
 
   protected:

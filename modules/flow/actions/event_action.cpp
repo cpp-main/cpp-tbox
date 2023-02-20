@@ -3,8 +3,9 @@
 namespace tbox {
 namespace flow {
 
-EventAction::EventAction(event::Loop &loop, EventPublisher &pub) :
-  Action(loop), pub_(pub)
+EventAction::EventAction(event::Loop &loop, const std::string &type, EventPublisher &pub) :
+  Action(loop, type),
+  pub_(pub)
 { }
 
 bool EventAction::onStart() {

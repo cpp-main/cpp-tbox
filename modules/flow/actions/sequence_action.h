@@ -28,10 +28,8 @@ class SequenceAction : public Action {
     };
 
   public:
-    using Action::Action;
+    explicit SequenceAction(event::Loop &loop);
     virtual ~SequenceAction();
-
-    virtual std::string type() const override { return "Sequence"; }
 
     virtual void toJson(Json &js) const;
 

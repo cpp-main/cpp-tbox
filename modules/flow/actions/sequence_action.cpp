@@ -10,6 +10,10 @@ namespace flow {
 
 using namespace std::placeholders;
 
+SequenceAction::SequenceAction(event::Loop &loop) :
+  Action(loop, "Sequence")
+{ }
+
 SequenceAction::~SequenceAction() {
   for (auto action : children_)
     delete action;

@@ -20,7 +20,6 @@ class IfElseAction : public Action {
                           Action *if_action, Action *else_action);
     virtual ~IfElseAction();
 
-    virtual std::string type() const override { return "IfElse"; }
     virtual void toJson(Json &js) const;
 
   protected:

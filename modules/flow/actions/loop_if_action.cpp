@@ -7,7 +7,7 @@ namespace tbox {
 namespace flow {
 
 LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_action) :
-  Action(loop),
+  Action(loop, "LoopIf"),
   cond_action_(cond_action),
   exec_action_(exec_action)
 {
