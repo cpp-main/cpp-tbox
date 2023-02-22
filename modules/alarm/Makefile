@@ -20,7 +20,7 @@ CPP_SRC_FILES = \
 	workday_alarm.cpp \
 	workday_calendar.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"alarm"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.alarm"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	workday_calendar_test.cpp \

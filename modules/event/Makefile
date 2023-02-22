@@ -52,7 +52,7 @@ TEST_CPP_SRC_FILES = \
 	signal_event_test.cpp \
 	stat_test.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox_event"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
 
 ifeq ($(ENABLE_STAT), yes)
 CXXFLAGS += -DENABLE_STAT=1

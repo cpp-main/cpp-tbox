@@ -16,6 +16,7 @@
 namespace tbox {
 namespace main {
 
+extern void RegisterSignals();
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
@@ -66,6 +67,8 @@ bool Start(int argc, char **argv) {
   }
 
   _runtime = new Runtime;
+
+  RegisterSignals();
 
   auto &log = _runtime->log;
   auto &ctx = _runtime->ctx;

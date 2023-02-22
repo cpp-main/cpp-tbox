@@ -17,13 +17,13 @@ CPP_SRC_FILES = \
 	syslog_channel.cpp \
 	file_async_channel.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"log"' $(CXXFLAGS)
-
 TEST_CPP_SRC_FILES = \
 	stdout_channel_test.cpp \
 	syslog_channel_test.cpp \
 	async_channel_test.cpp \
 	file_async_channel_test.cpp \
+
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no

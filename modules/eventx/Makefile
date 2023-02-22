@@ -18,7 +18,7 @@ CPP_SRC_FILES = \
 	loop_wdog.cpp \
 	work_thread.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"eventx"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.eventx"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	thread_pool_test.cpp \

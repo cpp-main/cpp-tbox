@@ -100,7 +100,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 //! 信号处理函数
 void CommonLoop::HandleSignal(int signo)
 {
-    //LogTrace("got signal :%d", signo);
+    LogInfo("Got signal :%d", signo);
     auto &this_signal_fds = _signal_write_fds_[signo];
     for (int fd : this_signal_fds) {
         auto wsize = write(fd, &signo, sizeof(signo));

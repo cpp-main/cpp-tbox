@@ -28,7 +28,7 @@ CPP_SRC_FILES = \
 	impl/service/telnetd.cpp \
 	impl/service/tcp_rpc.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"terminal"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.terminal"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	impl/key_event_scanner_test.cpp \

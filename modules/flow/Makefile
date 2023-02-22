@@ -38,7 +38,7 @@ CPP_SRC_FILES = \
 	actions/event_action.cpp \
 	actions/repeat_action.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"flow"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	state_machine_test.cpp \

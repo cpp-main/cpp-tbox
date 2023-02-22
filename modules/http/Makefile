@@ -27,7 +27,7 @@ CPP_SRC_FILES = \
 	server/router.cpp \
 	client/client.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"http"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.http"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	common_test.cpp \

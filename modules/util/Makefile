@@ -37,7 +37,7 @@ CPP_SRC_FILES = \
 	crc.cpp \
 	json_deep_loader.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"util"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	pid_file_test.cpp \

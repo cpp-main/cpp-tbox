@@ -1,7 +1,7 @@
 LIB_NAME = main
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	context.h \
@@ -18,7 +18,7 @@ CPP_SRC_FILES = \
 	module.cpp \
 	log.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"main"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.main"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 

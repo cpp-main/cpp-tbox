@@ -11,7 +11,7 @@ CPP_SRC_FILES = \
 	md5.cpp \
 	aes.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox_crypto"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.crypto"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	md5_test.cpp \

@@ -40,7 +40,7 @@ CPP_SRC_FILES = \
 	net_if.cpp \
 	dns_request.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"network"' $(CXXFLAGS)
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.network"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	fd_test.cpp \
