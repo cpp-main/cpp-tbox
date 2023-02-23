@@ -21,7 +21,8 @@ ContextImp::ContextImp() :
     sp_timer_pool_(new eventx::TimerPool(sp_loop_)),
     sp_terminal_(new terminal::Terminal),
     sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
-    sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_))
+    sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_)),
+    start_time_point_(std::chrono::steady_clock::now())
 {
     TBOX_ASSERT(sp_loop_ != nullptr);
     TBOX_ASSERT(sp_thread_pool_ != nullptr);
@@ -114,6 +115,12 @@ void ContextImp::cleanup()
     sp_thread_pool_->cleanup();
 }
 
+std::chrono::milliseconds ContextImp::running_time() const
+{
+    auto now = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_point_);
+}
+
 void ContextImp::initShell()
 {
     using namespace terminal;
@@ -175,6 +182,44 @@ void ContextImp::initShell()
             }
         , "reset Loop's stat data");
         wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
+
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    uint64_t ms = running_time().count();
+
+                    ss << ms << " ms\r\n";
+                    constexpr auto ms_per_sec   = 1000;
+                    constexpr auto ms_per_min   = 60 * ms_per_sec;
+                    constexpr auto ms_per_hour  = 60 * ms_per_min;
+                    constexpr auto ms_per_day   = 24 * ms_per_hour;
+
+                    auto days = ms / ms_per_day;
+                    auto ms_in_day = ms % ms_per_day;
+                    auto hours = ms_in_day / ms_per_hour;
+                    auto ms_in_hour = ms_in_day % ms_per_hour;
+                    auto mins = ms_in_hour / ms_per_min;
+                    auto ms_in_min = ms_in_hour % ms_per_min;
+                    auto secs = ms_in_min / ms_per_sec;
+                    auto msecs = ms_in_min % ms_per_sec;
+
+                    if (days > 0)
+                        ss << days << "d-";
+                    if (days > 0 || hours > 0)
+                        ss << hours << "h-";
+                    if (days > 0 || hours > 0 || mins > 0)
+                        ss << mins << "m-";
+                    if (days > 0 || hours > 0 || mins > 0 || secs > 0)
+                        ss << secs << "s-";
+                    ss << msecs << "ms\r\n";
+
+                    s.send(ss.str());
+                }
+            , "Print running times");
+            wp_nodes->mountNode(ctx_node, func_node, "running_time");
+        }
+
     }
 
     {
@@ -225,7 +270,7 @@ void ContextImp::initShell()
                     s.send(ss.str());
                 }
             , "Print buildtime");
-            wp_nodes->mountNode(info_node, func_node, "time");
+            wp_nodes->mountNode(info_node, func_node, "build_time");
         }
         {
             auto func_node = wp_nodes->createFuncNode(
@@ -235,7 +280,7 @@ void ContextImp::initShell()
                     s.send(ss.str());
                 }
             , "Print app describe");
-            wp_nodes->mountNode(info_node, func_node, "desc");
+            wp_nodes->mountNode(info_node, func_node, "what");
         }
     }
 }

@@ -42,7 +42,7 @@ class CommonLoop : public Loop {
     virtual SignalEvent* newSignalEvent() override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
-    static void HandleSignal(int signo);
+    static void OnSignal(int signo);
     void onSignal();
 
   protected:

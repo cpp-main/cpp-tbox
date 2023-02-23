@@ -38,7 +38,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 
         auto & signo_fds = _signal_write_fds_[signo];
         if (signo_fds.empty()) {
-            signal(signo, CommonLoop::HandleSignal);
+            signal(signo, CommonLoop::OnSignal);
             //LogTrace("set signal:%d", signo);
         }
         signo_fds.insert(signal_write_fd_);
@@ -98,7 +98,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 }
 
 //! 信号处理函数
-void CommonLoop::HandleSignal(int signo)
+void CommonLoop::OnSignal(int signo)
 {
     LogInfo("Got signal :%d", signo);
     auto &this_signal_fds = _signal_write_fds_[signo];
