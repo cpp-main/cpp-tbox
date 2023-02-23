@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <sys/time.h>
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
@@ -14,6 +15,41 @@
 
 namespace tbox {
 namespace main {
+
+namespace {
+std::string ToString(const std::chrono::milliseconds msec)
+{
+    uint64_t ms = msec.count();
+
+    constexpr auto ms_per_sec   = 1000;
+    constexpr auto ms_per_min   = 60 * ms_per_sec;
+    constexpr auto ms_per_hour  = 60 * ms_per_min;
+    constexpr auto ms_per_day   = 24 * ms_per_hour;
+
+    auto days = ms / ms_per_day;
+    auto ms_in_day = ms % ms_per_day;
+    auto hours = ms_in_day / ms_per_hour;
+    auto ms_in_hour = ms_in_day % ms_per_hour;
+    auto mins = ms_in_hour / ms_per_min;
+    auto ms_in_min = ms_in_hour % ms_per_min;
+    auto secs = ms_in_min / ms_per_sec;
+    auto msecs = ms_in_min % ms_per_sec;
+
+    std::ostringstream oss;
+
+    if (days > 0)
+        oss << days << "d-";
+    if (days > 0 || hours > 0)
+        oss << hours << "h-";
+    if (days > 0 || hours > 0 || mins > 0)
+        oss << mins << "m-";
+    if (days > 0 || hours > 0 || mins > 0 || secs > 0)
+        oss << secs << "s-";
+    oss << msecs << "ms";
+
+    return oss.str();
+}
+}
 
 ContextImp::ContextImp() :
     sp_loop_(event::Loop::New()),
@@ -113,12 +149,21 @@ void ContextImp::cleanup()
     sp_telnetd_->cleanup();
     sp_timer_pool_->cleanup();
     sp_thread_pool_->cleanup();
+
+    LogInfo("running_time: %s", ToString(running_time()).c_str());
 }
 
 std::chrono::milliseconds ContextImp::running_time() const
 {
     auto now = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_point_);
+}
+
+std::chrono::system_clock::time_point ContextImp::start_time_point() const
+{
+    auto steady_clock_now = std::chrono::steady_clock::now();
+    auto system_clock_now = std::chrono::system_clock::now();
+    return system_clock_now - (steady_clock_now - start_time_point_);
 }
 
 void ContextImp::initShell()
@@ -186,38 +231,32 @@ void ContextImp::initShell()
         {
             auto func_node = wp_nodes->createFuncNode(
                 [this] (const Session &s, const Args &args) {
-                    std::stringstream ss;
-                    uint64_t ms = running_time().count();
-
-                    ss << ms << " ms\r\n";
-                    constexpr auto ms_per_sec   = 1000;
-                    constexpr auto ms_per_min   = 60 * ms_per_sec;
-                    constexpr auto ms_per_hour  = 60 * ms_per_min;
-                    constexpr auto ms_per_day   = 24 * ms_per_hour;
-
-                    auto days = ms / ms_per_day;
-                    auto ms_in_day = ms % ms_per_day;
-                    auto hours = ms_in_day / ms_per_hour;
-                    auto ms_in_hour = ms_in_day % ms_per_hour;
-                    auto mins = ms_in_hour / ms_per_min;
-                    auto ms_in_min = ms_in_hour % ms_per_min;
-                    auto secs = ms_in_min / ms_per_sec;
-                    auto msecs = ms_in_min % ms_per_sec;
-
-                    if (days > 0)
-                        ss << days << "d-";
-                    if (days > 0 || hours > 0)
-                        ss << hours << "h-";
-                    if (days > 0 || hours > 0 || mins > 0)
-                        ss << mins << "m-";
-                    if (days > 0 || hours > 0 || mins > 0 || secs > 0)
-                        ss << secs << "s-";
-                    ss << msecs << "ms\r\n";
-
-                    s.send(ss.str());
+                    s.send(ToString(running_time()));
+                    s.send("\r\n");
                 }
             , "Print running times");
             wp_nodes->mountNode(ctx_node, func_node, "running_time");
+        }
+
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(start_time_point().time_since_epoch()).count();
+                    {
+                        time_t sec = ts / 1000;
+                        struct tm tm;
+                        localtime_r(&sec, &tm);
+                        char tmp[20];
+                        strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
+                        ss << tmp << '.' << ts % 1000 << "\r\n";
+                    }
+                    ss << ts << " ms\r\n";
+
+                    s.send(ss.str());
+                }
+            , "Print start time point");
+            wp_nodes->mountNode(ctx_node, func_node, "start_time");
         }
 
     }

@@ -20,6 +20,7 @@ class Context {
     virtual terminal::TerminalNodes* terminal() const = 0;
 
     virtual std::chrono::milliseconds running_time() const = 0;
+    virtual std::chrono::system_clock::time_point start_time_point() const = 0;
 };
 
 }

@@ -30,7 +30,8 @@ class ContextImp : public Context {
     virtual eventx::TimerPool* timer_pool() const override { return sp_timer_pool_; }
     virtual terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
 
-    virtual std::chrono::milliseconds running_time() const;
+    virtual std::chrono::milliseconds running_time() const override;
+    virtual std::chrono::system_clock::time_point start_time_point() const override;
 
   protected:
     void initShell();
