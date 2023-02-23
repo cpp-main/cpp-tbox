@@ -21,6 +21,7 @@ HEAD_FILES = \
 	actions/loop_if_action.h \
 	actions/event_action.h \
 	actions/repeat_action.h \
+	actions/wrapper_action.h \
 
 CPP_SRC_FILES = \
 	state_machine.cpp \
@@ -37,6 +38,7 @@ CPP_SRC_FILES = \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
 	actions/repeat_action.cpp \
+	actions/wrapper_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
