@@ -22,7 +22,7 @@ void WrapperAction::setChild(Action *child) {
 
 void WrapperAction::toJson(Json &js) const {
     Action::toJson(js);
-    child_->toJson(js["child"]);
+    child_->toJson(js["10.child"]);
 }
 
 bool WrapperAction::onStart() {

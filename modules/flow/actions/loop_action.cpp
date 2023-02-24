@@ -31,7 +31,7 @@ LoopAction::~LoopAction() {
 
 void LoopAction::toJson(Json &js) const {
   Action::toJson(js);
-  child_->toJson(js["child"]);
+  child_->toJson(js["10.child"]);
 }
 
 bool LoopAction::onStart() {

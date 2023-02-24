@@ -33,15 +33,15 @@ IfElseAction::~IfElseAction() {
 
 void IfElseAction::toJson(Json &js) const {
   Action::toJson(js);
-  cond_action_->toJson(js["cond"]);
+  cond_action_->toJson(js["10.cond"]);
   if (if_action_ != nullptr)
-    if_action_->toJson(js["if"]);
+    if_action_->toJson(js["11.if_action"]);
   if (else_action_ != nullptr)
-    else_action_->toJson(js["else"]);
+    else_action_->toJson(js["12.else_action"]);
 
-  js["is_cond_done"] = is_cond_done_;
+  js["13.is_cond_done"] = is_cond_done_;
   if (is_cond_done_)
-    js["is_cond_succ"] = is_cond_succ_;
+    js["14.is_cond_succ"] = is_cond_succ_;
 }
 
 bool IfElseAction::onStart() {
