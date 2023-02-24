@@ -33,7 +33,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
         [&] (int signo) {
-            LogDbg("Handle signal %d", signo);
+            LogInfo("Got signal %d", signo);
             apps.stop();
             ctx.stop();
             ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
