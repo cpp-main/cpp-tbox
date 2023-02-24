@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <tbox/base/log.h>
+#include <tbox/base/json.hpp>
 #include <tbox/base/assert.h>
 
 namespace tbox {
@@ -16,6 +17,16 @@ ParallelAction::ParallelAction(event::Loop &loop) :
 ParallelAction::~ParallelAction() {
   for (auto action : children_)
     delete action;
+}
+
+void ParallelAction::toJson(Json &js) const {
+  Action::toJson(js);
+  Json &js_children = js["children"];
+  for (auto action : children_) {
+    Json js_child;
+    action->toJson(js_child);
+    js_children.push_back(std::move(js_child));
+  }
 }
 
 int ParallelAction::append(Action *action) {

@@ -14,6 +14,8 @@ class ParallelAction : public Action {
     explicit ParallelAction(event::Loop &loop);
     virtual ~ParallelAction();
 
+    virtual void toJson(Json &js) const;
+
     int append(Action *action);
 
     std::set<int> succSet() const { return succ_set_; }
