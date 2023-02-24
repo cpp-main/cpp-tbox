@@ -39,11 +39,6 @@ bool Action::start() {
     return false;
   }
 
-  if (!finish_cb_) {
-    LogWarn("finish_cb not set");
-    return false;
-  }
-
   LogDbg("start action %s(%s)", type_.c_str(), name_.c_str());
   if (!onStart()) {
     LogWarn("start action %s(%s) fail", type_.c_str(), name_.c_str());
@@ -161,7 +156,12 @@ bool Action::finish(bool is_succ) {
       timer_ev_->disable();
 
     result_ = is_succ ? Result::kSuccess : Result::kFail;
-    loop_.runInLoop(std::bind(finish_cb_, is_succ));
+
+    if (finish_cb_)
+        loop_.runInLoop(std::bind(finish_cb_, is_succ));
+    else
+        LogWarn("action %s(%s) no finish_cb", type_.c_str(), name_.c_str());
+
     onFinished(is_succ);
     return true;
 
