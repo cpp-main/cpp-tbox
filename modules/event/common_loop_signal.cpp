@@ -100,6 +100,9 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 //! 信号处理函数
 void CommonLoop::OnSignal(int signo)
 {
+    /// 注意: 这里不能使用 LogXXX() 打印日志，因为有死锁的风险
+    ///       信号处理函数中也不应该有锁相关的操作
+
     auto &this_signal_fds = _signal_write_fds_[signo];
     for (int fd : this_signal_fds) {
         auto wsize = write(fd, &signo, sizeof(signo));
