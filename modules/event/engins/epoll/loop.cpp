@@ -41,6 +41,9 @@ EpollLoop::~EpollLoop()
 
 int64_t EpollLoop::getWaitTime() const
 {
+    if (hasNextFunc())
+        return 0;
+
     /// Get the top of minimum heap
     int64_t wait_time = -1;
     if (!timer_min_heap_.empty()) {
@@ -110,13 +113,12 @@ void EpollLoop::runLoop(Mode mode)
 
         handleExpiredTimers();
 
-        if (fds <= 0)
-            continue;
-
         for (int i = 0; i < fds; ++i) {
             epoll_event &ev = events.at(i);
             EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
         }
+
+        handleNextFunc();
 
         /// If the receiver array size is full, increase its size with 1.5 times.
         if (UNLIKELY(fds >= max_loop_entries_)) {

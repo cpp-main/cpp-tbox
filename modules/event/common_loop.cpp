@@ -25,12 +25,22 @@ CommonLoop::~CommonLoop()
 bool CommonLoop::isInLoopThread()
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
-    return std::this_thread::get_id() == loop_thread_id_;
+    return isInLoopThreadLockless();
 }
 
 bool CommonLoop::isRunning() const
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
+    return isRunningLockless();
+}
+
+bool CommonLoop::isInLoopThreadLockless() const
+{
+    return std::this_thread::get_id() == loop_thread_id_;
+}
+
+bool CommonLoop::isRunningLockless() const
+{
     return sp_run_read_event_ != nullptr;
 }
 
@@ -89,8 +99,6 @@ void CommonLoop::beginEventProcess()
 
 void CommonLoop::endEventProcess()
 {
-    handleNextFunc();
-
 #ifdef  ENABLE_STAT
     if (stat_enable_) {
         uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();

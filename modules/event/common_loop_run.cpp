@@ -11,41 +11,49 @@ void CommonLoop::runInLoop(const Func &func)
     std::lock_guard<std::recursive_mutex> g(lock_);
     run_in_loop_func_queue_.push_back(func);
 
-    if (sp_run_read_event_ == nullptr)
-        return;
-
-    commitRunRequest();
+    if (sp_run_read_event_ != nullptr)
+        commitRunRequest();
 }
 
 void CommonLoop::runNext(const Func &func)
 {
-    if (!isInLoopThread()) {
-        LogWarn("Fail, use runInLoop() instead.");
-        return;
-    }
-
     run_next_func_queue_.push_back(func);
 }
 
 void CommonLoop::run(const Func &func)
 {
-    if (isInLoopThread())
-        run_next_func_queue_.push_back(func);
+    bool can_run_next = true;
+    {
+        std::lock_guard<std::recursive_mutex> g(lock_);
+        if (isRunningLockless() && !isInLoopThreadLockless())
+            can_run_next = false;
+    }
+
+    if (can_run_next)
+        runNext(func);
     else
         runInLoop(func);
 }
 
 void CommonLoop::handleNextFunc()
 {
-    while (!run_next_func_queue_.empty()) {
-        Func &func = run_next_func_queue_.front();
+    std::deque<Func> tmp;
+    run_next_func_queue_.swap(tmp);
+
+    while (!tmp.empty()) {
+        Func &func = tmp.front();
         if (func) {
             ++cb_level_;
             func();
             --cb_level_;
         }
-        run_next_func_queue_.pop_front();
+        tmp.pop_front();
     }
+}
+
+bool CommonLoop::hasNextFunc() const
+{
+    return !run_next_func_queue_.empty();
 }
 
 void CommonLoop::handleRunInLoopRequest(short)
@@ -71,8 +79,6 @@ void CommonLoop::handleRunInLoopRequest(short)
             ++cb_level_;
             func();
             --cb_level_;
-
-            handleNextFunc();
         }
         tmp.pop_front();
     }
@@ -82,8 +88,8 @@ void CommonLoop::handleRunInLoopRequest(short)
 void CommonLoop::cleanupDeferredTasks()
 {
     int remain_loop_count = 10; //! 限定次数，防止出现 runNext() 递归导致无法退出循环的问题
-    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty())
-            && remain_loop_count-- > 0) {
+    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) &&
+           remain_loop_count-- > 0) {
         std::deque<Func> tasks = std::move(run_next_func_queue_);
         tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
         run_in_loop_func_queue_.clear();

@@ -123,7 +123,7 @@ TEST(CommonLoop, runNextInsideLoop)
     }
 }
 
-//! runNext() 只能在Loop中使用
+//! runNext() 支持在Loop之前操作
 TEST(CommonLoop, runNextBeforeLoop)
 {
     auto engins = Loop::Engines();
@@ -141,7 +141,7 @@ TEST(CommonLoop, runNextBeforeLoop)
         sp_timer->setCallback(
             [&] {
                 is_timer_run = true;
-                EXPECT_FALSE(is_run_next_run);
+                EXPECT_TRUE(is_run_next_run);
                 sp_loop->exitLoop();
             }
         );
@@ -153,28 +153,29 @@ TEST(CommonLoop, runNextBeforeLoop)
     }
 }
 
-TEST(CommonLoop, runNextCrossThread)
+TEST(CommonLoop, runNextForever)
 {
     auto engins = Loop::Engines();
     for (auto e : engins) {
         cout << "engin: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
-        SetScopeExitAction([sp_loop]{ delete sp_loop; });
 
-        bool is_run = false;
-        auto t = thread(
-            [&] {
-                this_thread::sleep_for(chrono::milliseconds(10));
-                sp_loop->runNext([&]{ is_run = true; });
-            }
-        );
+        int count = 0;
+        std::function<void()> func;
+        func = [&] {
+            ++count;
+            sp_loop->runNext(func);
+        };
 
-        sp_loop->exitLoop(chrono::milliseconds(20));
+        sp_loop->runNext(func);
+
+        sp_loop->exitLoop(chrono::milliseconds(1));
         sp_loop->runLoop();
 
-        t.join();
+        EXPECT_GT(count, 1);
+        cout << "count:" << count << endl;
 
-        EXPECT_FALSE(is_run);
+        delete sp_loop;
     }
 }
 
@@ -378,7 +379,7 @@ TEST(CommonLoop, runCrossThread)
             }
         );
 
-        sp_timer->initialize(chrono::milliseconds(20), Event::Mode::kOneshot);
+        sp_timer->initialize(chrono::milliseconds(40), Event::Mode::kOneshot);
         bool is_timer_run = false;
         sp_timer->setCallback(
             [&] {
@@ -395,6 +396,31 @@ TEST(CommonLoop, runCrossThread)
         EXPECT_TRUE(is_thread_run);
 
         t.join();
+    }
+}
+
+TEST(CommonLoop, runForever)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int count = 0;
+        std::function<void()> func;
+        func = [&] {
+            ++count;
+            sp_loop->run(func);
+        };
+
+        sp_loop->run(func);
+
+        sp_loop->exitLoop(chrono::milliseconds(1));
+        sp_loop->runLoop();
+
+        EXPECT_GT(count, 1);
+        cout << "count:" << count << endl;
+        delete sp_loop;
     }
 }
 
@@ -501,6 +527,50 @@ TEST(CommonLoop, RunInLoopBenchmark)
             ++counter;
         };
         sp_loop->runInLoop(func);
+
+        sp_loop->exitLoop(chrono::seconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+        cout << "10s count: " << counter << endl;
+    }
+}
+
+TEST(CommonLoop, RunNextBenchmark)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+        function<void()> func = [&] {
+            sp_loop->runNext(func);
+            ++counter;
+        };
+        sp_loop->runNext(func);
+
+        sp_loop->exitLoop(chrono::seconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+        cout << "10s count: " << counter << endl;
+    }
+}
+
+TEST(CommonLoop, RunBenchmark)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+        function<void()> func = [&] {
+            sp_loop->run(func);
+            ++counter;
+        };
+        sp_loop->run(func);
 
         sp_loop->exitLoop(chrono::seconds(10));
         sp_loop->runLoop();

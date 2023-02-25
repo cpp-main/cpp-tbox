@@ -51,19 +51,18 @@ class Loop {
      * runNext()
      *   功能：注入本回调完成后立即执行的函数，无加锁操作，不支持跨线程与跨Loop间调用；
      *   场景：常用于不方便在本函数中执行的操作，比如释放对象自身。
-     *   注意：不可以在 runNext() 执行函数中再 runNext()，否则会陷入死循环。
+     *   注意：仅Loop线程中调用，禁止跨线程操作
      *
-     * runInLoop() 能替代 runNext()，但 runNext() 比 runInLoop() 更轻量。
+     * runInLoop() 能替代 runNext()，但 runNext() 比 runInLoop() 更高效。
      *
      * run()
      *   功能：自动选择 runNext() 或是 runInLoop()。
      *         当与Loop在同一线程时，选择 runNext()，否则选择 runInLoop()。
-     *   场景：当不知道该怎么选择，只想让动作尽快被执行时。
-     *   注意：同 runNext()
+     *   场景：当不知道该怎么选择，选它就对了。
      *
      * 使用建议：
-     *   能用 runNext() 的场景就用 runNext()，不能用再使用 runInLoop()。
-     *   如果你嫌麻烦，就直接使用 run()。让它自己选择吧。
+     *   明确是Loop线程内的用 runNext(), 明确不是Loop线程内的用 runInLoop()。
+     *   不清楚的直接用 run()。
      */
 
     //! 创建事件

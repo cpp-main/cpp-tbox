@@ -46,6 +46,9 @@ class CommonLoop : public Loop {
     void onSignal();
 
   protected:
+    bool isInLoopThreadLockless() const;
+    bool isRunningLockless() const;
+
     void runThisBeforeLoop();
     void runThisAfterLoop();
 
@@ -54,6 +57,7 @@ class CommonLoop : public Loop {
     void commitRunRequest();
     void finishRunRequest();
     void handleNextFunc();
+    bool hasNextFunc() const;
 
   private:
     mutable std::recursive_mutex lock_;
