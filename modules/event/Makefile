@@ -6,8 +6,12 @@ LIB_VERSION_Y = 1
 LIB_VERSION_Z = 0
 
 HEAD_FILES = \
-	forward.h loop.h event.h \
-	fd_event.h timer_event.h signal_event.h \
+	forward.h \
+	loop.h \
+	event.h \
+	fd_event.h \
+	timer_event.h \
+	signal_event.h \
 	stat.h version.h
 
 CPP_SRC_FILES = \
@@ -19,31 +23,9 @@ CPP_SRC_FILES = \
 	misc.cpp \
 	stat.cpp \
 	version.cpp \
-
-ifeq ($(ENABLE_LIBEVENT), yes)
-CPP_SRC_FILES += \
-	engins/libevent/loop.cpp \
-	engins/libevent/fd_event.cpp \
-	engins/libevent/timer_event.cpp \
-	engins/libevent/common.cpp
-CXXFLAGS += -DENABLE_LIBEVENT=1
-endif
-
-ifeq ($(ENABLE_LIBEV), yes)
-CPP_SRC_FILES += \
-	engins/libev/loop.cpp \
-	engins/libev/fd_event.cpp \
-	engins/libev/timer_event.cpp
-CXXFLAGS += -DENABLE_LIBEV=1
-endif
-
-ifeq ($(ENABLE_EPOLL), yes)
-CPP_SRC_FILES += \
 	engins/epoll/loop.cpp \
 	engins/epoll/fd_event.cpp \
 	engins/epoll/timer_event.cpp
-CXXFLAGS += -DENABLE_EPOLL=1
-endif
 
 TEST_CPP_SRC_FILES = \
 	common_loop_test.cpp \
@@ -59,14 +41,6 @@ CXXFLAGS += -DENABLE_STAT=1
 endif
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
-
-ifeq ($(ENABLE_LIBEVENT), yes)
-	TEST_LDFLAGS += -levent_core
-endif
-
-ifeq ($(ENABLE_LIBEV), yes)
-	TEST_LDFLAGS += -lev
-endif
 
 ENABLE_SHARED_LIB = no
 
