@@ -1,8 +1,6 @@
 #ifndef TBOX_EVENT_EPOLL_LOOP_H_20220105
 #define TBOX_EVENT_EPOLL_LOOP_H_20220105
 
-#include <vector>
-#include <functional>
 #include <unordered_map>
 
 #include "../../common_loop.h"
