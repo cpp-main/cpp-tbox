@@ -158,7 +158,7 @@ bool Action::finish(bool is_succ) {
     result_ = is_succ ? Result::kSuccess : Result::kFail;
 
     if (finish_cb_)
-        loop_.runInLoop(std::bind(finish_cb_, is_succ));
+        loop_.runNext(std::bind(finish_cb_, is_succ));
     else
         LogWarn("action %s(%s) no finish_cb", type_.c_str(), name_.c_str());
 

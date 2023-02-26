@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {
@@ -17,6 +18,13 @@ void CommonLoop::runInLoop(const Func &func)
 
 void CommonLoop::runNext(const Func &func)
 {
+#ifdef DEBUG
+    {
+        std::lock_guard<std::recursive_mutex> g(lock_);
+        //! 要么还不有启动，要么在Loop线程中才允行这个操作
+        TBOX_ASSERT(!isRunningLockless() || isInLoopThreadLockless());
+    }
+#endif
     run_next_func_queue_.push_back(func);
 }
 
