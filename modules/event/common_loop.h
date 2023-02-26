@@ -7,12 +7,12 @@
 #include <map>
 #include <set>
 
+#include <tbox/base/cabinet.hpp>
+
 #include "loop.h"
 #include "signal_event_impl.h"
 
-#ifdef ENABLE_STAT
 #include <chrono>
-#endif
 
 namespace tbox {
 namespace event {
@@ -34,6 +34,8 @@ class CommonLoop : public Loop {
     virtual Stat getStat() const override;
     virtual void resetStat() override;
 
+    virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
+
   public:
     void beginEventProcess();
     void endEventProcess();
@@ -44,6 +46,11 @@ class CommonLoop : public Loop {
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     static void OnSignal(int signo);
     void onSignal();
+
+    virtual TimerEvent* newTimerEvent() override;
+    using TimerCallback = std::function<void()>;
+    cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
+    void deleteTimer(const cabinet::Token &token);
 
   protected:
     bool isInLoopThreadLockless() const;
@@ -58,6 +65,27 @@ class CommonLoop : public Loop {
     void finishRunRequest();
     void handleNextFunc();
     bool hasNextFunc() const;
+
+    void handleExpiredTimers();
+    int64_t getWaitTime() const;
+
+    virtual void stopLoop() = 0;
+
+  private:
+    struct Timer {
+        cabinet::Token token;
+        uint64_t interval = 0;
+        uint64_t expired = 0;
+        uint64_t repeat = 0;
+
+        TimerCallback cb;
+    };
+
+    struct TimerCmp {
+        bool operator()(const Timer *x, const Timer *y) const {
+            return x->expired > y->expired;
+        }
+    };
 
   private:
     mutable std::recursive_mutex lock_;
@@ -85,6 +113,10 @@ class CommonLoop : public Loop {
     int signal_write_fd_ = -1;
     FdEvent *sp_signal_read_event_ = nullptr;
     std::map<int, std::set<SignalSubscribuer*>> all_signals_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
+
+    TimerEvent *sp_exit_timer_ = nullptr;
+    cabinet::Cabinet<Timer> timer_cabinet_;
+    std::vector<Timer*>     timer_min_heap_;
 
     int cb_level_ = 0;
 };

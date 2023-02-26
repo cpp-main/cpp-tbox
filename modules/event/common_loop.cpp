@@ -11,6 +11,7 @@
 #include "fd_event.h"
 #include "stat.h"
 #include "misc.h"
+#include "timer_event.h"
 
 namespace tbox {
 namespace event {
@@ -20,6 +21,7 @@ using namespace std::chrono;
 CommonLoop::~CommonLoop()
 {
     TBOX_ASSERT(cb_level_ == 0);
+    CHECK_DELETE_RESET_OBJ(sp_exit_timer_);
 }
 
 bool CommonLoop::isInLoopThread()

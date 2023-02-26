@@ -1,18 +1,18 @@
-#ifndef TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
-#define TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
+#ifndef TBOX_EVENT_TIMER_EVENT_IMPL_H_20200110
+#define TBOX_EVENT_TIMER_EVENT_IMPL_H_20200110
 
-#include "tbox/base/cabinet.hpp"
-#include "../../timer_event.h"
+#include <tbox/base/cabinet_token.h>
+#include "timer_event.h"
 
 namespace tbox {
 namespace event {
 
-class EpollLoop;
+class CommonLoop;
 
-class EpollTimerEvent : public TimerEvent {
+class TimerEventImpl : public TimerEvent {
   public:
-    explicit EpollTimerEvent(EpollLoop *wp_loop);
-    virtual ~EpollTimerEvent() override;
+    explicit TimerEventImpl(CommonLoop *wp_loop);
+    virtual ~TimerEventImpl() override;
 
   public:
     virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode) override;
@@ -28,7 +28,8 @@ class EpollTimerEvent : public TimerEvent {
     void onEvent();
 
   private:
-    EpollLoop *wp_loop_;
+    CommonLoop *wp_loop_;
+
     bool is_inited_  = false;
     bool is_enabled_ = false;
 
@@ -44,4 +45,4 @@ class EpollTimerEvent : public TimerEvent {
 }
 }
 
-#endif //TBOX_EVENT_EPOLL_TIMER_EVENT_H_20200110
+#endif //TBOX_EVENT_TIMER_EVENT_IMPL_H_20200110

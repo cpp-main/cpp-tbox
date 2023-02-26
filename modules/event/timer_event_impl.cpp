@@ -1,22 +1,22 @@
-#include <sys/epoll.h>
 #include <tbox/base/assert.h>
-#include "loop.h"
-#include "timer_event.h"
+
+#include "common_loop.h"
+#include "timer_event_impl.h"
 
 namespace tbox {
 namespace event {
 
-EpollTimerEvent::EpollTimerEvent(EpollLoop *wp_loop)
+TimerEventImpl::TimerEventImpl(CommonLoop *wp_loop)
     : wp_loop_(wp_loop)
 { }
 
-EpollTimerEvent::~EpollTimerEvent()
+TimerEventImpl::~TimerEventImpl()
 {
     TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 
-bool EpollTimerEvent::initialize(const std::chrono::milliseconds &interval, Mode mode)
+bool TimerEventImpl::initialize(const std::chrono::milliseconds &interval, Mode mode)
 {
     disable();
 
@@ -27,12 +27,12 @@ bool EpollTimerEvent::initialize(const std::chrono::milliseconds &interval, Mode
     return true;
 }
 
-void EpollTimerEvent::setCallback(const CallbackFunc &cb)
+void TimerEventImpl::setCallback(const CallbackFunc &cb)
 {
     cb_ = cb;
 }
 
-bool EpollTimerEvent::isEnabled() const
+bool TimerEventImpl::isEnabled() const
 {
     if (!is_inited_)
         return false;
@@ -40,7 +40,7 @@ bool EpollTimerEvent::isEnabled() const
     return is_enabled_;
 }
 
-bool EpollTimerEvent::enable()
+bool TimerEventImpl::enable()
 {
     if (!is_inited_)
         return false;
@@ -56,7 +56,7 @@ bool EpollTimerEvent::enable()
     return true;
 }
 
-bool EpollTimerEvent::disable()
+bool TimerEventImpl::disable()
 {
     if (!is_inited_)
         return false;
@@ -71,12 +71,12 @@ bool EpollTimerEvent::disable()
     return true;
 }
 
-Loop* EpollTimerEvent::getLoop() const
+Loop* TimerEventImpl::getLoop() const
 {
     return wp_loop_;
 }
 
-void EpollTimerEvent::onEvent()
+void TimerEventImpl::onEvent()
 {
     wp_loop_->beginEventProcess();
 
