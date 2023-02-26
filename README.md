@@ -37,9 +37,10 @@ cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就
 
 | 库名 | 依赖模块 | 说明 | 安装方法 |
 |:----:|:--------:|:----:|:--------:|
-| googletest | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install google-mock |
-| mosquitto | mqtt | MQTT库 | sudo apt install libmosquitto-dev |
 | nlohmann/json | main | 作为配置数据用 | 下载[json\_fwd.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/include/nlohmann/json_fwd.hpp)与[json.hpp](https://raw.githubusercontent.com/nlohmann/json/v3.10.4/single_include/nlohmann/json.hpp)到头文件目录，如：/usr/local/include/nlohmann/ |
+| googletest | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install google-mock |
+| mosquitto | mqtt | MQTT库，如果不使用mqtt模块可忽略 | sudo apt install libmosquitto-dev |
+
 
 **安装命令**
 
