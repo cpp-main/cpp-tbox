@@ -66,7 +66,7 @@ LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
 
 # 模块间依赖
 
-![](http://assets.processon.com/chart_image/6227efafe401fd18bcfc83e8.png)
+![](/documents/images/modules-dependence.png)
 
 # 模块裁减
 
