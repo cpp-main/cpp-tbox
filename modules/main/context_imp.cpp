@@ -7,6 +7,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/version.h>
 #include <tbox/util/string.h>
 #include <tbox/util/json.h>
 #include <tbox/terminal/session.h>
@@ -289,6 +290,7 @@ void ContextImp::initShell()
     {
         auto info_node = wp_nodes->createDirNode("Information directory");
         wp_nodes->mountNode(wp_nodes->rootNode(), info_node, "info");
+
         {
             auto func_node = wp_nodes->createFuncNode(
                 [this] (const Session &s, const Args &args) {
@@ -298,8 +300,20 @@ void ContextImp::initShell()
                     ss << 'v' << major << '.' << minor << '.' << rev << '_' << build << "\r\n";
                     s.send(ss.str());
                 }
-            , "Print version");
-            wp_nodes->mountNode(info_node, func_node, "ver");
+            , "Print app version");
+            wp_nodes->mountNode(info_node, func_node, "app_ver");
+        }
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    int major = 0, minor = 0, rev = 0;
+                    GetTboxVersion(major, minor, rev);
+                    ss << 'v' << major << '.' << minor << '.' << rev << "\r\n";
+                    s.send(ss.str());
+                }
+            , "Print tbox version");
+            wp_nodes->mountNode(info_node, func_node, "tbox_ver");
         }
         {
             auto func_node = wp_nodes->createFuncNode(

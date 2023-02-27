@@ -12,7 +12,7 @@ HEAD_FILES = \
 	fd_event.h \
 	timer_event.h \
 	signal_event.h \
-	stat.h version.h
+	stat.h
 
 CPP_SRC_FILES = \
 	loop.cpp \
@@ -24,7 +24,6 @@ CPP_SRC_FILES = \
 	signal_event_impl.cpp \
 	misc.cpp \
 	stat.cpp \
-	version.cpp \
 	engins/epoll/loop.cpp \
 	engins/epoll/fd_event.cpp \
 

@@ -18,10 +18,12 @@ HEAD_FILES = \
 	json.hpp \
 	assert.h \
 	lifetime_tag.hpp \
+	version.h \
 
 CPP_SRC_FILES = \
 	log_imp.cpp \
 	log_output.cpp \
+	version.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.base"' $(CXXFLAGS)
 

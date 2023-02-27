@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <tbox/base/log.h>
+#include <tbox/base/version.h>
 
 #include "module.h"
 #include "context.h"
@@ -62,7 +63,10 @@ void SayHello()
 
     int major, minor, rev, build;
     GetAppVersion(major, minor, rev, build);
-    LogInfo("App Version : %d.%d.%d_%d", major, minor, rev, build);
+    LogInfo("App  Version: %d.%d.%d_%d", major, minor, rev, build);
+
+    GetTboxVersion(major, minor, rev);
+    LogInfo("Tbox Version: %d.%d.%d", major, minor, rev);
 }
 
 }

@@ -1,4 +1,5 @@
 include build_env.mk
+include version.mk
 
 .PHONY: all modules examples test clean distclean print
 
@@ -7,6 +8,11 @@ CCFLAGS := -Wall
 RELEASE ?= 0
 ENABLE_ASAN ?= 1
 ENABLE_GPROF ?= 0
+
+CCFLAGS += \
+	-DTBOX_VERSION_MAJOR=$(TBOX_VERSION_MAJOR) \
+	-DTBOX_VERSION_MINOR=$(TBOX_VERSION_MINOR) \
+	-DTBOX_VERSION_REVISION=$(TBOX_VERSION_REVISION)
 
 ifeq ($(RELEASE), 1)
 CCFLAGS += -O2 -Os
