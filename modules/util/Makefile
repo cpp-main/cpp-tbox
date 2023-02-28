@@ -52,6 +52,7 @@ TEST_CPP_SRC_FILES = \
 	base64_test.cpp \
 	checksum_test.cpp \
 	crc_test.cpp \
+	backtrace_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
