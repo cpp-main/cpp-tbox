@@ -25,6 +25,9 @@ CPP_SRC_FILES = \
 	log_output.cpp \
 	version.cpp \
 
+pre_build:
+	touch version.cpp
+
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.base"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
