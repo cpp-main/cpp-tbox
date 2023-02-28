@@ -3,9 +3,25 @@
 namespace tbox {
 namespace main {
 
+class TestModule : public Module {
+  public:
+    TestModule(Context &ctx) :
+        Module("test", ctx)
+    { }
+
+    virtual bool onStart() {
+        ctx().loop()->run(
+            [this] {
+                static_cast<uint8_t*>(nullptr)[0] = 0;
+            }
+        );
+        return true;
+    }
+};
+
 void RegisterApps(Module &apps, Context &ctx)
 {
-    static_cast<uint8_t*>(nullptr)[0] = 0;
+    apps.add(new TestModule(ctx));
 }
 
 std::string GetAppDescribe()
@@ -22,7 +38,7 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
 {
     major = 0;
     minor = 0;
-    rev = 1;
+    rev = 2;
     build = 0;
 }
 

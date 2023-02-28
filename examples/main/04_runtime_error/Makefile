@@ -1,4 +1,4 @@
-EXE_NAME := example/main/04_initiate_runtime_error
+EXE_NAME := example/main/04_runtime_error
 
 CPP_SRC_FILES = \
 	main.cpp \

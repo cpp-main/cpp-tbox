@@ -20,7 +20,7 @@ namespace {
 //! 处理程序运行异常信号
 void OnErrorSignal(int signo)
 {
-    const std::string &stack_str = util::Backtrace::DumpCallStack(32, 1);
+    const std::string &stack_str = util::DumpCallStack(32);
 
     LogFatal("Receive signal %d", signo);
     LogFatal("main: <%p>\n-----call stack-----\n%s",
