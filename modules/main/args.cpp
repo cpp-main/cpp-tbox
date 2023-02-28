@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <tbox/base/json.hpp>
+#include <tbox/base/version.h>
 
 #include <tbox/util/string.h>
 #include <tbox/util/argument_parser.h>
@@ -134,10 +135,13 @@ void Args::printHelp(const std::string &proc_name)
 void Args::printVersion()
 {
     int major, minor, rev, build;
-    GetAppVersion(major, minor, rev, build);
+    GetTboxVersion(major, minor, rev);
+    cout << "tbox version : " << major << '.' << minor << '.' << rev << endl;
 
-    cout << "version : " << major << '.' << minor << '.' << rev << '_' << build << endl
-         << "   buid : " << GetAppBuildTime() << endl;
+    GetAppVersion(major, minor, rev, build);
+    cout << " app version : " << major << '.' << minor << '.' << rev << '_' << build << endl
+         << "  build time : " << GetAppBuildTime() << endl;
+
 }
 
 bool Args::load(const std::string &config_filename)

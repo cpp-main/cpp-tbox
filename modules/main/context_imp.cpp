@@ -36,17 +36,15 @@ std::string ToString(const std::chrono::milliseconds msec)
     auto secs = ms_in_min / ms_per_sec;
     auto msecs = ms_in_min % ms_per_sec;
 
-    std::ostringstream oss;
+    using namespace std;
+    ostringstream oss;
 
-    if (days > 0)
-        oss << days << "d-";
-    if (days > 0 || hours > 0)
-        oss << hours << "h-";
-    if (days > 0 || hours > 0 || mins > 0)
-        oss << mins << "m-";
-    if (days > 0 || hours > 0 || mins > 0 || secs > 0)
-        oss << secs << "s-";
-    oss << msecs << "ms";
+    oss << days << ' ';
+    oss << setfill('0');
+    oss << setw(2) << hours << ':'
+        << setw(2) << mins << ':'
+        << setw(2) << secs << '.'
+        << setw(3) << msecs;
 
     return oss.str();
 }
