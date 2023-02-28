@@ -9,7 +9,7 @@ namespace util {
 TEST(Backtrace, _)
 {
     LogOutput_Initialize();
-    LogStack();
+    LogCallStack();
     LogOutput_Cleanup();
 }
 

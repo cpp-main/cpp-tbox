@@ -1,7 +1,6 @@
 #ifndef TBOX_UTIL_BACKTRACE_H_20220708
 #define TBOX_UTIL_BACKTRACE_H_20220708
 
-#include <signal.h>
 #include <string>
 #include <tbox/base/log.h>
 
@@ -13,6 +12,6 @@ std::string DumpCallStack(const unsigned int max_frames = 32);
 }
 }
 
-#define LogStack() LogTrace("call stack:\n%s", tbox::util::DumpCallStack().c_str())
+#define LogCallStack() LogTrace("call stack:\n%s", tbox::util::DumpCallStack().c_str())
 
 #endif // TBOX_UTIL_BACKTRACE_H_20220708
