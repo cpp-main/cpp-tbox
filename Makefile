@@ -1,7 +1,7 @@
 include build_env.mk
 include version.mk
 
-.PHONY: all modules examples test clean distclean print
+.PHONY: all third-party modules examples test clean distclean print
 
 CCFLAGS := -Wall
 
@@ -37,13 +37,13 @@ export MODULES
 
 include config.mk
 
-all: modules test examples
+all: third-party modules test examples
 
 print:
 	@echo "CXXFLAGS = $(CXXFLAGS)"
 	@echo "LDFLAGS  = $(LDFLAGS)"
 
-modules:
+modules third-party:
 	$(MAKE) -C $@
 
 test: modules
