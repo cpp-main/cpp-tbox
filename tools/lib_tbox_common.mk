@@ -14,7 +14,7 @@
 
 .PHONY: all print_vars print_static_vars print_shared_vars print_test_vars clean distclean install uninstall pre_build post_build
 
-LIB_BASENAME = lib$(LIB_NAME)$(LIB_NAME_EXT)
+LIB_BASENAME = libtbox_$(LIB_NAME)$(LIB_NAME_EXT)
 LIB_BUILD_DIR = $(BUILD_DIR)/$(LIB_NAME)
 
 STATIC_LIB := $(LIB_BASENAME).a
@@ -180,7 +180,7 @@ test : $(LIB_BUILD_DIR)/test
 ################################################################
 
 # install head files
-SRC_HEAD_TO_INSTALL_HEAD = $(addprefix $(STAGING_DIR)/include/$(LIB_NAME)/,$(1))
+SRC_HEAD_TO_INSTALL_HEAD = $(addprefix $(STAGING_DIR)/include/tbox/$(LIB_NAME)/,$(1))
 
 define CREATE_INSTALL_HEAD_TARGET
 $(call SRC_HEAD_TO_INSTALL_HEAD,$(1)) : $(1)
@@ -213,7 +213,7 @@ endif
 install: $(INSTALL_HEADS) $(INSTALL_STATIC_LIB) $(INSTALL_SHARED_LIB)
 
 uninstall:
-	rm -rf $(STAGING_DIR)/include/$(LIB_NAME)
+	rm -rf $(STAGING_DIR)/include/tbox/$(LIB_NAME)
 	rm -f $(STAGING_DIR)/lib/$(LIB_BASENAME).a
 	rm -f $(INSTALL_DIR)/lib/$(LIB_BASENAME).so*
 

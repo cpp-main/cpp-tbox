@@ -15,4 +15,4 @@ TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -lmosquitto -levent_core -le
 
 ENABLE_SHARED_LIB = no
 
-include ../../tools/lib_common.mk
+include ../../tools/lib_tbox_common.mk

@@ -36,4 +36,4 @@ TEST_CPP_SRC_FILES = \
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_event -ltbox_util -ltbox_base -levent_core -lev
 ENABLE_SHARED_LIB = no
 
-include ../../tools/lib_common.mk
+include ../../tools/lib_tbox_common.mk
