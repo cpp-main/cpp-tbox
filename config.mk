@@ -12,3 +12,5 @@ MODULES += main
 MODULES += flow
 MODULES += alarm
 MODULES += crypto
+
+THIRDPARTY += nlohmann

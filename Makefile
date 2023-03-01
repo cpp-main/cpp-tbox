@@ -33,7 +33,7 @@ CFLAGS := $(CCFLAGS) $(CFLAGS)
 APPS_DIR := $(PWD)
 
 export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
-export MODULES
+export MODULES THIRDPARTY
 
 include config.mk
 
