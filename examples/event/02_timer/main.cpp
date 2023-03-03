@@ -14,7 +14,7 @@ void TimerCallback()
 
 void PrintUsage(const char *process_name)
 {
-    cout << "Usage:" << process_name << " libevent|libev|epoll" << endl;
+    cout << "Usage:" << process_name << " epoll" << endl;
 }
 
 int main(int argc, char *argv[])
