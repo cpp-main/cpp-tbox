@@ -10,7 +10,7 @@
 using namespace std;
 void PrintUsage(const char *proc_name)
 {
-    cout << proc_name << " <libevent|libev>" << endl;
+    cout << proc_name << " epoll" << endl;
 }
 
 int main(int argc, char **argv)
