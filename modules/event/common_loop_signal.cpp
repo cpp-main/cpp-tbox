@@ -4,6 +4,7 @@
 #include <string.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <tbox/base/scope_exit.hpp>
 
 #include "misc.h"
 #include "fd_event.h"
@@ -17,7 +18,7 @@ using SignalHandler = void (*) (int);
 
 struct SignalCtx {
     std::set<int> write_fds;    //! 通知 Loop 的 fd，每个 Loop 注册一个
-    SignalHandler old_handler;
+    SignalHandler old_handler;  //! 原始的信号处理函数
 };
 
 std::mutex _signal_lock_;    //! 保护 _signal_ctxs_ 用
@@ -29,17 +30,17 @@ void SignalHandlerFunc(int signo)
     /// 注意: 这里不能使用 LogXXX() 打印日志，因为有死锁的风险
     ///       信号处理函数中也不应该有锁相关的操作
 
-    const auto &signal_ctx = _signal_ctxs_[signo];
+    const auto &this_signal_ctx = _signal_ctxs_[signo];
 
     //! 先执行旧的信号
-    auto old_handler = signal_ctx.old_handler;
+    auto old_handler = this_signal_ctx.old_handler;
     if (SIG_ERR != old_handler &&
         SIG_IGN != old_handler &&
         SIG_DFL != old_handler)
         old_handler(signo);
 
     //! 再执行自己的
-    for (int fd : signal_ctx.write_fds) {
+    for (int fd : this_signal_ctx.write_fds) {
         auto wsize = write(fd, &signo, sizeof(signo));
         (void)wsize;    //! 消除编译警告
     }
@@ -69,16 +70,36 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         sigfillset(&new_sigmask);
         sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
 
-        auto & signal_ctx = _signal_ctxs_[signo];
-        if (signal_ctx.write_fds.empty()) {
-            signal_ctx.old_handler = ::signal(signo, SignalHandlerFunc);
-            if (SIG_ERR == signal_ctx.old_handler)
-                LogWarn("install signal %d fail", signo);
-        }
-        signal_ctx.write_fds.insert(signal_write_fd_);
+        //! 设置退出后恢复信号
+        SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
 
-        //! 恢复信号
-        sigprocmask(SIG_SETMASK, &old_sigmask, 0);
+        auto & this_signal_ctx = _signal_ctxs_[signo];
+        if (this_signal_ctx.write_fds.empty()) {
+            this_signal_ctx.old_handler = ::signal(signo, SignalHandlerFunc);
+
+            if (SIG_ERR == this_signal_ctx.old_handler) {
+                all_signals_subscribers_.erase(signo);
+                //! Q: 为什么这里要进行一次删除操作？
+                //! A: 因为L63在访问all_signals_subscribers_[signo]时，如果不存在，就会默认创建一个。
+                //!    创建的这个this_signal_subscribers一定是空的。可直接删除。
+                //! 注意：erase()操作之后，this_signal_subscribers 是失效了的，不能再被访问
+
+                if (all_signals_subscribers_.empty()) {
+                    //! 本Loop已经没有任何SignalSubscribuer订阅任何信号了
+                    //! 可以销毁信号相关的资源了
+                    sp_signal_read_event_->disable();
+                    CHECK_CLOSE_RESET_FD(signal_write_fd_);
+                    CHECK_CLOSE_RESET_FD(signal_read_fd_);
+
+                    FdEvent *tobe_delete = nullptr;
+                    std::swap(tobe_delete, sp_signal_read_event_);
+                    run([tobe_delete] { delete tobe_delete; });
+                }
+                LogWarn("install signal %d fail", signo);
+                return false;
+            }
+        }
+        this_signal_ctx.write_fds.insert(signal_write_fd_);
     }
     this_signal_subscribers.insert(who);
 
@@ -102,19 +123,19 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
         sigfillset(&new_sigmask);
         sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
 
+        //! 设置退出后恢复信号
+        SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
+
         //! 并将 _signal_ctxs_ 中的记录删除
-        auto &signal_ctx = _signal_ctxs_[signo];
-        signal_ctx.write_fds.erase(signal_write_fd_);
-        if (signal_ctx.write_fds.empty()) {
+        auto &this_signal_ctx = _signal_ctxs_[signo];
+        this_signal_ctx.write_fds.erase(signal_write_fd_);
+        if (this_signal_ctx.write_fds.empty()) {
             //! 并还原信号处理函数
-            if (signal_ctx.old_handler != SIG_ERR)
-                ::signal(signo, signal_ctx.old_handler);
+            if (this_signal_ctx.old_handler != SIG_ERR)
+                ::signal(signo, this_signal_ctx.old_handler);
             //LogTrace("unset signal:%d", signo);
             _signal_ctxs_.erase(signo);
         }
-
-        //! 恢复信号
-        sigprocmask(SIG_SETMASK, &old_sigmask, 0);
     }
 
     if (!all_signals_subscribers_.empty())
