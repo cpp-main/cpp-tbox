@@ -7,9 +7,14 @@ using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 
-void SignalCallback(int signo)
+void OldSignalCallback(int signo)
 {
-    cout << "Got interupt signal" << endl;
+    cout << "Old: Got interupt signal:" << signo << endl;
+}
+
+void NewSignalCallback(int signo)
+{
+    cout << "New: Got interupt signal:" << signo << endl;
 }
 
 void PrintUsage(const char *process_name)
@@ -24,6 +29,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    ::signal(SIGINT, OldSignalCallback);
+
     Loop* sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
@@ -31,8 +38,8 @@ int main(int argc, char *argv[])
     }
 
     SignalEvent* sp_signal = sp_loop->newSignalEvent();
-    sp_signal->initialize(SIGINT, Event::Mode::kPersist);
-    sp_signal->setCallback(SignalCallback);
+    sp_signal->initialize(SIGINT, Event::Mode::kOneshot);
+    sp_signal->setCallback(NewSignalCallback);
     sp_signal->enable();
 
     cout << "Please ctrl+c" << endl;

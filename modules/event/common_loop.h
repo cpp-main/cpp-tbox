@@ -44,7 +44,6 @@ class CommonLoop : public Loop {
     virtual SignalEvent* newSignalEvent() override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
-    static void OnSignal(int signo);
     void onSignal();
 
     virtual TimerEvent* newTimerEvent() override;
@@ -105,9 +104,6 @@ class CommonLoop : public Loop {
     uint32_t event_count_ = 0;
     uint32_t max_cost_us_ = 0;
 #endif  //ENABLE_STAT
-
-    static std::map<int, std::set<int>> _signal_write_fds_; //! 通知 Loop 的 fd，每个 Loop 注册一个
-    static std::mutex _signal_lock_; //! 保护 _signal_write_fds_ 用
 
     int signal_read_fd_  = -1;
     int signal_write_fd_ = -1;

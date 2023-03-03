@@ -11,8 +11,41 @@
 namespace tbox {
 namespace event {
 
-std::map<int, std::set<int>> CommonLoop::_signal_write_fds_;
-std::mutex    CommonLoop::_signal_lock_;
+namespace {
+
+using SignalHandler = void (*) (int);
+
+struct SignalCtx {
+    std::set<int> write_fds;    //! 通知 Loop 的 fd，每个 Loop 注册一个
+    SignalHandler old_handler;
+};
+
+std::mutex _signal_lock_;    //! 保护 _signal_ctxs_ 用
+std::map<int, SignalCtx> _signal_ctxs_;
+
+//! 信号处理函数
+void SignalHandlerFunc(int signo)
+{
+    /// 注意: 这里不能使用 LogXXX() 打印日志，因为有死锁的风险
+    ///       信号处理函数中也不应该有锁相关的操作
+
+    const auto &signal_ctx = _signal_ctxs_[signo];
+
+    //! 先执行旧的信号
+    auto old_handler = signal_ctx.old_handler;
+    if (SIG_ERR != old_handler &&
+        SIG_IGN != old_handler &&
+        SIG_DFL != old_handler)
+        old_handler(signo);
+
+    //! 再执行自己的
+    for (int fd : signal_ctx.write_fds) {
+        auto wsize = write(fd, &signo, sizeof(signo));
+        (void)wsize;    //! 消除编译警告
+    }
+}
+
+}
 
 bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 {
@@ -28,7 +61,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 
     auto &this_signal_subscribers = all_signals_subscribers_[signo];
     if (this_signal_subscribers.empty()) {
-        //! 如果本Loop没有监听该信号，则要去 _signal_write_fds_ 中订阅
+        //! 如果本Loop没有监听该信号，则要去 _signal_ctxs_ 中订阅
         std::unique_lock<std::mutex> _g(_signal_lock_);
 
         //! 要禁止信号触发
@@ -36,12 +69,13 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         sigfillset(&new_sigmask);
         sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
 
-        auto & signo_fds = _signal_write_fds_[signo];
-        if (signo_fds.empty()) {
-            signal(signo, CommonLoop::OnSignal);
-            //LogTrace("set signal:%d", signo);
+        auto & signal_ctx = _signal_ctxs_[signo];
+        if (signal_ctx.write_fds.empty()) {
+            signal_ctx.old_handler = ::signal(signo, SignalHandlerFunc);
+            if (SIG_ERR == signal_ctx.old_handler)
+                LogWarn("install signal %d fail", signo);
         }
-        signo_fds.insert(signal_write_fd_);
+        signal_ctx.write_fds.insert(signal_write_fd_);
 
         //! 恢复信号
         sigprocmask(SIG_SETMASK, &old_sigmask, 0);
@@ -68,14 +102,15 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
         sigfillset(&new_sigmask);
         sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
 
-        //! 并将 _signal_write_fds_ 中的记录删除
-        auto &this_signal_fds = _signal_write_fds_[signo];
-        this_signal_fds.erase(signal_write_fd_);
-        if (this_signal_fds.empty()) {
+        //! 并将 _signal_ctxs_ 中的记录删除
+        auto &signal_ctx = _signal_ctxs_[signo];
+        signal_ctx.write_fds.erase(signal_write_fd_);
+        if (signal_ctx.write_fds.empty()) {
             //! 并还原信号处理函数
-            signal(signo, SIG_DFL);
+            if (signal_ctx.old_handler != SIG_ERR)
+                ::signal(signo, signal_ctx.old_handler);
             //LogTrace("unset signal:%d", signo);
-            _signal_write_fds_.erase(signo);
+            _signal_ctxs_.erase(signo);
         }
 
         //! 恢复信号
@@ -95,19 +130,6 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
     run([tobe_delete] { delete tobe_delete; });
 
     return true;
-}
-
-//! 信号处理函数
-void CommonLoop::OnSignal(int signo)
-{
-    /// 注意: 这里不能使用 LogXXX() 打印日志，因为有死锁的风险
-    ///       信号处理函数中也不应该有锁相关的操作
-
-    auto &this_signal_fds = _signal_write_fds_[signo];
-    for (int fd : this_signal_fds) {
-        auto wsize = write(fd, &signo, sizeof(signo));
-        (void)wsize;    //! 消除编译警告
-    }
 }
 
 void CommonLoop::onSignal()
