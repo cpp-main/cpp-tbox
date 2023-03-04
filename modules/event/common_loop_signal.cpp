@@ -9,12 +9,18 @@
 #include "misc.h"
 #include "fd_event.h"
 
+#define USING_SIGACTION
+
 namespace tbox {
 namespace event {
 
 namespace {
 
+#ifdef TBOX_HAS_SIGACTION
+using SignalHandler = struct sigaction;
+#else
 using SignalHandler = void (*) (int);
+#endif
 
 struct SignalCtx {
     std::set<int> write_fds;    //! 通知 Loop 的 fd，每个 Loop 注册一个
@@ -25,7 +31,11 @@ std::mutex _signal_lock_;    //! 保护 _signal_ctxs_ 用
 std::map<int, SignalCtx> _signal_ctxs_;
 
 //! 信号处理函数
+#ifdef  TBOX_HAS_SIGACTION
+void SignalHandlerFunc(int signo, siginfo_t *siginfo, void *context)
+#else
 void SignalHandlerFunc(int signo)
+#endif
 {
     /// 注意: 这里不能使用 LogXXX() 打印日志，因为有死锁的风险
     ///       信号处理函数中也不应该有锁相关的操作
@@ -33,11 +43,23 @@ void SignalHandlerFunc(int signo)
     const auto &this_signal_ctx = _signal_ctxs_[signo];
 
     //! 先执行旧的信号
-    auto old_handler = this_signal_ctx.old_handler;
+    const auto &old_handler = this_signal_ctx.old_handler;
+#ifdef  TBOX_HAS_SIGACTION
+    if (old_handler.sa_flags & SA_SIGINFO) {
+        if (old_handler.sa_sigaction)
+            old_handler.sa_sigaction(signo, siginfo, context);
+    } else {
+        if (SIG_ERR != old_handler.sa_handler &&
+            SIG_IGN != old_handler.sa_handler &&
+            SIG_DFL != old_handler.sa_handler)
+            old_handler.sa_handler(signo);
+    }
+#else
     if (SIG_ERR != old_handler &&
         SIG_IGN != old_handler &&
         SIG_DFL != old_handler)
         old_handler(signo);
+#endif
 
     //! 再执行自己的
     for (int fd : this_signal_ctx.write_fds) {
@@ -75,9 +97,20 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 
         auto & this_signal_ctx = _signal_ctxs_[signo];
         if (this_signal_ctx.write_fds.empty()) {
+            bool is_fail = false;
+#ifdef TBOX_HAS_SIGACTION
+            struct sigaction new_handler;
+            memset(&new_handler, 0, sizeof(new_handler));
+            sigemptyset(&new_handler.sa_mask);
+            new_handler.sa_sigaction = SignalHandlerFunc;
+            new_handler.sa_flags = SA_SIGINFO;
+            ssize_t ret = ::sigaction(signo, &new_handler, &this_signal_ctx.old_handler);
+            is_fail = (ret == -1);
+#else
             this_signal_ctx.old_handler = ::signal(signo, SignalHandlerFunc);
-
-            if (SIG_ERR == this_signal_ctx.old_handler) {
+            is_fail = (SIG_ERR == this_signal_ctx.old_handler);
+#endif
+            if (is_fail) {
                 all_signals_subscribers_.erase(signo);
                 //! Q: 为什么这里要进行一次删除操作？
                 //! A: 因为L63在访问all_signals_subscribers_[signo]时，如果不存在，就会默认创建一个。
@@ -131,8 +164,12 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
         this_signal_ctx.write_fds.erase(signal_write_fd_);
         if (this_signal_ctx.write_fds.empty()) {
             //! 并还原信号处理函数
+#ifdef TBOX_HAS_SIGACTION
+            ::sigaction(signo, &this_signal_ctx.old_handler, nullptr);
+#else
             if (this_signal_ctx.old_handler != SIG_ERR)
                 ::signal(signo, this_signal_ctx.old_handler);
+#endif
             //LogTrace("unset signal:%d", signo);
             _signal_ctxs_.erase(signo);
         }
