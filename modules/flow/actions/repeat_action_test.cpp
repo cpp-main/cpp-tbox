@@ -17,7 +17,6 @@ namespace flow {
  */
 TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -34,6 +33,8 @@ TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
   loop->exitLoop(std::chrono::milliseconds(10));
   loop->runLoop();
 
+  delete loop;
+
   EXPECT_TRUE(is_finished);
   EXPECT_EQ(loop_times, 3);
   EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
@@ -47,7 +48,6 @@ TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
  */
 TEST(RepeatAction, FunctionActionForeverNoBreak) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -65,6 +65,9 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
   loop->runLoop();
 
   repeat_action.stop();
+
+  delete loop;
+
   EXPECT_FALSE(is_finished);
   EXPECT_GT(loop_times, 1000);
   EXPECT_EQ(repeat_action.state(), Action::State::kStoped);
@@ -80,7 +83,6 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
  */
 TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -102,6 +104,8 @@ TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
   loop->exitLoop(std::chrono::milliseconds(10));
   loop->runLoop();
 
+  delete loop;
+
   EXPECT_TRUE(is_finished);
   EXPECT_EQ(loop_times, 3);
   EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
@@ -117,7 +121,6 @@ TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
  */
 TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -138,6 +141,8 @@ TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
   repeat_action.start();
   loop->exitLoop(std::chrono::milliseconds(10));
   loop->runLoop();
+
+  delete loop;
 
   EXPECT_TRUE(is_finished);
   EXPECT_EQ(loop_times, 3);

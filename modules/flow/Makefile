@@ -1,7 +1,7 @@
 LIB_NAME = flow
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	state_machine.h \
@@ -21,7 +21,9 @@ HEAD_FILES = \
 	actions/loop_if_action.h \
 	actions/event_action.h \
 	actions/repeat_action.h \
+	actions/composite_action.h \
 	actions/wrapper_action.h \
+	actions/succ_fail_action.h \
 
 CPP_SRC_FILES = \
 	state_machine.cpp \
@@ -38,6 +40,7 @@ CPP_SRC_FILES = \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
 	actions/repeat_action.cpp \
+	actions/composite_action.cpp \
 	actions/wrapper_action.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
@@ -56,7 +59,9 @@ TEST_CPP_SRC_FILES = \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
 	actions/repeat_action_test.cpp \
+	actions/composite_action_test.cpp \
 	actions/wrapper_action_test.cpp \
+	actions/succ_fail_action_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no

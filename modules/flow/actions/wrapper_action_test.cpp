@@ -5,48 +5,179 @@
 #include <tbox/base/log_output.h>
 
 #include "wrapper_action.h"
-#include "sleep_action.h"
-#include "loop_action.h"
-#include "function_action.h"
-#include "sequence_action.h"
+#include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
 
-class TimeCountAction : public WrapperAction {
-  public:
-    TimeCountAction(event::Loop &loop) : WrapperAction(loop, "TimeCount") {
-        auto seq_action = new SequenceAction(loop);
-        seq_action->append(new SleepAction(loop, std::chrono::milliseconds(100)));
-        seq_action->append(new FunctionAction(loop, [this] { ++count_; return true; }));
-        auto loop_action = new LoopAction(loop, seq_action);
-        setChild(loop_action);
-    }
-
-    virtual void onReset() {
-        count_ = 0;
-        WrapperAction::onReset();
-    }
-
-    int count() const { return count_; }
-
-  private:
-    int count_ = 0;
-};
-
-
-TEST(WrapperAction, Basic) {
+TEST(WrapperAction, NormalSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
-    TimeCountAction action(*loop);
+    WrapperAction action(*loop, new SuccAction(*loop));
     action.start();
 
-    loop->exitLoop(std::chrono::milliseconds(1010));
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_TRUE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
 
-    action.stop();
-    EXPECT_GE(action.count(), 10);
+    EXPECT_TRUE(is_callback);
 }
+
+TEST(WrapperAction, NormalFail) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new FailAction(*loop));
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_FALSE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+
+TEST(WrapperAction, InvertSucc) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kInvert);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_FALSE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, InvertFail) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kInvert);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_TRUE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, AlwaySuccSucc) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kAlwaySucc);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_TRUE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, AlwaySuccFail) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kAlwaySucc);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_TRUE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, AlwayFailSucc) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kAlwayFail);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_FALSE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, AlwayFailFail) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kAlwayFail);
+    action.start();
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&](bool succ) {
+            EXPECT_FALSE(succ);
+            is_callback = true;
+        }
+    );
+
+    loop->exitLoop(std::chrono::milliseconds(1));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_callback);
+}
+
 }
 }

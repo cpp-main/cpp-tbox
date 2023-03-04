@@ -6,34 +6,21 @@
 namespace tbox {
 namespace flow {
 
-/// 封装动作类
-/**
- * 在应用中，我们经常需要定义一个动作类，它由一组动作组合而成。
- *
- * 我们可以定义一个类，继承于`WrapperAction`，然后在该类的构造函数中组装动作。
- * 最后调用`setChild()`将动作设置为WrapperAction的子动作。
- *
- * class MyAction : public WrapperAction {
- *   public:
- *     MyAction(event::Loop &loop)
- *       : WrapperAction(loop, "MyAction")
- *     {
- *       auto loop_action = new LoopAction(loop);
- *       loop_action->append(...);
- *       loop_action->append(...);
- *       setChild(loop_action);
- *     }
- * };
- *
- * 不用重写`Action`中其它虚函数。
- */
+/// 包装动作类，对子Action的结果进行处理
 class WrapperAction : public Action {
   public:
-    using Action::Action;
+    enum class Mode {
+        kNormal,    //!< 正常，child
+        kInvert,    //!< 取反，!child
+        kAlwaySucc, //!< 总是成功，true
+        kAlwayFail, //!< 总是失败，false
+    };
+
+  public:
+    explicit WrapperAction(event::Loop &loop, Action *child, Mode mode = Mode::kNormal);
     virtual ~WrapperAction();
 
-  protected:
-    void setChild(Action *child);
+    Mode mode() const { return mode_; }
 
   protected:
     virtual void toJson(Json &js) const override;
@@ -45,8 +32,11 @@ class WrapperAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *child_ = nullptr;
+    Action *child_;
+    Mode mode_;
 };
+
+std::string ToString(WrapperAction::Mode mode);
 
 }
 }

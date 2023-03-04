@@ -20,7 +20,6 @@ namespace flow {
  */
 TEST(LoopAction, FunctionActionForever) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -37,6 +36,9 @@ TEST(LoopAction, FunctionActionForever) {
   loop->exitLoop(std::chrono::milliseconds(1000));
   loop->runLoop();
   loop_action.stop();
+
+  delete loop;
+
   EXPECT_FALSE(is_finished);
   EXPECT_GT(loop_times, 1000);
 }
@@ -50,7 +52,6 @@ TEST(LoopAction, FunctionActionForever) {
  */
 TEST(LoopAction, SleepActionForever) {
   auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
 
   int loop_times = 0;
   auto function_action = new FunctionAction(*loop,
@@ -72,6 +73,9 @@ TEST(LoopAction, SleepActionForever) {
   loop->exitLoop(std::chrono::milliseconds(1010));
   loop->runLoop();
   loop_action.stop();
+
+  delete loop;
+
   EXPECT_FALSE(is_finished);
   EXPECT_EQ(loop_times, 10);
 }

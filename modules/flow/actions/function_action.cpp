@@ -12,7 +12,7 @@ FunctionAction::FunctionAction(event::Loop &loop, const Func &func) :
 }
 
 bool FunctionAction::onStart() {
-  loop_.run([this] { finish(func_()); });
+  loop_.runNext([this] { finish(func_()); });
   return true;
 }
 
