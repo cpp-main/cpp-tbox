@@ -11,10 +11,18 @@
 #include "timer_event.h"
 
 using namespace std;
-using namespace tbox::event;
+namespace tbox {
+namespace event {
 
-const int kAcceptableError = 10;
+namespace {
+int _test_signal_count = 0;
+int _test_sigaction_count = 0;
 
+void TestSignalHander(int signo) { ++_test_signal_count; }
+void TestSignalAction(int signo, siginfo_t *siginfo, void *context) { ++_test_sigaction_count; }
+}
+
+//! 注意单次信号事件，触发信号两次，期望只回调一次
 TEST(SignalEvent, Oneshot)
 {
     auto engins = Loop::Engines();
@@ -33,6 +41,7 @@ TEST(SignalEvent, Oneshot)
             }
         );
 
+        sp_loop->run([] { raise(SIGUSR1); });
         sp_loop->run([] { raise(SIGUSR1); });
 
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -441,4 +450,80 @@ TEST(SignalEvent, LargeNumberOfSignals)
     }
 }
 
+//! 测试原始signal()注册的信号处理函数，在使能event信号事件后能不能继续有效，在关闭event信号事件后还能不能有效
+TEST(SignalEvent, OldSignalHandlerNeedInvoke)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+        auto old_handler = ::signal(SIGUSR1, TestSignalHander);
 
+        _test_signal_count = 0;
+        int count = 0;
+
+        auto sp_loop = Loop::New(e);
+        auto signal_event = sp_loop->newSignalEvent();
+        signal_event->initialize(SIGUSR1, Event::Mode::kOneshot);
+        signal_event->setCallback([&count] (int) { ++count; });
+
+        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([=]{ signal_event->enable(); });
+        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([]{ raise(SIGUSR1); });
+
+        sp_loop->exitLoop(std::chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        EXPECT_EQ(_test_signal_count, 3);
+        EXPECT_EQ(count, 1);
+
+        delete signal_event;
+        delete sp_loop;
+
+        ::signal(SIGUSR1, old_handler);
+    }
+}
+
+//! 测试原始sigaction()注册的信号处理函数，在使能event信号事件后能不能继续有效，在event关闭信号事件后还能不能有效
+TEST(SignalEvent, OldSigactionNeedInvoke)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+
+        struct sigaction old_handler;
+        struct sigaction new_handler;
+        memset(&new_handler, 0, sizeof(new_handler));
+        sigemptyset(&new_handler.sa_mask);
+        new_handler.sa_sigaction = TestSignalAction;
+        new_handler.sa_flags = SA_SIGINFO;
+        ::sigaction(SIGUSR1, &new_handler, &old_handler);
+
+        _test_sigaction_count = 0;
+        int count = 0;
+
+        auto sp_loop = Loop::New(e);
+        auto signal_event = sp_loop->newSignalEvent();
+        signal_event->initialize(SIGUSR1, Event::Mode::kOneshot);
+        signal_event->setCallback([&count] (int) { ++count; });
+
+        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([=]{ signal_event->enable(); });
+        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([]{ raise(SIGUSR1); });
+
+        sp_loop->exitLoop(std::chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        EXPECT_EQ(_test_signal_count, 3);
+        EXPECT_EQ(count, 1);
+
+        delete signal_event;
+        delete sp_loop;
+
+        ::sigaction(SIGUSR1, &new_handler, &old_handler);
+    }
+}
+
+}
+}
