@@ -40,12 +40,13 @@ class CommonLoop : public Loop {
     void beginEventProcess();
     void endEventProcess();
 
-    //! 信号处理相关
+    //! Signal 相关
     virtual SignalEvent* newSignalEvent() override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     void onSignal();
 
+    //! Timer 相关
     virtual TimerEvent* newTimerEvent() override;
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
@@ -89,6 +90,9 @@ class CommonLoop : public Loop {
   private:
     mutable std::recursive_mutex lock_;
     std::thread::id loop_thread_id_;
+    int cb_level_ = 0;
+
+    //! run 相关
     bool has_commit_run_req_ = false;
     int run_read_fd_ = -1;
     int run_write_fd_ = -1;
@@ -105,16 +109,16 @@ class CommonLoop : public Loop {
     uint32_t max_cost_us_ = 0;
 #endif  //ENABLE_STAT
 
+    //! Signal 相关
     int signal_read_fd_  = -1;
     int signal_write_fd_ = -1;
     FdEvent *sp_signal_read_event_ = nullptr;
     std::map<int, std::set<SignalSubscribuer*>> all_signals_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
 
+    //! Timer 相闫
     TimerEvent *sp_exit_timer_ = nullptr;
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
-
-    int cb_level_ = 0;
 };
 
 }
