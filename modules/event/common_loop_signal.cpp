@@ -9,14 +9,14 @@
 #include "misc.h"
 #include "fd_event.h"
 
-#define USING_SIGACTION
+#define TBOX_HAS_SIGACTION
 
 namespace tbox {
 namespace event {
 
 namespace {
 
-#ifdef TBOX_HAS_SIGACTION
+#ifdef  TBOX_HAS_SIGACTION
 using SignalHandler = struct sigaction;
 #else
 using SignalHandler = void (*) (int);
