@@ -37,7 +37,8 @@ cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就
 
 | 库名 | 依赖模块 | 说明 | 安装方法 |
 |:----:|:--------:|:----:|:--------:|
-| googletest | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install google-mock |
+| libgtest-dev | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install libgtest-dev |
+| libgmock-dev | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install libgmock-dev |
 | mosquitto | mqtt | MQTT库，如果不使用mqtt模块可忽略 | sudo apt install libmosquitto-dev |
 
 
@@ -45,7 +46,7 @@ cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就
 
 | 系统 | 安装命令 |
 |:----:|:------:|
-| Ubuntu/Debian | `apt install -y g++ make google-mock libmosquitto-dev` |
+| Ubuntu/Debian | `apt install -y g++ make libgtest-dev libgmock-dev libmosquitto-dev` |
 
 **如果构建**
 
