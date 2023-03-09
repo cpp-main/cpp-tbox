@@ -16,7 +16,9 @@
 namespace tbox {
 namespace main {
 
-extern void RegisterSignals();
+extern void InstallSignals();
+extern void UninstallSignals();
+
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
@@ -66,7 +68,8 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 
 int Main(int argc, char **argv)
 {
-    RegisterSignals();
+    InstallSignals();
+    SetScopeExitAction([] { UninstallSignals(); });
 
     Log log;
     ContextImp ctx;

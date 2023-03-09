@@ -16,7 +16,9 @@
 namespace tbox {
 namespace main {
 
-extern void RegisterSignals();
+extern void InstallSignals();
+extern void UninstallSignals();
+
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
@@ -66,9 +68,9 @@ bool Start(int argc, char **argv) {
     return false;
   }
 
-  _runtime = new Runtime;
+  InstallSignals();
 
-  RegisterSignals();
+  _runtime = new Runtime;
 
   auto &log = _runtime->log;
   auto &ctx = _runtime->ctx;
@@ -157,6 +159,8 @@ void Stop() {
 
   LogInfo("Bye!");
   CHECK_DELETE_RESET_OBJ(_runtime);
+
+  UninstallSignals();
 }
 
 }

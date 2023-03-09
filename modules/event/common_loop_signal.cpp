@@ -9,14 +9,14 @@
 #include "misc.h"
 #include "fd_event.h"
 
-#define TBOX_HAS_SIGACTION
+#define TBOX_USE_SIGACTION
 
 namespace tbox {
 namespace event {
 
 namespace {
 
-#ifdef  TBOX_HAS_SIGACTION
+#ifdef  TBOX_USE_SIGACTION
 using SignalHandler = struct sigaction;
 #else
 using SignalHandler = void (*) (int);
@@ -31,7 +31,7 @@ std::mutex _signal_lock_;    //! 保护 _signal_ctxs_ 用
 std::map<int, SignalCtx> _signal_ctxs_;
 
 //! 信号处理函数
-#ifdef  TBOX_HAS_SIGACTION
+#ifdef  TBOX_USE_SIGACTION
 void SignalHandlerFunc(int signo, siginfo_t *siginfo, void *context)
 #else
 void SignalHandlerFunc(int signo)
@@ -44,7 +44,7 @@ void SignalHandlerFunc(int signo)
 
     //! 先执行旧的信号
     const auto &old_handler = this_signal_ctx.old_handler;
-#ifdef  TBOX_HAS_SIGACTION
+#ifdef  TBOX_USE_SIGACTION
     if (old_handler.sa_flags & SA_SIGINFO) {
         if (old_handler.sa_sigaction)
             old_handler.sa_sigaction(signo, siginfo, context);
@@ -98,7 +98,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         auto & this_signal_ctx = _signal_ctxs_[signo];
         if (this_signal_ctx.write_fds.empty()) {
             bool is_fail = false;
-#ifdef TBOX_HAS_SIGACTION
+#ifdef TBOX_USE_SIGACTION
             struct sigaction new_handler;
             memset(&new_handler, 0, sizeof(new_handler));
             sigemptyset(&new_handler.sa_mask);
@@ -164,7 +164,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
         this_signal_ctx.write_fds.erase(signal_write_fd_);
         if (this_signal_ctx.write_fds.empty()) {
             //! 并还原信号处理函数
-#ifdef TBOX_HAS_SIGACTION
+#ifdef TBOX_USE_SIGACTION
             ::sigaction(signo, &this_signal_ctx.old_handler, nullptr);
 #else
             if (this_signal_ctx.old_handler != SIG_ERR)
