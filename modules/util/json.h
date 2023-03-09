@@ -9,6 +9,17 @@ namespace util {
 namespace json {
 
 //! true, false
+bool Get(const Json &js, bool &field_value);
+//! 0, 2, 1234
+bool Get(const Json &js, unsigned int &field_value);
+//! -12, -1, 0, 2, 1234
+bool Get(const Json &js, int &field_value);
+//! -12.34, 0.0, 1, 22, -3, 12.34
+bool Get(const Json &js, double &field_value);
+//! "hello world"
+bool Get(const Json &js, std::string &field_value);
+
+//! true, false
 bool GetField(const Json &js, const std::string &field_name, bool &field_value);
 //! 0, 2, 1234
 bool GetField(const Json &js, const std::string &field_name, unsigned int &field_value);
