@@ -22,7 +22,7 @@ extern void UninstallSignals();
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
-std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+extern std::function<void()> error_exit_func;
 
 namespace {
 void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)

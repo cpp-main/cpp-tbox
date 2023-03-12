@@ -18,7 +18,7 @@ int main(int argc, char **argv);
 namespace tbox {
 namespace main {
 
-extern std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
 
 namespace {
 

@@ -22,6 +22,8 @@ extern void UninstallSignals();
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
+extern std::function<void()> error_exit_func;
+
 namespace {
 struct Runtime {
   Log log;
@@ -112,6 +114,10 @@ bool Start(int argc, char **argv) {
   log.initialize(argv[0], ctx, js_conf);
 
   SayHello();
+
+  error_exit_func = [&] {
+    log.cleanup();
+  };
 
   if (ctx.initialize(js_conf)) {
     if (apps.initialize(js_conf)) {
