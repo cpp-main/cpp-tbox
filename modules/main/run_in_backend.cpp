@@ -5,6 +5,7 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/json.hpp>
 #include <tbox/event/loop.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
 #include <tbox/util/pid_file.h>
 
@@ -16,8 +17,8 @@
 namespace tbox {
 namespace main {
 
-extern void InstallSignals();
-extern void UninstallSignals();
+extern void InstallErrorSignals();
+extern void UninstallErrorSignals();
 
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
@@ -43,9 +44,17 @@ void RunInBackend()
 {
   auto loop = _runtime->ctx.loop();
 
+  auto warn_signal = loop->newSignalEvent();
+  SetScopeExitAction([=] { delete warn_signal; });
+
+  warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
+  warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
+
   //! 启动前准备
   eventx::LoopWDog::Start();
   eventx::LoopWDog::Register(loop, "main");
+
+  warn_signal->enable();
 
   LogDbg("Start!");
 
@@ -70,7 +79,7 @@ bool Start(int argc, char **argv) {
     return false;
   }
 
-  InstallSignals();
+  InstallErrorSignals();
 
   _runtime = new Runtime;
 
@@ -166,7 +175,7 @@ void Stop() {
   LogInfo("Bye!");
   CHECK_DELETE_RESET_OBJ(_runtime);
 
-  UninstallSignals();
+  UninstallErrorSignals();
 }
 
 }

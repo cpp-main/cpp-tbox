@@ -86,37 +86,21 @@ void OnErrorSignal(int signo)
     std::abort();
 }
 
-#ifdef TBOX_USE_SIGACTION
-void OnWarnSignal(int signo, siginfo_t *siginfo, void *context)
-#else
-void OnWarnSignal(int signo)
-#endif
-{
-#ifdef TBOX_USE_SIGACTION
-    InvokeOldHandler(signo, siginfo, context);
-#else
-    InvokeOldHandler(signo);
-#endif
-
-    LogWarn("Receive signal %d", signo);
-}
-
-bool InstallSignal(int signo, bool as_error)
+bool InstallSignal(int signo)
 {
     SignalHandler old_handler;
     bool is_succ = false;
-    auto func = as_error ? OnErrorSignal : OnWarnSignal;
 
 #ifdef TBOX_USE_SIGACTION
     struct sigaction new_handler;
     memset(&new_handler, 0, sizeof(new_handler));
     sigemptyset(&new_handler.sa_mask);
-    new_handler.sa_sigaction = func;
+    new_handler.sa_sigaction = OnErrorSignal;
     new_handler.sa_flags = SA_SIGINFO;
     ssize_t ret = ::sigaction(signo, &new_handler, &old_handler);
     is_succ = (ret != -1);
 #else
-    old_handler = ::signal(signo, func);
+    old_handler = ::signal(signo, OnErrorSignal);
     is_succ = (SIG_ERR != old_handler);
 #endif
 
@@ -126,7 +110,7 @@ bool InstallSignal(int signo, bool as_error)
 
 }
 
-void InstallSignals()
+void InstallErrorSignals()
 {
     //! 要禁止信号触发
     sigset_t new_sigmask, old_sigmask;
@@ -135,20 +119,15 @@ void InstallSignals()
     SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
 
     //! 注册信号处理函数
-    InstallSignal(SIGSEGV,  true);
-    InstallSignal(SIGILL,   true);
-    InstallSignal(SIGABRT,  true);
-    InstallSignal(SIGBUS,   true);
-    InstallSignal(SIGFPE,   true);
-    InstallSignal(SIGSYS,   true);
-
-    InstallSignal(SIGPIPE,  false);
-    InstallSignal(SIGHUP,   false);
-    InstallSignal(SIGTTIN,  false);
-    InstallSignal(SIGTTOU,  false);
+    InstallSignal(SIGSEGV);
+    InstallSignal(SIGILL);
+    InstallSignal(SIGABRT);
+    InstallSignal(SIGBUS);
+    InstallSignal(SIGFPE);
+    InstallSignal(SIGSYS);
 }
 
-void UninstallSignals()
+void UninstallErrorSignals()
 {
     //! 要禁止信号触发
     sigset_t new_sigmask, old_sigmask;

@@ -1,7 +1,7 @@
 LIB_NAME = main
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 2
+LIB_VERSION_Z = 3
 
 HEAD_FILES = \
 	context.h \
@@ -12,7 +12,7 @@ CPP_SRC_FILES = \
 	context_imp.cpp \
 	run_in_frontend.cpp \
 	run_in_backend.cpp \
-	signal.cpp \
+	error_signals.cpp \
 	misc.cpp \
 	args.cpp \
 	module.cpp \

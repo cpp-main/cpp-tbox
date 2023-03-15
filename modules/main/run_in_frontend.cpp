@@ -16,8 +16,8 @@
 namespace tbox {
 namespace main {
 
-extern void InstallSignals();
-extern void UninstallSignals();
+extern void InstallErrorSignals();
+extern void UninstallErrorSignals();
 
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
@@ -28,9 +28,15 @@ namespace {
 void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 {
     auto stop_signal = ctx.loop()->newSignalEvent();
+    auto warn_signal = ctx.loop()->newSignalEvent();
 
     //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction([stop_signal] { delete stop_signal; });
+    SetScopeExitAction(
+        [=] {
+            delete warn_signal;
+            delete stop_signal;
+        }
+    );
 
     stop_signal->initialize({SIGINT, SIGTERM, SIGQUIT, SIGTSTP, SIGPWR}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
@@ -43,11 +49,15 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
         }
     );
 
+    warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
+    warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
+
     //! 启动前准备
     eventx::LoopWDog::Start();
     eventx::LoopWDog::Register(ctx.loop(), "main");
 
     stop_signal->enable();
+    warn_signal->enable();
 
     LogDbg("Start!");
 
@@ -68,8 +78,8 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 
 int Main(int argc, char **argv)
 {
-    InstallSignals();
-    SetScopeExitAction([] { UninstallSignals(); });
+    InstallErrorSignals();
+    SetScopeExitAction([] { UninstallErrorSignals(); });
 
     Log log;
     ContextImp ctx;

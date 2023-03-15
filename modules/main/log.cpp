@@ -34,14 +34,14 @@ void Log::fillDefaultConfig(Json &cfg) const
   "filelog": {
     "enable": false,
     "enable_color": false,
-    "levels": {"":3},
+    "levels": {"":4},
     "prefix": "",
     "path": "",
     "max_size": 1024
   },
   "syslog": {
     "enable": false,
-    "levels": {"":3}
+    "levels": {"":4}
   }
 }
 )"_json;
