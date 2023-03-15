@@ -124,25 +124,6 @@ bool InstallSignal(int signo, bool as_error)
     return is_succ;
 }
 
-bool UninstallSignal(int signo)
-{
-    auto iter = _old_handler_map.find(signo);
-    if (iter == _old_handler_map.end())
-        return false;
-
-    auto &old_handler = iter->second;
-
-#ifdef TBOX_USE_SIGACTION
-    ::sigaction(signo, &old_handler, nullptr);
-#else
-    if (old_handler != SIG_ERR)
-        ::signal(signo, old_handler);
-#endif
-
-    _old_handler_map.erase(iter);
-    return true;
-}
-
 }
 
 void InstallSignals()
@@ -154,11 +135,17 @@ void InstallSignals()
     SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
 
     //! 注册信号处理函数
-    InstallSignal(SIGSEGV, true);
-    InstallSignal(SIGILL,  true);
-    InstallSignal(SIGABRT, true);
-    InstallSignal(SIGBUS,  true);
-    InstallSignal(SIGPIPE, false);
+    InstallSignal(SIGSEGV,  true);
+    InstallSignal(SIGILL,   true);
+    InstallSignal(SIGABRT,  true);
+    InstallSignal(SIGBUS,   true);
+    InstallSignal(SIGFPE,   true);
+    InstallSignal(SIGSYS,   true);
+
+    InstallSignal(SIGPIPE,  false);
+    InstallSignal(SIGHUP,   false);
+    InstallSignal(SIGTTIN,  false);
+    InstallSignal(SIGTTOU,  false);
 }
 
 void UninstallSignals()
@@ -169,11 +156,18 @@ void UninstallSignals()
     sigprocmask(SIG_BLOCK, &new_sigmask, &old_sigmask);
     SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
 
-    UninstallSignal(SIGSEGV);
-    UninstallSignal(SIGILL);
-    UninstallSignal(SIGABRT);
-    UninstallSignal(SIGBUS);
-    UninstallSignal(SIGPIPE);
+    for (auto &item : _old_handler_map) {
+        int signo = item.first;
+        auto &old_handler = item.second;
+
+#ifdef TBOX_USE_SIGACTION
+        ::sigaction(signo, &old_handler, nullptr);
+#else
+        if (old_handler != SIG_ERR)
+            ::signal(signo, old_handler);
+#endif
+    }
+    _old_handler_map.clear();
 }
 
 }

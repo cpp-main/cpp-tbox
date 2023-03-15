@@ -32,7 +32,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     //! 预定在离开时自动释放对象，确保无内存泄漏
     SetScopeExitAction([stop_signal] { delete stop_signal; });
 
-    stop_signal->initialize({SIGINT, SIGTERM}, event::Event::Mode::kOneshot);
+    stop_signal->initialize({SIGINT, SIGTERM, SIGQUIT, SIGTSTP, SIGPWR}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
         [&] (int signo) {
             LogInfo("Got signal %d", signo);
