@@ -32,6 +32,8 @@ class Token {
     inline bool operator >  (const tbox::cabinet::Token &rhs) const { return !less(rhs) && !equal(rhs); }
     inline bool operator >= (const tbox::cabinet::Token &rhs) const { return !less(rhs); }
 
+    inline operator bool () const { return id_ != 0; }
+
   private:
     Id id_ = 0;
     Pos pos_ = 0;
