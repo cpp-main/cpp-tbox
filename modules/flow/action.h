@@ -38,7 +38,8 @@ class Action {
       kFail,      //!< 失败
     };
 
-    inline const std::string& type() { return type_; }
+    inline int id() const { return id_; }
+    inline const std::string& type() const { return type_; }
 
     inline State state() const { return state_; }
     inline Result result() const { return result_; }
@@ -49,8 +50,8 @@ class Action {
         return state_ == State::kRunning || state_ == State::kPause;
     }
 
-    inline void set_name(const std::string &name) { name_ = name; }
-    inline const std::string& name() const { return name_; }
+    inline void set_label(const std::string &label) { label_ = label; }
+    inline const std::string& label() const { return label_; }
 
     //!< 设置结束回调
     using FinishCallback = std::function<void(bool is_succ)>;
@@ -81,8 +82,11 @@ class Action {
     event::Loop &loop_;
 
   private:
+    static int _id_alloc_counter_;
+
+    int id_;
     std::string type_;
-    std::string name_;
+    std::string label_;
     FinishCallback finish_cb_;
 
     State state_ = State::kIdle;      //!< 状态

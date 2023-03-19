@@ -27,7 +27,7 @@ void CompositeAction::toJson(Json &js) const {
 
 bool CompositeAction::onStart() {
     if (child_ == nullptr) {
-        LogWarn("no child in %s(%s)", type().c_str(), name().c_str());
+        LogWarn("no child in %d:%s(%s)", id(), type().c_str(), label().c_str());
         return false;
     }
     return child_->start();

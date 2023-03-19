@@ -8,26 +8,30 @@
 namespace tbox {
 namespace flow {
 
+int Action::_id_alloc_counter_ = 0;
+
 Action::Action(event::Loop &loop, const std::string &type) :
   loop_(loop),
+  id_(++_id_alloc_counter_),
   type_(type)
 {}
 
 Action::~Action() {
   if (isUnderway()) {
-    LogWarn("action %s(%s) is still underway, state:%s",
-            type_.c_str(), name_.c_str(),
+    LogWarn("action %d:%s(%s) is still underway, state:%s",
+            id_, type_.c_str(), label_.c_str(),
             ToString(state_).c_str());
   }
   CHECK_DELETE_RESET_OBJ(timer_ev_);
 }
 
 void Action::toJson(Json &js) const {
-  js["01.type"] = type_;
-  if (!name_.empty())
-    js["02.name"] = name_;
-  js["03.state"] = ToString(state_);
-  js["04.result"] = ToString(result_);
+  js["01.id"] = id_;
+  js["02.type"] = type_;
+  if (!label_.empty())
+    js["03.label"] = label_;
+  js["04.state"] = ToString(state_);
+  js["05.result"] = ToString(result_);
 }
 
 bool Action::start() {
@@ -39,9 +43,9 @@ bool Action::start() {
     return false;
   }
 
-  LogDbg("start action %s(%s)", type_.c_str(), name_.c_str());
+  LogDbg("start action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
   if (!onStart()) {
-    LogWarn("start action %s(%s) fail", type_.c_str(), name_.c_str());
+    LogWarn("start action %d:%s(%s) fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
@@ -61,9 +65,9 @@ bool Action::pause() {
     return false;
   }
 
-  LogDbg("pause action %s(%s)", type_.c_str(), name_.c_str());
+  LogDbg("pause action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
   if (!onPause()) {
-    LogWarn("pause action %s(%s) fail", type_.c_str(), name_.c_str());
+    LogWarn("pause action %d:%s(%s) fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
@@ -83,9 +87,9 @@ bool Action::resume() {
     return false;
   }
 
-  LogDbg("resume action %s(%s)", type_.c_str(), name_.c_str());
+  LogDbg("resume action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
   if (!onResume()) {
-    LogWarn("resume action %s(%s) fail", type_.c_str(), name_.c_str());
+    LogWarn("resume action %d:%s(%s) fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
@@ -101,9 +105,9 @@ bool Action::stop() {
       state_ != State::kPause)
     return true;
 
-  LogDbg("stop action %s(%s)", type_.c_str(), name_.c_str());
+  LogDbg("stop action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
   if (!onStop()) {
-    LogWarn("stop action %s(%s) fail", type_.c_str(), name_.c_str());
+    LogWarn("stop action %d:%s(%s) fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
@@ -118,7 +122,7 @@ void Action::reset() {
   if (state_ == State::kIdle)
     return;
 
-  LogDbg("reset action %s(%s)", type_.c_str(), name_.c_str());
+  LogDbg("reset action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
   onReset();
 
   if (timer_ev_ != nullptr)
@@ -129,13 +133,13 @@ void Action::reset() {
 }
 
 void Action::setTimeout(std::chrono::milliseconds ms) {
-  LogDbg("set action %s(%s) timeout: %d", type_.c_str(), name_.c_str(), ms.count());
+  LogDbg("set action %d:%s(%s) timeout: %d", id_, type_.c_str(), label_.c_str(), ms.count());
 
   if (timer_ev_ == nullptr) {
     timer_ev_ = loop_.newTimerEvent();
     timer_ev_->setCallback(
       [this] {
-        LogDbg("action %s(%s) timeout", type_.c_str(), name_.c_str());
+        LogDbg("action %d:%s(%s) timeout", id_, type_.c_str(), label_.c_str());
         onTimeout();
       }
     );
@@ -148,8 +152,8 @@ void Action::setTimeout(std::chrono::milliseconds ms) {
 
 bool Action::finish(bool is_succ) {
   if (state_ != State::kFinished) {
-    LogDbg("action %s(%s) finished, is_succ: %s", type_.c_str(),
-           name_.c_str(), is_succ? "succ" : "fail");
+    LogDbg("action %d:%s(%s) finished, is_succ: %s", id_, type_.c_str(), label_.c_str(),
+            (is_succ? "succ" : "fail"));
     state_ = State::kFinished;
 
     if (timer_ev_ != nullptr)
@@ -160,7 +164,7 @@ bool Action::finish(bool is_succ) {
     if (finish_cb_)
         loop_.runNext(std::bind(finish_cb_, is_succ));
     else
-        LogWarn("action %s(%s) no finish_cb", type_.c_str(), name_.c_str());
+        LogWarn("action %d:%s(%s) no finish_cb", id_, type_.c_str(), label_.c_str());
 
     onFinished(is_succ);
     return true;
