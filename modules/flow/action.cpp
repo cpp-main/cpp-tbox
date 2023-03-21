@@ -148,6 +148,20 @@ void Action::setTimeout(std::chrono::milliseconds ms) {
   }
 
   timer_ev_->initialize(ms, event::Event::Mode::kOneshot);
+  if (state_ == State::kRunning)
+    timer_ev_->enable();
+}
+
+void Action::resetTimeout() {
+  LogDbg("reset action %d:%s(%s) timeout", id_, type_.c_str(), label_.c_str());
+
+  if (timer_ev_ != nullptr) {
+    auto tobe_delete = timer_ev_;
+    timer_ev_ = nullptr;
+
+    tobe_delete->disable();
+    loop_.runNext([tobe_delete] { delete tobe_delete; });
+  }
 }
 
 bool Action::finish(bool is_succ) {

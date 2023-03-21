@@ -58,6 +58,7 @@ class Action {
     inline void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
     void setTimeout(std::chrono::milliseconds ms);
+    void resetTimeout();
 
     virtual void toJson(Json &js) const;
 
