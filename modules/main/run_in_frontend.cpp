@@ -19,6 +19,8 @@ namespace main {
 extern void InstallErrorSignals();
 extern void UninstallErrorSignals();
 
+extern void InstallTerminate();
+
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
@@ -60,15 +62,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     warn_signal->enable();
 
     LogDbg("Start!");
-
-    try {
-        ctx.loop()->runLoop();
-    } catch (const std::exception &e) {
-        LogErr("catch execption: %s", e.what());
-    } catch (...) {
-        LogErr("catch unknown execption");
-    }
-
+    ctx.loop()->runLoop();
     LogDbg("Stoped");
 
     eventx::LoopWDog::Unregister(ctx.loop());
@@ -80,6 +74,8 @@ int Main(int argc, char **argv)
 {
     InstallErrorSignals();
     SetScopeExitAction([] { UninstallErrorSignals(); });
+
+    InstallTerminate();
 
     Log log;
     ContextImp ctx;

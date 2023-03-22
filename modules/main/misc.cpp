@@ -9,6 +9,8 @@
 namespace tbox {
 namespace main {
 
+std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+
 void GetVersion(int &major, int &minor, int &rev, int &build)
 {
     major = 1;

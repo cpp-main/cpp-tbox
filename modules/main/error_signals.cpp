@@ -18,7 +18,7 @@ int main(int argc, char **argv);
 namespace tbox {
 namespace main {
 
-std::function<void()> error_exit_func;  //!< 出错异常退出前要做的事件
+extern std::function<void()> error_exit_func;
 
 namespace {
 
@@ -73,11 +73,13 @@ void OnErrorSignal(int signo)
     InvokeOldHandler(signo);
 #endif
 
-    const std::string &stack_str = util::DumpCallStack(32);
+    const std::string &stack_str = util::DumpCallStack(64);
 
     LogFatal("Receive signal %d", signo);
     LogFatal("main: <%p>\n-----call stack-----\n%s",
       ::main, stack_str.c_str());
+
+    LogFatal("Process abort!");
 
     if (error_exit_func)    //! 执行一些善后处理
         error_exit_func();

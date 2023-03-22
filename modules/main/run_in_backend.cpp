@@ -20,6 +20,8 @@ namespace main {
 extern void InstallErrorSignals();
 extern void UninstallErrorSignals();
 
+extern void InstallTerminate();
+
 extern void RegisterApps(Module &root, Context &ctx);
 extern void SayHello();
 
@@ -57,15 +59,7 @@ void RunInBackend()
   warn_signal->enable();
 
   LogDbg("Start!");
-
-  try {
-    loop->runLoop();
-  } catch (const std::exception &e) {
-    LogErr("catch execption: %s", e.what());
-  } catch (...) {
-    LogErr("catch unknown execption");
-  }
-
+  loop->runLoop();
   LogDbg("Stoped");
 
   eventx::LoopWDog::Unregister(loop);
@@ -80,6 +74,7 @@ bool Start(int argc, char **argv) {
   }
 
   InstallErrorSignals();
+  InstallTerminate();
 
   _runtime = new Runtime;
 
