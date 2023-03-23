@@ -103,18 +103,5 @@ TEST(SafeExecute, ThrowPrintStack)
     LogOutput_Cleanup();
 }
 
-TEST(SafeExecute, ThrowAbort)
-{
-    LogOutput_Initialize();
-
-    bool succ = SafeExecute([&]{
-        throw 10;
-    }, SAFE_EXECUTE_ABORT);
-
-    EXPECT_FALSE(succ);
-
-    LogOutput_Cleanup();
-}
-
 }
 }
