@@ -46,7 +46,7 @@ bool SafeExecute(const std::function<void()> &func, int flags)
         LogWarn("value: %d", e);
     } catch (double e) {
         CatchType();
-        LogWarn("value: %d", e);
+        LogWarn("value: %f", e);
     } catch (const std::string &e) {
         CatchType();
         LogWarn("value: %s", e.c_str());
