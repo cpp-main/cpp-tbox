@@ -19,6 +19,7 @@ HEAD_FILES = \
 	checksum.h \
 	crc.h \
 	json_deep_loader.h \
+	safe_execute.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -36,6 +37,7 @@ CPP_SRC_FILES = \
 	checksum.cpp \
 	crc.cpp \
 	json_deep_loader.cpp \
+	safe_execute.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
 
@@ -53,6 +55,7 @@ TEST_CPP_SRC_FILES = \
 	checksum_test.cpp \
 	crc_test.cpp \
 	backtrace_test.cpp \
+	safe_execute_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
