@@ -2,6 +2,7 @@
 #include "async_channel.h"
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 using namespace std;
 using namespace tbox::log;

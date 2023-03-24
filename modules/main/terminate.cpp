@@ -2,6 +2,7 @@
 #include <signal.h>
 
 #include <functional>
+#include <exception>
 #include <tbox/base/log.h>
 #include <tbox/util/backtrace.h>
 
