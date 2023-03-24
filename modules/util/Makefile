@@ -1,7 +1,7 @@
 LIB_NAME = util
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	pid_file.h \

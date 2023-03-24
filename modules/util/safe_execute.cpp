@@ -4,12 +4,13 @@
 #include <signal.h>
 
 #include <tbox/base/log.h>
-#include <tbox/util/backtrace.h>
+#include "backtrace.h"
 
 namespace tbox {
 namespace util {
 
-void CatchType() {
+void CatchType()
+{
     std::type_info *t = abi::__cxa_current_exception_type();
     if (t != nullptr) {
         // Note that "name" is the mangled name.
@@ -67,6 +68,18 @@ bool SafeExecute(const std::function<void()> &func, int flags)
     }
 
     return false;
+}
+
+bool SafeExecuteQuietly(const std::function<void()> &func)
+{
+    try {
+        if (func)
+            func();
+        return true;
+
+    } catch (...) {
+        return false;
+    }
 }
 
 }

@@ -103,5 +103,17 @@ TEST(SafeExecute, ThrowPrintStack)
     LogOutput_Cleanup();
 }
 
+TEST(SafeExecuteQuietly, Throw)
+{
+    bool succ = SafeExecuteQuietly([&]{ throw 10; });
+    EXPECT_FALSE(succ);
+}
+
+TEST(SafeExecuteQuietly, NoThrow)
+{
+    bool succ = SafeExecuteQuietly([&]{ });
+    EXPECT_TRUE(succ);
+}
+
 }
 }

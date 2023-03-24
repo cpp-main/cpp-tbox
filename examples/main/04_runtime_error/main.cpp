@@ -1,4 +1,5 @@
 #include <tbox/main/main.h>
+#include <tbox/terminal/session.h>
 
 namespace tbox {
 namespace main {
@@ -9,12 +10,67 @@ class TestModule : public Module {
         Module("test", ctx)
     { }
 
-    virtual bool onStart() {
-        ctx().loop()->run(
-            [this] {
-                static_cast<uint8_t*>(nullptr)[0] = 0;
-            }
-        );
+    virtual bool onInit(const Json &) {
+        using namespace terminal;
+        auto &shell = *ctx().terminal();
+        auto root_node = shell.rootNode();
+
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    static_cast<char*>(nullptr)[0] = 0;
+                }
+            );
+            shell.mountNode(root_node, func_node, "crash");
+        }
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    ctx().thread_pool()->execute(
+                        [] { static_cast<char*>(nullptr)[0] = 0; }
+                    );
+                }
+            );
+            shell.mountNode(root_node, func_node, "crash_thread");
+        }
+
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    throw 10;
+                }
+            );
+            shell.mountNode(root_node, func_node, "throw_int");
+        }
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    throw std::runtime_error("runtime error");
+                }
+            );
+            shell.mountNode(root_node, func_node, "throw_runtime_error");
+        }
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    ctx().thread_pool()->execute(
+                        [] { throw 10; }
+                    );
+                }
+            );
+            shell.mountNode(root_node, func_node, "throw_int_thread");
+        }
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    ctx().thread_pool()->execute(
+                        [] { throw std::runtime_error("runtime error"); }
+                    );
+                }
+            );
+            shell.mountNode(root_node, func_node, "throw_runtime_error_thread");
+        }
+
         return true;
     }
 };

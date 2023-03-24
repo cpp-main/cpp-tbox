@@ -13,6 +13,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/cabinet.hpp>
 #include <tbox/event/loop.h>
+#include <tbox/util/safe_execute.h>
 
 namespace tbox {
 namespace eventx {
@@ -291,8 +292,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             auto exec_time_point = Clock::now();
             auto wait_time_cost = exec_time_point - item->create_time_point;
 
-            if (item->backend_task)
-                item->backend_task();
+            util::SafeExecute(item->backend_task, util::SAFE_EXECUTE_PRINT_STACK);
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 

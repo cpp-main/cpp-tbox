@@ -18,9 +18,18 @@ enum SafeExecuteFlags {
  * \param flags     选项 SafeRunFlag
  *
  * \return true     运行过程中没有出现异常
- * \return false    运行过程中捕获到异常
+ * \return false    运行过程中捕获到了异常
  */
 bool SafeExecute(const std::function<void()> &func, int flags = 0);
+
+/// 安全执行，不打印任何日志
+/**
+ * \param func      将要执行的函数，通常是lambda
+ *
+ * \return true     运行过程中没有出现异常
+ * \return false    运行过程中捕获到了异常
+ */
+bool SafeExecuteQuietly(const std::function<void()> &func);
 
 }
 }

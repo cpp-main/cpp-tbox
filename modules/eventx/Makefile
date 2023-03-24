@@ -1,7 +1,7 @@
 LIB_NAME = eventx
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	thread_pool.h \
@@ -28,7 +28,7 @@ TEST_CPP_SRC_FILES = \
 	loop_wdog_test.cpp \
 	work_thread_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk
