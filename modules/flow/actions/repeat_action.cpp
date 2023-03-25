@@ -37,9 +37,9 @@ RepeatAction::~RepeatAction() {
 
 void RepeatAction::toJson(Json &js) const {
   Action::toJson(js);
-  child_->toJson(js["10.child"]);
-  js["11.repeat_times"] = repeat_times_;
-  js["12.remain_times"] = remain_times_;
+  child_->toJson(js["child"]);
+  js["repeat_times"] = repeat_times_;
+  js["remain_times"] = remain_times_;
 }
 
 bool RepeatAction::onStart() {

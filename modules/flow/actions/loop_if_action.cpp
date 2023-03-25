@@ -46,9 +46,9 @@ LoopIfAction::~LoopIfAction() {
 
 void LoopIfAction::toJson(Json &js) const {
   Action::toJson(js);
-  cond_action_->toJson(js["10.cond"]);
-  exec_action_->toJson(js["11.exec"]);
-  js["12.is_cond_done"] = is_cond_done_;
+  cond_action_->toJson(js["cond"]);
+  exec_action_->toJson(js["exec"]);
+  js["is_cond_done"] = is_cond_done_;
 }
 
 bool LoopIfAction::onStart() {

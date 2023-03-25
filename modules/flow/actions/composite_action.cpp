@@ -22,7 +22,7 @@ void CompositeAction::setChild(Action *child) {
 
 void CompositeAction::toJson(Json &js) const {
     Action::toJson(js);
-    child_->toJson(js["10.child"]);
+    child_->toJson(js["child"]);
 }
 
 bool CompositeAction::onStart() {

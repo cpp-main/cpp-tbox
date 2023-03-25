@@ -15,7 +15,6 @@ HEAD_FILES = \
 	actions/sleep_action.h \
 	actions/sequence_action.h \
 	actions/parallel_action.h \
-	actions/invert_action.h \
 	actions/if_else_action.h \
 	actions/loop_action.h \
 	actions/loop_if_action.h \
@@ -24,6 +23,7 @@ HEAD_FILES = \
 	actions/composite_action.h \
 	actions/wrapper_action.h \
 	actions/succ_fail_action.h \
+	json_to_graphviz.h \
 
 CPP_SRC_FILES = \
 	state_machine.cpp \
@@ -34,7 +34,6 @@ CPP_SRC_FILES = \
 	actions/sleep_action.cpp \
 	actions/sequence_action.cpp \
 	actions/parallel_action.cpp \
-	actions/invert_action.cpp \
 	actions/if_else_action.cpp \
 	actions/loop_action.cpp \
 	actions/loop_if_action.cpp \
@@ -42,6 +41,7 @@ CPP_SRC_FILES = \
 	actions/repeat_action.cpp \
 	actions/composite_action.cpp \
 	actions/wrapper_action.cpp \
+	json_to_graphviz.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
@@ -54,7 +54,6 @@ TEST_CPP_SRC_FILES = \
 	actions/function_action_test.cpp \
 	actions/sequence_action_test.cpp \
 	actions/parallel_action_test.cpp \
-	actions/invert_action_test.cpp \
 	actions/if_else_action_test.cpp \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
@@ -62,8 +61,9 @@ TEST_CPP_SRC_FILES = \
 	actions/composite_action_test.cpp \
 	actions/wrapper_action_test.cpp \
 	actions/succ_fail_action_test.cpp \
+	json_to_graphviz_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk

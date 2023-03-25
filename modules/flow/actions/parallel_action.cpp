@@ -21,7 +21,7 @@ ParallelAction::~ParallelAction() {
 
 void ParallelAction::toJson(Json &js) const {
   Action::toJson(js);
-  Json &js_children = js["10.children"];
+  Json &js_children = js["children"];
   for (auto action : children_) {
     Json js_child;
     action->toJson(js_child);

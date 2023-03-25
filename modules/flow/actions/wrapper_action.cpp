@@ -31,8 +31,8 @@ WrapperAction::~WrapperAction() {
 
 void WrapperAction::toJson(Json &js) const {
     Action::toJson(js);
-    js["10.mode"] = ToString(mode_);
-    child_->toJson(js["11.child"]);
+    js["mode"] = ToString(mode_);
+    child_->toJson(js["child"]);
 }
 
 bool WrapperAction::onStart() {

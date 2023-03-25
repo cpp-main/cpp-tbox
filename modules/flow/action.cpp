@@ -26,12 +26,12 @@ Action::~Action() {
 }
 
 void Action::toJson(Json &js) const {
-  js["01.id"] = id_;
-  js["02.type"] = type_;
+  js["id"] = id_;
+  js["type"] = type_;
   if (!label_.empty())
-    js["03.label"] = label_;
-  js["04.state"] = ToString(state_);
-  js["05.result"] = ToString(result_);
+    js["label"] = label_;
+  js["state"] = ToString(state_);
+  js["result"] = ToString(result_);
 }
 
 bool Action::start() {
