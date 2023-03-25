@@ -1,6 +1,7 @@
 #include "signal_event_impl.h"
 #include "common_loop.h"
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {
@@ -11,6 +12,7 @@ SignalEventImpl::SignalEventImpl(CommonLoop *wp_loop) :
 
 SignalEventImpl::~SignalEventImpl()
 {
+    TBOX_ASSERT(cb_level_ == 0);
     disable();
 }
 
@@ -76,11 +78,18 @@ Loop* SignalEventImpl::getLoop() const
 
 void SignalEventImpl::onSignal(int signo)
 {
+    wp_loop_->beginEventProcess();
+
     if (mode_ == Mode::kOneshot)
         disable();
 
-    if (cb_)
+    if (cb_) {
+        ++cb_level_;
         cb_(signo);
+        --cb_level_;
+    }
+
+    wp_loop_->endEventProcess();
 }
 
 }

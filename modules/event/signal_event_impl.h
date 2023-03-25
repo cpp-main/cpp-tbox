@@ -47,6 +47,8 @@ class SignalEventImpl : public SignalEvent,
 
     std::set<int> sigset_;
     Mode mode_ = Mode::kPersist;
+
+    int cb_level_ = 0;
 };
 
 }
