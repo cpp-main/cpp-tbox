@@ -4,7 +4,7 @@
 #include <functional>
 #include <exception>
 #include <tbox/base/log.h>
-#include <tbox/util/backtrace.h>
+#include <tbox/base/backtrace.h>
 
 int main(int argc, char **argv);
 
@@ -55,7 +55,7 @@ void Terminate()
     }
 
 #if 1
-    const std::string &stack_str = util::DumpCallStack(64);
+    const std::string &stack_str = DumpBacktrace();
     LogFatal("main: <%p>\n-----call stack-----\n%s", ::main, stack_str.c_str());
 #endif
 

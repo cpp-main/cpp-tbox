@@ -12,14 +12,12 @@ HEAD_FILES = \
 	serializer.h \
 	time_counter.h \
 	async_pipe.h \
-	backtrace.h \
 	timestamp.h \
 	json.h \
 	base64.h \
 	checksum.h \
 	crc.h \
 	json_deep_loader.h \
-	safe_execute.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -30,14 +28,12 @@ CPP_SRC_FILES = \
 	serializer.cpp \
 	time_counter.cpp \
 	async_pipe.cpp \
-	backtrace.cpp \
 	timestamp.cpp \
 	json.cpp \
 	base64.cpp \
 	checksum.cpp \
 	crc.cpp \
 	json_deep_loader.cpp \
-	safe_execute.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
 
@@ -54,8 +50,6 @@ TEST_CPP_SRC_FILES = \
 	base64_test.cpp \
 	checksum_test.cpp \
 	crc_test.cpp \
-	backtrace_test.cpp \
-	safe_execute_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

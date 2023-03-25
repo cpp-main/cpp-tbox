@@ -6,6 +6,7 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
+	version.h \
 	log.h \
 	log_imp.h \
 	log_output.h \
@@ -18,12 +19,15 @@ HEAD_FILES = \
 	json.hpp \
 	assert.h \
 	lifetime_tag.hpp \
-	version.h \
+	backtrace.h \
+	catch_throw.h \
 
 CPP_SRC_FILES = \
+	version.cpp \
 	log_imp.cpp \
 	log_output.cpp \
-	version.cpp \
+	backtrace.cpp \
+	catch_throw.cpp \
 
 pre_build:
 	touch version.cpp
@@ -37,6 +41,9 @@ TEST_CPP_SRC_FILES = \
 	cabinet_test.cpp \
 	json_test.cpp \
 	lifetime_tag_test.cpp \
+	backtrace_test.cpp \
+	catch_throw_test.cpp \
+
 
 TEST_LDFLAGS := $(LDFLAGS)
 

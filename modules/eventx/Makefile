@@ -28,7 +28,7 @@ TEST_CPP_SRC_FILES = \
 	loop_wdog_test.cpp \
 	work_thread_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk

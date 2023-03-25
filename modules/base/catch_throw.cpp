@@ -1,13 +1,14 @@
-#include "safe_execute.h"
+#include "catch_throw.h"
 
 #include <cxxabi.h>
 #include <signal.h>
 
-#include <tbox/base/log.h>
+#include "log.h"
 #include "backtrace.h"
 
 namespace tbox {
-namespace util {
+
+namespace {
 
 void CatchType()
 {
@@ -22,19 +23,22 @@ void CatchType()
         if (demangled != nullptr)
             readable_name = demangled;
 
-        LogWarn("  Catch: '%s'", readable_name);
+        LogWarn(" Catch: '%s'", readable_name);
 
         if (status == 0)
             free(demangled);
     }
 }
 
-bool SafeExecute(const std::function<void()> &func, int flags)
+}
+
+bool CatchThrow(const std::function<void()> &func,
+                bool print_backtrace, bool abort_process)
 {
     try {
         if (func)
             func();
-        return true;
+        return false;
 
     } catch (const std::exception &e) {
         CatchType();
@@ -56,31 +60,30 @@ bool SafeExecute(const std::function<void()> &func, int flags)
         LogWarn("can't print value");
     }
 
-    if (flags & SAFE_EXECUTE_PRINT_STACK) {
-        const std::string &stack_str = util::DumpCallStack(64);
+    if (print_backtrace) {
+        const std::string &stack_str = DumpBacktrace();
         LogWarn("----call stack-----\n%s", stack_str.c_str());
     }
 
-    if (flags & SAFE_EXECUTE_ABORT) {
+    if (abort_process) {
         LogFatal("Process abort!");
         signal(SIGABRT, SIG_DFL);
         std::abort();
     }
 
-    return false;
+    return true;
 }
 
-bool SafeExecuteQuietly(const std::function<void()> &func)
+bool CatchThrowQuietly(const std::function<void()> &func)
 {
     try {
         if (func)
             func();
-        return true;
+        return false;
 
     } catch (...) {
-        return false;
+        return true;
     }
 }
 
-}
 }

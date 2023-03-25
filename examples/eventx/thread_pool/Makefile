@@ -6,7 +6,6 @@ CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_eventx \
 	-ltbox_event \
-	-ltbox_util \
 	-ltbox_base \
 	-lpthread \
 

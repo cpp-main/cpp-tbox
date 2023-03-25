@@ -9,7 +9,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/scope_exit.hpp>
-#include <tbox/util/backtrace.h>
+#include <tbox/base/backtrace.h>
 
 #define TBOX_USE_SIGACTION
 
@@ -73,7 +73,7 @@ void OnErrorSignal(int signo)
     InvokeOldHandler(signo);
 #endif
 
-    const std::string &stack_str = util::DumpCallStack(64);
+    const std::string &stack_str = DumpBacktrace();
 
     LogFatal("Receive signal %d", signo);
     LogFatal("main: <%p>\n-----call stack-----\n%s",

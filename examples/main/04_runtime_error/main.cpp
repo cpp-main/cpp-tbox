@@ -1,3 +1,4 @@
+#include <thread>
 #include <tbox/main/main.h>
 #include <tbox/terminal/session.h>
 
@@ -69,6 +70,14 @@ class TestModule : public Module {
                 }
             );
             shell.mountNode(root_node, func_node, "throw_runtime_error_thread");
+        }
+        {
+            auto func_node = shell.createFuncNode(
+                [this] (const Session &, const Args &) {
+                    std::this_thread::sleep_for(std::chrono::seconds(3));
+                }
+            );
+            shell.mountNode(root_node, func_node, "block");
         }
 
         return true;

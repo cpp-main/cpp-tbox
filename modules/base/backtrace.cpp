@@ -10,9 +10,8 @@
 #include "backtrace.h"
 
 namespace tbox {
-namespace util {
 
-std::string DumpCallStack(const unsigned int max_frames)
+std::string DumpBacktrace(const unsigned int max_frames)
 {
     Dl_info info;
 
@@ -53,5 +52,4 @@ std::string DumpCallStack(const unsigned int max_frames)
     return oss.str();
 }
 
-}
 }
