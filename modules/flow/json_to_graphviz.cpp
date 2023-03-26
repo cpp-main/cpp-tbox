@@ -4,6 +4,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 #include <tbox/util/json.h>
+#include <tbox/util/string.h>
 
 namespace tbox {
 namespace flow {
@@ -13,7 +14,7 @@ namespace {
 int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
 {
     int id = 0;
-    std::string type, label, state, result;
+    std::string type, state, result;
 
     if (!util::json::GetField(js, "id", id) ||
         !util::json::GetField(js, "type", type) ||
@@ -46,7 +47,24 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
         oss << "shape=rect,";
 
     oss << R"(label=")";
-    oss << id << '.' << type;
+    {
+        oss << id << '.' << type;
+
+        std::string label;
+        if (util::json::GetField(js, "label", label))
+            oss << R"(\n[)" << label << "]";
+
+        for (auto &js_item : js.items()) {
+            auto &key = js_item.key();
+            if (key == "id" || key == "type" || key == "label" ||
+                key == "child" || key == "children" ||
+                key == "state" || key == "result")
+                continue;
+            std::string value_str = js_item.value().dump();
+            util::string::Replace(value_str, R"(")", R"(\")");
+            oss << R"(\n)" << key << " : " << value_str;
+        }
+    }
     oss << R"(")";
     oss << "];" << std::endl;
 

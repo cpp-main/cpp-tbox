@@ -19,10 +19,12 @@ TEST(JsonToGraphviz, ActionJson) {
     SetScopeExitAction([loop] { delete loop; });
 
     auto seq_action = new SequenceAction(*loop);
+    seq_action->set_label("This is test");
     auto if_else_action = new IfElseAction(*loop,
             new SuccAction(*loop),
             new FunctionAction(*loop, []{return true;}),
             new FunctionAction(*loop, []{return true;}));
+    if_else_action->set_label("Just If-Else");
     seq_action->append(if_else_action);
     auto repeat_action = new RepeatAction(*loop,
             new FunctionAction(*loop, []{return true;}), 5);
