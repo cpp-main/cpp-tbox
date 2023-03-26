@@ -27,24 +27,26 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
     bool has_children_array = util::json::HasArrayField(js, "children");
     bool has_children_object = util::json::HasObjectField(js, "children");
 
-    oss << "action_" << id << " [style=filled,";
+    oss << "action_" << id << R"( [style="filled",)";
     if (state == "finished") {
         if (result == "success")
-            oss << "fillcolor=green,";
+            oss << R"(fillcolor="green",)";
         else if (result == "fail")
-            oss << "fillcolor=red,";
+            oss << R"(fillcolor="red",)";
     } else if (state == "running") {
-        oss << "fillcolor=yellow,";
+        oss << R"(fillcolor="orange",)";
     } else if (state == "stoped") {
-        oss << "fillcolor=gray,";
+        oss << R"(fillcolor="gray",)";
     } else if (state == "pause") {
-        oss << "fillcolor=blue,";
+        oss << R"(fillcolor="lightblue",)";
     } else if (state == "idle") {
-        oss << "fillcolor=white,";
+        oss << R"(fillcolor="white",)";
+    } else {
+        LogWarn("unsupport state: %s", state.c_str());
     }
 
     if (has_child || has_children_object || has_children_array)
-        oss << "shape=rect,";
+        oss << R"(shape="rect",)";
 
     oss << R"(label=")";
     {
