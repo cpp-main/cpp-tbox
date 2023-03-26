@@ -9,104 +9,94 @@ namespace flow {
 
 using namespace std::placeholders;
 
-IfElseAction::IfElseAction(event::Loop &loop, Action *cond_action,
-                           Action *if_action, Action *else_action) :
+IfElseAction::IfElseAction(event::Loop &loop, Action *if_action,
+                           Action *succ_action, Action *fail_action) :
   Action(loop, "IfElse"),
-  cond_action_(cond_action),
   if_action_(if_action),
-  else_action_(else_action)
+  succ_action_(succ_action),
+  fail_action_(fail_action)
 {
-  TBOX_ASSERT(cond_action != nullptr);
+  TBOX_ASSERT(if_action != nullptr);
 
-  cond_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
-  if (if_action_ != nullptr)
-    if_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
-  if (else_action_ != nullptr)
-    else_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
+  if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
+  if (succ_action_ != nullptr)
+    succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
+  if (fail_action_ != nullptr)
+    fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
 }
 
 IfElseAction::~IfElseAction() {
-  CHECK_DELETE_RESET_OBJ(cond_action_);
   CHECK_DELETE_RESET_OBJ(if_action_);
-  CHECK_DELETE_RESET_OBJ(else_action_);
+  CHECK_DELETE_RESET_OBJ(succ_action_);
+  CHECK_DELETE_RESET_OBJ(fail_action_);
 }
 
 void IfElseAction::toJson(Json &js) const {
   Action::toJson(js);
   auto &js_children = js["children"];
-  cond_action_->toJson(js_children["cond"]);
-  if (if_action_ != nullptr)
-    if_action_->toJson(js_children["if"]);
-  if (else_action_ != nullptr)
-    else_action_->toJson(js_children["else"]);
-
-  js["is_cond_done"] = is_cond_done_;
-  if (is_cond_done_)
-    js["is_cond_succ"] = is_cond_succ_;
+  if_action_->toJson(js_children["0.if"]);
+  if (succ_action_ != nullptr)
+    succ_action_->toJson(js_children["1.succ"]);
+  if (fail_action_ != nullptr)
+    fail_action_->toJson(js_children["2.fail"]);
 }
 
 bool IfElseAction::onStart() {
-  return cond_action_->start();
+  return if_action_->start();
 }
 
 bool IfElseAction::onStop() {
-  if (is_cond_done_) {
-    if (is_cond_succ_)
-      return if_action_->stop();
+  if (if_action_->state() == Action::State::kFinished) {
+    if (if_action_->result() == Action::Result::kSuccess)
+      return succ_action_->stop();
     else
-      return else_action_->stop();
+      return fail_action_->stop();
   } else {
-    return cond_action_->stop();
+    return if_action_->stop();
   }
 }
 
 bool IfElseAction::onPause() {
-  if (is_cond_done_) {
-    if (is_cond_succ_)
-      return if_action_->pause();
+  if (if_action_->state() == Action::State::kFinished) {
+    if (if_action_->result() == Action::Result::kSuccess)
+      return succ_action_->pause();
     else
-      return else_action_->pause();
+      return fail_action_->pause();
   } else {
-    return cond_action_->pause();
+    return if_action_->pause();
   }
 }
 
 bool IfElseAction::onResume() {
-  if (is_cond_done_) {
-    if (is_cond_succ_)
-      return if_action_->resume();
+  if (if_action_->state() == Action::State::kFinished) {
+    if (if_action_->result() == Action::Result::kSuccess)
+      return succ_action_->resume();
     else
-      return else_action_->resume();
+      return fail_action_->resume();
   } else {
-    return cond_action_->resume();
+    return if_action_->resume();
   }
 }
 
 void IfElseAction::onReset() {
-  cond_action_->reset();
+  if_action_->reset();
 
-  if (if_action_ != nullptr)
-    if_action_->reset();
+  if (succ_action_ != nullptr)
+    succ_action_->reset();
 
-  if (else_action_ != nullptr)
-    else_action_->reset();
-
-  is_cond_done_ = false;
-  is_cond_succ_ = false;
+  if (fail_action_ != nullptr)
+    fail_action_->reset();
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ) {
-  is_cond_done_ = true;
-  is_cond_succ_ = is_succ;
-
   if (is_succ) {
-    if (if_action_ != nullptr) {
-      if_action_->start();
+    if (succ_action_ != nullptr) {
+      succ_action_->start();
       return;
     }
   } else {
-    if (else_action_ != nullptr) {
-      else_action_->start();
+    if (fail_action_ != nullptr) {
+      fail_action_->start();
       return;
     }
   }

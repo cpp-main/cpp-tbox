@@ -27,6 +27,7 @@ void SequenceAction::toJson(Json &js) const {
     action->toJson(js_child);
     js_children.push_back(std::move(js_child));
   }
+  js["index"] = index_;
 }
 
 int SequenceAction::append(Action *action) {

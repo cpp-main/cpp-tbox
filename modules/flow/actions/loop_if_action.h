@@ -9,7 +9,7 @@ namespace flow {
 class LoopIfAction : public Action {
   public:
     explicit LoopIfAction(event::Loop &loop,
-                          Action *cond_action,
+                          Action *if_action,
                           Action *exec_action);
     virtual ~LoopIfAction();
 
@@ -26,9 +26,8 @@ class LoopIfAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *cond_action_;
+    Action *if_action_;
     Action *exec_action_;
-    bool is_cond_done_ = false;
     bool finish_result_ = true;
 };
 

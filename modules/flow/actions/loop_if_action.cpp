@@ -6,19 +6,18 @@
 namespace tbox {
 namespace flow {
 
-LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_action) :
+LoopIfAction::LoopIfAction(event::Loop &loop, Action *if_action, Action *exec_action) :
   Action(loop, "LoopIf"),
-  cond_action_(cond_action),
+  if_action_(if_action),
   exec_action_(exec_action)
 {
-  TBOX_ASSERT(cond_action != nullptr);
+  TBOX_ASSERT(if_action != nullptr);
   TBOX_ASSERT(exec_action != nullptr);
 
-  cond_action_->setFinishCallback(
+  if_action_->setFinishCallback(
     [this] (bool is_succ) {
       if (is_succ) {
         exec_action_->start();
-        is_cond_done_ = true;
       } else {
         finish(finish_result_);
       }
@@ -28,11 +27,10 @@ LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_
   exec_action_->setFinishCallback(
     [this] (bool) {
       if (state() == State::kRunning) {
-        cond_action_->reset();
+        if_action_->reset();
         exec_action_->reset();
-        is_cond_done_ = false;
 
-        if (!cond_action_->start())
+        if (!if_action_->start())
           finish(finish_result_);
       }
     }
@@ -40,40 +38,38 @@ LoopIfAction::LoopIfAction(event::Loop &loop, Action *cond_action, Action *exec_
 }
 
 LoopIfAction::~LoopIfAction() {
-  delete cond_action_;
+  delete if_action_;
   delete exec_action_;
 }
 
 void LoopIfAction::toJson(Json &js) const {
   Action::toJson(js);
-  cond_action_->toJson(js["cond"]);
-  exec_action_->toJson(js["exec"]);
-  js["is_cond_done"] = is_cond_done_;
+  if_action_->toJson(js["0.if"]);
+  exec_action_->toJson(js["1.exec"]);
 }
 
 bool LoopIfAction::onStart() {
-  return cond_action_->start();
+  return if_action_->start();
 }
 
 bool LoopIfAction::onStop() {
-  auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
+  auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
   return curr_action->stop();
 }
 
 bool LoopIfAction::onPause() {
-  auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
+  auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
   return curr_action->pause();
 }
 
 bool LoopIfAction::onResume() {
-  auto curr_action = is_cond_done_ ? exec_action_ : cond_action_;
+  auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
   return curr_action->resume();
 }
 
 void LoopIfAction::onReset() {
-  cond_action_->reset();
+  if_action_->reset();
   exec_action_->reset();
-  is_cond_done_ = false;
 }
 
 }

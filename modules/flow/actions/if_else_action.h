@@ -7,17 +7,17 @@ namespace tbox {
 namespace flow {
 
 /**
- * bool IfElseAction(cond_action, if_action, else_acton) {
- *   if (cond_action())
- *     return if_action();
+ * bool IfElseAction(if_action, succ_action, fail_acton) {
+ *   if (if_action())
+ *     return succ_action();
  *   else
- *     return else_acton();
+ *     return fail_acton();
  * }
  */
 class IfElseAction : public Action {
   public:
-    explicit IfElseAction(event::Loop &loop, Action *cond_action,
-                          Action *if_action, Action *else_action);
+    explicit IfElseAction(event::Loop &loop, Action *if_action,
+                          Action *succ_action, Action *fail_action);
     virtual ~IfElseAction();
 
     virtual void toJson(Json &js) const;
@@ -33,12 +33,9 @@ class IfElseAction : public Action {
     void onCondActionFinished(bool is_succ);
 
   private:
-    Action *cond_action_;
     Action *if_action_;
-    Action *else_action_;
-
-    bool is_cond_done_ = false;
-    bool is_cond_succ_ = false;
+    Action *succ_action_;
+    Action *fail_action_;
 };
 
 }
