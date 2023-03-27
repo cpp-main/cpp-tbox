@@ -7,6 +7,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace flow {
@@ -18,9 +19,21 @@ class StateMachine::Impl {
     ~Impl();
 
   public:
-    bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
-    bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
-    bool addEvent(StateID state_id, EventID event_id, const EventFunc &action);
+    bool newState(StateID state_id,
+                  const ActionFunc &enter_action,
+                  const ActionFunc &exit_action,
+                  const std::string &lable);
+
+    bool addRoute(StateID from_state_id,
+                  EventID event_id,
+                  StateID to_state_id,
+                  const GuardFunc &guard,
+                  const ActionFunc &action,
+                  const std::string &label);
+
+    bool addEvent(StateID state_id,
+                  EventID event_id,
+                  const EventFunc &action);
 
     void setInitState(StateID init_state_id) { init_state_id_ = init_state_id; }
 
@@ -34,18 +47,22 @@ class StateMachine::Impl {
     StateID currentState() const;
     bool isTerminated() const;
 
+    void toJson(Json &js) const;
+
   private:
     struct Route {
         EventID event_id;
         StateID next_state_id;
         GuardFunc  guard;
         ActionFunc action;
+        std::string label;
     };
 
     struct State {
         StateID id;
         ActionFunc enter_action;
         ActionFunc exit_action;
+        std::string label;
         StateMachine::Impl *sub_sm; //! 子状态机
         vector<Route> routes;   //! 转换路由
         map<EventID, EventFunc> events;  //! 内部事件
@@ -74,15 +91,15 @@ StateMachine::~StateMachine()
     delete impl_;
 }
 
-bool StateMachine::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
+bool StateMachine::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action, const std::string &label)
 {
-    return impl_->newState(state_id, enter_action, exit_action);
+    return impl_->newState(state_id, enter_action, exit_action, label);
 }
 
 bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
-                            const GuardFunc &guard, const ActionFunc &action)
+                            const GuardFunc &guard, const ActionFunc &action, const std::string &label)
 {
-    return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action);
+    return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action, label);
 }
 
 bool StateMachine::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
@@ -136,6 +153,11 @@ bool StateMachine::isTerminated() const
     return impl_->isTerminated();
 }
 
+void StateMachine::toJson(Json &js) const
+{
+    return impl_->toJson(js);
+}
+
 ///////////////////////
 
 StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, nullptr, { } };
@@ -150,7 +172,10 @@ StateMachine::Impl::~Impl()
     states_.clear();
 }
 
-bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action)
+bool StateMachine::Impl::newState(StateID state_id,
+                                  const ActionFunc &enter_action,
+                                  const ActionFunc &exit_action,
+                                  const std::string &label)
 {
     //! 已存在的状态不能再创建了
     if (states_.find(state_id) != states_.end()) {
@@ -158,14 +183,18 @@ bool StateMachine::Impl::newState(StateID state_id, const ActionFunc &enter_acti
         return false;
     }
 
-    auto new_state = new State { state_id, enter_action, exit_action, nullptr, { } };
+    auto new_state = new State { state_id, enter_action, exit_action, label, nullptr, { } };
     states_[state_id] = new_state;
 
     return true;
 }
 
-bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
-                                  const GuardFunc &guard, const ActionFunc &action)
+bool StateMachine::Impl::addRoute(StateID from_state_id,
+                                  EventID event_id,
+                                  StateID to_state_id,
+                                  const GuardFunc &guard,
+                                  const ActionFunc &action,
+                                  const std::string &label)
 {
     //! 要求 from_state_id 必须是已存在的状态
     auto from_state = findState(from_state_id);
@@ -180,11 +209,13 @@ bool StateMachine::Impl::addRoute(StateID from_state_id, EventID event_id, State
         return false;
     }
 
-    from_state->routes.emplace_back(Route{ event_id, to_state_id, guard, action });
+    from_state->routes.emplace_back(Route{ event_id, to_state_id, guard, action, label });
     return true;
 }
 
-bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
+bool StateMachine::Impl::addEvent(StateID state_id,
+                                  EventID event_id,
+                                  const EventFunc &action)
 {
     if (action == nullptr) {
         LogWarn("action is nullptr", state_id);
@@ -389,6 +420,36 @@ StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
         return states_.at(state_id);
     } catch (const out_of_range &e) {
         return nullptr;
+    }
+}
+
+void StateMachine::Impl::toJson(Json &js) const
+{
+    js["init_state"] = init_state_id_;
+    js["term_state"] = init_state_id_;
+    if (curr_state_ != nullptr)
+        js["curr_state"] = curr_state_->id;
+
+    auto &js_state_array = js["states"];
+    for (auto &item : states_) {
+        auto state = item.second;
+        Json js_state;
+        js_state["id"] = state->id;
+        js_state["label"] = state->label;
+
+        if (state->sub_sm != nullptr)
+            state->sub_sm->toJson(js_state["sub_sm"]);
+
+        auto &js_route_array = js_state["routes"];
+        for (auto &route : state->routes) {
+            Json js_route;
+            js_route["event"] = route.event_id;
+            js_route["next_state_id"] = route.next_state_id;
+            js_route["label"] = route.label;
+            js_route_array.push_back(std::move(js_route));
+        }
+
+        js_state_array.push_back(std::move(js_state));
     }
 }
 

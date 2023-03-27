@@ -2,6 +2,7 @@
 #define TBOX_FLOW_STATE_MACHINE_H_20220320
 
 #include <functional>
+#include <tbox/base/json_fwd.h>
 #include "event.h"
 
 namespace tbox {
@@ -39,11 +40,17 @@ class StateMachine {
      *
      * \return  bool    成功与否，重复创建会失败
      */
-    bool newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action);
+    bool newState(StateID state_id,
+                  const ActionFunc &enter_action,
+                  const ActionFunc &exit_action,
+                  const std::string &label = "");
 
     template <typename S>
-    bool newState(S state_id, const ActionFunc &enter_action, const ActionFunc &exit_action) {
-        return newState(static_cast<StateID>(state_id), enter_action, exit_action);
+    bool newState(S state_id,
+                  const ActionFunc &enter_action,
+                  const ActionFunc &exit_action,
+                  const std::string &label = "") {
+        return newState(static_cast<StateID>(state_id), enter_action, exit_action, label);
     }
 
     /**
@@ -58,14 +65,24 @@ class StateMachine {
      * \return  bool    成功与否
      *                  from_state_id，to_state_id所指状态不存在时会失败
      */
-    bool addRoute(StateID from_state_id, EventID event_id, StateID to_state_id, const GuardFunc &guard, const ActionFunc &action);
+    bool addRoute(StateID from_state_id,
+                  EventID event_id,
+                  StateID to_state_id,
+                  const GuardFunc &guard,
+                  const ActionFunc &action,
+                  const std::string &label = "");
 
     template <typename S, typename E>
-    bool addRoute(S from_state_id, E event_id, S to_state_id, const GuardFunc &guard, const ActionFunc &action) {
+    bool addRoute(S from_state_id,
+                  E event_id,
+                  S to_state_id,
+                  const GuardFunc &guard,
+                  const ActionFunc &action,
+                  const std::string &label = "") {
         return addRoute(static_cast<StateID>(from_state_id),
                         static_cast<EventID>(event_id),
                         static_cast<StateID>(to_state_id),
-                        guard, action);
+                        guard, action, label);
     }
 
     /**
@@ -77,11 +94,17 @@ class StateMachine {
      *
      * \return  bool    成功与否
      */
-    bool addEvent(StateID state_id, EventID event_id, const EventFunc &action);
+    bool addEvent(StateID state_id,
+                  EventID event_id,
+                  const EventFunc &action);
 
     template <typename S, typename E>
-    bool addEvent(S state_id, E event_id, const EventFunc &action) {
-        return addEvent(static_cast<StateID>(state_id), static_cast<EventID>(event_id), action);
+    bool addEvent(S state_id,
+                  E event_id,
+                  const EventFunc &action) {
+        return addEvent(static_cast<StateID>(state_id),
+                        static_cast<EventID>(event_id),
+                        action);
     }
 
     /**
@@ -135,12 +158,12 @@ class StateMachine {
     StateID currentState() const;
 
     template <typename S>
-    S currentState() const {
-        return static_cast<S>(currentState());
-    }
+    S currentState() const { return static_cast<S>(currentState()); }
 
     //! 是否已终止
     bool isTerminated() const;
+
+    void toJson(Json &js) const;
 
   private:
     class Impl;
