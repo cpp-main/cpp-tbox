@@ -122,9 +122,15 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
 
         const char *curr_state_color = "orange";
 
+        bool has_sub_sm = util::json::HasObjectField(js_state, "sub_sm");
+
         oss << "state_" << curr_sm_id << '_' << state_id << R"( [)";
         if (state_id == curr_state)
-            oss << R"(style="filled",fillcolor=")" << curr_state_color << R"(",)";
+            oss << R"(fillcolor=")" << curr_state_color << R"(",)";
+
+        if (has_sub_sm)
+            oss << R"(shape="box",)";
+
         if (state_id == init_state) {
             oss << R"(shape="circle",label="")";
         } else {
@@ -157,6 +163,18 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
                 oss << R"("];)" << std::endl;
             }
         }
+
+        if (has_sub_sm) {
+            auto &js_sub_sm = js_state["sub_sm"];
+            oss << "subgraph cluster_" << state_id << " {" << std::endl;
+            oss << R"(style="rounded";)";
+            oss << R"(label=")" << state_id;
+            if (!label.empty())
+                oss << '.' << label;
+            oss << R"(";)" << std::endl;
+            StateMachineJsonToGraphviz(js_sub_sm, oss, sm_id_alloc);
+            oss << '}' << std::endl;
+        }
     }
 
     oss << "state_" << curr_sm_id << '_' << 0;
@@ -180,6 +198,7 @@ std::string StateMachineJsonToGraphviz(const Json &js)
     int sm_id_alloc = 0;
 
     oss << "digraph {" << std::endl;
+    oss << R"(node [style="filled,rounded",fillcolor="white"];)" << std::endl;
     StateMachineJsonToGraphviz(js, oss, sm_id_alloc);
     oss << '}' << std::endl;
     return oss.str();
