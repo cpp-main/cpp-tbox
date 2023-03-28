@@ -443,7 +443,7 @@ void StateMachine::Impl::toJson(Json &js) const
         auto &js_route_array = js_state["routes"];
         for (auto &route : state->routes) {
             Json js_route;
-            js_route["event"] = route.event_id;
+            js_route["event_id"] = route.event_id;
             js_route["next_state_id"] = route.next_state_id;
             js_route["label"] = route.label;
             js_route_array.push_back(std::move(js_route));

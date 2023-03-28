@@ -11,6 +11,8 @@
 #include "actions/repeat_action.h"
 #include "actions/succ_fail_action.h"
 
+#include "state_machine.h"
+
 namespace tbox {
 namespace flow {
 
@@ -40,6 +42,48 @@ TEST(JsonToGraphviz, ActionJson) {
 
     delete seq_action;
 }
+
+TEST(JsonToGraphviz, StateMachineJson)
+{
+    using SM = StateMachine;
+
+    enum class StateId { kTerm, kInit, k1, k2 };
+    enum class EventId { kTerm, k1, k2, k3 };
+
+    SM sm, sub_sm;
+
+    sm.newState(StateId::kInit, nullptr, nullptr, "Init");
+    sm.newState(StateId::k1,    nullptr, nullptr, "State1");
+    sm.newState(StateId::k2,    nullptr, nullptr, "State2");
+
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, nullptr, "Event1");
+    sm.addRoute(StateId::kInit, EventId::k2, StateId::k2,    nullptr, nullptr, "Event2");
+    sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, nullptr, "Event1");
+    sm.addRoute(StateId::k1,    EventId::k2, StateId::k2,    nullptr, nullptr, "Event2");
+    sm.addRoute(StateId::k2,    EventId::k1, StateId::k1,    nullptr, nullptr, "Event1");
+    sm.addRoute(StateId::k2,    EventId::k2, StateId::k1,    nullptr, nullptr, "Event2");
+    sm.addEvent(StateId::k2,    EventId::k3, [](Event) { return -1; });
+
+    sub_sm.newState(StateId::kInit, nullptr, nullptr, "Init");
+    sub_sm.newState(StateId::k1,    nullptr, nullptr, "SubState1");
+    sub_sm.newState(StateId::k2,    nullptr, nullptr, "SubState2");
+
+    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, nullptr, "Event1");
+    sub_sm.addRoute(StateId::kInit, EventId::k2, StateId::k2,    nullptr, nullptr, "Event2");
+    sub_sm.addRoute(StateId::k1,    EventId::k2, StateId::k2,    nullptr, nullptr, "Event2");
+    sub_sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, nullptr, "Event1");
+    sub_sm.addRoute(StateId::k2,    EventId::k1, StateId::k1,    nullptr, nullptr, "Event1");
+    sub_sm.addRoute(StateId::k2,    EventId::k2, StateId::kTerm, nullptr, nullptr, "Event2");
+
+    sm.setSubStateMachine(StateId::k1, &sub_sm);
+    sm.start();
+    sm.run(EventId::k1);
+
+    Json js;
+    sm.toJson(js);
+    std::cout << StateMachineJsonToGraphviz(js);
+}
+
 
 }
 }

@@ -96,6 +96,68 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
     return id;
 }
 
+void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm_id_alloc)
+{
+    int term_state = 0;
+    int init_state = 0;
+    int curr_state = -1;
+    int curr_sm_id = ++sm_id_alloc;
+
+    if (!util::json::GetField(js, "init_state", init_state) ||
+        !util::json::GetField(js, "term_state", term_state))
+        return;
+
+    util::json::GetField(js, "curr_state", curr_state);
+
+    if (!util::json::HasArrayField(js, "states"))
+        return;
+
+    const auto &js_state_array = js["states"];
+    for (auto &js_state : js_state_array) {
+        int state_id = 0;
+        std::string label;
+        if (!util::json::GetField(js_state, "id", state_id) ||
+            !util::json::GetField(js_state, "label", label))
+            continue;
+
+        oss << "state_" << curr_sm_id << '_' << state_id << R"( [)";
+        if (state_id == curr_state)
+            oss << R"(style="filled",fillcolor="orange",)";
+        if (state_id == init_state) {
+            oss << R"(shape="circle",label="")";
+        } else {
+            oss << R"(label=")" << state_id;
+            if (!label.empty())
+                oss << '.' << label;
+            oss << R"(")";
+        }
+        oss << R"(];)" << std::endl;
+
+        if (util::json::HasArrayField(js_state, "routes")) {
+            auto &js_route_array = js_state["routes"];
+            for (auto &js_route : js_route_array) {
+                int event_id = 0;
+                int next_state_id = 0;
+                std::string label;
+                if (!util::json::GetField(js_route, "event_id", event_id) ||
+                    !util::json::GetField(js_route, "next_state_id", next_state_id) ||
+                    !util::json::GetField(js_route, "label", label))
+                    continue;
+                oss << "state_" << curr_sm_id << '_' << state_id << "->";
+                oss << "state_" << curr_sm_id << '_' << next_state_id;
+                oss << R"( [label=")";
+                oss << next_state_id;
+                if (!label.empty())
+                    oss << '.' << label;
+                oss << R"("];)" << std::endl;
+            }
+        }
+    }
+
+    oss << "state_" << curr_sm_id << '_' << 0;
+    oss << R"( [shape="doublecircle",style="filled",fillcolor="black",label=""];)" << std::endl;
+}
+
 }
 
 std::string ActionJsonToGraphviz(const Json &js)
@@ -109,7 +171,13 @@ std::string ActionJsonToGraphviz(const Json &js)
 
 std::string StateMachineJsonToGraphviz(const Json &js)
 {
-    LogUndo();
+    std::ostringstream oss;
+    int sm_id_alloc = 0;
+
+    oss << "digraph {" << std::endl;
+    StateMachineJsonToGraphviz(js, oss, sm_id_alloc);
+    oss << '}' << std::endl;
+    return oss.str();
     return "";
 }
 
