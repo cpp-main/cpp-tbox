@@ -120,9 +120,11 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
             !util::json::GetField(js_state, "label", label))
             continue;
 
+        const char *curr_state_color = "orange";
+
         oss << "state_" << curr_sm_id << '_' << state_id << R"( [)";
         if (state_id == curr_state)
-            oss << R"(style="filled",fillcolor="orange",)";
+            oss << R"(style="filled",fillcolor=")" << curr_state_color << R"(",)";
         if (state_id == init_state) {
             oss << R"(shape="circle",label="")";
         } else {
@@ -145,7 +147,10 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
                     continue;
                 oss << "state_" << curr_sm_id << '_' << state_id << "->";
                 oss << "state_" << curr_sm_id << '_' << next_state_id;
-                oss << R"( [label=")";
+                oss << R"( [)";
+                if (state_id == curr_state)
+                    oss << R"(color=")" << curr_state_color << R"(",)";
+                oss << R"(label=")";
                 oss << next_state_id;
                 if (!label.empty())
                     oss << '.' << label;
