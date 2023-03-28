@@ -160,7 +160,7 @@ void StateMachine::toJson(Json &js) const
 
 ///////////////////////
 
-StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, nullptr, { } };
+StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, "Term", nullptr, { } };
 
 StateMachine::Impl::~Impl()
 {
@@ -426,7 +426,7 @@ StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
 void StateMachine::Impl::toJson(Json &js) const
 {
     js["init_state"] = init_state_id_;
-    js["term_state"] = init_state_id_;
+    js["term_state"] = 0;
     if (curr_state_ != nullptr)
         js["curr_state"] = curr_state_->id;
 
@@ -448,6 +448,10 @@ void StateMachine::Impl::toJson(Json &js) const
             js_route["label"] = route.label;
             js_route_array.push_back(std::move(js_route));
         }
+
+        auto &js_event_array = js_state["events"];
+        for (auto &item : state->events)
+            js_event_array.push_back(item.first);
 
         js_state_array.push_back(std::move(js_state));
     }
