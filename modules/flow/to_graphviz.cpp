@@ -155,13 +155,16 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
                     !util::json::GetField(js_route, "next_state_id", next_state_id) ||
                     !util::json::GetField(js_route, "label", label))
                     continue;
-                oss << "state_" << curr_sm_id << '_' << state_id << "->";
-                oss << "state_" << curr_sm_id << '_' << next_state_id;
-                oss << R"( [)";
-                if (state_id == curr_state)
-                    oss << R"(color=")" << curr_state_color << R"(",)";
-                oss << R"(label=")";
-                oss << next_state_id;
+                oss << "state_" << curr_sm_id << '_' << state_id << "->"
+                    << "state_" << curr_sm_id << '_' << next_state_id
+                    << R"( [)";
+                if (state_id == curr_state) {
+                    oss << R"(color=")" << curr_state_color << R"(",)"
+                        << R"(fontcolor=")" << curr_state_color << R"(",)";
+                }
+                oss << R"(label=")"
+                    << next_state_id;
+
                 if (!label.empty())
                     oss << '.' << label;
                 oss << R"("];)" << std::endl;
@@ -170,11 +173,13 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
 
         if (has_sub_sm) {
             auto &js_sub_sm = js_state["sub_sm"];
-            oss << "subgraph cluster_" << state_id << " {" << std::endl;
-            oss << R"(style="rounded";)";
-            oss << R"(label=")" << state_id;
+            oss << "subgraph cluster_" << state_id << " {" << std::endl
+                << R"(style="rounded";)"
+                << R"(label=")" << state_id;
+
             if (!label.empty())
                 oss << '.' << label;
+
             oss << R"(";)" << std::endl;
             StateMachineJsonToGraphviz(js_sub_sm, oss, sm_id_alloc);
             oss << '}' << std::endl;

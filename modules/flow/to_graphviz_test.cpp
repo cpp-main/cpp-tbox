@@ -16,7 +16,7 @@
 namespace tbox {
 namespace flow {
 
-TEST(JsonToGraphviz, ActionJson) {
+TEST(ToGraphviz, ActionJson) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -41,7 +41,7 @@ TEST(JsonToGraphviz, ActionJson) {
     delete seq_action;
 }
 
-TEST(JsonToGraphviz, StateMachineJson)
+TEST(ToGraphviz, StateMachineJson)
 {
     using SM = StateMachine;
 
@@ -79,7 +79,6 @@ TEST(JsonToGraphviz, StateMachineJson)
 
     std::cout << ToGraphviz(sm);
 }
-
 
 }
 }
