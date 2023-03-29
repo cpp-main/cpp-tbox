@@ -27,11 +27,7 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
         return 0;
     }
 
-    bool has_child = util::json::HasObjectField(js, "child");
-    bool has_children_array = util::json::HasArrayField(js, "children");
-    bool has_children_object = util::json::HasObjectField(js, "children");
-
-    oss << "action_" << id << R"( [style="filled",)";
+    oss << "action_" << id << R"( [)";
     if (state == "finished") {
         if (result == "success")
             oss << R"(fillcolor="green",)";
@@ -49,9 +45,6 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
         LogWarn("unsupport state: %s", state.c_str());
     }
 
-    if (has_child || has_children_object || has_children_array)
-        oss << R"(shape="rect",)";
-
     oss << R"(label=")";
     {
         oss << id << '.' << type;
@@ -68,26 +61,27 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
                 continue;
             std::string value_str = js_item.value().dump();
             util::string::Replace(value_str, R"(")", R"(\")");
-            oss << R"(\n)" << key << " : " << value_str;
+            oss << R"(\n)" << key << " = " << value_str;
         }
     }
     oss << R"(")";
     oss << "];" << std::endl;
 
-    if (has_child) {
+    if (util::json::HasObjectField(js, "child")) {
         auto &js_child = js.at("child");
         int child_id = ActionJsonToGraphviz(js_child, oss);
         if (child_id > 0)
             oss << "action_" << id << "->action_" << child_id << ";" << std::endl;
 
-    } else if (has_children_object) {
+    } else if (util::json::HasObjectField(js, "children")) {
         auto &js_children_object = js.at("children");
         for (auto &js_child_item : js_children_object.items()) {
             int child_id = ActionJsonToGraphviz(js_child_item.value(), oss);
             if (child_id > 0)
                 oss << "action_" << id << "->action_" << child_id << R"( [label=")" << js_child_item.key() << R"("];)" << std::endl;
         }
-    } else if (has_children_array) {
+
+    } else if (util::json::HasArrayField(js, "children")) {
         auto &js_children_array = js.at("children");
         for (size_t i = 0; i < js_children_array.size(); ++i) {
             auto &js_child = js_children_array.at(i);
@@ -133,7 +127,7 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
             oss << R"(fillcolor=")" << curr_state_color << R"(",)";
 
         if (has_sub_sm)
-            oss << R"(shape="box",)";
+            oss << R"(shape="box3d",)";
 
         if (state_id == init_state) {
             oss << R"(shape="circle",label="")";
@@ -186,8 +180,8 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
         }
     }
 
-    oss << "state_" << curr_sm_id << '_' << 0;
-    oss << R"( [shape="doublecircle",style="filled",fillcolor="black",label=""];)" << std::endl;
+    oss << "state_" << curr_sm_id << '_' << 0
+        << R"( [shape="doublecircle",style="filled",fillcolor="black",label=""];)" << std::endl;
 }
 
 }
@@ -195,7 +189,8 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
 std::string ActionJsonToGraphviz(const Json &js)
 {
     std::ostringstream oss;
-    oss << "digraph {" << std::endl;
+    oss << "digraph {" << std::endl
+        << R"(node [shape="rect",style="filled"];)" << std::endl;
     ActionJsonToGraphviz(js, oss);
     oss << '}' << std::endl;
     return oss.str();
@@ -206,8 +201,8 @@ std::string StateMachineJsonToGraphviz(const Json &js)
     std::ostringstream oss;
     int sm_id_alloc = 0;
 
-    oss << "digraph {" << std::endl;
-    oss << R"(node [style="filled,rounded",fillcolor="white"];)" << std::endl;
+    oss << "digraph {" << std::endl
+        << R"(node [shape="rect",style="filled,rounded"];)" << std::endl;
     StateMachineJsonToGraphviz(js, oss, sm_id_alloc);
     oss << '}' << std::endl;
     return oss.str();

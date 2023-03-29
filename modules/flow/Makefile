@@ -1,7 +1,7 @@
 LIB_NAME = flow
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
-LIB_VERSION_Z = 2
+LIB_VERSION_Z = 3
 
 HEAD_FILES = \
 	state_machine.h \
