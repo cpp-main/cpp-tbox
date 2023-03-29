@@ -23,7 +23,7 @@ HEAD_FILES = \
 	actions/composite_action.h \
 	actions/wrapper_action.h \
 	actions/succ_fail_action.h \
-	json_to_graphviz.h \
+	to_graphviz.h \
 
 CPP_SRC_FILES = \
 	state_machine.cpp \
@@ -41,7 +41,7 @@ CPP_SRC_FILES = \
 	actions/repeat_action.cpp \
 	actions/composite_action.cpp \
 	actions/wrapper_action.cpp \
-	json_to_graphviz.cpp \
+	to_graphviz.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
@@ -61,7 +61,7 @@ TEST_CPP_SRC_FILES = \
 	actions/composite_action_test.cpp \
 	actions/wrapper_action_test.cpp \
 	actions/succ_fail_action_test.cpp \
-	json_to_graphviz_test.cpp \
+	to_graphviz_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base
 ENABLE_SHARED_LIB = no

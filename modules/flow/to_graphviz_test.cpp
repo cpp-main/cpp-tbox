@@ -4,7 +4,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
 
-#include "json_to_graphviz.h"
+#include "to_graphviz.h"
 #include "actions/function_action.h"
 #include "actions/sequence_action.h"
 #include "actions/if_else_action.h"
@@ -33,9 +33,7 @@ TEST(JsonToGraphviz, ActionJson) {
     seq_action->append(repeat_action);
     seq_action->start();
 
-    Json js;
-    seq_action->toJson(js);
-    std::cout << ActionJsonToGraphviz(js);
+    std::cout << ToGraphviz(seq_action);
 
     loop->exitLoop(std::chrono::milliseconds(10));
     loop->runLoop();
@@ -79,9 +77,7 @@ TEST(JsonToGraphviz, StateMachineJson)
     sm.start();
     sm.run(EventId::k1);
 
-    Json js;
-    sm.toJson(js);
-    std::cout << StateMachineJsonToGraphviz(js);
+    std::cout << ToGraphviz(sm);
 }
 
 

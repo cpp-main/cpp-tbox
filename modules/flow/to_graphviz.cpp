@@ -1,10 +1,14 @@
-#include "json_to_graphviz.h"
+#include "to_graphviz.h"
 
 #include <sstream>
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
 #include <tbox/util/json.h>
 #include <tbox/util/string.h>
+
+#include "action.h"
+#include "state_machine.h"
 
 namespace tbox {
 namespace flow {
@@ -203,6 +207,38 @@ std::string StateMachineJsonToGraphviz(const Json &js)
     oss << '}' << std::endl;
     return oss.str();
     return "";
+}
+
+std::string ToGraphviz(const Action &action)
+{
+    Json js;
+    action.toJson(js);
+    return ActionJsonToGraphviz(js);
+}
+
+std::string ToGraphviz(const Action *action)
+{
+    TBOX_ASSERT(action != nullptr);
+
+    Json js;
+    action->toJson(js);
+    return ActionJsonToGraphviz(js);
+}
+
+std::string ToGraphviz(const StateMachine &sm)
+{
+    Json js;
+    sm.toJson(js);
+    return StateMachineJsonToGraphviz(js);
+}
+
+std::string ToGraphviz(const StateMachine *sm)
+{
+    TBOX_ASSERT(sm != nullptr);
+
+    Json js;
+    sm->toJson(js);
+    return StateMachineJsonToGraphviz(js);
 }
 
 }
