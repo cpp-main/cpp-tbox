@@ -21,10 +21,12 @@ const char* Basename(const char *full_path)
 }
 }
 
-TimeCounter::TimeCounter(const char *file_name, const char *func_name, int line) :
+TimeCounter::TimeCounter(const char *file_name, const char *func_name, int line,
+                         std::chrono::nanoseconds threshold) :
     file_name_(file_name),
     func_name_(func_name),
-    line_(line)
+    line_(line),
+    threshold_(threshold)
 {
     start_time_point_ = steady_clock::now();
 }
@@ -38,13 +40,18 @@ void TimeCounter::stop()
 {
     if (stoped_)
         return;
+    stoped_ = true;
 
     auto cost = steady_clock::now() - start_time_point_;
+    if (cost < threshold_)
+        return;
+
+#if 1
     cout << "Info: " << func_name_ << "() costs " << cost.count()
          <<  " ns -- " << Basename(file_name_)
          << ":" << line_ << endl;
+#endif
 
-    stoped_ = true;
 }
 
 }
