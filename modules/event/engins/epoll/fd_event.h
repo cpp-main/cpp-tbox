@@ -32,6 +32,7 @@ class EpollFdEvent : public FdEvent {
   protected:
     void reloadEpoll();
     void onEvent(short events);
+    void unrefFdSharedData();
 
   private:
     EpollLoop *wp_loop_;

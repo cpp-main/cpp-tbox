@@ -5,8 +5,10 @@
 #include "loop.h"
 #include "timer_event.h"
 
+namespace tbox {
+namespace event {
+
 using namespace std;
-using namespace tbox::event;
 
 const int kAcceptableError = 10;
 
@@ -115,4 +117,7 @@ TEST(TimerEvent, Precision)
         delete timer_event;
         delete sp_loop;
     }
+}
+
+}
 }

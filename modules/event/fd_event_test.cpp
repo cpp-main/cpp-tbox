@@ -8,8 +8,10 @@
 #include "loop.h"
 #include "fd_event.h"
 
+namespace tbox {
+namespace event {
+
 using namespace std;
-using namespace tbox::event;
 
 TEST(FdEvent, DisableSelfInReadCallback)
 {
@@ -292,3 +294,28 @@ TEST(FdEvent, Benchmark)
     }
 }
 
+
+/// 检查重复initialize()时会不会出现内存泄漏问题
+TEST(FdEvent, Reinitialize)
+{
+    auto engins = Loop::Engines();
+    for (auto e : engins) {
+        cout << "engin: " << e << endl;
+
+        auto loop = Loop::New(e);
+        auto fd_event = loop->newFdEvent();
+
+        fd_event->initialize(0, FdEvent::kReadEvent, Event::Mode::kPersist);
+        fd_event->enable();
+        fd_event->disable();
+        fd_event->initialize(1, FdEvent::kReadEvent, Event::Mode::kPersist);
+        fd_event->enable();
+        fd_event->disable();
+
+        delete fd_event;
+        delete loop;
+    }
+}
+
+}
+}

@@ -10,9 +10,10 @@
 #include "signal_event.h"
 #include "timer_event.h"
 
-using namespace std;
 namespace tbox {
 namespace event {
+
+using namespace std;
 
 namespace {
 int _test_signal_count = 0;

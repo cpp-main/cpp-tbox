@@ -2,8 +2,10 @@
 #include "stat.h"
 #include <ostream>
 
+namespace tbox {
+namespace event {
+
 using namespace std;
-using namespace tbox::event;
 
 TEST(Stat, Stream)
 {
@@ -25,4 +27,7 @@ cpu: 0.6 %
     oss << stat;
 
     EXPECT_EQ(oss.str(), target_str);
+}
+
+}
 }

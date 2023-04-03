@@ -8,11 +8,11 @@
 #include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
 
+namespace tbox {
+namespace event {
+
 using namespace std;
 using namespace std::chrono;
-
-using namespace tbox;
-using namespace tbox::event;
 
 TEST(CommonLoop, isRunning)
 {
@@ -595,3 +595,5 @@ TEST(CommonLoop, ExitLoopMultiTimes)
     }
 }
 
+}
+}

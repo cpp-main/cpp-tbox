@@ -28,19 +28,15 @@ EpollFdEvent::~EpollFdEvent()
 
     disable();
 
-    if (d_ != nullptr) {
-        --d_->ref;
-        if (d_->ref == 0) {
-            wp_loop_->removeFdSharedData(fd_);
-            delete d_;
-        }
-    }
+    unrefFdSharedData();
 }
 
 bool EpollFdEvent::initialize(int fd, short events, Mode mode)
 {
     if (isEnabled())
         return false;
+
+    unrefFdSharedData();
 
     fd_ = fd;
     events_ = events;
@@ -151,6 +147,19 @@ void EpollFdEvent::onEvent(short events)
     }
 
     wp_loop_->endEventProcess();
+}
+
+void EpollFdEvent::unrefFdSharedData()
+{
+    if (d_ != nullptr) {
+        --d_->ref;
+        if (d_->ref == 0) {
+            wp_loop_->removeFdSharedData(fd_);
+            delete d_;
+            d_ = nullptr;
+            fd_ = -1;
+        }
+    }
 }
 
 }
