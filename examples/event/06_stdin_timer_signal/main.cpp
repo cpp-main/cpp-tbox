@@ -30,12 +30,7 @@ void OneshotTimerCallback()
 void printStat(Loop *wp_loop)
 {
     Stat stat = wp_loop->getStat();
-    cout << "stat_time: " << stat.stat_time_us << endl
-         << "time_cost: " << stat.time_cost_us << endl
-         << "event_count: " << stat.event_count << endl
-         << "peak_cost_us: " << stat.peak_cost_us << endl
-         << "time use rate: " << stat.time_cost_us * 100.0 / stat.stat_time_us << "%" << endl
-         << "us/event: " << stat.time_cost_us / stat.event_count << endl;
+    cout << stat;
 }
 
 void StdinReadCallback(short events, Loop* wp_loop, TimerEvent* wp_timer)

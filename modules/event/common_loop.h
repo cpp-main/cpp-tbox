@@ -39,6 +39,9 @@ class CommonLoop : public Loop {
     virtual void setCBTimeCostThreshold(uint32_t threshold_us) override;
 
   public:
+    void beginLoopProcess();
+    void endLoopProcess();
+
     void beginEventProcess();
     void endEventProcess();
 
@@ -53,9 +56,6 @@ class CommonLoop : public Loop {
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
-
-    void startWaitEvents();
-    void startHandleEvents();
 
   protected:
     bool isInLoopThreadLockless() const;
@@ -108,14 +108,16 @@ class CommonLoop : public Loop {
     //! 统计相关
     std::chrono::steady_clock::time_point whole_stat_start_;
     std::chrono::steady_clock::time_point event_stat_start_;
-    std::chrono::steady_clock::time_point wait_stat_start_;
-    uint64_t time_cost_us_ = 0;   //!< 消耗在事件处理上的时长,us
-    uint32_t event_count_ = 0;    //!< 处理事件的次数
-    uint32_t peak_cost_us_ = 0;   //!< 事件处理最长时长
-    uint64_t wait_cost_us_ = 0;   //!< 花在等待的时长,us
-    uint32_t wait_count_ = 0;     //!< 等待次数
-    size_t   run_in_loop_peak_num_ = 0;  //!< 等待任务数峰值
-    size_t   run_next_peak_num_ = 0;  //!< 等待任务数峰值
+    std::chrono::steady_clock::time_point loop_stat_start_;
+    uint32_t event_count_ = 0;        //!< 处理事件的次数
+    std::chrono::nanoseconds event_acc_cost_;  //!< 消耗在事件处理上的时长,us
+    std::chrono::nanoseconds event_peak_cost_; //!< 事件处理最长时长
+    uint32_t loop_count_ = 0;         //!< loop次数
+    std::chrono::nanoseconds loop_acc_cost_;   //!< loop工作累积时长
+    std::chrono::nanoseconds loop_peak_cost_;  //!< loop工作最长时长
+
+    size_t run_in_loop_peak_num_ = 0; //!< 等待任务数峰值
+    size_t run_next_peak_num_ = 0;    //!< 等待任务数峰值
 
     //! Signal 相关
     int signal_read_fd_  = -1;

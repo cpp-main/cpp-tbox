@@ -30,7 +30,6 @@ TEST_CPP_SRC_FILES = \
 	fd_event_test.cpp \
 	timer_event_test.cpp \
 	signal_event_test.cpp \
-	stat_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
 

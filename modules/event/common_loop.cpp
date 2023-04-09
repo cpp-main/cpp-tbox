@@ -89,6 +89,20 @@ void CommonLoop::runThisAfterLoop()
     }
 }
 
+void CommonLoop::beginLoopProcess()
+{
+    loop_stat_start_ = steady_clock::now();
+}
+
+void CommonLoop::endLoopProcess()
+{
+    auto cost = steady_clock::now() - loop_stat_start_;
+    ++loop_count_;
+    loop_acc_cost_ += cost;
+    if (loop_peak_cost_ < cost)
+        loop_peak_cost_ = cost;
+}
+
 void CommonLoop::beginEventProcess()
 {
      event_stat_start_ = steady_clock::now();
@@ -96,27 +110,15 @@ void CommonLoop::beginEventProcess()
 
 void CommonLoop::endEventProcess()
 {
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
-
+    auto cost = steady_clock::now() - event_stat_start_;
     ++event_count_;
-    time_cost_us_ += cost_us;
-    if (peak_cost_us_ < cost_us)
-        peak_cost_us_ = cost_us;
+    event_acc_cost_ += cost;
+    if (event_peak_cost_ < cost)
+        event_peak_cost_ = cost;
 
+    auto cost_us = duration_cast<microseconds>(cost).count();
     if (cost_us > cb_time_cost_threshold_us_)
         LogWarn("cost_us: %u", cost_us);
-}
-
-void CommonLoop::startWaitEvents()
-{
-    wait_stat_start_ = steady_clock::now();
-}
-
-void CommonLoop::startHandleEvents()
-{
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
-    ++wait_count_;
-    wait_cost_us_ += cost_us;
 }
 
 Stat CommonLoop::getStat() const
@@ -124,11 +126,15 @@ Stat CommonLoop::getStat() const
     Stat stat;
     using namespace std::chrono;
     stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
-    stat.time_cost_us = time_cost_us_;
-    stat.peak_cost_us = peak_cost_us_;
+
     stat.event_count = event_count_;
-    stat.wait_count = wait_count_;
-    stat.wait_cost_us = wait_cost_us_;
+    stat.event_acc_cost_us = duration_cast<microseconds>(event_acc_cost_).count();
+    stat.event_peak_cost_us = duration_cast<microseconds>(event_peak_cost_).count();
+
+    stat.loop_count = loop_count_;
+    stat.loop_acc_cost_us = duration_cast<microseconds>(loop_acc_cost_).count();
+    stat.loop_peak_cost_us = duration_cast<microseconds>(loop_peak_cost_).count();
+
     stat.run_in_loop_peak_num = run_in_loop_peak_num_;
     stat.run_next_peak_num = run_next_peak_num_;
 
@@ -137,10 +143,18 @@ Stat CommonLoop::getStat() const
 
 void CommonLoop::resetStat()
 {
-    time_cost_us_ = peak_cost_us_ = event_count_ = 0;
-    wait_count_ = wait_cost_us_ = 0;
-    event_stat_start_ = whole_stat_start_ = steady_clock::now();
-    run_in_loop_peak_num_ = run_next_peak_num_ = 0;
+    event_stat_start_ = whole_stat_start_ = loop_stat_start_ = steady_clock::now();
+
+    event_count_ = 0;
+    event_acc_cost_ = nanoseconds::zero();
+    event_peak_cost_ = nanoseconds::zero();
+
+    loop_count_ = 0;
+    loop_acc_cost_ = nanoseconds::zero();
+    loop_peak_cost_ = nanoseconds::zero();
+
+    run_in_loop_peak_num_ = 0;
+    run_next_peak_num_ = 0;
 }
 
 void CommonLoop::setCBTimeCostThreshold(uint32_t threshold_us)

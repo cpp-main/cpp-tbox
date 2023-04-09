@@ -48,11 +48,9 @@ void EpollLoop::runLoop(Mode mode)
 
     keep_running_ = (mode == Loop::Mode::kForever);
     do {
-        startWaitEvents();
-
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), getWaitTime());
 
-        startHandleEvents();
+        beginLoopProcess();
 
         handleExpiredTimers();
 
@@ -68,6 +66,8 @@ void EpollLoop::runLoop(Mode mode)
             max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
             events.resize(max_loop_entries_);
         }
+
+        endLoopProcess();
 
     } while (keep_running_);
 
