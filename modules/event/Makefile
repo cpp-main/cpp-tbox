@@ -1,5 +1,3 @@
-include config.mk
-
 LIB_NAME = event
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 1
@@ -35,10 +33,6 @@ TEST_CPP_SRC_FILES = \
 	stat_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
-
-ifeq ($(ENABLE_STAT), yes)
-CXXFLAGS += -DENABLE_STAT=1
-endif
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
 

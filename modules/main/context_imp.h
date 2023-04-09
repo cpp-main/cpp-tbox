@@ -34,6 +34,10 @@ class ContextImp : public Context {
     virtual std::chrono::system_clock::time_point start_time_point() const override;
 
   protected:
+    bool initLoop(const Json &js);
+    bool initThreadPool(const Json &js);
+    bool initTelnetd(const Json &js);
+    bool initRpc(const Json &js);
     void initShell();
 
   private:

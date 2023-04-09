@@ -10,7 +10,15 @@ namespace event {
 void CommonLoop::runInLoop(const Func &func)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
+
     run_in_loop_func_queue_.push_back(func);
+
+    auto queue_size = run_in_loop_func_queue_.size();
+    if (queue_size > run_in_loop_threshold_)
+        LogWarn("run_in_loop_queue size: %u", queue_size);
+
+    if (queue_size > run_in_loop_peak_num_)
+        run_in_loop_peak_num_ = queue_size;
 
     if (sp_run_read_event_ != nullptr)
         commitRunRequest();
@@ -26,6 +34,13 @@ void CommonLoop::runNext(const Func &func)
     }
 #endif
     run_next_func_queue_.push_back(func);
+
+    auto queue_size = run_next_func_queue_.size();
+    if (queue_size > run_next_threshold_)
+        LogWarn("run_next_queue size: %u", queue_size);
+
+    if (queue_size > run_next_peak_num_)
+        run_next_peak_num_ = queue_size;
 }
 
 void CommonLoop::run(const Func &func)
@@ -41,6 +56,16 @@ void CommonLoop::run(const Func &func)
         runNext(func);
     else
         runInLoop(func);
+}
+
+void CommonLoop::setRunInLoopThreshold(size_t threshold)
+{
+    run_in_loop_threshold_ = threshold;
+}
+
+void CommonLoop::setRunNextThreshold(size_t threshold)
+{
+    run_next_threshold_ = threshold;
 }
 
 void CommonLoop::handleNextFunc()

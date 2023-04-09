@@ -73,9 +73,7 @@ void CommonLoop::runThisBeforeLoop()
     if (!run_in_loop_func_queue_.empty())
         commitRunRequest();
 
-#ifdef  ENABLE_STAT
     resetStat();
-#endif
 }
 
 void CommonLoop::runThisAfterLoop()
@@ -93,63 +91,61 @@ void CommonLoop::runThisAfterLoop()
 
 void CommonLoop::beginEventProcess()
 {
-#ifdef  ENABLE_STAT
-    if (stat_enable_)
-        event_stat_start_ = steady_clock::now();
-#endif
+     event_stat_start_ = steady_clock::now();
 }
 
 void CommonLoop::endEventProcess()
 {
-#ifdef  ENABLE_STAT
-    if (stat_enable_) {
-        uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
-        ++event_count_;
-        time_cost_us_ += cost_us;
-        if (max_cost_us_ < cost_us)
-            max_cost_us_ = cost_us;
-    }
-#endif
+    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
+
+    ++event_count_;
+    time_cost_us_ += cost_us;
+    if (peak_cost_us_ < cost_us)
+        peak_cost_us_ = cost_us;
+
+    if (cost_us > cb_time_cost_threshold_us_)
+        LogWarn("cost_us: %u", cost_us);
 }
 
-void CommonLoop::setStatEnable(bool enable)
+void CommonLoop::startWaitEvents()
 {
-#ifdef  ENABLE_STAT
-    if (!stat_enable_ && enable)
-        resetStat();
-
-    stat_enable_ = enable;
-#endif
+    wait_stat_start_ = steady_clock::now();
 }
 
-bool CommonLoop::isStatEnabled() const
+void CommonLoop::startHandleEvents()
 {
-#ifdef  ENABLE_STAT
-    return stat_enable_;
-#else
-    return false;
-#endif
+    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
+    ++wait_count_;
+    wait_cost_us_ += cost_us;
 }
 
 Stat CommonLoop::getStat() const
 {
     Stat stat;
-#ifdef  ENABLE_STAT
     using namespace std::chrono;
     stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
     stat.time_cost_us = time_cost_us_;
-    stat.max_cost_us = max_cost_us_;
+    stat.peak_cost_us = peak_cost_us_;
     stat.event_count = event_count_;
-#endif
+    stat.wait_count = wait_count_;
+    stat.wait_cost_us = wait_cost_us_;
+    stat.run_in_loop_peak_num = run_in_loop_peak_num_;
+    stat.run_next_peak_num = run_next_peak_num_;
+
     return stat;
 }
 
 void CommonLoop::resetStat()
 {
-#ifdef  ENABLE_STAT
-    time_cost_us_ = max_cost_us_ = event_count_ = 0;
+    time_cost_us_ = peak_cost_us_ = event_count_ = 0;
+    wait_count_ = wait_cost_us_ = 0;
     event_stat_start_ = whole_stat_start_ = steady_clock::now();
-#endif
+    run_in_loop_peak_num_ = run_next_peak_num_ = 0;
+}
+
+void CommonLoop::setCBTimeCostThreshold(uint32_t threshold_us)
+{
+    cb_time_cost_threshold_us_ = threshold_us;
 }
 
 }

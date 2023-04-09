@@ -19,7 +19,7 @@ cpu: 0.6 %
 
     Stat stat;
     stat.event_count = 2;
-    stat.max_cost_us = 50;
+    stat.peak_cost_us = 50;
     stat.time_cost_us = 60;
     stat.stat_time_us = 10000;
 

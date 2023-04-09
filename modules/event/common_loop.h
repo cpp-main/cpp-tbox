@@ -29,12 +29,14 @@ class CommonLoop : public Loop {
     virtual void runNext(const Func &func) override;
     virtual void run(const Func &func) override;
 
-    virtual void setStatEnable(bool enable) override;
-    virtual bool isStatEnabled() const override;
     virtual Stat getStat() const override;
     virtual void resetStat() override;
 
     virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
+
+    virtual void setRunInLoopThreshold(size_t threshold) override;
+    virtual void setRunNextThreshold(size_t threshold) override;
+    virtual void setCBTimeCostThreshold(uint32_t threshold_us) override;
 
   public:
     void beginEventProcess();
@@ -51,6 +53,9 @@ class CommonLoop : public Loop {
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
+
+    void startWaitEvents();
+    void startHandleEvents();
 
   protected:
     bool isInLoopThreadLockless() const;
@@ -100,14 +105,17 @@ class CommonLoop : public Loop {
     std::deque<Func> run_in_loop_func_queue_;
     std::deque<Func> run_next_func_queue_;
 
-#ifdef ENABLE_STAT
-    bool stat_enable_ = false;
+    //! 统计相关
     std::chrono::steady_clock::time_point whole_stat_start_;
     std::chrono::steady_clock::time_point event_stat_start_;
-    uint64_t time_cost_us_ = 0;
-    uint32_t event_count_ = 0;
-    uint32_t max_cost_us_ = 0;
-#endif  //ENABLE_STAT
+    std::chrono::steady_clock::time_point wait_stat_start_;
+    uint64_t time_cost_us_ = 0;   //!< 消耗在事件处理上的时长,us
+    uint32_t event_count_ = 0;    //!< 处理事件的次数
+    uint32_t peak_cost_us_ = 0;   //!< 事件处理最长时长
+    uint64_t wait_cost_us_ = 0;   //!< 花在等待的时长,us
+    uint32_t wait_count_ = 0;     //!< 等待次数
+    size_t   run_in_loop_peak_num_ = 0;  //!< 等待任务数峰值
+    size_t   run_next_peak_num_ = 0;  //!< 等待任务数峰值
 
     //! Signal 相关
     int signal_read_fd_  = -1;
@@ -115,10 +123,15 @@ class CommonLoop : public Loop {
     FdEvent *sp_signal_read_event_ = nullptr;
     std::map<int, std::set<SignalSubscribuer*>> all_signals_subscribers_; //! signo -> SignalSubscribuer*，信号的订阅者
 
-    //! Timer 相闫
+    //! Timer 相关
     TimerEvent *sp_exit_timer_ = nullptr;
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
+
+    //! 警告阈值
+    size_t run_in_loop_threshold_ = std::numeric_limits<size_t>::max();
+    size_t run_next_threshold_ = std::numeric_limits<size_t>::max();
+    uint32_t cb_time_cost_threshold_us_ = std::numeric_limits<uint32_t>::max();
 };
 
 }

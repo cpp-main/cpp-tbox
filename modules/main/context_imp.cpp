@@ -8,6 +8,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/version.h>
+#include <tbox/base/catch_throw.h>
 #include <tbox/util/string.h>
 #include <tbox/util/json.h>
 #include <tbox/terminal/session.h>
@@ -84,15 +85,57 @@ void ContextImp::fillDefaultConfig(Json &cfg) const
 
 bool ContextImp::initialize(const Json &cfg)
 {
+    if (util::json::HasObjectField(cfg, "loop")) {
+        auto &js_loop = cfg["loop"];
+        initLoop(js_loop);
+    }
+
     if (!util::json::HasObjectField(cfg, "thread_pool")) {
         LogWarn("cfg.thread_pool not found");
         return false;
     }
-    auto &js_thread_pool = cfg["thread_pool"];
 
+    auto &js_thread_pool = cfg["thread_pool"];
+    if (!initThreadPool(js_thread_pool))
+        return false;
+
+    if (util::json::HasObjectField(cfg, "telnetd")) {
+        auto &js_telnetd = cfg["telnetd"];
+        initTelnetd(js_telnetd);
+    }
+
+    if (util::json::HasObjectField(cfg, "tcp_rpc")) {
+        auto &js_tcp_rpc = cfg["tcp_rpc"];
+        initRpc(js_tcp_rpc);
+    }
+
+    initShell();
+
+    return true;
+}
+
+bool ContextImp::initLoop(const Json &js)
+{
+    int run_in_loop_threshold = 0;
+    if (util::json::GetField(js, "run_in_loop_threshold", run_in_loop_threshold))
+        sp_loop_->setRunInLoopThreshold(run_in_loop_threshold);
+
+    int run_next_threshold = 0;
+    if (util::json::GetField(js, "run_next_threshold", run_next_threshold))
+        sp_loop_->setRunNextThreshold(run_next_threshold);
+
+    int cb_time_cost_threshold_us = 0;
+    if (util::json::GetField(js, "cb_time_cost_threshold", cb_time_cost_threshold_us))
+        sp_loop_->setCBTimeCostThreshold(cb_time_cost_threshold_us);
+
+    return true;
+}
+
+bool ContextImp::initThreadPool(const Json &js)
+{
     int thread_pool_min = 0, thread_pool_max = 0;
-    if (!util::json::GetField(js_thread_pool, "min", thread_pool_min) ||
-        !util::json::GetField(js_thread_pool, "max", thread_pool_max)) {
+    if (!util::json::GetField(js, "min", thread_pool_min) ||
+        !util::json::GetField(js, "max", thread_pool_max)) {
         LogWarn("in cfg.thread_pool, min or max is not number");
         return false;
     }
@@ -100,25 +143,26 @@ bool ContextImp::initialize(const Json &cfg)
     if (!sp_thread_pool_->initialize(thread_pool_min, thread_pool_max))
         return false;
 
-    if (util::json::HasObjectField(cfg, "telnetd")) {
-        auto &js_telnetd = cfg["telnetd"];
-        std::string telnetd_bind;
-        if (util::json::GetField(js_telnetd, "bind", telnetd_bind)) {
-            if (sp_telnetd_->initialize(telnetd_bind))
-                telnetd_init_ok = true;
-        }
-    }
-    if (util::json::HasObjectField(cfg, "tcp_rpc")) {
-        auto &js_tcp_rpc = cfg["tcp_rpc"];
-        std::string tcp_rpc_bind;
-        if (util::json::GetField(js_tcp_rpc, "bind", tcp_rpc_bind)) {
-            if (sp_tcp_rpc_->initialize(tcp_rpc_bind))
-                tcp_rpc_init_ok = true;
-        }
-    }
+    return true;
+}
 
-    initShell();
+bool ContextImp::initTelnetd(const Json &js)
+{
+    std::string telnetd_bind;
+    if (util::json::GetField(js, "bind", telnetd_bind)) {
+      if (sp_telnetd_->initialize(telnetd_bind))
+        telnetd_init_ok = true;
+    }
+    return true;
+}
 
+bool ContextImp::initRpc(const Json &js)
+{
+    std::string tcp_rpc_bind;
+    if (util::json::GetField(js, "bind", tcp_rpc_bind)) {
+        if (sp_tcp_rpc_->initialize(tcp_rpc_bind))
+            tcp_rpc_init_ok = true;
+    }
     return true;
 }
 
@@ -177,64 +221,127 @@ void ContextImp::initShell()
         auto loop_node = wp_nodes->createDirNode("This is Loop directory");
         wp_nodes->mountNode(ctx_node, loop_node, "loop");
 
-        auto loop_stat_node = wp_nodes->createDirNode();
-        wp_nodes->mountNode(loop_node, loop_stat_node, "stat");
-
-        auto loop_stat_enable_node = wp_nodes->createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::stringstream ss;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        sp_loop_->setStatEnable(true);
-                        ss << "stat on\r\n";
-                    } else if (opt == "off") {
-                        sp_loop_->setStatEnable(false);
-                        ss << "stat off\r\n";
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    bool print_usage = false;
+                    std::ostringstream oss;
+                    if (args.size() >= 2) {
+                        int value = 0;
+                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                        if (CatchThrowQuietly(may_throw_func)) {
+                            oss << "must be number\r\n";
+                            print_usage = true;
+                        } else {
+                            sp_loop_->setRunInLoopThreshold(value);
+                            oss << "done\r\n";
+                        }
                     } else {
-                        ss << "Usage: " << args[0] << " on|off\r\n";
+                        print_usage = true;
                     }
-                } else {
-                    ss << (sp_loop_->isStatEnabled() ? "on" : "off") << "\r\n";
-                }
-                s.send(ss.str());
-            }
-        , "enable or disable Loop's stat function");
-        wp_nodes->mountNode(loop_stat_node, loop_stat_enable_node, "enable");
 
-        auto loop_stat_print_node = wp_nodes->createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::stringstream ss;
-                if (sp_loop_->isStatEnabled()) {
-                    ss << sp_loop_->getStat();
-                } else {
-                    ss << "stat not enabled" << std::endl;
-                }
-                std::string txt = ss.str();
-                util::string::Replace(txt, "\n", "\r\n");
-                s.send(txt);
-            }
-        , "print Loop's stat data");
-        wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
+                    if (print_usage)
+                        oss << "Usage: " << args[0] << " <num>\r\n";
 
-        auto loop_stat_reset_node = wp_nodes->createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::stringstream ss;
-                sp_loop_->resetStat();
-                ss << "done\r\n";
-                s.send(ss.str());
-            }
-        , "reset Loop's stat data");
-        wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
+                    s.send(oss.str());
+                },
+                "Invoke Loop::setRunInLoopThreshold()"
+            );
+            wp_nodes->mountNode(loop_node, func_node, "set_run_in_loop_threshold");
+        }
 
         {
             auto func_node = wp_nodes->createFuncNode(
                 [this] (const Session &s, const Args &args) {
-                    s.send(ToString(running_time()));
-                    s.send("\r\n");
+                    bool print_usage = false;
+                    std::ostringstream oss;
+                    if (args.size() >= 2) {
+                        int value = 0;
+                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                        if (CatchThrowQuietly(may_throw_func)) {
+                            oss << "must be number\r\n";
+                            print_usage = true;
+                        } else {
+                            sp_loop_->setRunNextThreshold(value);
+                            oss << "done\r\n";
+                        }
+                    } else {
+                        print_usage = true;
+                    }
+
+                    if (print_usage)
+                        oss << "Usage: " << args[0] << " <num>\r\n";
+
+                    s.send(oss.str());
+                },
+                "Invoke Loop::setRunNextThreshold()"
+            );
+            wp_nodes->mountNode(loop_node, func_node, "set_run_next_threshold");
+        }
+
+        {
+            auto func_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    bool print_usage = false;
+                    std::ostringstream oss;
+                    if (args.size() >= 2) {
+                        int value = 0;
+                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                        if (CatchThrowQuietly(may_throw_func)) {
+                            oss << "must be number\r\n";
+                            print_usage = true;
+                        } else {
+                            sp_loop_->setCBTimeCostThreshold(value);
+                            oss << "done\r\n";
+                        }
+                    } else {
+                        print_usage = true;
+                    }
+
+                    if (print_usage)
+                        oss << "Usage: " << args[0] << " <num>\r\n";
+
+                    s.send(oss.str());
+                },
+                "Invoke Loop::setCBTimeCostThreshold()"
+            );
+            wp_nodes->mountNode(loop_node, func_node, "set_cb_time_cost_threshold");
+        }
+
+        {
+            auto loop_stat_node = wp_nodes->createDirNode();
+            wp_nodes->mountNode(loop_node, loop_stat_node, "stat");
+
+            auto loop_stat_print_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    ss << sp_loop_->getStat();
+                    std::string txt = ss.str();
+                    util::string::Replace(txt, "\n", "\r\n");
+                    s.send(txt);
                 }
-            , "Print running times");
-            wp_nodes->mountNode(ctx_node, func_node, "running_time");
+            , "print Loop's stat data");
+            wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
+
+            auto loop_stat_reset_node = wp_nodes->createFuncNode(
+                [this] (const Session &s, const Args &args) {
+                    std::stringstream ss;
+                    sp_loop_->resetStat();
+                    ss << "done\r\n";
+                    s.send(ss.str());
+                }
+            , "reset Loop's stat data");
+            wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        s.send(ToString(running_time()));
+                        s.send("\r\n");
+                    }
+                , "Print running times");
+                wp_nodes->mountNode(ctx_node, func_node, "running_time");
+            }
         }
 
         {
@@ -250,7 +357,6 @@ void ContextImp::initShell()
                         strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
                         ss << tmp << '.' << ts % 1000 << "\r\n";
                     }
-                    ss << ts << " ms\r\n";
 
                     s.send(ss.str());
                 }

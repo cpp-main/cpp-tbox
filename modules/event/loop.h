@@ -70,11 +70,14 @@ class Loop {
     virtual TimerEvent* newTimerEvent() = 0;
     virtual SignalEvent* newSignalEvent() = 0;
 
-    //! 统计操作
-    virtual void setStatEnable(bool enable) = 0;
-    virtual bool isStatEnabled() const = 0;
+    //! 统计
     virtual Stat getStat() const = 0;
     virtual void resetStat() = 0;
+
+    //! 阈值
+    virtual void setRunInLoopThreshold(size_t threshold) = 0;
+    virtual void setRunNextThreshold(size_t threshold) = 0;
+    virtual void setCBTimeCostThreshold(uint32_t threshold_us) = 0;
 
   public:
     virtual ~Loop() { }
