@@ -1,6 +1,7 @@
 #include "common_loop.h"
 
 #include <unistd.h>
+#include <inttypes.h>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 
@@ -95,7 +96,7 @@ void CommonLoop::handleNextFunc()
 
         auto delay = steady_clock::now() - item.commit_time_point;
         if (delay > run_next_delay_waterline_)
-            LogWarn("run next delay over waterline: %u ns", delay.count());
+            LogWarn("run next delay over waterline: %" PRIu64 " ns", delay.count());
 
         if (item.func) {
             ++cb_level_;
@@ -133,7 +134,7 @@ void CommonLoop::handleRunInLoopRequest(short)
 
         auto delay = steady_clock::now() - item.commit_time_point;
         if (delay > run_in_loop_delay_waterline_)
-            LogWarn("run in loop delay over waterline: %u ns", delay.count());
+            LogWarn("run in loop delay over waterline: %" PRIu64 " ns", delay.count());
 
         if (item.func) {
             ++cb_level_;
