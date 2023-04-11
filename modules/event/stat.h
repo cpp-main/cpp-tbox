@@ -14,10 +14,6 @@ struct Stat {
     uint64_t loop_acc_cost_us = 0;    //! 循环执行累积时长
     uint64_t loop_peak_cost_us = 0;   //! 循环执行时长峰值
 
-    uint32_t event_count = 0;         //! 事件触发次数
-    uint64_t event_acc_cost_us = 0;   //! 事件处理累积占用时长
-    uint32_t event_peak_cost_us = 0;  //! 事件处理占用时长峰值
-
     size_t   run_in_loop_peak_num = 0;  //!< 等待任务数峰值
     size_t   run_next_peak_num = 0;   //!< 等待任务数峰值
 };

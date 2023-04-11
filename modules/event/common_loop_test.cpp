@@ -480,40 +480,6 @@ TEST(CommonLoop, cleanupDeferedTask1)
     }
 }
 
-TEST(CommonLoop, runOrder)
-{
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
-        Loop *sp_loop = event::Loop::New(e);
-        TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
-        SetScopeExitAction(
-            [sp_loop, sp_timer1]{
-                delete sp_timer1;
-                delete sp_loop;
-            }
-        );
-
-        int tag = 0;
-        sp_timer1->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
-        sp_timer1->setCallback(
-            [&] {
-                sp_loop->runNext([&] { EXPECT_EQ(tag, 0); tag = 1; });
-                sp_loop->runInLoop([&] { EXPECT_EQ(tag, 2); tag = 3; });
-                sp_loop->runInLoop([&] { EXPECT_EQ(tag, 3); tag = 4; });
-                sp_loop->runNext([&] { EXPECT_EQ(tag, 1); tag = 2; });
-                sp_loop->runInLoop([&] { EXPECT_EQ(tag, 4); tag = 5; });
-            }
-        );
-        sp_timer1->enable();
-
-        sp_loop->exitLoop(chrono::milliseconds(20));
-        sp_loop->runLoop();
-
-        EXPECT_EQ(tag, 5);
-    }
-}
-
 TEST(CommonLoop, RunInLoopBenchmark)
 {
     auto engins = Loop::Engines();

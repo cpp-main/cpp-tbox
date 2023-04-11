@@ -126,7 +126,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 
                     FdEvent *tobe_delete = nullptr;
                     std::swap(tobe_delete, sp_signal_read_event_);
-                    run([tobe_delete] { delete tobe_delete; });
+                    run([tobe_delete] { delete tobe_delete; }, __func__);
                 }
                 LogWarn("install signal %d fail", signo);
                 return false;
@@ -185,7 +185,7 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 
     FdEvent *tobe_delete = nullptr;
     std::swap(tobe_delete, sp_signal_read_event_);
-    run([tobe_delete] { delete tobe_delete; });
+    run([tobe_delete] { delete tobe_delete; }, __func__);
 
     return true;
 }
@@ -217,9 +217,9 @@ void CommonLoop::onSignal()
     }
 }
 
-SignalEvent* CommonLoop::newSignalEvent()
+SignalEvent* CommonLoop::newSignalEvent(const std::string &what)
 {
-    return new SignalEventImpl(this);
+    return new SignalEventImpl(this, what);
 }
 
 }

@@ -22,7 +22,7 @@ class EpollLoop : public CommonLoop {
   public:
     virtual void runLoop(Mode mode) override;
 
-    virtual FdEvent* newFdEvent() override;
+    virtual FdEvent* newFdEvent(const std::string &what) override;
 
   public:
     inline int epollFd() const { return epoll_fd_; }

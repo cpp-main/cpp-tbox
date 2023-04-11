@@ -59,6 +59,7 @@ void EpollLoop::runLoop(Mode mode)
             EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
         }
 
+        //handleRunInLoopFunc();
         handleNextFunc();
 
         /// If the receiver array size is full, increase its size with 1.5 times.
@@ -93,9 +94,9 @@ EpollFdSharedData* EpollLoop::queryFdSharedData(int fd) const
 }
 
 
-FdEvent* EpollLoop::newFdEvent()
+FdEvent* EpollLoop::newFdEvent(const std::string &what)
 {
-    return new EpollFdEvent(this);
+    return new EpollFdEvent(this, what);
 }
 
 }

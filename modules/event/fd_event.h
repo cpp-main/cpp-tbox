@@ -10,11 +10,13 @@ namespace event {
 
 class FdEvent : public Event {
   public:
-    enum Event {
+    enum EventTypes {
         kReadEvent   = 0x01,
         kWriteEvent  = 0x02,
         kExceptEvent = 0x04,
     };
+
+    using Event::Event;
 
     virtual bool initialize(int fd, short events, Mode mode) = 0;
 

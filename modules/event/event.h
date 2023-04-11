@@ -1,6 +1,8 @@
 #ifndef TBOX_EVENT_ITEM_H_20170627
 #define TBOX_EVENT_ITEM_H_20170627
 
+#include <string>
+
 namespace tbox {
 namespace event {
 
@@ -8,6 +10,8 @@ class Loop;
 
 class Event {
   public:
+    Event(const std::string &what) : what_(what) { }
+
     enum class Mode {
         kPersist,
         kOneshot
@@ -19,8 +23,13 @@ class Event {
 
     virtual Loop* getLoop() const = 0;
 
+    std::string what() const { return what_; }
+
   public:
     virtual ~Event() { }
+
+  protected:
+    std::string what_;
 };
 
 }

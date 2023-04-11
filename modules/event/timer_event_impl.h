@@ -11,7 +11,7 @@ class CommonLoop;
 
 class TimerEventImpl : public TimerEvent {
   public:
-    explicit TimerEventImpl(CommonLoop *wp_loop);
+    explicit TimerEventImpl(CommonLoop *wp_loop, const std::string &what);
     virtual ~TimerEventImpl() override;
 
   public:

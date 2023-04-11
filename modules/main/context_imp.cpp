@@ -136,9 +136,9 @@ bool ContextImp::initLoop(const Json &js)
     if (util::json::GetField(js, "loop_time_cost_water_line", loop_time_cost_water_line_us))
         sp_loop_->setLoopTimeCostWaterLine(std::chrono::microseconds(loop_time_cost_water_line_us));
 
-    int event_time_cost_water_line_us = 0;
-    if (util::json::GetField(js, "event_time_cost_water_line", event_time_cost_water_line_us))
-        sp_loop_->setEventTimeCostWaterLine(std::chrono::microseconds(event_time_cost_water_line_us));
+    int cb_time_cost_water_line_us = 0;
+    if (util::json::GetField(js, "cb_time_cost_water_line", cb_time_cost_water_line_us))
+        sp_loop_->setCbTimeCostWaterLine(std::chrono::microseconds(cb_time_cost_water_line_us));
 
     return true;
 }
@@ -393,7 +393,7 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setEventTimeCostWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->setCbTimeCostWaterLine(std::chrono::microseconds(value));
                                 oss << "done\r\n";
                             }
                         } else {
@@ -405,9 +405,9 @@ void ContextImp::initShell()
 
                         s.send(oss.str());
                     },
-                    "Invoke Loop::setEventTimeCostWaterLine()"
+                    "Invoke Loop::setCbTimeCostWaterLine()"
                 );
-                wp_nodes->mountNode(water_line_node, func_node, "event_time_cost");
+                wp_nodes->mountNode(water_line_node, func_node, "cb_time_cost");
             }
         }
 

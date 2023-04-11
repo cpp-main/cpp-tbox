@@ -10,16 +10,17 @@ namespace event {
 
 using namespace std::chrono;
 
-CommonLoop::RunFuncItem::RunFuncItem(const Func &f)
+CommonLoop::RunFuncItem::RunFuncItem(const Func &f, const std::string &w)
     : commit_time_point(steady_clock::now())
     , func(f)
+    , what(w)
 { }
 
-void CommonLoop::runInLoop(const Func &func)
+void CommonLoop::runInLoop(const Func &func, const std::string &what)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
 
-    run_in_loop_func_queue_.emplace_back(RunFuncItem(func));
+    run_in_loop_func_queue_.emplace_back(RunFuncItem(func, what));
 
     auto queue_size = run_in_loop_func_queue_.size();
     if (queue_size > run_in_loop_queue_size_water_line_)
@@ -32,7 +33,7 @@ void CommonLoop::runInLoop(const Func &func)
         commitRunRequest();
 }
 
-void CommonLoop::runNext(const Func &func)
+void CommonLoop::runNext(const Func &func, const std::string &what)
 {
 #ifdef DEBUG
     {
@@ -41,7 +42,7 @@ void CommonLoop::runNext(const Func &func)
         TBOX_ASSERT(!isRunningLockless() || isInLoopThreadLockless());
     }
 #endif
-    run_next_func_queue_.emplace_back(RunFuncItem(func));
+    run_next_func_queue_.emplace_back(RunFuncItem(func, what));
 
     auto queue_size = run_next_func_queue_.size();
     if (queue_size > run_next_queue_size_water_line_)
@@ -51,7 +52,7 @@ void CommonLoop::runNext(const Func &func)
         run_next_peak_num_ = queue_size;
 }
 
-void CommonLoop::run(const Func &func)
+void CommonLoop::run(const Func &func, const std::string &what)
 {
     bool can_run_next = true;
     {
@@ -61,29 +62,9 @@ void CommonLoop::run(const Func &func)
     }
 
     if (can_run_next)
-        runNext(func);
+        runNext(func, what);
     else
-        runInLoop(func);
-}
-
-void CommonLoop::setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line)
-{
-    run_in_loop_queue_size_water_line_ = queue_size_water_line;
-}
-
-void CommonLoop::setRunNextQueueSizeWaterLine(size_t queue_size_water_line)
-{
-    run_next_queue_size_water_line_ = queue_size_water_line;
-}
-
-void CommonLoop::setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline)
-{
-    run_in_loop_delay_waterline_ = waterline;
-}
-
-void CommonLoop::setRunNextDelayWaterLine(std::chrono::nanoseconds waterline)
-{
-    run_next_delay_waterline_ = waterline;
+        runInLoop(func, what);
 }
 
 void CommonLoop::handleNextFunc()
@@ -94,15 +75,23 @@ void CommonLoop::handleNextFunc()
     while (!tmp.empty()) {
         RunFuncItem &item = tmp.front();
 
-        auto delay = steady_clock::now() - item.commit_time_point;
+        auto now = steady_clock::now();
+        auto delay = now - item.commit_time_point;
         if (delay > run_next_delay_waterline_)
-            LogWarn("run next delay over waterline: %" PRIu64 " ns", delay.count());
+            LogWarn("run next delay over waterline: %" PRIu64 " ns, what: '%s'",
+                    delay.count(), item.what.c_str());
 
         if (item.func) {
             ++cb_level_;
             item.func();
             --cb_level_;
         }
+
+        auto cost = steady_clock::now() - now;
+        if (cost > cb_time_cost_waterline_)
+            LogWarn("run next cost over waterline: %" PRIu64 " ns, what: '%s'",
+                    cost.count(), item.what.c_str());
+
         tmp.pop_front();
     }
 }
@@ -112,7 +101,7 @@ bool CommonLoop::hasNextFunc() const
     return !run_next_func_queue_.empty();
 }
 
-void CommonLoop::handleRunInLoopRequest(short)
+void CommonLoop::handleRunInLoopFunc()
 {
     /**
      * NOTICE:
@@ -132,15 +121,23 @@ void CommonLoop::handleRunInLoopRequest(short)
     while (!tmp.empty()) {
         RunFuncItem &item = tmp.front();
 
-        auto delay = steady_clock::now() - item.commit_time_point;
+        auto now = steady_clock::now();
+        auto delay = now - item.commit_time_point;
         if (delay > run_in_loop_delay_waterline_)
-            LogWarn("run in loop delay over waterline: %" PRIu64 " ns", delay.count());
+            LogWarn("run in loop delay over waterline: %" PRIu64 " ns, what: '%s'",
+                    delay.count(), item.what.c_str());
 
         if (item.func) {
             ++cb_level_;
             item.func();
             --cb_level_;
         }
+
+        auto cost = steady_clock::now() - now;
+        if (cost > cb_time_cost_waterline_)
+            LogWarn("run next cost over waterline: %" PRIu64 " ns, what: '%s'",
+                    cost.count(), item.what.c_str());
+
         tmp.pop_front();
     }
 }

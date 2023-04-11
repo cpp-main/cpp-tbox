@@ -19,7 +19,7 @@ class SignalSubscribuer {
 class SignalEventImpl : public SignalEvent,
                         public SignalSubscribuer {
   public:
-    explicit SignalEventImpl(CommonLoop *wp_loop);
+    explicit SignalEventImpl(CommonLoop *wp_loop, const std::string &what);
     virtual ~SignalEventImpl() override;
 
   public:

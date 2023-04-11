@@ -13,7 +13,7 @@ struct EpollFdSharedData;
 
 class EpollFdEvent : public FdEvent {
   public:
-    explicit EpollFdEvent(EpollLoop *wp_loop);
+    explicit EpollFdEvent(EpollLoop *wp_loop, const std::string &what);
     virtual ~EpollFdEvent() override;
 
   public:
