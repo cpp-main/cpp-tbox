@@ -75,9 +75,12 @@ class Loop {
     virtual void resetStat() = 0;
 
     //! 阈值
-    virtual void setRunInLoopThreshold(size_t threshold) = 0;
-    virtual void setRunNextThreshold(size_t threshold) = 0;
-    virtual void setCBTimeCostThreshold(uint32_t threshold_us) = 0;
+    virtual void setRunInLoopQueueSizeWaterLine(size_t threshold) = 0;
+    virtual void setRunNextQueueSizeWaterLine(size_t threshold) = 0;
+    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual void setEventTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
 
   public:
     virtual ~Loop() { }

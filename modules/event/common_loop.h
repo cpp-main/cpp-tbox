@@ -34,9 +34,12 @@ class CommonLoop : public Loop {
 
     virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual void setRunInLoopThreshold(size_t threshold) override;
-    virtual void setRunNextThreshold(size_t threshold) override;
-    virtual void setCBTimeCostThreshold(uint32_t threshold_us) override;
+    virtual void setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line) override;
+    virtual void setRunNextQueueSizeWaterLine(size_t queue_size_water_line) override;
+    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual void setEventTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) override;
 
   public:
     void beginLoopProcess();
@@ -92,6 +95,13 @@ class CommonLoop : public Loop {
         }
     };
 
+    struct RunFuncItem {
+        std::chrono::steady_clock::time_point commit_time_point;
+        Func func;
+
+        RunFuncItem(const Func &func);
+    };
+
   private:
     mutable std::recursive_mutex lock_;
     std::thread::id loop_thread_id_;
@@ -102,8 +112,8 @@ class CommonLoop : public Loop {
     int run_read_fd_ = -1;
     int run_write_fd_ = -1;
     FdEvent *sp_run_read_event_ = nullptr;
-    std::deque<Func> run_in_loop_func_queue_;
-    std::deque<Func> run_next_func_queue_;
+    std::deque<RunFuncItem> run_in_loop_func_queue_;
+    std::deque<RunFuncItem> run_next_func_queue_;
 
     //! 统计相关
     std::chrono::steady_clock::time_point whole_stat_start_;
@@ -130,10 +140,13 @@ class CommonLoop : public Loop {
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
 
-    //! 警告阈值
-    size_t run_in_loop_threshold_ = std::numeric_limits<size_t>::max();
-    size_t run_next_threshold_ = std::numeric_limits<size_t>::max();
-    uint32_t cb_time_cost_threshold_us_ = std::numeric_limits<uint32_t>::max();
+    //! 警告水位线
+    size_t run_in_loop_queue_size_water_line_ = std::numeric_limits<size_t>::max();
+    size_t run_next_queue_size_water_line_ = std::numeric_limits<size_t>::max();
+    std::chrono::nanoseconds event_time_cost_waterline_   = std::chrono::milliseconds(100);
+    std::chrono::nanoseconds loop_time_cost_waterline_    = std::chrono::milliseconds(100);
+    std::chrono::nanoseconds run_in_loop_delay_waterline_ = std::chrono::milliseconds(10);
+    std::chrono::nanoseconds run_next_delay_waterline_    = std::chrono::milliseconds(10);
 };
 
 }

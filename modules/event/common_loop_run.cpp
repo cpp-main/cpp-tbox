@@ -7,14 +7,21 @@
 namespace tbox {
 namespace event {
 
+using namespace std::chrono;
+
+CommonLoop::RunFuncItem::RunFuncItem(const Func &f)
+    : commit_time_point(steady_clock::now())
+    , func(f)
+{ }
+
 void CommonLoop::runInLoop(const Func &func)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
 
-    run_in_loop_func_queue_.push_back(func);
+    run_in_loop_func_queue_.emplace_back(RunFuncItem(func));
 
     auto queue_size = run_in_loop_func_queue_.size();
-    if (queue_size > run_in_loop_threshold_)
+    if (queue_size > run_in_loop_queue_size_water_line_)
         LogWarn("run_in_loop_queue size: %u", queue_size);
 
     if (queue_size > run_in_loop_peak_num_)
@@ -33,10 +40,10 @@ void CommonLoop::runNext(const Func &func)
         TBOX_ASSERT(!isRunningLockless() || isInLoopThreadLockless());
     }
 #endif
-    run_next_func_queue_.push_back(func);
+    run_next_func_queue_.emplace_back(RunFuncItem(func));
 
     auto queue_size = run_next_func_queue_.size();
-    if (queue_size > run_next_threshold_)
+    if (queue_size > run_next_queue_size_water_line_)
         LogWarn("run_next_queue size: %u", queue_size);
 
     if (queue_size > run_next_peak_num_)
@@ -58,26 +65,41 @@ void CommonLoop::run(const Func &func)
         runInLoop(func);
 }
 
-void CommonLoop::setRunInLoopThreshold(size_t threshold)
+void CommonLoop::setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line)
 {
-    run_in_loop_threshold_ = threshold;
+    run_in_loop_queue_size_water_line_ = queue_size_water_line;
 }
 
-void CommonLoop::setRunNextThreshold(size_t threshold)
+void CommonLoop::setRunNextQueueSizeWaterLine(size_t queue_size_water_line)
 {
-    run_next_threshold_ = threshold;
+    run_next_queue_size_water_line_ = queue_size_water_line;
+}
+
+void CommonLoop::setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_in_loop_delay_waterline_ = waterline;
+}
+
+void CommonLoop::setRunNextDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_next_delay_waterline_ = waterline;
 }
 
 void CommonLoop::handleNextFunc()
 {
-    std::deque<Func> tmp;
+    std::deque<RunFuncItem> tmp;
     run_next_func_queue_.swap(tmp);
 
     while (!tmp.empty()) {
-        Func &func = tmp.front();
-        if (func) {
+        RunFuncItem &item = tmp.front();
+
+        auto delay = steady_clock::now() - item.commit_time_point;
+        if (delay > run_next_delay_waterline_)
+            LogWarn("run next delay over waterline: %u ns", delay.count());
+
+        if (item.func) {
             ++cb_level_;
-            func();
+            item.func();
             --cb_level_;
         }
         tmp.pop_front();
@@ -99,7 +121,7 @@ void CommonLoop::handleRunInLoopRequest(short)
      *
      * 这点与 runNext() 不同
      */
-    std::deque<Func> tmp;
+    std::deque<RunFuncItem> tmp;
     {
         std::lock_guard<std::recursive_mutex> g(lock_);
         run_in_loop_func_queue_.swap(tmp);
@@ -107,10 +129,15 @@ void CommonLoop::handleRunInLoopRequest(short)
     }
 
     while (!tmp.empty()) {
-        Func &func = tmp.front();
-        if (func) {
+        RunFuncItem &item = tmp.front();
+
+        auto delay = steady_clock::now() - item.commit_time_point;
+        if (delay > run_in_loop_delay_waterline_)
+            LogWarn("run in loop delay over waterline: %u ns", delay.count());
+
+        if (item.func) {
             ++cb_level_;
-            func();
+            item.func();
             --cb_level_;
         }
         tmp.pop_front();
@@ -121,20 +148,29 @@ void CommonLoop::handleRunInLoopRequest(short)
 void CommonLoop::cleanupDeferredTasks()
 {
     int remain_loop_count = 10; //! 限定次数，防止出现 runNext() 递归导致无法退出循环的问题
-    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) &&
-           remain_loop_count-- > 0) {
-        std::deque<Func> tasks = std::move(run_next_func_queue_);
-        tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
-        run_in_loop_func_queue_.clear();
+    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) && remain_loop_count-- > 0) {
 
-        while (!tasks.empty()) {
-            Func &func = tasks.front();
-            if (func) {
+        std::deque<RunFuncItem> run_next_tasks = std::move(run_next_func_queue_);
+        std::deque<RunFuncItem> run_in_loop_tasks = std::move(run_in_loop_func_queue_);
+
+        while (!run_next_tasks.empty()) {
+            RunFuncItem &item = run_next_tasks.front();
+            if (item.func) {
                 ++cb_level_;
-                func();
+                item.func();
                 --cb_level_;
             }
-            tasks.pop_front();
+            run_next_tasks.pop_front();
+        }
+
+        while (!run_in_loop_tasks.empty()) {
+            RunFuncItem &item = run_in_loop_tasks.front();
+            if (item.func) {
+                ++cb_level_;
+                item.func();
+                --cb_level_;
+            }
+            run_in_loop_tasks.pop_front();
         }
     }
 

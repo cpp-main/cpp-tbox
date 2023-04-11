@@ -116,17 +116,29 @@ bool ContextImp::initialize(const Json &cfg)
 
 bool ContextImp::initLoop(const Json &js)
 {
-    int run_in_loop_threshold = 0;
-    if (util::json::GetField(js, "run_in_loop_threshold", run_in_loop_threshold))
-        sp_loop_->setRunInLoopThreshold(run_in_loop_threshold);
+    int run_in_loop_queue_size_water_line = 0;
+    if (util::json::GetField(js, "run_in_loop_queue_size_water_line", run_in_loop_queue_size_water_line))
+        sp_loop_->setRunInLoopQueueSizeWaterLine(run_in_loop_queue_size_water_line);
 
-    int run_next_threshold = 0;
-    if (util::json::GetField(js, "run_next_threshold", run_next_threshold))
-        sp_loop_->setRunNextThreshold(run_next_threshold);
+    int run_next_queue_size_water_line = 0;
+    if (util::json::GetField(js, "run_next_queue_size_water_line", run_next_queue_size_water_line))
+        sp_loop_->setRunNextQueueSizeWaterLine(run_next_queue_size_water_line);
 
-    int cb_time_cost_threshold_us = 0;
-    if (util::json::GetField(js, "cb_time_cost_threshold", cb_time_cost_threshold_us))
-        sp_loop_->setCBTimeCostThreshold(cb_time_cost_threshold_us);
+    int run_in_loop_delay_water_line_us = 0;
+    if (util::json::GetField(js, "run_in_loop_delay_water_line", run_in_loop_delay_water_line_us))
+        sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(run_in_loop_delay_water_line_us));
+
+    int run_next_delay_water_line_us = 0;
+    if (util::json::GetField(js, "run_next_delay_water_line", run_next_delay_water_line_us))
+        sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(run_next_delay_water_line_us));
+
+    int loop_time_cost_water_line_us = 0;
+    if (util::json::GetField(js, "loop_time_cost_water_line", loop_time_cost_water_line_us))
+        sp_loop_->setLoopTimeCostWaterLine(std::chrono::microseconds(loop_time_cost_water_line_us));
+
+    int event_time_cost_water_line_us = 0;
+    if (util::json::GetField(js, "event_time_cost_water_line", event_time_cost_water_line_us))
+        sp_loop_->setEventTimeCostWaterLine(std::chrono::microseconds(event_time_cost_water_line_us));
 
     return true;
 }
@@ -222,90 +234,181 @@ void ContextImp::initShell()
         wp_nodes->mountNode(ctx_node, loop_node, "loop");
 
         {
-            auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
-                    bool print_usage = false;
-                    std::ostringstream oss;
-                    if (args.size() >= 2) {
-                        int value = 0;
-                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                        if (CatchThrowQuietly(may_throw_func)) {
-                            oss << "must be number\r\n";
-                            print_usage = true;
+            auto water_line_node = wp_nodes->createDirNode("This is waterline directory");
+            wp_nodes->mountNode(loop_node, water_line_node, "water_line");
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setRunInLoopQueueSizeWaterLine(value);
+                                oss << "done\r\n";
+                            }
                         } else {
-                            sp_loop_->setRunInLoopThreshold(value);
-                            oss << "done\r\n";
-                        }
-                    } else {
-                        print_usage = true;
-                    }
-
-                    if (print_usage)
-                        oss << "Usage: " << args[0] << " <num>\r\n";
-
-                    s.send(oss.str());
-                },
-                "Invoke Loop::setRunInLoopThreshold()"
-            );
-            wp_nodes->mountNode(loop_node, func_node, "set_run_in_loop_threshold");
-        }
-
-        {
-            auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
-                    bool print_usage = false;
-                    std::ostringstream oss;
-                    if (args.size() >= 2) {
-                        int value = 0;
-                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                        if (CatchThrowQuietly(may_throw_func)) {
-                            oss << "must be number\r\n";
                             print_usage = true;
-                        } else {
-                            sp_loop_->setRunNextThreshold(value);
-                            oss << "done\r\n";
                         }
-                    } else {
-                        print_usage = true;
-                    }
 
-                    if (print_usage)
-                        oss << "Usage: " << args[0] << " <num>\r\n";
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
 
-                    s.send(oss.str());
-                },
-                "Invoke Loop::setRunNextThreshold()"
-            );
-            wp_nodes->mountNode(loop_node, func_node, "set_run_next_threshold");
-        }
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setRunInLoopQueueSizeWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_queue_size");
+            }
 
-        {
-            auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
-                    bool print_usage = false;
-                    std::ostringstream oss;
-                    if (args.size() >= 2) {
-                        int value = 0;
-                        auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                        if (CatchThrowQuietly(may_throw_func)) {
-                            oss << "must be number\r\n";
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setRunNextQueueSizeWaterLine(value);
+                                oss << "done\r\n";
+                            }
+                        } else {
                             print_usage = true;
-                        } else {
-                            sp_loop_->setCBTimeCostThreshold(value);
-                            oss << "done\r\n";
                         }
-                    } else {
-                        print_usage = true;
-                    }
 
-                    if (print_usage)
-                        oss << "Usage: " << args[0] << " <num>\r\n";
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
 
-                    s.send(oss.str());
-                },
-                "Invoke Loop::setCBTimeCostThreshold()"
-            );
-            wp_nodes->mountNode(loop_node, func_node, "set_cb_time_cost_threshold");
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setRunNextQueueSizeWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "run_next_queue_size");
+            }
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(value));
+                                oss << "done\r\n";
+                            }
+                        } else {
+                            print_usage = true;
+                        }
+
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
+
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setRunInLoopDelayWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_delay");
+            }
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setRunNextDelayWaterLine(std::chrono::microseconds(value));
+                                oss << "done\r\n";
+                            }
+                        } else {
+                            print_usage = true;
+                        }
+
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
+
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setRunNextDelayWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "run_next_delay");
+            }
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setLoopTimeCostWaterLine(std::chrono::microseconds(value));
+                                oss << "done\r\n";
+                            }
+                        } else {
+                            print_usage = true;
+                        }
+
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
+
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setLoopTimeCostWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "loop_time_cost");
+            }
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->setEventTimeCostWaterLine(std::chrono::microseconds(value));
+                                oss << "done\r\n";
+                            }
+                        } else {
+                            print_usage = true;
+                        }
+
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
+
+                        s.send(oss.str());
+                    },
+                    "Invoke Loop::setEventTimeCostWaterLine()"
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "event_time_cost");
+            }
         }
 
         {

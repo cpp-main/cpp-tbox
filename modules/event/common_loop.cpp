@@ -101,6 +101,10 @@ void CommonLoop::endLoopProcess()
     loop_acc_cost_ += cost;
     if (loop_peak_cost_ < cost)
         loop_peak_cost_ = cost;
+
+    if (cost > loop_time_cost_waterline_)
+        LogWarn("loop cost over waterline: %u ns", cost.count());
+
 }
 
 void CommonLoop::beginEventProcess()
@@ -116,9 +120,8 @@ void CommonLoop::endEventProcess()
     if (event_peak_cost_ < cost)
         event_peak_cost_ = cost;
 
-    auto cost_us = duration_cast<microseconds>(cost).count();
-    if (cost_us > cb_time_cost_threshold_us_)
-        LogWarn("cost_us: %u", cost_us);
+    if (cost > event_time_cost_waterline_)
+        LogWarn("event cost over waterline: %u ns", cost.count());
 }
 
 Stat CommonLoop::getStat() const
@@ -157,9 +160,14 @@ void CommonLoop::resetStat()
     run_next_peak_num_ = 0;
 }
 
-void CommonLoop::setCBTimeCostThreshold(uint32_t threshold_us)
+void CommonLoop::setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline)
 {
-    cb_time_cost_threshold_us_ = threshold_us;
+    loop_time_cost_waterline_ = waterline;
+}
+
+void CommonLoop::setEventTimeCostWaterLine(std::chrono::nanoseconds waterline)
+{
+    event_time_cost_waterline_ = waterline;
 }
 
 }
