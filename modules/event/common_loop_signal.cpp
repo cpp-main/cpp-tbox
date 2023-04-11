@@ -76,7 +76,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         if (!CreateFdPair(signal_read_fd_, signal_write_fd_))
             return false;
 
-        sp_signal_read_event_ = newFdEvent();
+        sp_signal_read_event_ = newFdEvent("CommonLoop::sp_signal_read_event_");
         sp_signal_read_event_->initialize(signal_read_fd_, FdEvent::kReadEvent, Event::Mode::kPersist);
         sp_signal_read_event_->setCallback(std::bind(&CommonLoop::onSignal, this));
         sp_signal_read_event_->enable();

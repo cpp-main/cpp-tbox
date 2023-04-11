@@ -136,7 +136,7 @@ void Action::setTimeout(std::chrono::milliseconds ms) {
   LogDbg("set action %d:%s(%s) timeout: %d", id_, type_.c_str(), label_.c_str(), ms.count());
 
   if (timer_ev_ == nullptr) {
-    timer_ev_ = loop_.newTimerEvent();
+    timer_ev_ = loop_.newTimerEvent("Action::timer_ev_");
     timer_ev_->setCallback(
       [this] {
         LogDbg("action %d:%s(%s) timeout", id_, type_.c_str(), label_.c_str());
@@ -160,7 +160,7 @@ void Action::resetTimeout() {
     timer_ev_ = nullptr;
 
     tobe_delete->disable();
-    loop_.runNext([tobe_delete] { delete tobe_delete; });
+    loop_.runNext([tobe_delete] { delete tobe_delete; }, "Action::resetTimeout, delete");
   }
 }
 
@@ -176,7 +176,7 @@ bool Action::finish(bool is_succ) {
     result_ = is_succ ? Result::kSuccess : Result::kFail;
 
     if (finish_cb_)
-        loop_.runNext(std::bind(finish_cb_, is_succ));
+        loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
     else
         LogWarn("action %d:%s(%s) no finish_cb", id_, type_.c_str(), label_.c_str());
 

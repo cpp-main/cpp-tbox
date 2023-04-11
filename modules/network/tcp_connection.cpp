@@ -41,7 +41,11 @@ bool TcpConnection::disconnect()
 
     BufferedFd *tmp = nullptr;
     std::swap(tmp, sp_buffered_fd_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    wp_loop_->runNext(
+        [tmp] { CHECK_DELETE_OBJ(tmp); },
+        "TcpConnection::disconnect, delete tmp"
+    );
 
     return true;
 }
@@ -101,7 +105,11 @@ void TcpConnection::onSocketClosed()
 
     BufferedFd *tmp = nullptr;
     std::swap(tmp, sp_buffered_fd_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    wp_loop_->runNext(
+        [tmp] { CHECK_DELETE_OBJ(tmp); },
+        "TcpConnection::onSocketClosed, delete tmp"
+    );
 
     if (disconnected_cb_) {
         ++cb_level_;

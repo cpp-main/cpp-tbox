@@ -193,7 +193,7 @@ void WorkThread::threadProc()
                    exec_time_cost.count() / 1000);
 
             if (item->main_cb && item->main_loop != nullptr)
-                item->main_loop->runInLoop(item->main_cb);
+                item->main_loop->runInLoop(item->main_cb, "WorkThread::threadProc, invoke main_cb");
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);

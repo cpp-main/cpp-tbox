@@ -52,7 +52,7 @@ void CommonLoop::runThisBeforeLoop()
     if (!CreateFdPair(read_fd, write_fd))
         return;
 
-    FdEvent *sp_read_event = newFdEvent();
+    FdEvent *sp_read_event = newFdEvent("CommonLoop::sp_run_read_event_");
     if (!sp_read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
         close(write_fd);
         close(read_fd);

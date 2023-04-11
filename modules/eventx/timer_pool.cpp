@@ -41,7 +41,7 @@ TimerPool::TimerToken TimerPool::Impl::doEvery(const Milliseconds &m_sec, const 
         return TimerToken();
     }
 
-    auto new_timer = wp_loop_->newTimerEvent();
+    auto new_timer = wp_loop_->newTimerEvent("TimerPool::doEvery");
     auto new_token = timers_.alloc(new_timer);
     new_timer->initialize(m_sec, event::Event::Mode::kPersist);
     new_timer->setCallback(
@@ -62,7 +62,7 @@ TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, const 
         return TimerToken();
     }
 
-    auto new_timer = wp_loop_->newTimerEvent();
+    auto new_timer = wp_loop_->newTimerEvent("TimerPool::doAfter");
     auto new_token = timers_.alloc(new_timer);
     new_timer->initialize(m_sec, event::Event::Mode::kOneshot);
     new_timer->setCallback(
@@ -90,7 +90,7 @@ bool TimerPool::Impl::cancel(const TimerToken &token)
     if (timer != nullptr) {
         timer->disable();
         if (wp_loop_->isRunning())
-            wp_loop_->run([timer] { delete timer; });
+            wp_loop_->run([timer] { delete timer; }, "TimerPool::cancel");
         else
             delete timer;
         return true;
@@ -105,7 +105,7 @@ void TimerPool::Impl::cleanup()
         [this](event::TimerEvent *timer) {
             timer->disable();
             if (wp_loop_->isRunning())
-                wp_loop_->run([timer]{ delete timer; });
+                wp_loop_->run([timer]{ delete timer; }, "TimerPool::cleanup");
             else
                 delete timer;
         }

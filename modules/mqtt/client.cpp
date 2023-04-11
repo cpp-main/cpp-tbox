@@ -78,14 +78,14 @@ Client::Client(Loop *wp_loop) :
 
     d_->sp_mosq = mosquitto_new(nullptr, true, this);
 
-    d_->sp_timer_ev = wp_loop->newTimerEvent();
+    d_->sp_timer_ev = wp_loop->newTimerEvent("mqtt::Client::sp_timer_ev");
     d_->sp_timer_ev->initialize(chrono::seconds(1), Event::Mode::kPersist);
     d_->sp_timer_ev->setCallback(std::bind(&Client::onTimerTick, this));
 
-    d_->sp_sock_read_ev  = wp_loop->newFdEvent();
+    d_->sp_sock_read_ev  = wp_loop->newFdEvent("mqtt::Client::sp_sock_read_ev");
     d_->sp_sock_read_ev->setCallback(std::bind(&Client::onSocketRead, this));
 
-    d_->sp_sock_write_ev = wp_loop->newFdEvent();
+    d_->sp_sock_write_ev = wp_loop->newFdEvent("mqtt::Client::sp_sock_write_ev");
     d_->sp_sock_write_ev->setCallback(std::bind(&Client::onSocketWrite, this));
 }
 
@@ -279,7 +279,8 @@ bool Client::start()
                     if (!is_alive)  //!< 判定this指针是否有效
                         return;
                     onTcpConnectDone(ret, true);
-                }
+                },
+                "mqtt::Client::start, connect done"
             );
         }
     );
@@ -391,7 +392,8 @@ void Client::onTimerTick()
                             if (!is_alive)  //!< 判定this指针是否有效
                                 return;
                             onTcpConnectDone(ret, false);
-                        }
+                        },
+                        "mqtt::Client::onTimerTick, reconnect done"
                     );
                 }
             );

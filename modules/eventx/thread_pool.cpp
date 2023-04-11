@@ -256,7 +256,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
                 auto t = d_->threads_cabinet.free(thread_token);
-                d_->wp_loop->runInLoop([t]{ t->join(); delete t; });
+                d_->wp_loop->runInLoop([t]{ t->join(); delete t; }, "ThreadPool::threadProc, join and delete t");
                 break;
             }
 
@@ -302,7 +302,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                    exec_time_cost.count() / 1000);
 
             if (item->main_cb)
-                d_->wp_loop->runInLoop(item->main_cb);
+                d_->wp_loop->runInLoop(item->main_cb, "ThreadPool::threadProc, invoke main_cb");
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);

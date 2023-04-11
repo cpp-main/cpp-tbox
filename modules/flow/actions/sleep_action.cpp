@@ -9,7 +9,7 @@ namespace flow {
 
 SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span) :
   Action(loop, "Sleep"),
-  timer_(loop.newTimerEvent()),
+  timer_(loop.newTimerEvent("SleepAction::timer_")),
   time_span_(time_span)
 {
   TBOX_ASSERT(timer_ != nullptr);
@@ -18,7 +18,7 @@ SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &tim
 
 SleepAction::SleepAction(event::Loop &loop, const Generator &gen) :
   Action(loop, "Sleep"),
-  timer_(loop.newTimerEvent()),
+  timer_(loop.newTimerEvent("SleepAction::timer_")),
   gen_(gen)
 {
   TBOX_ASSERT(timer_ != nullptr);

@@ -46,7 +46,7 @@ void RunInBackend()
 {
   auto loop = _runtime->ctx.loop();
 
-  auto warn_signal = loop->newSignalEvent();
+  auto warn_signal = loop->newSignalEvent("main::RunInBackend::warn_signal");
   SetScopeExitAction([=] { delete warn_signal; });
 
   warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
@@ -160,7 +160,8 @@ void Stop() {
       _runtime->ctx.stop();
       _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
       LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
-    }
+    },
+    "main::Stop"
   );
   _runtime->thread.join();
 

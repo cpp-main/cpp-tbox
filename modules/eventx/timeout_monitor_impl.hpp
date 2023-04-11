@@ -10,7 +10,7 @@ namespace eventx {
 
 template <typename T>
 TimeoutMonitor<T>::TimeoutMonitor(event::Loop *wp_loop) :
-    sp_timer_(wp_loop->newTimerEvent())
+    sp_timer_(wp_loop->newTimerEvent("TimeoutMonitor::sp_timer_"))
 { }
 
 template <typename T>
