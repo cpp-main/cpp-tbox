@@ -76,18 +76,19 @@ class Loop {
 
     //! 阈值
     virtual void setRunInLoopQueueSizeWaterLine(size_t threshold) = 0;
-    virtual void setRunNextQueueSizeWaterLine(size_t threshold) = 0;
-    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
-
     virtual size_t getRunInLoopQueueSizeWaterLine() const = 0;
+    virtual void setRunNextQueueSizeWaterLine(size_t threshold) = 0;
     virtual size_t getRunNextQueueSizeWaterLine() const = 0;
+    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
     virtual std::chrono::nanoseconds getLoopTimeCostWaterLine() const = 0;
+    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
     virtual std::chrono::nanoseconds getCbTimeCostWaterLine() const = 0;
+    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
     virtual std::chrono::nanoseconds getRunInLoopDelayWaterLine() const = 0;
+    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
     virtual std::chrono::nanoseconds getRunNextDelayWaterLine() const = 0;
+    virtual void setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getRunRequestDelayWaterLine() const = 0;
 
   public:
     virtual ~Loop() { }

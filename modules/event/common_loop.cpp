@@ -103,7 +103,7 @@ void CommonLoop::endLoopProcess()
         loop_peak_cost_ = cost;
 
     if (cost > loop_time_cost_waterline_)
-        LogWarn("loop cost over waterline: %u ns", cost.count());
+        LogWarn("loop cost over waterline: %" PRIu64 " us", cost.count()/1000);
 }
 
 void CommonLoop::beginEventProcess()
@@ -115,8 +115,8 @@ void CommonLoop::endEventProcess(Event *event)
 {
     auto cost = steady_clock::now() - event_stat_start_;
     if (cost > cb_time_cost_waterline_)
-        LogWarn("event cb cost over waterline: %u ns, what: '%s'",
-                cost.count(), event->what().c_str());
+        LogWarn("event cb cost over waterline: %" PRIu64 " us, what: '%s'",
+                cost.count()/1000, event->what().c_str());
 }
 
 Stat CommonLoop::getStat() const
@@ -207,6 +207,15 @@ std::chrono::nanoseconds CommonLoop::getCbTimeCostWaterLine() const
     return cb_time_cost_waterline_;
 }
 
+void CommonLoop::setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_request_delay_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getRunRequestDelayWaterLine() const
+{
+    return run_request_delay_waterline_;
+}
 
 }
 }

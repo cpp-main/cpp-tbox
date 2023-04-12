@@ -78,8 +78,8 @@ void CommonLoop::handleNextFunc()
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
         if (delay > run_next_delay_waterline_)
-            LogWarn("run next delay over waterline: %" PRIu64 " ns, what: '%s'",
-                    delay.count(), item.what.c_str());
+            LogWarn("run next delay over waterline: %" PRIu64 " us, what: '%s'",
+                    delay.count()/1000, item.what.c_str());
 
         if (item.func) {
             ++cb_level_;
@@ -89,8 +89,8 @@ void CommonLoop::handleNextFunc()
 
         auto cost = steady_clock::now() - now;
         if (cost > cb_time_cost_waterline_)
-            LogWarn("run next cost over waterline: %" PRIu64 " ns, what: '%s'",
-                    cost.count(), item.what.c_str());
+            LogWarn("run next cost over waterline: %" PRIu64 " us, what: '%s'",
+                    cost.count()/1000, item.what.c_str());
 
         tmp.pop_front();
     }
@@ -124,8 +124,8 @@ void CommonLoop::handleRunInLoopFunc()
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
         if (delay > run_in_loop_delay_waterline_)
-            LogWarn("run in loop delay over waterline: %" PRIu64 " ns, what: '%s'",
-                    delay.count(), item.what.c_str());
+            LogWarn("run in loop delay over waterline: %" PRIu64 " us, what: '%s'",
+                    delay.count()/1000, item.what.c_str());
 
         if (item.func) {
             ++cb_level_;
@@ -135,8 +135,8 @@ void CommonLoop::handleRunInLoopFunc()
 
         auto cost = steady_clock::now() - now;
         if (cost > cb_time_cost_waterline_)
-            LogWarn("run next cost over waterline: %" PRIu64 " ns, what: '%s'",
-                    cost.count(), item.what.c_str());
+            LogWarn("run next cost over waterline: %" PRIu64 " us, what: '%s'",
+                    cost.count()/1000, item.what.c_str());
 
         tmp.pop_front();
     }
@@ -184,11 +184,16 @@ void CommonLoop::commitRunRequest()
         (void)wsize;
 
         has_commit_run_req_ = true;
+        request_stat_start_ = steady_clock::now();
     }
 }
 
 void CommonLoop::finishRunRequest()
 {
+    auto delay = steady_clock::now() - request_stat_start_;
+    if (delay > run_request_delay_waterline_)
+        LogWarn("run request delay over waterline: %" PRIu64 " us", delay.count()/1000);
+
     char ch = 0;
     ssize_t rsize = read(run_read_fd_, &ch, 1);
     (void)rsize;
