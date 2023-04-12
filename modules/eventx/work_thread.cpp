@@ -12,6 +12,7 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/cabinet.hpp>
 #include <tbox/base/catch_throw.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {
@@ -59,21 +60,7 @@ WorkThread::WorkThread(event::Loop *main_loop) :
 
 WorkThread::~WorkThread()
 {
-    {
-        std::lock_guard<std::mutex> lg(d_->lock);
-        //! 清空task中的任务
-        while (!d_->undo_tasks_token_deque.empty()) {
-            auto token = d_->undo_tasks_token_deque.front();
-            delete d_->undo_tasks_cabinet.free(token);
-            d_->undo_tasks_token_deque.pop_front();
-        }
-    }
-
-    d_->stop_flag = true;
-    d_->cond_var.notify_all();
-
-    d_->work_thread.join();
-    CHECK_DELETE_RESET_OBJ(d_);
+    cleanup();
 }
 
 WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
@@ -85,9 +72,13 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, con
 {
     TaskToken token;
 
-    Task *item = new Task;
-    if (item == nullptr)
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
         return token;
+    }
+
+    Task *item = new Task;
+    TBOX_ASSERT(item != nullptr);
 
     item->backend_task = backend_task;
     item->main_cb = main_cb;
@@ -108,6 +99,11 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, con
 
 WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
 {
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
+        return TaskStatus::kNotFound;
+    }
+
     std::lock_guard<std::mutex> lg(d_->lock);
 
     if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
@@ -127,6 +123,11 @@ WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
  */
 int WorkThread::cancel(TaskToken token)
 {
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
+        return 3;
+    }
+
     std::lock_guard<std::mutex> lg(d_->lock);
 
     //! 如果正在执行
@@ -219,6 +220,28 @@ WorkThread::Task* WorkThread::popOneTask()
         return d_->undo_tasks_cabinet.free(token);
     }
     return nullptr;
+}
+
+void WorkThread::cleanup()
+{
+    if (d_ == nullptr)
+        return;
+
+    {
+        std::lock_guard<std::mutex> lg(d_->lock);
+        //! 清空task中的任务
+        while (!d_->undo_tasks_token_deque.empty()) {
+            auto token = d_->undo_tasks_token_deque.front();
+            delete d_->undo_tasks_cabinet.free(token);
+            d_->undo_tasks_token_deque.pop_front();
+        }
+    }
+
+    d_->stop_flag = true;
+    d_->cond_var.notify_all();
+
+    d_->work_thread.join();
+    CHECK_DELETE_RESET_OBJ(d_);
 }
 
 }

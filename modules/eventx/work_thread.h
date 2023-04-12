@@ -69,7 +69,7 @@ class WorkThread {
     int cancel(TaskToken task_token);
 
     /**
-     * 清理资源，并等待所有的worker线程结束
+     * 清理资源，并等待线程结束
      */
     void cleanup();
 

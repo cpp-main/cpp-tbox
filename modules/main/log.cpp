@@ -17,11 +17,6 @@ Log::Log()
     stdout_.enable();
 }
 
-Log::~Log()
-{
-    cleanup();
-}
-
 void Log::fillDefaultConfig(Json &cfg) const
 {
     cfg["log"] = R"(

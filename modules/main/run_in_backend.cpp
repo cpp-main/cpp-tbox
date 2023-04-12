@@ -169,6 +169,8 @@ void Stop() {
   _runtime->ctx.cleanup();
 
   LogInfo("Bye!");
+  _runtime->log.cleanup();
+
   CHECK_DELETE_RESET_OBJ(_runtime);
 
   UninstallErrorSignals();
