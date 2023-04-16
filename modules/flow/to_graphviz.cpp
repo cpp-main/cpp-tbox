@@ -190,6 +190,7 @@ std::string ActionJsonToGraphviz(const Json &js)
 {
     std::ostringstream oss;
     oss << "digraph {" << std::endl
+        << "rankdir=TB;" << std::endl
         << R"(node [shape="rect",style="filled"];)" << std::endl;
     ActionJsonToGraphviz(js, oss);
     oss << '}' << std::endl;
@@ -202,6 +203,7 @@ std::string StateMachineJsonToGraphviz(const Json &js)
     int sm_id_alloc = 0;
 
     oss << "digraph {" << std::endl
+        << "rankdir=LR;" << std::endl
         << R"(node [shape="rect",style="filled,rounded"];)" << std::endl;
     StateMachineJsonToGraphviz(js, oss, sm_id_alloc);
     oss << '}' << std::endl;
