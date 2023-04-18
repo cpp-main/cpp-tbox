@@ -74,7 +74,7 @@ void CommonLoop::run(Func &&func, const std::string &what)
 void CommonLoop::run(const Func &func, const std::string &what)
 {
     Func func_copy(func);
-    run(std::move(func), what);
+    run(std::move(func_copy), what);
 }
 
 void CommonLoop::handleNextFunc()

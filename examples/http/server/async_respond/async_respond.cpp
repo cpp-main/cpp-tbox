@@ -65,7 +65,7 @@ R"(
 </body>
 )";
             } else if (ctx->req().url.path == "/1") {
-                timers.doAfter(std::chrono::seconds(10), [ctx] (const TimerPool::TimerToken &){
+                timers.doAfter(std::chrono::seconds(10), [ctx] {
                     ctx->res().status_code = StatusCode::k200_OK;
                     ctx->res().body = ctx->req().url.path;
                 });

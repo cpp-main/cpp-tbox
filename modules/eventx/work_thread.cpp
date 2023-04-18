@@ -63,9 +63,15 @@ WorkThread::~WorkThread()
     cleanup();
 }
 
+WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task)
+{
+    return execute(std::move(backend_task), nullptr, nullptr);
+}
+
 WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
 {
-    return execute(backend_task, nullptr);
+    NonReturnFunc backend_task_copy(backend_task);
+    return execute(std::move(backend_task_copy), nullptr, nullptr);
 }
 
 WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
