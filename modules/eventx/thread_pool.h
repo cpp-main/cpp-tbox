@@ -55,6 +55,7 @@ class ThreadPool {
      *
      * \return TaskToken        任务Token
      */
+    TaskToken execute(NonReturnFunc &&backend_task, int prio = 0);
     TaskToken execute(const NonReturnFunc &backend_task, int prio = 0);
 
     /**
@@ -66,6 +67,7 @@ class ThreadPool {
      *
      * \return TaskToken        任务Token
      */
+    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio = 0);
     TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio = 0);
 
     enum class TaskStatus {

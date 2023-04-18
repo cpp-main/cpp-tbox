@@ -36,6 +36,7 @@ class WorkThread {
      *
      * \return TaskToken        任务Token
      */
+    TaskToken execute(NonReturnFunc &&backend_task);
     TaskToken execute(const NonReturnFunc &backend_task);
 
     /**
@@ -46,6 +47,7 @@ class WorkThread {
      *
      * \return TaskToken        任务Token
      */
+    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop = nullptr);
     TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop = nullptr);
 
     enum class TaskStatus {

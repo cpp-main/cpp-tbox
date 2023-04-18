@@ -98,12 +98,17 @@ bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
     return true;
 }
 
+ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, int prio)
+{
+    return execute(std::move(backend_task), nullptr, prio);
+}
+
 ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int prio)
 {
     return execute(backend_task, nullptr, prio);
 }
 
-ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
+ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
 {
     TaskToken token;
 
@@ -123,8 +128,8 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     if (item == nullptr)
         return token;
 
-    item->backend_task = backend_task;
-    item->main_cb = main_cb;
+    item->backend_task = std::move(backend_task);
+    item->main_cb = std::move(main_cb);
     item->create_time_point = Clock::now();
     {
         std::lock_guard<std::mutex> lg(d_->lock);
@@ -148,17 +153,11 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     return token;
 }
 
-ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
+ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
 {
-    std::lock_guard<std::mutex> lg(d_->lock);
-
-    if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
-        return TaskStatus::kWaiting;
-
-    if (d_->doing_tasks_token.find(task_token) != d_->doing_tasks_token.end())
-        return TaskStatus::kExecuting;
-
-    return TaskStatus::kNotFound;
+    NonReturnFunc backend_task_copy(backend_task);
+    NonReturnFunc main_cb_copy(main_cb);
+    return execute(std::move(backend_task_copy), std::move(main_cb_copy), prio);
 }
 
 /**

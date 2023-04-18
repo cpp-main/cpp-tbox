@@ -68,7 +68,7 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
     return execute(backend_task, nullptr);
 }
 
-WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
 {
     TaskToken token;
 
@@ -80,8 +80,8 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, con
     Task *item = new Task;
     TBOX_ASSERT(item != nullptr);
 
-    item->backend_task = backend_task;
-    item->main_cb = main_cb;
+    item->backend_task = std::move(backend_task);
+    item->main_cb = std::move(main_cb);
     item->main_loop = (main_loop != nullptr) ? main_loop : d_->default_main_loop;
     item->create_time_point = Clock::now();
 
@@ -95,6 +95,13 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, con
     d_->cond_var.notify_one();
 
     return token;
+}
+
+WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+{
+    NonReturnFunc backend_task_copy(backend_task);
+    NonReturnFunc main_cb_copy(main_cb);
+    return execute(std::move(backend_task_copy), std::move(main_cb_copy), main_loop);
 }
 
 WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
