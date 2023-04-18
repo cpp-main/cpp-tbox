@@ -27,7 +27,7 @@ class SignalEventImpl : public SignalEvent,
     virtual bool initialize(const std::set<int> &sigset, Mode mode) override;
     virtual bool initialize(const std::initializer_list<int> &sigset, Mode mode) override;
 
-    virtual void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
+    virtual void setCallback(CallbackFunc &&cb) override { cb_ = std::move(cb); }
 
     virtual bool isEnabled() const override { return is_enabled_; }
     virtual bool enable() override;

@@ -19,7 +19,7 @@ class SignalEvent : public Event {
     virtual bool initialize(const std::initializer_list<int> &sigset, Mode mode) = 0;
 
     using CallbackFunc = std::function<void (int)>;
-    virtual void setCallback(const CallbackFunc &cb) = 0;
+    virtual void setCallback(CallbackFunc &&cb) = 0;
 
   public:
     virtual ~SignalEvent() { }

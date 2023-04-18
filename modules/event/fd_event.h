@@ -21,7 +21,7 @@ class FdEvent : public Event {
     virtual bool initialize(int fd, short events, Mode mode) = 0;
 
     using CallbackFunc = std::function<void (short events)>;
-    virtual void setCallback(const CallbackFunc &cb) = 0;
+    virtual void setCallback(CallbackFunc &&cb) = 0;
 
   public:
     virtual ~FdEvent() { }

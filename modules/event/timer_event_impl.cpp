@@ -28,11 +28,6 @@ bool TimerEventImpl::initialize(const std::chrono::milliseconds &interval, Mode 
     return true;
 }
 
-void TimerEventImpl::setCallback(const CallbackFunc &cb)
-{
-    cb_ = cb;
-}
-
 bool TimerEventImpl::isEnabled() const
 {
     if (!is_inited_)

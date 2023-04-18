@@ -16,7 +16,7 @@ class TimerEventImpl : public TimerEvent {
 
   public:
     virtual bool initialize(const std::chrono::milliseconds &interval, Mode mode) override;
-    virtual void setCallback(const CallbackFunc &cb) override;
+    virtual void setCallback(CallbackFunc &&cb) override { cb_ = std::move(cb); }
 
     virtual bool isEnabled() const override;
     virtual bool enable() override;

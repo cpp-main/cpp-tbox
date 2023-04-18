@@ -16,7 +16,7 @@ class TimerEvent : public Event {
     virtual bool initialize(const std::chrono::milliseconds &time_span, Mode mode) = 0;
 
     using CallbackFunc = std::function<void ()>;
-    virtual void setCallback(const CallbackFunc &cb) = 0;
+    virtual void setCallback(CallbackFunc &&cb) = 0;
 
   public:
     virtual ~TimerEvent() { }
