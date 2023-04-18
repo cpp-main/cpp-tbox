@@ -26,8 +26,11 @@ class CommonLoop : public Loop {
     virtual bool isRunning() const override;
 
     virtual void runInLoop(const Func &func, const std::string &what) override;
+    virtual void runInLoop(Func &&func, const std::string &what) override;
     virtual void runNext(const Func &func, const std::string &what) override;
+    virtual void runNext(Func &&func, const std::string &what) override;
     virtual void run(const Func &func, const std::string &what) override;
+    virtual void run(Func &&func, const std::string &what) override;
 
     virtual Stat getStat() const override;
     virtual void resetStat() override;
@@ -77,11 +80,15 @@ class CommonLoop : public Loop {
 
     void handleRunInLoopRequest(short);
     void cleanupDeferredTasks();
+
     void commitRunRequest();
     void finishRunRequest();
     void handleRunInLoopFunc();
     void handleNextFunc();
     bool hasNextFunc() const;
+
+    void checkRunInLoopQueue();
+    void checkRunNextQueue();
 
     void handleExpiredTimers();
     int64_t getWaitTime() const;
@@ -105,6 +112,7 @@ class CommonLoop : public Loop {
     };
 
     struct RunFuncItem {
+        RunFuncItem(Func &&func, const std::string &what);
         RunFuncItem(const Func &func, const std::string &what);
 
         std::chrono::steady_clock::time_point commit_time_point;
