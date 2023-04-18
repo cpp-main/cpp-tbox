@@ -52,7 +52,7 @@ cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就
 
 进入到cpp-tbox的顶层目录，执行命令:  
 ```
-STAGING_DIR=$HOME/.local make modules RELEASE=1
+STAGING_DIR=$HOME/.local make 3rd-party modules RELEASE=1
 ```
 
 完成之后，所有的头文件导出到 `$HOME/.local/include/`，所有的库文件输出到 `$HOME/.local/lib/`。
@@ -61,7 +61,8 @@ STAGING_DIR=$HOME/.local make modules RELEASE=1
 在你自己工程的 Makefile 中，你需要添加以下的内容:
 ```
 CXXFLAGS += -I$(HOME)/.local/include
-LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
+LDFLAGS += -L$(HOME)/.local/lib
+LDFLAGS += -ltbox_main -ltbox_terminal -ltbox_network -ltbox_eventx -ltbox_event -ltbox_log -ltbox_util -ltbox_base -lpthread -ldl
 ```
 然后就可以使用tbox的组件了。
 
@@ -78,3 +79,6 @@ LDFLAGS += -L$(HOME)/.local/lib -ltbox_xxxxx
 - 实现IPv6
 - 实现TLS的支持
 
+# 联系方式
+
+微信：hevake_lee
