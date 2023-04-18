@@ -16,23 +16,6 @@ CommonLoop::RunFuncItem::RunFuncItem(Func &&f, const std::string &w)
     , what(w)
 { }
 
-CommonLoop::RunFuncItem::RunFuncItem(const Func &f, const std::string &w)
-    : commit_time_point(steady_clock::now())
-    , func(f)
-    , what(w)
-{ }
-
-void CommonLoop::runInLoop(const Func &func, const std::string &what)
-{
-    std::lock_guard<std::recursive_mutex> g(lock_);
-    run_in_loop_func_queue_.emplace_back(RunFuncItem(func, what));
-
-    if (sp_run_read_event_ != nullptr)
-        commitRunRequest();
-
-    checkRunInLoopQueue();
-}
-
 void CommonLoop::runInLoop(Func &&func, const std::string &what)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
@@ -41,11 +24,6 @@ void CommonLoop::runInLoop(Func &&func, const std::string &what)
     if (sp_run_read_event_ != nullptr)
         commitRunRequest();
 
-    checkRunInLoopQueue();
-}
-
-void CommonLoop::checkRunInLoopQueue()
-{
     auto queue_size = run_in_loop_func_queue_.size();
     if (queue_size > run_in_loop_queue_size_water_line_)
         LogNotice("run_in_loop_queue size: %u", queue_size);
@@ -54,20 +32,16 @@ void CommonLoop::checkRunInLoopQueue()
         run_in_loop_peak_num_ = queue_size;
 }
 
-void CommonLoop::runNext(const Func &func, const std::string &what)
+void CommonLoop::runInLoop(const Func &func, const std::string &what)
 {
-    run_next_func_queue_.emplace_back(RunFuncItem(func, what));
-    checkRunNextQueue();
+    Func func_copy(func);
+    runInLoop(std::move(func_copy), what);
 }
 
 void CommonLoop::runNext(Func &&func, const std::string &what)
 {
     run_next_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
-    checkRunNextQueue();
-}
 
-void CommonLoop::checkRunNextQueue()
-{
     auto queue_size = run_next_func_queue_.size();
     if (queue_size > run_next_queue_size_water_line_)
         LogNotice("run_next_queue size: %u", queue_size);
@@ -76,19 +50,10 @@ void CommonLoop::checkRunNextQueue()
         run_next_peak_num_ = queue_size;
 }
 
-void CommonLoop::run(const Func &func, const std::string &what)
+void CommonLoop::runNext(const Func &func, const std::string &what)
 {
-    bool can_run_next = true;
-    {
-        std::lock_guard<std::recursive_mutex> g(lock_);
-        if (isRunningLockless() && !isInLoopThreadLockless())
-            can_run_next = false;
-    }
-
-    if (can_run_next)
-        runNext(func, what);
-    else
-        runInLoop(func, what);
+    Func func_copy(func);
+    runNext(std::move(func_copy), what);
 }
 
 void CommonLoop::run(Func &&func, const std::string &what)
@@ -104,6 +69,12 @@ void CommonLoop::run(Func &&func, const std::string &what)
         runNext(std::move(func), what);
     else
         runInLoop(std::move(func), what);
+}
+
+void CommonLoop::run(const Func &func, const std::string &what)
+{
+    Func func_copy(func);
+    run(std::move(func), what);
 }
 
 void CommonLoop::handleNextFunc()

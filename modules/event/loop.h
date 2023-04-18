@@ -38,12 +38,12 @@ class Loop {
 
     //! 委托延后执行动作
     using Func = std::function<void()>;
-    virtual void runInLoop(const Func &func, const std::string &what = "") = 0;
     virtual void runInLoop(Func &&func, const std::string &what = "") = 0;
-    virtual void runNext(const Func &func, const std::string &what = "") = 0;
+    virtual void runInLoop(const Func &func, const std::string &what = "") = 0;
     virtual void runNext(Func &&func, const std::string &what = "") = 0;
-    virtual void run(const Func &func, const std::string &what = "") = 0;
+    virtual void runNext(const Func &func, const std::string &what = "") = 0;
     virtual void run(Func &&func, const std::string &what = "") = 0;
+    virtual void run(const Func &func, const std::string &what = "") = 0;
     /**
      * runInLoop(), runNext(), run() 区别
      *
