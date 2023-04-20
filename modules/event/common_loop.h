@@ -123,8 +123,7 @@ class CommonLoop : public Loop {
 
     //! run 相关
     bool has_commit_run_req_ = false;
-    int run_read_fd_ = -1;
-    int run_write_fd_ = -1;
+    int run_event_fd_ = -1;
     FdEvent *sp_run_read_event_ = nullptr;
     std::deque<RunFuncItem> run_in_loop_func_queue_;
     std::deque<RunFuncItem> run_next_func_queue_;

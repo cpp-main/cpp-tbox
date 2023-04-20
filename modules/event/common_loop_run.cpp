@@ -189,9 +189,10 @@ void CommonLoop::cleanupDeferredTasks()
 void CommonLoop::commitRunRequest()
 {
     if (!has_commit_run_req_) {
-        char ch = 0;
-        ssize_t wsize = write(run_write_fd_, &ch, 1);
-        (void)wsize;
+        uint64_t one = 1;
+        ssize_t wsize = write(run_event_fd_, &one, sizeof(one));
+        if (wsize != sizeof(one))
+            LogErr("write error");
 
         has_commit_run_req_ = true;
         request_stat_start_ = steady_clock::now();
@@ -204,9 +205,10 @@ void CommonLoop::finishRunRequest()
     if (delay > run_request_delay_waterline_)
         LogNotice("run request delay over waterline: %" PRIu64 " us", delay.count()/1000);
 
-    char ch = 0;
-    ssize_t rsize = read(run_read_fd_, &ch, 1);
-    (void)rsize;
+    uint64_t one = 1;
+    ssize_t rsize = read(run_event_fd_, &one, sizeof(one));
+    if (rsize != sizeof(one))
+        LogErr("read error");
 
     has_commit_run_req_ = false;
 }

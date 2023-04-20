@@ -48,14 +48,11 @@ bool CommonLoop::isRunningLockless() const
 
 void CommonLoop::runThisBeforeLoop()
 {
-    int read_fd = -1, write_fd = -1;
-    if (!CreateFdPair(read_fd, write_fd))
-        return;
+    int event_fd = CreateEventFd();
 
     FdEvent *sp_read_event = newFdEvent("CommonLoop::sp_run_read_event_");
-    if (!sp_read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
-        close(write_fd);
-        close(read_fd);
+    if (!sp_read_event->initialize(event_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
+        close(event_fd);
         delete sp_read_event;
         return;
     }
@@ -66,8 +63,7 @@ void CommonLoop::runThisBeforeLoop()
 
     std::lock_guard<std::recursive_mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
-    run_read_fd_ = read_fd;
-    run_write_fd_ = write_fd;
+    run_event_fd_ = event_fd;
     sp_run_read_event_ = sp_read_event;
 
     if (!run_in_loop_func_queue_.empty())
@@ -84,8 +80,7 @@ void CommonLoop::runThisAfterLoop()
     loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
     if (sp_run_read_event_ != nullptr) {
         CHECK_DELETE_RESET_OBJ(sp_run_read_event_);
-        CHECK_CLOSE_RESET_FD(run_write_fd_);
-        CHECK_CLOSE_RESET_FD(run_read_fd_);
+        CHECK_CLOSE_RESET_FD(run_event_fd_);
     }
 }
 
