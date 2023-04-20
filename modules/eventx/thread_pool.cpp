@@ -136,8 +136,8 @@ ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonRetur
         item->token = token = d_->undo_tasks_cabinet.alloc(item);
 
         d_->undo_tasks_token.at(level).push_back(token);
-        //! 如果空间线程不够，且还可以再创建新的线程
-        if (d_->idle_thread_num == 0) {
+        //! 如果空闲线程不够分配未认领的任务，且还可以再创建新的线程
+        if (d_->undo_tasks_cabinet.size() > d_->idle_thread_num) {
             if (d_->threads_cabinet.size() < d_->max_thread_num) {
                 createWorker();
             } else {
@@ -333,6 +333,7 @@ bool ThreadPool::createWorker()
     auto *new_thread = new std::thread(std::bind(&ThreadPool::threadProc, this, thread_token));
     if (new_thread != nullptr) {
         d_->threads_cabinet.update(thread_token, new_thread);
+        LogDbg("create thread %u", thread_token.id());
         return true;
 
     } else {
