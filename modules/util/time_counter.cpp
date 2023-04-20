@@ -45,9 +45,11 @@ uint64_t TimeCounter::elapsed() const
     return cost.count();
 }
 
-void TimeCounter::print(const char *tag) const
+void TimeCounter::print(const char *tag, uint64_t threshold_ns) const
 {
     auto ns_count = elapsed();
+    if (ns_count <= threshold_ns)
+        return;
 
 #if USE_PRINTF
     printf("TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at [%s] \n",

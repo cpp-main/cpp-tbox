@@ -17,7 +17,7 @@ class TimeCounter {
     uint64_t elapsed() const;
 
     //! 打印已流逝的时间到终端
-    void print(const char *tag) const;
+    void print(const char *tag, uint64_t threshold_ns = 0) const;
 
   private:
     std::chrono::steady_clock::time_point start_time_point_;
