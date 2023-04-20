@@ -260,11 +260,9 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             std::unique_lock<std::mutex> lk(d_->lock);
 
             /**
-             * 为防止反复创建线程，此处做优化：
-             * 如果当前已有空闲的线程在等待，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
-             * 但这也会引起另一个小问题：如果 min_thread_num = 0，那么一旦执行过一次，线程池中至少会保留一个工作线程
+             * 如果当前空闲的线程数量大于等于未被领取的任务数，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
              */
-            if (d_->idle_thread_num > 0 && d_->threads_cabinet.size() > d_->min_thread_num) {
+            if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) && (d_->threads_cabinet.size() > d_->min_thread_num)) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
                 auto t = d_->threads_cabinet.free(thread_token);
