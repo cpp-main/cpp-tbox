@@ -1,6 +1,6 @@
 #include "time_counter.h"
 
-#define USE_PRINTF 0
+#define USE_PRINTF 1
 
 #if USE_PRINTF
 # include <cstdio>
@@ -55,7 +55,9 @@ void TimeCounter::print(const char *tag, uint64_t threshold_ns) const
     printf("TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at [%s] \n",
            ns_count / 1000, ns_count % 1000, tag);
 #else
-    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << ns_count % 1000 << " us on [" << tag << ']' << endl;
+    cout << "TIME_COST: " << setw(8) << ns_count / 1000
+         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
+         << " us on [" << tag << ']' << endl;
 #endif
 }
 
@@ -95,8 +97,10 @@ void FixedTimeCounter::stop()
            ns_count / 1000, ns_count % 1000,
            func_name_, Basename(file_name_), line_);
 #else
-    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << ns_count % 1000 << " us at "
-         << func_name_ << "() in " << Basename(file_name_) << ':' << line_ << endl;
+    cout << "TIME_COST: " << setw(8) << ns_count / 1000
+         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
+         << " us at " << func_name_ << "() in "
+         << Basename(file_name_) << ':' << line_ << endl;
 #endif
 
 }
