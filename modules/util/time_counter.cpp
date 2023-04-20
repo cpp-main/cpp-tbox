@@ -95,7 +95,7 @@ void FixedTimeCounter::stop()
            ns_count / 1000, ns_count % 1000,
            func_name_, Basename(file_name_), line_);
 #else
-    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << ns_count % 1000 << " us at"
+    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << ns_count % 1000 << " us at "
          << func_name_ << "() in " << Basename(file_name_) << ':' << line_ << endl;
 #endif
 
