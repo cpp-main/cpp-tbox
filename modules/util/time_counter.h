@@ -23,7 +23,22 @@ class TimeCounter {
     std::chrono::steady_clock::time_point start_time_point_;
 };
 
+class CpuTimeCounter {
+  public:
+    CpuTimeCounter();
 
+    //! 开始计时
+    void start();
+
+    //! 获取㳿逝的时间，单位纳秒
+    uint64_t elapsed() const;
+
+    //! 打印已流逝的时间到终端
+    void print(const char *tag, uint64_t threshold_ns = 0) const;
+
+  private:
+    struct timespec start_time_;
+};
 
 class FixedTimeCounter {
   public:

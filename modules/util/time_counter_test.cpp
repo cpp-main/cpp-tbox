@@ -57,5 +57,18 @@ TEST(TimeCounter, TimeCounter)
     tc.print("after 20 sec");
 }
 
+TEST(TimeCounter, CpuTimeCounter)
+{
+    CpuTimeCounter tc;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    tc.print("after 10 msec");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    tc.print("after 20 sec");
+
+    tc.start();
+    tc.print("do nothing");
+}
+
 }
 }

@@ -61,6 +61,44 @@ void TimeCounter::print(const char *tag, uint64_t threshold_ns) const
 #endif
 }
 
+CpuTimeCounter::CpuTimeCounter()
+{
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time_);
+}
+
+void CpuTimeCounter::start()
+{
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time_);
+}
+
+uint64_t CpuTimeCounter::elapsed() const
+{
+    const uint64_t nsec_per_sec = 1000000000;
+    struct timespec end_time;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_time);
+    uint64_t ns_count = (end_time.tv_sec - start_time_.tv_sec) * nsec_per_sec;
+    ns_count += end_time.tv_nsec;
+    ns_count -= start_time_.tv_nsec;
+
+    return ns_count;
+}
+
+void CpuTimeCounter::print(const char *tag, uint64_t threshold_ns) const
+{
+    auto ns_count = elapsed();
+    if (ns_count <= threshold_ns)
+        return;
+
+#if USE_PRINTF
+    printf("CPU_TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at [%s] \n",
+           ns_count / 1000, ns_count % 1000, tag);
+#else
+    cout << "CPU_TIME_COST: " << setw(8) << ns_count / 1000
+         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
+         << " us on [" << tag << ']' << endl;
+#endif
+}
+
 /////////////////////
 // FixedTimeCounter
 /////////////////////
