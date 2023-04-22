@@ -11,6 +11,7 @@ ostream& operator<< (ostream &os, const tbox::event::Stat &stat)
 
     os << "loop_count: " << stat.loop_count << endl;
     os << "loop_acc_cost: " << stat.loop_acc_cost_us << " us" << endl;
+    os << "loop_avg_cost: " << stat.loop_acc_cost_us * 1.0 / stat.loop_count << " us" << endl;
     os << "loop_peak_cost: " << stat.loop_peak_cost_us << " us" << endl;
     os << "loop_cpu: " << (stat.loop_acc_cost_us * 100.0 / stat.stat_time_us) << " %" << endl;
 
