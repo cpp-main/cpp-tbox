@@ -1,21 +1,73 @@
 # cpp-tbox
 
-# 介绍
-cpp-tbox，全称: C++ Treasure Box，C++开发百宝箱，是基于事件的服务型应用开发库。
-
-如果您需要使用C++开发服务型软件，您使用它可以助你事半功倍。因为这里有完备的软件框架与服务型软件开发配套成体系的工具集，拿来即用。使用它打造一个服务型的软件非常简单。
-
-打个比方：如果你想要建一栋别墅。你会怎么做呢？如果你从零修建它，就太费时费力了。你可能要自己打地基、烧砖，砌墙、封顶，而且最终修建出来的东西还不一定稳固，可能还会漏雨、甚至倒塌。好在这里就有一个成熟且免费的施工方案。它有栋现成的经过了工程检验了的新别墅，里面水电气网全通，并配备了各种家具：灶、洗衣机、冰箱等供你选择。基于实用方面的考虑，为何不用现成的？
-
-cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就是cpp-tbox中的main框架。水电气网，就是这个main框架内置的事件驱动、日志系统、参数系统、调试终端、线程池模块。而所谓的家具就是cpp-tbox中其它常用模块，如：通信（TCP,UDP,HTTP,MQTT,UART等）、协程、闹钟、序列化、状态机、行为树、AES、MD5等等，几乎网络编程需要的模块，这里都有。
-有了cpp-tbox，打造一个服务型程序就变得非常简单多了：在main框架的基础上，编写业务模块就可以了，连`main()`函数都不用写。省去了大量没必要的开发工作量。
-
-真的很好用，快来试试吧！
+# 简介
+cpp-tbox，全称: C++ Treasure Box，是C++开发百宝箱，是基于事件的服务型应用开发库以及开发框架。
 
 # 适用环境
 
 - Linux 环境，主要是针对服务型应用的；
 - C++11 以上。
+
+# 快速上手
+
+**准备**
+
+`apt install -y g++ git make libgtest-dev libgmock-dev libmosquitto-dev`
+
+**下载**
+`git clone https://gitee.com/cpp-master/cpp-tbox.git`
+
+**构建**
+```
+cd cpp-tbox;
+STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
+```
+头文件与库文件都在 $HOME/.tbox 中。
+
+**编写Demo程序**
+创建自己的工程目录，然后在其中创建 demo.cpp 与 Makefile。
+
+demo.cpp
+```
+#include <tbox/base/log.h>
+#include <tbox/main/module.h>
+
+using namespace std;
+
+class Demo : public tbox::main::Module {
+  public:
+    Demo(tbox::main::Context &ctx) : tbox::main::Module("demo", ctx) { }
+    virtual bool onInit(const tbox::Json &js) override { LogTag(); return true; }
+    virtual bool onStart() override { LogTag(); return true; }
+    virtual void onStop() override { LogTag(); }
+    virtual void onCleanup() override { LogTag(); }
+};
+
+namespace tbox {
+namespace main {
+
+void RegisterApps(Module &app, Context &ctx) {  app.add(new Demo(ctx)); }
+
+}
+}
+
+Makefile
+```
+TARGET:=demo
+OBJECTS:=demo.o
+
+CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"demo"'
+LDFLAGS:=-L$(HOME)/.tbox/lib -rdynamic
+LIBS:=-ltbox_main -ltbox_terminal -ltbox_network -ltbox_eventx -ltbox_event -ltbox_log -ltbox_util -ltbox_base -lpthread -ldl
+
+all : $(TARGET)
+
+$(TARGET) : $(OBJECTS)
+        g++ -o $@ $^ $(LDFLAGS) $(LIBS)
+```
+
+然后 make，然后执行 demo：
+![执行效果](documents/images/demo.png)
 
 # 模块介绍
 
@@ -41,31 +93,6 @@ cpp-tbox就提供了这样的别墅与配套设施。所谓的现成的别墅就
 | libgmock-dev | 所有模块 | 单元测试用，如果不进行单元测试可忽略 | sudo apt install libgmock-dev |
 | mosquitto | mqtt | MQTT库，如果不使用mqtt模块可忽略 | sudo apt install libmosquitto-dev |
 
-
-**安装命令**
-
-| 系统 | 安装命令 |
-|:----:|:------:|
-| Ubuntu/Debian | `apt install -y g++ make libgtest-dev libgmock-dev libmosquitto-dev` |
-
-**如果构建**
-
-进入到cpp-tbox的顶层目录，执行命令:  
-```
-STAGING_DIR=$HOME/.local make 3rd-party modules RELEASE=1
-```
-
-完成之后，所有的头文件导出到 `$HOME/.local/include/`，所有的库文件输出到 `$HOME/.local/lib/`。
-如果你没有指定 `STAGING_DIR` 参数，它默认为 `.staging`。
-
-在你自己工程的 Makefile 中，你需要添加以下的内容:
-```
-CXXFLAGS += -I$(HOME)/.local/include
-LDFLAGS += -L$(HOME)/.local/lib
-LDFLAGS += -ltbox_main -ltbox_terminal -ltbox_network -ltbox_eventx -ltbox_event -ltbox_log -ltbox_util -ltbox_base -lpthread -ldl
-```
-然后就可以使用tbox的组件了。
-
 # 模块间依赖
 
 ![](/documents/images/modules-dependence.png)
@@ -74,11 +101,8 @@ LDFLAGS += -ltbox_main -ltbox_terminal -ltbox_network -ltbox_eventx -ltbox_event
 
 打开 config.mk 文件，将不需要模块对应 `app_y += xxx` 屏蔽即可，但要注意模块间的依赖性。
 
-# 未来规划
+# 联系我
 
-- 实现IPv6
-- 实现TLS的支持
-
-# 联系方式
-
-微信：hevake_lee
+- Issue：使用任何问题都欢迎在issue里交流
+- 微信：hevake_lee
+- QQ群：738084942（cpp-tbox 技术交流）
