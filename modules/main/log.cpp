@@ -56,7 +56,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 
         //! SYSLOG
         if (util::json::HasObjectField(js_log, "syslog")) {
-            auto &js_syslog = js_log.at("stdout");
+            auto &js_syslog = js_log.at("syslog");
             initChannel(js_syslog, syslog_);
         }
 

@@ -201,7 +201,7 @@ void CommonLoop::commitRunRequest()
 
 void CommonLoop::finishRunRequest()
 {
-    auto delay = steady_clock::now() - request_stat_start_;
+    auto delay = loop_stat_start_ - request_stat_start_;
     if (delay > run_request_delay_waterline_)
         LogNotice("run request delay over waterline: %" PRIu64 " us", delay.count()/1000);
 
