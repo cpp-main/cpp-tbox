@@ -15,9 +15,11 @@ cpp-tbox，全称: C++ Treasure Box，是C++开发百宝箱，是基于事件的
 `apt install -y g++ git make libgtest-dev libgmock-dev libmosquitto-dev`
 
 **下载**
+
 `git clone https://gitee.com/cpp-master/cpp-tbox.git`
 
 **构建**
+
 ```
 cd cpp-tbox;
 STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
@@ -25,6 +27,7 @@ STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
 头文件与库文件都在 $HOME/.tbox 中。
 
 **编写Demo程序**
+
 创建自己的工程目录，然后在其中创建 demo.cpp 与 Makefile。
 
 demo.cpp
@@ -67,7 +70,7 @@ $(TARGET) : $(OBJECTS)
 ```
 
 然后 make，然后执行 demo：
-![执行效果](documents/images/demo.png)
+![执行效果](documents/images/first-demo.png)
 
 # 模块介绍
 
