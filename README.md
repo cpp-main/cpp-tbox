@@ -53,6 +53,7 @@ void RegisterApps(Module &app, Context &ctx) {  app.add(new Demo(ctx)); }
 
 }
 }
+```
 
 Makefile
 ```
