@@ -40,11 +40,17 @@ using namespace std;
 class Demo : public tbox::main::Module {
   public:
     Demo(tbox::main::Context &ctx) : tbox::main::Module("demo", ctx) { }
+    virtual bool onInit(const tbox::Json &js) override { LogTag(); return true; }
+    virtual bool onStart() override { LogTag(); return true; }
+    virtual void onStop() override { LogTag(); }
+    virtual void onCleanup() override { LogTag(); }
 };
 
 namespace tbox {
 namespace main {
-void RegisterApps(Module &app, Context &ctx) {  app.add(new Demo(ctx)); }
+void RegisterApps(Module &app, Context &ctx) {
+  app.add(new Demo(ctx));
+}
 }
 }
 ```
@@ -66,6 +72,7 @@ $(TARGET) : $(OBJECTS)
 
 然后 make，然后执行 demo：
 ![执行效果](documents/images/first-demo.png)
+
 
 # 模块介绍
 
