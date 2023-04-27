@@ -4,7 +4,7 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 # 特点
 
 ## 1. 基于Reactor模型
-参考 Node.js 的 Reactor 模式。主线程以 Reactor 模式处理非阻塞 IO 事件,并配合 ThreadPool 执行大运算与阻塞性操作。
+参考 Node.js 的 Reactor 模式。主线程以 Reactor 模式处理非阻塞 IO 事件,并配合 ThreadPool 执行大运算与阻塞性操作。  
 
 该模式避免了多线程模式竞态加锁的烦恼,程序稳定可靠。
 
@@ -18,15 +18,16 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 这极大地降低了调试难度。
 
 ## 4. 完备的日志系统
-**1) 有三种日志输出渠道:终端 + 文件 + syslog**
+**1) 有三种日志输出渠道:终端 + 文件 + syslog**  
 
-**2) 根据日志等级渲染不同颜色,一目了然,内容详尽**
+**2) 根据日志等级渲染不同颜色,一目了然,内容详尽**  
 ![](documents/images/0002-log-show.png)
 日志内容包含了:等级、时间(精确到微秒)、线程号、模块名、函数名、正文、文件名、行号。
 方便快速定位问题。
 
-**3) 灵活的日志输出过滤器,且能运行时修改**
-可针对不同的模块单独设置日志等级。
+**3) 灵活的日志输出过滤器,且能运行时修改**  
+可在程序运行时针对不同的模块单独设置日志等级,如下:
+![](documents/images/0001-set-log-level.gif)
 
 ## 5. 灵活的参数系统,以不变应万变
 ![](documents/images/0005-arguments.png)
@@ -34,12 +35,12 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 ## 6. 支持线程池、主次线程间无锁传递
 子线程委托主线程执行:
 ![](documents/images/0003-run-in-loop.png)
-
 主线程委托子线程执行:
 ![](documents/images/0004-run-thread-pool.png)
 
 ## 7. 支持优雅的退出流程
 在接收到信号:SIGINT, SIGTERM, SIGQUIT, SIGPWR 时,会有序地执行退出流程,释放资源。做到干净地退出。
+![](documents/images/0002-exit-friendly.gif)
 
 ## 8. 有全面的异常捕获机制
 当程序出现各种程序异常,如:段错误、断言、总线错误、异常未捕获等,架框会捕获并在日志系统中打印完整的调用栈,如:
