@@ -5,7 +5,7 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 
 ## 1. 基于Reactor模型
 参考 Node.js 的 Reactor 模式。主线程以 Reactor 模式处理非阻塞 IO 事件,并配合 ThreadPool 执行大运算与阻塞性操作。  
-![](documents/images/0008-reactor-model.png)  
+![](documents/images/0001-tbox-loop.jpg)  
 该模式避免了多线程模式竞态加锁的烦恼,程序稳定可靠。  
 
 ## 2. 内含main框架,开箱即用
@@ -47,7 +47,7 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 ## 8. 有全面的异常捕获机制
 当程序出现各种程序异常,如:段错误、断言、总线错误、异常未捕获等,架框会捕获并在日志系统中打印完整的调用栈,如:  
 ![异常栈打印](documents/images/0006-error-dump.png)  
-面对程序蹦溃,不再一脸茫然。
+面对程序崩溃,不再一脸茫然。
 
 ## 9. 有丰富的开发组件
 
