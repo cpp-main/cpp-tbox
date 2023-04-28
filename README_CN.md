@@ -9,9 +9,29 @@ cpp-tbox,全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的
 该模式避免了多线程模式竞态加锁的烦恼,程序稳定可靠。  
 
 ## 2. 内含main框架,开箱即用
-使用内置的 main 框架可直接构建出可执行程序,不需要使用者编写 `main()` 程序入口。  
-一切都已准备好,您只需要填写业务代码即可。  
-![主框架组成图](documents/images/0008-main-framework.png)
+使用内置的 main 框架处理了所有与业务无关的工作。您不需要关心日志怎么输出、参数怎么解析、程序怎么退出、main函数怎么写这些琐碎的事情。main框架都为您处理好了。  
+您只需要派生`tbox::main::Module`类,填写业务代码,然后注册到框架即可。  
+```c++
+#include <tbox/main/module.h>
+
+class DemoApp : public tbox::main::Module {
+  public:
+    explicit DemoApp(tbox::main::Context &ctx) : tbox::main::Module("demo", ctx) { }
+  public:
+    virtual bool onInit(const tbox::Json &js) override { return true; }
+    virtual bool onStart() override { return true; }
+    virtual void onStop() override { }
+    virtual void onCleanup() override { }
+};
+
+namespace tbox {
+namespace main {
+void RegisterApps(Module &app, Context &ctx) {
+  app.add(new DemoApp(ctx));
+}
+}
+}
+```
 
 ## 3. 具有类Shell的命令终端
 可以与运行中的服务通过telnet进行交互,令其打印内部数据,或是执行特定的动作。
