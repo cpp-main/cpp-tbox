@@ -1,6 +1,6 @@
 # cpp-tbox
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Language](https://img.shields.io/badge/language-c++-red.svg)](https://en.cppreference.com/)
+[![Language](https://img.shields.io/badge/language-c++11-red.svg)](https://en.cppreference.com/)
 [![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
 全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**。  
@@ -113,6 +113,17 @@
 
 # 反馈途径
 
-- Issue:任何问题都欢迎在issue里交流
-- 微信:hevake_lee
-- QQ群:738084942(cpp-tbox 技术交流)
+- Issue: 任何问题都欢迎在issue里交流
+- 微信: hevake_lee
+- QQ群: 738084942 (cpp-tbox 技术交流)
+
+# 鼓励我
+
+如果这个项目让您的工作更轻松、下班更早了，请您给我更多的鼓励。
+你可以做这些：  
+
+- 给它点亮三连： Star, Watch, Fork；
+- 向身边的同事与伙伴推荐，在技术论坛向您的读者推荐；
+- 积极反馈问题，提出建议；
+- 参与项目的开发，贡献您的力量。
+- 让我知道它被运用到了哪些的项目上（本项目不收费用，仅仅是想得到更多的成就感）；
