@@ -62,7 +62,6 @@ class Deserializer {
 
     bool skip(size_t s);
 
-  protected:
     bool checkSize(size_t size) const;
 
   private:
