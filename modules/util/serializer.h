@@ -52,6 +52,8 @@ class Deserializer {
     inline const uint8_t* start() const { return start_; }
     inline size_t size() const { return size_; }
 
+    inline const uint8_t* ptr() const { return start_ + pos_; }
+
     bool fetch(uint8_t &out);
     bool fetch(uint16_t &out);
     bool fetch(uint32_t &out);

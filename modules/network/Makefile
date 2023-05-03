@@ -20,6 +20,7 @@ HEAD_FILES = \
 	tcp_client.h \
 	tcp_server.h \
 	net_if.h \
+	domain_name.h \
 	dns_request.h \
 
 CPP_SRC_FILES = \

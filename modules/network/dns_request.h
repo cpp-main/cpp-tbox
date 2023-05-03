@@ -4,6 +4,7 @@
 #include <map>
 #include <tbox/event/loop.h>
 #include <tbox/eventx/timeout_monitor.hpp>
+
 #include "udp_socket.h"
 #include "domain_name.h"
 
@@ -55,7 +56,7 @@ class DnsRequest {
 
   public:
     /// 设置DNS IP地址
-    void setDnsIPAddesses(const IPAddressVec &dns_ip_vec);
+    void setDnsIPAddresses(const IPAddressVec &dns_ip_vec);
 
     /// 向DNS服务器发送查询请求
     ReqId request(const DomainName &domain, const Callback &cb);
