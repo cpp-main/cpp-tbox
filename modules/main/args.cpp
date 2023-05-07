@@ -110,25 +110,22 @@ void Args::printHelp(const std::string &proc_name)
 {
     cout << "Usage: " << proc_name << " [OPTION]" << endl
         << GetAppDescribe() << endl << endl
-        << "OPTION:" << endl
+        << "OPTION" << endl
         << "  -h, --help        display this help text and exit" << endl
         << "  -v, --version     display version and exit" << endl
-        << "  -c FILE           specify config file, file type: JSON" << endl
+        << "  -c FILE           specify config file, which content format: JSON" << endl
         << "  -s KEY=VALUE      set config field" << endl
         << "  -p                display config" << endl
-        << "  -n                not run" << endl
+        << "  -n                don't run" << endl
         << endl
-        << "EXAMPLE:" << endl
+        << "EXAMPLE" << endl
         << "  " << proc_name << endl
         << "  " << proc_name << R"( -c somewhere/conf.json)" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -p)" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -pn)" << endl
-        << "  " << proc_name << R"( -s 'log.level=6' -s 'log.output="stdout"')" << endl
-        << "  " << proc_name << R"( -s 'log={"level":5,"output":"tcp","tcp":{"ip":"192.168.0.20","port":50000}}')" << endl
-        << "  " << proc_name << R"( -c somewhere/conf.json -s 'log.level=6' -s 'thread_pool.min_thread=2')" << endl
-        << endl
-        << "CONFIG:" << endl
-        << R"(  type ")" << proc_name << R"( -pn" to display default config.)" << endl
+        << "  " << proc_name << R"( -s 'log.filelog.enable=true' -s 'log.filelog.path="/tmp/"')" << endl
+        << "  " << proc_name << R"( -s 'log.filelog={"enable":true,"path":"/tmp/"}')" << endl
+        << "  " << proc_name << R"( -c somewhere/conf.json -s 'thread_pool.min=2')" << endl
         << endl;
 }
 

@@ -80,7 +80,7 @@ ContextImp::~ContextImp()
 
 void ContextImp::fillDefaultConfig(Json &cfg) const
 {
-    cfg["thread_pool"] = R"({"min":1, "max":5})"_json;
+    cfg["thread_pool"] = R"({"min":0, "max":5})"_json;
 }
 
 bool ContextImp::initialize(const Json &cfg)
@@ -238,8 +238,8 @@ void ContextImp::initShell()
         wp_nodes->mountNode(ctx_node, loop_node, "loop");
 
         {
-            auto water_line_node = wp_nodes->createDirNode("This is waterline directory");
-            wp_nodes->mountNode(loop_node, water_line_node, "water_line");
+            auto water_line_node = wp_nodes->createDirNode("This is water line directory");
+            wp_nodes->mountNode(loop_node, water_line_node, "wl");
             {
                 auto func_node = wp_nodes->createFuncNode(
                     [this] (const Session &s, const Args &args) {
