@@ -17,7 +17,10 @@ TEST(SleepAction, Basic) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
-  SleepAction action(*loop, std::chrono::milliseconds(10));
+  SleepAction action(*loop);
+  action.setDuration(std::chrono::milliseconds(10));
+  action.init();
+
   bool is_finished = false;
   action.setFinishCallback(
     [loop, &is_finished] (bool is_succ) {
@@ -42,16 +45,22 @@ TEST(SleepAction, Accuracy) {
   std::chrono::steady_clock::time_point ts_100ms;
   std::chrono::steady_clock::time_point ts_200ms;
 
-  SleepAction action_50ms(*loop, std::chrono::milliseconds(50));
-  SleepAction action_100ms(*loop, std::chrono::milliseconds(100));
-  SleepAction action_200ms(*loop, std::chrono::milliseconds(200));
-
+  SleepAction action_50ms(*loop);
+  action_50ms.setDuration(std::chrono::milliseconds(50));
   action_50ms.setFinishCallback( [&] (bool is_succ) { ts_50ms = std::chrono::steady_clock::now(); });
-  action_100ms.setFinishCallback( [&] (bool is_succ) { ts_100ms = std::chrono::steady_clock::now(); });
-  action_200ms.setFinishCallback( [&] (bool is_succ) { ts_200ms = std::chrono::steady_clock::now(); });
-
+  action_50ms.init();
   action_50ms.start();
+
+  SleepAction action_100ms(*loop);
+  action_100ms.setDuration(std::chrono::milliseconds(100));
+  action_100ms.setFinishCallback( [&] (bool is_succ) { ts_100ms = std::chrono::steady_clock::now(); });
+  action_100ms.init();
   action_100ms.start();
+
+  SleepAction action_200ms(*loop);
+  action_200ms.setDuration(std::chrono::milliseconds(200));
+  action_200ms.setFinishCallback( [&] (bool is_succ) { ts_200ms = std::chrono::steady_clock::now(); });
+  action_200ms.init();
   action_200ms.start();
 
   ts_start = std::chrono::steady_clock::now();
@@ -77,7 +86,8 @@ TEST(SleepAction, GenOneAction) {
   auto end_ts = start_ts;
 
   auto gen_time = [] { return std::chrono::milliseconds(50); };
-  SleepAction action(*loop, gen_time);
+  SleepAction action(*loop);
+  action.setDuration(gen_time);
   action.setFinishCallback(
     [&] (bool succ) {
       EXPECT_TRUE(succ);
@@ -85,6 +95,7 @@ TEST(SleepAction, GenOneAction) {
       loop->exitLoop();
     }
   );
+  action.init();
   action.start();
 
   loop->runLoop();
@@ -120,21 +131,33 @@ TEST(SleepAction, GenLoopAction) {
   ts.push_back(std::chrono::steady_clock::now());
 
   auto gen_time = [&] { return std::chrono::milliseconds(time_tbl[index]); };
-  auto cond_action = new FunctionAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
-  auto body_action = new SequenceAction(*loop);
 
-  body_action->append(new SleepAction(*loop, gen_time));
-  body_action->append(
-    new FunctionAction(*loop,
-      [&] {
-        ts.push_back(std::chrono::steady_clock::now());
-        ++index;
-        return true;
-      }
-    )
-  );
-  LoopIfAction loop_if_action(*loop, cond_action, body_action);
+  auto cond_action = std::make_shared<FunctionAction>(*loop);
+  cond_action->setFunc([&] { return index < NUMBER_OF_ARRAY(time_tbl); });
+  cond_action->init();
+
+  auto sleep_action = std::make_shared<SleepAction>(*loop);
+  sleep_action->setDuration(gen_time);
+  sleep_action->init();
+
+  auto func_action = std::make_shared<FunctionAction>(*loop);
+  func_action->setFunc([&] {
+    ts.push_back(std::chrono::steady_clock::now());
+    ++index;
+    return true;
+  });
+  func_action->init();
+
+  auto body_action = std::make_shared<SequenceAction>(*loop);
+  body_action->append(sleep_action);
+  body_action->append(func_action);
+  body_action->init();
+
+  LoopIfAction loop_if_action(*loop);
+  loop_if_action.setIfAction(cond_action);
+  loop_if_action.setExecAction(body_action);
   loop_if_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
+  loop_if_action.init();
   loop_if_action.start();
 
   loop->runLoop();

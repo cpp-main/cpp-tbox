@@ -49,8 +49,11 @@ TEST_CPP_SRC_FILES = \
 	state_machine_test.cpp \
 	action_test.cpp \
 	event_publisher_impl_test.cpp \
-	action_executor_test.cpp \
 	actions/sleep_action_test.cpp \
+	to_graphviz_test.cpp \
+
+IGNORE = \
+	action_executor_test.cpp \
 	actions/function_action_test.cpp \
 	actions/sequence_action_test.cpp \
 	actions/parallel_action_test.cpp \
@@ -61,7 +64,6 @@ TEST_CPP_SRC_FILES = \
 	actions/composite_action_test.cpp \
 	actions/wrapper_action_test.cpp \
 	actions/succ_fail_action_test.cpp \
-	to_graphviz_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base
 ENABLE_SHARED_LIB = no

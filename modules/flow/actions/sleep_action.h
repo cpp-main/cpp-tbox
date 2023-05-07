@@ -11,12 +11,14 @@ class SleepAction : public Action {
   public:
     using Generator = std::function<std::chrono::milliseconds ()>;
 
-    SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span);
-    SleepAction(event::Loop &loop, const Generator &gen);
+    explicit SleepAction(event::Loop &loop);
+    virtual ~SleepAction();
 
-    ~SleepAction();
+    void setDuration(const Generator &gen);
+    void setDuration(const std::chrono::milliseconds &duration);
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;

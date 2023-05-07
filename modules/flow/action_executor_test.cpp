@@ -35,7 +35,12 @@ TEST(ActionExecutor, OneAction) {
 
   exec.setAllFinishedCallback([loop]{ loop->exitLoop(); });
 
-  exec.append(new FunctionAction(*loop, [&]{ is_run = true; return true; }));
+  auto func_action = std::make_shared<FunctionAction>(*loop);
+  func_action->setFunc([&] { is_run = true; return true; });
+  func_action->init();
+
+  exec.append(function_action);
+  exec.init();
 
   loop->runLoop();
   EXPECT_TRUE(is_run);
@@ -53,24 +58,24 @@ TEST(ActionExecutor, TwoActions) {
   bool is_run_1 = false;
   bool is_run_2 = false;
 
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run_1 = true;
-        EXPECT_FALSE(is_run_2);
-        return true;
-      }
-    )
-  );
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run_2 = true;
-        EXPECT_TRUE(is_run_1);
-        return true;
-      }
-    )
-  );
+  auto func_action_1 = std::make_shared<FunctionAction>(*loop);
+  func_action_1->setFunc([&] {
+    is_run_1 = true;
+    EXPECT_FALSE(is_run_2);
+    return true;
+  });
+  func_action_1->init();
+
+  auto func_action_2 = std::make_shared<FunctionAction>(*loop);
+  func_action_2->setFunc([&] {
+    is_run_2 = true;
+    EXPECT_TRUE(is_run_1);
+    return true;
+  });
+  func_action_2->init();
+
+  exec.append(func_action_1);
+  exec.append(func_action_2);
 
   loop->runLoop();
   EXPECT_TRUE(is_run_1);
@@ -89,33 +94,40 @@ TEST(ActionExecutor, CancelAction)
   bool is_run_2 = false;
   bool is_run_3 = false;
 
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run_1 = true;
-        EXPECT_FALSE(is_run_2);
-        EXPECT_FALSE(is_run_3);
-        return true;
-      }
-    )
+  auto func_action_1 = std::make_shared<Function>(*loop);
+  auto func_action_2 = std::make_shared<Function>(*loop);
+  auto func_action_3 = std::make_shared<Function>(*loop);
+
+  func_action_1->setFunc(
+    [&]{
+      is_run_1 = true;
+      EXPECT_FALSE(is_run_2);
+      EXPECT_FALSE(is_run_3);
+      return true;
+    }
   );
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run_2 = true;
-        return true;
-      }
-    )
+  func_action_1->init();
+
+  func_action_2->setFunc(
+    [&]{
+      is_run_2 = true;
+      return true;
+    }
   );
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run_3 = true;
-        EXPECT_TRUE(is_run_1);
-        return true;
-      }
-    )
+  func_action_2->init();
+
+  func_action_3->setFunc(
+    [&]{
+      is_run_3 = true;
+      EXPECT_TRUE(is_run_1);
+      return true;
+    }
   );
+  func_action_3->init();
+
+  exec.append(func_action_1);
+  exec.append(func_action_2);
+  exec.append(func_action_3);
 
   exec.cancel(2);
 
@@ -154,58 +166,61 @@ TEST(ActionExecutor, Prio)
 
   int index = 0;
 
+  auto sleep_action = std::make_shared<SleepAction>(*loop);
+  sleep_action->setDuration(std::chrono::milliseconds(10));
+  sleep_action->init();
+
   //! 加入延时动作1，防止立即开始执行
-  exec.append(
-    new SleepAction(*loop, std::chrono::milliseconds(10)),
-    1
-  );
+  exec.append(sleep_action, 1);
 
   //! 加入低优先级动作2
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        EXPECT_EQ(index, 3);
-        ++index;
-        return true;
-      }
-    ),
-    2
+  auto func_action_1 = std::make_shared<FunctionAction>(*loop);
+  func_action_1->setFunc(
+    [&]{
+      EXPECT_EQ(index, 3);
+      ++index;
+      return true;
+    }
   );
+  func_action_1->init();
+
+  exec.append(func_action_1, 2);
 
   //! 加入中优先级动作3
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        EXPECT_EQ(index, 1);
-        ++index;
-        return true;
-      }
-    ),
-    1
+  auto func_action_2 = std::make_shared<FunctionAction>(*loop);
+  func_action_2->setFunc(
+    [&]{
+      EXPECT_EQ(index, 1);
+      ++index;
+      return true;
+    }
   );
+  func_action_2->init();
+  exec.append(func_action_2, 1);
+
   //! 加入中优先级动作4
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        EXPECT_EQ(index, 2);
-        ++index;
-        return true;
-      }
-    ),
-    1
+  auto func_action_3 = std::make_shared<FunctionAction>(*loop);
+  func_action_3->setFunc(
+    [&]{
+      EXPECT_EQ(index, 2);
+      ++index;
+      return true;
+    }
   );
+  func_action_3->init();
+  exec.append(func_action_3, 1);
 
   //! 加入高优先级动作5
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        EXPECT_EQ(index, 0);
-        ++index;
-        return true;
-      }
-    ),
-    0
+  auto func_action_4 = std::make_shared<FunctionAction>(*loop);
+  func_action_4->setFunc(
+    [&]{
+      EXPECT_EQ(index, 0);
+      ++index;
+      return true;
+    }
   );
+  func_action_4->init();
+  exec.append(func_action_4, 0);
 
   loop->runLoop();
   EXPECT_EQ(index, 4);
@@ -250,16 +265,21 @@ TEST(ActionExecutor, CancelCurrent) {
   std::chrono::steady_clock::time_point exec_ts;
   bool is_run = false;
 
-  exec.append(new SleepAction(*loop, std::chrono::seconds(1)));
-  exec.append(
-    new FunctionAction(*loop,
-      [&]{
-        is_run = true;
-        exec_ts = std::chrono::steady_clock::now();
-        return true;
-      }
-    )
-  );
+  auto sleep_action = std::make_shared<SleepAction>(*loop);
+  sleep_action->setDuration(std::chrono::seconds(1));
+  sleep_action->init();
+
+  exec.append(sleep_action);
+
+  auto func_action = std::make_shared<SleepAction>(*loop);
+  func_action->setFunc([&]{
+    is_run = true;
+    exec_ts = std::chrono::steady_clock::now();
+    return true;
+  });
+  func_action->init();
+
+  exec.append(func_action);
 
   auto timer = loop->newTimerEvent();
   SetScopeExitAction([timer] { delete timer; });

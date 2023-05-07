@@ -8,17 +8,15 @@ namespace flow {
 
 class LoopIfAction : public Action {
   public:
-    explicit LoopIfAction(event::Loop &loop,
-                          Action *if_action,
-                          Action *exec_action);
-    virtual ~LoopIfAction();
+    explicit LoopIfAction(event::Loop &loop);
 
-    virtual void toJson(Json &js) const;
+    void setIfAction(Action::SharedPtr action);
+    void setExecAction(Action::SharedPtr action);
 
-    //! 默认结束结果是true，如果需要可以设定
-    void setFinishResult(bool succ) { finish_result_ = succ; }
+    virtual void toJson(Json &js) const override;
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -26,9 +24,8 @@ class LoopIfAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *if_action_;
-    Action *exec_action_;
-    bool finish_result_ = true;
+    Action::SharedPtr if_action_;
+    Action::SharedPtr exec_action_;
 };
 
 }

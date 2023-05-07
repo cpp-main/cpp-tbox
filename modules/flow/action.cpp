@@ -34,11 +34,29 @@ void Action::toJson(Json &js) const {
   js["result"] = ToString(result_);
 }
 
+bool Action::init() {
+  if (state_ == State::kInited)
+    return true;
+
+  if (state_ != State::kNone) {
+    LogWarn("not allow");
+    return false;
+  }
+
+  if (!onInit()) {
+    LogWarn("action %d:%s(%s) not ready", id_, type_.c_str(), label_.c_str());
+    return false;
+  }
+
+  state_ = State::kInited;
+  return true;
+}
+
 bool Action::start() {
   if (state_ == State::kRunning)
     return true;
 
-  if (state_ != State::kIdle) {
+  if (state_ != State::kInited) {
     LogWarn("not allow");
     return false;
   }
@@ -119,7 +137,7 @@ bool Action::stop() {
 }
 
 void Action::reset() {
-  if (state_ == State::kIdle)
+  if (state_ == State::kInited)
     return;
 
   LogDbg("reset action %d:%s(%s)", id_, type_.c_str(), label_.c_str());
@@ -128,7 +146,7 @@ void Action::reset() {
   if (timer_ev_ != nullptr)
     timer_ev_->disable();
 
-  state_ = State::kIdle;
+  state_ = State::kInited;
   result_ = Result::kUnsure;
 }
 
@@ -190,7 +208,7 @@ bool Action::finish(bool is_succ) {
 }
 
 std::string ToString(Action::State state) {
-  const char *tbl[] = { "idle", "running", "pause", "finished", "stoped" };
+  const char *tbl[] = { "none", "inited", "running", "pause", "finished", "stoped" };
   auto index = static_cast<size_t>(state);
   if (index < NUMBER_OF_ARRAY(tbl))
     return tbl[index];

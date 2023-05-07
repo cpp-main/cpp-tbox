@@ -18,7 +18,7 @@ namespace flow {
  *     MyAction(event::Loop &loop)
  *       : CompositeAction(loop, "MyAction")
  *     {
- *       auto loop_action = new LoopAction(loop);
+ *       auto loop_action = LoopAction::MakeShared(loop);
  *       loop_action->append(...);
  *       loop_action->append(...);
  *       setChild(loop_action);
@@ -30,14 +30,14 @@ namespace flow {
 class CompositeAction : public Action {
   public:
     using Action::Action;
-    virtual ~CompositeAction();
 
-  protected:
-    void setChild(Action *child);
-
-  protected:
     virtual void toJson(Json &js) const override;
 
+  protected:
+    void setChild(Action::SharedPtr child);
+
+  protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -45,7 +45,7 @@ class CompositeAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *child_ = nullptr;
+    Action::SharedPtr child_;
 };
 
 }

@@ -7,15 +7,17 @@ namespace tbox {
 namespace flow {
 
 class FunctionAction : public Action {
-  public:
-    using Func = std::function<bool()>;
-    explicit FunctionAction(event::Loop &loop, const Func &func);
+ public:
+  using Func = std::function<bool()>;
+  explicit FunctionAction(event::Loop &loop);
+  void setFunc(const Func &func) { func_ = func; }
 
-  protected:
-    virtual bool onStart() override;
+ protected:
+  virtual bool onInit() override { return func_ != nullptr; }
+  virtual bool onStart() override;
 
-  private:
-    Func func_;
+ private:
+  Func func_;
 };
 
 }

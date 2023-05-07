@@ -9,9 +9,10 @@ namespace flow {
 /// 成功动作
 class SuccAction : public Action {
   public:
-    SuccAction(event::Loop &loop) : Action(loop, "Succ") { }
+    explicit SuccAction(event::Loop &loop) : Action(loop, "Succ") { }
 
   protected:
+    virtual bool onInit() override { return true; }
     virtual bool onStart() {
         loop_.runNext([this] { finish(true); });
         return true;
@@ -21,9 +22,10 @@ class SuccAction : public Action {
 /// 失败动作
 class FailAction : public Action {
   public:
-    FailAction(event::Loop &loop) : Action(loop, "Fail") { }
+    explicit FailAction(event::Loop &loop) : Action(loop, "Fail") { }
 
   protected:
+    virtual bool onInit() override { return true; }
     virtual bool onStart() {
         loop_.runNext([this] { finish(false); });
         return true;

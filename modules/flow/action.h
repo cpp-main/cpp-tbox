@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include <tbox/base/defines.h>
+#include <tbox/base/smart_ptr.h>
 #include <tbox/base/json_fwd.h>
 #include <tbox/event/forward.h>
 
@@ -21,10 +22,13 @@ class Action {
     NONCOPYABLE(Action);
     IMMOVABLE(Action);
 
+    TBOX_SMART_PTR_DEFINITIONS(Action);
+
   public:
     //! 状态
     enum class State {
-      kIdle,      //!< 未启动状态
+      kNone,      //!< 未初始化状态
+      kInited,    //!< 已初始化状态
       kRunning,   //!< 正在运行状态
       kPause,     //!< 暂停状态
       kFinished,  //!< 结束状态，自主通过 finish() 结束
@@ -62,6 +66,7 @@ class Action {
 
     virtual void toJson(Json &js) const;
 
+    bool init();
     bool start();   //!< 开始
     bool pause();   //!< 暂停
     bool resume();  //!< 恢复
@@ -71,6 +76,7 @@ class Action {
   protected:
     bool finish(bool is_succ);
 
+    virtual bool onInit() = 0;   //!< 检查参数是否完整
     virtual bool onStart() { return true; }   //! WARN: 启动失败是一种异常，要少用
     virtual bool onPause() { return true; }
     virtual bool onResume() { return true; }
@@ -90,7 +96,7 @@ class Action {
     std::string label_;
     FinishCallback finish_cb_;
 
-    State state_ = State::kIdle;      //!< 状态
+    State state_ = State::kNone;      //!< 状态
     Result result_ = Result::kUnsure; //!< 运行结果
 
     event::TimerEvent *timer_ev_ = nullptr;

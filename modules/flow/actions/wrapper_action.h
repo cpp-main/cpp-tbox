@@ -17,23 +17,28 @@ class WrapperAction : public Action {
     };
 
   public:
-    explicit WrapperAction(event::Loop &loop, Action *child, Mode mode = Mode::kNormal);
-    virtual ~WrapperAction();
+    explicit WrapperAction(event::Loop &loop);
+
+    void setChild(Action::SharedPtr child);
+    void setMode(Mode mode);
 
     Mode mode() const { return mode_; }
 
-  protected:
     virtual void toJson(Json &js) const override;
 
+  protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
     virtual bool onResume() override;
     virtual void onReset() override;
 
+    void onChildFinished(bool is_succ);
+
   private:
-    Action *child_;
-    Mode mode_;
+    Action::SharedPtr child_;
+    Mode mode_ = Mode::kNormal;
 };
 
 std::string ToString(WrapperAction::Mode mode);

@@ -114,7 +114,7 @@ void ActionExecutor::schedule() {
     while (!ready_deque.empty()) {
       auto item = ready_deque.front();
       //! 没有启动的要启动
-      if (item.action->state() == Action::State::kIdle) {
+      if (item.action->state() == Action::State::kInited) {
         if (item.action->start()) {
           curr_action_deque_index_ = ready_deque_index;
           ++cb_level_;

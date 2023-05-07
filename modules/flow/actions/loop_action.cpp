@@ -5,28 +5,28 @@
 namespace tbox {
 namespace flow {
 
-LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
-  Action(loop, "Loop"),
-  child_(child),
-  mode_(mode)
+LoopAction::LoopAction(event::Loop &loop)
+  : Action(loop, "Loop")
+{ }
+
+void LoopAction::setMode(Mode mode) { mode_ = mode; }
+
+void LoopAction::setChild(Action::SharedPtr child)
 {
-  TBOX_ASSERT(child != nullptr);
-
-  child_->setFinishCallback(
-    [this] (bool is_succ) {
-      if ((mode_ == Mode::kUntilSucc && is_succ) ||
+  child_ = child;
+  if (child_) {
+    child_->setFinishCallback(
+      [this] (bool is_succ) {
+        if ((mode_ == Mode::kUntilSucc && is_succ) ||
           (mode_ == Mode::kUntilFail && !is_succ)) {
-        finish(is_succ);
-      } else if (state() == State::kRunning) {
-        child_->reset();
-        child_->start();
+          finish(is_succ);
+        } else if (state() == State::kRunning) {
+          child_->reset();
+          child_->start();
+        }
       }
-    }
-  );
-}
-
-LoopAction::~LoopAction() {
-  delete child_;
+    );
+  }
 }
 
 void LoopAction::toJson(Json &js) const {
@@ -34,25 +34,17 @@ void LoopAction::toJson(Json &js) const {
   child_->toJson(js["child"]);
 }
 
-bool LoopAction::onStart() {
-  return child_->start();
-}
+bool LoopAction::onInit() { return (mode_ != Mode::kNone) && child_; }
 
-bool LoopAction::onStop() {
-  return child_->stop();
-}
+bool LoopAction::onStart() { return child_->start(); }
 
-bool LoopAction::onPause() {
-  return child_->pause();
-}
+bool LoopAction::onStop() { return child_->stop(); }
 
-bool LoopAction::onResume() {
-  return child_->resume();
-}
+bool LoopAction::onPause() { return child_->pause(); }
 
-void LoopAction::onReset() {
-  child_->reset();
-}
+bool LoopAction::onResume() { return child_->resume(); }
+
+void LoopAction::onReset() { child_->reset(); }
 
 }
 }

@@ -9,16 +9,21 @@ namespace flow {
 class LoopAction : public Action {
   public:
     enum class Mode {
-      kForever,     //! while(true) { action() };
-      kUntilFail,   //! while(action());
-      kUntilSucc,   //! while(!action());
+        kNone,
+        kForever,     //! while(true) { action() };
+        kUntilFail,   //! while(action());
+        kUntilSucc,   //! while(!action());
     };
-    explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
-    virtual ~LoopAction();
 
-    virtual void toJson(Json &js) const;
+    explicit LoopAction(event::Loop &loop);
+
+    void setMode(Mode mode);
+    void setChild(Action::SharedPtr child);
+
+    virtual void toJson(Json &js) const override;
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -26,8 +31,8 @@ class LoopAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *child_;
-    Mode mode_;
+    Action::SharedPtr child_;
+    Mode mode_ = Mode::kNone;
 };
 
 }

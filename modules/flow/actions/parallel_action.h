@@ -12,16 +12,16 @@ namespace flow {
 class ParallelAction : public Action {
   public:
     explicit ParallelAction(event::Loop &loop);
-    virtual ~ParallelAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
-    int append(Action *action);
+    int append(Action::SharedPtr action);
 
     std::set<int> succSet() const { return succ_set_; }
     std::set<int> failSet() const { return fail_set_; }
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -32,7 +32,7 @@ class ParallelAction : public Action {
     void onChildFinished(int index, bool is_succ);
 
   private:
-    std::vector<Action*> children_;
+    std::vector<Action::SharedPtr> children_;
     std::set<int> succ_set_;
     std::set<int> fail_set_;
 };

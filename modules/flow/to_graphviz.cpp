@@ -39,8 +39,10 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
         oss << R"(fillcolor="gray",)";
     } else if (state == "pause") {
         oss << R"(fillcolor="lightblue",)";
-    } else if (state == "idle") {
+    } else if (state == "inited") {
         oss << R"(fillcolor="white",)";
+    } else if (state == "none") {
+        oss << R"(fillcolor="black",fontcolor="white",)";
     } else {
         LogWarn("unsupport state: %s", state.c_str());
     }

@@ -10,14 +10,9 @@ namespace flow {
 
 using namespace std::placeholders;
 
-ParallelAction::ParallelAction(event::Loop &loop) :
-  Action(loop, "Parallel")
+ParallelAction::ParallelAction(event::Loop &loop)
+  : Action(loop, "Parallel")
 { }
-
-ParallelAction::~ParallelAction() {
-  for (auto action : children_)
-    delete action;
-}
 
 void ParallelAction::toJson(Json &js) const {
   Action::toJson(js);
@@ -29,7 +24,7 @@ void ParallelAction::toJson(Json &js) const {
   }
 }
 
-int ParallelAction::append(Action *action) {
+int ParallelAction::append(Action::SharedPtr action) {
   TBOX_ASSERT(action != nullptr);
 
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
@@ -43,9 +38,11 @@ int ParallelAction::append(Action *action) {
   }
 }
 
+bool ParallelAction::onInit() { return !children_.empty(); }
+
 bool ParallelAction::onStart() {
   for (size_t index = 0; index < children_.size(); ++index) {
-    Action *action = children_.at(index);
+    auto action = children_.at(index);
     if (!action->start())
       fail_set_.insert(index);
   }
@@ -53,13 +50,13 @@ bool ParallelAction::onStart() {
 }
 
 bool ParallelAction::onStop() {
-  for (Action *action : children_)
+  for (auto action : children_)
     action->stop();
   return true;
 }
 
 bool ParallelAction::onPause() {
-  for (Action *action : children_) {
+  for (auto action : children_) {
     if (action->state() == Action::State::kRunning)
       action->pause();
   }
@@ -67,7 +64,7 @@ bool ParallelAction::onPause() {
 }
 
 bool ParallelAction::onResume() {
-  for (Action *action : children_) {
+  for (auto action : children_) {
     if (action->state() == Action::State::kPause)
       action->resume();
   }

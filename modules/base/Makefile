@@ -21,6 +21,7 @@ HEAD_FILES = \
 	lifetime_tag.hpp \
 	backtrace.h \
 	catch_throw.h \
+	smart_ptr.h \
 
 CPP_SRC_FILES = \
 	version.cpp \

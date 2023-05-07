@@ -14,13 +14,16 @@ class RepeatAction : public Action {
       kBreakSucc,   //! for (int i = 0; i < times && !action(); ++i);
     };
 
-    explicit RepeatAction(event::Loop &loop, Action *child, size_t times,
-                          Mode mode = Mode::kNoBreak);
-    virtual ~RepeatAction();
+    explicit RepeatAction(event::Loop &loop);
 
-    virtual void toJson(Json &js) const;
+    void setChild(Action::SharedPtr child);
+    void setMode(Mode mode);
+    void setRepeatTimes(size_t repeat_times);
+
+    virtual void toJson(Json &js) const override;
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -28,10 +31,10 @@ class RepeatAction : public Action {
     virtual void onReset() override;
 
   private:
-    Action *child_;
-    size_t repeat_times_;
+    Action::SharedPtr child_;
+    size_t repeat_times_ = 0;
     size_t remain_times_ = 0;
-    Mode mode_;
+    Mode mode_ = Mode::kNoBreak;
 };
 
 }

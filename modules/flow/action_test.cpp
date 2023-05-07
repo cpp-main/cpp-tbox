@@ -13,6 +13,8 @@ TEST(Action, Timeout) {
   class TestAction : public Action {
     public:
       explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+    protected:
+      virtual bool onInit() { return true; }
   };
 
   TestAction action(*loop);
@@ -30,6 +32,7 @@ TEST(Action, Timeout) {
       loop->exitLoop();
     }
   );
+  action.init();
   action.start();
   ts_start = std::chrono::steady_clock::now();
 

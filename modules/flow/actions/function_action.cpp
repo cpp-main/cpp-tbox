@@ -5,11 +5,9 @@
 namespace tbox {
 namespace flow {
 
-FunctionAction::FunctionAction(event::Loop &loop, const Func &func) :
-  Action(loop, "Function"), func_(func)
-{
-  TBOX_ASSERT(func != nullptr);
-}
+FunctionAction::FunctionAction(event::Loop &loop) :
+  Action(loop, "Function")
+{ }
 
 bool FunctionAction::onStart() {
   loop_.runNext([this] { finish(func_()); });

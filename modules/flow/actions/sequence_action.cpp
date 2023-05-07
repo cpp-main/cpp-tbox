@@ -14,11 +14,6 @@ SequenceAction::SequenceAction(event::Loop &loop) :
   Action(loop, "Sequence")
 { }
 
-SequenceAction::~SequenceAction() {
-  for (auto action : children_)
-    delete action;
-}
-
 void SequenceAction::toJson(Json &js) const {
   Action::toJson(js);
   Json &js_children = js["children"];
@@ -30,7 +25,7 @@ void SequenceAction::toJson(Json &js) const {
   js["index"] = index_;
 }
 
-int SequenceAction::append(Action *action) {
+int SequenceAction::append(Action::SharedPtr action) {
   TBOX_ASSERT(action != nullptr);
 
   if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
@@ -43,6 +38,8 @@ int SequenceAction::append(Action *action) {
     return -1;
   }
 }
+
+bool SequenceAction::onInit() { return !children_.empty(); }
 
 bool SequenceAction::onStart() {
   startOtheriseFinish(true);

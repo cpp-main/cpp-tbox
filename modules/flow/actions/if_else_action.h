@@ -16,13 +16,16 @@ namespace flow {
  */
 class IfElseAction : public Action {
   public:
-    explicit IfElseAction(event::Loop &loop, Action *if_action,
-                          Action *succ_action, Action *fail_action);
-    virtual ~IfElseAction();
+    explicit IfElseAction(event::Loop &loop);
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
+
+    void setIfAction(Action::SharedPtr action);
+    void setSuccAction(Action::SharedPtr action);
+    void setFailAction(Action::SharedPtr action);
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -33,9 +36,9 @@ class IfElseAction : public Action {
     void onCondActionFinished(bool is_succ);
 
   private:
-    Action *if_action_;
-    Action *succ_action_;
-    Action *fail_action_;
+    Action::SharedPtr if_action_;
+    Action::SharedPtr succ_action_;
+    Action::SharedPtr fail_action_;
 };
 
 }

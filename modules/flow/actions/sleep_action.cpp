@@ -7,19 +7,9 @@
 namespace tbox {
 namespace flow {
 
-SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span) :
-  Action(loop, "Sleep"),
-  timer_(loop.newTimerEvent()),
-  time_span_(time_span)
-{
-  TBOX_ASSERT(timer_ != nullptr);
-  timer_->setCallback([this] { finish(true); });
-}
-
-SleepAction::SleepAction(event::Loop &loop, const Generator &gen) :
-  Action(loop, "Sleep"),
-  timer_(loop.newTimerEvent()),
-  gen_(gen)
+SleepAction::SleepAction(event::Loop &loop)
+  : Action(loop, "Sleep")
+  , timer_(loop.newTimerEvent())
 {
   TBOX_ASSERT(timer_ != nullptr);
   timer_->setCallback([this] { finish(true); });
@@ -27,6 +17,16 @@ SleepAction::SleepAction(event::Loop &loop, const Generator &gen) :
 
 SleepAction::~SleepAction() {
   delete timer_;
+}
+
+void SleepAction::setDuration(const Generator &gen) { gen_ = gen; }
+
+void SleepAction::setDuration(const std::chrono::milliseconds &duration) { time_span_ = duration; }
+
+bool SleepAction::onInit() {
+  return \
+    (time_span_ != std::chrono::milliseconds::zero()) ||
+    (gen_ != nullptr);
 }
 
 bool SleepAction::onStart() {

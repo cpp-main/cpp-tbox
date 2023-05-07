@@ -29,11 +29,10 @@ class SequenceAction : public Action {
 
   public:
     explicit SequenceAction(event::Loop &loop);
-    virtual ~SequenceAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
-    int append(Action *action);
+    int append(Action::SharedPtr action);
 
     inline void setFinishCondition(FinishCondition finish_condition) {
       finish_condition_ = finish_condition;
@@ -42,6 +41,7 @@ class SequenceAction : public Action {
     inline int index() const { return index_; }
 
   protected:
+    virtual bool onInit() override;
     virtual bool onStart() override;
     virtual bool onStop() override;
     virtual bool onPause() override;
@@ -55,7 +55,7 @@ class SequenceAction : public Action {
   private:
     FinishCondition finish_condition_ = FinishCondition::kAllFinish;
     size_t index_ = 0;
-    std::vector<Action*> children_;
+    std::vector<Action::SharedPtr> children_;
 };
 
 }
