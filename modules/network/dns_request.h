@@ -16,6 +16,8 @@ namespace network {
 /// 用于发送DNS请求，支持并行发送多个DNS清求
 class DnsRequest {
   public:
+    using ReqId = uint16_t;
+
     struct A {
         uint32_t ttl;
         IPAddress ip;
@@ -37,6 +39,7 @@ class DnsRequest {
             kFail,              //!< 其它错误
         };
 
+        ReqId req_id = 0;   //!< 请求号
         Status status = Status::kSuccess;   //!< 结果状态
         std::vector<A>      a_vec;      //!< A记录列表
         std::vector<CNAME>  cname_vec;  //!< CNAME记录列表
@@ -46,8 +49,6 @@ class DnsRequest {
 
     /// 请求结束回调
     using Callback = std::function<void(const Result &result)>;
-
-    using ReqId = uint16_t;
 
   public:
     explicit DnsRequest(event::Loop *wp_loop);

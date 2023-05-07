@@ -209,6 +209,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     uint8_t rcode = flags & 0x000f;
 
     Result result;
+    result.req_id = req_id;
 
     if (rcode == 0) {   //! 正常
         uint16_t qd_count, an_count, ns_count, ar_count;
