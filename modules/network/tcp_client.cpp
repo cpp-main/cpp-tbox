@@ -99,7 +99,12 @@ void TcpClient::stop()
         TcpConnection *tobe_delete = nullptr;
         std::swap(tobe_delete, d_->sp_connection);
         tobe_delete->disconnect();
-        d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });
+
+        d_->wp_loop->runNext(
+            [tobe_delete] { delete tobe_delete; },
+            "TcpClient::stop, delete"
+        );
+
         d_->state = State::kInited;
     }
 }
@@ -192,8 +197,12 @@ void TcpClient::onTcpDisconnected()
 {
     TcpConnection *tobe_delete = nullptr;
     std::swap(tobe_delete, d_->sp_connection);
+
     //! 这里要使用延后释放，因为本函数一定是 d_->sp_connection 对象自己调用的
-    d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; });
+    d_->wp_loop->runNext(
+        [tobe_delete] { delete tobe_delete; },
+        "TcpClient::onTcpDisconnected, delete"
+    );
 
     d_->state = State::kInited;
 

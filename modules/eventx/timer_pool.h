@@ -18,9 +18,9 @@ namespace eventx {
 class TimerPool {
   public:
     using TimerToken = cabinet::Token;
-    using Callback = std::function<void(const TimerToken &)>;
+    using Callback = std::function<void()>;
     using Milliseconds = std::chrono::milliseconds;
-    using TimePoint = std::chrono::steady_clock::time_point;
+    using TimePoint = std::chrono::system_clock::time_point;
 
   public:
     explicit TimerPool(event::Loop *wp_loop);
@@ -30,9 +30,9 @@ class TimerPool {
     IMMOVABLE(TimerPool);
 
   public:
-    TimerToken doEvery(const Milliseconds &m_sec, const Callback &cb);
-    TimerToken doAfter(const Milliseconds &m_sec, const Callback &cb);
-    TimerToken doAt(const TimePoint &time_point, const Callback &cb);
+    TimerToken doEvery(const Milliseconds &m_sec, Callback &&cb);
+    TimerToken doAfter(const Milliseconds &m_sec, Callback &&cb);
+    TimerToken doAt(const TimePoint &time_point, Callback &&cb);
     //! NOTICE:
     //! 使用时一定要小心对象生命期倒挂问题！
     //! 如果 Callback 持有了短生命期的对象，在该对象消亡时记得 cancel 该定时器

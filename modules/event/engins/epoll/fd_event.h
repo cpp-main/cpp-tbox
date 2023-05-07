@@ -13,12 +13,12 @@ struct EpollFdSharedData;
 
 class EpollFdEvent : public FdEvent {
   public:
-    explicit EpollFdEvent(EpollLoop *wp_loop);
+    explicit EpollFdEvent(EpollLoop *wp_loop, const std::string &what);
     virtual ~EpollFdEvent() override;
 
   public:
     virtual bool initialize(int fd, short events, Mode mode) override;
-    virtual void setCallback(const CallbackFunc &cb) override { cb_ = cb; }
+    virtual void setCallback(CallbackFunc &&cb) override { cb_ = std::move(cb); }
 
     virtual bool isEnabled() const override{ return is_enabled_; }
     virtual bool enable() override;

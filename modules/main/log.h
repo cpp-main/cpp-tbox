@@ -17,7 +17,6 @@ namespace main {
 class Log {
   public:
     Log();
-    ~Log();
 
   public:
     void fillDefaultConfig(Json &cfg) const;

@@ -38,9 +38,12 @@ class Loop {
 
     //! 委托延后执行动作
     using Func = std::function<void()>;
-    virtual void runInLoop(const Func &func) = 0;
-    virtual void runNext(const Func &func) = 0;
-    virtual void run(const Func &func) = 0;
+    virtual void runInLoop(Func &&func, const std::string &what = "") = 0;
+    virtual void runInLoop(const Func &func, const std::string &what = "") = 0;
+    virtual void runNext(Func &&func, const std::string &what = "") = 0;
+    virtual void runNext(const Func &func, const std::string &what = "") = 0;
+    virtual void run(Func &&func, const std::string &what = "") = 0;
+    virtual void run(const Func &func, const std::string &what = "") = 0;
     /**
      * runInLoop(), runNext(), run() 区别
      *
@@ -66,18 +69,29 @@ class Loop {
      */
 
     //! 创建事件
-    virtual FdEvent* newFdEvent() = 0;
-    virtual TimerEvent* newTimerEvent() = 0;
-    virtual SignalEvent* newSignalEvent() = 0;
+    virtual FdEvent* newFdEvent(const std::string &what = "") = 0;
+    virtual TimerEvent* newTimerEvent(const std::string &what = "") = 0;
+    virtual SignalEvent* newSignalEvent(const std::string &what = "") = 0;
 
     //! 统计
     virtual Stat getStat() const = 0;
     virtual void resetStat() = 0;
 
     //! 阈值
-    virtual void setRunInLoopThreshold(size_t threshold) = 0;
-    virtual void setRunNextThreshold(size_t threshold) = 0;
-    virtual void setCBTimeCostThreshold(uint32_t threshold_us) = 0;
+    virtual void setRunInLoopQueueSizeWaterLine(size_t threshold) = 0;
+    virtual size_t getRunInLoopQueueSizeWaterLine() const = 0;
+    virtual void setRunNextQueueSizeWaterLine(size_t threshold) = 0;
+    virtual size_t getRunNextQueueSizeWaterLine() const = 0;
+    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getLoopTimeCostWaterLine() const = 0;
+    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getCbTimeCostWaterLine() const = 0;
+    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getRunInLoopDelayWaterLine() const = 0;
+    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getRunNextDelayWaterLine() const = 0;
+    virtual void setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
+    virtual std::chrono::nanoseconds getRunRequestDelayWaterLine() const = 0;
 
   public:
     virtual ~Loop() { }

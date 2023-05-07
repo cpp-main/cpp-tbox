@@ -48,26 +48,22 @@ bool CommonLoop::isRunningLockless() const
 
 void CommonLoop::runThisBeforeLoop()
 {
-    int read_fd = -1, write_fd = -1;
-    if (!CreateFdPair(read_fd, write_fd))
-        return;
+    int event_fd = CreateEventFd();
 
-    FdEvent *sp_read_event = newFdEvent();
-    if (!sp_read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
-        close(write_fd);
-        close(read_fd);
+    FdEvent *sp_read_event = newFdEvent("CommonLoop::sp_run_read_event_");
+    if (!sp_read_event->initialize(event_fd, FdEvent::kReadEvent, Event::Mode::kPersist)) {
+        close(event_fd);
         delete sp_read_event;
         return;
     }
 
     using std::placeholders::_1;
-    sp_read_event->setCallback(std::bind(&CommonLoop::handleRunInLoopRequest, this, _1));
+    sp_read_event->setCallback(std::bind(&CommonLoop::handleRunInLoopFunc, this));
     sp_read_event->enable();
 
     std::lock_guard<std::recursive_mutex> g(lock_);
     loop_thread_id_ = std::this_thread::get_id();
-    run_read_fd_ = read_fd;
-    run_write_fd_ = write_fd;
+    run_event_fd_ = event_fd;
     sp_run_read_event_ = sp_read_event;
 
     if (!run_in_loop_func_queue_.empty())
@@ -84,39 +80,38 @@ void CommonLoop::runThisAfterLoop()
     loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
     if (sp_run_read_event_ != nullptr) {
         CHECK_DELETE_RESET_OBJ(sp_run_read_event_);
-        CHECK_CLOSE_RESET_FD(run_write_fd_);
-        CHECK_CLOSE_RESET_FD(run_read_fd_);
+        CHECK_CLOSE_RESET_FD(run_event_fd_);
     }
+}
+
+void CommonLoop::beginLoopProcess()
+{
+    loop_stat_start_ = steady_clock::now();
+}
+
+void CommonLoop::endLoopProcess()
+{
+    auto cost = steady_clock::now() - loop_stat_start_;
+    ++loop_count_;
+    loop_acc_cost_ += cost;
+    if (loop_peak_cost_ < cost)
+        loop_peak_cost_ = cost;
+
+    if (cost > loop_time_cost_waterline_)
+        LogNotice("loop cost over waterline: %" PRIu64 " us", cost.count()/1000);
 }
 
 void CommonLoop::beginEventProcess()
 {
-     event_stat_start_ = steady_clock::now();
+    event_stat_start_ = steady_clock::now();
 }
 
-void CommonLoop::endEventProcess()
+void CommonLoop::endEventProcess(Event *event)
 {
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
-
-    ++event_count_;
-    time_cost_us_ += cost_us;
-    if (peak_cost_us_ < cost_us)
-        peak_cost_us_ = cost_us;
-
-    if (cost_us > cb_time_cost_threshold_us_)
-        LogWarn("cost_us: %u", cost_us);
-}
-
-void CommonLoop::startWaitEvents()
-{
-    wait_stat_start_ = steady_clock::now();
-}
-
-void CommonLoop::startHandleEvents()
-{
-    uint64_t cost_us = duration_cast<microseconds>(steady_clock::now() - event_stat_start_).count();
-    ++wait_count_;
-    wait_cost_us_ += cost_us;
+    auto cost = steady_clock::now() - event_stat_start_;
+    if (cost > cb_time_cost_waterline_)
+        LogNotice("event cb cost over waterline: %" PRIu64 " us, what: '%s'",
+                  cost.count()/1000, event->what().c_str());
 }
 
 Stat CommonLoop::getStat() const
@@ -124,11 +119,11 @@ Stat CommonLoop::getStat() const
     Stat stat;
     using namespace std::chrono;
     stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
-    stat.time_cost_us = time_cost_us_;
-    stat.peak_cost_us = peak_cost_us_;
-    stat.event_count = event_count_;
-    stat.wait_count = wait_count_;
-    stat.wait_cost_us = wait_cost_us_;
+
+    stat.loop_count = loop_count_;
+    stat.loop_acc_cost_us = duration_cast<microseconds>(loop_acc_cost_).count();
+    stat.loop_peak_cost_us = duration_cast<microseconds>(loop_peak_cost_).count();
+
     stat.run_in_loop_peak_num = run_in_loop_peak_num_;
     stat.run_next_peak_num = run_next_peak_num_;
 
@@ -137,15 +132,84 @@ Stat CommonLoop::getStat() const
 
 void CommonLoop::resetStat()
 {
-    time_cost_us_ = peak_cost_us_ = event_count_ = 0;
-    wait_count_ = wait_cost_us_ = 0;
-    event_stat_start_ = whole_stat_start_ = steady_clock::now();
-    run_in_loop_peak_num_ = run_next_peak_num_ = 0;
+    whole_stat_start_ = loop_stat_start_ = steady_clock::now();
+
+    loop_count_ = 0;
+    loop_acc_cost_ = nanoseconds::zero();
+    loop_peak_cost_ = nanoseconds::zero();
+
+    run_in_loop_peak_num_ = 0;
+    run_next_peak_num_ = 0;
 }
 
-void CommonLoop::setCBTimeCostThreshold(uint32_t threshold_us)
+void CommonLoop::setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line)
 {
-    cb_time_cost_threshold_us_ = threshold_us;
+    run_in_loop_queue_size_water_line_ = queue_size_water_line;
+}
+
+size_t CommonLoop::getRunInLoopQueueSizeWaterLine() const
+{
+    return run_in_loop_queue_size_water_line_;
+}
+
+void CommonLoop::setRunNextQueueSizeWaterLine(size_t queue_size_water_line)
+{
+    run_next_queue_size_water_line_ = queue_size_water_line;
+}
+
+size_t CommonLoop::getRunNextQueueSizeWaterLine() const
+{
+    return run_next_queue_size_water_line_;
+}
+
+void CommonLoop::setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_in_loop_delay_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getRunInLoopDelayWaterLine() const
+{
+    return run_in_loop_delay_waterline_;
+}
+
+void CommonLoop::setRunNextDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_next_delay_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getRunNextDelayWaterLine() const
+{
+    return run_next_delay_waterline_;
+}
+
+void CommonLoop::setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline)
+{
+    loop_time_cost_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getLoopTimeCostWaterLine() const
+{
+    return loop_time_cost_waterline_;
+}
+
+void CommonLoop::setCbTimeCostWaterLine(std::chrono::nanoseconds waterline)
+{
+    cb_time_cost_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getCbTimeCostWaterLine() const
+{
+    return cb_time_cost_waterline_;
+}
+
+void CommonLoop::setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline)
+{
+    run_request_delay_waterline_ = waterline;
+}
+
+std::chrono::nanoseconds CommonLoop::getRunRequestDelayWaterLine() const
+{
+    return run_request_delay_waterline_;
 }
 
 }

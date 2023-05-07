@@ -153,7 +153,7 @@ void TcpConnector::enterConnectingState()
         sock_fd_ = new_sock_fd;
 
         CHECK_DELETE_RESET_OBJ(sp_write_ev_);
-        sp_write_ev_ = wp_loop_->newFdEvent();
+        sp_write_ev_ = wp_loop_->newFdEvent("TcpConnector::sp_write_ev_");
         sp_write_ev_->initialize(sock_fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
         sp_write_ev_->setCallback(std::bind(&TcpConnector::onSocketWritable, this));
         sp_write_ev_->enable();
@@ -184,7 +184,11 @@ void TcpConnector::exitConnectingState()
     //! 释放 sp_write_ev_ 对象
     event::FdEvent *tmp = nullptr;
     std::swap(tmp, sp_write_ev_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    wp_loop_->runNext(
+        [tmp] { CHECK_DELETE_OBJ(tmp); },
+        "TcpConnector::exitConnectingState, delete tmp"
+    );
 
     //! 关闭 socket
     sock_fd_.close();
@@ -200,7 +204,7 @@ void TcpConnector::enterReconnectDelayState()
 
     //! 创建定时器进行等待
     CHECK_DELETE_RESET_OBJ(sp_delay_ev_);
-    sp_delay_ev_ = wp_loop_->newTimerEvent();
+    sp_delay_ev_ = wp_loop_->newTimerEvent("TcpConnector::sp_delay_ev_");
     sp_delay_ev_->initialize(std::chrono::seconds(delay_sec), event::Event::Mode::kOneshot);
     sp_delay_ev_->setCallback(std::bind(&TcpConnector::onDelayTimeout, this));
     sp_delay_ev_->enable();
@@ -217,7 +221,11 @@ void TcpConnector::exitReconnectDelayState()
     //! 销毁定时器
     event::TimerEvent *tmp = nullptr;
     std::swap(tmp, sp_delay_ev_);
-    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); });
+
+    wp_loop_->runNext(
+        [tmp] { CHECK_DELETE_OBJ(tmp); },
+        "TcpConnector::exitReconnectDelayState, delete tmp"
+    );
 
     LogDbg("exit reconnect delay state");
 }

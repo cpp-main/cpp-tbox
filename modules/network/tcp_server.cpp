@@ -140,7 +140,7 @@ bool TcpServer::disconnect(const ConnToken &client)
     auto conn = d_->conns.free(client);
     if (conn != nullptr) {
         conn->disconnect();
-        d_->wp_loop->run([conn] { delete conn; });
+        d_->wp_loop->runNext([conn] { delete conn; }, "TcpServer::disconnect, delete");
         return true;
     }
     return false;
@@ -208,7 +208,10 @@ void TcpServer::onTcpDisconnected(const ConnToken &client)
     --d_->cb_level;
 
     TcpConnection *conn = d_->conns.free(client);
-    d_->wp_loop->runNext([conn] { CHECK_DELETE_OBJ(conn); });
+    d_->wp_loop->runNext(
+        [conn] { CHECK_DELETE_OBJ(conn); },
+        "TcpServer::onTcpDisconnected, delete conn"
+    );
     //! 为什么先回调，再访问后面？是为了在回调中还能访问到TcpConnection对象
 }
 

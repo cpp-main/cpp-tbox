@@ -25,37 +25,51 @@ class CommonLoop : public Loop {
     virtual bool isInLoopThread() override;
     virtual bool isRunning() const override;
 
-    virtual void runInLoop(const Func &func) override;
-    virtual void runNext(const Func &func) override;
-    virtual void run(const Func &func) override;
+    virtual void runInLoop(Func &&func, const std::string &what) override;
+    virtual void runInLoop(const Func &func, const std::string &what) override;
+    virtual void runNext(Func &&func, const std::string &what) override;
+    virtual void runNext(const Func &func, const std::string &what) override;
+    virtual void run(Func &&func, const std::string &what) override;
+    virtual void run(const Func &func, const std::string &what) override;
 
     virtual Stat getStat() const override;
     virtual void resetStat() override;
 
     virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual void setRunInLoopThreshold(size_t threshold) override;
-    virtual void setRunNextThreshold(size_t threshold) override;
-    virtual void setCBTimeCostThreshold(uint32_t threshold_us) override;
+    virtual void setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line) override;
+    virtual size_t getRunInLoopQueueSizeWaterLine() const override;
+    virtual void setRunNextQueueSizeWaterLine(size_t queue_size_water_line) override;
+    virtual size_t getRunNextQueueSizeWaterLine() const override;
+    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual std::chrono::nanoseconds getLoopTimeCostWaterLine() const override;
+    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual std::chrono::nanoseconds getCbTimeCostWaterLine() const override;
+    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual std::chrono::nanoseconds getRunInLoopDelayWaterLine() const override;
+    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual std::chrono::nanoseconds getRunNextDelayWaterLine() const override;
+    virtual void setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline) override;
+    virtual std::chrono::nanoseconds getRunRequestDelayWaterLine() const override;
 
   public:
+    void beginLoopProcess();
+    void endLoopProcess();
+
     void beginEventProcess();
-    void endEventProcess();
+    void endEventProcess(Event *event);
 
     //! Signal 相关
-    virtual SignalEvent* newSignalEvent() override;
+    virtual SignalEvent* newSignalEvent(const std::string &what) override;
     bool subscribeSignal(int signal_num, SignalSubscribuer *who);
     bool unsubscribeSignal(int signal_num, SignalSubscribuer *who);
     void onSignal();
 
     //! Timer 相关
-    virtual TimerEvent* newTimerEvent() override;
+    virtual TimerEvent* newTimerEvent(const std::string &what) override;
     using TimerCallback = std::function<void()>;
     cabinet::Token addTimer(uint64_t interval, uint64_t repeat, const TimerCallback &cb);
     void deleteTimer(const cabinet::Token &token);
-
-    void startWaitEvents();
-    void startHandleEvents();
 
   protected:
     bool isInLoopThreadLockless() const;
@@ -66,8 +80,10 @@ class CommonLoop : public Loop {
 
     void handleRunInLoopRequest(short);
     void cleanupDeferredTasks();
+
     void commitRunRequest();
     void finishRunRequest();
+    void handleRunInLoopFunc();
     void handleNextFunc();
     bool hasNextFunc() const;
 
@@ -92,6 +108,14 @@ class CommonLoop : public Loop {
         }
     };
 
+    struct RunFuncItem {
+        RunFuncItem(Func &&func, const std::string &what);
+
+        std::chrono::steady_clock::time_point commit_time_point;
+        Func func;
+        std::string what;
+    };
+
   private:
     mutable std::recursive_mutex lock_;
     std::thread::id loop_thread_id_;
@@ -99,23 +123,20 @@ class CommonLoop : public Loop {
 
     //! run 相关
     bool has_commit_run_req_ = false;
-    int run_read_fd_ = -1;
-    int run_write_fd_ = -1;
+    int run_event_fd_ = -1;
     FdEvent *sp_run_read_event_ = nullptr;
-    std::deque<Func> run_in_loop_func_queue_;
-    std::deque<Func> run_next_func_queue_;
+    std::deque<RunFuncItem> run_in_loop_func_queue_;
+    std::deque<RunFuncItem> run_next_func_queue_;
 
     //! 统计相关
     std::chrono::steady_clock::time_point whole_stat_start_;
-    std::chrono::steady_clock::time_point event_stat_start_;
-    std::chrono::steady_clock::time_point wait_stat_start_;
-    uint64_t time_cost_us_ = 0;   //!< 消耗在事件处理上的时长,us
-    uint32_t event_count_ = 0;    //!< 处理事件的次数
-    uint32_t peak_cost_us_ = 0;   //!< 事件处理最长时长
-    uint64_t wait_cost_us_ = 0;   //!< 花在等待的时长,us
-    uint32_t wait_count_ = 0;     //!< 等待次数
-    size_t   run_in_loop_peak_num_ = 0;  //!< 等待任务数峰值
-    size_t   run_next_peak_num_ = 0;  //!< 等待任务数峰值
+    std::chrono::steady_clock::time_point loop_stat_start_;
+    uint32_t loop_count_ = 0;         //!< loop次数
+    std::chrono::nanoseconds loop_acc_cost_;   //!< loop工作累积时长
+    std::chrono::nanoseconds loop_peak_cost_;  //!< loop工作最长时长
+
+    size_t run_in_loop_peak_num_ = 0; //!< 等待任务数峰值
+    size_t run_next_peak_num_ = 0;    //!< 等待任务数峰值
 
     //! Signal 相关
     int signal_read_fd_  = -1;
@@ -128,10 +149,18 @@ class CommonLoop : public Loop {
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
 
-    //! 警告阈值
-    size_t run_in_loop_threshold_ = std::numeric_limits<size_t>::max();
-    size_t run_next_threshold_ = std::numeric_limits<size_t>::max();
-    uint32_t cb_time_cost_threshold_us_ = std::numeric_limits<uint32_t>::max();
+    //! 警告水位线
+    size_t run_in_loop_queue_size_water_line_ = std::numeric_limits<size_t>::max();
+    size_t run_next_queue_size_water_line_    = std::numeric_limits<size_t>::max();
+    std::chrono::nanoseconds cb_time_cost_waterline_      = std::chrono::milliseconds(100);
+    std::chrono::nanoseconds loop_time_cost_waterline_    = std::chrono::milliseconds(100);
+    std::chrono::nanoseconds run_in_loop_delay_waterline_ = std::chrono::milliseconds(10);
+    std::chrono::nanoseconds run_next_delay_waterline_    = std::chrono::milliseconds(10);
+    std::chrono::nanoseconds run_request_delay_waterline_ = std::chrono::milliseconds(5);
+
+    std::chrono::steady_clock::time_point event_stat_start_;
+    std::chrono::steady_clock::time_point request_stat_start_;
+
 };
 
 }

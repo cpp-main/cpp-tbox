@@ -51,13 +51,13 @@ bool BufferedFd::initialize(Fd fd, short events)
     CHECK_DELETE_RESET_OBJ(sp_read_event_);
 
     if (events & kReadOnly) {
-        sp_read_event_ = wp_loop_->newFdEvent();
+        sp_read_event_ = wp_loop_->newFdEvent("BufferedFd::sp_read_event_");
         sp_read_event_->initialize(fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
         sp_read_event_->setCallback(std::bind(&BufferedFd::onReadCallback, this, _1));
     }
 
     if (events & kWriteOnly) {
-        sp_write_event_ = wp_loop_->newFdEvent();
+        sp_write_event_ = wp_loop_->newFdEvent("BufferedFd::sp_write_event_");
         sp_write_event_->initialize(fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kPersist);
         sp_write_event_->setCallback(std::bind(&BufferedFd::onWriteCallback, this, _1));
     }

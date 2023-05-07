@@ -22,7 +22,7 @@ UdpSocket::UdpSocket(event::Loop *wp_loop, bool enable_broadcast)
     socket_ = SocketFd::CreateUdpSocket();
     socket_.setBroadcast(enable_broadcast);
 
-    sp_socket_ev_ = wp_loop->newFdEvent();
+    sp_socket_ev_ = wp_loop->newFdEvent("UdpSocket::sp_socket_ev_");
     sp_socket_ev_->initialize(socket_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
     sp_socket_ev_->setCallback(std::bind(&UdpSocket::onSocketEvent, this, _1));
 }

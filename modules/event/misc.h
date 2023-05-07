@@ -5,6 +5,7 @@ namespace tbox {
 namespace event {
 
 bool CreateFdPair(int &read_fd, int &write_fd);
+int CreateEventFd();
 
 }
 }

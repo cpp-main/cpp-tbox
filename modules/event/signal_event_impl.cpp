@@ -6,8 +6,9 @@
 namespace tbox {
 namespace event {
 
-SignalEventImpl::SignalEventImpl(CommonLoop *wp_loop) :
-    wp_loop_(wp_loop)
+SignalEventImpl::SignalEventImpl(CommonLoop *wp_loop, const std::string &what)
+    : SignalEvent(what)
+    , wp_loop_(wp_loop)
 { }
 
 SignalEventImpl::~SignalEventImpl()
@@ -78,18 +79,16 @@ Loop* SignalEventImpl::getLoop() const
 
 void SignalEventImpl::onSignal(int signo)
 {
-    wp_loop_->beginEventProcess();
-
     if (mode_ == Mode::kOneshot)
         disable();
 
+    wp_loop_->beginEventProcess();
     if (cb_) {
         ++cb_level_;
         cb_(signo);
         --cb_level_;
     }
-
-    wp_loop_->endEventProcess();
+    wp_loop_->endEventProcess(this);
 }
 
 }

@@ -27,9 +27,8 @@ TEST(TimerPool, doEvery)
     int count = 0;
     TimerPool::TimerToken token;
     token = timer_pool.doEvery(milliseconds(100),
-        [&] (const TimerPool::TimerToken &t){
+        [&] {
             ++count;
-            EXPECT_EQ(t, token);
             auto d = steady_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
             EXPECT_LT(d, milliseconds(count * 100 + kAcceptableError));
@@ -57,8 +56,7 @@ TEST(TimerPool, doAfter)
     TimerPool::TimerToken token;
     bool is_run = false;
     token = timer_pool.doAfter(milliseconds(500),
-        [&] (const TimerPool::TimerToken &t){
-            EXPECT_EQ(t, token);
+        [&] {
             auto d = steady_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(500 - kAcceptableError));
             EXPECT_LT(d, milliseconds(500 + kAcceptableError));
@@ -85,7 +83,7 @@ TEST(TimerPool, cancel_inside_loop)
 
     bool is_run = false;
     auto token = timer_pool.doAfter(milliseconds(100),
-        [&] (const TimerPool::TimerToken &){
+        [&] {
             is_run = true;
         }
     );
@@ -117,7 +115,7 @@ TEST(TimerPool, cancel_outside_loop)
 
     bool is_run = false;
     auto token = timer_pool.doAfter(milliseconds(100),
-        [&] (const TimerPool::TimerToken &){
+        [&] {
             is_run = true;
         }
     );
@@ -141,13 +139,12 @@ TEST(TimerPool, doAt)
     TimerPool timer_pool(sp_loop);
     SetScopeExitAction([sp_loop]{ delete sp_loop;});
 
-    auto start_time = steady_clock::now();
+    auto start_time = system_clock::now();
     TimerPool::TimerToken token;
     bool is_run = false;
     token = timer_pool.doAt(start_time + milliseconds(1000),
-        [&] (const TimerPool::TimerToken &t){
-            EXPECT_EQ(t, token);
-            auto d = steady_clock::now() - start_time;
+        [&] {
+            auto d = system_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(1000 - kAcceptableError));
             EXPECT_LT(d, milliseconds(1000 + kAcceptableError));
             is_run = true;
@@ -176,7 +173,7 @@ TEST(TimerPool, all)
 
     int count = 0;
     TimerPool::TimerToken token = timer_pool.doEvery(milliseconds(100),
-        [&] (const TimerPool::TimerToken &t) {
+        [&] {
             auto d = steady_clock::now() - start_time;
             ++count;
             EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
@@ -186,7 +183,7 @@ TEST(TimerPool, all)
 
     bool is_run = false;
     timer_pool.doAfter(milliseconds(510),
-        [&] (const TimerPool::TimerToken &t) {
+        [&] {
             auto d = steady_clock::now() - start_time;
             EXPECT_GT(d, milliseconds(510 - kAcceptableError));
             EXPECT_LT(d, milliseconds(510 + kAcceptableError));
@@ -196,7 +193,7 @@ TEST(TimerPool, all)
     );
 
     timer_pool.doAfter(milliseconds(1010),
-        [&] (const TimerPool::TimerToken &) {
+        [&] {
             sp_loop->exitLoop();
         }
     );

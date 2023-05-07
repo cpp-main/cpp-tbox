@@ -78,7 +78,7 @@ void CommonLoop::exitLoop(const std::chrono::milliseconds &wait_time)
     if (wait_time.count() == 0) {
         stopLoop();
     } else {
-        sp_exit_timer_ = newTimerEvent();
+        sp_exit_timer_ = newTimerEvent(__func__);
         sp_exit_timer_->initialize(wait_time, Event::Mode::kOneshot);
         sp_exit_timer_->setCallback([this] { stopLoop(); });
         sp_exit_timer_->enable();
@@ -125,12 +125,12 @@ void CommonLoop::deleteTimer(const cabinet::Token& token)
     timer_min_heap_.pop_back();
 #endif
 
-    run([timer] { delete timer; }); //! Delete later, avoid delete itself
+    run([timer] { delete timer; }, __func__); //! Delete later, avoid delete itself
 }
 
-TimerEvent* CommonLoop::newTimerEvent()
+TimerEvent* CommonLoop::newTimerEvent(const std::string &what)
 {
-    return new TimerEventImpl(this);
+    return new TimerEventImpl(this, what);
 }
 
 }

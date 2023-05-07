@@ -1,49 +1,62 @@
 #include "common_loop.h"
 
 #include <unistd.h>
+#include <inttypes.h>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {
 
-void CommonLoop::runInLoop(const Func &func)
+using namespace std::chrono;
+
+CommonLoop::RunFuncItem::RunFuncItem(Func &&f, const std::string &w)
+    : commit_time_point(steady_clock::now())
+    , func(std::move(f))
+    , what(w)
+{ }
+
+void CommonLoop::runInLoop(Func &&func, const std::string &what)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
-
-    run_in_loop_func_queue_.push_back(func);
-
-    auto queue_size = run_in_loop_func_queue_.size();
-    if (queue_size > run_in_loop_threshold_)
-        LogWarn("run_in_loop_queue size: %u", queue_size);
-
-    if (queue_size > run_in_loop_peak_num_)
-        run_in_loop_peak_num_ = queue_size;
+    run_in_loop_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
 
     if (sp_run_read_event_ != nullptr)
         commitRunRequest();
+
+    auto queue_size = run_in_loop_func_queue_.size();
+    if (queue_size > run_in_loop_queue_size_water_line_)
+        LogNotice("run_in_loop_queue size: %u", queue_size);
+
+    if (queue_size > run_in_loop_peak_num_)
+        run_in_loop_peak_num_ = queue_size;
 }
 
-void CommonLoop::runNext(const Func &func)
+void CommonLoop::runInLoop(const Func &func, const std::string &what)
 {
-#ifdef DEBUG
-    {
-        std::lock_guard<std::recursive_mutex> g(lock_);
-        //! 要么还不有启动，要么在Loop线程中才允行这个操作
-        TBOX_ASSERT(!isRunningLockless() || isInLoopThreadLockless());
-    }
-#endif
-    run_next_func_queue_.push_back(func);
+    Func func_copy(func);
+    runInLoop(std::move(func_copy), what);
+}
+
+void CommonLoop::runNext(Func &&func, const std::string &what)
+{
+    run_next_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
 
     auto queue_size = run_next_func_queue_.size();
-    if (queue_size > run_next_threshold_)
-        LogWarn("run_next_queue size: %u", queue_size);
+    if (queue_size > run_next_queue_size_water_line_)
+        LogNotice("run_next_queue size: %u", queue_size);
 
     if (queue_size > run_next_peak_num_)
         run_next_peak_num_ = queue_size;
 }
 
-void CommonLoop::run(const Func &func)
+void CommonLoop::runNext(const Func &func, const std::string &what)
+{
+    Func func_copy(func);
+    runNext(std::move(func_copy), what);
+}
+
+void CommonLoop::run(Func &&func, const std::string &what)
 {
     bool can_run_next = true;
     {
@@ -53,33 +66,42 @@ void CommonLoop::run(const Func &func)
     }
 
     if (can_run_next)
-        runNext(func);
+        runNext(std::move(func), what);
     else
-        runInLoop(func);
+        runInLoop(std::move(func), what);
 }
 
-void CommonLoop::setRunInLoopThreshold(size_t threshold)
+void CommonLoop::run(const Func &func, const std::string &what)
 {
-    run_in_loop_threshold_ = threshold;
-}
-
-void CommonLoop::setRunNextThreshold(size_t threshold)
-{
-    run_next_threshold_ = threshold;
+    Func func_copy(func);
+    run(std::move(func_copy), what);
 }
 
 void CommonLoop::handleNextFunc()
 {
-    std::deque<Func> tmp;
+    std::deque<RunFuncItem> tmp;
     run_next_func_queue_.swap(tmp);
 
     while (!tmp.empty()) {
-        Func &func = tmp.front();
-        if (func) {
+        RunFuncItem &item = tmp.front();
+
+        auto now = steady_clock::now();
+        auto delay = now - item.commit_time_point;
+        if (delay > run_next_delay_waterline_)
+            LogNotice("run next delay over waterline: %" PRIu64 " us, what: '%s'",
+                      delay.count()/1000, item.what.c_str());
+
+        if (item.func) {
             ++cb_level_;
-            func();
+            item.func();
             --cb_level_;
         }
+
+        auto cost = steady_clock::now() - now;
+        if (cost > cb_time_cost_waterline_)
+            LogNotice("run next cost over waterline: %" PRIu64 " us, what: '%s'",
+                      cost.count()/1000, item.what.c_str());
+
         tmp.pop_front();
     }
 }
@@ -89,7 +111,7 @@ bool CommonLoop::hasNextFunc() const
     return !run_next_func_queue_.empty();
 }
 
-void CommonLoop::handleRunInLoopRequest(short)
+void CommonLoop::handleRunInLoopFunc()
 {
     /**
      * NOTICE:
@@ -99,7 +121,7 @@ void CommonLoop::handleRunInLoopRequest(short)
      *
      * 这点与 runNext() 不同
      */
-    std::deque<Func> tmp;
+    std::deque<RunFuncItem> tmp;
     {
         std::lock_guard<std::recursive_mutex> g(lock_);
         run_in_loop_func_queue_.swap(tmp);
@@ -107,12 +129,25 @@ void CommonLoop::handleRunInLoopRequest(short)
     }
 
     while (!tmp.empty()) {
-        Func &func = tmp.front();
-        if (func) {
+        RunFuncItem &item = tmp.front();
+
+        auto now = steady_clock::now();
+        auto delay = now - item.commit_time_point;
+        if (delay > run_in_loop_delay_waterline_)
+            LogNotice("run in loop delay over waterline: %" PRIu64 " us, what: '%s'",
+                      delay.count()/1000, item.what.c_str());
+
+        if (item.func) {
             ++cb_level_;
-            func();
+            item.func();
             --cb_level_;
         }
+
+        auto cost = steady_clock::now() - now;
+        if (cost > cb_time_cost_waterline_)
+            LogNotice("run in loop cost over waterline: %" PRIu64 " us, what: '%s'",
+                      cost.count()/1000, item.what.c_str());
+
         tmp.pop_front();
     }
 }
@@ -121,20 +156,29 @@ void CommonLoop::handleRunInLoopRequest(short)
 void CommonLoop::cleanupDeferredTasks()
 {
     int remain_loop_count = 10; //! 限定次数，防止出现 runNext() 递归导致无法退出循环的问题
-    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) &&
-           remain_loop_count-- > 0) {
-        std::deque<Func> tasks = std::move(run_next_func_queue_);
-        tasks.insert(tasks.end(), run_in_loop_func_queue_.begin(), run_in_loop_func_queue_.end());
-        run_in_loop_func_queue_.clear();
+    while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) && remain_loop_count-- > 0) {
 
-        while (!tasks.empty()) {
-            Func &func = tasks.front();
-            if (func) {
+        std::deque<RunFuncItem> run_next_tasks = std::move(run_next_func_queue_);
+        std::deque<RunFuncItem> run_in_loop_tasks = std::move(run_in_loop_func_queue_);
+
+        while (!run_next_tasks.empty()) {
+            RunFuncItem &item = run_next_tasks.front();
+            if (item.func) {
                 ++cb_level_;
-                func();
+                item.func();
                 --cb_level_;
             }
-            tasks.pop_front();
+            run_next_tasks.pop_front();
+        }
+
+        while (!run_in_loop_tasks.empty()) {
+            RunFuncItem &item = run_in_loop_tasks.front();
+            if (item.func) {
+                ++cb_level_;
+                item.func();
+                --cb_level_;
+            }
+            run_in_loop_tasks.pop_front();
         }
     }
 
@@ -145,19 +189,26 @@ void CommonLoop::cleanupDeferredTasks()
 void CommonLoop::commitRunRequest()
 {
     if (!has_commit_run_req_) {
-        char ch = 0;
-        ssize_t wsize = write(run_write_fd_, &ch, 1);
-        (void)wsize;
+        uint64_t one = 1;
+        ssize_t wsize = write(run_event_fd_, &one, sizeof(one));
+        if (wsize != sizeof(one))
+            LogErr("write error");
 
         has_commit_run_req_ = true;
+        request_stat_start_ = steady_clock::now();
     }
 }
 
 void CommonLoop::finishRunRequest()
 {
-    char ch = 0;
-    ssize_t rsize = read(run_read_fd_, &ch, 1);
-    (void)rsize;
+    auto delay = loop_stat_start_ - request_stat_start_;
+    if (delay > run_request_delay_waterline_)
+        LogNotice("run request delay over waterline: %" PRIu64 " us", delay.count()/1000);
+
+    uint64_t one = 1;
+    ssize_t rsize = read(run_event_fd_, &one, sizeof(one));
+    if (rsize != sizeof(one))
+        LogErr("read error");
 
     has_commit_run_req_ = false;
 }

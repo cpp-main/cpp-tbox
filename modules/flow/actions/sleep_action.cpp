@@ -9,7 +9,7 @@ namespace flow {
 
 SleepAction::SleepAction(event::Loop &loop)
   : Action(loop, "Sleep")
-  , timer_(loop.newTimerEvent())
+  , timer_(loop.newTimerEvent("SleepAction::timer_"))
 {
   TBOX_ASSERT(timer_ != nullptr);
   timer_->setCallback([this] { finish(true); });

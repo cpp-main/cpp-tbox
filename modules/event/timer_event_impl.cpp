@@ -6,8 +6,9 @@
 namespace tbox {
 namespace event {
 
-TimerEventImpl::TimerEventImpl(CommonLoop *wp_loop)
-    : wp_loop_(wp_loop)
+TimerEventImpl::TimerEventImpl(CommonLoop *wp_loop, const std::string &what)
+    : TimerEvent(what)
+    , wp_loop_(wp_loop)
 { }
 
 TimerEventImpl::~TimerEventImpl()
@@ -25,11 +26,6 @@ bool TimerEventImpl::initialize(const std::chrono::milliseconds &interval, Mode 
 
     is_inited_ = true;
     return true;
-}
-
-void TimerEventImpl::setCallback(const CallbackFunc &cb)
-{
-    cb_ = cb;
 }
 
 bool TimerEventImpl::isEnabled() const
@@ -78,20 +74,18 @@ Loop* TimerEventImpl::getLoop() const
 
 void TimerEventImpl::onEvent()
 {
-    wp_loop_->beginEventProcess();
-
     if (mode_ == Mode::kOneshot) {
         is_enabled_ = false;
         token_.reset();
     }
 
+    wp_loop_->beginEventProcess();
     if (cb_) {
         ++cb_level_;
         cb_();
         --cb_level_;
     }
-
-    wp_loop_->endEventProcess();
+    wp_loop_->endEventProcess(this);
 }
 
 }

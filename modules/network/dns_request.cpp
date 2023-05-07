@@ -120,7 +120,7 @@ void DnsRequest::init()
     timeout_monitor_.setCallback(std::bind(&DnsRequest::onRequestTimeout, this, _1));
 }
 
-void DnsRequest::setDnsIPAddesses(const IPAddressVec &dns_ip_vec)
+void DnsRequest::setDnsIPAddresses(const IPAddressVec &dns_ip_vec)
 {
     dns_ip_vec_ = dns_ip_vec;
 }

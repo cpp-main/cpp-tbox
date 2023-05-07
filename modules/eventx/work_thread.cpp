@@ -12,6 +12,7 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/cabinet.hpp>
 #include <tbox/base/catch_throw.h>
+#include <tbox/base/assert.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {
@@ -59,38 +60,34 @@ WorkThread::WorkThread(event::Loop *main_loop) :
 
 WorkThread::~WorkThread()
 {
-    {
-        std::lock_guard<std::mutex> lg(d_->lock);
-        //! 清空task中的任务
-        while (!d_->undo_tasks_token_deque.empty()) {
-            auto token = d_->undo_tasks_token_deque.front();
-            delete d_->undo_tasks_cabinet.free(token);
-            d_->undo_tasks_token_deque.pop_front();
-        }
-    }
+    cleanup();
+}
 
-    d_->stop_flag = true;
-    d_->cond_var.notify_all();
-
-    d_->work_thread.join();
-    CHECK_DELETE_RESET_OBJ(d_);
+WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task)
+{
+    return execute(std::move(backend_task), nullptr, nullptr);
 }
 
 WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
 {
-    return execute(backend_task, nullptr);
+    NonReturnFunc backend_task_copy(backend_task);
+    return execute(std::move(backend_task_copy), nullptr, nullptr);
 }
 
-WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
 {
     TaskToken token;
 
-    Task *item = new Task;
-    if (item == nullptr)
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
         return token;
+    }
 
-    item->backend_task = backend_task;
-    item->main_cb = main_cb;
+    Task *item = new Task;
+    TBOX_ASSERT(item != nullptr);
+
+    item->backend_task = std::move(backend_task);
+    item->main_cb = std::move(main_cb);
     item->main_loop = (main_loop != nullptr) ? main_loop : d_->default_main_loop;
     item->create_time_point = Clock::now();
 
@@ -106,8 +103,20 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, con
     return token;
 }
 
+WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+{
+    NonReturnFunc backend_task_copy(backend_task);
+    NonReturnFunc main_cb_copy(main_cb);
+    return execute(std::move(backend_task_copy), std::move(main_cb_copy), main_loop);
+}
+
 WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
 {
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
+        return TaskStatus::kNotFound;
+    }
+
     std::lock_guard<std::mutex> lg(d_->lock);
 
     if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
@@ -127,6 +136,11 @@ WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
  */
 int WorkThread::cancel(TaskToken token)
 {
+    if (d_ == nullptr) {
+        LogWarn("WorkThread has been cleanup");
+        return 3;
+    }
+
     std::lock_guard<std::mutex> lg(d_->lock);
 
     //! 如果正在执行
@@ -193,7 +207,7 @@ void WorkThread::threadProc()
                    exec_time_cost.count() / 1000);
 
             if (item->main_cb && item->main_loop != nullptr)
-                item->main_loop->runInLoop(item->main_cb);
+                item->main_loop->runInLoop(item->main_cb, "WorkThread::threadProc, invoke main_cb");
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
@@ -219,6 +233,28 @@ WorkThread::Task* WorkThread::popOneTask()
         return d_->undo_tasks_cabinet.free(token);
     }
     return nullptr;
+}
+
+void WorkThread::cleanup()
+{
+    if (d_ == nullptr)
+        return;
+
+    {
+        std::lock_guard<std::mutex> lg(d_->lock);
+        //! 清空task中的任务
+        while (!d_->undo_tasks_token_deque.empty()) {
+            auto token = d_->undo_tasks_token_deque.front();
+            delete d_->undo_tasks_cabinet.free(token);
+            d_->undo_tasks_token_deque.pop_front();
+        }
+    }
+
+    d_->stop_flag = true;
+    d_->cond_var.notify_all();
+
+    d_->work_thread.join();
+    CHECK_DELETE_RESET_OBJ(d_);
 }
 
 }

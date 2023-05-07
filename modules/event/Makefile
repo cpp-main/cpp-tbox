@@ -1,7 +1,7 @@
 LIB_NAME = event
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 1
-LIB_VERSION_Z = 1
+LIB_VERSION_Z = 2
 
 HEAD_FILES = \
 	forward.h \
@@ -30,7 +30,6 @@ TEST_CPP_SRC_FILES = \
 	fd_event_test.cpp \
 	timer_event_test.cpp \
 	signal_event_test.cpp \
-	stat_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
 

@@ -12,7 +12,7 @@ namespace alarm {
 
 Alarm::Alarm(event::Loop *wp_loop) :
   wp_loop_(wp_loop),
-  sp_timer_ev_(wp_loop->newTimerEvent())
+  sp_timer_ev_(wp_loop->newTimerEvent("Alarm::sp_timer_ev_"))
 {
   sp_timer_ev_->setCallback([this] { onTimeExpired(); });
 }

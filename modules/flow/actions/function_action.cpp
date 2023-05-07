@@ -10,7 +10,7 @@ FunctionAction::FunctionAction(event::Loop &loop) :
 { }
 
 bool FunctionAction::onStart() {
-  loop_.runNext([this] { finish(func_()); });
+  loop_.runNext([this] { finish(func_()); }, "FunctionAction::onStart");
   return true;
 }
 

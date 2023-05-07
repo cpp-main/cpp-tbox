@@ -18,8 +18,9 @@ struct EpollFdSharedData {
     std::vector<EpollFdEvent*> write_events;
 };
 
-EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop) :
-    wp_loop_(wp_loop)
+EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop, const std::string &what)
+  : FdEvent(what)
+  , wp_loop_(wp_loop)
 { }
 
 EpollFdEvent::~EpollFdEvent()
@@ -135,18 +136,16 @@ void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
 
 void EpollFdEvent::onEvent(short events)
 {
-    wp_loop_->beginEventProcess();
-
     if (is_stop_after_trigger_)
         disable();
 
+    wp_loop_->beginEventProcess();
     if (cb_) {
         ++cb_level_;
         cb_(events);
         --cb_level_;
     }
-
-    wp_loop_->endEventProcess();
+    wp_loop_->endEventProcess(this);
 }
 
 void EpollFdEvent::unrefFdSharedData()

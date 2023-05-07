@@ -78,12 +78,13 @@ bool TcpRpc::Impl::endSession(const SessionToken &st)
         return false;
 
     //! 委托执行，否则会出自我销毁的异常
-    wp_loop_->run(
+    wp_loop_->runNext(
         [this, st, ct] {
             client_to_session_.erase(ct);
             session_to_client_.erase(st);
             sp_tcp_->disconnect(ct);
-        }
+        },
+        "TcpRpc::endSession"
     );
 
     return true;

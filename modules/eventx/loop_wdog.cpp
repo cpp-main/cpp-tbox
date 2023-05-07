@@ -59,7 +59,8 @@ void SendLoopFunc() {
                         if (loop_info_sptr->state == State::kTimeout)
                             _loop_recover_cb(loop_info_sptr->name);
                         loop_info_sptr->state = State::kChecked;
-                    }
+                    },
+                    "LoopWdog"
                 );
             }
         }

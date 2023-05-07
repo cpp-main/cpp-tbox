@@ -29,8 +29,8 @@ extern std::function<void()> error_exit_func;
 namespace {
 void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 {
-    auto stop_signal = ctx.loop()->newSignalEvent();
-    auto warn_signal = ctx.loop()->newSignalEvent();
+    auto stop_signal = ctx.loop()->newSignalEvent("main::RunInFrontend::stop_signal");
+    auto warn_signal = ctx.loop()->newSignalEvent("main::RunInFrontend::warn_signal");
 
     //! 预定在离开时自动释放对象，确保无内存泄漏
     SetScopeExitAction(
@@ -143,6 +143,8 @@ int Main(int argc, char **argv)
     }
 
     LogInfo("Bye!");
+    log.cleanup();
+
     return 0;
 }
 

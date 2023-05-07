@@ -48,11 +48,9 @@ void EpollLoop::runLoop(Mode mode)
 
     keep_running_ = (mode == Loop::Mode::kForever);
     do {
-        startWaitEvents();
-
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), getWaitTime());
 
-        startHandleEvents();
+        beginLoopProcess();
 
         handleExpiredTimers();
 
@@ -61,6 +59,7 @@ void EpollLoop::runLoop(Mode mode)
             EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
         }
 
+        //handleRunInLoopFunc();
         handleNextFunc();
 
         /// If the receiver array size is full, increase its size with 1.5 times.
@@ -68,6 +67,8 @@ void EpollLoop::runLoop(Mode mode)
             max_loop_entries_ = (max_loop_entries_ + max_loop_entries_ / 2);
             events.resize(max_loop_entries_);
         }
+
+        endLoopProcess();
 
     } while (keep_running_);
 
@@ -93,9 +94,9 @@ EpollFdSharedData* EpollLoop::queryFdSharedData(int fd) const
 }
 
 
-FdEvent* EpollLoop::newFdEvent()
+FdEvent* EpollLoop::newFdEvent(const std::string &what)
 {
-    return new EpollFdEvent(this);
+    return new EpollFdEvent(this, what);
 }
 
 }

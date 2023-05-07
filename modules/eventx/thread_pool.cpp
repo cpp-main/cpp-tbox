@@ -98,12 +98,17 @@ bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
     return true;
 }
 
+ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, int prio)
+{
+    return execute(std::move(backend_task), nullptr, prio);
+}
+
 ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int prio)
 {
     return execute(backend_task, nullptr, prio);
 }
 
-ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
+ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
 {
     TaskToken token;
 
@@ -123,16 +128,16 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     if (item == nullptr)
         return token;
 
-    item->backend_task = backend_task;
-    item->main_cb = main_cb;
+    item->backend_task = std::move(backend_task);
+    item->main_cb = std::move(main_cb);
     item->create_time_point = Clock::now();
     {
         std::lock_guard<std::mutex> lg(d_->lock);
         item->token = token = d_->undo_tasks_cabinet.alloc(item);
 
         d_->undo_tasks_token.at(level).push_back(token);
-        //! 如果空间线程不够，且还可以再创建新的线程
-        if (d_->idle_thread_num == 0) {
+        //! 如果空闲线程不够分配未认领的任务，且还可以再创建新的线程
+        if (d_->undo_tasks_cabinet.size() > d_->idle_thread_num) {
             if (d_->threads_cabinet.size() < d_->max_thread_num) {
                 createWorker();
             } else {
@@ -146,6 +151,13 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, con
     d_->cond_var.notify_one();
 
     return token;
+}
+
+ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
+{
+    NonReturnFunc backend_task_copy(backend_task);
+    NonReturnFunc main_cb_copy(main_cb);
+    return execute(std::move(backend_task_copy), std::move(main_cb_copy), prio);
 }
 
 ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
@@ -248,15 +260,13 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             std::unique_lock<std::mutex> lk(d_->lock);
 
             /**
-             * 为防止反复创建线程，此处做优化：
-             * 如果当前已有空闲的线程在等待，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
-             * 但这也会引起另一个小问题：如果 min_thread_num = 0，那么一旦执行过一次，线程池中至少会保留一个工作线程
+             * 如果当前空闲的线程数量大于等于未被领取的任务数，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
              */
-            if (d_->idle_thread_num > 0 && d_->threads_cabinet.size() > d_->min_thread_num) {
+            if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) && (d_->threads_cabinet.size() > d_->min_thread_num)) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
                 auto t = d_->threads_cabinet.free(thread_token);
-                d_->wp_loop->runInLoop([t]{ t->join(); delete t; });
+                d_->wp_loop->runInLoop([t]{ t->join(); delete t; }, "ThreadPool::threadProc, join and delete t");
                 break;
             }
 
@@ -302,7 +312,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                    exec_time_cost.count() / 1000);
 
             if (item->main_cb)
-                d_->wp_loop->runInLoop(item->main_cb);
+                d_->wp_loop->runInLoop(item->main_cb, "ThreadPool::threadProc, invoke main_cb");
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
@@ -321,6 +331,7 @@ bool ThreadPool::createWorker()
     auto *new_thread = new std::thread(std::bind(&ThreadPool::threadProc, this, thread_token));
     if (new_thread != nullptr) {
         d_->threads_cabinet.update(thread_token, new_thread);
+        LogDbg("create thread %u", thread_token.id());
         return true;
 
     } else {
