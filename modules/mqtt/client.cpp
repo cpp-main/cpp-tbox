@@ -270,10 +270,10 @@ bool Client::start()
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
     d_->sp_thread = new thread(
         [this, is_alive] {
-            int ret = mosquitto_connect(d_->sp_mosq,
-                                        d_->config.base.broker.domain.c_str(),
-                                        d_->config.base.broker.port,
-                                        d_->config.base.keepalive);
+            int ret = mosquitto_connect_async(d_->sp_mosq,
+                                              d_->config.base.broker.domain.c_str(),
+                                              d_->config.base.broker.port,
+                                              d_->config.base.keepalive);
             d_->wp_loop->runInLoop(
                 [this, is_alive, ret] {
                     if (!is_alive)  //!< 判定this指针是否有效
@@ -386,7 +386,7 @@ void Client::onTimerTick()
             auto is_alive = d_->alive_tag.get();  //! 原理见Q1
             d_->sp_thread = new thread(
                 [this, is_alive] {
-                    int ret = mosquitto_reconnect(d_->sp_mosq);
+                    int ret = mosquitto_reconnect_async(d_->sp_mosq);
                     d_->wp_loop->runInLoop(
                         [this, is_alive, ret] {
                             if (!is_alive)  //!< 判定this指针是否有效
