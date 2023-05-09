@@ -44,6 +44,10 @@ void CommonLoop::handleExpiredTimers()
         if (now < t->expired)
             break;
 
+        int delay_ms = now - t->expired;
+        if (delay_ms > (water_line_.timer_delay.count() / 1000000))
+            LogNotice("timer delay over waterline: %d ms", delay_ms);
+
         auto tobe_run = t->cb;
 
         // swap first element and last element

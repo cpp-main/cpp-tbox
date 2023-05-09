@@ -116,33 +116,35 @@ bool ContextImp::initialize(const Json &cfg)
 
 bool ContextImp::initLoop(const Json &js)
 {
-    int run_in_loop_queue_size_water_line = 0;
-    if (util::json::GetField(js, "run_in_loop_queue_size_water_line", run_in_loop_queue_size_water_line))
-        sp_loop_->setRunInLoopQueueSizeWaterLine(run_in_loop_queue_size_water_line);
+    if (util::json::HasObjectField(js, "water_line")) {
+        auto &js_water_line = js["water_line"];
+        auto &water_line = sp_loop_->water_line();
 
-    int run_next_queue_size_water_line = 0;
-    if (util::json::GetField(js, "run_next_queue_size_water_line", run_next_queue_size_water_line))
-        sp_loop_->setRunNextQueueSizeWaterLine(run_next_queue_size_water_line);
+        int value = 0;
+        if (util::json::GetField(js_water_line, "run_in_loop_queue_size", value))
+            water_line.run_in_loop_queue_size = value;
 
-    int run_in_loop_delay_water_line_us = 0;
-    if (util::json::GetField(js, "run_in_loop_delay_water_line", run_in_loop_delay_water_line_us))
-        sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(run_in_loop_delay_water_line_us));
+        if (util::json::GetField(js_water_line, "run_next_queue_size", value))
+            water_line.run_next_queue_size = value;
 
-    int run_next_delay_water_line_us = 0;
-    if (util::json::GetField(js, "run_next_delay_water_line", run_next_delay_water_line_us))
-        sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(run_next_delay_water_line_us));
+        if (util::json::GetField(js_water_line, "run_in_loop_delay", value))
+            water_line.run_in_loop_delay = std::chrono::microseconds(value);
 
-    int loop_time_cost_water_line_us = 0;
-    if (util::json::GetField(js, "loop_time_cost_water_line", loop_time_cost_water_line_us))
-        sp_loop_->setLoopTimeCostWaterLine(std::chrono::microseconds(loop_time_cost_water_line_us));
+        if (util::json::GetField(js_water_line, "run_next_delay", value))
+            water_line.run_next_delay = std::chrono::microseconds(value);
 
-    int cb_time_cost_water_line_us = 0;
-    if (util::json::GetField(js, "cb_time_cost_water_line", cb_time_cost_water_line_us))
-        sp_loop_->setCbTimeCostWaterLine(std::chrono::microseconds(cb_time_cost_water_line_us));
+        if (util::json::GetField(js_water_line, "loop_time_cost", value))
+            water_line.loop_time_cost = std::chrono::microseconds(value);
 
-    int run_request_delay_water_line_us = 0;
-    if (util::json::GetField(js, "run_request_delay_water_line", run_request_delay_water_line_us))
-        sp_loop_->setRunRequestDelayWaterLine(std::chrono::microseconds(run_request_delay_water_line_us));
+        if (util::json::GetField(js_water_line, "cb_time_cost", value))
+            water_line.cb_time_cost = std::chrono::microseconds(value);
+
+        if (util::json::GetField(js_water_line, "wake_delay", value))
+            water_line.wake_delay = std::chrono::microseconds(value);
+
+        if (util::json::GetField(js_water_line, "timer_delay", value))
+            water_line.timer_delay = std::chrono::microseconds(value);
+    }
 
     return true;
 }
@@ -252,19 +254,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setRunInLoopQueueSizeWaterLine(value);
+                                sp_loop_->water_line().run_in_loop_queue_size = value;
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getRunInLoopQueueSizeWaterLine() << "\r\n";
+                            oss << sp_loop_->water_line().run_in_loop_queue_size  << "\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setRunInLoopQueueSizeWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_queue_size");
             }
@@ -281,19 +282,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setRunNextQueueSizeWaterLine(value);
+                                sp_loop_->water_line().run_next_queue_size = value;
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getRunNextQueueSizeWaterLine() << "\r\n";
+                            oss << sp_loop_->water_line().run_next_queue_size  << "\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setRunNextQueueSizeWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "run_next_queue_size");
             }
@@ -310,19 +310,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setRunInLoopDelayWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->water_line().run_in_loop_delay = std::chrono::microseconds(value);
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getRunInLoopDelayWaterLine().count()/1000 << " us\r\n";
+                            oss << sp_loop_->water_line().run_in_loop_delay.count()/1000 << " us\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setRunInLoopDelayWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_delay");
             }
@@ -339,19 +338,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setRunNextDelayWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->water_line().run_next_delay = std::chrono::microseconds(value);
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getRunNextDelayWaterLine().count()/1000 << " us\r\n";
+                            oss << sp_loop_->water_line().run_next_delay.count()/1000 << " us\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setRunNextDelayWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "run_next_delay");
             }
@@ -368,19 +366,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setLoopTimeCostWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->water_line().loop_time_cost = std::chrono::microseconds(value);
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getLoopTimeCostWaterLine().count()/1000 << " us\r\n";
+                            oss << sp_loop_->water_line().loop_time_cost.count()/1000 << " us\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setLoopTimeCostWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "loop_time_cost");
             }
@@ -397,19 +394,18 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setCbTimeCostWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->water_line().cb_time_cost = std::chrono::microseconds(value);
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getCbTimeCostWaterLine().count()/1000 << " us\r\n";
+                            oss << sp_loop_->water_line().cb_time_cost.count()/1000 << " us\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setCbTimeCostWaterLine()"
+                    }
                 );
                 wp_nodes->mountNode(water_line_node, func_node, "cb_time_cost");
             }
@@ -426,21 +422,48 @@ void ContextImp::initShell()
                                 oss << "must be number\r\n";
                                 print_usage = true;
                             } else {
-                                sp_loop_->setRunRequestDelayWaterLine(std::chrono::microseconds(value));
+                                sp_loop_->water_line().wake_delay = std::chrono::microseconds(value);
                                 oss << "done\r\n";
                             }
                         } else {
-                            oss << sp_loop_->getRunRequestDelayWaterLine().count()/1000 << " us\r\n";
+                            oss << sp_loop_->water_line().wake_delay.count()/1000 << " us\r\n";
                         }
 
                         if (print_usage)
                             oss << "Usage: " << args[0] << " <num>\r\n";
 
                         s.send(oss.str());
-                    },
-                    "Invoke Loop::setRunRequestDelayWaterLine()"
+                    }
                 );
-                wp_nodes->mountNode(water_line_node, func_node, "run_request_delay");
+                wp_nodes->mountNode(water_line_node, func_node, "wake_delay");
+            }
+
+            {
+                auto func_node = wp_nodes->createFuncNode(
+                    [this] (const Session &s, const Args &args) {
+                        bool print_usage = false;
+                        std::ostringstream oss;
+                        if (args.size() >= 2) {
+                            int value = 0;
+                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
+                            if (CatchThrowQuietly(may_throw_func)) {
+                                oss << "must be number\r\n";
+                                print_usage = true;
+                            } else {
+                                sp_loop_->water_line().timer_delay = std::chrono::microseconds(value);
+                                oss << "done\r\n";
+                            }
+                        } else {
+                            oss << sp_loop_->water_line().timer_delay.count()/1000 << " us\r\n";
+                        }
+
+                        if (print_usage)
+                            oss << "Usage: " << args[0] << " <num>\r\n";
+
+                        s.send(oss.str());
+                    }
+                );
+                wp_nodes->mountNode(water_line_node, func_node, "timer_delay");
             }
         }
 

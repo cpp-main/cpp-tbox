@@ -97,7 +97,7 @@ void CommonLoop::endLoopProcess()
     if (loop_peak_cost_ < cost)
         loop_peak_cost_ = cost;
 
-    if (cost > loop_time_cost_waterline_)
+    if (cost > water_line_.loop_time_cost)
         LogNotice("loop cost over waterline: %" PRIu64 " us", cost.count()/1000);
 }
 
@@ -109,7 +109,7 @@ void CommonLoop::beginEventProcess()
 void CommonLoop::endEventProcess(Event *event)
 {
     auto cost = steady_clock::now() - event_stat_start_;
-    if (cost > cb_time_cost_waterline_)
+    if (cost > water_line_.cb_time_cost)
         LogNotice("event cb cost over waterline: %" PRIu64 " us, what: '%s'",
                   cost.count()/1000, event->what().c_str());
 }
@@ -140,76 +140,6 @@ void CommonLoop::resetStat()
 
     run_in_loop_peak_num_ = 0;
     run_next_peak_num_ = 0;
-}
-
-void CommonLoop::setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line)
-{
-    run_in_loop_queue_size_water_line_ = queue_size_water_line;
-}
-
-size_t CommonLoop::getRunInLoopQueueSizeWaterLine() const
-{
-    return run_in_loop_queue_size_water_line_;
-}
-
-void CommonLoop::setRunNextQueueSizeWaterLine(size_t queue_size_water_line)
-{
-    run_next_queue_size_water_line_ = queue_size_water_line;
-}
-
-size_t CommonLoop::getRunNextQueueSizeWaterLine() const
-{
-    return run_next_queue_size_water_line_;
-}
-
-void CommonLoop::setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline)
-{
-    run_in_loop_delay_waterline_ = waterline;
-}
-
-std::chrono::nanoseconds CommonLoop::getRunInLoopDelayWaterLine() const
-{
-    return run_in_loop_delay_waterline_;
-}
-
-void CommonLoop::setRunNextDelayWaterLine(std::chrono::nanoseconds waterline)
-{
-    run_next_delay_waterline_ = waterline;
-}
-
-std::chrono::nanoseconds CommonLoop::getRunNextDelayWaterLine() const
-{
-    return run_next_delay_waterline_;
-}
-
-void CommonLoop::setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline)
-{
-    loop_time_cost_waterline_ = waterline;
-}
-
-std::chrono::nanoseconds CommonLoop::getLoopTimeCostWaterLine() const
-{
-    return loop_time_cost_waterline_;
-}
-
-void CommonLoop::setCbTimeCostWaterLine(std::chrono::nanoseconds waterline)
-{
-    cb_time_cost_waterline_ = waterline;
-}
-
-std::chrono::nanoseconds CommonLoop::getCbTimeCostWaterLine() const
-{
-    return cb_time_cost_waterline_;
-}
-
-void CommonLoop::setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline)
-{
-    run_request_delay_waterline_ = waterline;
-}
-
-std::chrono::nanoseconds CommonLoop::getRunRequestDelayWaterLine() const
-{
-    return run_request_delay_waterline_;
 }
 
 }
