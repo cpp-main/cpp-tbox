@@ -13,20 +13,68 @@ namespace network {
 
 class Dns {
   public:
-    explicit DnsRequest(event::Loop *wp_loop);
-    explicit DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec);
-    virtual ~DnsRequest();
+    using QueryId = uint32_t;
 
-  private:
-    DnsRequest dns_req_;    //!< DNS请求器
+    class QueryToken {
+        friend Dns;
 
-    std::map<DomainName, IPAddress> ip_address_cache_;
+      public:
+        inline bool isNull() const { id_ == 0; }
+        inline QueryId id() const { return id_; }
+        inline const DomainName& domain_name() const { return domain_name_; }
+        inline void reset() {
+            domain_name_.clear();
+            id_ = 0;
+            pos_ = 0;
+        }
+        inline void swap(QueryToken &other) {
+            std::swap(domain_name_, other.domain_name_);
+            std::swap(id_, other.id_);
+            std::swap(pos_, other.pos_);
+        }
+
+      private:
+        DomainName domain_name_;
+        QueryId id_ = 0;
+        size_t pos_ = 0;
+    };
+
+    using QueryCallback = std::function<const QueryToken &, bool, const IPAddress &>;
+
+  public:
+    explicit Dns(event::Loop *wp_loop);
+    virtual ~Dns();
+
+  public:
+    bool initialize(const IPAddressVec &dns_ip_vec);
+    void cleanup();
+
+  public:
+    /// 同步查询，只在 cache 里查，里面没有就返回空
+    IPAddress query(const DomainName &domain_name) const;
+
+    /// 异步查询，先在 cache 里查，如果没有，则发起 DNS 请求，等有了结果再回调
+    QueryToken query(const DomainName &domain_name, QueryCallback &&cb);
+    /// 取消异步查询
+    bool cancel(const QueryToken &token);
+
+  protected:
+    struct Lifetime {
+        uint64_t ts;
+        DomainName domain_name;
+    };
+
     struct QueryInfo {
         DnsRequest::ReqId req_id;
-        std::vector<QueryCallback>
+        std::vector<QueryCallback> cb_vec_;
     };
-    std::map<DomainName, IPAddress> ip_address_cache_;
-    std::map<DomainName, QueryInfo> query_info_;
+
+  private:
+    event::TimerEvent *tick_timer_;
+    DnsRequest dns_req_;    //!< DNS请求器
+    std::map<DomainName, IPAddress> cache_;
+    std::map<DomainName, QueryInfo> querys_;
+    std::vector<Lifetime> lifetime_min_heap_;
 };
 
 }
