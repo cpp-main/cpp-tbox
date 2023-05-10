@@ -78,20 +78,17 @@ class Loop {
     virtual void resetStat() = 0;
 
     //! 阈值
-    virtual void setRunInLoopQueueSizeWaterLine(size_t threshold) = 0;
-    virtual size_t getRunInLoopQueueSizeWaterLine() const = 0;
-    virtual void setRunNextQueueSizeWaterLine(size_t threshold) = 0;
-    virtual size_t getRunNextQueueSizeWaterLine() const = 0;
-    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual std::chrono::nanoseconds getLoopTimeCostWaterLine() const = 0;
-    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual std::chrono::nanoseconds getCbTimeCostWaterLine() const = 0;
-    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual std::chrono::nanoseconds getRunInLoopDelayWaterLine() const = 0;
-    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual std::chrono::nanoseconds getRunNextDelayWaterLine() const = 0;
-    virtual void setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline) = 0;
-    virtual std::chrono::nanoseconds getRunRequestDelayWaterLine() const = 0;
+    struct WaterLine {
+      size_t run_in_loop_queue_size;              //!< runInLoop() 队列长度
+      size_t run_next_queue_size;                 //!< runNext() 队列长度
+      std::chrono::nanoseconds wake_delay;        //!< loop 唤醒延迟
+      std::chrono::nanoseconds loop_time_cost;    //!< loop 时间消耗
+      std::chrono::nanoseconds cb_time_cost;      //!< 回调时间消耗
+      std::chrono::nanoseconds run_in_loop_delay; //!< runInLoop() 执行延迟
+      std::chrono::nanoseconds run_next_delay;    //!< runNext() 执行延迟
+      std::chrono::nanoseconds timer_delay;       //!< 定时器延迟
+    };
+    virtual WaterLine& water_line() = 0;
 
   public:
     virtual ~Loop() { }

@@ -25,7 +25,7 @@ void CommonLoop::runInLoop(Func &&func, const std::string &what)
         commitRunRequest();
 
     auto queue_size = run_in_loop_func_queue_.size();
-    if (queue_size > run_in_loop_queue_size_water_line_)
+    if (queue_size > water_line_.run_in_loop_queue_size)
         LogNotice("run_in_loop_queue size: %u", queue_size);
 
     if (queue_size > run_in_loop_peak_num_)
@@ -43,7 +43,7 @@ void CommonLoop::runNext(Func &&func, const std::string &what)
     run_next_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
 
     auto queue_size = run_next_func_queue_.size();
-    if (queue_size > run_next_queue_size_water_line_)
+    if (queue_size > water_line_.run_next_queue_size)
         LogNotice("run_next_queue size: %u", queue_size);
 
     if (queue_size > run_next_peak_num_)
@@ -87,7 +87,7 @@ void CommonLoop::handleNextFunc()
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
-        if (delay > run_next_delay_waterline_)
+        if (delay > water_line_.run_next_delay)
             LogNotice("run next delay over waterline: %" PRIu64 " us, what: '%s'",
                       delay.count()/1000, item.what.c_str());
 
@@ -98,7 +98,7 @@ void CommonLoop::handleNextFunc()
         }
 
         auto cost = steady_clock::now() - now;
-        if (cost > cb_time_cost_waterline_)
+        if (cost > water_line_.cb_time_cost)
             LogNotice("run next cost over waterline: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
 
@@ -133,7 +133,7 @@ void CommonLoop::handleRunInLoopFunc()
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
-        if (delay > run_in_loop_delay_waterline_)
+        if (delay > water_line_.run_in_loop_delay)
             LogNotice("run in loop delay over waterline: %" PRIu64 " us, what: '%s'",
                       delay.count()/1000, item.what.c_str());
 
@@ -144,7 +144,7 @@ void CommonLoop::handleRunInLoopFunc()
         }
 
         auto cost = steady_clock::now() - now;
-        if (cost > cb_time_cost_waterline_)
+        if (cost > water_line_.cb_time_cost)
             LogNotice("run in loop cost over waterline: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
 
@@ -202,8 +202,8 @@ void CommonLoop::commitRunRequest()
 void CommonLoop::finishRunRequest()
 {
     auto delay = loop_stat_start_ - request_stat_start_;
-    if (delay > run_request_delay_waterline_)
-        LogNotice("run request delay over waterline: %" PRIu64 " us", delay.count()/1000);
+    if (delay > water_line_.wake_delay)
+        LogNotice("wake delay over waterline: %" PRIu64 " us", delay.count()/1000);
 
     uint64_t one = 1;
     ssize_t rsize = read(run_event_fd_, &one, sizeof(one));

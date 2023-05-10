@@ -37,20 +37,7 @@ class CommonLoop : public Loop {
 
     virtual void exitLoop(const std::chrono::milliseconds &wait_time) override;
 
-    virtual void setRunInLoopQueueSizeWaterLine(size_t queue_size_water_line) override;
-    virtual size_t getRunInLoopQueueSizeWaterLine() const override;
-    virtual void setRunNextQueueSizeWaterLine(size_t queue_size_water_line) override;
-    virtual size_t getRunNextQueueSizeWaterLine() const override;
-    virtual void setLoopTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
-    virtual std::chrono::nanoseconds getLoopTimeCostWaterLine() const override;
-    virtual void setCbTimeCostWaterLine(std::chrono::nanoseconds waterline) override;
-    virtual std::chrono::nanoseconds getCbTimeCostWaterLine() const override;
-    virtual void setRunInLoopDelayWaterLine(std::chrono::nanoseconds waterline) override;
-    virtual std::chrono::nanoseconds getRunInLoopDelayWaterLine() const override;
-    virtual void setRunNextDelayWaterLine(std::chrono::nanoseconds waterline) override;
-    virtual std::chrono::nanoseconds getRunNextDelayWaterLine() const override;
-    virtual void setRunRequestDelayWaterLine(std::chrono::nanoseconds waterline) override;
-    virtual std::chrono::nanoseconds getRunRequestDelayWaterLine() const override;
+    WaterLine& water_line() override { return water_line_; }
 
   public:
     void beginLoopProcess();
@@ -150,13 +137,16 @@ class CommonLoop : public Loop {
     std::vector<Timer*>     timer_min_heap_;
 
     //! 警告水位线
-    size_t run_in_loop_queue_size_water_line_ = std::numeric_limits<size_t>::max();
-    size_t run_next_queue_size_water_line_    = std::numeric_limits<size_t>::max();
-    std::chrono::nanoseconds cb_time_cost_waterline_      = std::chrono::milliseconds(100);
-    std::chrono::nanoseconds loop_time_cost_waterline_    = std::chrono::milliseconds(100);
-    std::chrono::nanoseconds run_in_loop_delay_waterline_ = std::chrono::milliseconds(10);
-    std::chrono::nanoseconds run_next_delay_waterline_    = std::chrono::milliseconds(10);
-    std::chrono::nanoseconds run_request_delay_waterline_ = std::chrono::milliseconds(5);
+    WaterLine water_line_ = {
+      .run_in_loop_queue_size = std::numeric_limits<size_t>::max(),
+      .run_next_queue_size = std::numeric_limits<size_t>::max(),
+      .wake_delay = std::chrono::milliseconds(5),
+      .loop_time_cost = std::chrono::milliseconds(100),
+      .cb_time_cost = std::chrono::milliseconds(50),
+      .run_in_loop_delay = std::chrono::milliseconds(10),
+      .run_next_delay = std::chrono::milliseconds(10),
+      .timer_delay = std::chrono::milliseconds(10)
+    };
 
     std::chrono::steady_clock::time_point event_stat_start_;
     std::chrono::steady_clock::time_point request_stat_start_;
