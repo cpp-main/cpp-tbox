@@ -60,7 +60,7 @@ endef
 
 define CREATE_C_OBJECT
 $(call C_SOURCE_TO_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCXX $^\033[0m"
+	@echo "\033[32mCC $$^\033[0m"
 	@install -d $$(dir $$@)
 	@$(CC) $(CFLAGS) -o $$@ -c $$^
 endef
@@ -70,6 +70,7 @@ $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_OBJECT,$(src))))
 
 print_exe_vars :
+	@echo CFLAGS=$(CFLAGS)
 	@echo CXXFLAGS=$(CXXFLAGS)
 	@echo EXE_NAME=$(EXE_NAME)
 	@echo OBJECTS=$(OBJECTS)

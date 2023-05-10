@@ -74,8 +74,9 @@ endef
 
 define CREATE_C_OBJECT
 $(call C_SOURCE_TO_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCXX $^\033[0m"
-	@$(CC) $(CFLAGS) -o $@ -c $^
+	@echo "\033[32mCC $$^\033[0m"
+	@install -d $$(dir $$@)
+	@$(CC) $(CFLAGS) -o $$@ -c $$^
 endef
 
 $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_OBJECT,$(src))))
@@ -83,6 +84,7 @@ $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_OBJECT,$(src))))
 
 print_static_vars :
+	@echo CFLAGS=$(CFLAGS)
 	@echo CXXFLAGS=$(CXXFLAGS)
 	@echo OBJECTS=$(OBJECTS)
 
@@ -125,8 +127,9 @@ endef
 
 define CREATE_C_SHARED_OBJECT
 $(call C_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCXX $^\033[0m"
-	@$(CC) $(SHARED_CFLAGS) -o $@ -c $^
+	@echo "\033[32mCC $$^\033[0m"
+	@install -d $$(dir $$@)
+	@$(CC) $(SHARED_CFLAGS) -o $$@ -c $$^
 endef
 
 $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_SHARED_OBJECT,$(src))))
@@ -134,6 +137,7 @@ $(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_SHARED_OBJECT,$(src))))
 $(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_SHARED_OBJECT,$(src))))
 
 print_shared_vars :
+	@echo SHARED_CFLAGS=$(SHARED_CFLAGS)
 	@echo SHARED_CXXFLAGS=$(SHARED_CXXFLAGS)
 	@echo SHARED_OBJECTS=$(SHARED_OBJECTS)
 
