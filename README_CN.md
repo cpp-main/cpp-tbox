@@ -48,6 +48,7 @@
 ![设置日志等级](documents/images/0001-set-log-level.gif)  
 
 ## 5. 灵活的参数系统,以不变应万变
+参数以JSON的格式提供，可以传入任何格式的运行参数，包括：整数、小数、字串、数组、组合参数。满足几乎所有参数传入需求：  
 ![参数help](documents/images/0005-arguments.png)  
 
 ## 6. 跨线程委派任务,无需加锁
