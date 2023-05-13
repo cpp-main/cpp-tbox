@@ -87,11 +87,17 @@
 
 # 适用环境
 
-- Linux 操作系统;
+- Linux 系统;
 - C++11 以上。
 
-# 安装与构建
-[安装与构建教程](documents/00.install.md)  
+# 下载与构建
+
+```
+git clone https://gitee.com/cpp-master/cpp-tbox.git
+cd cpp-tbox;
+STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
+```
+完成之后，头文件与库文件都在 $HOME/.tbox 中。
 
 # 快速上手
 [快速上手教程](documents/01.quick_start.md)  
@@ -118,7 +124,7 @@
 # 反馈途径
 
 - Issue: 任何问题都欢迎在issue里交流
-- 微信: hevake_lee
+- 微信: hevake\_lee
 - QQ群: 738084942 (cpp-tbox 技术交流)
 
 # 鼓励我
@@ -132,3 +138,4 @@
 - 积极反馈问题，提出建议；
 - 参与项目的开发，贡献您的力量；
 - 让我知道它被运用到了哪些的项目上（不收费，仅仅是想得到更多的成就感）；
+
