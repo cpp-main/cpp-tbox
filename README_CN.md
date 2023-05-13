@@ -99,8 +99,8 @@ STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
 ```
 完成之后，头文件与库文件都在 $HOME/.tbox 中。
 
-# 快速上手
-[快速上手教程](documents/01.quick_start.md)  
+# 使用教程
+[cpp-tbox-tutorials](https://gitee.com/cpp-master/cpp-tbox-tutorials)  
 
 # 外部库依赖
 
