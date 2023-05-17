@@ -141,14 +141,15 @@ class CommonLoop : public Loop {
       .run_in_loop_queue_size = std::numeric_limits<size_t>::max(),
       .run_next_queue_size = std::numeric_limits<size_t>::max(),
       .wake_delay = std::chrono::milliseconds(5),
-      .loop_time_cost = std::chrono::milliseconds(100),
-      .cb_time_cost = std::chrono::milliseconds(50),
+      .loop_cost = std::chrono::milliseconds(100),
+      .event_cb_cost = std::chrono::milliseconds(50),
+      .run_cb_cost = std::chrono::milliseconds(50),
       .run_in_loop_delay = std::chrono::milliseconds(10),
       .run_next_delay = std::chrono::milliseconds(10),
       .timer_delay = std::chrono::milliseconds(10)
     };
 
-    std::chrono::steady_clock::time_point event_stat_start_;
+    std::chrono::steady_clock::time_point event_cb_stat_start_;
     std::chrono::steady_clock::time_point request_stat_start_;
 
 };

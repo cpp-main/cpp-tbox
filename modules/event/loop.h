@@ -82,8 +82,9 @@ class Loop {
       size_t run_in_loop_queue_size;              //!< runInLoop() 队列长度
       size_t run_next_queue_size;                 //!< runNext() 队列长度
       std::chrono::nanoseconds wake_delay;        //!< loop 唤醒延迟
-      std::chrono::nanoseconds loop_time_cost;    //!< loop 时间消耗
-      std::chrono::nanoseconds cb_time_cost;      //!< 回调时间消耗
+      std::chrono::nanoseconds loop_cost;         //!< loop 时间消耗
+      std::chrono::nanoseconds event_cb_cost;     //!< 事件回调时间消耗
+      std::chrono::nanoseconds run_cb_cost;       //!< Run回调时间消耗
       std::chrono::nanoseconds run_in_loop_delay; //!< runInLoop() 执行延迟
       std::chrono::nanoseconds run_next_delay;    //!< runNext() 执行延迟
       std::chrono::nanoseconds timer_delay;       //!< 定时器延迟

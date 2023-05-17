@@ -97,20 +97,20 @@ void CommonLoop::endLoopProcess()
     if (loop_peak_cost_ < cost)
         loop_peak_cost_ = cost;
 
-    if (cost > water_line_.loop_time_cost)
-        LogNotice("loop cost over waterline: %" PRIu64 " us", cost.count()/1000);
+    if (cost > water_line_.loop_cost)
+        LogNotice("loop_cost: %" PRIu64 " us", cost.count()/1000);
 }
 
 void CommonLoop::beginEventProcess()
 {
-    event_stat_start_ = steady_clock::now();
+    event_cb_stat_start_ = steady_clock::now();
 }
 
 void CommonLoop::endEventProcess(Event *event)
 {
-    auto cost = steady_clock::now() - event_stat_start_;
-    if (cost > water_line_.cb_time_cost)
-        LogNotice("event cb cost over waterline: %" PRIu64 " us, what: '%s'",
+    auto cost = steady_clock::now() - event_cb_stat_start_;
+    if (cost > water_line_.event_cb_cost)
+        LogNotice("event_cb_cost: %" PRIu64 " us, what: '%s'",
                   cost.count()/1000, event->what().c_str());
 }
 
