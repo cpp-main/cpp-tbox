@@ -6,6 +6,7 @@
 #include "loop.h"
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/defines.h>
 
 namespace tbox {
 namespace event {
@@ -108,15 +109,25 @@ Loop* EpollFdEvent::getLoop() const
 //! 重新加载fd对应的epoll
 void EpollFdEvent::reloadEpoll()
 {
-    epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_DEL, fd_, NULL);
+    uint32_t old_events = d_->ev.events;
+    uint32_t new_events = 0;
 
-    d_->ev.events = 0;
     if (!d_->write_events.empty())
-        d_->ev.events |= EPOLLOUT;
+        new_events |= EPOLLOUT;
     if (!d_->read_events.empty())
-        d_->ev.events |= EPOLLIN;
+        new_events |= EPOLLIN;
 
-    epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_ADD, fd_, &d_->ev);
+    d_->ev.events = new_events;
+
+    if (old_events == 0) {
+        if (LIKELY(new_events != 0))
+            epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_ADD, fd_, &d_->ev);
+    } else {
+        if (new_events != 0)
+            epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_MOD, fd_, &d_->ev);
+        else
+            epoll_ctl(wp_loop_->epollFd(), EPOLL_CTL_DEL, fd_, nullptr);
+    }
 }
 
 void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
