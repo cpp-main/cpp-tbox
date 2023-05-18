@@ -12,6 +12,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/cabinet.hpp>
+#include <tbox/base/assert.h>
 #include <tbox/base/catch_throw.h>
 #include <tbox/event/loop.h>
 
@@ -41,6 +42,8 @@ struct ThreadPool::Data {
     bool all_threads_stop_flag = false; //!< 是否所有工作线程立即停止标记
 
     size_t undo_task_peak_num_ = 0;
+
+    Task *free_task_list = nullptr;
 };
 
 /**
@@ -51,6 +54,8 @@ struct ThreadPool::Task {
     NonReturnFunc backend_task;   //! 任务在工作线程中执行函数
     NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
     Clock::time_point create_time_point;
+
+    Task *next = nullptr;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -124,15 +129,13 @@ ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonRetur
 
     int level = prio + THREAD_POOL_PRIO_MAX;
 
-    Task *item = new Task;
-    if (item == nullptr)
-        return token;
-
-    item->backend_task = std::move(backend_task);
-    item->main_cb = std::move(main_cb);
-    item->create_time_point = Clock::now();
     {
         std::lock_guard<std::mutex> lg(d_->lock);
+
+        Task *item = newTask();
+        item->backend_task = std::move(backend_task);
+        item->main_cb = std::move(main_cb);
+        item->create_time_point = Clock::now();
         item->token = token = d_->undo_tasks_cabinet.alloc(item);
 
         d_->undo_tasks_token.at(level).push_back(token);
@@ -194,7 +197,7 @@ int ThreadPool::cancel(TaskToken token)
             auto iter = std::find(tasks_token.begin(), tasks_token.end(), token);
             if (iter != tasks_token.end()) {
                 tasks_token.erase(iter);
-                delete d_->undo_tasks_cabinet.free(token);
+                deleteTask(d_->undo_tasks_cabinet.free(token));
                 return 0;
             }
         }
@@ -215,7 +218,7 @@ void ThreadPool::cleanup()
             auto &tasks_token = d_->undo_tasks_token.at(i);
             while (!tasks_token.empty()) {
                 auto token = tasks_token.front();
-                delete d_->undo_tasks_cabinet.free(token);
+                deleteTask(d_->undo_tasks_cabinet.free(token));
                 tasks_token.pop_front();
             }
         }
@@ -232,6 +235,13 @@ void ThreadPool::cleanup()
         }
     );
     d_->threads_cabinet.clear();
+
+    while (d_->free_task_list != nullptr) {
+        auto next = d_->free_task_list->next;
+        ::free(d_->free_task_list);
+        d_->free_task_list = next;
+    }
+
     d_->is_ready = false;
 }
 
@@ -317,8 +327,8 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.erase(item->token);
+                deleteTask(item);
             }
-            delete item;
         }
     }
 
@@ -353,6 +363,28 @@ bool ThreadPool::shouldThreadExitWaiting() const
     }
 
     return false;
+}
+
+ThreadPool::Task* ThreadPool::newTask()
+{
+    Task *new_task = d_->free_task_list;
+    if (new_task == nullptr)
+        new_task = static_cast<Task*>(::malloc(sizeof(Task)));
+    else
+        d_->free_task_list = new_task->next;
+
+    new (new_task) Task;
+
+    TBOX_ASSERT(new_task != nullptr);
+    return new_task;
+}
+
+void ThreadPool::deleteTask(Task *task)
+{
+    task->~Task();
+
+    task->next = d_->free_task_list;
+    d_->free_task_list = task;
 }
 
 ThreadPool::Task* ThreadPool::popOneTask()

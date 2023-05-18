@@ -34,6 +34,8 @@ struct WorkThread::Data {
     std::deque<TaskToken> undo_tasks_token_deque;   //!< 排队中的任务队列
     std::set<TaskToken> doing_tasks_token;          //!< 正在处理的任务集合
 
+    Task *free_task_list = nullptr;
+
     bool stop_flag = false; //!< 是否立即停止标记
 };
 
@@ -46,6 +48,8 @@ struct WorkThread::Task {
     NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
     event::Loop  *main_loop = nullptr;
     Clock::time_point create_time_point;
+
+    Task *next = nullptr;
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -83,17 +87,16 @@ WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonRetur
         return token;
     }
 
-    Task *item = new Task;
-    TBOX_ASSERT(item != nullptr);
-
-    item->backend_task = std::move(backend_task);
-    item->main_cb = std::move(main_cb);
-    item->main_loop = (main_loop != nullptr) ? main_loop : d_->default_main_loop;
-    item->create_time_point = Clock::now();
-
     {
         std::lock_guard<std::mutex> lg(d_->lock);
+
+        Task *item = newTask();
+        item->backend_task = std::move(backend_task);
+        item->main_cb = std::move(main_cb);
+        item->main_loop = (main_loop != nullptr) ? main_loop : d_->default_main_loop;
+        item->create_time_point = Clock::now();
         item->token = token = d_->undo_tasks_cabinet.alloc(item);
+
         d_->undo_tasks_token_deque.push_back(token);
     }
 
@@ -152,7 +155,7 @@ int WorkThread::cancel(TaskToken token)
         auto iter = std::find(d_->undo_tasks_token_deque.begin(), d_->undo_tasks_token_deque.end(), token);
         if (iter != d_->undo_tasks_token_deque.end()) {
             d_->undo_tasks_token_deque.erase(iter);
-            delete d_->undo_tasks_cabinet.free(token);
+            deleteTask(d_->undo_tasks_cabinet.free(token));
             return 0;
         }
     }
@@ -212,12 +215,34 @@ void WorkThread::threadProc()
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.erase(item->token);
+                deleteTask(item);
             }
-            delete item;
         }
     }
 
     LogDbg("thread exit");
+}
+
+WorkThread::Task* WorkThread::newTask()
+{
+    Task *new_task = d_->free_task_list;
+    if (new_task == nullptr)
+        new_task = static_cast<Task*>(::malloc(sizeof(Task)));
+    else
+        d_->free_task_list = new_task->next;
+
+    new (new_task) Task;
+
+    TBOX_ASSERT(new_task != nullptr);
+    return new_task;
+}
+
+void WorkThread::deleteTask(Task *task)
+{
+    task->~Task();
+
+    task->next = d_->free_task_list;
+    d_->free_task_list = task;
 }
 
 bool WorkThread::shouldThreadExitWaiting() const
@@ -245,7 +270,7 @@ void WorkThread::cleanup()
         //! 清空task中的任务
         while (!d_->undo_tasks_token_deque.empty()) {
             auto token = d_->undo_tasks_token_deque.front();
-            delete d_->undo_tasks_cabinet.free(token);
+            deleteTask(d_->undo_tasks_cabinet.free(token));
             d_->undo_tasks_token_deque.pop_front();
         }
     }
@@ -254,6 +279,13 @@ void WorkThread::cleanup()
     d_->cond_var.notify_all();
 
     d_->work_thread.join();
+
+    while (d_->free_task_list != nullptr) {
+        auto next = d_->free_task_list->next;
+        ::free(d_->free_task_list);
+        d_->free_task_list = next;
+    }
+
     CHECK_DELETE_RESET_OBJ(d_);
 }
 
