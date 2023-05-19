@@ -21,6 +21,7 @@ HEAD_FILES = \
 	lifetime_tag.hpp \
 	backtrace.h \
 	catch_throw.h \
+	object_pool.hpp \
 
 CPP_SRC_FILES = \
 	version.cpp \
@@ -43,6 +44,7 @@ TEST_CPP_SRC_FILES = \
 	lifetime_tag_test.cpp \
 	backtrace_test.cpp \
 	catch_throw_test.cpp \
+	object_pool_test.cpp \
 
 
 TEST_LDFLAGS := $(LDFLAGS)

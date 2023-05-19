@@ -81,9 +81,6 @@ class WorkThread {
     bool shouldThreadExitWaiting() const;   //! 判定子线程是否需要退出条件变量的wait()函数
 
     struct Task;
-    Task* newTask();
-    void  deleteTask(Task *task);
-
     Task* popOneTask(); //! 取出一个优先级最高的任务
 
   private:
