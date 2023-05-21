@@ -1,6 +1,8 @@
 #ifndef TBOX_OBJECT_POOL_H
 #define TBOX_OBJECT_POOL_H
 
+#include <cstdlib>
+#include <utility>
 #include <limits>
 
 namespace tbox {
