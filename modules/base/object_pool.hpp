@@ -5,6 +5,8 @@
 #include <utility>
 #include <limits>
 
+#include "assert.h"
+
 namespace tbox {
 
 /**
@@ -74,6 +76,8 @@ class ObjectPool {
             --free_number_;
         }
 
+        TBOX_ASSERT(block != nullptr);
+
         T *p = reinterpret_cast<T*>(block);
         //! 执行对象的构造函数
         new (p) T(std::forward<Args>(args)...);
@@ -82,6 +86,8 @@ class ObjectPool {
 
     //! delete 指定对象
     void free(T* p) {
+        TBOX_ASSERT(p != nullptr);
+
         p->~T();    //! 执行对象的析构函数
 
         Block *block = reinterpret_cast<Block*>(p);

@@ -13,7 +13,7 @@
 # define TBOX_ASSERT(expr) void(0)
 #else //! 在调试模式下，要在日志中打印错误并退出
 # define TBOX_ASSERT(expr) \
-  if (!static_cast<bool>(expr)) { \
+  if (!(expr)) { \
     LogFatal("TBOX_ASSERT(%s)", #expr); \
     std::abort(); \
   }
