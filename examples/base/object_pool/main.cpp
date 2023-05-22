@@ -10,43 +10,51 @@ struct MyStruct {
     MyStruct(int i) : i_(i) { }
   private:
     int i_;
-    char ca[50];
+    char array[100];
 };
 
+struct MyBlock {
+    char array[1500];
+};
 
 int main() {
     tbox::ObjectPool<int> op1;
     tbox::ObjectPool<MyStruct> op2;
+    tbox::ObjectPool<MyBlock> op3;
 
     std::chrono::nanoseconds acc_new = std::chrono::nanoseconds::zero();
     std::chrono::nanoseconds acc_op = std::chrono::nanoseconds::zero();
 
     std::chrono::steady_clock::time_point tp;
-    constexpr int count = 1000000;
+    constexpr int count = 100000;
     for (int i = 0; i < count; ++i) {
         tp = std::chrono::steady_clock::now();
-        auto p1 = new MyStruct(i);
-        auto p2 = new int(i);
+        auto p01 = new MyStruct(i);
+        auto p02 = new int(i);
+        auto p03 = new MyBlock;
         acc_new += std::chrono::steady_clock::now() - tp;
 
         tp = std::chrono::steady_clock::now();
-        auto p3 = op1.alloc(i);
-        auto p4 = op2.alloc(i);
+        auto p11 = op1.alloc(i);
+        auto p12 = op2.alloc(i);
+        auto p13 = op3.alloc();
         acc_op += std::chrono::steady_clock::now() - tp;
 
         tp = std::chrono::steady_clock::now();
-        delete p1;
-        delete p2;
+        delete p01;
+        delete p02;
+        delete p03;
         acc_new += std::chrono::steady_clock::now() - tp;
 
         tp = std::chrono::steady_clock::now();
-        op1.free(p3);
-        op2.free(p4);
+        op1.free(p11);
+        op2.free(p12);
+        op3.free(p13);
         acc_op += std::chrono::steady_clock::now() - tp;
     }
 
-    std::cout << "new_acc: " << acc_new.count() / count << " ns" << std::endl;
-    std::cout << "op_acc : " << acc_op.count() / count << " ns" << std::endl;
+    std::cout << "new_acc: " << acc_new.count() / count / 3 << " ns" << std::endl;
+    std::cout << "op_acc : " << acc_op.count() / count / 3 << " ns" << std::endl;
 
     return 0;
 }
