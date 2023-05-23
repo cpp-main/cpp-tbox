@@ -26,13 +26,12 @@ struct LogContent {
     const char *file_name;  //!< 文件名
     int         line;       //!< 行号
     int         level;      //!< 日志等级
-    bool        with_args;  //!< 是否有可变参数
-    const char *fmt;        //!< 格式串
-    va_list     args;       //!< 可变参数
+    const char *text_ptr;   //!< 内容地址
+    uint32_t    text_len;   //!< 内容大小
 };
 
 //! 定义日志输出函数
-typedef void (*LogPrintfFuncType)(LogContent *content, void *ptr);
+typedef void (*LogPrintfFuncType)(const LogContent *content, void *ptr);
 
 //! 添加与删除日志输出函数
 uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr);

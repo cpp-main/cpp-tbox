@@ -57,7 +57,7 @@ bool Channel::filter(int level, const std::string &module)
         return level <= default_level_;
 }
 
-void Channel::HandleLog(LogContent *content, void *ptr)
+void Channel::HandleLog(const LogContent *content, void *ptr)
 {
     Channel *pthis = static_cast<Channel*>(ptr);
     pthis->handleLog(content);
@@ -68,7 +68,7 @@ const char *level_name = "FEWNIDT";
 const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
 }
 
-void Channel::handleLog(LogContent *content)
+void Channel::handleLog(const LogContent *content)
 {
     if (!filter(content->level, content->module_id))
         return;
@@ -104,18 +104,10 @@ void Channel::handleLog(LogContent *content)
             pos += len;
         }
 
-        if (content->fmt != nullptr) {
-            if (content->with_args) {
-                va_list args;
-                va_copy(args, content->args);    //! 同上，va_list 要被复制了使用
-                len = vsnprintf(WRITE_PTR, REMAIN_SIZE, content->fmt, args);
-                pos += len;
-            } else {
-                len = strlen(content->fmt);
-                if (REMAIN_SIZE >= len)
-                    memcpy(WRITE_PTR, content->fmt, len);
-                pos += len;
-            }
+        if (content->text_ptr != nullptr) {
+            if (REMAIN_SIZE >= content->text_len)
+                memcpy(WRITE_PTR, content->text_ptr, content->text_len);
+            pos += content->text_len;
 
             if (REMAIN_SIZE >= 1)    //! 追加一个空格
                 *WRITE_PTR = ' ';

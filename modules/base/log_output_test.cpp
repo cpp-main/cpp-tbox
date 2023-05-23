@@ -2,7 +2,7 @@
 #include "log.h"
 #include "log_output.h"
 
-TEST(Log, output_type)
+TEST(Log, Levels)
 {
     LogOutput_Initialize();
     LogFatal("fatal");
@@ -17,11 +17,18 @@ TEST(Log, output_type)
     LogOutput_Cleanup();
 }
 
-TEST(Log, output_detail)
+TEST(Log, Format)
 {
     LogOutput_Initialize();
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
     LogInfo("%d, %f, %s", 123456, 12.345, "world");
+    LogOutput_Cleanup();
+}
+
+TEST(Log, LogPuts)
+{
+    LogOutput_Initialize();
+    LogPuts(LOG_LEVEL_INFO, "should be raw: %s, %d, %f");
     LogOutput_Cleanup();
 }
 

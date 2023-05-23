@@ -29,11 +29,11 @@ class Channel {
 
     virtual void onLogFrontEnd(const void *data_ptr, size_t data_size) = 0;
 
-    void handleLog(LogContent *content);
+    void handleLog(const LogContent *content);
     void udpateTimestampStr(uint32_t sec);
 
   private:
-    static void HandleLog(LogContent *content, void *ptr);
+    static void HandleLog(const LogContent *content, void *ptr);
     bool filter(int level, const std::string &module);
 
   private:

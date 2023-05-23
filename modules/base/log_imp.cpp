@@ -4,11 +4,14 @@
 #include <sys/time.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <cstring>
 #include <vector>
+#include <iostream>
 #include <algorithm>
 #include <mutex>
 
 namespace {
+constexpr uint32_t LOG_MAX_LEN = (100 << 10);
 
 std::mutex _lock;
 uint32_t _id_alloc = 0;
@@ -31,6 +34,15 @@ const char* Basename(const char *full_path)
         }
     }
     return p_last;
+}
+
+void Dispatch(const LogContent &content)
+{
+    std::lock_guard<std::mutex> lg(_lock);
+    for (const auto &item : _output_channels) {
+        if (item.func)
+            item.func(&content, item.ptr);
+    }
 }
 
 }
@@ -63,28 +75,38 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .func_name = func_name,
         .file_name = Basename(file_name),
         .line = line,
-        .level = level,
-        .with_args = with_args,
-        .fmt = fmt
+        .level = level
     };
 
-    va_list args;
-
     if (with_args) {
-        va_start(args, fmt);
-        va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
-    }
+        uint32_t buff_size = 256;    //! 初始大小，可应对绝大数情况
+        va_list args;
 
-    {
-        std::lock_guard<std::mutex> lg(_lock);
-        for (const auto &item : _output_channels) {
-            if (item.func)
-                item.func(&content, item.ptr);
+        for (;;) {
+            va_start(args, fmt);
+            char buffer[buff_size];
+            size_t len = vsnprintf(buffer, buff_size, fmt, args);
+            va_end(args);
+
+            if (len <= buff_size) {
+                content.text_ptr = buffer;
+                content.text_len = len;
+                Dispatch(content);
+                break;
+            }
+
+            buff_size = len;
+            if (buff_size > LOG_MAX_LEN) {
+                std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+                break;
+            }
         }
-    }
 
-    if (with_args)
-        va_end(args);
+    } else {
+        content.text_ptr = fmt;
+        content.text_len = (fmt != nullptr) ? ::strlen(fmt) : 0;
+        Dispatch(content);
+    }
 }
 
 uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr)

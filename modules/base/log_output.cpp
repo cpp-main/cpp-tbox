@@ -35,7 +35,7 @@ namespace {
 #endif
     }
 
-    void _PrintLogToStdout(LogContent *content)
+    void _PrintLogToStdout(const LogContent *content)
     {
         char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
         _GetCurrTimeString(content, timestamp);
@@ -51,14 +51,7 @@ namespace {
         if (content->func_name != nullptr)
             printf("%s() ", content->func_name);
 
-        if (content->fmt != nullptr) {
-            va_list args;
-            va_copy(args, content->args);
-            vprintf(content->fmt, args);    //! 不可以直接使用 content->args，因为 va_list 只能被使用一次
-            putchar(' ');
-        } else {
-            printf("%s ", content->fmt);
-        }
+        printf("%s ", content->text_ptr);
 
         if (content->file_name != nullptr) {
             printf("-- %s:%d", content->file_name, content->line);
@@ -70,11 +63,11 @@ namespace {
 
 //! Declare log filte function as weak reference
 //! Even if user did't implement their own filter function, it stall works.
-bool __attribute((weak)) LogOutput_FilterFunc(LogContent *content);
+bool __attribute((weak)) LogOutput_FilterFunc(const LogContent *content);
 
 extern "C" {
 
-    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr);
+    static void _LogOutput_PrintfFunc(const LogContent *content, void *ptr);
     static uint32_t _id = 0;
 
     void LogOutput_Initialize()
@@ -88,7 +81,7 @@ extern "C" {
         _id = 0;
     }
 
-    static void _LogOutput_PrintfFunc(LogContent *content, void *ptr)
+    static void _LogOutput_PrintfFunc(const LogContent *content, void *ptr)
     {
         if ((LogOutput_FilterFunc != nullptr) &&
             !LogOutput_FilterFunc(content))
