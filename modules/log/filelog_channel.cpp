@@ -1,4 +1,4 @@
-#include "file_async_channel.h"
+#include "filelog_channel.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -15,13 +15,13 @@ namespace log {
 
 using namespace std;
 
-FileAsyncChannel::~FileAsyncChannel()
+FilelogChannel::~FilelogChannel()
 {
     if (pid_ != 0)
         cleanup();
 }
 
-bool FileAsyncChannel::initialize(const std::string &log_path, const std::string &log_prefix)
+bool FilelogChannel::initialize(const std::string &log_path, const std::string &log_prefix)
 {
     log_path_ = util::string::Strip(log_path);
 
@@ -53,13 +53,13 @@ bool FileAsyncChannel::initialize(const std::string &log_path, const std::string
     return false;
 }
 
-void FileAsyncChannel::cleanup()
+void FilelogChannel::cleanup()
 {
     AsyncChannel::cleanup();
     pid_ = 0;
 }
 
-void FileAsyncChannel::writeLog(const char *str, size_t len)
+void FilelogChannel::writeLog(const char *str, size_t len)
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
@@ -73,13 +73,13 @@ void FileAsyncChannel::writeLog(const char *str, size_t len)
     char endline = '\n';
     ::write(fd_, &endline, 1);
 
-    total_write_size_ += len;
+    total_write_size_ += (len + 1);
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
 }
 
-bool FileAsyncChannel::checkAndCreateLogFile()
+bool FilelogChannel::checkAndCreateLogFile()
 {
     if (fd_ >= 0) {
         if (util::fs::IsFileExist(log_filename_))

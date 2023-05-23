@@ -5,7 +5,7 @@
 
 #include <tbox/log/stdout_channel.h>
 #include <tbox/log/syslog_channel.h>
-#include <tbox/log/file_async_channel.h>
+#include <tbox/log/filelog_channel.h>
 
 #include <tbox/terminal/terminal_nodes.h>
 
@@ -32,7 +32,7 @@ class Log {
   private:
     log::StdoutChannel stdout_;
     log::SyslogChannel syslog_;
-    log::FileAsyncChannel filelog_;
+    log::FilelogChannel filelog_;
 };
 
 }

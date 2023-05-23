@@ -8,20 +8,20 @@ HEAD_FILES = \
 	async_channel.h \
 	stdout_channel.h \
 	syslog_channel.h \
-	file_async_channel.h \
+	filelog_channel.h \
 
 CPP_SRC_FILES = \
 	channel.cpp \
 	async_channel.cpp \
 	stdout_channel.cpp \
 	syslog_channel.cpp \
-	file_async_channel.cpp \
+	filelog_channel.cpp \
 
 TEST_CPP_SRC_FILES = \
 	stdout_channel_test.cpp \
 	syslog_channel_test.cpp \
 	async_channel_test.cpp \
-	file_async_channel_test.cpp \
+	filelog_channel_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
 

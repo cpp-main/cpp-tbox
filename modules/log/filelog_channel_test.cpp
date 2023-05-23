@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "file_async_channel.h"
+#include "filelog_channel.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -9,9 +9,9 @@ using namespace std;
 using namespace tbox;
 using namespace tbox::log;
 
-TEST(FileAsyncChannel, Format)
+TEST(FilelogChannel, Format)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
 
     ch.initialize("/tmp/tbox", "test");
     ch.enable();
@@ -22,9 +22,9 @@ TEST(FileAsyncChannel, Format)
     ch.cleanup();
 }
 
-TEST(FileAsyncChannel, LongString)
+TEST(FilelogChannel, LongString)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
 
     ch.initialize("/tmp/tbox", "test");
     ch.enable();
@@ -40,9 +40,9 @@ TEST(FileAsyncChannel, LongString)
     ch.cleanup();
 }
 
-TEST(FileAsyncChannel, FileDivide)
+TEST(FilelogChannel, FileDivide)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
 
     ch.initialize("/tmp/tbox", "test");
     ch.setFileMaxSize(100);
@@ -59,27 +59,27 @@ TEST(FileAsyncChannel, FileDivide)
 }
 
 //! 参数规范化
-TEST(FileAsyncChannel, ParamNormalize)
+TEST(FilelogChannel, ParamNormalize)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
     ch.initialize("  /tmp/tbox ", " test ");
     ch.enable();
     LogInfo("Test LogPath");
     ch.cleanup();
 }
 
-TEST(FileAsyncChannel, CreateFileInInit)
+TEST(FilelogChannel, CreateFileInInit)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
     ch.initialize("/tmp/tbox", "create_file_init");
     ch.enable();
     EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
     ch.cleanup();
 }
 
-TEST(FileAsyncChannel, RemoveLogFileDuringWriting)
+TEST(FilelogChannel, RemoveLogFileDuringWriting)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
     ch.initialize("/tmp/tbox", "remove_log_file_during_writing");
     ch.enable();
     util::fs::RemoveFile(ch.currentFilename());
@@ -92,9 +92,9 @@ TEST(FileAsyncChannel, RemoveLogFileDuringWriting)
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(FileAsyncChannel, Benchmark)
+TEST(FilelogChannel, Benchmark)
 {
-    FileAsyncChannel ch;
+    FilelogChannel ch;
     ch.initialize("/tmp/tbox", "test");
     ch.enable();
     std::string tmp(30, 'x');

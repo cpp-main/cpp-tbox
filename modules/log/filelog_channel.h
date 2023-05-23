@@ -1,5 +1,5 @@
-#ifndef TBOX_LOG_FILE_ASYNC_CHANNEL_H_20220412
-#define TBOX_LOG_FILE_ASYNC_CHANNEL_H_20220412
+#ifndef TBOX_LOG_FILE_CHANNEL_H_20220412
+#define TBOX_LOG_FILE_CHANNEL_H_20220412
 
 #include "async_channel.h"
 
@@ -8,9 +8,9 @@
 namespace tbox {
 namespace log {
 
-class FileAsyncChannel : public AsyncChannel {
+class FilelogChannel : public AsyncChannel {
   public:
-    virtual ~FileAsyncChannel() override;
+    virtual ~FilelogChannel() override;
 
   public:
     bool initialize(const std::string &log_path, const std::string &log_prefix);
@@ -35,11 +35,9 @@ class FileAsyncChannel : public AsyncChannel {
 
     int fd_ = -1;
     size_t total_write_size_ = 0;
-
-    std::vector<char> buffer_;
 };
 
 }
 }
 
-#endif //TBOX_LOG_FILE_ASYNC_CHANNEL_H_20220412
+#endif //TBOX_LOG_FILE_CHANNEL_H_20220412
