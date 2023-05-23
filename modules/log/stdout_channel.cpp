@@ -4,10 +4,9 @@
 namespace tbox {
 namespace log {
 
-void StdoutChannel::onLogFrontEnd(const void *data_ptr, size_t data_size)
+void StdoutChannel::writeLog(const char *str, size_t len)
 {
-    const char *str_ptr = static_cast<const char *>(data_ptr);
-    std::cout << str_ptr << std::endl;
+    std::cout << str << std::endl;
 }
 
 }

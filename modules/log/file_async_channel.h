@@ -20,7 +20,7 @@ class FileAsyncChannel : public AsyncChannel {
     std::string currentFilename() const { return log_filename_; }
 
   protected:
-    virtual void onLogBackEnd(const void *data_ptr, size_t data_size) override;
+    virtual void writeLog(const char *str, size_t len) override;
     bool checkAndCreateLogFile();
 
   private:

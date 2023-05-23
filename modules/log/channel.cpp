@@ -63,101 +63,12 @@ void Channel::HandleLog(const LogContent *content, void *ptr)
     pthis->handleLog(content);
 }
 
-namespace {
-const char *level_name = "FEWNIDT";
-const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
-}
-
 void Channel::handleLog(const LogContent *content)
 {
     if (!filter(content->level, content->module_id))
         return;
 
-    size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
-
-    //! 加循环为了应对缓冲不够的情况
-    for (;;) {
-        char buff[buff_size];
-        size_t pos = 0;
-
-#define REMAIN_SIZE ((buff_size > pos) ? (buff_size - pos) : 0)
-#define WRITE_PTR   (buff + pos)
-
-        udpateTimestampStr(content->timestamp.sec);
-
-        size_t len = 0;
-
-        //! 开启色彩，显示日志等级
-        if (enable_color_) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%dm", level_color_num[content->level]);
-            pos += len;
-        }
-
-        len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
-                       level_name[content->level],
-                       timestamp_str_, content->timestamp.usec,
-                       content->thread_id, content->module_id);
-        pos += len;
-
-        if (content->func_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
-            pos += len;
-        }
-
-        if (content->text_ptr != nullptr) {
-            if (REMAIN_SIZE >= content->text_len)
-                memcpy(WRITE_PTR, content->text_ptr, content->text_len);
-            pos += content->text_len;
-
-            if (REMAIN_SIZE >= 1)    //! 追加一个空格
-                *WRITE_PTR = ' ';
-            ++pos;
-        }
-
-        if (content->file_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
-            pos += len;
-        }
-
-        if (enable_color_) {
-            if (REMAIN_SIZE >= 4)
-                memcpy(WRITE_PTR, "\033[0m", 4);
-            pos += 4;
-        }
-
-        if (REMAIN_SIZE >= 1)
-            *WRITE_PTR = '\0';  //! 追加结束符
-        ++pos;
-
-#undef REMAIN_SIZE
-#undef WRITE_PTR
-
-        //! 如果缓冲区是够用的，就完成
-        if (pos <= buff_size) {
-            onLogFrontEnd(buff, pos);
-            break;
-        }
-
-        //! 否则扩展缓冲区，重来
-        buff_size = pos;
-
-        if (buff_size > LOG_MAX_LEN) {
-            std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
-            break;
-        }
-    }
-}
-
-void Channel::udpateTimestampStr(uint32_t sec)
-{
-    std::lock_guard<std::mutex> lg(lock_);
-    if (timestamp_sec_ != sec) {
-        time_t ts_sec = sec;
-        struct tm tm;
-        localtime_r(&ts_sec, &tm);
-        strftime(timestamp_str_, sizeof(timestamp_str_), "%m-%d %H:%M:%S", &tm);
-        timestamp_sec_ = sec;
-    }
+    onLogFrontEnd(content);
 }
 
 }

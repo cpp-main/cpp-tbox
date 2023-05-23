@@ -26,8 +26,8 @@ struct LogContent {
     const char *file_name;  //!< 文件名
     int         line;       //!< 行号
     int         level;      //!< 日志等级
-    const char *text_ptr;   //!< 内容地址
     uint32_t    text_len;   //!< 内容大小
+    const char *text_ptr;   //!< 内容地址
 };
 
 //! 定义日志输出函数

@@ -75,7 +75,9 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .func_name = func_name,
         .file_name = Basename(file_name),
         .line = line,
-        .level = level
+        .level = level,
+        .text_len = 0,
+        .text_ptr = nullptr,
     };
 
     if (with_args) {
@@ -89,8 +91,8 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
             va_end(args);
 
             if (len <= buff_size) {
-                content.text_ptr = buffer;
                 content.text_len = len;
+                content.text_ptr = buffer;
                 Dispatch(content);
                 break;
             }
@@ -103,8 +105,10 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         }
 
     } else {
-        content.text_ptr = fmt;
-        content.text_len = (fmt != nullptr) ? ::strlen(fmt) : 0;
+        if (fmt != nullptr) {
+            content.text_len = ::strlen(fmt);
+            content.text_ptr = fmt;
+        }
         Dispatch(content);
     }
 }

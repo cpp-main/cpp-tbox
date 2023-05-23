@@ -59,26 +59,21 @@ void FileAsyncChannel::cleanup()
     pid_ = 0;
 }
 
-void FileAsyncChannel::onLogBackEnd(const void *data_ptr, size_t data_size)
+void FileAsyncChannel::writeLog(const char *str, size_t len)
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
-    const char *start_ptr = static_cast<const char *>(data_ptr);
-    if (buffer_.size() < data_size)
-        buffer_.resize(data_size);
-
-    std::transform(start_ptr, start_ptr + data_size, buffer_.begin(),
-        [](char ch) { return ch == 0 ? '\n' : ch; }
-    );
-
-    auto wsize = ::write(fd_, buffer_.data(), data_size);
-    if (wsize != static_cast<ssize_t>(data_size)) {
+    auto wsize = ::write(fd_, str, len);
+    if (wsize != static_cast<ssize_t>(len)) {
         cerr << "Err: write file error." << endl;
         return;
     }
 
-    total_write_size_ += data_size;
+    char endline = '\n';
+    ::write(fd_, &endline, 1);
+
+    total_write_size_ += len;
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
