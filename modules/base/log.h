@@ -24,6 +24,9 @@
 #define LogPrintf(level, fmt, ...) \
     LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, true, fmt, ## __VA_ARGS__)
 
+#define LogPuts(level, text) \
+    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, false, text)
+
 #define LogFatal(fmt, ...)  LogPrintf(LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
 #define LogErr(fmt, ...)    LogPrintf(LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
 #define LogWarn(fmt, ...)   LogPrintf(LOG_LEVEL_WARN,   fmt, ## __VA_ARGS__)
@@ -38,13 +41,13 @@
 
 #if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= LOG_LEVEL_TRACE)
     #define LogTrace(fmt, ...)  LogPrintf(LOG_LEVEL_TRACE, fmt, ## __VA_ARGS__)
-    #define LogTag()            LogTrace("==> Run Here <==")
+    #define LogTag()            LogPuts(LOG_LEVEL_TRACE, "==> Run Here <==")
 #else
     #define LogTrace(fmt, ...)
     #define LogTag()
 #endif
 
-#define LogUndo() LogNotice("!!! Undo !!!")
+#define LogUndo() LogPuts(LOG_LEVEL_NOTICE, "!!! Undo !!!")
 
 //! 打印错误码，需要 #include <string.h>
 #define LogErrno(err, fmt, ...) LogErr("Errno:%d(%s) " fmt, (err), strerror(err), ## __VA_ARGS__)

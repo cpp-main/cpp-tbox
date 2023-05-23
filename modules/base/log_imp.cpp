@@ -44,9 +44,6 @@ const char* Basename(const char *full_path)
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                    int line, int level, bool with_args, const char *fmt, ...)
 {
-    va_list args;
-    va_start(args, fmt);
-
     if (level < 0) level = 0;
     if (level > LOG_LEVEL_TRACE) level = LOG_LEVEL_TRACE;
 
@@ -71,8 +68,12 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .fmt = fmt
     };
 
-    if (with_args)
+    va_list args;
+
+    if (with_args) {
+        va_start(args, fmt);
         va_copy(content.args, args);    //! va_list 不能直接赋值，需要使用 va_copy()
+    }
 
     {
         std::lock_guard<std::mutex> lg(_lock);
