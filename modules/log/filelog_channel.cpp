@@ -69,6 +69,7 @@ void FilelogChannel::updateInnerValues()
 
 void FilelogChannel::appendLog(const char *str, size_t len)
 {
+    buffer_.reserve(buffer_.size() + len - 1);
     std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
     std::copy(str, str + len - 1, back_insert_iter);
 }

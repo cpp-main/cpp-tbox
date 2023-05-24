@@ -36,6 +36,7 @@ void AsyncChannel::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
     constexpr auto LogContentSize = sizeof(LogContent);
     const char *p = reinterpret_cast<const char*>(data_ptr);
 
+    buffer_.reserve(buffer_.size() + data_size);
     std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
     std::copy(p, p + data_size, back_insert_iter);
 
