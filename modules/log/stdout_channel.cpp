@@ -24,7 +24,8 @@ void StdoutChannel::appendLog(const char *str, size_t len)
 
 void StdoutChannel::flushLog()
 {
-    ::write(STDOUT_FILENO, buffer_.data(), buffer_.size()); //! 写到终端
+    auto wsize = ::write(STDOUT_FILENO, buffer_.data(), buffer_.size()); //! 写到终端
+    (void)wsize;  //! 消除警告用
 
     buffer_.clear();
     if (buffer_.capacity() > 1024)

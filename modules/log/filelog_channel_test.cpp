@@ -13,7 +13,9 @@ TEST(FilelogChannel, Format)
 {
     FilelogChannel ch;
 
-    ch.initialize("/tmp/tbox", "test");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("test");
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -26,7 +28,9 @@ TEST(FilelogChannel, LongString)
 {
     FilelogChannel ch;
 
-    ch.initialize("/tmp/tbox", "test");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("test");
     ch.enable();
 
     for (size_t s = 900; s < 1200; ++s) {
@@ -44,7 +48,9 @@ TEST(FilelogChannel, FileDivide)
 {
     FilelogChannel ch;
 
-    ch.initialize("/tmp/tbox", "test");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("test");
     ch.setFileMaxSize(100);
     ch.enable();
 
@@ -62,7 +68,10 @@ TEST(FilelogChannel, FileDivide)
 TEST(FilelogChannel, ParamNormalize)
 {
     FilelogChannel ch;
-    ch.initialize("  /tmp/tbox ", " test ");
+
+    ch.initialize();
+    ch.setFilePath("  /tmp/tbox ");
+    ch.setFilePrefix(" test ");
     ch.enable();
     LogInfo("Test LogPath");
     ch.cleanup();
@@ -71,7 +80,9 @@ TEST(FilelogChannel, ParamNormalize)
 TEST(FilelogChannel, CreateFileInInit)
 {
     FilelogChannel ch;
-    ch.initialize("/tmp/tbox", "create_file_init");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("create_file_init");
     ch.enable();
     EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
     ch.cleanup();
@@ -80,7 +91,9 @@ TEST(FilelogChannel, CreateFileInInit)
 TEST(FilelogChannel, RemoveLogFileDuringWriting)
 {
     FilelogChannel ch;
-    ch.initialize("/tmp/tbox", "remove_log_file_during_writing");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("remove_log_file_during_writing");
     ch.enable();
     util::fs::RemoveFile(ch.currentFilename());
     LogInfo("Hello");
@@ -95,7 +108,9 @@ using namespace tbox::event;
 TEST(FilelogChannel, Benchmark)
 {
     FilelogChannel ch;
-    ch.initialize("/tmp/tbox", "test");
+    ch.initialize();
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("test");
     ch.enable();
     std::string tmp(30, 'x');
 

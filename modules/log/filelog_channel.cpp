@@ -21,24 +21,8 @@ FilelogChannel::~FilelogChannel()
         cleanup();
 }
 
-bool FilelogChannel::initialize(const std::string &log_path, const std::string &log_prefix)
+bool FilelogChannel::initialize()
 {
-    log_path_ = util::string::Strip(log_path);
-
-    //! 确保最后没有'/'字符。如果最后一个字符是/，就弹出
-    if (log_path_.length() > 1 &&
-        log_path_.at(log_path_.length() - 1) == '/')
-        log_path_.pop_back();
-
-    auto log_prefix_strip = util::string::Strip(log_prefix);
-    if (log_prefix_strip.empty() || log_path_.empty()) {
-        cerr << "Err: prefix or log_path is empty" << endl;
-        return false;
-    }
-
-    filename_prefix_ = log_path_ + '/' + log_prefix_strip + '.';
-    sym_filename_ = filename_prefix_ + "latest.log";
-
     AsyncChannel::Config cfg;
     cfg.buff_size = 10240;
     cfg.buff_min_num = 2;
@@ -48,15 +32,39 @@ bool FilelogChannel::initialize(const std::string &log_path, const std::string &
     bool ok = AsyncChannel::initialize(cfg);
     if (ok) {
         pid_ = ::getpid();
-        return checkAndCreateLogFile();
+        return true;
     }
     return false;
+}
+
+void FilelogChannel::setFilePath(const std::string &file_path)
+{
+    file_path_ = util::string::Strip(file_path);
+
+    //! 确保最后没有'/'字符。如果最后一个字符是/，就弹出
+    if (file_path_.length() > 1 &&
+        file_path_.at(file_path_.length() - 1) == '/')
+        file_path_.pop_back();
+
+    updateInnerValues();
+}
+
+void FilelogChannel::setFilePrefix(const std::string &file_prefix)
+{
+    file_prefix_ = util::string::Strip(file_prefix);
+    updateInnerValues();
 }
 
 void FilelogChannel::cleanup()
 {
     AsyncChannel::cleanup();
     pid_ = 0;
+}
+
+void FilelogChannel::updateInnerValues()
+{
+    filename_prefix_ = file_path_ + '/' + file_prefix_ + '.';
+    sym_filename_ = filename_prefix_ + "latest.log";
 }
 
 void FilelogChannel::appendLog(const char *str, size_t len)
@@ -95,8 +103,8 @@ bool FilelogChannel::checkAndCreateLogFile()
     }
 
     //!检查并创建路径
-    if (!util::fs::MakeDirectory(log_path_, false)) {
-        cerr << "Err: create director " << log_path_ << " fail." << endl;
+    if (!util::fs::MakeDirectory(file_path_, false)) {
+        cerr << "Err: create director " << file_path_ << " fail." << endl;
         return false;
     }
 

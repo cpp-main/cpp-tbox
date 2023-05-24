@@ -13,22 +13,26 @@ class FilelogChannel : public AsyncChannel {
     virtual ~FilelogChannel() override;
 
   public:
-    bool initialize(const std::string &log_path, const std::string &log_prefix);
+    bool initialize();
     void cleanup();
 
+    void setFilePath(const std::string &file_path);
+    void setFilePrefix(const std::string &file_path);
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
     std::string currentFilename() const { return log_filename_; }
 
   protected:
+    void updateInnerValues();
+
     virtual void appendLog(const char *str, size_t len) override;
     virtual void flushLog() override;
 
     bool checkAndCreateLogFile();
 
   private:
-    std::string log_prefix_;
-    std::string log_path_;
-    size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为2MB
+    std::string file_prefix_ = "none";
+    std::string file_path_ = "/var/log/";
+    size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为1MB
     pid_t pid_ = 0;
 
     std::string filename_prefix_;

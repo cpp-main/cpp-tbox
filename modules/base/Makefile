@@ -47,7 +47,7 @@ TEST_CPP_SRC_FILES = \
 	object_pool_test.cpp \
 
 
-TEST_LDFLAGS := $(LDFLAGS)
+TEST_LDFLAGS := $(LDFLAGS) -ldl
 
 ENABLE_SHARED_LIB = no
 

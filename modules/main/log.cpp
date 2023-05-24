@@ -30,8 +30,6 @@ void Log::fillDefaultConfig(Json &cfg) const
     "enable": false,
     "enable_color": false,
     "levels": {"":4},
-    "prefix": "",
-    "path": "",
     "max_size": 1024
   },
   "syslog": {
@@ -48,6 +46,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 
     stdout_.initialize();
     syslog_.initialize();
+    filelog_.initialize();
 
     if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
@@ -66,28 +65,20 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
         //! FILELOG
         if (util::json::HasObjectField(js_log, "filelog")) {
             auto &js_filelog = js_log.at("filelog");
-            do {
-                std::string path;
-                util::json::GetField(js_filelog, "path", path);
-                if (path.empty())
-                    path = "/var/log/" + util::fs::Basename(proc_name);
 
-                std::string prefix;
-                util::json::GetField(js_filelog, "prefix", prefix);
-                if (prefix.empty())
-                    prefix = util::fs::Basename(proc_name);
+            std::string path;
+            if (util::json::GetField(js_filelog, "path", path))
+                filelog_.setFilePath(path);
 
-                if (!filelog_.initialize(path, prefix)) {
-                    cerr << "WARN: filelog init fail" << endl;
-                    break;
-                }
+            std::string prefix = util::fs::Basename(proc_name);
+            util::json::GetField(js_filelog, "prefix", prefix);
+            filelog_.setFilePrefix(prefix);
 
-                unsigned int max_size = 1024;
-                if (util::json::GetField(js_filelog, "max_size", max_size))
-                    filelog_.setFileMaxSize(max_size * 1024);
+            unsigned int max_size = 0;
+            if (util::json::GetField(js_filelog, "max_size", max_size))
+                filelog_.setFileMaxSize(max_size * 1024);
 
-                initChannel(js_filelog, filelog_);
-            } while (false);
+            initChannel(js_filelog, filelog_);
         }
     }
     return true;
