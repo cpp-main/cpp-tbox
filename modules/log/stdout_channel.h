@@ -7,6 +7,9 @@ namespace tbox {
 namespace log {
 
 class StdoutChannel : public AsyncChannel {
+  public:
+    bool initialize();
+
   protected:
     virtual void writeLog(const char *str, size_t len) override;
 };

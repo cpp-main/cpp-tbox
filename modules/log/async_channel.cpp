@@ -8,12 +8,6 @@
 namespace tbox {
 namespace log {
 
-AsyncChannel::AsyncChannel()
-{ }
-
-AsyncChannel::~AsyncChannel()
-{ }
-
 bool AsyncChannel::initialize(const Config &cfg)
 {
     if (!async_pipe_.initialize(cfg))
@@ -94,7 +88,7 @@ void AsyncChannel::onLogBackEnd(const LogContent *content)
             pos += len;
         }
 
-        if (content->text_ptr != nullptr) {
+        if (content->text_len > 0) {
             if (REMAIN_SIZE >= content->text_len)
                 memcpy(WRITE_PTR, content->text_ptr, content->text_len);
             pos += content->text_len;

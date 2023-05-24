@@ -11,9 +11,6 @@ namespace log {
 
 class AsyncChannel : public Channel {
   public:
-    AsyncChannel();
-    virtual ~AsyncChannel() override;
-
     using Config = util::AsyncPipe::Config;
     bool initialize(const Config &cfg);
     void cleanup();

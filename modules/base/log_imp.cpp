@@ -80,35 +80,36 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .text_ptr = nullptr,
     };
 
-    if (with_args) {
-        uint32_t buff_size = 256;    //! 初始大小，可应对绝大数情况
-        va_list args;
+    if (fmt != nullptr) {
+        if (with_args) {
+            uint32_t buff_size = 256;    //! 初始大小，可应对绝大数情况
+            for (;;) {
+                va_list args;
+                char buffer[buff_size];
 
-        for (;;) {
-            va_start(args, fmt);
-            char buffer[buff_size];
-            size_t len = vsnprintf(buffer, buff_size, fmt, args);
-            va_end(args);
+                va_start(args, fmt);
+                size_t len = vsnprintf(buffer, buff_size, fmt, args);
+                va_end(args);
 
-            if (len <= buff_size) {
-                content.text_len = len;
-                content.text_ptr = buffer;
-                Dispatch(content);
-                break;
+                if (len < buff_size) {
+                    content.text_len = len;
+                    content.text_ptr = buffer;
+                    Dispatch(content);
+                    break;
+                }
+
+                buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
+                if (buff_size > LOG_MAX_LEN) {
+                    std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+                    break;
+                }
             }
-
-            buff_size = len;
-            if (buff_size > LOG_MAX_LEN) {
-                std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
-                break;
-            }
-        }
-
-    } else {
-        if (fmt != nullptr) {
+        } else {
             content.text_len = ::strlen(fmt);
             content.text_ptr = fmt;
+            Dispatch(content);
         }
+    } else {
         Dispatch(content);
     }
 }
