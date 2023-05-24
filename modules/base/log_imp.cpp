@@ -36,6 +36,11 @@ const char* Basename(const char *full_path)
     return p_last;
 }
 
+bool CantDispatch() {
+    std::lock_guard<std::mutex> lg(_lock);
+    return _output_channels.empty();
+}
+
 void Dispatch(const LogContent &content)
 {
     std::lock_guard<std::mutex> lg(_lock);
@@ -56,6 +61,9 @@ void Dispatch(const LogContent &content)
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
                    int line, int level, bool with_args, const char *fmt, ...)
 {
+    if (CantDispatch())
+        return;
+
     if (level < 0) level = 0;
     if (level > LOG_LEVEL_TRACE) level = LOG_LEVEL_TRACE;
 
@@ -82,7 +90,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
 
     if (fmt != nullptr) {
         if (with_args) {
-            uint32_t buff_size = 256;    //! 初始大小，可应对绝大数情况
+            uint32_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
             for (;;) {
                 va_list args;
                 char buffer[buff_size];
@@ -100,7 +108,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
 
                 buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
                 if (buff_size > LOG_MAX_LEN) {
-                    std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
+                    std::cerr << "WARN: log text length " << buff_size << ", too long!" << std::endl;
                     break;
                 }
             }

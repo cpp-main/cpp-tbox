@@ -104,7 +104,7 @@ bool FilelogChannel::checkAndCreateLogFile()
 
     //!检查并创建路径
     if (!util::fs::MakeDirectory(file_path_, false)) {
-        cerr << "Err: create director " << file_path_ << " fail." << endl;
+        cerr << "Err: create director " << file_path_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;
     }
 
