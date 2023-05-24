@@ -33,14 +33,14 @@ int main()
 
     ping.setRecvCallback(
         [&ping] (const void *data_ptr, size_t data_size, const SockAddr &from) {
-            char dummy;
+            char dummy = 0;
             ping.send(&dummy, 1);
         }
     );
     int count = 0;
     pong.setRecvCallback(
         [&pong, &count] (const void *data_ptr, size_t data_size, const SockAddr &from) {
-            char dummy;
+            char dummy = 1;
             pong.send(&dummy, 1);
             ++count;
         }
@@ -49,7 +49,7 @@ int main()
     ping.enable();
     pong.enable();
 
-    char dummy;
+    char dummy = 0;
     ping.send(&dummy, 1);   //! 发球
 
     sp_loop->exitLoop(chrono::seconds(5));  //! 5秒后自动停止

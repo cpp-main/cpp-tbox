@@ -40,12 +40,14 @@ TEST(FdEvent, DisableSelfInReadCallback)
                 EXPECT_STREQ(tmp, "0123456789");
                 ++run_time;
 
-                write(write_fd, "0123456789", 10);
+                auto wsize = ::write(write_fd, "0123456789", 10);
+                (void)wsize;
                 read_event->disable();
             }
         );
 
-        write(write_fd, "0123456789", 10);
+        auto wsize = ::write(write_fd, "0123456789", 10);
+        (void)wsize;
         sp_loop->exitLoop(std::chrono::milliseconds(50));
         sp_loop->runLoop();
 
@@ -80,7 +82,8 @@ TEST(FdEvent, DisableSelfInWriteCallback)
         write_event->setCallback(
             [&] (short events) {
                 EXPECT_EQ(events, FdEvent::kWriteEvent);
-                write(write_fd, "0", 1);
+                auto wsize = ::write(write_fd, "0", 1);
+                (void)wsize;
                 ++run_time;
                 write_event->disable();
             }
@@ -150,7 +153,8 @@ TEST(FdEvent, OneWriteMultiRead)
             }
         );
 
-        write(write_fd, "0123456789", 10);
+        auto wsize = ::write(write_fd, "0123456789", 10);
+        (void)wsize;
         sp_loop->exitLoop(std::chrono::milliseconds(50));
         sp_loop->runLoop();
 
@@ -208,7 +212,7 @@ TEST(FdEvent, MultiWriteOneRead)
         write_event1->setCallback(
             [&] (short events) {
                 EXPECT_EQ(events, FdEvent::kWriteEvent);
-                auto wsize = write(write_fd, "abcdefghij", 10);
+                auto wsize = ::write(write_fd, "abcdefghij", 10);
                 EXPECT_EQ(wsize, 10);
                 event1_run = true;
             }
@@ -216,7 +220,7 @@ TEST(FdEvent, MultiWriteOneRead)
         write_event2->setCallback(
             [&] (short events) {
                 EXPECT_EQ(events, FdEvent::kWriteEvent);
-                auto wsize = write(write_fd, "0123456789", 10);
+                auto wsize = ::write(write_fd, "0123456789", 10);
                 EXPECT_EQ(wsize, 10);
                 event2_run = true;
             }
@@ -274,13 +278,15 @@ TEST(FdEvent, Benchmark)
         read_event->setCallback(
             [&] (short events) {
                 char dummy = 0;
-                write(write_fd, &dummy, 1);
+                auto wsize = ::write(write_fd, &dummy, 1);
+                (void)wsize;
                 ++run_time;
             }
         );
 
         char dummy = 0;
-        write(write_fd, &dummy, 1);
+        auto wsize = ::write(write_fd, &dummy, 1);
+        (void)wsize;
         sp_loop->exitLoop(std::chrono::seconds(10));
         sp_loop->runLoop();
 
