@@ -34,11 +34,12 @@ void AsyncChannel::onLogFrontEnd(const LogContent *content)
 void AsyncChannel::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 {
     constexpr auto LogContentSize = sizeof(LogContent);
-    const uint8_t *p = reinterpret_cast<const uint8_t*>(data_ptr);
+    const char *p = reinterpret_cast<const char*>(data_ptr);
 
-    for (size_t i = 0; i < data_size; ++i)
-        buffer_.push_back(p[i]);
+    std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
+    std::copy(p, p + data_size, back_insert_iter);
 
+    bool is_need_flush = false;
     while (buffer_.size() >= LogContentSize) {
         auto content = reinterpret_cast<LogContent*>(buffer_.data());
         auto frame_size = LogContentSize + content->text_len;
@@ -46,7 +47,14 @@ void AsyncChannel::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
             break;
         content->text_ptr = reinterpret_cast<const char *>(content + 1);
         onLogBackEnd(content);
+        is_need_flush = true;
         buffer_.erase(buffer_.begin(), (buffer_.begin() + frame_size));
+    }
+
+    if (is_need_flush) {
+        flushLog();
+        if (buffer_.capacity() > 1024)
+            buffer_.shrink_to_fit();
     }
 }
 
@@ -109,16 +117,21 @@ void AsyncChannel::onLogBackEnd(const LogContent *content)
             pos += 4;
         }
 
-        if (REMAIN_SIZE >= 1)
+        if (REMAIN_SIZE >= 2) {
+            *WRITE_PTR = '\n';  //! 追加结束符
+            ++pos;
             *WRITE_PTR = '\0';  //! 追加结束符
-        ++pos;
+            ++pos;
+        } else {
+          pos += 2;
+        }
 
 #undef REMAIN_SIZE
 #undef WRITE_PTR
 
         //! 如果缓冲区是够用的，就完成
         if (pos <= buff_size) {
-            writeLog(buff, pos);
+            appendLog(buff, pos);
             break;
         }
 

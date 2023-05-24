@@ -15,7 +15,7 @@ bool SyslogChannel::initialize()
     return AsyncChannel::initialize(cfg);
 }
 
-void SyslogChannel::writeLog(const char *str, size_t len)
+void SyslogChannel::appendLog(const char *str, size_t len)
 {
     syslog(LOG_INFO, "%s", str);
 }

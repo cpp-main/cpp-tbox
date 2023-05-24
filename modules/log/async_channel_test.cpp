@@ -9,14 +9,14 @@ using namespace tbox::log;
 
 class TestAsyncChannel : public AsyncChannel {
   protected:
-    virtual void writeLog(const char *str, size_t len) {
+    virtual void appendLog(const char *str, size_t len) {
         cout << str << endl;
     }
 };
 
 class EmptyTestAsyncChannel : public AsyncChannel {
   protected:
-    virtual void writeLog(const char *str, size_t len) { }
+    virtual void appendLog(const char *str, size_t len) { }
 };
 
 
@@ -87,10 +87,10 @@ TEST(AsyncChannel, Benchmark_Empty)
     function<void()> func = [&] {
         for (int i = 0; i < 100; ++i)
             LogInfo("%d %s", i, tmp.c_str());
-        sp_loop->runInLoop(func);
+        sp_loop->run(func);
         counter += 100;
     };
-    sp_loop->runInLoop(func);
+    sp_loop->run(func);
 
     sp_loop->exitLoop(chrono::seconds(10));
     sp_loop->runLoop();

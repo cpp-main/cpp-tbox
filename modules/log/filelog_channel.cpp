@@ -59,21 +59,28 @@ void FilelogChannel::cleanup()
     pid_ = 0;
 }
 
-void FilelogChannel::writeLog(const char *str, size_t len)
+void FilelogChannel::appendLog(const char *str, size_t len)
+{
+    std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
+    std::copy(str, str + len - 1, back_insert_iter);
+}
+
+void FilelogChannel::flushLog()
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
-    auto wsize = ::write(fd_, str, len);
-    if (wsize != static_cast<ssize_t>(len)) {
+    auto wsize = ::write(fd_, buffer_.data(), buffer_.size());
+    if (wsize != static_cast<ssize_t>(buffer_.size())) {
         cerr << "Err: write file error." << endl;
         return;
     }
 
-    char endline = '\n';
-    ::write(fd_, &endline, 1);
+    total_write_size_ += buffer_.size();
 
-    total_write_size_ += (len + 1);
+    buffer_.clear();
+    if (buffer_.capacity() > 1024)
+        buffer_.shrink_to_fit();
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);

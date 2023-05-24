@@ -20,7 +20,8 @@ class AsyncChannel : public Channel {
     void onLogBackEndReadPipe(const void *data_ptr, size_t data_size);
     void onLogBackEnd(const LogContent *content);
     void udpateTimestampStr(uint32_t sec);
-    virtual void writeLog(const char *str, size_t len) = 0;
+    virtual void appendLog(const char *str, size_t len) = 0;
+    virtual void flushLog() { }
 
   private:
     util::AsyncPipe async_pipe_;
@@ -28,7 +29,7 @@ class AsyncChannel : public Channel {
     uint32_t timestamp_sec_ = 0;
     char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30
 
-    std::vector<uint8_t> buffer_;
+    std::vector<char> buffer_;
 };
 
 }

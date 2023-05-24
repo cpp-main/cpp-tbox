@@ -46,6 +46,9 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 {
     buildTerminalNodes(*ctx.terminal());
 
+    stdout_.initialize();
+    syslog_.initialize();
+
     if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
         //! STDOUT
@@ -92,8 +95,13 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 
 void Log::cleanup()
 {
-    filelog_.cleanup();
     filelog_.disable();
+    syslog_.disable();
+    stdout_.disable();
+
+    filelog_.cleanup();
+    syslog_.cleanup();
+    stdout_.cleanup();
 }
 
 void Log::initChannel(const Json &js, log::Channel &ch)

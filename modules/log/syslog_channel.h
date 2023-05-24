@@ -11,7 +11,7 @@ class SyslogChannel : public AsyncChannel {
     bool initialize();
 
   protected:
-    virtual void writeLog(const char *str, size_t len) override;
+    virtual void appendLog(const char *str, size_t len) override;
 };
 
 }

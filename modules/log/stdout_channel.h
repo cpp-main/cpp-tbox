@@ -3,6 +3,8 @@
 
 #include "async_channel.h"
 
+#include <vector>
+
 namespace tbox {
 namespace log {
 
@@ -11,7 +13,11 @@ class StdoutChannel : public AsyncChannel {
     bool initialize();
 
   protected:
-    virtual void writeLog(const char *str, size_t len) override;
+    virtual void appendLog(const char *str, size_t len) override;
+    virtual void flushLog() override;
+
+  private:
+    std::vector<char> buffer_;
 };
 
 }

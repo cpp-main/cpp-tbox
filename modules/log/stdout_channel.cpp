@@ -1,5 +1,6 @@
 #include "stdout_channel.h"
-#include <iostream>
+#include <unistd.h>
+#include <algorithm>
 
 namespace tbox {
 namespace log {
@@ -15,9 +16,19 @@ bool StdoutChannel::initialize()
     return AsyncChannel::initialize(cfg);
 }
 
-void StdoutChannel::writeLog(const char *str, size_t len)
+void StdoutChannel::appendLog(const char *str, size_t len)
 {
-    std::cout << str << std::endl;
+    std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
+    std::copy(str, str + len - 1, back_insert_iter);
+}
+
+void StdoutChannel::flushLog()
+{
+    ::write(STDOUT_FILENO, buffer_.data(), buffer_.size()); //! 写到终端
+
+    buffer_.clear();
+    if (buffer_.capacity() > 1024)
+        buffer_.shrink_to_fit();
 }
 
 }
