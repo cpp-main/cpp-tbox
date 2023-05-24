@@ -36,7 +36,8 @@ const char* Basename(const char *full_path)
     return p_last;
 }
 
-bool CantDispatch() {
+bool CantDispatch()
+{
     std::lock_guard<std::mutex> lg(_lock);
     return _output_channels.empty();
 }
