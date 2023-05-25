@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <tbox/base/json.hpp>
+#include <tbox/base/catch_throw.h>
 #include <tbox/terminal/session.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/json.h>
@@ -42,7 +43,7 @@ void Log::fillDefaultConfig(Json &cfg) const
 
 bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 {
-    buildTerminalNodes(*ctx.terminal());
+    initShell(*ctx.terminal());
 
     if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
@@ -108,11 +109,11 @@ void Log::initChannel(const Json &js, log::Channel &ch)
     if (util::json::HasObjectField(js, "levels")) {
         auto &js_levels = js.at("levels");
         for (auto &item : js_levels.items())
-            ch.setLevel(item.value(), item.key());
+            ch.setLevel(item.key(), item.value());
     }
 }
 
-void Log::buildTerminalNodes(TerminalNodes &term)
+void Log::initShell(TerminalNodes &term)
 {
     auto log_node = term.createDirNode("This is log directory");
     term.mountNode(term.rootNode(), log_node, "log");
@@ -120,44 +121,45 @@ void Log::buildTerminalNodes(TerminalNodes &term)
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "stdout");
-        buildTerminalNodesForChannel(term, stdout_, dir_node);
+        initShellForChannel(stdout_, term, dir_node);
     }
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "syslog");
-        buildTerminalNodesForChannel(term, syslog_, dir_node);
+        initShellForChannel(syslog_, term, dir_node);
     }
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "filelog");
-        buildTerminalNodesForChannel(term, filelog_, dir_node);
+        initShellForChannel(filelog_, term, dir_node);
+        initShellForFilelogChannel(term, dir_node);
     }
 }
 
-void Log::buildTerminalNodesForChannel(terminal::TerminalNodes &term, log::Channel &log_ch, terminal::NodeToken dir_node)
+void Log::initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node)
 {
     {
         auto func_node = term.createFuncNode(
             [this, &log_ch] (const Session &s, const Args &args) {
-                std::stringstream ss;
+                std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
                     const auto &opt = args[1];
                     if (opt == "on") {
                         log_ch.enable();
-                        ss << "on\r\n";
+                        oss << "on\r\n";
                         print_usage = false;
                     } else if (opt == "off") {
                         log_ch.disable();
-                        ss << "off\r\n";
+                        oss << "off\r\n";
                         print_usage = false;
                     }
                 }
 
                 if (print_usage)
-                    ss << "Usage: " << args[0] << " on|off\r\n";
+                    oss << "Usage: " << args[0] << " on|off\r\n";
 
-                s.send(ss.str());
+                s.send(oss.str());
             }
         , "enable or disable");
         term.mountNode(dir_node, func_node, "enable");
@@ -166,25 +168,25 @@ void Log::buildTerminalNodesForChannel(terminal::TerminalNodes &term, log::Chann
     {
         auto func_node = term.createFuncNode(
             [this, &log_ch] (const Session &s, const Args &args) {
-                std::stringstream ss;
+                std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
                     const auto &opt = args[1];
                     if (opt == "on") {
                         log_ch.enableColor(true);
-                        ss << "on\r\n";
+                        oss << "on\r\n";
                         print_usage = false;
                     } else if (opt == "off") {
                         log_ch.enableColor(false);
-                        ss << "off\r\n";
+                        oss << "off\r\n";
                         print_usage = false;
                     }
                 }
 
                 if (print_usage)
-                    ss << "Usage: " << args[0] << " on|off\r\n";
+                    oss << "Usage: " << args[0] << " on|off\r\n";
 
-                s.send(ss.str());
+                s.send(oss.str());
             }
         , "enable or disable color");
         term.mountNode(dir_node, func_node, "color_enable");
@@ -193,32 +195,30 @@ void Log::buildTerminalNodesForChannel(terminal::TerminalNodes &term, log::Chann
     {
         auto func_node = term.createFuncNode(
             [this, &log_ch] (const Session &s, const Args &args) {
-                std::stringstream ss;
+                std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 3) {
                     do {
                         auto &module_id = args[1];
                         int level = 0;
-                        try {
-                            level = std::stoi(args[2]);
-                        } catch (const std::exception &e) {
-                            ss << "level must be number\r\n";
+                        if (CatchThrowQuietly([&] { level = std::stoi(args[2]); })) {
+                            oss << "level must be number\r\n";
                             break;
                         }
                         if (level < 0 || level > LOG_LEVEL_TRACE) {
-                            ss << "level range: [0-" << LOG_LEVEL_TRACE << "]\r\n";
+                            oss << "level range: [0-" << LOG_LEVEL_TRACE << "]\r\n";
                             break;
                         }
 
-                        log_ch.setLevel(level, module_id);
-                        ss << "done\r\n";
+                        log_ch.setLevel(module_id, level);
+                        oss << "done. level: " << level << "\r\n";
                         print_usage = false;
 
                     } while (false);
                 }
 
                 if (print_usage)
-                    ss << "Usage: " << args[0] << " <module_id:string> <level:0-6>\r\n"
+                    oss << "Usage: " << args[0] << " <module_id:string> <level:0-6>\r\n"
                        << "LEVEL\r\n"
                        << " 0: Fatal\r\n"
                        << " 1: Error\r\n"
@@ -229,11 +229,105 @@ void Log::buildTerminalNodesForChannel(terminal::TerminalNodes &term, log::Chann
                        << " 6: Trace\r\n"
                        ;
 
-                s.send(ss.str());
+                s.send(oss.str());
             }
         , "set log level");
         term.mountNode(dir_node, func_node, "set_level");
     }
+
+    {
+        auto func_node = term.createFuncNode(
+            [this, &log_ch] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
+                    log_ch.unsetLevel(args.at(1));
+                    print_usage = false;
+                    oss << "done\r\n";
+                }
+
+                if (print_usage)
+                    oss << "Usage: " << args[0] << " <module>\r\n";
+
+                s.send(oss.str());
+            }
+        , "unset log level");
+        term.mountNode(dir_node, func_node, "unset_level");
+    }
+}
+
+void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::NodeToken dir_node)
+{
+    {
+        auto func_node = term.createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
+                    filelog_.setFilePath(args.at(1));
+                    print_usage = false;
+                    oss << "done\r\n";
+                }
+
+                if (print_usage) {
+                    oss << "Usage: " << args[0] << " <path>\r\n"
+                        << "Exp  : " << args[0] << " /var/log/\r\n";
+                }
+
+                s.send(oss.str());
+            }
+        , "set log file path");
+        term.mountNode(dir_node, func_node, "set_path");
+    }
+
+    {
+        auto func_node = term.createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
+                    filelog_.setFilePrefix(args.at(1));
+                    print_usage = false;
+                    oss << "done\r\n";
+                }
+
+                if (print_usage)
+                    oss << "Usage: " << args[0] << " <prefix>\r\n";
+
+                s.send(oss.str());
+            }
+        , "set log file prefix");
+        term.mountNode(dir_node, func_node, "set_prefix");
+    }
+
+    {
+        auto func_node = term.createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
+                    size_t max_size;
+                    bool is_throw = CatchThrowQuietly([&] { max_size = std::stoul(args.at(1)); });
+                    if (!is_throw) {
+                        filelog_.setFileMaxSize(max_size * 1024);
+                        print_usage = false;
+                        oss << "done, max_size: " << max_size << " KB\r\n";
+                    } else {
+                        oss << "size must be number\r\n";
+                    }
+                }
+
+                if (print_usage) {
+                    oss << "Usage: " << args[0] << " <size>\r\n"
+                        << "Exp  : " << args[0] << " 1024\r\n";
+                }
+
+                s.send(oss.str());
+            }
+        , "set log file max size");
+        term.mountNode(dir_node, func_node, "set_max_size");
+    }
+
 }
 
 }

@@ -178,11 +178,13 @@ void AsyncPipe::Impl::cleanup()
     stop_signal_ = true;
     full_buffers_cv_.notify_all();
     backend_thread_.join();
+    stop_signal_ = false;
 
     assert(full_buffers_.empty());
     CHECK_DELETE_RESET_OBJ(curr_buffer_);
     for (auto item : free_buffers_)
         CHECK_DELETE_RESET_OBJ(item);
+    free_buffers_.clear();
 
     cb_ = nullptr;
     inited_ = false;

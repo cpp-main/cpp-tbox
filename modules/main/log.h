@@ -25,9 +25,9 @@ class Log {
 
   protected:
     void initChannel(const Json &js, log::Channel &ch);
-    void buildTerminalNodes(terminal::TerminalNodes &term);
-    void buildTerminalNodesForChannel(terminal::TerminalNodes &term,
-            log::Channel &log_ch, terminal::NodeToken dir_node);
+    void initShell(terminal::TerminalNodes &term);
+    void initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node);
+    void initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::NodeToken dir_node);
 
   private:
     log::StdoutChannel stdout_;

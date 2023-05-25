@@ -13,13 +13,18 @@ Channel::~Channel()
     disable();
 }
 
-void Channel::setLevel(int level, const std::string &module)
+void Channel::setLevel(const std::string &module, int level)
 {
     std::lock_guard<std::mutex> _lk(lock_);
     if (module.empty())
         default_level_ = level;
     else
         modules_level_[module] = level;
+}
+
+void Channel::unsetLevel(const std::string &module)
+{
+    modules_level_.erase(module);
 }
 
 void Channel::enableColor(bool enable)
@@ -31,8 +36,8 @@ bool Channel::enable()
 {
     using namespace std::placeholders;
     if (output_id_ == 0) {
-        output_id_ = LogAddPrintfFunc(HandleLog, this);
         onEnable();
+        output_id_ = LogAddPrintfFunc(HandleLog, this);
         return true;
     }
     return false;
@@ -41,8 +46,8 @@ bool Channel::enable()
 void Channel::disable()
 {
     if (output_id_ != 0) {
-        onDisable();
         LogRemovePrintfFunc(output_id_);
+        onDisable();
         output_id_ = 0;
     }
 }

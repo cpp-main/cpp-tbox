@@ -17,7 +17,9 @@ class Channel {
   public:
     virtual ~Channel();
 
-    void setLevel(int level, const std::string &module = "");
+    void setLevel(const std::string &module, int level);
+    void unsetLevel(const std::string &module);
+
     void enableColor(bool enable);
 
     bool enable();

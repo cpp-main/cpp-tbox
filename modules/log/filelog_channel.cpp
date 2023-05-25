@@ -61,6 +61,8 @@ void FilelogChannel::updateInnerValues()
 {
     filename_prefix_ = file_path_ + '/' + file_prefix_ + '.';
     sym_filename_ = filename_prefix_ + "latest.log";
+
+    CHECK_CLOSE_RESET_FD(fd_);
 }
 
 void FilelogChannel::appendLog(const char *str, size_t len)
