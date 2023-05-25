@@ -9,7 +9,6 @@ using namespace tbox::log;
 TEST(SyslogChannel, DefaultLevel)
 {
     SyslogChannel ch;
-    ch.initialize();
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -29,7 +28,6 @@ TEST(SyslogChannel, DefaultLevel)
 TEST(SyslogChannel, TraceLevel)
 {
     SyslogChannel ch;
-    ch.initialize();
     ch.enable();
     ch.setLevel(LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -50,7 +48,6 @@ TEST(SyslogChannel, TraceLevel)
 TEST(SyslogChannel, WillNotPrint)
 {
     SyslogChannel ch;
-    ch.initialize();
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -69,7 +66,6 @@ TEST(SyslogChannel, WillNotPrint)
 TEST(SyslogChannel, Format)
 {
     SyslogChannel ch;
-    ch.initialize();
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -81,7 +77,6 @@ TEST(SyslogChannel, Format)
 TEST(SyslogChannel, LongString)
 {
     SyslogChannel ch;
-    ch.initialize();
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
@@ -95,7 +90,6 @@ using namespace tbox::event;
 TEST(SyslogChannel, Benchmark)
 {
     SyslogChannel ch;
-    ch.initialize();
     ch.enable();
     std::string tmp(30, 'x');
 

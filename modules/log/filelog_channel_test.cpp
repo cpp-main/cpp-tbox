@@ -13,7 +13,6 @@ TEST(FilelogChannel, Format)
 {
     FilelogChannel ch;
 
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
     ch.enable();
@@ -28,7 +27,6 @@ TEST(FilelogChannel, LongString)
 {
     FilelogChannel ch;
 
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
     ch.enable();
@@ -48,7 +46,6 @@ TEST(FilelogChannel, FileDivide)
 {
     FilelogChannel ch;
 
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
     ch.setFileMaxSize(100);
@@ -69,7 +66,6 @@ TEST(FilelogChannel, ParamNormalize)
 {
     FilelogChannel ch;
 
-    ch.initialize();
     ch.setFilePath("  /tmp/tbox ");
     ch.setFilePrefix(" test ");
     ch.enable();
@@ -80,7 +76,6 @@ TEST(FilelogChannel, ParamNormalize)
 TEST(FilelogChannel, CreateFileInInit)
 {
     FilelogChannel ch;
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("create_file_init");
     ch.enable();
@@ -91,7 +86,6 @@ TEST(FilelogChannel, CreateFileInInit)
 TEST(FilelogChannel, RemoveLogFileDuringWriting)
 {
     FilelogChannel ch;
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("remove_log_file_during_writing");
     ch.enable();
@@ -108,7 +102,6 @@ using namespace tbox::event;
 TEST(FilelogChannel, Benchmark)
 {
     FilelogChannel ch;
-    ch.initialize();
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
     ch.enable();

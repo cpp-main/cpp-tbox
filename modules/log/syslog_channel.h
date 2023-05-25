@@ -8,7 +8,7 @@ namespace log {
 
 class SyslogChannel : public AsyncChannel {
   public:
-    bool initialize();
+    SyslogChannel();
 
   protected:
     virtual void appendLog(const char *str, size_t len) override;

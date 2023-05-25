@@ -44,10 +44,6 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 {
     buildTerminalNodes(*ctx.terminal());
 
-    stdout_.initialize();
-    syslog_.initialize();
-    filelog_.initialize();
-
     if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
         //! STDOUT

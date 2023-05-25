@@ -12,10 +12,14 @@ namespace log {
 class AsyncChannel : public Channel {
   public:
     using Config = util::AsyncPipe::Config;
-    bool initialize(const Config &cfg);
+
+    void setConfig(const Config &cfg) { cfg_ = cfg; }
     void cleanup();
 
   protected:
+    virtual void onEnable() override;
+    virtual void onDisable() override;
+
     virtual void onLogFrontEnd(const LogContent *content) override;
     void onLogBackEndReadPipe(const void *data_ptr, size_t data_size);
     void onLogBackEnd(const LogContent *content);
@@ -24,7 +28,9 @@ class AsyncChannel : public Channel {
     virtual void flushLog() { }
 
   private:
+    Config cfg_;
     util::AsyncPipe async_pipe_;
+    bool is_pipe_inited_ = false;
 
     uint32_t timestamp_sec_ = 0;
     char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30

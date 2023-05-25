@@ -4,7 +4,7 @@
 namespace tbox {
 namespace log {
 
-bool SyslogChannel::initialize()
+SyslogChannel::SyslogChannel()
 {
     AsyncChannel::Config cfg;
     cfg.buff_size = 10240;
@@ -12,7 +12,7 @@ bool SyslogChannel::initialize()
     cfg.buff_max_num = 20;
     cfg.interval  = 100;
 
-    return AsyncChannel::initialize(cfg);
+    setConfig(cfg);
 }
 
 void SyslogChannel::appendLog(const char *str, size_t len)

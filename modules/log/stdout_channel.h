@@ -10,7 +10,7 @@ namespace log {
 
 class StdoutChannel : public AsyncChannel {
   public:
-    bool initialize();
+    StdoutChannel();
 
   protected:
     virtual void appendLog(const char *str, size_t len) override;

@@ -10,10 +10,10 @@ namespace log {
 
 class FilelogChannel : public AsyncChannel {
   public:
+    FilelogChannel();
     virtual ~FilelogChannel() override;
 
   public:
-    bool initialize();
     void cleanup();
 
     void setFilePath(const std::string &file_path);

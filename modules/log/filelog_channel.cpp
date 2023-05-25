@@ -15,13 +15,7 @@ namespace log {
 
 using namespace std;
 
-FilelogChannel::~FilelogChannel()
-{
-    if (pid_ != 0)
-        cleanup();
-}
-
-bool FilelogChannel::initialize()
+FilelogChannel::FilelogChannel()
 {
     AsyncChannel::Config cfg;
     cfg.buff_size = 10240;
@@ -29,12 +23,14 @@ bool FilelogChannel::initialize()
     cfg.buff_max_num = 20;
     cfg.interval  = 100;
 
-    bool ok = AsyncChannel::initialize(cfg);
-    if (ok) {
-        pid_ = ::getpid();
-        return true;
-    }
-    return false;
+    setConfig(cfg);
+    pid_ = ::getpid();
+}
+
+FilelogChannel::~FilelogChannel()
+{
+    if (pid_ != 0)
+        cleanup();
 }
 
 void FilelogChannel::setFilePath(const std::string &file_path)

@@ -9,7 +9,6 @@ using namespace tbox::log;
 TEST(StdoutChannel, DefaultLevel)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -29,7 +28,6 @@ TEST(StdoutChannel, DefaultLevel)
 TEST(StdoutChannel, TraceLevel)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
     ch.setLevel(LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -50,7 +48,6 @@ TEST(StdoutChannel, TraceLevel)
 TEST(StdoutChannel, NullString)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
 
     LogInfo(nullptr);
@@ -62,7 +59,6 @@ TEST(StdoutChannel, NullString)
 TEST(StdoutChannel, WillNotPrint)
 {
     StdoutChannel ch;
-    ch.initialize();
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -81,7 +77,6 @@ TEST(StdoutChannel, WillNotPrint)
 TEST(StdoutChannel, EnableColor)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
     ch.enableColor(true);
     ch.setLevel(LOG_LEVEL_TRACE);
@@ -104,7 +99,6 @@ TEST(StdoutChannel, EnableColor)
 TEST(StdoutChannel, Format)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -116,7 +110,6 @@ TEST(StdoutChannel, Format)
 TEST(StdoutChannel, LongString)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
@@ -129,7 +122,6 @@ using namespace tbox::event;
 TEST(StdoutChannel, Benchmark)
 {
     StdoutChannel ch;
-    ch.initialize();
     ch.enable();
     std::string tmp(30, 'x');
 

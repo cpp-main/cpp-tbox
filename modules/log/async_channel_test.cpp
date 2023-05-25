@@ -24,7 +24,6 @@ TEST(AsyncChannel, Format)
 {
     TestAsyncChannel ch;
 
-    ch.initialize(TestAsyncChannel::Config());
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -37,7 +36,6 @@ TEST(AsyncChannel, LongString)
 {
     TestAsyncChannel ch;
 
-    ch.initialize(TestAsyncChannel::Config());
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
@@ -51,7 +49,6 @@ using namespace tbox::event;
 TEST(AsyncChannel, Benchmark)
 {
     TestAsyncChannel ch;
-    ch.initialize(TestAsyncChannel::Config());
     ch.enable();
     std::string tmp(30, 'x');
 
@@ -77,7 +74,6 @@ TEST(AsyncChannel, Benchmark)
 TEST(AsyncChannel, Benchmark_Empty)
 {
     EmptyTestAsyncChannel ch;
-    ch.initialize(TestAsyncChannel::Config());
     ch.enable();
     std::string tmp(30, 'x');
 

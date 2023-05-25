@@ -8,20 +8,26 @@ constexpr uint32_t LOG_MAX_LEN = (100 << 10);   //! 限定单条日志最大长�
 namespace tbox {
 namespace log {
 
-bool AsyncChannel::initialize(const Config &cfg)
+void AsyncChannel::cleanup()
 {
-    if (!async_pipe_.initialize(cfg))
-        return false;
+    if (is_pipe_inited_)
+        async_pipe_.cleanup();
+}
+
+void AsyncChannel::onEnable()
+{
+    if (!async_pipe_.initialize(cfg_))
+        return;
 
     using namespace std::placeholders;
     async_pipe_.setCallback(std::bind(&AsyncChannel::onLogBackEndReadPipe, this, _1, _2));
-
-    return true;
+    is_pipe_inited_ = true;
 }
 
-void AsyncChannel::cleanup()
+void AsyncChannel::onDisable()
 {
     async_pipe_.cleanup();
+    is_pipe_inited_ = false;
 }
 
 void AsyncChannel::onLogFrontEnd(const LogContent *content)
