@@ -51,6 +51,12 @@ void FilelogChannel::setFilePrefix(const std::string &file_prefix)
     updateInnerValues();
 }
 
+void FilelogChannel::setFileSyncEnable(bool enable)
+{
+    file_sync_enable_ = enable;
+    CHECK_CLOSE_RESET_FD(fd_);
+}
+
 void FilelogChannel::cleanup()
 {
     AsyncChannel::cleanup();
@@ -86,8 +92,6 @@ void FilelogChannel::flushLog()
     total_write_size_ += buffer_.size();
 
     buffer_.clear();
-    if (buffer_.capacity() > 1024)
-        buffer_.shrink_to_fit();
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
@@ -118,16 +122,20 @@ bool FilelogChannel::checkAndCreateLogFile()
     std::string log_filename;
     int postfix = 0;
     do {
-        ostringstream filename_oss;
-        filename_oss << filename_prefix_ << timestamp << '.' << pid_ << ".log";
-        if (postfix != 0)
-            filename_oss << "." << postfix;
-        log_filename = filename_oss.str();
+        log_filename = filename_prefix_ + timestamp + '.' + std::to_string(pid_) + ".log";
+        if (postfix != 0) {
+            log_filename += '.';
+            log_filename += std::to_string(postfix);
+        }
         ++postfix;
     } while (util::fs::IsFileExist(log_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
-    log_filename_ = log_filename;
+    log_filename_ = std::move(log_filename);
 
-    fd_ = ::open(log_filename_.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_DSYNC, S_IRUSR | S_IWUSR);
+    int flags = O_CREAT | O_WRONLY | O_APPEND;
+    if (file_sync_enable_)
+        flags |= O_DSYNC;
+
+    fd_ = ::open(log_filename_.c_str(), flags, S_IRUSR | S_IWUSR);
     if (fd_ < 0) {
         cerr << "Err: open file " << log_filename_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;
@@ -135,7 +143,7 @@ bool FilelogChannel::checkAndCreateLogFile()
 
     total_write_size_ = 0;
     util::fs::RemoveFile(sym_filename_, false);
-    util::fs::MakeSymbolLink(log_filename, sym_filename_, false);
+    util::fs::MakeSymbolLink(log_filename_, sym_filename_, false);
 
     return true;
 }

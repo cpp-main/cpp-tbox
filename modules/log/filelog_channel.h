@@ -19,6 +19,7 @@ class FilelogChannel : public AsyncChannel {
     void setFilePath(const std::string &file_path);
     void setFilePrefix(const std::string &file_path);
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
+    void setFileSyncEnable(bool enable);
     std::string currentFilename() const { return log_filename_; }
 
   protected:
@@ -33,6 +34,7 @@ class FilelogChannel : public AsyncChannel {
     std::string file_prefix_ = "none";
     std::string file_path_ = "/var/log/";
     size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为1MB
+    bool file_sync_enable_ = false;
     pid_t pid_ = 0;
 
     std::string filename_prefix_;

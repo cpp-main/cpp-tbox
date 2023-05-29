@@ -71,6 +71,10 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
             util::json::GetField(js_filelog, "prefix", prefix);
             filelog_.setFilePrefix(prefix);
 
+            bool enable_sync = false;
+            if (util::json::GetField(js_filelog, "enable_sync", enable_sync))
+                filelog_.setFileSyncEnable(enable_sync);
+
             unsigned int max_size = 0;
             if (util::json::GetField(js_filelog, "max_size", max_size))
                 filelog_.setFileMaxSize(max_size * 1024);
@@ -189,7 +193,7 @@ void Log::initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &ter
                 s.send(oss.str());
             }
         , "enable or disable color");
-        term.mountNode(dir_node, func_node, "color_enable");
+        term.mountNode(dir_node, func_node, "enable_color");
     }
 
     {
@@ -298,6 +302,33 @@ void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::No
             }
         , "set log file prefix");
         term.mountNode(dir_node, func_node, "set_prefix");
+    }
+
+    {
+        auto func_node = term.createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
+                    const auto &opt = args[1];
+                    if (opt == "on") {
+                        filelog_.setFileSyncEnable(true);
+                        oss << "on\r\n";
+                        print_usage = false;
+                    } else if (opt == "off") {
+                        filelog_.setFileSyncEnable(false);
+                        oss << "off\r\n";
+                        print_usage = false;
+                    }
+                }
+
+                if (print_usage)
+                    oss << "Usage: " << args[0] << " on|off\r\n";
+
+                s.send(oss.str());
+            }
+        , "enable or disable file sync");
+        term.mountNode(dir_node, func_node, "enable_sync");
     }
 
     {
