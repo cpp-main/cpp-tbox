@@ -1,4 +1,5 @@
-#include "async_channel.h"
+#include "async_sink.h"
+
 #include <cstring>
 #include <algorithm>
 #include <iostream>
@@ -8,36 +9,36 @@ constexpr uint32_t LOG_MAX_LEN = (100 << 10);   //! 限定单条日志最大长�
 namespace tbox {
 namespace log {
 
-void AsyncChannel::cleanup()
+void AsyncSink::cleanup()
 {
     if (is_pipe_inited_)
         async_pipe_.cleanup();
 }
 
-void AsyncChannel::onEnable()
+void AsyncSink::onEnable()
 {
     if (!async_pipe_.initialize(cfg_))
         return;
 
     using namespace std::placeholders;
-    async_pipe_.setCallback(std::bind(&AsyncChannel::onLogBackEndReadPipe, this, _1, _2));
+    async_pipe_.setCallback(std::bind(&AsyncSink::onLogBackEndReadPipe, this, _1, _2));
     is_pipe_inited_ = true;
 }
 
-void AsyncChannel::onDisable()
+void AsyncSink::onDisable()
 {
     async_pipe_.cleanup();
     is_pipe_inited_ = false;
 }
 
-void AsyncChannel::onLogFrontEnd(const LogContent *content)
+void AsyncSink::onLogFrontEnd(const LogContent *content)
 {
     async_pipe_.append(content, sizeof(LogContent));
     if (content->text_len != 0)
         async_pipe_.append(content->text_ptr, content->text_len);
 }
 
-void AsyncChannel::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
+void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 {
     constexpr auto LogContentSize = sizeof(LogContent);
     const char *p = reinterpret_cast<const char*>(data_ptr);
@@ -70,7 +71,7 @@ const char *level_name = "FEWNIDT";
 const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
 }
 
-void AsyncChannel::onLogBackEnd(const LogContent *content)
+void AsyncSink::onLogBackEnd(const LogContent *content)
 {
     size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
 
@@ -152,7 +153,7 @@ void AsyncChannel::onLogBackEnd(const LogContent *content)
     }
 }
 
-void AsyncChannel::udpateTimestampStr(uint32_t sec)
+void AsyncSink::udpateTimestampStr(uint32_t sec)
 {
     if (timestamp_sec_ != sec) {
         time_t ts_sec = sec;

@@ -1,16 +1,16 @@
-#ifndef TBOX_LOG_OUTPUT_STDOUT_H_20220408
-#define TBOX_LOG_OUTPUT_STDOUT_H_20220408
+#ifndef TBOX_LOG_ASYNC_STDOUT_SINK_H_20220408
+#define TBOX_LOG_ASYNC_STDOUT_SINK_H_20220408
 
-#include "async_channel.h"
+#include "async_sink.h"
 
 #include <vector>
 
 namespace tbox {
 namespace log {
 
-class StdoutChannel : public AsyncChannel {
+class AsyncStdoutSink : public AsyncSink {
   public:
-    StdoutChannel();
+    AsyncStdoutSink();
 
   protected:
     virtual void appendLog(const char *str, size_t len) override;
@@ -23,4 +23,4 @@ class StdoutChannel : public AsyncChannel {
 }
 }
 
-#endif //TBOX_LOG_OUTPUT_STDOUT_H_20220408
+#endif //TBOX_LOG_ASYNC_STDOUT_SINK_H_20220408

@@ -1,4 +1,4 @@
-#include "filelog_channel.h"
+#include "async_file_sink.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -15,9 +15,9 @@ namespace log {
 
 using namespace std;
 
-FilelogChannel::FilelogChannel()
+AsyncFileSink::AsyncFileSink()
 {
-    AsyncChannel::Config cfg;
+    AsyncSink::Config cfg;
     cfg.buff_size = 10240;
     cfg.buff_min_num = 2;
     cfg.buff_max_num = 20;
@@ -27,13 +27,13 @@ FilelogChannel::FilelogChannel()
     pid_ = ::getpid();
 }
 
-FilelogChannel::~FilelogChannel()
+AsyncFileSink::~AsyncFileSink()
 {
     if (pid_ != 0)
         cleanup();
 }
 
-void FilelogChannel::setFilePath(const std::string &file_path)
+void AsyncFileSink::setFilePath(const std::string &file_path)
 {
     file_path_ = util::string::Strip(file_path);
 
@@ -45,25 +45,25 @@ void FilelogChannel::setFilePath(const std::string &file_path)
     updateInnerValues();
 }
 
-void FilelogChannel::setFilePrefix(const std::string &file_prefix)
+void AsyncFileSink::setFilePrefix(const std::string &file_prefix)
 {
     file_prefix_ = util::string::Strip(file_prefix);
     updateInnerValues();
 }
 
-void FilelogChannel::setFileSyncEnable(bool enable)
+void AsyncFileSink::setFileSyncEnable(bool enable)
 {
     file_sync_enable_ = enable;
     CHECK_CLOSE_RESET_FD(fd_);
 }
 
-void FilelogChannel::cleanup()
+void AsyncFileSink::cleanup()
 {
-    AsyncChannel::cleanup();
+    AsyncSink::cleanup();
     pid_ = 0;
 }
 
-void FilelogChannel::updateInnerValues()
+void AsyncFileSink::updateInnerValues()
 {
     filename_prefix_ = file_path_ + '/' + file_prefix_ + '.';
     sym_filename_ = filename_prefix_ + "latest.log";
@@ -71,14 +71,14 @@ void FilelogChannel::updateInnerValues()
     CHECK_CLOSE_RESET_FD(fd_);
 }
 
-void FilelogChannel::appendLog(const char *str, size_t len)
+void AsyncFileSink::appendLog(const char *str, size_t len)
 {
     buffer_.reserve(buffer_.size() + len - 1);
     std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
     std::copy(str, str + len - 1, back_insert_iter);
 }
 
-void FilelogChannel::flushLog()
+void AsyncFileSink::flushLog()
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
@@ -97,7 +97,7 @@ void FilelogChannel::flushLog()
         CHECK_CLOSE_RESET_FD(fd_);
 }
 
-bool FilelogChannel::checkAndCreateLogFile()
+bool AsyncFileSink::checkAndCreateLogFile()
 {
     if (fd_ >= 0) {
         if (util::fs::IsFileExist(log_filename_))

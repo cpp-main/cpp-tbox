@@ -1,12 +1,12 @@
-#include "syslog_channel.h"
 #include <syslog.h>
+#include "async_syslog_sink.h"
 
 namespace tbox {
 namespace log {
 
-SyslogChannel::SyslogChannel()
+AsyncSyslogSink::AsyncSyslogSink()
 {
-    AsyncChannel::Config cfg;
+    AsyncSink::Config cfg;
     cfg.buff_size = 10240;
     cfg.buff_min_num = 2;
     cfg.buff_max_num = 20;
@@ -15,7 +15,7 @@ SyslogChannel::SyslogChannel()
     setConfig(cfg);
 }
 
-void SyslogChannel::appendLog(const char *str, size_t len)
+void AsyncSyslogSink::appendLog(const char *str, size_t len)
 {
     syslog(LOG_INFO, "%s", str);
 }

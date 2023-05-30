@@ -1,7 +1,7 @@
-#ifndef TBOX_LOG_ASYNC_CHANNEL_H_20220408
-#define TBOX_LOG_ASYNC_CHANNEL_H_20220408
+#ifndef TBOX_LOG_ASYNC_SINK_H_20220408
+#define TBOX_LOG_ASYNC_SINK_H_20220408
 
-#include "channel.h"
+#include "sink.h"
 
 #include <vector>
 #include <tbox/util/async_pipe.h>
@@ -9,7 +9,7 @@
 namespace tbox {
 namespace log {
 
-class AsyncChannel : public Channel {
+class AsyncSink : public Sink {
   public:
     using Config = util::AsyncPipe::Config;
 
@@ -41,4 +41,4 @@ class AsyncChannel : public Channel {
 }
 }
 
-#endif //TBOX_LOG_ASYNC_CHANNEL_H_20220408
+#endif //TBOX_LOG_ASYNC_SINK_H_20220408

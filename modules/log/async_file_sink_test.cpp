@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "filelog_channel.h"
+#include "async_file_sink.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -9,9 +9,9 @@ using namespace std;
 using namespace tbox;
 using namespace tbox::log;
 
-TEST(FilelogChannel, Format)
+TEST(AsyncFileSink, Format)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
 
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
@@ -23,9 +23,9 @@ TEST(FilelogChannel, Format)
     ch.cleanup();
 }
 
-TEST(FilelogChannel, LongString)
+TEST(AsyncFileSink, LongString)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
 
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
@@ -42,9 +42,9 @@ TEST(FilelogChannel, LongString)
     ch.cleanup();
 }
 
-TEST(FilelogChannel, FileDivide)
+TEST(AsyncFileSink, FileDivide)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
 
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
@@ -62,9 +62,9 @@ TEST(FilelogChannel, FileDivide)
 }
 
 //! 参数规范化
-TEST(FilelogChannel, ParamNormalize)
+TEST(AsyncFileSink, ParamNormalize)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
 
     ch.setFilePath("  /tmp/tbox ");
     ch.setFilePrefix(" test ");
@@ -73,9 +73,9 @@ TEST(FilelogChannel, ParamNormalize)
     ch.cleanup();
 }
 
-TEST(FilelogChannel, CreateFileInInit)
+TEST(AsyncFileSink, CreateFileInInit)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("create_file_init");
     ch.enable();
@@ -83,9 +83,9 @@ TEST(FilelogChannel, CreateFileInInit)
     ch.cleanup();
 }
 
-TEST(FilelogChannel, RemoveLogFileDuringWriting)
+TEST(AsyncFileSink, RemoveLogFileDuringWriting)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("remove_log_file_during_writing");
     ch.enable();
@@ -99,9 +99,9 @@ TEST(FilelogChannel, RemoveLogFileDuringWriting)
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(FilelogChannel, Benchmark)
+TEST(AsyncFileSink, Benchmark)
 {
-    FilelogChannel ch;
+    AsyncFileSink ch;
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("test");
     ch.enable();

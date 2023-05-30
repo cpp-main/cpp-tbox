@@ -1,5 +1,5 @@
-#ifndef TBOX_LOGOUTPUT_CHANNEL_H_20220406
-#define TBOX_LOGOUTPUT_CHANNEL_H_20220406
+#ifndef TBOX_LOG_SINK_H_20220406
+#define TBOX_LOG_SINK_H_20220406
 
 #include <map>
 #include <string>
@@ -13,10 +13,11 @@ namespace tbox {
 namespace log {
 
 //! 日志打印通道类
-class Channel {
+class Sink {
   public:
-    virtual ~Channel();
+    virtual ~Sink();
 
+    void setLevel(int level);
     void setLevel(const std::string &module, int level);
     void unsetLevel(const std::string &module);
 
@@ -50,4 +51,4 @@ class Channel {
 }
 }
 
-#endif //TBOX_LOGOUTPUT_CHANNEL_H_20220406
+#endif //TBOX_LOG_SINK_H_20220406

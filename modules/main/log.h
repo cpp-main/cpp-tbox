@@ -3,9 +3,9 @@
 
 #include <tbox/base/json_fwd.h>
 
-#include <tbox/log/stdout_channel.h>
-#include <tbox/log/syslog_channel.h>
-#include <tbox/log/filelog_channel.h>
+#include <tbox/log/async_stdout_sink.h>
+#include <tbox/log/async_syslog_sink.h>
+#include <tbox/log/async_file_sink.h>
 
 #include <tbox/terminal/terminal_nodes.h>
 
@@ -24,15 +24,15 @@ class Log {
     void cleanup();
 
   protected:
-    void initChannel(const Json &js, log::Channel &ch);
+    void initSink(const Json &js, log::Sink &ch);
     void initShell(terminal::TerminalNodes &term);
-    void initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node);
-    void initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::NodeToken dir_node);
+    void initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node);
+    void initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::NodeToken dir_node);
 
   private:
-    log::StdoutChannel stdout_;
-    log::SyslogChannel syslog_;
-    log::FilelogChannel filelog_;
+    log::AsyncStdoutSink async_stdout_sink_;
+    log::AsyncSyslogSink async_syslog_sink_;
+    log::AsyncFileSink   async_file_sink_;
 };
 
 }

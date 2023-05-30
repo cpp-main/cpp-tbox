@@ -1,17 +1,17 @@
-#ifndef TBOX_LOG_FILE_CHANNEL_H_20220412
-#define TBOX_LOG_FILE_CHANNEL_H_20220412
+#ifndef TBOX_LOG_ASYNC_FILE_SINK_H_20220412
+#define TBOX_LOG_ASYNC_FILE_SINK_H_20220412
 
-#include "async_channel.h"
+#include "async_sink.h"
 
 #include <vector>
 
 namespace tbox {
 namespace log {
 
-class FilelogChannel : public AsyncChannel {
+class AsyncFileSink : public AsyncSink {
   public:
-    FilelogChannel();
-    virtual ~FilelogChannel() override;
+    AsyncFileSink();
+    virtual ~AsyncFileSink() override;
 
   public:
     void cleanup();
@@ -50,4 +50,4 @@ class FilelogChannel : public AsyncChannel {
 }
 }
 
-#endif //TBOX_LOG_FILE_CHANNEL_H_20220412
+#endif //TBOX_LOG_ASYNC_FILE_SINK_H_20220412

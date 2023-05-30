@@ -1,14 +1,15 @@
-#include <gtest/gtest.h>
-#include "syslog_channel.h"
 #include <iostream>
 #include <chrono>
+#include <gtest/gtest.h>
+
+#include "async_stdout_sink.h"
 
 using namespace std;
 using namespace tbox::log;
 
-TEST(SyslogChannel, DefaultLevel)
+TEST(AsyncStdoutSink, DefaultLevel)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -25,9 +26,9 @@ TEST(SyslogChannel, DefaultLevel)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, TraceLevel)
+TEST(AsyncStdoutSink, TraceLevel)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     ch.setLevel(LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -45,9 +46,20 @@ TEST(SyslogChannel, TraceLevel)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, WillNotPrint)
+TEST(AsyncStdoutSink, NullString)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
+    ch.enable();
+
+    LogInfo(nullptr);
+    LogPuts(LOG_LEVEL_INFO, nullptr);
+
+    ch.cleanup();
+}
+
+TEST(AsyncStdoutSink, WillNotPrint)
+{
+    AsyncStdoutSink ch;
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -63,9 +75,31 @@ TEST(SyslogChannel, WillNotPrint)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, Format)
+TEST(AsyncStdoutSink, EnableColor)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
+    ch.enable();
+    ch.enableColor(true);
+    ch.setLevel(LOG_LEVEL_TRACE);
+    cout << "Should with color" << endl;
+
+    LogFatal("fatal");
+    LogErr("err");
+    LogWarn("warn");
+    LogNotice("notice");
+    LogInfo("info");
+    LogDbg("debug");
+    LogTrace("trace");
+    LogUndo();
+    LogTag();
+
+    ch.cleanup();
+}
+
+
+TEST(AsyncStdoutSink, Format)
+{
+    AsyncStdoutSink ch;
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -74,22 +108,21 @@ TEST(SyslogChannel, Format)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, LongString)
+TEST(AsyncStdoutSink, LongString)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
-
     ch.cleanup();
 }
 
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(SyslogChannel, Benchmark)
+TEST(AsyncStdoutSink, Benchmark)
 {
-    SyslogChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     std::string tmp(30, 'x');
 
@@ -112,4 +145,3 @@ TEST(SyslogChannel, Benchmark)
 
     cout << "count in sec: " << counter/10 << endl;
 }
-
