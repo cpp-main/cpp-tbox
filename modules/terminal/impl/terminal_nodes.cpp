@@ -1,7 +1,7 @@
 #include "terminal.h"
 
-#include <base/log.h>
-#include <util/string.h>
+#include <tbox/base/log.h>
+#include <tbox/util/string.h>
 
 #include "dir_node.h"
 #include "func_node.h"

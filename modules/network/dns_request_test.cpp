@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include "dns_request.h"
 #include <iostream>
-#include <base/scope_exit.hpp>
-#include <event/loop.h>
-#include <base/log_output.h>
+#include <tbox/base/scope_exit.hpp>
+#include <tbox/event/loop.h>
+#include <tbox/base/log_output.h>
 
 using namespace std;
 using namespace tbox;

@@ -1,11 +1,11 @@
 #include "to_graphviz.h"
 
 #include <sstream>
-#include <base/log.h>
-#include <base/json.hpp>
-#include <base/assert.h>
-#include <util/json.h>
-#include <util/string.h>
+#include <tbox/base/log.h>
+#include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
+#include <tbox/util/json.h>
+#include <tbox/util/string.h>
 
 #include "action.h"
 #include "state_machine.h"

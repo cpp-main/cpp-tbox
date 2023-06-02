@@ -1,11 +1,11 @@
 #include "log.h"
 #include <iostream>
 #include <sstream>
-#include <base/json.hpp>
-#include <base/catch_throw.h>
-#include <terminal/session.h>
-#include <util/fs.h>
-#include <util/json.h>
+#include <tbox/base/json.hpp>
+#include <tbox/base/catch_throw.h>
+#include <tbox/terminal/session.h>
+#include <tbox/util/fs.h>
+#include <tbox/util/json.h>
 
 namespace tbox {
 namespace main {

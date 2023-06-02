@@ -1,6 +1,6 @@
 #include "telnetd.h"
 #include "../impl/service/telnetd.h"
-#include <base/assert.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace terminal {

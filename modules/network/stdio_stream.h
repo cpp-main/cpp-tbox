@@ -4,8 +4,8 @@
 #ifndef TBOX_NETWORK_STDIO_STREAM_H_20171103
 #define TBOX_NETWORK_STDIO_STREAM_H_20171103
 
-#include <base/defines.h>
-#include <event/loop.h>
+#include <tbox/base/defines.h>
+#include <tbox/event/loop.h>
 
 #include "byte_stream.h"
 #include "buffered_fd.h"

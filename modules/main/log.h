@@ -1,13 +1,13 @@
 #ifndef TBOX_MAIN_LOG_H_20220414
 #define TBOX_MAIN_LOG_H_20220414
 
-#include <base/json_fwd.h>
+#include <tbox/base/json_fwd.h>
 
-#include <log/stdout_channel.h>
-#include <log/syslog_channel.h>
-#include <log/filelog_channel.h>
+#include <tbox/log/stdout_channel.h>
+#include <tbox/log/syslog_channel.h>
+#include <tbox/log/filelog_channel.h>
 
-#include <terminal/terminal_nodes.h>
+#include <tbox/terminal/terminal_nodes.h>
 
 #include "context.h"
 

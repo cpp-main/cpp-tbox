@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <base/cabinet_token.h>
+#include <tbox/base/cabinet_token.h>
 
 namespace tbox {
 namespace terminal {

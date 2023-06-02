@@ -1,8 +1,8 @@
 #ifndef TBOX_NETWORK_UART_H_20171104
 #define TBOX_NETWORK_UART_H_20171104
 
-#include <base/defines.h>
-#include <event/loop.h>
+#include <tbox/base/defines.h>
+#include <tbox/event/loop.h>
 
 #include "byte_stream.h"
 #include "buffered_fd.h"

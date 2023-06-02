@@ -7,9 +7,9 @@
 #include <functional>
 #include <map>
 
-#include <base/log.h>
-#include <base/scope_exit.hpp>
-#include <base/backtrace.h>
+#include <tbox/base/log.h>
+#include <tbox/base/scope_exit.hpp>
+#include <tbox/base/backtrace.h>
 
 #define TBOX_USE_SIGACTION
 

@@ -2,7 +2,7 @@
 #define TBOX_UTIL_JSON_H_20220908
 
 #include <stdexcept>
-#include <base/json_fwd.h>
+#include <tbox/base/json_fwd.h>
 
 namespace tbox {
 namespace util {

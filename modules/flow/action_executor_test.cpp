@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <event/loop.h>
-#include <event/timer_event.h>
-#include <base/scope_exit.hpp>
+#include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
+#include <tbox/base/scope_exit.hpp>
 
 #include "action_executor.h"
 #include "actions/function_action.h"

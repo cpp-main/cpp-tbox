@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "md5.h"
-#include <util/string.h>
+#include <tbox/util/string.h>
 
 namespace tbox {
 namespace crypto {

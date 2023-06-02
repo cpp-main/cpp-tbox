@@ -2,8 +2,8 @@
 #define TBOX_NETWORK_BUFFERED_FD_H_20171030
 
 #include <functional>
-#include <event/forward.h>
-#include <base/defines.h>
+#include <tbox/event/forward.h>
+#include <tbox/base/defines.h>
 
 #include "byte_stream.h"
 #include "fd.h"

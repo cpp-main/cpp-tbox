@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <util/fs.h>
+#include <tbox/util/fs.h>
 
 using namespace std;
 using namespace tbox;
@@ -97,7 +97,7 @@ TEST(FilelogChannel, RemoveLogFileDuringWriting)
     ch.cleanup();
 }
 
-#include <event/loop.h>
+#include <tbox/event/loop.h>
 using namespace tbox::event;
 
 TEST(FilelogChannel, Benchmark)

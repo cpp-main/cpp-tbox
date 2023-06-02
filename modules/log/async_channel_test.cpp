@@ -44,7 +44,7 @@ TEST(AsyncChannel, LongString)
     ch.cleanup();
 }
 
-#include <event/loop.h>
+#include <tbox/event/loop.h>
 using namespace tbox::event;
 
 TEST(AsyncChannel, Benchmark)

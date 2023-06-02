@@ -1,8 +1,8 @@
 #include <iostream>
 #include <gtest/gtest.h>
-#include <base/json.hpp>
-#include <event/loop.h>
-#include <base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
+#include <tbox/event/loop.h>
+#include <tbox/base/scope_exit.hpp>
 
 #include "to_graphviz.h"
 #include "actions/function_action.h"

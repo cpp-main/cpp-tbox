@@ -1,7 +1,7 @@
 #ifndef TBOX_TERMINAL_TELNETD_IMPL_H_20220214
 #define TBOX_TERMINAL_TELNETD_IMPL_H_20220214
 
-#include <network/tcp_server.h>
+#include <tbox/network/tcp_server.h>
 
 #include <map>
 

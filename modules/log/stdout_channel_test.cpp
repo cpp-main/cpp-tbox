@@ -116,7 +116,7 @@ TEST(StdoutChannel, LongString)
     ch.cleanup();
 }
 
-#include <event/loop.h>
+#include <tbox/event/loop.h>
 using namespace tbox::event;
 
 TEST(StdoutChannel, Benchmark)
