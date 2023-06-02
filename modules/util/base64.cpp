@@ -187,13 +187,11 @@ size_t Decode(const char *in, size_t inlen, void *out, size_t outlen)
     uint8_t *out_bytes = static_cast<uint8_t*>(out);
 
     for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
-        if (in[r_pos] == BASE64_PAD)
+        char in_c = in[r_pos];
+        if (in_c == BASE64_PAD)
             break;
 
-        if (in[r_pos] < 0)
-            return 0;
-
-        uint8_t c = base64de[(int)in[r_pos]];
+        uint8_t c = base64de[int(in_c)];
         if (c == 255)
             return 0;
 

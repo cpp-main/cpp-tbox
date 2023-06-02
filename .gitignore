@@ -7,3 +7,4 @@ lib*.so*
 /.staging
 /.install
 /.build
+/build

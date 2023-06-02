@@ -60,7 +60,3 @@ endif()
 
 install(FILES ${TBOX_BASE_HEADERS} DESTINATION include/tbox/base)
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
-
-
-
-

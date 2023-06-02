@@ -26,7 +26,7 @@ set(TBOX_COROUTINE_TEST_SOURCES
     semaphore_test.cpp
     mutex_test.cpp
     broadcast_test.cpp
-    condition_test.cpp )
+    condition_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_COROUTINE_SOURCES})
 

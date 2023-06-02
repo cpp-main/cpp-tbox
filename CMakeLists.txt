@@ -36,7 +36,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(TBOX_BUILD_LIB_TYPE SHARED)
+set(TBOX_BUILD_LIB_TYPE STATIC)
 
 message("*")
 message("* ${PROJECT_NAME} v${PROJECT_VERSION} (${CMAKE_BUILD_TYPE})")
@@ -52,12 +52,12 @@ option(TBOX_ENABLE_NETWORK "build network" ON)
 option(TBOX_ENABLE_TERMINAL "build terminal" ON)
 option(TBOX_ENABLE_MAIN "build main" ON)
 
-option(TBOX_ENABLE_COROUTINE "build coroutine" ON)
-option(TBOX_ENABLE_HTTP "build http" ON)
-option(TBOX_ENABLE_MQTT "build mqtt" ON)
-option(TBOX_ENABLE_FLOW "build flow" ON)
-option(TBOX_ENABLE_ALARM "build alarm" ON)
-option(TBOX_ENABLE_CRYPTO "build crypto" ON)
+option(TBOX_ENABLE_COROUTINE "build coroutine" OFF)
+option(TBOX_ENABLE_HTTP "build http" OFF)
+option(TBOX_ENABLE_MQTT "build mqtt" OFF)
+option(TBOX_ENABLE_FLOW "build flow" OFF)
+option(TBOX_ENABLE_ALARM "build alarm" OFF)
+option(TBOX_ENABLE_CRYPTO "build crypto" OFF)
 
 #
 # TESTS
