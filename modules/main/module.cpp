@@ -1,7 +1,7 @@
 #include "module.h"
 #include <algorithm>
-#include <tbox/base/log.h>
-#include <tbox/base/json.hpp>
+#include <base/log.h>
+#include <base/json.hpp>
 
 namespace tbox {
 namespace main {

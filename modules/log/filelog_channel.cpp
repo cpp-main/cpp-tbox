@@ -6,9 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <tbox/base/defines.h>
-#include <tbox/util/fs.h>
-#include <tbox/util/string.h>
+#include <base/defines.h>
+#include <util/fs.h>
+#include <util/string.h>
 
 namespace tbox {
 namespace log {

@@ -4,9 +4,9 @@
 
 #include "fd_event.h"
 #include "loop.h"
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/defines.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/defines.h>
 
 namespace tbox {
 namespace event {
@@ -143,6 +143,8 @@ void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
         for (EpollFdEvent *event : d->write_events)
             event->onEvent(kWriteEvent);
     }
+
+    (void)fd;
 }
 
 void EpollFdEvent::onEvent(short events)

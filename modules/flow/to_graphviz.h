@@ -1,7 +1,7 @@
 #ifndef TBOX_FLOW_TO_GRAPHVIZ_H_20230323
 #define TBOX_FLOW_TO_GRAPHVIZ_H_20230323
 
-#include <tbox/base/json_fwd.h>
+#include <base/json_fwd.h>
 
 namespace tbox {
 namespace flow {

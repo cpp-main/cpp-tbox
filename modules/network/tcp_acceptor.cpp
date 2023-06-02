@@ -5,8 +5,8 @@
 #include <errno.h>
 #include <cstring>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <base/log.h>
+#include <base/assert.h>
 
 #include "tcp_connection.h"
 
@@ -48,10 +48,10 @@ bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
         return false;
     }
 
-    sock_fd_ = sock_fd;
+    sock_fd_ = std::move(sock_fd);
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sp_read_ev_ = wp_loop_->newFdEvent("TcpAcceptor::sp_read_ev_");
-    sp_read_ev_->initialize(sock_fd.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
+    sp_read_ev_->initialize(sock_fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
     sp_read_ev_->setCallback(std::bind(&TcpAcceptor::onSocketRead, this, std::placeholders::_1));
 
     return true;

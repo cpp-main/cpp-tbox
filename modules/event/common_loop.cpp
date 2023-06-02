@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/defines.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/defines.h>
 
 #include "fd_event.h"
 #include "stat.h"

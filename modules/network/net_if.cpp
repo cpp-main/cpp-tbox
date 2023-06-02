@@ -6,7 +6,7 @@
 #include <cstring>
 #include <sstream>
 
-#include <tbox/base/log.h>
+#include <base/log.h>
 
 namespace tbox {
 namespace network {

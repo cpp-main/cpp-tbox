@@ -3,7 +3,7 @@
 #include <cassert>
 #include <thread>
 #include <string>
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 
 using namespace std;
 using namespace tbox;

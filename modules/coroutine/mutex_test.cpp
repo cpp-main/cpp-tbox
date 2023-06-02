@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "mutex.hpp"
-#include <tbox/base/scope_exit.hpp>
+#include <base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -73,6 +73,7 @@ TEST(Mutex, DuplicateLock)
         for (int i = 0; i < times; ++i) {
             mutex.lock();
             ++count;
+            (void)sch;
         }
     };
 
@@ -101,6 +102,7 @@ TEST(Mutex, InvalidUnlock)
     //! 第一个协程，直接对资源进行加锁，然后就退了
     auto routine1_entry = [&] (Scheduler &sch) {
         mutex.lock();
+        (void)sch;
     };
     //! 第二个协程，申请资源得不到，应该阻塞这里了
     auto routine2_entry = [&] (Scheduler &sch) {

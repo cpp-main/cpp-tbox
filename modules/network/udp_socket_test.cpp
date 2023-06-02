@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include "udp_socket.h"
 
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
+#include <base/scope_exit.hpp>
+#include <event/loop.h>
+#include <event/timer_event.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -45,6 +45,8 @@ TEST(UdpSocket, echo)
         [&recv_count](const void *data_ptr, size_t data_size, const SockAddr &from_addr) {
             ASSERT_STREQ((const char *)data_ptr, "123456789");
             ++recv_count;
+            (void)data_size;
+            (void)from_addr;
         }
     );
 
@@ -102,6 +104,7 @@ TEST(UdpSocket, echo_connect)
         [&recv_count](const void *data_ptr, size_t data_size, const SockAddr &) {
             ASSERT_STREQ((const char *)data_ptr, "123456789");
             ++recv_count;
+            (void)data_size;
         }
     );
 

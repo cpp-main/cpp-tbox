@@ -1,5 +1,5 @@
 #include "app.h"
-#include <tbox/base/log.h>
+#include <base/log.h>
 
 App::App(tbox::main::Context &ctx) :
   Module("app", ctx),

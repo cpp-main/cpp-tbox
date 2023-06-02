@@ -4,14 +4,14 @@
 #include <iomanip>
 #include <sys/time.h>
 
-#include <tbox/base/json.hpp>
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/version.h>
-#include <tbox/base/catch_throw.h>
-#include <tbox/util/string.h>
-#include <tbox/util/json.h>
-#include <tbox/terminal/session.h>
+#include <base/json.hpp>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/version.h>
+#include <base/catch_throw.h>
+#include <util/string.h>
+#include <util/json.h>
+#include <terminal/session.h>
 
 #include "main.h"
 
@@ -509,6 +509,7 @@ void ContextImp::initShell()
                     std::string txt = ss.str();
                     util::string::Replace(txt, "\n", "\r\n");
                     s.send(txt);
+                    (void)args;
                 }
             , "print Loop's stat data");
             wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
@@ -519,6 +520,7 @@ void ContextImp::initShell()
                     sp_loop_->resetStat();
                     ss << "done\r\n";
                     s.send(ss.str());
+                    (void)args;
                 }
             , "reset Loop's stat data");
             wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
@@ -528,6 +530,7 @@ void ContextImp::initShell()
                     [this] (const Session &s, const Args &args) {
                         s.send(ToString(running_time()));
                         s.send("\r\n");
+                        (void)args;
                     }
                 , "Print running times");
                 wp_nodes->mountNode(ctx_node, func_node, "running_time");
@@ -549,6 +552,7 @@ void ContextImp::initShell()
                     }
 
                     s.send(ss.str());
+                    (void)args;
                 }
             , "Print start time point");
             wp_nodes->mountNode(ctx_node, func_node, "start_time");
@@ -575,6 +579,7 @@ void ContextImp::initShell()
                     oss << "doing_task_num: " << snapshot.doing_task_num << "\r\n";
                     oss << "undo_task_peak_num: " << snapshot.undo_task_peak_num << "\r\n";
                     s.send(oss.str());
+                    (void)args;
                 }
             , "Print thread pool's snapshot");
             wp_nodes->mountNode(threadpool_node, func_node, "snapshot");
@@ -593,6 +598,7 @@ void ContextImp::initShell()
                     GetAppVersion(major, minor, rev, build);
                     ss << 'v' << major << '.' << minor << '.' << rev << '_' << build << "\r\n";
                     s.send(ss.str());
+                    (void)args;
                 }
             , "Print app version");
             wp_nodes->mountNode(info_node, func_node, "app_ver");
@@ -605,6 +611,7 @@ void ContextImp::initShell()
                     GetTboxVersion(major, minor, rev);
                     ss << 'v' << major << '.' << minor << '.' << rev << "\r\n";
                     s.send(ss.str());
+                    (void)args;
                 }
             , "Print tbox version");
             wp_nodes->mountNode(info_node, func_node, "tbox_ver");
@@ -615,6 +622,7 @@ void ContextImp::initShell()
                     std::stringstream ss;
                     ss << GetAppBuildTime() << "\r\n";
                     s.send(ss.str());
+                    (void)args;
                 }
             , "Print buildtime");
             wp_nodes->mountNode(info_node, func_node, "build_time");
@@ -625,6 +633,7 @@ void ContextImp::initShell()
                     std::stringstream ss;
                     ss << GetAppDescribe() << "\r\n";
                     s.send(ss.str());
+                    (void)args;
                 }
             , "Print app describe");
             wp_nodes->mountNode(info_node, func_node, "what");

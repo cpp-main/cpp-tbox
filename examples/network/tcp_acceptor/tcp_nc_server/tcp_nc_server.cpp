@@ -4,15 +4,15 @@
 
 #include <iostream>
 
-#include <tbox/network/tcp_acceptor.h>
-#include <tbox/network/tcp_connection.h>
-#include <tbox/network/stdio_stream.h>
+#include <network/tcp_acceptor.h>
+#include <network/tcp_connection.h>
+#include <network/stdio_stream.h>
 
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/fd_event.h>
-#include <tbox/event/signal_event.h>
+#include <base/log.h>
+#include <base/log_output.h>
+#include <base/scope_exit.hpp>
+#include <event/fd_event.h>
+#include <event/signal_event.h>
 
 #include <set>
 

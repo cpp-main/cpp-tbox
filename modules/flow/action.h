@@ -5,9 +5,9 @@
 #include <functional>
 #include <chrono>
 
-#include <tbox/base/defines.h>
-#include <tbox/base/json_fwd.h>
-#include <tbox/event/forward.h>
+#include <base/defines.h>
+#include <base/json_fwd.h>
+#include <event/forward.h>
 
 namespace tbox {
 namespace flow {
@@ -76,7 +76,7 @@ class Action {
     virtual bool onResume() { return true; }
     virtual bool onStop() { return true; }
     virtual void onReset() { }
-    virtual void onFinished(bool is_succ) { }
+    virtual void onFinished(bool is_succ) { (void)is_succ; }
     virtual void onTimeout() { finish(false); }
 
   protected:

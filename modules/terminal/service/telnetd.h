@@ -1,7 +1,7 @@
 #ifndef TBOX_TERMINAL_TELNETD_H_20220127
 #define TBOX_TERMINAL_TELNETD_H_20220127
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 
 namespace tbox {
 namespace terminal {

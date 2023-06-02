@@ -2,7 +2,7 @@
 #define TBOX_MAIN_MODULE_H_20220326
 
 #include <vector>
-#include <tbox/base/json_fwd.h>
+#include <base/json_fwd.h>
 #include "context.h"
 
 namespace tbox {
@@ -91,9 +91,9 @@ class Module {
     //! 下面的5个虚函数，可由使用者根据需要重写。如果没有操作，就不用重写
 
     //! 填充本模块的默认参数，可重写。注意：日志系统在该函数执行过程中尚不可用
-    virtual void onFillDefaultConfig(Json &js_this) { }
+    virtual void onFillDefaultConfig(Json &js_this) { (void)js_this; }
     //! 初始化本模块的操作，可重写
-    virtual bool onInit(const Json &js_this) { return true; }
+    virtual bool onInit(const Json &js_this) { (void)js_this; return true; }
     //! 启动本模块的操作，可重写
     virtual bool onStart() { return true; }
     //! 停止本模块的操作，可重写，对应onStart()的逆操作

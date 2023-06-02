@@ -1,9 +1,9 @@
 #include "app.h"
 
 #include <cassert>
-#include <tbox/base/log.h>
-#include <tbox/base/defines.h>
-#include <tbox/base/json.hpp>
+#include <base/log.h>
+#include <base/defines.h>
+#include <base/json.hpp>
 
 namespace echo_server {
 

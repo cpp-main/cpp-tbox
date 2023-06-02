@@ -1,10 +1,10 @@
 #ifndef TBOX_NETWORK_TCP_CONNECTOR_H_20180115
 #define TBOX_NETWORK_TCP_CONNECTOR_H_20180115
 
-#include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
-#include <tbox/event/fd_event.h>
-#include <tbox/event/timer_event.h>
+#include <base/defines.h>
+#include <event/loop.h>
+#include <event/fd_event.h>
+#include <event/timer_event.h>
 
 #include "sockaddr.h"
 #include "socket_fd.h"

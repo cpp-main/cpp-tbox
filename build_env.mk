@@ -10,6 +10,7 @@ export INSTALL_LIB := $(INSTALL_DIR)/lib
 export BUILD_DIR := $(TOP_DIR)/.build
 
 CCFLAGS := -I$(STAGING_INCLUDE)
+CCFLAGS += -I$(STAGING_INCLUDE)/tbox
 
 export CFLAGS := $(CCFLAGS) -std=c99
 export CXXFLAGS := $(CCFLAGS) -std=c++11

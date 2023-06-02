@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <tbox/base/defines.h>
+#include <base/defines.h>
 #include "argument_parser.h"
 
 using namespace tbox::util;
@@ -10,6 +10,9 @@ TEST(ArgumentParser, Fail)
     const char* argv[] = {"test_fail", "-x"};
     ArgumentParser parser(
         [&](char short_opt, const std::string &long_opt, ArgumentParser::OptionValue& opt_value) {
+            (void)short_opt;
+            (void)long_opt;
+            (void)opt_value;
             return false;
         }
     );
@@ -52,6 +55,7 @@ TEST(ArgumentParser, LongOptionKeyAndValueWithQuot)
                 EXPECT_EQ(opt_value.get(), "Shenzhen China");
                 has_address = true;
             }
+            (void)short_opt;
             return true;
         }
     );

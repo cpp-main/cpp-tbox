@@ -4,8 +4,8 @@
 #include <limits>
 #include <functional>
 #include <array>
-#include <tbox/event/forward.h>
-#include <tbox/base/cabinet_token.h>
+#include <event/forward.h>
+#include <base/cabinet_token.h>
 
 namespace tbox {
 namespace eventx {
@@ -43,7 +43,7 @@ class ThreadPool {
      *
      * \return bool     是否成功
      */
-    bool initialize(size_t min_thread_num = 0, size_t max_thread_num = std::numeric_limits<size_t>::max());
+    bool initialize(ssize_t min_thread_num = 0, ssize_t max_thread_num = std::numeric_limits<ssize_t>::max());
 
     using NonReturnFunc = std::function<void ()>;
 

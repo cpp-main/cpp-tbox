@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <thread>
 #include "loop_wdog.h"
-#include <tbox/base/scope_exit.hpp>
-//#include <tbox/base/log_output.h>
-//#include <tbox/base/log.h>
+#include <base/scope_exit.hpp>
+//#include <base/log_output.h>
+//#include <base/log.h>
 
 namespace tbox {
 namespace eventx {
@@ -21,7 +21,7 @@ TEST(LoopWDog, Normal)
 
   int die_cb_count = 0;
   LoopWDog::SetLoopBlockCallback(
-    [&](const std::string &name) { ++die_cb_count; }
+    [&](const std::string &name) { ++die_cb_count; (void)name; }
   );
 
   sp_loop->exitLoop(std::chrono::seconds(6));

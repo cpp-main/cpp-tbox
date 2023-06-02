@@ -1,7 +1,7 @@
 #ifndef TBOX_EVENT_TIMER_EVENT_IMPL_H_20200110
 #define TBOX_EVENT_TIMER_EVENT_IMPL_H_20200110
 
-#include <tbox/base/cabinet_token.h>
+#include <base/cabinet_token.h>
 #include "timer_event.h"
 
 namespace tbox {

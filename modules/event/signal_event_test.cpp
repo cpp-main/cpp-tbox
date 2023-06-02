@@ -3,8 +3,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
+#include <base/log.h>
+#include <base/log_output.h>
 
 #include "loop.h"
 #include "signal_event.h"
@@ -19,8 +19,8 @@ namespace {
 int _test_signal_count = 0;
 int _test_sigaction_count = 0;
 
-void TestSignalHander(int signo) { ++_test_signal_count; }
-void TestSignalAction(int signo, siginfo_t *siginfo, void *context) { ++_test_sigaction_count; }
+void TestSignalHander(int signo) { ++_test_signal_count; (void)signo; }
+void TestSignalAction(int signo, siginfo_t *siginfo, void *context) { ++_test_sigaction_count; (void)signo; (void)siginfo; (void)context; }
 }
 
 //! 注意单次信号事件，触发信号两次，期望只回调一次

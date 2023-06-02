@@ -10,12 +10,12 @@
 #include <condition_variable>
 #include <chrono>
 
-#include <tbox/base/log.h>
-#include <tbox/base/cabinet.hpp>
-#include <tbox/base/assert.h>
-#include <tbox/base/catch_throw.h>
-#include <tbox/base/object_pool.hpp>
-#include <tbox/event/loop.h>
+#include <base/log.h>
+#include <base/cabinet.hpp>
+#include <base/assert.h>
+#include <base/catch_throw.h>
+#include <base/object_pool.hpp>
+#include <event/loop.h>
 
 namespace tbox {
 namespace eventx {
@@ -75,7 +75,7 @@ ThreadPool::~ThreadPool()
     delete d_;
 }
 
-bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
+bool ThreadPool::initialize(ssize_t min_thread_num, ssize_t max_thread_num)
 {
     if (d_->is_ready) {
         LogWarn("it has ready, cleanup() first");
@@ -83,7 +83,8 @@ bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
     }
 
     if (max_thread_num < 0 || min_thread_num < 0 ||
-        min_thread_num > max_thread_num || max_thread_num == 0) {
+            min_thread_num > max_thread_num || max_thread_num == 0) {
+
         LogWarn("min_thread_num or max_thread_num invalid, min:%d, max:%d", min_thread_num, max_thread_num);
         return false;
     }
@@ -93,7 +94,7 @@ bool ThreadPool::initialize(size_t min_thread_num, size_t max_thread_num)
         d_->min_thread_num = min_thread_num;
         d_->max_thread_num = max_thread_num;
 
-        for (size_t i = 0; i < min_thread_num; ++i)
+        for (ssize_t i = 0; i < min_thread_num; ++i)
             if (!createWorker())
                 return false;
     }

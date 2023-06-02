@@ -1,7 +1,7 @@
 #include "loop_if_action.h"
 
-#include <tbox/base/json.hpp>
-#include <tbox/base/assert.h>
+#include <base/json.hpp>
+#include <base/assert.h>
 
 namespace tbox {
 namespace flow {

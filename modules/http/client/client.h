@@ -1,8 +1,8 @@
 #ifndef TBOX_HTTP_CLIENT_H_20220504
 #define TBOX_HTTP_CLIENT_H_20220504
 
-#include <tbox/event/loop.h>
-#include <tbox/network/sockaddr.h>
+#include <event/loop.h>
+#include <network/sockaddr.h>
 
 #include "../request.h"
 #include "../respond.h"

@@ -1,10 +1,10 @@
 #include "timer_pool.h"
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/cabinet.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/cabinet.hpp>
+#include <event/loop.h>
+#include <event/timer_event.h>
 
 namespace tbox {
 namespace eventx {

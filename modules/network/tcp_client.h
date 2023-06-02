@@ -9,8 +9,8 @@
 #include "byte_stream.h"
 #include "sockaddr.h"
 
-#include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
+#include <base/defines.h>
+#include <event/loop.h>
 
 namespace tbox {
 namespace network {

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <tbox/util/fs.h>
+#include <util/fs.h>
 
 using namespace std;
 using namespace tbox;
@@ -79,7 +79,8 @@ TEST(FilelogChannel, CreateFileInInit)
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("create_file_init");
     ch.enable();
-    EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
+    std::string name = ch.currentFilename();
+    EXPECT_TRUE(util::fs::IsFileExist(name));
     ch.cleanup();
 }
 
@@ -96,7 +97,7 @@ TEST(FilelogChannel, RemoveLogFileDuringWriting)
     ch.cleanup();
 }
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 using namespace tbox::event;
 
 TEST(FilelogChannel, Benchmark)

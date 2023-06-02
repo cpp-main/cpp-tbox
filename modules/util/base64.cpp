@@ -1,7 +1,7 @@
 #include "base64.h"
 
 #include <cstring>
-#include <tbox/base/assert.h>
+#include <base/assert.h>
 
 namespace tbox {
 namespace util {

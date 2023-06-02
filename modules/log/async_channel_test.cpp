@@ -11,12 +11,13 @@ class TestAsyncChannel : public AsyncChannel {
   protected:
     virtual void appendLog(const char *str, size_t len) {
         cout << str << endl;
+        (void)len;
     }
 };
 
 class EmptyTestAsyncChannel : public AsyncChannel {
   protected:
-    virtual void appendLog(const char *str, size_t len) { }
+    virtual void appendLog(const char *str, size_t len) { (void)str; (void)len; }
 };
 
 
@@ -43,7 +44,7 @@ TEST(AsyncChannel, LongString)
     ch.cleanup();
 }
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 using namespace tbox::event;
 
 TEST(AsyncChannel, Benchmark)

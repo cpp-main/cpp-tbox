@@ -3,10 +3,10 @@
 
 #include <chrono>
 
-#include <tbox/event/loop.h>
-#include <tbox/eventx/thread_pool.h>
-#include <tbox/eventx/timer_pool.h>
-#include <tbox/terminal/terminal_nodes.h>
+#include <event/loop.h>
+#include <eventx/thread_pool.h>
+#include <eventx/timer_pool.h>
+#include <terminal/terminal_nodes.h>
 
 namespace tbox {
 namespace main {

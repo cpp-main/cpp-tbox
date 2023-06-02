@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/json.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/signal_event.h>
-#include <tbox/eventx/loop_wdog.h>
-#include <tbox/util/pid_file.h>
+#include <base/log.h>
+#include <base/scope_exit.hpp>
+#include <base/json.hpp>
+#include <event/loop.h>
+#include <event/signal_event.h>
+#include <eventx/loop_wdog.h>
+#include <util/pid_file.h>
 
 #include "module.h"
 #include "context_imp.h"

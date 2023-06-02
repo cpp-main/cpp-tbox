@@ -1,7 +1,7 @@
 #include "request_parser.h"
 #include <limits>
-#include <tbox/base/defines.h>
-#include <tbox/util/string.h>
+#include <base/defines.h>
+#include <util/string.h>
 
 namespace tbox {
 namespace http {

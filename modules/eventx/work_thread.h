@@ -4,8 +4,8 @@
 #include <limits>
 #include <functional>
 #include <array>
-#include <tbox/event/forward.h>
-#include <tbox/base/cabinet_token.h>
+#include <event/forward.h>
+#include <base/cabinet_token.h>
 
 namespace tbox {
 namespace eventx {

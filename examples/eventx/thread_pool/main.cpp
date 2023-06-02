@@ -2,10 +2,10 @@
 #include <thread>   //! 引用std::this_thread::sleep_for
 #include <memory>   //! 引入智能指针
 
-#include <tbox/event/loop.h>
-#include <tbox/eventx/thread_pool.h>
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
+#include <event/loop.h>
+#include <eventx/thread_pool.h>
+#include <base/log.h>
+#include <base/log_output.h>
 
 using namespace std;
 

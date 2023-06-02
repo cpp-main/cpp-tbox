@@ -2,9 +2,9 @@
 #define TBOX_NETWORK_TCP_ACCEPTOR_20180114
 
 #include <functional>
-#include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
-#include <tbox/event/fd_event.h>
+#include <base/defines.h>
+#include <event/loop.h>
+#include <event/fd_event.h>
 
 #include "sockaddr.h"
 #include "socket_fd.h"

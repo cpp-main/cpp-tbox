@@ -4,9 +4,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <tbox/base/defines.h>
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <base/defines.h>
+#include <base/log.h>
+#include <base/assert.h>
 
 namespace tbox {
 namespace network {

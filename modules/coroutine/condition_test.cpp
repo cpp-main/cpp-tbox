@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "condition.hpp"
 #include "broadcast.hpp"
-#include <tbox/base/scope_exit.hpp>
+#include <base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -35,6 +35,7 @@ TEST(Condition, WaitAll)
         cond.wait();    //! 再次等 post_entry 对应的协程执行完
 
         EXPECT_EQ(number, 4);
+        (void)sch;
     };
 
     auto post_entry = [&] (Scheduler &sch) {
@@ -73,6 +74,7 @@ TEST(Condition, WaitAll_NotMeet)
         cond.add("post2");
         cond.wait();
         wait_done = true;
+        (void)sch;
     };
 
     auto post_entry = [&] (Scheduler &sch) {
@@ -103,6 +105,7 @@ TEST(Condition, WaitAny)
         cond.add("post2");
         cond.wait();    //! 要等 post_entry 对应的协程执行完才能执行
         EXPECT_TRUE(post_run);
+        (void)sch;
     };
 
     auto post_entry = [&] (Scheduler &sch) {

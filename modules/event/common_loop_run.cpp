@@ -2,8 +2,8 @@
 
 #include <unistd.h>
 #include <inttypes.h>
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <base/log.h>
+#include <base/assert.h>
 
 namespace tbox {
 namespace event {

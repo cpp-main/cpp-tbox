@@ -1,6 +1,6 @@
 #include "argument_parser.h"
 
-#include <tbox/base/assert.h>
+#include <base/assert.h>
 #include "string.h"
 
 namespace tbox {

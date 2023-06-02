@@ -2,11 +2,11 @@
 #include <signal.h>
 #include <iostream>
 #include <string>
-#include <tbox/event/loop.h>
-#include <tbox/event/fd_event.h>
-#include <tbox/event/timer_event.h>
-#include <tbox/event/signal_event.h>
-#include <tbox/event/stat.h>
+#include <event/loop.h>
+#include <event/fd_event.h>
+#include <event/timer_event.h>
+#include <event/signal_event.h>
+#include <event/stat.h>
 
 using namespace std;
 using namespace tbox;

@@ -2,9 +2,9 @@
 
 #include <limits>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/cabinet.hpp>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/cabinet.hpp>
 
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"

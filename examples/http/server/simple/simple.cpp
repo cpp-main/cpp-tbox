@@ -1,8 +1,8 @@
-#include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/log/stdout_channel.h>
-#include <tbox/event/signal_event.h>
-#include <tbox/http/server/server.h>
+#include <base/log.h>
+#include <base/scope_exit.hpp>
+#include <log/stdout_channel.h>
+#include <event/signal_event.h>
+#include <http/server/server.h>
 
 using namespace tbox;
 using namespace tbox::event;

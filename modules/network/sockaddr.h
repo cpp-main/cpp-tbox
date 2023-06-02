@@ -6,7 +6,7 @@
 #include <cstring>
 #include <string>
 
-#include <tbox/base/assert.h>
+#include <base/assert.h>
 #include "ip_address.h"
 
 namespace tbox {

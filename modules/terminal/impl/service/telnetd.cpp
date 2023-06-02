@@ -3,9 +3,9 @@
 #include <iostream>
 #include <algorithm>
 
-#include <tbox/util/string.h>
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <util/string.h>
+#include <base/log.h>
+#include <base/assert.h>
 
 #include "../../terminal_interact.h"
 

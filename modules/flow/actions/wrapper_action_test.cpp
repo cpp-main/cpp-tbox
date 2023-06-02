@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <tbox/event/loop.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
+#include <event/loop.h>
+#include <base/scope_exit.hpp>
+#include <base/log.h>
+#include <base/log_output.h>
 
 #include "wrapper_action.h"
 #include "succ_fail_action.h"

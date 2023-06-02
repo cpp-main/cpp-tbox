@@ -1,7 +1,7 @@
 /**
  * 本示例对 ObjectPool 与 new,delete 的时间耗时进行了统计，然后打印出两者平均耗时
  */
-#include <tbox/base/object_pool.hpp>
+#include <base/object_pool.hpp>
 #include <chrono>
 #include <iostream>
 

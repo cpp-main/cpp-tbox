@@ -1,7 +1,7 @@
 #include "action_executor.h"
 
 #include <algorithm>
-#include <tbox/base/assert.h>
+#include <base/assert.h>
 #include "action.h"
 
 namespace tbox {

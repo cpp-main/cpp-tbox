@@ -1,8 +1,8 @@
 #include <cstring>
 #include <utility>
 
-#include <tbox/base/assert.h>
-#include <tbox/base/defines.h>
+#include <base/assert.h>
+#include <base/defines.h>
 
 #include "buffer.h"
 

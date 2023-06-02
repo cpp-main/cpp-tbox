@@ -2,11 +2,11 @@
 
 #include <thread>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/lifetime_tag.hpp>
-#include <tbox/event/timer_event.h>
-#include <tbox/event/fd_event.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <base/lifetime_tag.hpp>
+#include <event/timer_event.h>
+#include <event/fd_event.h>
 
 #include <mosquitto.h>
 
@@ -489,6 +489,7 @@ void Client::onDisconnected(int rc)
         }
         d_->state = State::kConnecting;
     }
+    (void)rc;
 }
 
 void Client::onPublish(int mid)

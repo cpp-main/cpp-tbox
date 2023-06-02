@@ -279,8 +279,9 @@ TEST(FdEvent, Benchmark)
             [&] (short events) {
                 char dummy = 0;
                 auto wsize = ::write(write_fd, &dummy, 1);
-                (void)wsize;
                 ++run_time;
+                (void)wsize;
+                (void)events;
             }
         );
 

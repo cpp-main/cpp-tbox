@@ -5,10 +5,10 @@
 #include <map>
 #include <memory>
 
-#include <tbox/base/assert.h>
-#include <tbox/util/serializer.h>
-#include <tbox/util/string.h>
-#include <tbox/util/fs.h>
+#include <base/assert.h>
+#include <util/serializer.h>
+#include <util/string.h>
+#include <util/fs.h>
 
 namespace tbox {
 namespace network {
@@ -274,6 +274,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
         req->cb(result);
 
     deleteRequest(req_id);
+    (void)from;
 }
 
 void DnsRequest::onRequestTimeout(ReqId req_id)

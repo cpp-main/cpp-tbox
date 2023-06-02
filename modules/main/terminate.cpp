@@ -3,8 +3,8 @@
 
 #include <functional>
 #include <exception>
-#include <tbox/base/log.h>
-#include <tbox/base/backtrace.h>
+#include <base/log.h>
+#include <base/backtrace.h>
 
 int main(int argc, char **argv);
 

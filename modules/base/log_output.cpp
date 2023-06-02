@@ -88,5 +88,7 @@ extern "C" {
             return;
 
         _PrintLogToStdout(content);
+
+        (void)ptr;
     }
 }

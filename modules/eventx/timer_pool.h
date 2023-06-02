@@ -5,10 +5,10 @@
 #include <functional>
 #include <chrono>
 
-#include <tbox/base/cabinet_token.h>
-#include <tbox/base/defines.h>
+#include <base/cabinet_token.h>
+#include <base/defines.h>
 
-#include <tbox/event/forward.h>
+#include <event/forward.h>
 
 namespace tbox {
 namespace eventx {

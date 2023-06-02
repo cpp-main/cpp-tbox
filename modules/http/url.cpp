@@ -1,6 +1,6 @@
 #include "url.h"
 #include <sstream>
-#include <tbox/util/string.h>
+#include <util/string.h>
 
 namespace tbox {
 namespace http {
@@ -31,9 +31,9 @@ std::string UrlEncode(const std::string &local_str, bool path_mode)
     std::string url_str;
     url_str.reserve(local_str.size() * 5 / 4); //! 预留1.25倍的空间
 
-    for (char c : local_str) {
+    for (const char c : local_str) {
         //! 如果非ASCII或是特殊字符
-        if (c >= 128 || special_chars.find(c) != std::string::npos) {
+        if (special_chars.find(c) != std::string::npos) {
             url_str.push_back('%');
             url_str.push_back(char_to_hex[c >> 4]);
             url_str.push_back(char_to_hex[c & 0xf]);

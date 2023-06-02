@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <tbox/base/json.hpp>
+#include <base/json.hpp>
 #include "state_machine.h"
 
 using namespace std;
@@ -493,6 +493,8 @@ TEST(StateMachine, EventExtra)
             ++count;
             EXPECT_EQ(e.id, 10);
             EXPECT_EQ(e.extra, &extra_data);
+            (void)f;
+            (void)t;
         }
     );
 
@@ -571,7 +573,7 @@ TEST(StateMachine, SwitchStateInEvent) {
         }
     );
     sm.addEvent(STATE_B, EVENT_1,
-        [](Event e) -> SM::StateID { return STATE_A; }
+        [](Event e) -> SM::StateID { return STATE_A; (void)e; }
     );
     sm.start();
 

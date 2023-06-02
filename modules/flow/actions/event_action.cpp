@@ -39,6 +39,7 @@ void EventAction::onReset() {
 
 void EventAction::onFinished(bool succ) {
   pub_.unsubscribe(this);
+  (void)succ;
 }
 
 }

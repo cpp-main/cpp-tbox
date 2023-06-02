@@ -1,6 +1,6 @@
 #include <thread>
-#include <tbox/main/main.h>
-#include <tbox/terminal/session.h>
+#include <main/main.h>
+#include <terminal/session.h>
 
 namespace tbox {
 namespace main {

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "timer_pool.h"
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
-#include <tbox/base/scope_exit.hpp>
+#include <event/loop.h>
+#include <event/timer_event.h>
+#include <base/scope_exit.hpp>
 
 using namespace std;
 using namespace std::chrono;

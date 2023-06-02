@@ -1,10 +1,10 @@
 #include "buffered_fd.h"
 
 #include <cstring>
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/event/loop.h>
-#include <tbox/event/fd_event.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <event/loop.h>
+#include <event/fd_event.h>
 
 namespace tbox {
 namespace network {

@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.15)
+
+set(TBOX_MQTT_VERSION_MAJOR 0)
+set(TBOX_MQTT_VERSION_MINOR 0)
+set(TBOX_MQTT_VERSION_PATCH 1)
+set(TBOX_MQTT_VERSION ${TBOX_MQTT_VERSION_MAJOR}.${TBOX_MQTT_VERSION_MINOR}.${TBOX_MQTT_VERSION_PATCH})
+
+project(tbox_mqtt)
+
+add_definitions(-DLOG_MODULE_ID="tbox.mqtt")
+
+set(TBOX_MQTT_HEADERS client.h)
+set(TBOX_MQTT_SOURCES client.cpp)
+
+add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_MQTT_SOURCES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+                        VERSION ${TBOX_MQTT_VERSION}
+                      SOVERSION ${TBOX_MQTT_VERSION_MAJOR})
+
+install(FILES ${TBOX_MQTT_HEADERS} DESTINATION include/tbox/mqtt)
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)

@@ -1,4 +1,4 @@
-#include <tbox/main/main.h>
+#include <main/main.h>
 
 #include "echo_server/app.h"
 #include "nc_client/app.h"

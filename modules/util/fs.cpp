@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
+#include <base/log.h>
+#include <base/scope_exit.hpp>
 
 namespace tbox {
 namespace util {
@@ -208,6 +208,7 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
 bool RemoveDirectory(const std::string &dir)
 {
     LogUndo();
+    (void)dir;
     return false;
 }
 

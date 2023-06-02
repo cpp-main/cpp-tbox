@@ -9,9 +9,9 @@
  * 在程序启动时，由 ping 首先发送第一个字节。
  */
 #include <iostream>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/network/udp_socket.h>
+#include <base/scope_exit.hpp>
+#include <event/loop.h>
+#include <network/udp_socket.h>
 
 using namespace std;
 using namespace tbox::event;

@@ -4,8 +4,8 @@
 #ifndef TBOX_NETWORK_STDIO_STREAM_H_20171103
 #define TBOX_NETWORK_STDIO_STREAM_H_20171103
 
-#include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
+#include <base/defines.h>
+#include <event/loop.h>
 
 #include "byte_stream.h"
 #include "buffered_fd.h"
@@ -22,7 +22,7 @@ class StdinStream : public ByteStream {
 
   public:
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
-    virtual bool send(const void *data_ptr, size_t data_size) override { return false; }
+    virtual bool send(const void *data_ptr, size_t data_size) override { return false; (void)data_ptr; (void)data_size; }
     virtual void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
     virtual void unbind() override { buff_fd_.unbind(); }
 
@@ -41,9 +41,9 @@ class StdoutStream : public ByteStream {
     IMMOVABLE(StdoutStream);
 
   public:
-    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override { }
+    virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override { (void)cb; (void)threshold; }
     virtual bool send(const void *data_ptr, size_t data_size) override;
-    virtual void bind(ByteStream *receiver) override { }
+    virtual void bind(ByteStream *receiver) override { (void)receiver; }
     virtual void unbind() override { }
 
     bool enable();

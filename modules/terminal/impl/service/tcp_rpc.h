@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include <tbox/network/tcp_server.h>
+#include <network/tcp_server.h>
 
 #include "../../connection.h"
 #include "../../service/tcp_rpc.h"

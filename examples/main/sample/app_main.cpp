@@ -1,4 +1,4 @@
-#include <tbox/main/main.h>
+#include <main/main.h>
 
 #include "app1/app.h"
 #include "app2/app.h"

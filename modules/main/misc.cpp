@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <tbox/base/log.h>
-#include <tbox/base/version.h>
+#include <base/log.h>
+#include <base/version.h>
 
 #include "module.h"
 #include "context.h"
@@ -24,7 +24,7 @@ __attribute__((weak))
 void RegisterApps(Module &apps, Context &ctx)
 {
     const char *src_text = R"(
-#include <tbox/main/main.h>
+#include <main/main.h>
 #include "your_app.h"
 
 namespace tbox {
@@ -38,6 +38,9 @@ void RegisterApps(Module &apps, Context &ctx)
 )";
     std::cerr << "WARN: You should implement tbox::main::RegisterApps().\nExp:" << std::endl
          << src_text << std::endl;
+
+    (void)apps;
+    (void)ctx;
 }
 
 __attribute__((weak))

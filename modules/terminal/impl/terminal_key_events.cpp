@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include <tbox/base/log.h>
+#include <base/log.h>
 
 #include "session_context.h"
 #include "dir_node.h"
@@ -100,6 +100,7 @@ void Terminal::Impl::onTabKey(SessionContext *s)
 {
     //!TODO: 实现补全功能
     LogUndo();
+    (void)s;
 }
 
 namespace {

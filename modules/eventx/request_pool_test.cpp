@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "request_pool.hpp"
-#include <tbox/base/scope_exit.hpp>
+#include <base/scope_exit.hpp>
 
 namespace tbox {
 namespace eventx {
@@ -46,7 +46,7 @@ TEST(RequestPool, NotTimeout)
 
     auto token = rp.newRequest(new int(123));
     bool run = false;
-    rp.setTimeoutAction([&] (int *p) { run = true; });
+    rp.setTimeoutAction([&] (int *p) { run = true; (void)p; });
 
     auto req = rp.removeRequest(token);
     EXPECT_TRUE(req != nullptr);
@@ -69,7 +69,7 @@ TEST(RequestPool, NotTimeout_2)
 
     auto token = rp.newRequest(new int(123));
     bool run = false;
-    rp.setTimeoutAction([&] (int *p) { run = true; });
+    rp.setTimeoutAction([&] (int *p) { run = true; (void)p; });
 
     sp_loop->runInLoop([&] {
         auto req = rp.removeRequest(token);
@@ -97,7 +97,7 @@ TEST(RequestPool, Lost)
         rp.newRequest(new int(123));
 
     int count = 0;
-    rp.setTimeoutAction([&] (int *p) { ++count; });
+    rp.setTimeoutAction([&] (int *p) { ++count; (void)p; });
 
     sp_loop->exitLoop(milliseconds(1200));
     sp_loop->runLoop();

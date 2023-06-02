@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <tbox/event/loop.h>
-#include <tbox/base/scope_exit.hpp>
+#include <event/loop.h>
+#include <base/scope_exit.hpp>
 
 #include "if_else_action.h"
 #include "function_action.h"

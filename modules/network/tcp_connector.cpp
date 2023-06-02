@@ -2,8 +2,8 @@
 
 #include <sys/un.h>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <base/log.h>
+#include <base/assert.h>
 
 #include "tcp_connection.h"
 
@@ -150,7 +150,7 @@ void TcpConnector::enterConnectingState()
     if ((conn_errno == 0) || (conn_errno == EINPROGRESS)
         || (conn_errno == EINTR) || (conn_errno == EISCONN)) {
         //! 正常情况
-        sock_fd_ = new_sock_fd;
+        sock_fd_ = std::move(new_sock_fd);
 
         CHECK_DELETE_RESET_OBJ(sp_write_ev_);
         sp_write_ev_ = wp_loop_->newFdEvent("TcpConnector::sp_write_ev_");

@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <sstream>
 
-#include <tbox/base/log.h>
-#include <tbox/util/split_cmdline.h>
-#include <tbox/util/string.h>
+#include <base/log.h>
+#include <util/split_cmdline.h>
+#include <util/string.h>
 
 #include "session_context.h"
 #include "dir_node.h"
@@ -160,6 +160,7 @@ void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
         ss << setw(2) << i << "  " << cmd << "\r\n";
     }
     s->wp_conn->send(s->token, ss.str());
+    (void)args;
 }
 
 void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
@@ -167,6 +168,7 @@ void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
     if (!(s->options & kQuietMode))
         s->wp_conn->send(s->token, "Bye!\r\n");
     s->wp_conn->endSession(s->token);
+    (void)args;
 }
 
 void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
@@ -286,6 +288,7 @@ void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &args)
     }
     ss << "\r\n";
     s->wp_conn->send(s->token, ss.str());
+    (void)args;
 }
 
 bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 
 #ifdef USE_LITE
     #include "game_lite.h"

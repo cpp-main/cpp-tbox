@@ -1,7 +1,7 @@
 #include "composite_action.h"
-#include <tbox/base/defines.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/json.hpp>
+#include <base/defines.h>
+#include <base/assert.h>
+#include <base/json.hpp>
 
 namespace tbox {
 namespace flow {

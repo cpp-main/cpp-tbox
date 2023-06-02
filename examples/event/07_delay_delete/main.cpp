@@ -1,6 +1,6 @@
 #include <iostream>
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
+#include <event/loop.h>
+#include <event/timer_event.h>
 
 using namespace std;
 using namespace tbox::event;

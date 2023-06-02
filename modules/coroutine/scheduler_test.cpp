@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "scheduler.h"
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
-#include <tbox/base/scope_exit.hpp>
+#include <event/loop.h>
+#include <event/timer_event.h>
+#include <base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -19,6 +19,7 @@ TEST(Scheduler, CreateTwoRoutineThenStop)
         Scheduler sch(sp_loop);
         auto entry = [&exec_count] (Scheduler &sch) {
             ++exec_count;
+            (void)sch;
         };
         sch.create(entry, false, "test1");
         sch.create(entry, false, "test2");
@@ -40,6 +41,7 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
         Scheduler sch(sp_loop);
         auto entry = [&exec_count] (Scheduler &sch) {
             ++exec_count;
+            (void)sch;
         };
         sch.create(entry, true, "test1");
         sch.create(entry, false, "test2");
@@ -87,6 +89,7 @@ TEST(Scheduler, RoutineCreateAnotherRoutine)
     bool routine1_run = false;
     auto routine1_entry = [&] (Scheduler &sch) {
         routine1_run = true;
+        (void)sch;
     };
 
     bool routine2_end = false;
@@ -267,16 +270,19 @@ TEST(Scheduler, OneLoopTwoSchedule)
     sch1.create(
         [&](Scheduler &sch) {
             sch1_routine1_run = true;
+            (void)sch;
         }
     );
     sch1.create(
         [&](Scheduler &sch) {
             sch1_routine2_run = true;
+            (void)sch;
         }
     );
     sch2.create(
         [&](Scheduler &sch) {
             sch2_routine_run = true;
+            (void)sch;
         }
     );
 

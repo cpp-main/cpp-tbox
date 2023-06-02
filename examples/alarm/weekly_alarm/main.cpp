@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
+#include <base/log.h>
+#include <base/log_output.h>
+#include <base/scope_exit.hpp>
 
-#include <tbox/event/loop.h>
-#include <tbox/alarm/weekly_alarm.h>
+#include <event/loop.h>
+#include <alarm/weekly_alarm.h>
 
 using namespace std;
 using namespace tbox;

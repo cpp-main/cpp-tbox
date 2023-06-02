@@ -1,9 +1,9 @@
 #ifndef TBOX_COROUTINE_SCHEDULER_H_20180519
 #define TBOX_COROUTINE_SCHEDULER_H_20180519
 
-#include <tbox/base/defines.h>
-#include <tbox/base/cabinet_token.h>
-#include <tbox/event/loop.h>
+#include <base/defines.h>
+#include <base/cabinet_token.h>
+#include <event/loop.h>
 
 namespace tbox {
 namespace coroutine {

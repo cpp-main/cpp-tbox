@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <tbox/event/loop.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/log_output.h>
-#include <tbox/base/log.h>
+#include <event/loop.h>
+#include <base/scope_exit.hpp>
+#include <base/log_output.h>
+#include <base/log.h>
 
 #include "sleep_action.h"
 #include "loop_if_action.h"
@@ -23,6 +23,7 @@ TEST(SleepAction, Basic) {
     [loop, &is_finished] (bool is_succ) {
       loop->exitLoop();
       is_finished = true;
+      (void)is_succ;
     }
   );
   action.start();
@@ -46,9 +47,9 @@ TEST(SleepAction, Accuracy) {
   SleepAction action_100ms(*loop, std::chrono::milliseconds(100));
   SleepAction action_200ms(*loop, std::chrono::milliseconds(200));
 
-  action_50ms.setFinishCallback( [&] (bool is_succ) { ts_50ms = std::chrono::steady_clock::now(); });
-  action_100ms.setFinishCallback( [&] (bool is_succ) { ts_100ms = std::chrono::steady_clock::now(); });
-  action_200ms.setFinishCallback( [&] (bool is_succ) { ts_200ms = std::chrono::steady_clock::now(); });
+  action_50ms.setFinishCallback( [&] (bool is_succ) { ts_50ms = std::chrono::steady_clock::now(); (void)is_succ; });
+  action_100ms.setFinishCallback( [&] (bool is_succ) { ts_100ms = std::chrono::steady_clock::now(); (void)is_succ; });
+  action_200ms.setFinishCallback( [&] (bool is_succ) { ts_200ms = std::chrono::steady_clock::now(); (void)is_succ; });
 
   action_50ms.start();
   action_100ms.start();

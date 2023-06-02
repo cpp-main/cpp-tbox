@@ -1,7 +1,7 @@
 #ifndef TBOX_NETWORK_TCP_CONNECTION_H_20180113
 #define TBOX_NETWORK_TCP_CONNECTION_H_20180113
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 
 #include "socket_fd.h"
 #include "buffered_fd.h"

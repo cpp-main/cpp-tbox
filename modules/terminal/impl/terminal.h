@@ -1,7 +1,7 @@
 #ifndef TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 #define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
-#include <tbox/base/cabinet.hpp>
+#include <base/cabinet.hpp>
 
 #include "../terminal.h"
 #include "node.h"

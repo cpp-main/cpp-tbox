@@ -29,7 +29,7 @@ TEST(StdoutChannel, TraceLevel)
 {
     StdoutChannel ch;
     ch.enable();
-    ch.setLevel(LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
 
     LogFatal("fatal");
@@ -79,7 +79,7 @@ TEST(StdoutChannel, EnableColor)
     StdoutChannel ch;
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel(LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should with color" << endl;
 
     LogFatal("fatal");
@@ -116,7 +116,7 @@ TEST(StdoutChannel, LongString)
     ch.cleanup();
 }
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 using namespace tbox::event;
 
 TEST(StdoutChannel, Benchmark)

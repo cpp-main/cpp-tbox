@@ -2,8 +2,8 @@
 #define TBOX_NETWORK_DNS_REQUEST_H_20230207
 
 #include <map>
-#include <tbox/event/loop.h>
-#include <tbox/eventx/timeout_monitor.hpp>
+#include <event/loop.h>
+#include <eventx/timeout_monitor.hpp>
 
 #include "udp_socket.h"
 #include "domain_name.h"

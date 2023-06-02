@@ -1,8 +1,8 @@
 #include "server_imp.h"
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/network/buffer.h>
+#include <base/log.h>
+#include <base/assert.h>
+#include <network/buffer.h>
 
 #include "middleware.h"
 

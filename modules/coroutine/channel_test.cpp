@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "channel.hpp"
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/timer_event.h>
+#include <base/scope_exit.hpp>
+#include <event/timer_event.h>
 #include <algorithm>
 
 using namespace std;

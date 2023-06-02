@@ -1,9 +1,9 @@
 #ifndef TBOX_MQTT_CLIENT_H_20200815
 #define TBOX_MQTT_CLIENT_H_20200815
 
-#include <tbox/base/defines.h>
-#include <tbox/base/memblock.h>
-#include <tbox/event/loop.h>
+#include <base/defines.h>
+#include <base/memblock.h>
+#include <event/loop.h>
 
 struct mosquitto;
 struct mosquitto_message;

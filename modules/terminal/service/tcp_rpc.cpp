@@ -1,6 +1,6 @@
 #include "tcp_rpc.h"
 #include "../impl/service/tcp_rpc.h"
-#include <tbox/base/assert.h>
+#include <base/assert.h>
 
 namespace tbox {
 namespace terminal {

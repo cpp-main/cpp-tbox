@@ -4,7 +4,7 @@
 #include "channel.h"
 
 #include <vector>
-#include <tbox/util/async_pipe.h>
+#include <util/async_pipe.h>
 
 namespace tbox {
 namespace log {

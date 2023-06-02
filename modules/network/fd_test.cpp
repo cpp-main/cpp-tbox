@@ -49,7 +49,7 @@ TEST(Fd, reset)
 
 TEST(Fd, close) {
     int close_times = 0;
-    Fd fd1(12, [&](int v) { ++close_times; });
+    Fd fd1(12, [&](int v) { ++close_times; (void)v; });
     {
         Fd fd2 = fd1;
         {

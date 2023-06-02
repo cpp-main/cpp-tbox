@@ -3,10 +3,10 @@
 
 #include "context.h"
 
-#include <tbox/base/json_fwd.h>
-#include <tbox/terminal/terminal.h>
-#include <tbox/terminal/service/telnetd.h>
-#include <tbox/terminal/service/tcp_rpc.h>
+#include <base/json_fwd.h>
+#include <terminal/terminal.h>
+#include <terminal/service/telnetd.h>
+#include <terminal/service/tcp_rpc.h>
 
 namespace tbox {
 namespace main {

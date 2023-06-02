@@ -1,7 +1,7 @@
 #include "wrapper_action.h"
-#include <tbox/base/defines.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/json.hpp>
+#include <base/defines.h>
+#include <base/assert.h>
+#include <base/json.hpp>
 
 namespace tbox {
 namespace flow {
@@ -57,8 +57,8 @@ void WrapperAction::onReset() {
 
 std::string ToString(WrapperAction::Mode mode) {
     const char *tbl[] = {"Normal", "Invert", "AlwaySucc", "AlwayFail"};
-    auto idx = static_cast<size_t>(mode);
-    if (idx >= 0 && idx < NUMBER_OF_ARRAY(tbl))
+    auto idx = static_cast<size_t>(mode); // size_t id always >= 0
+    if (idx < NUMBER_OF_ARRAY(tbl))
         return tbl[idx];
     else
         return "Unknown";

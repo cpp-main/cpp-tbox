@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <tbox/event/forward.h>
+#include <event/forward.h>
 
 namespace tbox {
 namespace alarm {

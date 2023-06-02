@@ -29,7 +29,7 @@ TEST(SyslogChannel, TraceLevel)
 {
     SyslogChannel ch;
     ch.enable();
-    ch.setLevel(LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
 
     LogFatal("fatal");
@@ -84,7 +84,7 @@ TEST(SyslogChannel, LongString)
     ch.cleanup();
 }
 
-#include <tbox/event/loop.h>
+#include <event/loop.h>
 using namespace tbox::event;
 
 TEST(SyslogChannel, Benchmark)
