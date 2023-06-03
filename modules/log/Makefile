@@ -1,27 +1,27 @@
 LIB_NAME = log
 LIB_VERSION_X = 0
-LIB_VERSION_Y = 0
-LIB_VERSION_Z = 1
+LIB_VERSION_Y = 1
+LIB_VERSION_Z = 0
 
 HEAD_FILES = \
-	channel.h \
-	async_channel.h \
-	stdout_channel.h \
-	syslog_channel.h \
-	filelog_channel.h \
+	sink.h \
+	async_sink.h \
+	async_stdout_sink.h \
+	async_syslog_sink.h \
+	async_file_sink.h \
 
 CPP_SRC_FILES = \
-	channel.cpp \
-	async_channel.cpp \
-	stdout_channel.cpp \
-	syslog_channel.cpp \
-	filelog_channel.cpp \
+	sink.cpp \
+	async_sink.cpp \
+	async_stdout_sink.cpp \
+	async_syslog_sink.cpp \
+	async_file_sink.cpp \
 
 TEST_CPP_SRC_FILES = \
-	stdout_channel_test.cpp \
-	syslog_channel_test.cpp \
-	async_channel_test.cpp \
-	filelog_channel_test.cpp \
+	async_sink_test.cpp \
+	async_stdout_sink_test.cpp \
+	async_syslog_sink_test.cpp \
+	async_file_sink_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
 

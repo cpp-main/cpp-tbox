@@ -1,14 +1,15 @@
-#include <gtest/gtest.h>
-#include "stdout_channel.h"
 #include <iostream>
 #include <chrono>
+#include <gtest/gtest.h>
+
+#include "async_stdout_sink.h"
 
 using namespace std;
 using namespace tbox::log;
 
-TEST(StdoutChannel, DefaultLevel)
+TEST(AsyncStdoutSink, DefaultLevel)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -25,9 +26,9 @@ TEST(StdoutChannel, DefaultLevel)
     ch.cleanup();
 }
 
-TEST(StdoutChannel, TraceLevel)
+TEST(AsyncStdoutSink, TraceLevel)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -45,9 +46,9 @@ TEST(StdoutChannel, TraceLevel)
     ch.cleanup();
 }
 
-TEST(StdoutChannel, NullString)
+TEST(AsyncStdoutSink, NullString)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
 
     LogInfo(nullptr);
@@ -56,9 +57,9 @@ TEST(StdoutChannel, NullString)
     ch.cleanup();
 }
 
-TEST(StdoutChannel, WillNotPrint)
+TEST(AsyncStdoutSink, WillNotPrint)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -74,9 +75,9 @@ TEST(StdoutChannel, WillNotPrint)
     ch.cleanup();
 }
 
-TEST(StdoutChannel, EnableColor)
+TEST(AsyncStdoutSink, EnableColor)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     ch.enableColor(true);
     ch.setLevel("test.log", LOG_LEVEL_TRACE);
@@ -96,9 +97,9 @@ TEST(StdoutChannel, EnableColor)
 }
 
 
-TEST(StdoutChannel, Format)
+TEST(AsyncStdoutSink, Format)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -107,9 +108,9 @@ TEST(StdoutChannel, Format)
     ch.cleanup();
 }
 
-TEST(StdoutChannel, LongString)
+TEST(AsyncStdoutSink, LongString)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
@@ -119,9 +120,9 @@ TEST(StdoutChannel, LongString)
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(StdoutChannel, Benchmark)
+TEST(AsyncStdoutSink, Benchmark)
 {
-    StdoutChannel ch;
+    AsyncStdoutSink ch;
     ch.enable();
     std::string tmp(30, 'x');
 

@@ -1,4 +1,4 @@
-#include "filelog_channel.h"
+#include "async_file_sink.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -15,9 +15,9 @@ namespace log {
 
 using namespace std;
 
-FilelogChannel::FilelogChannel()
+AsyncFileSink::AsyncFileSink()
 {
-    AsyncChannel::Config cfg;
+    AsyncSink::Config cfg;
     cfg.buff_size = 10240;
     cfg.buff_min_num = 2;
     cfg.buff_max_num = 20;
@@ -27,13 +27,13 @@ FilelogChannel::FilelogChannel()
     pid_ = ::getpid();
 }
 
-FilelogChannel::~FilelogChannel()
+AsyncFileSink::~AsyncFileSink()
 {
     if (pid_ != 0)
         cleanup();
 }
 
-void FilelogChannel::setFilePath(const std::string &file_path)
+void AsyncFileSink::setFilePath(const std::string &file_path)
 {
     file_path_ = util::string::Strip(file_path);
 
@@ -45,19 +45,25 @@ void FilelogChannel::setFilePath(const std::string &file_path)
     updateInnerValues();
 }
 
-void FilelogChannel::setFilePrefix(const std::string &file_prefix)
+void AsyncFileSink::setFilePrefix(const std::string &file_prefix)
 {
     file_prefix_ = util::string::Strip(file_prefix);
     updateInnerValues();
 }
 
-void FilelogChannel::cleanup()
+void AsyncFileSink::setFileSyncEnable(bool enable)
 {
-    AsyncChannel::cleanup();
+    file_sync_enable_ = enable;
+    CHECK_CLOSE_RESET_FD(fd_);
+}
+
+void AsyncFileSink::cleanup()
+{
+    AsyncSink::cleanup();
     pid_ = 0;
 }
 
-void FilelogChannel::updateInnerValues()
+void AsyncFileSink::updateInnerValues()
 {
     filename_prefix_ = file_path_ + '/' + file_prefix_ + '.';
     sym_filename_ = filename_prefix_ + "latest.log";
@@ -65,14 +71,14 @@ void FilelogChannel::updateInnerValues()
     CHECK_CLOSE_RESET_FD(fd_);
 }
 
-void FilelogChannel::appendLog(const char *str, size_t len)
+void AsyncFileSink::appendLog(const char *str, size_t len)
 {
     buffer_.reserve(buffer_.size() + len - 1);
     std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
     std::copy(str, str + len - 1, back_insert_iter);
 }
 
-void FilelogChannel::flushLog()
+void AsyncFileSink::flushLog()
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
@@ -86,14 +92,12 @@ void FilelogChannel::flushLog()
     total_write_size_ += buffer_.size();
 
     buffer_.clear();
-    if (buffer_.capacity() > 1024)
-        buffer_.shrink_to_fit();
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
 }
 
-bool FilelogChannel::checkAndCreateLogFile()
+bool AsyncFileSink::checkAndCreateLogFile()
 {
     if (fd_ >= 0) {
         if (util::fs::IsFileExist(log_filename_))
@@ -118,16 +122,20 @@ bool FilelogChannel::checkAndCreateLogFile()
     std::string log_filename;
     int postfix = 0;
     do {
-        ostringstream filename_oss;
-        filename_oss << filename_prefix_ << timestamp << '.' << pid_ << ".log";
-        if (postfix != 0)
-            filename_oss << "." << postfix;
-        log_filename = filename_oss.str();
+        log_filename = filename_prefix_ + timestamp + '.' + std::to_string(pid_) + ".log";
+        if (postfix != 0) {
+            log_filename += '.';
+            log_filename += std::to_string(postfix);
+        }
         ++postfix;
     } while (util::fs::IsFileExist(log_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
-    log_filename_ = log_filename;
+    log_filename_ = std::move(log_filename);
 
-    fd_ = ::open(log_filename_.c_str(), O_CREAT | O_WRONLY | O_APPEND | O_DSYNC, S_IRUSR | S_IWUSR);
+    int flags = O_CREAT | O_WRONLY | O_APPEND;
+    if (file_sync_enable_)
+        flags |= O_DSYNC;
+
+    fd_ = ::open(log_filename_.c_str(), flags, S_IRUSR | S_IWUSR);
     if (fd_ < 0) {
         cerr << "Err: open file " << log_filename_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;
@@ -135,7 +143,7 @@ bool FilelogChannel::checkAndCreateLogFile()
 
     total_write_size_ = 0;
     util::fs::RemoveFile(sym_filename_, false);
-    util::fs::MakeSymbolLink(log_filename, sym_filename_, false);
+    util::fs::MakeSymbolLink(log_filename_, sym_filename_, false);
 
     return true;
 }

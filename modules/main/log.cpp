@@ -15,7 +15,7 @@ using namespace std;
 
 Log::Log()
 {
-    stdout_.enable();
+    async_stdout_sink_.enable();
 }
 
 void Log::fillDefaultConfig(Json &cfg) const
@@ -27,7 +27,7 @@ void Log::fillDefaultConfig(Json &cfg) const
     "enable_color": true,
     "levels": {"":6}
   },
-  "filelog": {
+  "file": {
     "enable": false,
     "enable_color": false,
     "levels": {"":4},
@@ -50,32 +50,36 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
         //! STDOUT
         if (util::json::HasObjectField(js_log, "stdout")) {
             auto &js_stdout = js_log.at("stdout");
-            initChannel(js_stdout, stdout_);
+            initSink(js_stdout, async_stdout_sink_);
         }
 
         //! SYSLOG
         if (util::json::HasObjectField(js_log, "syslog")) {
             auto &js_syslog = js_log.at("syslog");
-            initChannel(js_syslog, syslog_);
+            initSink(js_syslog, async_syslog_sink_);
         }
 
         //! FILELOG
-        if (util::json::HasObjectField(js_log, "filelog")) {
-            auto &js_filelog = js_log.at("filelog");
+        if (util::json::HasObjectField(js_log, "file")) {
+            auto &js_file = js_log.at("file");
 
             std::string path;
-            if (util::json::GetField(js_filelog, "path", path))
-                filelog_.setFilePath(path);
+            if (util::json::GetField(js_file, "path", path))
+                async_file_sink_.setFilePath(path);
 
             std::string prefix = util::fs::Basename(proc_name);
-            util::json::GetField(js_filelog, "prefix", prefix);
-            filelog_.setFilePrefix(prefix);
+            util::json::GetField(js_file, "prefix", prefix);
+            async_file_sink_.setFilePrefix(prefix);
+
+            bool enable_sync = false;
+            if (util::json::GetField(js_file, "enable_sync", enable_sync))
+                async_file_sink_.setFileSyncEnable(enable_sync);
 
             unsigned int max_size = 0;
-            if (util::json::GetField(js_filelog, "max_size", max_size))
-                filelog_.setFileMaxSize(max_size * 1024);
+            if (util::json::GetField(js_file, "max_size", max_size))
+                async_file_sink_.setFileMaxSize(max_size * 1024);
 
-            initChannel(js_filelog, filelog_);
+            initSink(js_file, async_file_sink_);
         }
     }
     return true;
@@ -83,16 +87,16 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 
 void Log::cleanup()
 {
-    filelog_.disable();
-    syslog_.disable();
-    stdout_.disable();
+    async_file_sink_.disable();
+    async_syslog_sink_.disable();
+    async_stdout_sink_.disable();
 
-    filelog_.cleanup();
-    syslog_.cleanup();
-    stdout_.cleanup();
+    async_file_sink_.cleanup();
+    async_syslog_sink_.cleanup();
+    async_stdout_sink_.cleanup();
 }
 
-void Log::initChannel(const Json &js, log::Channel &ch)
+void Log::initSink(const Json &js, log::Sink &ch)
 {
     bool enable = false;
     if (util::json::GetField(js, "enable", enable)) {
@@ -121,22 +125,22 @@ void Log::initShell(TerminalNodes &term)
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "stdout");
-        initShellForChannel(stdout_, term, dir_node);
+        initShellForSink(async_stdout_sink_, term, dir_node);
     }
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "syslog");
-        initShellForChannel(syslog_, term, dir_node);
+        initShellForSink(async_syslog_sink_, term, dir_node);
     }
     {
         auto dir_node = term.createDirNode();
-        term.mountNode(log_node, dir_node, "filelog");
-        initShellForChannel(filelog_, term, dir_node);
-        initShellForFilelogChannel(term, dir_node);
+        term.mountNode(log_node, dir_node, "file");
+        initShellForSink(async_file_sink_, term, dir_node);
+        initShellForAsyncFileSink(term, dir_node);
     }
 }
 
-void Log::initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node)
+void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node)
 {
     {
         auto func_node = term.createFuncNode(
@@ -189,7 +193,7 @@ void Log::initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &ter
                 s.send(oss.str());
             }
         , "enable or disable color");
-        term.mountNode(dir_node, func_node, "color_enable");
+        term.mountNode(dir_node, func_node, "enable_color");
     }
 
     {
@@ -256,7 +260,7 @@ void Log::initShellForChannel(log::Channel &log_ch, terminal::TerminalNodes &ter
     }
 }
 
-void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::NodeToken dir_node)
+void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::NodeToken dir_node)
 {
     {
         auto func_node = term.createFuncNode(
@@ -264,7 +268,7 @@ void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::No
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
-                    filelog_.setFilePath(args.at(1));
+                    async_file_sink_.setFilePath(args.at(1));
                     print_usage = false;
                     oss << "done\r\n";
                 }
@@ -286,7 +290,7 @@ void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::No
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
-                    filelog_.setFilePrefix(args.at(1));
+                    async_file_sink_.setFilePrefix(args.at(1));
                     print_usage = false;
                     oss << "done\r\n";
                 }
@@ -306,10 +310,37 @@ void Log::initShellForFilelogChannel(terminal::TerminalNodes &term, terminal::No
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
+                    const auto &opt = args[1];
+                    if (opt == "on") {
+                        async_file_sink_.setFileSyncEnable(true);
+                        oss << "on\r\n";
+                        print_usage = false;
+                    } else if (opt == "off") {
+                        async_file_sink_.setFileSyncEnable(false);
+                        oss << "off\r\n";
+                        print_usage = false;
+                    }
+                }
+
+                if (print_usage)
+                    oss << "Usage: " << args[0] << " on|off\r\n";
+
+                s.send(oss.str());
+            }
+        , "enable or disable file sync");
+        term.mountNode(dir_node, func_node, "enable_sync");
+    }
+
+    {
+        auto func_node = term.createFuncNode(
+            [this] (const Session &s, const Args &args) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (args.size() >= 2) {
                     size_t max_size;
                     bool is_throw = CatchThrowQuietly([&] { max_size = std::stoul(args.at(1)); });
                     if (!is_throw) {
-                        filelog_.setFileMaxSize(max_size * 1024);
+                        async_file_sink_.setFileMaxSize(max_size * 1024);
                         print_usage = false;
                         oss << "done, max_size: " << max_size << " KB\r\n";
                     } else {

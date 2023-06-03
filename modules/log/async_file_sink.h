@@ -1,17 +1,17 @@
-#ifndef TBOX_LOG_FILE_CHANNEL_H_20220412
-#define TBOX_LOG_FILE_CHANNEL_H_20220412
+#ifndef TBOX_LOG_ASYNC_FILE_SINK_H_20220412
+#define TBOX_LOG_ASYNC_FILE_SINK_H_20220412
 
-#include "async_channel.h"
+#include "async_sink.h"
 
 #include <vector>
 
 namespace tbox {
 namespace log {
 
-class FilelogChannel : public AsyncChannel {
+class AsyncFileSink : public AsyncSink {
   public:
-    FilelogChannel();
-    virtual ~FilelogChannel() override;
+    AsyncFileSink();
+    virtual ~AsyncFileSink() override;
 
   public:
     void cleanup();
@@ -19,6 +19,7 @@ class FilelogChannel : public AsyncChannel {
     void setFilePath(const std::string &file_path);
     void setFilePrefix(const std::string &file_path);
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
+    void setFileSyncEnable(bool enable);
     std::string currentFilename() const { return log_filename_; }
 
   protected:
@@ -33,6 +34,7 @@ class FilelogChannel : public AsyncChannel {
     std::string file_prefix_ = "none";
     std::string file_path_ = "/var/log/";
     size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为1MB
+    bool file_sync_enable_ = false;
     pid_t pid_ = 0;
 
     std::string filename_prefix_;
@@ -48,4 +50,4 @@ class FilelogChannel : public AsyncChannel {
 }
 }
 
-#endif //TBOX_LOG_FILE_CHANNEL_H_20220412
+#endif //TBOX_LOG_ASYNC_FILE_SINK_H_20220412

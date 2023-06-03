@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
-#include "async_channel.h"
+
 #include <iostream>
 #include <chrono>
 #include <algorithm>
 
+#include "async_sink.h"
+
 using namespace std;
 using namespace tbox::log;
 
-class TestAsyncChannel : public AsyncChannel {
+class TestAsyncSink : public AsyncSink {
   protected:
     virtual void appendLog(const char *str, size_t len) {
         cout << str << endl;
@@ -15,15 +17,15 @@ class TestAsyncChannel : public AsyncChannel {
     }
 };
 
-class EmptyTestAsyncChannel : public AsyncChannel {
+class EmptyTestAsyncSink : public AsyncSink {
   protected:
     virtual void appendLog(const char *str, size_t len) { (void)str; (void)len; }
 };
 
 
-TEST(AsyncChannel, Format)
+TEST(AsyncSink, Format)
 {
-    TestAsyncChannel ch;
+    TestAsyncSink ch;
 
     ch.enable();
 
@@ -33,9 +35,9 @@ TEST(AsyncChannel, Format)
     ch.cleanup();
 }
 
-TEST(AsyncChannel, LongString)
+TEST(AsyncSink, LongString)
 {
-    TestAsyncChannel ch;
+    TestAsyncSink ch;
 
     ch.enable();
     std::string tmp(4096, 'x');
@@ -47,9 +49,9 @@ TEST(AsyncChannel, LongString)
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(AsyncChannel, Benchmark)
+TEST(AsyncSink, Benchmark)
 {
-    TestAsyncChannel ch;
+    TestAsyncSink ch;
     ch.enable();
     std::string tmp(30, 'x');
 
@@ -72,9 +74,9 @@ TEST(AsyncChannel, Benchmark)
     ch.cleanup();
 }
 
-TEST(AsyncChannel, Benchmark_Empty)
+TEST(AsyncSink, Benchmark_Empty)
 {
-    EmptyTestAsyncChannel ch;
+    EmptyTestAsyncSink ch;
     ch.enable();
     std::string tmp(30, 'x');
 

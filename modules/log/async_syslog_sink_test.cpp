@@ -1,14 +1,15 @@
-#include <gtest/gtest.h>
-#include "syslog_channel.h"
 #include <iostream>
 #include <chrono>
+#include <gtest/gtest.h>
+
+#include "async_syslog_sink.h"
 
 using namespace std;
 using namespace tbox::log;
 
-TEST(SyslogChannel, DefaultLevel)
+TEST(AsyncSyslogSink, DefaultLevel)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -25,9 +26,9 @@ TEST(SyslogChannel, DefaultLevel)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, TraceLevel)
+TEST(AsyncSyslogSink, TraceLevel)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     ch.enable();
     ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -45,9 +46,9 @@ TEST(SyslogChannel, TraceLevel)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, WillNotPrint)
+TEST(AsyncSyslogSink, WillNotPrint)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -63,9 +64,9 @@ TEST(SyslogChannel, WillNotPrint)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, Format)
+TEST(AsyncSyslogSink, Format)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
@@ -74,9 +75,9 @@ TEST(SyslogChannel, Format)
     ch.cleanup();
 }
 
-TEST(SyslogChannel, LongString)
+TEST(AsyncSyslogSink, LongString)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
@@ -87,9 +88,9 @@ TEST(SyslogChannel, LongString)
 #include <tbox/event/loop.h>
 using namespace tbox::event;
 
-TEST(SyslogChannel, Benchmark)
+TEST(AsyncSyslogSink, Benchmark)
 {
-    SyslogChannel ch;
+    AsyncSyslogSink ch;
     ch.enable();
     std::string tmp(30, 'x');
 
