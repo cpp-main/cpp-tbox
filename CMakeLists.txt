@@ -13,10 +13,19 @@ endif()
 #
 # Project configuration
 #
-set(TBOX_VERSION_MAJOR 2)
-set(TBOX_VERSION_MINOR 1)
-set(TBOX_VERSION_REVISION 0)
+file(STRINGS "version.mk" VERSION_CONTENTS)
+set(REGEX_MAJOR "TBOX_VERSION_MAJOR *:= *([0-9]+)")
+set(REGEX_MINOR "TBOX_VERSION_MINOR *:= *([0-9]+)")
+set(REGEX_REVISION "TBOX_VERSION_REVISION *:= *([0-9]+)")
+string(REGEX MATCH "${REGEX_MAJOR}" _ ${VERSION_CONTENTS})
+set(TBOX_VERSION_MAJOR ${CMAKE_MATCH_1})
+string(REGEX MATCH "${REGEX_MINOR}" _ ${VERSION_CONTENTS})
+set(TBOX_VERSION_MINOR ${CMAKE_MATCH_1})
+string(REGEX MATCH "${REGEX_REVISION}" _ ${VERSION_CONTENTS})
+set(TBOX_VERSION_REVISION ${CMAKE_MATCH_1})
+
 set(TBOX_VERSION ${TBOX_VERSION_MAJOR}.${TBOX_VERSION_MINOR}.${TBOX_VERSION_REVISION})
+
 
 #
 # Set install prefix
@@ -58,6 +67,11 @@ option(TBOX_ENABLE_MQTT "build mqtt" OFF)
 option(TBOX_ENABLE_FLOW "build flow" OFF)
 option(TBOX_ENABLE_ALARM "build alarm" OFF)
 option(TBOX_ENABLE_CRYPTO "build crypto" OFF)
+
+#
+# 3rd-party libraries
+#
+option(TBOX_ENABLE_NLOHMANN_JSON "install nlohmann/json" OFF)
 
 #
 # TESTS
@@ -153,5 +167,10 @@ endif()
 if(TBOX_ENABLE_CRYPTO)
     message(STATUS "crypto module enabled")
     add_subdirectory(modules/crypto)
+endif()
+
+if(TBOX_ENABLE_NLOHMANN_JSON)
+    message(STATUS "nlohmann/json installation enabled")
+    add_subdirectory(3rd-party/nlohmann)
 endif()
 

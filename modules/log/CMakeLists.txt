@@ -10,24 +10,24 @@ project(tbox_log)
 add_definitions(-DLOG_MODULE_ID="tbox.log")
 
 set(TBOX_LOG_HEADERS
-    channel.h
-    async_channel.h
-    stdout_channel.h
-    syslog_channel.h
-    filelog_channel.h)
+    sink.h
+    async_sink.h
+    async_stdout_sink.h
+    async_syslog_sink.h
+    async_file_sink.h)
 
 set(TBOX_LOG_SOURCES
-    channel.cpp
-    async_channel.cpp
-    stdout_channel.cpp
-    syslog_channel.cpp
-    filelog_channel.cpp)
+    sink.cpp
+    async_sink.cpp
+    async_stdout_sink.cpp
+    async_syslog_sink.cpp
+    async_file_sink.cpp)
 
 set(TBOX_LOG_TEST_SOURCES
-    stdout_channel_test.cpp
-    syslog_channel_test.cpp
-    async_channel_test.cpp
-    filelog_channel_test.cpp)
+    async_sink_test.cpp
+    async_stdout_sink_test.cpp
+    async_syslog_sink_test.cpp
+    async_file_sink_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_LOG_SOURCES})
 
