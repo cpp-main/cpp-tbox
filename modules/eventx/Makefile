@@ -11,12 +11,14 @@ HEAD_FILES = \
 	request_pool.hpp \
 	loop_wdog.h \
 	work_thread.h \
+	loop_thread.h \
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
 	timer_pool.cpp \
 	loop_wdog.cpp \
 	work_thread.cpp \
+	loop_thread.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.eventx"' $(CXXFLAGS)
 
@@ -27,6 +29,7 @@ TEST_CPP_SRC_FILES = \
 	request_pool_test.cpp \
 	loop_wdog_test.cpp \
 	work_thread_test.cpp \
+	loop_thread_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
