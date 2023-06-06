@@ -71,7 +71,7 @@ option(TBOX_ENABLE_CRYPTO "build crypto" OFF)
 #
 # 3rd-party libraries
 #
-option(TBOX_ENABLE_NLOHMANN_JSON "install nlohmann/json" OFF)
+option(TBOX_ENABLE_NLOHMANN_JSON "install nlohmann/json" ON)
 
 #
 # TESTS

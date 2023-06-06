@@ -92,15 +92,21 @@
 
 # 下载与构建
 
-1. GNU Make:
+## 方法一：GNU Make
 ```
 git clone https://gitee.com/cpp-master/cpp-tbox.git
 cd cpp-tbox;
-STAGING_DIR=$HOME/.tbox make 3rd-party modules RELEASE=1
+make 3rd-party modules RELEASE=1
 ```
-完成之后，头文件与库文件都在 $HOME/.tbox 中。
+完成之后，头文件与库文件都在 .staging 目录下。  
+当然也可以通过指定 `STAGING_DIR` 对头文件与库文件的生成路径进行指定。  
+如：
+```
+make 3rd-party modules RELEASE=1 STAGING_DIR=$HOME/.tbox
+```
+完成之后，头文件与库文件都在 $HOME/.tbox 路径下。
 
-2. CMake:
+## 方法二：CMake
 ```
 git clone https://gitee.com/cpp-master/cpp-tbox.git
 cd cpp-tbox
@@ -114,6 +120,7 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
 # 使用教程
+关于如何使用 cpp-tbox 开发自己的程序，详见教程：
 [cpp-tbox-tutorials](https://gitee.com/cpp-master/cpp-tbox-tutorials)  
 
 # 外部库依赖

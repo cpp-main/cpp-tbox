@@ -16,13 +16,15 @@ set(TBOX_EVENTX_HEADERS
     timeout_monitor_impl.hpp
     request_pool.hpp
     loop_wdog.h
-    work_thread.h)
+    work_thread.h
+    loop_thread.h)
 
 set(TBOX_EVENTX_SOURCES
     thread_pool.cpp
     timer_pool.cpp
     loop_wdog.cpp
-    work_thread.cpp)
+    work_thread.cpp
+    loop_thread.cpp)
 
 set(TBOX_EVENTX_TEST_SOURCES
     thread_pool_test.cpp
@@ -30,7 +32,8 @@ set(TBOX_EVENTX_TEST_SOURCES
     timeout_monitor_test.cpp
     request_pool_test.cpp
     loop_wdog_test.cpp
-    work_thread_test.cpp)
+    work_thread_test.cpp
+    loop_thread_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_EVENTX_SOURCES})
 
