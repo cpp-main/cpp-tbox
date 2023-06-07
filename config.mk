@@ -15,6 +15,7 @@ MODULES += main
 #MODULES += flow
 #MODULES += alarm
 #MODULES += crypto
+MODULES += async
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
