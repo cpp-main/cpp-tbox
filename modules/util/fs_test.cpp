@@ -32,6 +32,24 @@ TEST(fs, TextFileReadWrite_Ok) {
     EXPECT_FALSE(IsFileExist(test_filename));
 }
 
+TEST(fs, TextFileReadAppend_Ok) {
+    std::string text_tobe_read;
+    const std::string text_tobe_write1 = "hello, this is a test.";
+    const std::string text_tobe_write2 = "another text, yes, for test.\n  ";
+
+    ::unlink(test_filename);  //! 先删一次
+    EXPECT_FALSE(IsFileExist(test_filename));   //! 文件不应该存在
+
+    EXPECT_TRUE(WriteStringToTextFile(test_filename, text_tobe_write1)); //! 写入数据
+    EXPECT_TRUE(AppendStringToTextFile(test_filename, text_tobe_write2)); //! 写入数据
+    EXPECT_TRUE(IsFileExist(test_filename));    //! 文件应该存在
+
+    EXPECT_TRUE(ReadStringFromTextFile(test_filename, text_tobe_read)); //! 将文件读取出来
+    EXPECT_EQ(text_tobe_write1 + text_tobe_write2, text_tobe_read); //! 对比写入与读出的数据是否一致
+
+    RemoveFile(test_filename);
+}
+
 TEST(fs, TextFileReadEachLine) {
     ::unlink(test_filename);  //! 先删一次
     const std::string text_tobe_write = "first line\nsecond line\nthird line";

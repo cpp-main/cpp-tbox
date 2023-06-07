@@ -56,6 +56,18 @@ bool ReadEachLineFromTextFile(const std::string &filename, const std::function<v
 bool WriteStringToTextFile(const std::string &filename, const std::string &content, bool sync_now = false);
 
 /**
+ * 将字串追加到文件尾部
+ *
+ * \param filename      文件名
+ * \param content       将要写入的字串内容
+ * \param sync_now      是否需要立即sync
+ *
+ * \return true     成功
+ * \return false    失败
+ */
+bool AppendStringToTextFile(const std::string &filename, const std::string &content, bool sync_now = false);
+
+/**
  * 从文件中读取数据
  *
  * \param filename      文件名
@@ -90,6 +102,19 @@ bool WriteBinaryToFile(const std::string &filename, const std::string &content, 
  * \return false    失败
  */
 bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now = false);
+
+/**
+ * 将数据追加到文件尾部
+ *
+ * \param filename      文件名
+ * \param data_ptr      将要写入的数据地址
+ * \param data_size     将要写入的数据长度
+ * \param sync_now      是否需要立即sync
+ *
+ * \return true     成功
+ * \return false    失败
+ */
+bool AppendFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now = false);
 
 /**
  * 删除文件
