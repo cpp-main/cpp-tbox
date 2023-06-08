@@ -9,6 +9,7 @@
 namespace tbox {
 namespace system {
 
+/// 将与系统相关的阻塞性调用转换成异步回调形式
 class System {
   public:
     explicit System(eventx::ThreadPool *thread_pool);
@@ -23,6 +24,8 @@ class System {
 
     void writeFile (const std::string &filename, const std::string &context, bool sync_now = false, Callback &&cb = nullptr);
     void appendFile(const std::string &filename, const std::string &context, bool sync_now = false, Callback &&cb = nullptr);
+
+    void removeFile(const std::string &filename, Callback &&cb = nullptr);
 
     void executeCmd(const std::string &filename, const std::string &context, Callback &&cb = nullptr);
     void executeCmd(const std::string &filename, const std::string &context, StringCallback &&cb);

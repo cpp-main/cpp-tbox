@@ -109,5 +109,28 @@ void System::appendFile(const std::string &filename, const std::string &content,
     );
 }
 
+void System::removeFile(const std::string &filename, Callback &&cb)
+{
+    struct Tmp {
+        int error_code = 0;
+        Callback cb;
+    };
+
+    auto tmp = std::make_shared<Tmp>();
+    tmp->cb = std::move(cb);
+
+    thread_pool_->execute(
+        [tmp, filename] {
+            if (!util::fs::RemoveFile(filename))
+                tmp->error_code = 1;
+        },
+        [tmp] {
+            if (tmp->cb)
+                tmp->cb(tmp->error_code);
+        }
+    );
+}
+
+
 }
 }

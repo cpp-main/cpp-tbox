@@ -29,6 +29,7 @@ class ContextImp : public Context {
     virtual eventx::ThreadPool* thread_pool() const override { return sp_thread_pool_; }
     virtual eventx::TimerPool* timer_pool() const override { return sp_timer_pool_; }
     virtual terminal::TerminalNodes* terminal() const override { return sp_terminal_; }
+    virtual system::System* sys() const override { return sp_sys_; }
 
     virtual std::chrono::milliseconds running_time() const override;
     virtual std::chrono::system_clock::time_point start_time_point() const override;
@@ -50,6 +51,8 @@ class ContextImp : public Context {
     terminal::TcpRpc   *sp_tcp_rpc_ = nullptr;
     bool telnetd_init_ok = false;
     bool tcp_rpc_init_ok = false;
+
+    system::System *sp_sys_ = nullptr;
 
     std::chrono::steady_clock::time_point start_time_point_;
 };

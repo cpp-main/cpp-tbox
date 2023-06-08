@@ -58,6 +58,7 @@ ContextImp::ContextImp() :
     sp_terminal_(new terminal::Terminal),
     sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
     sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_)),
+    sp_sys_(new system::System(sp_thread_pool_)),
     start_time_point_(std::chrono::steady_clock::now())
 {
     TBOX_ASSERT(sp_loop_ != nullptr);
@@ -70,6 +71,7 @@ ContextImp::ContextImp() :
 
 ContextImp::~ContextImp()
 {
+    delete sp_sys_;
     delete sp_tcp_rpc_;
     delete sp_telnetd_;
     delete sp_terminal_;

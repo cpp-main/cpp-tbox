@@ -101,7 +101,6 @@ TEST_F(SystemTest, appendFileNoCallback) {
     EXPECT_EQ(rcontent, wcontent_1 + wcontent_2);
 }
 
-
 /// 测试 System::readFile() 函数
 TEST_F(SystemTest, ReadFile) {
     std::string wcontent = "This is SystemTest::ReadFile";
@@ -146,6 +145,19 @@ TEST_F(SystemTest, ReadFileLines) {
     EXPECT_EQ(rcontent_vec[0], "first");
     EXPECT_EQ(rcontent_vec[1], "second");
     EXPECT_EQ(rcontent_vec[2], "third");
+}
+
+/// 测试 System::removeFile() 函数，不带回调
+TEST_F(SystemTest, removeFileNoCallback) {
+    util::fs::WriteStringToTextFile(filename, "any");
+    ASSERT_TRUE(util::fs::IsFileExist(filename));
+
+    sys_->removeFile(filename);
+
+    loop_->exitLoop(std::chrono::milliseconds(100));
+    loop_->runLoop();
+
+    ASSERT_FALSE(util::fs::IsFileExist(filename));
 }
 
 }
