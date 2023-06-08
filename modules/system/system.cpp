@@ -1,30 +1,30 @@
-#include "async.h"
+#include "system.h"
 
 #include <memory>
+#include <tbox/base/assert.h>
 #include <tbox/util/fs.h>
 
 namespace tbox {
-namespace async {
+namespace system {
 
-namespace {
-}
-
-Async::Async(eventx::ThreadPool &thread_pool)
+System::System(eventx::ThreadPool *thread_pool)
     : thread_pool_(thread_pool)
 { }
 
-void Async::readFile(const std::string &filename, ErrorCodeStringCb &&cb)
+void System::readFile(const std::string &filename, StringCallback &&cb)
 {
+    TBOX_ASSERT(cb != nullptr);
+
     struct Tmp {
         int error_code = 0;
         std::string result;
-        ErrorCodeStringCb cb;
+        StringCallback cb;
     };
 
     auto tmp = std::make_shared<Tmp>();
     tmp->cb = std::move(cb);
 
-    thread_pool_.execute(
+    thread_pool_->execute(
         [tmp, filename] {
             if (!util::fs::ReadStringFromTextFile(filename, tmp->result))
                 tmp->error_code = 1;
@@ -35,18 +35,20 @@ void Async::readFile(const std::string &filename, ErrorCodeStringCb &&cb)
     );
 }
 
-void Async::readFileLines(const std::string &filename, ErrorCodeStringVecCb &&cb)
+void System::readFileLines(const std::string &filename, StringVecCallback &&cb)
 {
+    TBOX_ASSERT(cb != nullptr);
+
     struct Tmp {
         int error_code = 0;
         std::vector<std::string> line_vec;
-        ErrorCodeStringVecCb cb;
+        StringVecCallback cb;
     };
 
     auto tmp = std::make_shared<Tmp>();
     tmp->cb = std::move(cb);
 
-    thread_pool_.execute(
+    thread_pool_->execute(
         [tmp, filename] {
             auto is_succ = util::fs::ReadEachLineFromTextFile(filename,
                 [tmp](const std::string &line) {
@@ -63,44 +65,46 @@ void Async::readFileLines(const std::string &filename, ErrorCodeStringVecCb &&cb
     );
 }
 
-void Async::writeFile(const std::string &filename, const std::string &content, bool sync_now, ErrorCodeCb &&cb)
+void System::writeFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
     struct Tmp {
         int error_code = 0;
-        ErrorCodeCb cb;
+        Callback cb;
     };
 
     auto tmp = std::make_shared<Tmp>();
     tmp->cb = std::move(cb);
 
-    thread_pool_.execute(
+    thread_pool_->execute(
         [tmp, filename, content, sync_now] {
             if (!util::fs::WriteStringToTextFile(filename, content, sync_now))
                 tmp->error_code = 1;
         },
         [tmp] {
-            tmp->cb(tmp->error_code);
+            if (tmp->cb)
+                tmp->cb(tmp->error_code);
         }
     );
 }
 
-void Async::appendFile(const std::string &filename, const std::string &content, bool sync_now, ErrorCodeCb &&cb)
+void System::appendFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
     struct Tmp {
         int error_code = 0;
-        ErrorCodeCb cb;
+        Callback cb;
     };
 
     auto tmp = std::make_shared<Tmp>();
     tmp->cb = std::move(cb);
 
-    thread_pool_.execute(
+    thread_pool_->execute(
         [tmp, filename, content, sync_now] {
             if (!util::fs::AppendStringToTextFile(filename, content, sync_now))
                 tmp->error_code = 1;
         },
         [tmp] {
-            tmp->cb(tmp->error_code);
+            if (tmp->cb)
+                tmp->cb(tmp->error_code);
         }
     );
 }
