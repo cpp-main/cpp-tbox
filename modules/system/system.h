@@ -27,8 +27,8 @@ class System {
 
     void removeFile(const std::string &filename, Callback &&cb = nullptr);
 
-    void executeCmd(const std::string &filename, const std::string &context, Callback &&cb = nullptr);
-    void executeCmd(const std::string &filename, const std::string &context, StringCallback &&cb);
+    void executeCmd(const std::string &cmd, Callback &&cb = nullptr);
+    void executeCmd(const std::string &cmd, StringCallback &&cb);
 
   private:
     eventx::ThreadPool *thread_pool_;

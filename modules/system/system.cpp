@@ -3,6 +3,7 @@
 #include <memory>
 #include <tbox/base/assert.h>
 #include <tbox/util/fs.h>
+#include <tbox/util/execute_cmd.h>
 
 namespace tbox {
 namespace system {
@@ -13,6 +14,7 @@ System::System(eventx::ThreadPool *thread_pool)
 
 void System::readFile(const std::string &filename, StringCallback &&cb)
 {
+    TBOX_ASSERT(!filename.empty());
     TBOX_ASSERT(cb != nullptr);
 
     struct Tmp {
@@ -37,6 +39,7 @@ void System::readFile(const std::string &filename, StringCallback &&cb)
 
 void System::readFileLines(const std::string &filename, StringVecCallback &&cb)
 {
+    TBOX_ASSERT(!filename.empty());
     TBOX_ASSERT(cb != nullptr);
 
     struct Tmp {
@@ -67,6 +70,8 @@ void System::readFileLines(const std::string &filename, StringVecCallback &&cb)
 
 void System::writeFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
+    TBOX_ASSERT(!filename.empty());
+
     struct Tmp {
         int error_code = 0;
         Callback cb;
@@ -89,6 +94,8 @@ void System::writeFile(const std::string &filename, const std::string &content, 
 
 void System::appendFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
+    TBOX_ASSERT(!filename.empty());
+
     struct Tmp {
         int error_code = 0;
         Callback cb;
@@ -111,6 +118,8 @@ void System::appendFile(const std::string &filename, const std::string &content,
 
 void System::removeFile(const std::string &filename, Callback &&cb)
 {
+    TBOX_ASSERT(!filename.empty());
+
     struct Tmp {
         int error_code = 0;
         Callback cb;
@@ -131,6 +140,54 @@ void System::removeFile(const std::string &filename, Callback &&cb)
     );
 }
 
+void System::executeCmd(const std::string &cmd, Callback &&cb)
+{
+    TBOX_ASSERT(!cmd.empty());
+
+    struct Tmp {
+        int error_code = 0;
+        Callback cb;
+    };
+
+    auto tmp = std::make_shared<Tmp>();
+    tmp->cb = std::move(cb);
+
+    thread_pool_->execute(
+        [tmp, cmd] {
+            if (!util::ExecuteCmd(cmd))
+                tmp->error_code = 1;
+        },
+        [tmp] {
+            if (tmp->cb)
+                tmp->cb(tmp->error_code);
+        }
+    );
+}
+
+void System::executeCmd(const std::string &cmd, StringCallback &&cb)
+{
+    TBOX_ASSERT(!cmd.empty());
+    TBOX_ASSERT(cb != nullptr);
+
+    struct Tmp {
+        int error_code = 0;
+        std::string result;
+        StringCallback cb;
+    };
+
+    auto tmp = std::make_shared<Tmp>();
+    tmp->cb = std::move(cb);
+
+    thread_pool_->execute(
+        [tmp, cmd] {
+            if (!util::ExecuteCmd(cmd, tmp->result))
+                tmp->error_code = 1;
+        },
+        [tmp] {
+            tmp->cb(tmp->error_code, tmp->result);
+        }
+    );
+}
 
 }
 }

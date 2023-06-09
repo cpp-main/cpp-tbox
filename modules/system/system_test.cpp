@@ -160,6 +160,39 @@ TEST_F(SystemTest, removeFileNoCallback) {
     ASSERT_FALSE(util::fs::IsFileExist(filename));
 }
 
+TEST_F(SystemTest, executeCmdOnly) {
+    std::string wcontent = "This is SystemTest::executeCmd";
+
+    sys_->executeCmd("echo -n '" + wcontent + "' > " + filename);
+
+    loop_->exitLoop(std::chrono::milliseconds(100));
+    loop_->runLoop();
+
+    std::string rcontent;
+    ASSERT_TRUE(util::fs::ReadStringFromTextFile(filename, rcontent));
+    EXPECT_EQ(rcontent, wcontent);
+}
+
+TEST_F(SystemTest, executeCmdThenGetResult) {
+    std::string wcontent = "This is SystemTest::executeCmd with cb";
+    ASSERT_TRUE(util::fs::WriteStringToTextFile(filename, wcontent));
+
+    int errcode = -1;
+    std::string rcontent;
+    sys_->executeCmd("cat " + filename,
+        [&](int code, const std::string &content) {
+            errcode = code;
+            rcontent = content;
+        }
+    );
+
+    loop_->exitLoop(std::chrono::milliseconds(100));
+    loop_->runLoop();
+
+    ASSERT_EQ(errcode, 0);
+    EXPECT_EQ(rcontent, wcontent);
+}
+
 }
 }
 }
