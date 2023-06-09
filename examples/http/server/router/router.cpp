@@ -1,9 +1,9 @@
-#include <base/log.h>
-#include <base/scope_exit.hpp>
-#include <log/stdout_channel.h>
-#include <event/signal_event.h>
-#include <http/server/server.h>
-#include <http/server/router.h>
+#include <tbox/base/log.h>
+#include <tbox/base/scope_exit.hpp>
+#include <tbox/log/async_stdout_sink.h>
+#include <tbox/event/signal_event.h>
+#include <tbox/http/server/server.h>
+#include <tbox/http/server/router.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
         bind_addr = argv[1];
     }
 
-    log::StdoutChannel log;
+    log::AsyncStdoutSink log;
     log.enable();
     log.enableColor(true);
     log.setLevel(LOG_LEVEL_TRACE);
