@@ -11,7 +11,7 @@ namespace tbox {
 namespace eventx {
 
 TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what)
-    : tbox::event::TimerEvent(what)
+    : tbox::event::Event(what)
     , loop_(loop)
     , timer_fd_event_(loop->newFdEvent())
 { }
@@ -59,18 +59,6 @@ bool TimerFd::disable()
 tbox::event::Loop* TimerFd::getLoop() const
 {
     return loop_;
-}
-
-bool TimerFd::initialize(const std::chrono::milliseconds &time_span, Mode mode)
-{
-    std::chrono::microseconds mics = std::chrono::duration_cast<std::chrono::microseconds>(time_span);
-    return initialize(mics, mode);
-}
-
-bool TimerFd::initialize(const std::chrono::microseconds &time_span, Mode mode)
-{
-    std::chrono::nanoseconds ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_span);
-    return initialize(ns, mode);
 }
 
 bool TimerFd::initialize(const std::chrono::nanoseconds &time_span, Mode mode)

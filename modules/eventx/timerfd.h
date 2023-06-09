@@ -1,12 +1,14 @@
 #ifndef TBOX_EVENTX_ACCURATE_TIMER_H_20230607
 #define TBOX_EVENTX_ACCURATE_TIMER_H_20230607
 
+#include <functional>
+#include <chrono>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/fd_event.h>
 
 namespace tbox {
 namespace eventx {
-class TimerFd : public tbox::event::TimerEvent {
+class TimerFd : public tbox::event::Event {
   public:
     TimerFd(tbox::event::Loop *loop, const std::string &what);
     ~TimerFd();
@@ -14,12 +16,12 @@ class TimerFd : public tbox::event::TimerEvent {
     virtual bool isEnabled() const override;
     virtual bool enable() override;
     virtual bool disable() override;
-
     virtual tbox::event::Loop* getLoop() const override;
-    virtual bool initialize(const std::chrono::milliseconds &time_span, Mode mode) override;
-    virtual bool initialize(const std::chrono::microseconds &time_span, Mode mode);
+
     virtual bool initialize(const std::chrono::nanoseconds &time_span, Mode mode);
-    virtual void setCallback(CallbackFunc &&cb) override;
+
+    using CallbackFunc = std::function<void ()>;
+    virtual void setCallback(CallbackFunc &&cb);
 
   private:
     void onEvent(short events);
