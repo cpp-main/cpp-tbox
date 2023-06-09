@@ -23,7 +23,8 @@ set(TBOX_UTIL_HEADERS
     base64.h
     checksum.h
     crc.h
-    json_deep_loader.h)
+    json_deep_loader.h
+    execute_cmd.h)
 
 set(TBOX_UTIL_SOURCES
     pid_file.cpp
@@ -39,7 +40,8 @@ set(TBOX_UTIL_SOURCES
     base64.cpp
     checksum.cpp
     crc.cpp
-    json_deep_loader.cpp)
+    json_deep_loader.cpp
+    execute_cmd.cpp)
 
 set(TBOX_UTIL_TEST_SOURCES
     pid_file_test.cpp
@@ -53,7 +55,8 @@ set(TBOX_UTIL_TEST_SOURCES
     json_test.cpp
     base64_test.cpp
     checksum_test.cpp
-    crc_test.cpp)
+    crc_test.cpp
+    execute_cmd_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})
 
