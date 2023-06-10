@@ -1,10 +1,10 @@
-#ifndef TBOX_EVENTX_ACCURATE_TIMER_H_20230607
-#define TBOX_EVENTX_ACCURATE_TIMER_H_20230607
+#ifndef TBOX_EVENTX_TIMER_FD_H_20230607
+#define TBOX_EVENTX_TIMER_FD_H_20230607
 
 #include <functional>
 #include <chrono>
 
-#include <tbox/event/fd_event.h>
+#include <tbox/event/forward.h>
 
 namespace tbox {
 namespace eventx {
@@ -15,28 +15,35 @@ class TimerFd {
     ~TimerFd();
 
   public:
-    bool initialize(const std::chrono::nanoseconds &time_span, event::Event::Mode mode);
+    /// 初始化
+    /**
+     * \param first     首次延迟时长
+     * \param repeat    重重间隔时长，如果不指定则表示单次定时
+     */
+    bool initialize(const std::chrono::nanoseconds first,
+                    const std::chrono::nanoseconds repeat = std::chrono::nanoseconds::zero());
+    void cleanup();
 
-    using CallbackFunc = std::function<void ()>;
-    void setCallback(CallbackFunc &&cb);
+    using Callback = std::function<void ()>;
+    void setCallback(Callback &&cb);
 
     bool isEnabled() const;
     bool enable();
     bool disable();
 
+
+    /// 获取距下一次触发剩余的时长
+    std::chrono::nanoseconds remainTime() const;
+
   private:
     void onEvent(short events);
 
   private:
-    CallbackFunc cb_{ nullptr };
-    tbox::event::Loop *loop_{ nullptr };
-    tbox::event::FdEvent *timer_fd_event_{ nullptr };
-    int timer_fd_{ -1 };
-    bool is_inited_{ false };
-    bool is_enabled_{ false };
-    std::chrono::milliseconds interval_ { 0 };
-    event::Event::Mode mode_{ event::Event::Mode::kOneshot };
+    struct Data;
+    Data *d_;
 };
+
 }
 }
-#endif
+
+#endif //TBOX_EVENTX_TIMER_FD_H_20230607

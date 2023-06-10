@@ -4,6 +4,7 @@
 #include <time.h>
 
 #include <tbox/event/loop.h>
+#include <tbox/base/scope_exit.hpp>
 #include "timerfd.h"
 
 namespace tbox {
@@ -12,14 +13,16 @@ namespace eventx {
 using namespace std;
 using namespace tbox::event;
 
-const int kAcceptableError = 10;
+const int kAcceptableError = 5;
 
 TEST(TimerFd, Oneshot)
 {
     auto sp_loop = Loop::New("epoll");
     auto timer_event = new TimerFd(sp_loop, "10");
+    SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
+
     EXPECT_FALSE(timer_event->enable());
-    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kOneshot));
+    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10)));
     EXPECT_TRUE(timer_event->enable());
 
     int run_time = 0;
@@ -31,16 +34,15 @@ TEST(TimerFd, Oneshot)
 
     EXPECT_EQ(run_time, 1);
     EXPECT_FALSE(timer_event->isEnabled());
-
-    delete timer_event;
-    delete sp_loop;
 }
 
 TEST(TimerFd, Persist)
 {
     auto sp_loop = Loop::New("epoll");
     auto timer_event = new TimerFd(sp_loop, "10");
-    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kPersist));
+    SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
+
+    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), chrono::milliseconds(10)));
     EXPECT_TRUE(timer_event->enable());
 
     int run_time = 0;
@@ -51,16 +53,15 @@ TEST(TimerFd, Persist)
 
     EXPECT_EQ(run_time, 10);
     EXPECT_TRUE(timer_event->isEnabled());
-
-    delete timer_event;
-    delete sp_loop;
 }
 
 TEST(TimerFd, DisableSelfInCallback)
 {
     auto sp_loop = Loop::New("epoll");
     auto timer_event = new TimerFd(sp_loop, "10");
-    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kPersist));
+    SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
+
+    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), chrono::milliseconds(10)));
     EXPECT_TRUE(timer_event->enable());
 
     int run_time = 0;
@@ -75,16 +76,15 @@ TEST(TimerFd, DisableSelfInCallback)
     sp_loop->runLoop();
 
     EXPECT_EQ(run_time, 1);
-
-    delete timer_event;
-    delete sp_loop;
 }
 
 TEST(TimerFd, Precision)
 {
     auto sp_loop = Loop::New("epoll");
     auto timer_event = new TimerFd(sp_loop, "100");
-    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(100), Event::Mode::kPersist));
+    SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
+
+    EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(100), chrono::milliseconds(100)));
     EXPECT_TRUE(timer_event->enable());
 
     int count = 0;
@@ -103,8 +103,6 @@ TEST(TimerFd, Precision)
     );
 
     sp_loop->runLoop();
-    delete timer_event;
-    delete sp_loop;
 }
 
 TEST(TimerFd, NanoSeconds)
@@ -114,31 +112,35 @@ TEST(TimerFd, NanoSeconds)
     // Get number of nanoseconds from last second to the present
     ASSERT_EQ(clock_gettime(CLOCK_MONOTONIC, &ts), 0) << "Failed to get clock time";
 
-    long ns = ts.tv_nsec;
-    long prev_ns = ns - (ns % 1000000);
-    long min_interval_ns = ns - prev_ns;
+    auto ns = ts.tv_nsec;
+    auto prev_ns = ns - (ns % 1000000);
+    auto min_interval_ns = ns - prev_ns;
     printf("Elapsed nanoseconds since last second: %ld\n", min_interval_ns);
+
     auto sp_loop = Loop::New("epoll");
     auto timer_event = new TimerFd(sp_loop, std::to_string(min_interval_ns));
-    EXPECT_TRUE(timer_event->initialize(chrono::nanoseconds(min_interval_ns), Event::Mode::kOneshot));
+    SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
+
+    EXPECT_TRUE(timer_event->initialize(chrono::nanoseconds(min_interval_ns)));
+
+    std::chrono::steady_clock::time_point start_ts, stop_ts;
+
+    EXPECT_TRUE(timer_event->enable());
+    start_ts = std::chrono::steady_clock::now();
+
     timer_event->setCallback(
         [&] {
+            stop_ts = std::chrono::steady_clock::now();
             timer_event->disable();
             sp_loop->exitLoop();
         }
     );
 
-    EXPECT_TRUE(timer_event->enable());
-
-    struct timespec before, after;
-    ASSERT_EQ(clock_gettime(CLOCK_MONOTONIC, &before), 0) << "Failed to get clock time";
     sp_loop->runLoop();
-    ASSERT_EQ(clock_gettime(CLOCK_MONOTONIC, &after), 0) << "Failed to get clock time";
-    uint64_t elapsed_ns = (after.tv_sec - before.tv_sec) * (uint64_t)1000000000 + (after.tv_nsec - before.tv_nsec);
+
+    uint64_t elapsed_ns = (stop_ts - start_ts).count();
     ASSERT_GE(elapsed_ns, min_interval_ns) << "Timer did not expire after " << min_interval_ns << "nanoseconds" << endl;
     ASSERT_LE(elapsed_ns, 2 * min_interval_ns) << "Timer expired too late, elapsed_ns=" << elapsed_ns << endl;
-    delete timer_event;
-    delete sp_loop;
 }
 
 }

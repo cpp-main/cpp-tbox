@@ -4,102 +4,165 @@
 #include <sys/timerfd.h>
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
+#include <tbox/event/fd_event.h>
 
 namespace tbox {
 namespace eventx {
 
+namespace {
+constexpr auto NANOSECS_PER_SECOND = 1000000000ul;
+}
+
+struct TimerFd::Data {
+    Callback cb;
+    tbox::event::Loop *loop { nullptr };
+    tbox::event::FdEvent *timer_fd_event { nullptr };
+    int timer_fd { -1 };
+    bool is_inited { false };
+    bool is_enabled { false };
+    struct itimerspec ts { 0 };
+    int cb_level {0};
+};
+
 TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what)
-    : loop_(loop)
-    , timer_fd_event_(loop->newFdEvent(what))
-{ }
+    : d_(new Data)
+{
+    d_->loop = loop;
+    d_->timer_fd_event = loop->newFdEvent(what);
+    d_->timer_fd_event->setCallback(std::bind(&TimerFd::onEvent, this, std::placeholders::_1));
+}
 
 TimerFd::~TimerFd()
 {
-    timer_fd_event_->disable();
-    CHECK_CLOSE_FD(timer_fd_);
-    CHECK_DELETE_OBJ(timer_fd_event_);
+    TBOX_ASSERT(d_->cb_level == 0);
+
+    cleanup();
+    CHECK_DELETE_RESET_OBJ(d_->timer_fd_event);
+    CHECK_DELETE_RESET_OBJ(d_);
 }
 
-bool TimerFd::initialize(const std::chrono::nanoseconds &time_span, event::Event::Mode mode)
+bool TimerFd::initialize(const std::chrono::nanoseconds first, 
+                         const std::chrono::nanoseconds repeat)
 {
-    CHECK_CLOSE_FD(timer_fd_);
-    timer_fd_ = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    if (timer_fd_ < 0)
+    cleanup();
+
+    int timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+    if (timer_fd < 0)
         return false;
 
-    struct itimerspec ts;
+    d_->timer_fd = timer_fd;
 
-    std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(time_span);
-    std::chrono::nanoseconds n = time_span - s;
+    auto first_nanosec = first.count();
+    auto repeat_nanosec = repeat.count();
 
-    ts.it_interval.tv_sec = s.count();
-    ts.it_interval.tv_nsec = n.count();
-    ts.it_value.tv_sec = s.count();
-    ts.it_value.tv_nsec = n.count();
+    d_->ts.it_value.tv_sec = first_nanosec / NANOSECS_PER_SECOND;
+    d_->ts.it_value.tv_nsec = first_nanosec % NANOSECS_PER_SECOND;
+    d_->ts.it_interval.tv_sec = repeat_nanosec / NANOSECS_PER_SECOND; 
+    d_->ts.it_interval.tv_nsec = repeat_nanosec % NANOSECS_PER_SECOND;
 
-    if (timerfd_settime(timer_fd_, TFD_TIMER_CANCEL_ON_SET, &ts, NULL) < 0) {
-        LogWarn("timerfd_settime() failed: errno=%d", errno);
-        return false;
-    }
+    auto mode = repeat_nanosec != 0 ? event::Event::Mode::kPersist : event::Event::Mode::kOneshot;
 
-    timer_fd_event_->initialize(timer_fd_, tbox::event::FdEvent::kReadEvent, mode);
-    timer_fd_event_->setCallback(std::bind(&TimerFd::onEvent, this, std::placeholders::_1));
+    d_->timer_fd_event->initialize(d_->timer_fd, tbox::event::FdEvent::kReadEvent, mode);
 
-    is_inited_ = true;
-    return is_inited_;
+    d_->is_inited = true;
+    return true;
+}
+
+void TimerFd::cleanup()
+{
+    if (!d_->is_inited)
+        return;
+
+    disable();
+    CHECK_CLOSE_RESET_FD(d_->timer_fd);
+    d_->cb = nullptr;
+    d_->is_inited = false;
 }
 
 bool TimerFd::isEnabled() const
 {
-    return is_enabled_;
+    return d_->is_enabled;
 }
 
 bool TimerFd::enable()
 {
-    if (!is_inited_)
+    if (!d_->is_inited)
         return false;
 
-    if (is_enabled_)
+    if (d_->is_enabled)
         return true;
 
-    is_enabled_ = timer_fd_event_->enable();
-    return is_enabled_;
+    if (!d_->timer_fd_event->enable())
+        return false;
+
+    if (timerfd_settime(d_->timer_fd, TFD_TIMER_CANCEL_ON_SET, &d_->ts, NULL) < 0) {
+        LogWarn("timerfd_settime() failed: errno=%d", errno);
+        return false;
+    }
+
+    d_->is_enabled = true;
+    return true;
 }
 
 bool TimerFd::disable()
 {
-    if (!is_inited_)
+    if (!d_->is_inited)
         return false;
 
-    if (!is_enabled_)
+    if (!d_->is_enabled)
         return true;
 
-    if (timer_fd_event_->disable()) {
-        is_enabled_ = false;
-        return true;
+    struct itimerspec ts = {0};
+    if (timerfd_settime(d_->timer_fd, TFD_TIMER_CANCEL_ON_SET, &ts, NULL) < 0) {
+        LogWarn("timerfd_settime() failed: errno=%d", errno);
+        return false;
     }
 
-    return false;
+    if (!d_->timer_fd_event->disable())
+        return false;
+
+    d_->is_enabled = false;
+    return true;
+}
+
+std::chrono::nanoseconds TimerFd::remainTime() const
+{
+    std::chrono::nanoseconds remain_time = std::chrono::nanoseconds::zero();
+
+    struct itimerspec ts;
+    int ret = ::timerfd_gettime(d_->timer_fd, &ts);
+    if (ret == 0) {
+        remain_time += std::chrono::seconds(ts.it_value.tv_sec);
+        remain_time += std::chrono::nanoseconds(ts.it_value.tv_nsec);
+    } else {
+        LogErr("timerfd_gettime() fail, ret: %d", ret);
+    }
+
+    return remain_time;
 }
 
 void TimerFd::onEvent(short events)
 {
     if (events & tbox::event::FdEvent::kReadEvent) {
         uint64_t exp = 0;
-        int len  = ::read(timer_fd_, &exp, sizeof(exp));
+        int len  = ::read(d_->timer_fd, &exp, sizeof(exp));
         if (len <= 0)
             return;
 
-        if (cb_)
-            cb_();
+        if (d_->cb) {
+            ++d_->cb_level;
+            d_->cb();
+            --d_->cb_level;
+        }
     }
 }
 
-void TimerFd::setCallback(CallbackFunc &&cb)
+void TimerFd::setCallback(Callback &&cb)
 {
-    cb_ = cb;
+    d_->cb = std::move(cb);
 }
 
 }
