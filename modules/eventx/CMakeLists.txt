@@ -18,7 +18,7 @@ set(TBOX_EVENTX_HEADERS
     loop_wdog.h
     work_thread.h
     loop_thread.h
-    timrefd.h)
+    timre_fd.h)
 
 set(TBOX_EVENTX_SOURCES
     thread_pool.cpp
@@ -26,7 +26,7 @@ set(TBOX_EVENTX_SOURCES
     loop_wdog.cpp
     work_thread.cpp
     loop_thread.cpp
-    timerfd.cpp)
+    timer_fd.cpp)
 
 set(TBOX_EVENTX_TEST_SOURCES
     thread_pool_test.cpp
@@ -36,7 +36,7 @@ set(TBOX_EVENTX_TEST_SOURCES
     loop_wdog_test.cpp
     work_thread_test.cpp
     loop_thread_test.cpp
-    timerfd_test.cpp)
+    timer_fd_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_EVENTX_SOURCES})
 

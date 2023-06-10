@@ -12,7 +12,7 @@ HEAD_FILES = \
 	loop_wdog.h \
 	work_thread.h \
 	loop_thread.h \
-	timerfd.h
+	timer_fd.h
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
@@ -20,7 +20,7 @@ CPP_SRC_FILES = \
 	loop_wdog.cpp \
 	work_thread.cpp \
 	loop_thread.cpp \
-	timerfd.cpp
+	timer_fd.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.eventx"' $(CXXFLAGS)
 
@@ -32,7 +32,7 @@ TEST_CPP_SRC_FILES = \
 	loop_wdog_test.cpp \
 	work_thread_test.cpp \
 	loop_thread_test.cpp \
-	timerfd_test.cpp
+	timer_fd_test.cpp
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
