@@ -1,6 +1,6 @@
-#include <base/assert.h>
-#include <base/log.h>
-#include <base/log_output.h>
+#include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
 
 int main() {
   LogOutput_Initialize();

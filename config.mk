@@ -6,6 +6,7 @@ MODULES += eventx
 MODULES += log
 MODULES += network
 MODULES += terminal
+MODULES += system
 MODULES += main
 
 ## 非核心模块，请根据需要选择
