@@ -3,25 +3,26 @@
 
 #include <functional>
 #include <chrono>
-#include <tbox/event/timer_event.h>
+
 #include <tbox/event/fd_event.h>
 
 namespace tbox {
 namespace eventx {
-class TimerFd : public tbox::event::Event {
+
+class TimerFd {
   public:
     TimerFd(tbox::event::Loop *loop, const std::string &what);
     ~TimerFd();
 
-    virtual bool isEnabled() const override;
-    virtual bool enable() override;
-    virtual bool disable() override;
-    virtual tbox::event::Loop* getLoop() const override;
-
-    virtual bool initialize(const std::chrono::nanoseconds &time_span, Mode mode);
+  public:
+    bool initialize(const std::chrono::nanoseconds &time_span, event::Event::Mode mode);
 
     using CallbackFunc = std::function<void ()>;
-    virtual void setCallback(CallbackFunc &&cb);
+    void setCallback(CallbackFunc &&cb);
+
+    bool isEnabled() const;
+    bool enable();
+    bool disable();
 
   private:
     void onEvent(short events);
@@ -34,7 +35,7 @@ class TimerFd : public tbox::event::Event {
     bool is_inited_{ false };
     bool is_enabled_{ false };
     std::chrono::milliseconds interval_ { 0 };
-    Mode mode_{ Mode::kOneshot };
+    event::Event::Mode mode_{ event::Event::Mode::kOneshot };
 };
 }
 }

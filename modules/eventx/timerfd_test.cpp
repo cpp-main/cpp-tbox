@@ -65,11 +65,11 @@ TEST(TimerFd, DisableSelfInCallback)
 
     int run_time = 0;
     timer_event->setCallback(
-            [&] () {
+        [&] () {
             timer_event->disable();
             ++run_time;
-            }
-            );
+        }
+    );
 
     sp_loop->exitLoop(std::chrono::milliseconds(100));
     sp_loop->runLoop();
@@ -90,7 +90,7 @@ TEST(TimerFd, Precision)
     int count = 0;
     auto start_time = chrono::steady_clock::now();
     timer_event->setCallback(
-            [&] {
+        [&] {
             ++count;
 
             auto d = chrono::steady_clock::now() - start_time;
@@ -99,8 +99,8 @@ TEST(TimerFd, Precision)
 
             if (count >= 20)
             sp_loop->exitLoop();
-            }
-            );
+        }
+    );
 
     sp_loop->runLoop();
     delete timer_event;
@@ -122,11 +122,11 @@ TEST(TimerFd, NanoSeconds)
     auto timer_event = new TimerFd(sp_loop, std::to_string(min_interval_ns));
     EXPECT_TRUE(timer_event->initialize(chrono::nanoseconds(min_interval_ns), Event::Mode::kOneshot));
     timer_event->setCallback(
-            [&] {
+        [&] {
             timer_event->disable();
             sp_loop->exitLoop();
-            }
-            );
+        }
+    );
 
     EXPECT_TRUE(timer_event->enable());
 
