@@ -1,4 +1,4 @@
-#include "system.h"
+#include "async.h"
 
 #include <memory>
 #include <tbox/base/assert.h>
@@ -6,13 +6,13 @@
 #include <tbox/util/execute_cmd.h>
 
 namespace tbox {
-namespace system {
+namespace eventx {
 
-System::System(eventx::ThreadPool *thread_pool)
+Async::Async(eventx::ThreadPool *thread_pool)
     : thread_pool_(thread_pool)
 { }
 
-void System::readFile(const std::string &filename, StringCallback &&cb)
+void Async::readFile(const std::string &filename, StringCallback &&cb)
 {
     TBOX_ASSERT(!filename.empty());
     TBOX_ASSERT(cb != nullptr);
@@ -37,7 +37,7 @@ void System::readFile(const std::string &filename, StringCallback &&cb)
     );
 }
 
-void System::readFileLines(const std::string &filename, StringVecCallback &&cb)
+void Async::readFileLines(const std::string &filename, StringVecCallback &&cb)
 {
     TBOX_ASSERT(!filename.empty());
     TBOX_ASSERT(cb != nullptr);
@@ -68,7 +68,7 @@ void System::readFileLines(const std::string &filename, StringVecCallback &&cb)
     );
 }
 
-void System::writeFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
+void Async::writeFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
     TBOX_ASSERT(!filename.empty());
 
@@ -92,7 +92,7 @@ void System::writeFile(const std::string &filename, const std::string &content, 
     );
 }
 
-void System::appendFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
+void Async::appendFile(const std::string &filename, const std::string &content, bool sync_now, Callback &&cb)
 {
     TBOX_ASSERT(!filename.empty());
 
@@ -116,7 +116,7 @@ void System::appendFile(const std::string &filename, const std::string &content,
     );
 }
 
-void System::removeFile(const std::string &filename, Callback &&cb)
+void Async::removeFile(const std::string &filename, Callback &&cb)
 {
     TBOX_ASSERT(!filename.empty());
 
@@ -140,7 +140,7 @@ void System::removeFile(const std::string &filename, Callback &&cb)
     );
 }
 
-void System::executeCmd(const std::string &cmd, Callback &&cb)
+void Async::executeCmd(const std::string &cmd, Callback &&cb)
 {
     TBOX_ASSERT(!cmd.empty());
 
@@ -164,7 +164,7 @@ void System::executeCmd(const std::string &cmd, Callback &&cb)
     );
 }
 
-void System::executeCmd(const std::string &cmd, StringCallback &&cb)
+void Async::executeCmd(const std::string &cmd, StringCallback &&cb)
 {
     TBOX_ASSERT(!cmd.empty());
     TBOX_ASSERT(cb != nullptr);

@@ -12,7 +12,8 @@ HEAD_FILES = \
 	loop_wdog.h \
 	work_thread.h \
 	loop_thread.h \
-	timer_fd.h
+	timer_fd.h \
+	async.h \
 
 CPP_SRC_FILES = \
 	thread_pool.cpp \
@@ -20,7 +21,8 @@ CPP_SRC_FILES = \
 	loop_wdog.cpp \
 	work_thread.cpp \
 	loop_thread.cpp \
-	timer_fd.cpp
+	timer_fd.cpp \
+	async.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.eventx"' $(CXXFLAGS)
 
@@ -32,9 +34,10 @@ TEST_CPP_SRC_FILES = \
 	loop_wdog_test.cpp \
 	work_thread_test.cpp \
 	loop_thread_test.cpp \
-	timer_fd_test.cpp
+	timer_fd_test.cpp \
+	async_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk

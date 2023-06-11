@@ -24,7 +24,6 @@ CXXFLAGS := -DLOG_MODULE_ID='"tbox.main"' $(CXXFLAGS)
 TEST_CPP_SRC_FILES = \
 
 TEST_LDFLAGS := $(LDFLAGS) \
-	-ltbox_system \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \

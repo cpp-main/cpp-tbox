@@ -4,15 +4,15 @@
 #include <string>
 #include <vector>
 
-#include <tbox/eventx/thread_pool.h>
+#include "thread_pool.h"
 
 namespace tbox {
-namespace system {
+namespace eventx {
 
-/// 将与系统相关的阻塞性调用转换成异步回调形式
-class System {
+/// 将阻塞性的调用转换成异步回调形式
+class Async {
   public:
-    explicit System(eventx::ThreadPool *thread_pool);
+    explicit Async(eventx::ThreadPool *thread_pool);
 
   public:
     using Callback = std::function<void(int)>;

@@ -12,7 +12,6 @@ include app2/app.mk
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_main \
-	-ltbox_system \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \

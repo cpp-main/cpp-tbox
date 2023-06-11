@@ -18,7 +18,8 @@ set(TBOX_EVENTX_HEADERS
     loop_wdog.h
     work_thread.h
     loop_thread.h
-    timre_fd.h)
+    timre_fd.h
+    async,h)
 
 set(TBOX_EVENTX_SOURCES
     thread_pool.cpp
@@ -26,7 +27,8 @@ set(TBOX_EVENTX_SOURCES
     loop_wdog.cpp
     work_thread.cpp
     loop_thread.cpp
-    timer_fd.cpp)
+    timer_fd.cpp
+    async.cpp)
 
 set(TBOX_EVENTX_TEST_SOURCES
     thread_pool_test.cpp
@@ -36,7 +38,8 @@ set(TBOX_EVENTX_TEST_SOURCES
     loop_wdog_test.cpp
     work_thread_test.cpp
     loop_thread_test.cpp
-    timer_fd_test.cpp)
+    timer_fd_test.cpp
+    async_test.cpp)
 
 add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_EVENTX_SOURCES})
 
@@ -46,7 +49,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 if(${TBOX_ENABLE_TEST})
     add_executable(${PROJECT_NAME}_test ${TBOX_EVENTX_TEST_SOURCES})
-    target_link_libraries(${PROJECT_NAME}_test gmock_main gmock gtest pthread ${PROJECT_NAME} tbox_base tbox_event rt dl)
+    target_link_libraries(${PROJECT_NAME}_test gmock_main gmock gtest pthread ${PROJECT_NAME} tbox_base tbox_util tbox_event rt dl)
     add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 endif()
 
