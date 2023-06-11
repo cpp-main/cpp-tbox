@@ -27,8 +27,8 @@ namespace {
         time_t ts_sec = content->timestamp.sec;
         struct tm tm;
         localtime_r(&ts_sec, &tm);
-        char tmp[20];
-        strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", &tm);
+        char tmp[15];
+        strftime(tmp, sizeof(tmp), "%m-%d %H:%M:%S", &tm);
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
 #else
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%u.%06u", content->timestamp.sec, content->timestamp.usec);

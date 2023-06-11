@@ -13,7 +13,7 @@ namespace eventx {
 using namespace std;
 using namespace tbox::event;
 
-const int kAcceptableError = 5;
+const int kAcceptableError = 1;
 
 TEST(TimerFd, Oneshot)
 {
@@ -98,7 +98,7 @@ TEST(TimerFd, Precision)
             EXPECT_LT(d, chrono::milliseconds(count * 100 + kAcceptableError));
 
             if (count >= 20)
-            sp_loop->exitLoop();
+                sp_loop->exitLoop();
         }
     );
 

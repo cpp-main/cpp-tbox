@@ -8,6 +8,8 @@
 #include <tbox/base/log_output.h>
 
 using namespace std;
+using namespace tbox::event;
+using namespace tbox::eventx;
 
 //! 模拟存储大数据到文件
 int StoreDataToFile(const string &filename, const string &content)
@@ -20,9 +22,6 @@ int StoreDataToFile(const string &filename, const string &content)
 
 int main(int argc, char **argv)
 {
-    using namespace tbox::event;
-    using namespace tbox::eventx;
-
     LogOutput_Initialize();
 
     Loop* sp_loop = Loop::New();
@@ -57,9 +56,8 @@ int main(int argc, char **argv)
         }
     );
 
-
     LogInfo("Start");
-    sp_loop->runLoop(Loop::Mode::kForever);
+    sp_loop->runLoop();
     LogInfo("Stoped");
 
     sp_tp->cleanup();
