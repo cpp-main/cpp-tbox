@@ -1,14 +1,18 @@
 #ifndef TBOX_EVENTX_TIMER_FD_H_20230607
 #define TBOX_EVENTX_TIMER_FD_H_20230607
 
-#include <functional>
+#include <string>
 #include <chrono>
+#include <functional>
 
 #include <tbox/event/forward.h>
 
 namespace tbox {
 namespace eventx {
 
+/**
+ * 基于 timerfd 的定时器类
+ */
 class TimerFd {
   public:
     /// 构造
@@ -23,7 +27,12 @@ class TimerFd {
     /// 初始化
     /**
      * \param first     首次触发间隔时长
-     * \param repeat    重复触发间隔时长，如果为zero()则表示不重复触发
+     * \param repeat    重复触发间隔时长
+     *
+     * \note
+     *  1.如果为周期性定时器，将first与repeat均设置为触发周期即可
+     *  2.如果为单次定时器，指定first为延时时长，repeat填zero即可
+     *  3.first不能设置为zero()，否则定时器不工作
      */
     bool initialize(const std::chrono::nanoseconds first,
                     const std::chrono::nanoseconds repeat = std::chrono::nanoseconds::zero());

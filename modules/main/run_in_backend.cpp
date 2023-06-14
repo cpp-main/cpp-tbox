@@ -145,6 +145,7 @@ bool Start(int argc, char **argv) {
     LogErr("Context init fail");
   }
 
+  log.cleanup();
   return false;
 }
 
