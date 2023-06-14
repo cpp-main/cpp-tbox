@@ -5,9 +5,9 @@ set(TBOX_UTIL_VERSION_MINOR 0)
 set(TBOX_UTIL_VERSION_PATCH 2)
 set(TBOX_UTIL_VERSION ${TBOX_UTIL_VERSION_MAJOR}.${TBOX_UTIL_VERSION_MINOR}.${TBOX_UTIL_VERSION_PATCH})
 
-project(tbox_util)
-
 add_definitions(-DLOG_MODULE_ID="tbox.util")
+
+set(TBOX_LIBRARY_NAME tbox_util)
 
 set(TBOX_UTIL_HEADERS
     pid_file.h
@@ -55,17 +55,42 @@ set(TBOX_UTIL_TEST_SOURCES
     checksum_test.cpp
     crc_test.cpp)
 
-add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})
+add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})
+add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                        VERSION ${TBOX_UTIL_VERSION}
-                      SOVERSION ${TBOX_UTIL_VERSION_MAJOR})
+set_target_properties(
+    ${TBOX_LIBRARY_NAME} PROPERTIES
+    VERSION ${TBOX_UTIL_VERSION}
+    SOVERSION ${TBOX_UTIL_VERSION_MAJOR}
+)
 
 if(${TBOX_ENABLE_TEST})
-    add_executable(${PROJECT_NAME}_test ${TBOX_UTIL_TEST_SOURCES})
-    target_link_libraries(${PROJECT_NAME}_test gmock_main gmock gtest pthread ${PROJECT_NAME} tbox_base rt dl)
-    add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+    add_executable(${TBOX_LIBRARY_NAME}_test ${TBOX_UTIL_TEST_SOURCES})
+    target_link_libraries(${TBOX_LIBRARY_NAME}_test gmock_main gmock gtest pthread ${TBOX_LIBRARY_NAME} tbox_base rt dl)
+    add_test(NAME ${TBOX_LIBRARY_NAME}_test COMMAND ${TBOX_LIBRARY_NAME}_test)
 endif()
 
-install(FILES ${TBOX_UTIL_HEADERS} DESTINATION include/tbox/util)
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
+# install the target and create export-set
+install(
+    TARGETS ${TBOX_LIBRARY_NAME}
+    EXPORT ${TBOX_LIBRARY_NAME}_targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# install header file
+install(
+    FILES ${TBOX_UTIL_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
+)
+
+
+# generate and install export file
+install(
+    EXPORT ${TBOX_LIBRARY_NAME}_targets
+    FILE ${TBOX_LIBRARY_NAME}_targets.cmake
+    NAMESPACE tbox::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tbox
+)

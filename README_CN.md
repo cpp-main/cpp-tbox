@@ -120,8 +120,16 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
 # 使用教程
-关于如何使用 cpp-tbox 开发自己的程序，详见教程：
+1. 关于如何使用 cpp-tbox 开发自己的程序，详见教程：
 [cpp-tbox-tutorials](https://gitee.com/cpp-master/cpp-tbox-tutorials)  
+
+2. 使用CMake **find_package**:
+tbox 使用CMake的components构建, 使用库的方法如下(CMakeLists.txt):
+```
+find_package(tbox COMPONENTS base util alarm event eventx ... REQUIRED) or find_package(tbox COMPONENTS base REQUIRED PATHS /your/install/path)
+target_link_libraries(your_target PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx ...)
+```
+
 
 # 外部库依赖
 

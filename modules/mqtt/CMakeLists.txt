@@ -5,18 +5,43 @@ set(TBOX_MQTT_VERSION_MINOR 0)
 set(TBOX_MQTT_VERSION_PATCH 1)
 set(TBOX_MQTT_VERSION ${TBOX_MQTT_VERSION_MAJOR}.${TBOX_MQTT_VERSION_MINOR}.${TBOX_MQTT_VERSION_PATCH})
 
-project(tbox_mqtt)
-
 add_definitions(-DLOG_MODULE_ID="tbox.mqtt")
+
+set(TBOX_LIBRARY_NAME tbox_mqtt)
 
 set(TBOX_MQTT_HEADERS client.h)
 set(TBOX_MQTT_SOURCES client.cpp)
 
-add_library(${PROJECT_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_MQTT_SOURCES})
+add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_MQTT_SOURCES})
+add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                        VERSION ${TBOX_MQTT_VERSION}
-                      SOVERSION ${TBOX_MQTT_VERSION_MAJOR})
+set_target_properties(
+    ${TBOX_LIBRARY_NAME} PROPERTIES
+    VERSION ${TBOX_MQTT_VERSION}
+    SOVERSION ${TBOX_MQTT_VERSION_MAJOR}
+)
 
-install(FILES ${TBOX_MQTT_HEADERS} DESTINATION include/tbox/mqtt)
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
+# install the target and create export-set
+install(
+    TARGETS ${TBOX_LIBRARY_NAME}
+    EXPORT ${TBOX_LIBRARY_NAME}_targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# install header file
+install(
+    FILES ${TBOX_MQTT_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
+)
+
+
+# generate and install export file
+install(
+    EXPORT ${TBOX_LIBRARY_NAME}_targets
+    FILE ${TBOX_LIBRARY_NAME}_targets.cmake
+    NAMESPACE tbox::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tbox
+)
