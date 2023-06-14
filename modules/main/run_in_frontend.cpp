@@ -3,6 +3,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/json.hpp>
+#include <tbox/base/log_output.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
@@ -72,6 +73,8 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
 
 int Main(int argc, char **argv)
 {
+    LogOutput_Enable();
+
     InstallErrorSignals();
     SetScopeExitAction([] { UninstallErrorSignals(); });
 
@@ -117,6 +120,7 @@ int Main(int argc, char **argv)
     }
 
     log.initialize(argv[0], ctx, js_conf);
+    LogOutput_Disable();
 
     SayHello();
 
@@ -143,6 +147,8 @@ int Main(int argc, char **argv)
     }
 
     LogInfo("Bye!");
+
+    LogOutput_Enable();
     log.cleanup();
 
     return 0;

@@ -4,6 +4,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/json.hpp>
+#include <tbox/base/log_output.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
@@ -65,6 +66,19 @@ void RunInBackend()
   eventx::LoopWDog::Unregister(loop);
   eventx::LoopWDog::Stop();
 }
+
+void End()
+{
+  LogInfo("Bye!");
+
+  LogOutput_Enable();
+  _runtime->log.cleanup();
+
+  CHECK_DELETE_RESET_OBJ(_runtime);
+
+  UninstallErrorSignals();
+}
+
 }
 
 bool Start(int argc, char **argv) {
@@ -72,6 +86,8 @@ bool Start(int argc, char **argv) {
     std::cerr << "Err: process started" << std::endl;
     return false;
   }
+
+  LogOutput_Enable();
 
   InstallErrorSignals();
   InstallTerminate();
@@ -116,6 +132,7 @@ bool Start(int argc, char **argv) {
   }
 
   log.initialize(argv[0], ctx, js_conf);
+  LogOutput_Disable();
 
   SayHello();
 
@@ -145,7 +162,7 @@ bool Start(int argc, char **argv) {
     LogErr("Context init fail");
   }
 
-  log.cleanup();
+  End();
   return false;
 }
 
@@ -169,12 +186,7 @@ void Stop() {
   _runtime->apps.cleanup();  //! cleanup所有应用
   _runtime->ctx.cleanup();
 
-  LogInfo("Bye!");
-  _runtime->log.cleanup();
-
-  CHECK_DELETE_RESET_OBJ(_runtime);
-
-  UninstallErrorSignals();
+  End();
 }
 
 }

@@ -22,7 +22,7 @@ int StoreDataToFile(const string &filename, const string &content)
 
 int main(int argc, char **argv)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop* sp_loop = Loop::New();
     ThreadPool *sp_tp = new ThreadPool(sp_loop);

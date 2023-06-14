@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     const char *topic = argv[1];
     const char *payload = argv[2];
 
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });

@@ -62,7 +62,7 @@ TEST(LoopWDog, MainLoopBlock)
 
 TEST(LoopWDog, WorkLoopBlock)
 {
-  //LogOutput_Initialize();
+  //LogOutput_Enable();
   LoopWDog::Start();
 
   auto sp_loop = Loop::New();
@@ -106,7 +106,7 @@ TEST(LoopWDog, WorkLoopBlock)
 
   EXPECT_EQ(die_cb_count, 1);
   LoopWDog::Stop();
-  //LogOutput_Cleanup();
+  //LogOutput_Disable();
 }
 
 }

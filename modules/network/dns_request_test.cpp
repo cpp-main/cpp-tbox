@@ -18,7 +18,7 @@ const std::vector<IPAddress> dns_srv_ip_vec = {
 
 TEST(DnsRequest, request_baidu)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
@@ -43,12 +43,12 @@ TEST(DnsRequest, request_baidu)
     sp_loop->runLoop();
 
     EXPECT_TRUE(tag);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(DnsRequest, request_baidu_and_bing)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
@@ -90,12 +90,12 @@ TEST(DnsRequest, request_baidu_and_bing)
 
     EXPECT_TRUE(baidu_tag);
     EXPECT_TRUE(bing_tag);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(DnsRequest, request_baidu_and_bing_cancel_baidu)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
@@ -123,13 +123,13 @@ TEST(DnsRequest, request_baidu_and_bing_cancel_baidu)
 
     EXPECT_FALSE(baidu_tag);
     EXPECT_TRUE(bing_tag);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 
 TEST(DnsRequest, request_not_exist_domain)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
@@ -146,12 +146,12 @@ TEST(DnsRequest, request_not_exist_domain)
     sp_loop->runLoop();
 
     EXPECT_TRUE(tag);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(DnsRequest, timeout)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop]{ delete sp_loop; });
@@ -172,6 +172,6 @@ TEST(DnsRequest, timeout)
     sp_loop->runLoop();
 
     EXPECT_TRUE(tag);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 

@@ -7,7 +7,7 @@ namespace tbox {
 
 TEST(CatchThrow, NoThrow)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool tag = false;
     bool has_catch = CatchThrow([&]{
@@ -17,12 +17,12 @@ TEST(CatchThrow, NoThrow)
     EXPECT_TRUE(tag);
     EXPECT_FALSE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowRuntimeError)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool tag = false;
     bool has_catch = CatchThrow([&]{
@@ -33,12 +33,12 @@ TEST(CatchThrow, ThrowRuntimeError)
     EXPECT_FALSE(tag);
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowInt)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool has_catch = CatchThrow([&]{
         throw 100;
@@ -46,12 +46,12 @@ TEST(CatchThrow, ThrowInt)
 
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowRawString)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool has_catch = CatchThrow([&]{
         throw "this is const char*";
@@ -59,12 +59,12 @@ TEST(CatchThrow, ThrowRawString)
 
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowStdString)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool has_catch = CatchThrow([&]{
         throw std::string("this is std::string");
@@ -72,12 +72,12 @@ TEST(CatchThrow, ThrowStdString)
 
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowCustomType)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     struct CustomType {};
     bool has_catch = CatchThrow([&]{
@@ -86,12 +86,12 @@ TEST(CatchThrow, ThrowCustomType)
 
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrow, ThrowPrintStack)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     bool has_catch = CatchThrow([&]{
         throw 10;
@@ -99,7 +99,7 @@ TEST(CatchThrow, ThrowPrintStack)
 
     EXPECT_TRUE(has_catch);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(CatchThrowQuietly, Throw)

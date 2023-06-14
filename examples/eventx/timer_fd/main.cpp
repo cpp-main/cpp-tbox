@@ -11,7 +11,7 @@ using namespace tbox::eventx;
 
 int main(int argc, char **argv)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([=] { delete sp_loop; });
@@ -33,6 +33,6 @@ int main(int argc, char **argv)
     sp_loop->runLoop();
     LogInfo("Stoped");
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
     return 0;
 }

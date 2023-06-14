@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     using namespace tbox;
     using namespace tbox::event;
 
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     Loop* sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });

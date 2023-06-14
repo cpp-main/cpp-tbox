@@ -4,7 +4,7 @@
 
 TEST(Log, Levels)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
     LogFatal("fatal");
     LogErr("err");
     LogWarn("warn");
@@ -14,29 +14,29 @@ TEST(Log, Levels)
     LogTrace("trace");
     LogUndo();
     LogTag();
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(Log, Format)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
     LogInfo("%d, %f, %s", 123456, 12.345, "world");
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(Log, LogPuts)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
     LogPuts(LOG_LEVEL_INFO, "should be raw: %s, %d, %f");
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 TEST(Log, error)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
     LogErrno(1, "");
     LogErrno(1, "no value");
     LogErrno(1, "has value:%d", 123);
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }

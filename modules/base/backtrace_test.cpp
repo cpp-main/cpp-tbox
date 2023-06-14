@@ -7,9 +7,9 @@ namespace tbox {
 
 TEST(Backtrace, _)
 {
-    LogOutput_Initialize();
+    LogOutput_Enable();
     LogBacktrace();
-    LogOutput_Cleanup();
+    LogOutput_Disable();
 }
 
 }

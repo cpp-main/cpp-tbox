@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    LogOutput_Initialize();
+    LogOutput_Enable();
 
     std::string cron_expr;
     int timezone_offset_minutes = 0;
@@ -52,6 +52,6 @@ int main(int argc, char *argv[]) {
 
     sp_loop->runLoop(Loop::Mode::kForever);
 
-    LogOutput_Cleanup();
+    LogOutput_Disable();
     return 0;
 }

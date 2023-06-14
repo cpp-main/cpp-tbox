@@ -13,13 +13,11 @@
 
 #include "log_imp.h"
 
-#define TIMESTAMP_STRING_SIZE   28
-#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
+#define TIMESTAMP_STRING_SIZE   22
 
 namespace {
     const char *level_name = "FEWNIDT";
     const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
-    std::mutex _stdout_lock;
 
     void _GetCurrTimeString(const LogContent *content, char *timestamp)
     {
@@ -37,10 +35,8 @@ namespace {
 
     void _PrintLogToStdout(const LogContent *content)
     {
-        char timestamp[TIMESTAMP_STRING_SIZE]; //!  "20170513 23:45:07.000000"
+        char timestamp[TIMESTAMP_STRING_SIZE]; //!  "05-13 23:45:07.000000"
         _GetCurrTimeString(content, timestamp);
-
-        std::lock_guard<std::mutex> lg(_stdout_lock);
 
         //! 开启色彩，显示日志等级
         printf("\033[%dm%c ", level_color_num[content->level], level_name[content->level]);
@@ -70,25 +66,24 @@ extern "C" {
     static void _LogOutput_PrintfFunc(const LogContent *content, void *ptr);
     static uint32_t _id = 0;
 
-    void LogOutput_Initialize()
+    void LogOutput_Enable()
     {
-        _id = LogAddPrintfFunc(_LogOutput_PrintfFunc, nullptr);
+        if (_id == 0)
+            _id = LogAddPrintfFunc(_LogOutput_PrintfFunc, nullptr);
     }
 
-    void LogOutput_Cleanup()
+    void LogOutput_Disable()
     {
         LogRemovePrintfFunc(_id);
         _id = 0;
     }
 
-    static void _LogOutput_PrintfFunc(const LogContent *content, void *ptr)
+    static void _LogOutput_PrintfFunc(const LogContent *content, void *)
     {
         if ((LogOutput_FilterFunc != nullptr) &&
             !LogOutput_FilterFunc(content))
             return;
 
         _PrintLogToStdout(content);
-
-        (void)ptr;
     }
 }
