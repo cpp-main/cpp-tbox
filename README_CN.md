@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="documents/images/logo-with-slogan.jpg" alt="cpp-tbox logo"/>
+  <img src="documents/images/logo-with-slogan.png" alt="cpp-tbox logo"/>
 </p>
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
