@@ -26,7 +26,7 @@ class FileAsyncChannel : public AsyncChannel {
   private:
     std::string log_prefix_;
     std::string log_path_;
-    size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为2MB
+    size_t file_max_size_ = (1 << 20);  //!< 默认文件大小为1MB
     pid_t pid_ = 0;
 
     std::string filename_prefix_;

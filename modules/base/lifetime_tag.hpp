@@ -25,8 +25,7 @@ namespace tbox {
  *
  * if (w)   //! 条件成立
  *   cout << "value:" << o->value << endl;
- * * delete o;    //! 析构对象
- *
+ * delete o;    //! 析构对象
  *
  * 实现原理：
  * 该模块借鉴了智能指针的引用计数原理。它定义了两个类：
