@@ -6,109 +6,111 @@
 [![Language](https://img.shields.io/badge/language-c++11-red.svg)](https://en.cppreference.com/)
 [![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
-全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**。  
+[[中文]](README_CN.md)
 
-# 应用场景
+Full name: C++ Treasure Box,  is a service-oriented **development framework** and **component library** based on the Reactor model.
 
-- **智能硬件**，如：机器人（扫地机、商用服务机器人）、IPC、无人机、车载等；
-- **边缘计算组件**，如：智能家居网关、IOT边缘网关等；
-- **后台服务型软件**，如：[cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
+# Application field
 
-# 特点
+- **Intelligent hardware**, such as: robots (sweepers, commercial service robots), IPC, drones, vehicles, etc.;
+- **Edge computing components**, such as: smart home gateway, IOT edge gateway, etc.;
+- **Background service software**, such as: SOCK5, see:[cpp-socks5](https://gitee.com/cpp-master/cpp-socks5);
 
-## 1. 基于Reactor模型
-参考 Node.js 的 Reactor 模式。  
-主线程以 Reactor 模式处理非阻塞 IO 事件,并配合 ThreadPool 执行大运算与阻塞性操作。  
+# Features
+
+## 1. Based on the Reactor
+See the Node.js Reactor pattern.  
+The main thread handles non-blocking IO events in Reactor mode, and cooperates with ThreadPool to perform large calculations and blocking operations.  
 ![](documents/images/0001-tbox-loop.jpg)  
-该模式避免了多线程模式竞态加锁的烦恼,程序稳定可靠。  
+This mode avoids the annoyance of competing locking in multi-thread mode, and the program is stable and reliable.  
 
-## 2. 内含main框架,开箱即用
-使用内置的 main 框架处理了所有与业务无关的工作。您不需要关心日志怎么输出、参数怎么解析、程序怎么退出、main函数怎么写这些琐碎的事情。main框架都为您处理好了。  
-您只需要派生`tbox::main::Module`类,填写业务代码,然后注册到框架即可。  
-![](documents/images/0009-demo-app.png)
+## 2. Contains main framework, easy to use
+All non-business-related work is handled using the built-in main framework. You don't need to care about such trivial things as how to output the log, how to parse the parameters, how to exit the program, and how to write the main function. The main frame is all handled for you.  
+You only need to derive the `tbox::main::Module` class, fill in the business code, and then register to the framework.  
+![](documents/images/0009-demo-app.png)  
 
-## 3. 具有类Shell的命令终端
-可以与运行中的服务通过telnet进行交互,令其打印内部数据,或是执行特定的动作。这极大地降低了调试难度。  
-![shell交互示例](documents/images/0000-terminal-show.gif)  
+## 3. With Shell-like terminal
+You can interact with the running service through telnet, make it print internal data, or perform specific actions. This greatly reduces the difficulty of debugging.    
+![shell interaction](documents/images/0000-terminal-show.gif)  
 
-## 4. 完备的日志系统
-**1) 有三种日志输出渠道:stdout + filelog + syslog**  
+## 4. With completely log system
+**1) There are three log sink: stdout + filelog + syslog**  
 
-- stdout，将日志通过 `std::cout` 输出到终端;
-- syslog，将日志通过 `syslog()` 输出到系统日志;
-- filelog，将日志写入到指定目录下,以格式:`前缀.年月日_时分秒.进程号.log` 的文件中。文件大小超过1M则另创建新的日志文件。由于写文件效率低,该输出渠道采用前后端模式。
+- stdout，Output the log to the terminal via `std::cout`;
+- syslog，Output logs to syslog via `syslog()`;
+- filelog，Write the log to the specified directory, in the format: `<PRIFIX>.YYMMDD_HHMMSS.<PID>.log`. If the file size exceeds 1M, a new log file will be created. Due to the low efficiency of writing files, the output channel adopts the front-end and back-end modes.
 
-三种渠道可以启动参数中选定一个或同时多种,也可在运行时通过终端更改。
+One or more of the three sink can be selected in the startup parameters, and can also be changed through the terminal during operation.
 
-**2) 根据日志等级渲染不同颜色,一目了然,内容详尽**  
-日志内容包含了:等级、时间(精确到微秒)、线程号、模块名、函数名、正文、文件名、行号。  
-方便快速定位问题。  
-![日志打印展示](documents/images/0002-log-show.png)  
+**2) Different level different color**  
+The log content includes: level, time (accurate to microseconds), thread number, module name, function name, text, file name, line number.  
+It is convenient and quick to locate the problem. 
+![log show](documents/images/0002-log-show.png)  
 
-**3) 灵活的日志输出过滤器,且能运行时修改**  
-可在程序运行时针对不同的模块单独设置日志等级,如下:  
-![设置日志等级](documents/images/0001-set-log-level.gif)  
+**3) Flexible log output filter**  
+The log level can be set separately for different modules when the program is running, as follows:  
+![set log level](documents/images/0001-set-log-level.gif)  
 
-## 5. 灵活的参数系统,以不变应万变
-参数以JSON的格式提供，可以传入任何格式的运行参数，包括：整数、小数、字串、数组、组合参数，满足几乎所有参数传入需求：  
-![参数help](documents/images/0005-arguments.png)  
-在执行时可以使用 `-c your_cfg_file.json` 导入JSON格式的配置文件。同时还可以使用配合 `-s 'xx.yy.zz=vvv'` 临时指定参数。  
-而JSON格式的配置文件还支持include指令，在加载时去包含其它的配置文件。  
+## 5. Flexible parameter system
+Parameters are provided in JSON format, and any format of running parameters can be passed in, including: integers, decimals, strings, arrays, and combination parameters, meeting almost all parameter passing requirements:  
+![paremeter help](documents/images/0005-arguments.png)  
+You can use `-c your_cfg_file.json` to import a configuration file in JSON format at execution time. At the same time, you can also use `-s 'xx.yy.zz=vvv'` to specify parameters temporarily.  
+The configuration file in JSON format also supports the include command to include other configuration files when loading.  
 
-## 6. 跨线程委派任务,无需加锁
-子线程委托主线程执行:  
-![runInLoop示例](documents/images/0003-run-in-loop.png)  
-主线程委托子线程执行:  
-![ThreadPool示例](documents/images/0004-run-thread-pool.png)  
+## 6. Assign tasks across threads without locking
+The child thread entrusts the main thread to execute:  
+![runInLoop example](documents/images/0003-run-in-loop.png)  
+The main thread entrusts the child thread to execute:  
+![ThreadPool example](documents/images/0004-run-thread-pool.png)  
 
-## 7. 支持优雅的退出流程
-在接收到信号:SIGINT, SIGTERM, SIGQUIT, SIGPWR 时,会有序地执行退出流程,释放资源。做到干净地退出。   
-![友好地退出](documents/images/0002-exit-friendly.gif)  
+## 7. Graceful exit process
+When receiving signals: SIGINT, SIGTERM, SIGQUIT, SIGPWR, it will execute the exit process in an orderly manner and release resources. Do a clean exit.  
+![graceful exit](documents/images/0002-exit-friendly.gif)  
 
-## 8. 有全面的异常捕获机制
-当程序出现各种程序异常,如:段错误、断言、总线错误、异常未捕获等,架框会捕获并在日志系统中打印完整的调用栈。面对程序崩溃,不再一脸茫然。效果如下:  
-![异常栈打印](documents/images/0006-error-dump.png)  
+## 8. Comprehensive exception capture mechanism
+When various program exceptions occur in the program, such as: segment fault, assertion, bus error, exception not caught, etc., the framework will capture and print the complete call stack in the log system. Facing program crashes, no longer look blank. The effect is as follows:  
+![stack print](documents/images/0006-error-dump.png)  
 
-## 9. 有丰富的开发组件
+## 9. Rich components
 
-| 库名 | 中文名 | 说明 |
-|:----:|:---:|:----|
-| base | 基础库 | 含日志打印、常用工具等 |
-| util | 工具库 | 在业务代码中可能会用到的库 |
-| event | 事件库 | 实现了IO,Timer,Signal三种事件驱动,是整个框架的心脏 |
-| eventx | 事件扩展库 | 含 ThreadPool 线程池,WorkThread工作线程,TimerPool 定时器池等模块 |
-| log | 日志输出库 | 实现了终端、syslog、文件形式的日志输出 |
-| network | 网络库 | 实现了串口、终端、UDP、TCP 通信模块 |
-| terminal | 终端 | 类似shell的命令终端,可实现运行时与程序进行命令交互 |
-| **main** | 主框架 | 实现了完备的程序启动流程与框架,让开发者只需关心业务代码 |
-| mqtt | MQTT客户端库 | |
-| coroutine | 协程库 | 众所周知,异步框架不方便处理顺序性业务,协程弥补之 |
-| http | HTTP库 | 在network的基础上实现了HTTP的Server与Client模块 |
-| alarm | 闹钟模块 | 实现了4种常用的闹钟:CRON闹钟、单次闹钟、星期循环闹钟、工作日闹钟 |
-| flow | 流程模块 | 含多层级状态机与行为树,解决异步模式下动行流程问题 |
+| Name | What |
+|:----:|:----|
+| base | Including log printing, common tools, etc. |
+| util | Accessibility module |
+| event | Realized IO, Timer, Signal three kinds of event-driven, which is the heart of the whole framework |
+| eventx | Including ThreadPool thread pool, WorkThread worker thread, TimerPool timer pool and other modules |
+| log | Realize efficient and reliable terminal, syslog, and log output in the form of files |
+| network | Realized serial port, terminal, UDP, TCP communication module |
+| terminal | A shell-like command terminal that enables command interaction with programs during runtime |
+| **main** | Realized a complete program startup process and framework, so that developers only need to care about business code |
+| mqtt | MQTT Client |
+| coroutine | coroutine function |
+| http | Implemented HTTP Server and Client modules on the basis of network |
+| alarm | Realized 4 commonly used alarm clocks: CRON alarm clock, single alarm clock, weekly cycle alarm clock, weekday alarm clock |
+| flow | Contains multi-level state machine and behavior tree to solve the problem of action flow in asynchronous mode |
 
-# 适用环境
+# Environment
 
-- Linux 系统;
-- C++11 以上。
+- Linux series operating system;
+- C++11 or above.
 
-# 下载与构建
+# Download & build
 
-## 方法一：GNU Make
+## Using GNU Make
 ```
 git clone https://gitee.com/cpp-master/cpp-tbox.git
 cd cpp-tbox;
 make 3rd-party modules RELEASE=1
 ```
-完成之后，头文件与库文件都在 .staging 目录下。  
-当然也可以通过指定 `STAGING_DIR` 对头文件与库文件的生成路径进行指定。  
-如：
+After completion, the header files and library files are in the .staging directory.  
+Of course, you can also specify the generation path of header files and library files by specifying `STAGING_DIR`.  
+like:  
 ```
 make 3rd-party modules RELEASE=1 STAGING_DIR=$HOME/.tbox
 ```
-完成之后，头文件与库文件都在 $HOME/.tbox 路径下。
+After completion, the header files and library files are in the $HOME/.tbox path.  
 
-## 方法二：CMake
+## Using CMake
 ```
 git clone https://gitee.com/cpp-master/cpp-tbox.git
 cd cpp-tbox
@@ -116,49 +118,45 @@ cmake -B build
 cmake --build build
 cmake --install build
 ```
-通过指定`CMAKE_INSTALL_PREFIX` 自定义安装目录(默认安装在/usr/local):
+Customize the installation directory by specifying `CMAKE_INSTALL_PREFIX` (installed in /usr/local by default):  
 ```
 cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
-# 使用教程
-关于如何使用 cpp-tbox 开发自己的程序，详见教程：
+# Tutorial
+For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
 [cpp-tbox-tutorials](https://github.com/hevake/cpp-tbox-tutorials/blob/master/README.md)  
 
-# 外部库依赖
+# Dependencies
 
-| 库名 | 依赖模块 | 说明 | 安装方法 |
-|:----:|:--------:|:----:|:--------:|
-| libgtest-dev | 所有模块 | 单元测试用,如果不进行单元测试可忽略 | sudo apt install libgtest-dev |
-| libgmock-dev | 所有模块 | 单元测试用,如果不进行单元测试可忽略 | sudo apt install libgmock-dev |
-| mosquitto | mqtt | MQTT库,如果不使用mqtt模块可忽略 | sudo apt install libmosquitto-dev |
+| Name | Dependent module | Required | Use | Install |
+|:----:|:--------:|:--:|:----:|:--------:|
+| libgtest-dev | all | no | unit testing | sudo apt install libgtest-dev |
+| libgmock-dev | all | no |unit testing | sudo apt install libgmock-dev |
+| mosquitto | mqtt | no | MQTT | sudo apt install libmosquitto-dev |
 
-# 模块间依赖
-![依赖关系](documents/images/modules-dependence.png)  
+# Configure
 
-# 模块裁减
+Open the config.mk file, you don’t need to block the modules corresponding to `app_y += xxx`, but pay attention to the dependencies between modules.
 
-打开 config.mk 文件,将不需要模块对应 `app_y += xxx` 屏蔽即可,但要注意模块间的依赖性。
+# License
 
-# 开源许可
+[MIT](LICENSE), Free for use.
 
-[MIT](LICENSE),可免费商用。
+# Feedback
 
-# 反馈途径
+- Issue: Any questions are welcome to communicate in issue
+- WeChat: hevake\_lee
+- QQ Group: 738084942 (cpp-tbox 技术交流)
 
-- Issue: 任何问题都欢迎在issue里交流
-- 微信: hevake\_lee
-- QQ群: 738084942 (cpp-tbox 技术交流)
+# Encourage me
 
-# 鼓励我
+If this project makes your work easier and you leave work earlier, please give me more encouragement.
+You can do these:  
 
-如果这个项目让您的工作更轻松、下班更早了，请您给我更多的鼓励。  
-你可以做这些：  
-
-- 给它点亮三连： Star, Watch, Fork；
-- 向身边的同事与伙伴推荐，在技术论坛向您的读者推荐；
-- 加入上面的QQ群、加我微信进入微信群；
-- 积极反馈问题，提出建议；
-- 参与项目的开发，贡献您的力量；
-- 让我知道它被运用到了哪些的项目上（不收费，仅仅是想得到更多的成就感）；
-
+- Light up three combos for it: Star, Watch, Fork;
+- Recommend to colleagues and partners around you, and recommend to your readers in technical forums;
+- Join the above QQ group, add me on WeChat to enter the WeChat group;
+- Positive feedback on issues and suggestions;
+- Participate in the development of the project and contribute your strength;
+- Let me know which projects it is used in;
