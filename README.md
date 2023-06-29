@@ -8,13 +8,17 @@
 
 [[中文]](README_CN.md)
 
-Full name: C++ Treasure Box,  is a service-oriented **development framework** and **component library** based on the Reactor model.
+**C++ Treasure Box** is a service-oriented **development framework** and **component library** based on the Reactor model, aim at make C++ development easy.
 
 # Application field
 
 - **Intelligent hardware**, such as: robots (sweepers, commercial service robots), IPC, drones, vehicles, etc.;
 - **Edge computing components**, such as: smart home gateway, IOT edge gateway, etc.;
-- **Background service software**, such as: SOCK5, see:[cpp-socks5](https://gitee.com/cpp-master/cpp-socks5);
+- **Service**, such as: SOCK5, Middleware.
+
+See projects:
+
+- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5);
 
 # Features
 

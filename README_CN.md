@@ -8,13 +8,17 @@
 
 [[English]](README.md)
 
-全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**。  
+全称: C++ Treasure Box，C++百宝箱，是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**，旨在让C++开发变得轻松。  
 
 # 应用场景
 
 - **智能硬件**，如：机器人（扫地机、商用服务机器人）、IPC、无人机、车载等；
 - **边缘计算组件**，如：智能家居网关、IOT边缘网关等；
-- **后台服务型软件**，如：SOCKS5，见:[cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
+- **后台服务型软件**，如：SOCKS5、中间件
+
+参考项目:  
+
+- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
 
 # 特点
 
