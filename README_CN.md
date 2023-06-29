@@ -6,13 +6,19 @@
 [![Language](https://img.shields.io/badge/language-c++11-red.svg)](https://en.cppreference.com/)
 [![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
-全称: C++ Treasure Box,C++百宝箱,是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**。  
+[[English]](README.md)
+
+全称: C++ Treasure Box，C++百宝箱，是一个基于 Reactor 模式的服务型 **开发框架** 与 **组件库**，旨在让C++开发变得轻松。  
 
 # 应用场景
 
 - **智能硬件**，如：机器人（扫地机、商用服务机器人）、IPC、无人机、车载等；
 - **边缘计算组件**，如：智能家居网关、IOT边缘网关等；
-- **后台服务型软件**，如：[cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
+- **后台服务型软件**，如：SOCKS5、中间件
+
+参考项目:  
+
+- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
 
 # 特点
 
@@ -127,20 +133,17 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 
 # 外部库依赖
 
-| 库名 | 依赖模块 | 说明 | 安装方法 |
-|:----:|:--------:|:----:|:--------:|
-| libgtest-dev | 所有模块 | 单元测试用,如果不进行单元测试可忽略 | sudo apt install libgtest-dev |
-| libgmock-dev | 所有模块 | 单元测试用,如果不进行单元测试可忽略 | sudo apt install libgmock-dev |
-| mosquitto | mqtt | MQTT库,如果不使用mqtt模块可忽略 | sudo apt install libmosquitto-dev |
+| 库名 | 依赖模块 | 必需 | 说明 | 安装方法 |
+|:----:|:--------:|:--:| :----:|:--------:|
+| libgtest-dev | 所有 | 否 | 单元测试用 | sudo apt install libgtest-dev |
+| libgmock-dev | 所有 | 否 | 单元测试用 | sudo apt install libgmock-dev |
+| mosquitto | mqtt | 否 | MQTT通信 | sudo apt install libmosquitto-dev |
 
-# 模块间依赖
-![依赖关系](documents/images/modules-dependence.png)  
-
-# 模块裁减
-
+# 配置
+你可以决定哪些模块需要构建，哪些不需要。  
 打开 config.mk 文件,将不需要模块对应 `app_y += xxx` 屏蔽即可,但要注意模块间的依赖性。
 
-# 开源许可
+# 许可
 
 [MIT](LICENSE),可免费商用。
 
@@ -160,5 +163,5 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 - 加入上面的QQ群、加我微信进入微信群；
 - 积极反馈问题，提出建议；
 - 参与项目的开发，贡献您的力量；
-- 让我知道它被运用到了哪些的项目上（不收费，仅仅是想得到更多的成就感）；
+- 让我知道它被运用到了哪些的项目上；
 
