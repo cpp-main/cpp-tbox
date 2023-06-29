@@ -43,7 +43,7 @@ class CpuTimeCounter {
 class FixedTimeCounter {
   public:
     FixedTimeCounter(const char *file_name, const char *func_name, int line,
-                     std::chrono::nanoseconds threshold = std::chrono::nanoseconds::zero());
+                     uint64_t threshold_ns = 0);
     ~FixedTimeCounter();
 
     void stop();

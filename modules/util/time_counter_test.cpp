@@ -26,24 +26,24 @@ TEST(TimeCounter, SetNamedTimeCounter)
 TEST(TimeCounter, SetTimeCounterWithThreshold)
 {
     {
-        SetTimeCounterWithThreshold(std::chrono::milliseconds(10));
+        SetTimeCounterWithThreshold(10000000);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 
     {
-        SetTimeCounterWithThreshold(std::chrono::milliseconds(10));
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        SetTimeCounterWithThreshold(1000000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 }
 
 TEST(TimeCounter, SetNamedTimeCounterWithThreshold)
 {
-    SetNamedTimeCounterWithThreshold(a, std::chrono::milliseconds(10));
+    SetNamedTimeCounterWithThreshold(a, 10000000);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     StopNamedTimeCounterWithThreshold(a);
 
-    SetNamedTimeCounterWithThreshold(b, std::chrono::milliseconds(10));
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    SetNamedTimeCounterWithThreshold(b, 1000000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
     StopNamedTimeCounterWithThreshold(b);
 }
 
