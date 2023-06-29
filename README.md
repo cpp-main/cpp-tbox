@@ -18,7 +18,7 @@
 
 See projects:
 
-- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5);
+- [cpp-socks5](https://github.com/hevake/cpp-socks5);
 
 # Features
 
