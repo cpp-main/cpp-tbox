@@ -103,12 +103,11 @@ void CpuTimeCounter::print(const char *tag, uint64_t threshold_ns) const
 // FixedTimeCounter
 /////////////////////
 
-FixedTimeCounter::FixedTimeCounter(const char *file_name, const char *func_name, int line,
-                         std::chrono::nanoseconds threshold) :
+FixedTimeCounter::FixedTimeCounter(const char *file_name, const char *func_name, int line, uint64_t threshold_ns) :
     file_name_(file_name),
     func_name_(func_name),
     line_(line),
-    threshold_(threshold)
+    threshold_(std::chrono::nanoseconds(threshold_ns))
 {
     start_time_point_ = steady_clock::now();
 }
