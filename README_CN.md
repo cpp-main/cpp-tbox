@@ -153,7 +153,7 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 - 微信: hevake\_lee
 - QQ群: 738084942 (cpp-tbox 技术交流)
 
-# 鼓励我
+# 鼓励我们
 
 如果这个项目让您的工作更轻松、下班更早了，请您给我更多的鼓励。  
 你可以做这些：  

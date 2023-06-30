@@ -18,7 +18,7 @@
 
 See projects:
 
-- [cpp-socks5](https://github.com/hevake/cpp-socks5);
+- [cpp-socks5](https://github.com/cpp-main/cpp-socks5);
 
 # Features
 
@@ -129,7 +129,7 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 
 # Tutorial
 For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
-[cpp-tbox-tutorials](https://github.com/hevake/cpp-tbox-tutorials/blob/master/README.md)  
+[cpp-tbox-tutorials](https://github.com/cpp-main/cpp-tbox-tutorials/blob/master/README.md)  
 
 # Dependencies
 
@@ -153,7 +153,7 @@ Open the config.mk file, you don’t need to block the modules corresponding to 
 - WeChat: hevake\_lee
 - QQ Group: 738084942 (cpp-tbox 技术交流)
 
-# Encourage me
+# Encourage us
 
 If this project makes your work easier and you leave work earlier, please give me more encouragement.
 You can do these:  
