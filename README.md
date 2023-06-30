@@ -131,6 +131,16 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
 [cpp-tbox-tutorials](https://github.com/hevake/cpp-tbox-tutorials/blob/master/README.md)  
 
+For example to use find_package:
+```
+cmake_minimum_required(VERSION 3.10)
+project(tbox-find_package)
+find_package(tbox COMPONENTS base util alarm event eventx)
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx)
+```
+
+
 # Dependencies
 
 | Name | Dependent module | Required | Use | Install |
