@@ -128,8 +128,15 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
 # Tutorial
-For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
+1. For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
 [cpp-tbox-tutorials](https://github.com/cpp-main/cpp-tbox-tutorials/blob/master/README.md)  
+
+2. Using CMake **find_package**:
+If cpp-tbox is build by CMake components, Your CMakeLists.txt need contains:
+```
+find_package(tbox COMPONENTS base util alarm event eventx ... REQUIRED) or find_package(tbox COMPONENTS base REQUIRED PATHS /your/install/path)
+target_link_libraries(your_target PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx ...)
+```
 
 # Dependencies
 

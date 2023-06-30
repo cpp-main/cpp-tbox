@@ -1,7 +1,7 @@
 #
 # cpp-tbox
 #
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 #
 # Building in-tree is not allowed (we take care of your craziness).
@@ -27,14 +27,14 @@ set(TBOX_VERSION_REVISION ${CMAKE_MATCH_1})
 set(TBOX_VERSION ${TBOX_VERSION_MAJOR}.${TBOX_VERSION_MINOR}.${TBOX_VERSION_REVISION})
 
 
+
 #
 # Set install prefix
 #
 #set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install" CACHE PATH "")
 
-
 project(
-    tbox
+    cpp-tbox
     VERSION ${TBOX_VERSION}
     DESCRIPTION "Easy to use, convenient and modern C++ treasure box!"
     HOMEPAGE_URL "https://gitee.com/cpp-master/cpp-tbox"
@@ -76,7 +76,7 @@ option(TBOX_ENABLE_NLOHMANN_JSON "install nlohmann/json" ON)
 #
 # TESTS
 #
-option(CMAKE_ENABLE_TEST "Whether to enable unit tests" OFF)
+option(CMAKE_ENABLE_TEST "Whether to enable unit tests" ON)
 
 if(CMAKE_ENABLE_TEST)
     message(STATUS "Unit tests enabled")
@@ -85,6 +85,7 @@ if(CMAKE_ENABLE_TEST)
     enable_testing()
 endif()
 
+include(GNUInstallDirs)
 
 #
 # Compiler args
@@ -92,6 +93,7 @@ endif()
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 add_compile_options(-Wall -Wextra -Werror -Wno-missing-field-initializers)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
@@ -99,78 +101,112 @@ add_definitions(-DTBOX_VERSION_MAJOR=${TBOX_VERSION_MAJOR}
                 -DTBOX_VERSION_MINOR=${TBOX_VERSION_MINOR}
                 -DTBOX_VERSION_REVISION=${TBOX_VERSION_REVISION})
 
+set(TBOX_COMPONENTS)
+
 if(TBOX_ENABLE_BASE)
     message(STATUS "base module enabled")
-    add_subdirectory(modules/base)
+    list(APPEND TBOX_COMPONENTS base)
 endif()
 
 if(TBOX_ENABLE_UTIL)
     message(STATUS "util module enabled")
-    add_subdirectory(modules/util)
+    list(APPEND TBOX_COMPONENTS util)
 endif()
 
 if(TBOX_ENABLE_EVENT)
     message(STATUS "event module enabled")
-    add_subdirectory(modules/event)
+    list(APPEND TBOX_COMPONENTS event)
 endif()
 
 if(TBOX_ENABLE_EVENTX)
     message(STATUS "eventx module enabled")
-    add_subdirectory(modules/eventx)
+    list(APPEND TBOX_COMPONENTS eventx)
 endif()
 
 if(TBOX_ENABLE_LOG)
     message(STATUS "log module enabled")
-    add_subdirectory(modules/log)
+    list(APPEND TBOX_COMPONENTS log)
 endif()
 
 if(TBOX_ENABLE_NETWORK)
     message(STATUS "network module enabled")
-    add_subdirectory(modules/network)
+    list(APPEND TBOX_COMPONENTS network)
 endif()
 
 if(TBOX_ENABLE_TERMINAL)
     message(STATUS "terminal module enabled")
-    add_subdirectory(modules/terminal)
+    list(APPEND TBOX_COMPONENTS terminal)
 endif()
 
 if(TBOX_ENABLE_MAIN)
     message(STATUS "main module enabled")
-    add_subdirectory(modules/main)
+    list(APPEND TBOX_COMPONENTS main)
 endif()
 
 if(TBOX_ENABLE_COROUTINE)
     message(STATUS "coroutine module enabled")
-    add_subdirectory(modules/coroutine)
+    list(APPEND TBOX_COMPONENTS coroutine)
 endif()
 
 if(TBOX_ENABLE_HTTP)
     message(STATUS "http module enabled")
-    add_subdirectory(modules/http)
+    list(APPEND TBOX_COMPONENTS http)
 endif()
 
 if(TBOX_ENABLE_MQTT)
     message(STATUS "mqtt module enabled")
-    add_subdirectory(modules/mqtt)
+    list(APPEND TBOX_COMPONENTS mqtt)
 endif()
 
 if(TBOX_ENABLE_FLOW)
     message(STATUS "flow module enabled")
-    add_subdirectory(modules/flow)
+    list(APPEND TBOX_COMPONENTS flow)
 endif()
 
 if(TBOX_ENABLE_ALARM)
     message(STATUS "alarm module enabled")
-    add_subdirectory(modules/alarm)
+    list(APPEND TBOX_COMPONENTS alarm)
 endif()
 
 if(TBOX_ENABLE_CRYPTO)
     message(STATUS "crypto module enabled")
-    add_subdirectory(modules/crypto)
+    list(APPEND TBOX_COMPONENTS crypto)
 endif()
+
+
+foreach(item IN LISTS TBOX_COMPONENTS)
+    add_subdirectory(modules/${item})
+endforeach()
 
 if(TBOX_ENABLE_NLOHMANN_JSON)
     message(STATUS "nlohmann/json installation enabled")
+    list(APPEND TBOX_COMPONENTS nlohmann)
     add_subdirectory(3rd-party/nlohmann)
 endif()
+
+#
+# installation
+#
+include(CMakePackageConfigHelpers)
+
+# generate the version file for the config file
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/tboxConfigVersion.cmake"
+  VERSION "${TBOX_VERSION}"
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/tboxConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tbox
+    PATH_VARS TBOX_COMPONENTS
+)
+
+install(
+    FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/tboxConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/tboxConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tbox
+)
 
