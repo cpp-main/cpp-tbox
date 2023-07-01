@@ -157,7 +157,7 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
                         << R"(fontcolor=")" << curr_state_color << R"(",)";
                 }
                 oss << R"(label=")"
-                    << next_state_id;
+                    << event_id;
 
                 if (!label.empty())
                     oss << '.' << label;
