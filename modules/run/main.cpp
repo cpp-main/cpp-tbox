@@ -1,7 +1,6 @@
 #include <tbox/main/main.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/catch_throw.h>
 #include <tbox/util/argument_parser.h>
 #include <tbox/util/fs.h>
 
@@ -15,6 +14,7 @@ typedef void(*RegisterAppsFunc) (tbox::main::Module &, tbox::main::Context &);
 std::vector<void*> _dl_handle_vec;
 std::vector<RegisterAppsFunc> _register_func_vec;
 
+/// 解决参数中的'-l <module>' 与 '--load <module>' 参数作为模块动态库列表
 void ParseArgs(int argc, char **argv,
                std::vector<std::string> &module_file_vec)
 {
@@ -54,7 +54,7 @@ void Load(int argc, char **argv)
         auto register_func = (RegisterAppsFunc)dlsym(dl_handle, "RegisterApps");
         if (register_func == nullptr) {
             dlclose(dl_handle);
-            LogWarn("can't find 'RegisterApps' symbol is %s.", module_file.c_str());
+            LogWarn("can't find 'RegisterApps' symbol in %s.", module_file.c_str());
             continue;
         }
 
@@ -80,8 +80,13 @@ namespace main {
 
 void RegisterApps(Module &apps, Context &ctx)
 {
-    for (auto func : _register_func_vec)
-        func(apps, ctx);
+    if (_register_func_vec.empty()) {
+        LogWarn("no module");
+        return;
+    }
+
+    for (auto register_func : _register_func_vec)
+        register_func(apps, ctx);
     _register_func_vec.clear();
 }
 
