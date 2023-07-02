@@ -7,6 +7,7 @@ MODULES += log
 MODULES += network
 MODULES += terminal
 MODULES += main
+MODULES += run
 
 ## 非核心模块，请根据需要选择
 #MODULES += coroutine
