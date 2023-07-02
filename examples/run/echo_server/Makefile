@@ -1,10 +1,10 @@
-PLUGIN=echo_server
+MODULE=echo_server
 
-TARGET:=lib$(PLUGIN).so
+TARGET:=lib$(MODULE).so
 
 SHARED_OBJECTS:=echo_server.o
 
-CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(PLUGIN)"'
+CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(MODULE)"'
 LDFLAGS:=-L$(HOME)/.tbox/lib
 
 $(TARGET): $(SHARED_OBJECTS)

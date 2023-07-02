@@ -40,6 +40,6 @@ class MyModule : public tbox::main::Module {
     int count_ = 0;
 };
 
-extern "C" void PluginRegisterApps(tbox::main::Module &apps, tbox::main::Context &ctx) {
+extern "C" void RegisterApps(tbox::main::Module &apps, tbox::main::Context &ctx) {
   apps.add(new MyModule(ctx));
 }

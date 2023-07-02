@@ -10,19 +10,19 @@
 
 namespace {
 
-typedef void(*PluginRegisterAppsFunc) (tbox::main::Module &, tbox::main::Context &);
+typedef void(*RegisterAppsFunc) (tbox::main::Module &, tbox::main::Context &);
 
 std::vector<void*> _dl_handle_vec;
-std::vector<PluginRegisterAppsFunc> _register_func_vec;
+std::vector<RegisterAppsFunc> _register_func_vec;
 
 void ParseArgs(int argc, char **argv,
-               std::vector<std::string> &plugin_file_vec)
+               std::vector<std::string> &module_file_vec)
 {
     tbox::util::ArgumentParser parser(
         [&] (char short_option, const std::string &long_option,
              tbox::util::ArgumentParser::OptionValue &option_value) {
-            if (long_option == "plugin")
-                plugin_file_vec.push_back(option_value.get());
+            if (short_option == 'l' || long_option == "load")
+                module_file_vec.push_back(option_value.get());
             return true;
         }
     );
@@ -30,42 +30,42 @@ void ParseArgs(int argc, char **argv,
     parser.parse(argc, argv);
 }
 
-/// 导入插件动态库
+/// 导入模块动态库
 void Load(int argc, char **argv)
 {
-    std::vector<std::string> plugin_file_vec;
-    ParseArgs(argc, argv, plugin_file_vec);
+    std::vector<std::string> module_file_vec;
+    ParseArgs(argc, argv, module_file_vec);
 
-    for (auto &plugin_file : plugin_file_vec) {
-        if (!tbox::util::fs::IsFileExist(plugin_file)) {
-            LogWarn("file %s not exist.", plugin_file.c_str());
+    for (auto &module_file : module_file_vec) {
+        if (!tbox::util::fs::IsFileExist(module_file)) {
+            LogWarn("file %s not exist.", module_file.c_str());
             continue;
         }
 
-        void *dl_handle = dlopen(plugin_file.c_str(), RTLD_NOW);
+        void *dl_handle = dlopen(module_file.c_str(), RTLD_NOW);
         if (dl_handle == nullptr) {
-            LogWarn("load %s faild.", plugin_file.c_str());
+            LogWarn("load %s faild.", module_file.c_str());
             const char *err_str = dlerror();
             if (err_str != nullptr)
                 LogNotice("reason: %s", err_str);
             continue;
         }
 
-        auto register_func = (PluginRegisterAppsFunc)dlsym(dl_handle, "PluginRegisterApps");
+        auto register_func = (RegisterAppsFunc)dlsym(dl_handle, "RegisterApps");
         if (register_func == nullptr) {
             dlclose(dl_handle);
-            LogWarn("can't find 'PluginRegisterApps' symbol is %s.", plugin_file.c_str());
+            LogWarn("can't find 'RegisterApps' symbol is %s.", module_file.c_str());
             continue;
         }
 
         _dl_handle_vec.push_back(dl_handle);
         _register_func_vec.push_back(register_func);
 
-        LogInfo("load %s success.", plugin_file.c_str());
+        LogInfo("load %s success.", module_file.c_str());
     }
 }
 
-/// 关闭插件动态库
+/// 关闭模块动态库
 void Release()
 {
     for (void *dl_handle : _dl_handle_vec)
@@ -85,7 +85,7 @@ void RegisterApps(Module &apps, Context &ctx)
     _register_func_vec.clear();
 }
 
-std::string GetAppDescribe() { return "plugin runner"; }
+std::string GetAppDescribe() { return "modules runner"; }
 
 std::string GetAppBuildTime() { return __DATE__ " " __TIME__; }
 
@@ -93,7 +93,7 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
 {
     major = 0;
     minor = 0;
-    rev = 1;
+    rev = 2;
     build = 0;
 }
 

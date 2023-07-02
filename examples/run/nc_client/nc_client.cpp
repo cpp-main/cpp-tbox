@@ -61,6 +61,6 @@ void App::onCleanup()
 }
 
 extern "C"
-void PluginRegisterApps(tbox::main::Module &apps, tbox::main::Context &ctx) {
+void RegisterApps(tbox::main::Module &apps, tbox::main::Context &ctx) {
   apps.add(new nc_client::App(ctx));
 }

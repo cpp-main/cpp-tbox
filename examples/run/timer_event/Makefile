@@ -1,10 +1,10 @@
-PLUGIN=timer_event
+MODULE=timer_event
 
-TARGET:=lib$(PLUGIN).so
+TARGET:=lib$(MODULE).so
 
 SHARED_OBJECTS:=timer_event.o
 
-CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(PLUGIN)"'
+CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(MODULE)"'
 LDFLAGS:=-L$(HOME)/.tbox/lib
 
 $(TARGET): $(SHARED_OBJECTS)
