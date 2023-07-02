@@ -1,8 +1,6 @@
 EXE_NAME := run
 
-CPP_SRC_FILES = \
-	main.cpp \
-	plugin.cpp \
+CPP_SRC_FILES = plugin.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
