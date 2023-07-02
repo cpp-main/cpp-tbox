@@ -71,13 +71,7 @@ bool Args::parse(int argc, const char * const * const argv)
                     return false;
                 }
             } else {
-                if (short_option == 0)
-                    cerr << "Error: invalid option `" << long_option << "'" << endl;
-                else
-                    cerr << "Error: invalid option `" << short_option << "'" << endl;
-                print_tips = true;
-                run = false;
-                return false;
+                //! DO NOTHING
             }
 
             return true;
