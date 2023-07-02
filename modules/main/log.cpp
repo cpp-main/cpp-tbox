@@ -13,11 +13,6 @@ namespace main {
 using namespace terminal;
 using namespace std;
 
-Log::Log()
-{
-    async_stdout_sink_.enable();
-}
-
 void Log::fillDefaultConfig(Json &cfg) const
 {
     cfg["log"] = R"(

@@ -16,9 +16,6 @@ namespace main {
 
 class Log {
   public:
-    Log();
-
-  public:
     void fillDefaultConfig(Json &cfg) const;
     bool initialize(const char *proc_name, Context &ctx, const Json &cfg);
     void cleanup();
