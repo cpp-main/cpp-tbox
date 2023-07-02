@@ -44,7 +44,10 @@ void Load(int argc, char **argv)
 
         void *dl_handle = dlopen(plugin_file.c_str(), RTLD_NOW);
         if (dl_handle == nullptr) {
-            LogWarn("load %s fail.", plugin_file.c_str());
+            LogWarn("load %s faild.", plugin_file.c_str());
+            const char *err_str = dlerror();
+            if (err_str != nullptr)
+                LogNotice("reason: %s", err_str);
             continue;
         }
 
