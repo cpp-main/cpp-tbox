@@ -5,7 +5,8 @@
 #
 # HOW TO USE:
 # before include this file. those variables need be specified.
-# LIB_VERSION_X, LIB_VERSION_Y, LIB_VERSION_Z, C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, TEST_LDFLAGS
+# PROJECT, LIB_NAME, LIB_NAME_EXT, LIB_VERSION_X, LIB_VERSION_Y, LIB_VERSION_Z,
+# C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, LDFLAGS, TEST_LDFLAGS
 # BUILD_DIR, STAGING_DIR, INSTALL_DIR
 #
 # TARGETS:
@@ -15,7 +16,7 @@
 .PHONY: all print_vars print_static_vars print_shared_vars print_test_vars clean distclean install uninstall pre_build post_build
 
 LIB_BASENAME = lib$(LIB_NAME)$(LIB_NAME_EXT)
-LIB_BUILD_DIR = $(BUILD_DIR)/$(LIB_NAME)
+LIB_BUILD_DIR = $(BUILD_DIR)/$(PROJECT)
 
 STATIC_LIB := $(LIB_BASENAME).a
 SHARED_LIB := $(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y).$(LIB_VERSION_Z)
@@ -143,7 +144,8 @@ print_shared_vars :
 
 $(LIB_BUILD_DIR)/$(SHARED_LIB) : $(SHARED_OBJECTS)
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
-	@$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@
+	@install -d $(dir $@)
+	$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@ $(LDFLAGS)
 
 #build_shared_lib : print_shared_vars $(LIB_BUILD_DIR)/$(SHARED_LIB)
 build_shared_lib : $(LIB_BUILD_DIR)/$(SHARED_LIB)
@@ -156,7 +158,7 @@ CPP_SOURCE_TO_TEST_OBJECT = $(LIB_BUILD_DIR)/$(subst .cpp,.oT,$(1))
 C_SOURCE_TO_TEST_OBJECT = $(LIB_BUILD_DIR)/$(subst .c,.oT,$(1))
 
 TEST_OBJECTS := $(foreach src,$(TEST_CPP_SRC_FILES),$(call CPP_SOURCE_TO_TEST_OBJECT,$(src)))
-TEST_CXXFLAGS := $(CXXFLAGS)
+TEST_CXXFLAGS := $(CXXFLAGS) -DENABLE_TEST=1
 
 define CREATE_CPP_TEST_OBJECT
 $(call CPP_SOURCE_TO_TEST_OBJECT,$(1)) : $(1)
@@ -172,9 +174,9 @@ print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
-$(LIB_BUILD_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
+$(LIB_BUILD_DIR)/test: $(TEST_OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
-	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
+	@$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 #test : print_test_vars $(LIB_BUILD_DIR)/test
 test : $(LIB_BUILD_DIR)/test

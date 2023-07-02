@@ -1,17 +1,15 @@
-MODULE=timer_event
+PROJECT = example/run/timer_event
 
-TARGET:=lib$(MODULE).so
+LIB_NAME = timer_event
+LIB_VERSION_X = 0
+LIB_VERSION_Y = 0
+LIB_VERSION_Z = 1
 
-SHARED_OBJECTS:=timer_event.o
+CPP_SRC_FILES = timer_event.cpp
 
-CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(MODULE)"'
-LDFLAGS:=-L$(HOME)/.tbox/lib
+CXXFLAGS := -DLOG_MODULE_ID='"$(LIB_NAME)"' $(CXXFLAGS)
 
-$(TARGET): $(SHARED_OBJECTS)
-	$(CXX) -shared $(SHARED_OBJECTS) -o $@ $(LDFLAGS)
+ENABLE_STATIC_LIB = no
+ENABLE_SHARED_LIB = yes
 
-clean:
-	rm *.o
-
-distclean: clean
-	rm $(TARGET)
+include ${TOP_DIR}/tools/lib_common.mk

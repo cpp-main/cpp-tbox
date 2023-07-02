@@ -1,4 +1,5 @@
-EXE_NAME := example/event/02_timer
+PROJECT := example/event/02_timer
+EXE_NAME := 02_timer
 
 CPP_SRC_FILES := main.cpp
 

@@ -1,3 +1,4 @@
+PROJECT := run
 EXE_NAME := run
 
 CPP_SRC_FILES = main.cpp
@@ -7,7 +8,6 @@ LDFLAGS += \
 	-ltbox_main \
 	-ltbox_terminal \
 	-ltbox_network \
-	-ltbox_eventx \
 	-ltbox_eventx \
 	-ltbox_event \
 	-ltbox_log \

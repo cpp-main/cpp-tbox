@@ -1,3 +1,4 @@
+PROJECT = log
 LIB_NAME = log
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 1
@@ -18,6 +19,7 @@ CPP_SRC_FILES = \
 	async_file_sink.cpp \
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	async_sink_test.cpp \
 	async_stdout_sink_test.cpp \
 	async_syslog_sink_test.cpp \

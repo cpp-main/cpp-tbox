@@ -1,4 +1,5 @@
-EXE_NAME := example/event/05_run_next_seq
+PROJECT := example/event/05_run_next_seq
+EXE_NAME := 05_run_next_seq
 
 CPP_SRC_FILES := main.cpp
 

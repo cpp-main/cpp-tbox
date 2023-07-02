@@ -1,3 +1,4 @@
+PROJECT = util
 LIB_NAME = util
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -40,6 +41,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	pid_file_test.cpp \
 	string_test.cpp \
 	fs_test.cpp \

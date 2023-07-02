@@ -1,4 +1,5 @@
-EXE_NAME := example/network/stdio_stream/01_stdin_out
+PROJECT := example/network/stdio_stream/01_stdin_out
+EXE_NAME := 01_stdin_out
 
 CPP_SRC_FILES := main.cpp
 

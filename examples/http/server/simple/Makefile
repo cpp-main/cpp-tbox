@@ -1,4 +1,5 @@
-EXE_NAME := example/http/server/simple
+PROJECT := example/http/server/simple
+EXE_NAME := simple
 
 CPP_SRC_FILES := simple.cpp
 

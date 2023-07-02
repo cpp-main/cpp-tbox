@@ -1,4 +1,5 @@
-EXE_NAME := example/event/07_delay_delete
+PROJECT := example/event/07_delay_delete
+EXE_NAME := 07_delay_delete
 
 CPP_SRC_FILES := main.cpp
 

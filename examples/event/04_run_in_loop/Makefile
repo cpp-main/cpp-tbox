@@ -1,4 +1,5 @@
-EXE_NAME := example/event/04_run_in_loop
+PROJECT := example/event/04_run_in_loop
+EXE_NAME := 04_run_in_loop
 
 CPP_SRC_FILES := main.cpp
 

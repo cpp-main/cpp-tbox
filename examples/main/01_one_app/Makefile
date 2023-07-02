@@ -1,4 +1,5 @@
-EXE_NAME := example/main/01_one_app
+PROJECT := example/main/01_one_app
+EXE_NAME := 01_one_app
 
 CPP_SRC_FILES = \
 	app.cpp \

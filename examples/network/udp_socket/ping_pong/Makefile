@@ -1,4 +1,5 @@
-EXE_NAME := example/network/udp_socket/ping_pong
+PROJECT := example/network/udp_socket/ping_pong
+EXE_NAME := ping_pong
 
 CPP_SRC_FILES := ping_pong.cpp
 

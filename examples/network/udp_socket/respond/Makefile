@@ -1,4 +1,5 @@
-EXE_NAME := example/network/udp_socket/respond
+PROJECT := example/network/udp_socket/respond
+EXE_NAME := respond
 
 CPP_SRC_FILES := respond.cpp
 

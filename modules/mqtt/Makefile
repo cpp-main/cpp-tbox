@@ -1,3 +1,4 @@
+PROJECT = mqtt
 LIB_NAME = mqtt
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0

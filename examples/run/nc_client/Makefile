@@ -1,17 +1,16 @@
-MODULE=nc_client
+PROJECT = example/run/nc_client
 
-TARGET:=lib$(MODULE).so
+LIB_NAME = nc_client
+LIB_VERSION_X = 0
+LIB_VERSION_Y = 0
+LIB_VERSION_Z = 1
 
-SHARED_OBJECTS:=nc_client.o
+CPP_SRC_FILES = nc_client.cpp
 
-CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(MODULE)"'
-LDFLAGS:=-L$(HOME)/.tbox/lib -ltbox_network
+CXXFLAGS := -DLOG_MODULE_ID='"$(LIB_NAME)"' $(CXXFLAGS)
+LDFLAGS += -ltbox_network
 
-$(TARGET): $(SHARED_OBJECTS)
-	$(CXX) -shared $(SHARED_OBJECTS) -o $@ $(LDFLAGS)
+ENABLE_STATIC_LIB = no
+ENABLE_SHARED_LIB = yes
 
-clean:
-	rm *.o
-
-distclean: clean
-	rm $(TARGET)
+include ${TOP_DIR}/tools/lib_common.mk

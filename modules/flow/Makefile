@@ -1,3 +1,4 @@
+PROJECT = flow
 LIB_NAME = flow
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -46,6 +47,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	state_machine_test.cpp \
 	action_test.cpp \
 	event_publisher_impl_test.cpp \

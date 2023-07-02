@@ -1,4 +1,5 @@
-EXE_NAME := example/alarm/cron_alarm
+PROJECT := example/alarm/cron_alarm
+EXE_NAME := cron_alarm
 
 CPP_SRC_FILES := main.cpp
 

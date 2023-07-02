@@ -1,4 +1,5 @@
-EXE_NAME := example/terminal/tcp_rpc
+PROJECT := example/terminal/tcp_rpc
+EXE_NAME := tcp_rpc
 
 CPP_SRC_FILES := main.cpp
 

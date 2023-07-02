@@ -1,4 +1,5 @@
-EXE_NAME := example/eventx/timer_fd
+PROJECT := example/eventx/timer_fd
+EXE_NAME := timer_fd
 
 CPP_SRC_FILES := main.cpp
 

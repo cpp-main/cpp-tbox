@@ -1,4 +1,5 @@
-EXE_NAME := example/terminal/telnetd
+PROJECT := example/terminal/telnetd
+EXE_NAME := telnetd
 
 CPP_SRC_FILES := main.cpp
 

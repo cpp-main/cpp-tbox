@@ -1,4 +1,5 @@
-EXE_NAME := example/network/tcp_acceptor/tcp_nc_server
+PROJECT := example/network/tcp_acceptor/tcp_nc_server
+EXE_NAME := tcp_nc_server
 
 CPP_SRC_FILES := tcp_nc_server.cpp
 

@@ -1,4 +1,5 @@
-EXE_NAME := example/alarm/weekly_alarm
+PROJECT := example/alarm/weekly_alarm
+EXE_NAME := weekly_alarm
 
 CPP_SRC_FILES := main.cpp
 

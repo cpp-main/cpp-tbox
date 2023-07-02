@@ -1,4 +1,5 @@
-EXE_NAME := example/event/03_signal
+PROJECT := example/event/03_signal
+EXE_NAME := 03_signal
 
 CPP_SRC_FILES := main.cpp
 

@@ -1,4 +1,5 @@
-EXE_NAME := example/mqtt/sub
+PROJECT := example/mqtt/sub
+EXE_NAME := sub
 
 CPP_SRC_FILES := sub.cpp
 

@@ -1,3 +1,4 @@
+PROJECT = coroutine
 LIB_NAME = coroutine
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -17,6 +18,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.coroutine"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	scheduler_test.cpp \
 	channel_test.cpp \
 	semaphore_test.cpp \

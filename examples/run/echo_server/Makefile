@@ -1,17 +1,15 @@
-MODULE=echo_server
+PROJECT = example/run/echo_server
 
-TARGET:=lib$(MODULE).so
+LIB_NAME = echo_server
+LIB_VERSION_X = 0
+LIB_VERSION_Y = 0
+LIB_VERSION_Z = 1
 
-SHARED_OBJECTS:=echo_server.o
+CPP_SRC_FILES = echo_server.cpp
 
-CXXFLAGS:=-I$(HOME)/.tbox/include -DLOG_MODULE_ID='"$(MODULE)"'
-LDFLAGS:=-L$(HOME)/.tbox/lib
+CXXFLAGS := -DLOG_MODULE_ID='"$(LIB_NAME)"' $(CXXFLAGS)
 
-$(TARGET): $(SHARED_OBJECTS)
-	$(CXX) -shared $(SHARED_OBJECTS) -o $@ $(LDFLAGS)
+ENABLE_STATIC_LIB = no
+ENABLE_SHARED_LIB = yes
 
-clean:
-	rm *.o
-
-distclean: clean
-	rm $(TARGET)
+include ${TOP_DIR}/tools/lib_common.mk

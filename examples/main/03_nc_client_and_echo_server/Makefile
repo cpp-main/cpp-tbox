@@ -1,4 +1,5 @@
-EXE_NAME := example/main/03_nc_client_and_echo_server
+PROJECT := example/main/03_nc_client_and_echo_server
+EXE_NAME := 03_nc_client_and_echo_server
 
 CPP_SRC_FILES = \
 	main.cpp \

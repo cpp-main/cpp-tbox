@@ -1,4 +1,5 @@
-EXE_NAME := example/network/udp_socket/send_only
+PROJECT := example/network/udp_socket/send_only
+EXE_NAME := send_only
 
 CPP_SRC_FILES := send_only.cpp
 

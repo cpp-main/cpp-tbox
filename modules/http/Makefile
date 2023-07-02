@@ -1,3 +1,4 @@
+PROJECT = http
 LIB_NAME = http
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -30,6 +31,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.http"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	common_test.cpp \
 	respond_test.cpp \
 	request_test.cpp \

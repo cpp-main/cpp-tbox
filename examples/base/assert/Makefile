@@ -1,4 +1,5 @@
-EXE_NAME := example/base/assert
+PROJECT := example/base/assert
+EXE_NAME := assert
 
 CPP_SRC_FILES := main.cpp
 

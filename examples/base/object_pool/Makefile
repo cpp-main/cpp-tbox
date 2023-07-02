@@ -1,4 +1,5 @@
-EXE_NAME := example/base/object_pool
+PROJECT := example/base/object_pool
+EXE_NAME := object_pool
 
 CPP_SRC_FILES := main.cpp
 

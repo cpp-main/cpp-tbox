@@ -1,4 +1,5 @@
-EXE_NAME := example/main/06_run_in_backend
+PROJECT := example/main/06_run_in_backend
+EXE_NAME := 06_run_in_backend
 
 CPP_SRC_FILES = \
 	app.cpp \

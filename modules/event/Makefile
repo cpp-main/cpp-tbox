@@ -1,3 +1,4 @@
+PROJECT = event
 LIB_NAME = event
 LIB_VERSION_X = 1
 LIB_VERSION_Y = 1
@@ -26,6 +27,7 @@ CPP_SRC_FILES = \
 	engins/epoll/fd_event.cpp \
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	common_loop_test.cpp \
 	fd_event_test.cpp \
 	timer_event_test.cpp \

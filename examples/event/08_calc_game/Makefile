@@ -1,4 +1,5 @@
-EXE_NAME := example/event/08_calc_game
+PROJECT := example/event/08_calc_game
+EXE_NAME := 08_calc_game
 
 CPP_SRC_FILES := \
 	main.cpp \

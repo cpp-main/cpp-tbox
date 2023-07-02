@@ -5,7 +5,7 @@
 #
 # HOW TO USE:
 # before include this file. those variables need be specified.
-# C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, TEST_LDFLAGS
+# PROJECT, EXE_NAME, C_SRC_FILES, CC_SRC_FILES, CPP_SRC_FILES, CXXFLAGS, TEST_LDFLAGS
 # BUILD_DIR, INSTALL_DIR
 #
 # TARGETS:
@@ -14,9 +14,7 @@
 
 .PHONY: all print_complie_vars print_build_var print_test_vars clean distclean install uninstall pre_build post_build
 
-EXE_BUILD_DIR = $(BUILD_DIR)/$(EXE_NAME)
-
-STATIC_LIB := $(EXE_NAME)
+EXE_BUILD_DIR = $(BUILD_DIR)/$(PROJECT)
 
 #TARGETS := pre_build print_vars build_exe post_build
 TARGETS := pre_build build_exe post_build
@@ -91,7 +89,7 @@ CPP_SOURCE_TO_TEST_OBJECT = $(EXE_BUILD_DIR)/$(subst .cpp,.oT,$(1))
 C_SOURCE_TO_TEST_OBJECT = $(EXE_BUILD_DIR)/$(subst .c,.oT,$(1))
 
 TEST_OBJECTS := $(foreach src,$(TEST_CPP_SRC_FILES),$(call CPP_SOURCE_TO_TEST_OBJECT,$(src)))
-TEST_CXXFLAGS := $(CXXFLAGS)
+TEST_CXXFLAGS := $(CXXFLAGS) -DENABLE_TEST=1
 
 define CREATE_CPP_TEST_OBJECT
 $(call CPP_SOURCE_TO_TEST_OBJECT,$(1)) : $(1)
@@ -107,9 +105,10 @@ print_test_vars :
 	@echo TEST_OBJECTS=$(TEST_OBJECTS)
 	@echo TEST_LDFLAGS=$(TEST_LDFLAGS)
 
-$(EXE_BUILD_DIR)/test: $(TEST_OBJECTS) $(OBJECTS)
+$(EXE_BUILD_DIR)/test: $(TEST_OBJECTS)
 	@echo "\033[35mBUILD test\033[0m"
-	@$(CXX) -o $@ $(TEST_OBJECTS) $(OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
+	@install -d $(dir $@)
+	@$(CXX) -o $@ $(TEST_OBJECTS) $(TEST_LDFLAGS) -lgmock_main -lgmock -lgtest -lpthread
 
 #test : print_test_vars $(EXE_BUILD_DIR)/test
 test : $(EXE_BUILD_DIR)/test

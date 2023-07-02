@@ -1,4 +1,5 @@
-EXE_NAME := example/network/tcp_server/tcp_echo
+PROJECT := example/network/tcp_server/tcp_echo
+EXE_NAME := tcp_echo
 
 CPP_SRC_FILES := tcp_echo.cpp
 

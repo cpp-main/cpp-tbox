@@ -1,3 +1,4 @@
+PROJECT = crypto
 LIB_NAME = crypto
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -14,6 +15,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.crypto"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	md5_test.cpp \
 	aes_test.cpp \
 

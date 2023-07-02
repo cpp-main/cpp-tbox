@@ -1,4 +1,5 @@
-EXE_NAME := example/network/udp_socket/recv_only
+PROJECT := example/network/udp_socket/recv_only
+EXE_NAME := recv_only
 
 CPP_SRC_FILES := recv_only.cpp
 

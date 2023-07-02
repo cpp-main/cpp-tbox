@@ -1,4 +1,5 @@
-EXE_NAME := example/main/00_empty
+PROJECT := example/main/00_empty
+EXE_NAME := 00_empty
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

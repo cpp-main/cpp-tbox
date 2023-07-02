@@ -1,3 +1,4 @@
+PROJECT = base
 LIB_NAME = base
 LIB_NAME_EXT =
 
@@ -36,6 +37,7 @@ pre_build:
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.base"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	log_output_test.cpp \
 	scope_exit_test.cpp \
 	cabinet_token_test.cpp \

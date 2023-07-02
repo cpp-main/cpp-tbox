@@ -1,4 +1,5 @@
-EXE_NAME := example/http/server/async_respond
+PROJECT := example/http/server/async_respond
+EXE_NAME := async_respond
 
 CPP_SRC_FILES := async_respond.cpp
 

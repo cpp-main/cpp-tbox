@@ -1,3 +1,4 @@
+PROJECT = main
 LIB_NAME = main
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0

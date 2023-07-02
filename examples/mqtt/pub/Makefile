@@ -1,4 +1,5 @@
-EXE_NAME := example/mqtt/pub
+PROJECT := example/mqtt/pub
+EXE_NAME := pub
 
 CPP_SRC_FILES := pub.cpp
 

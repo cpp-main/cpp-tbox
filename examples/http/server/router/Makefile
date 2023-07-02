@@ -1,4 +1,5 @@
-EXE_NAME := example/http/server/router
+PROJECT := example/http/server/router
+EXE_NAME := router
 
 CPP_SRC_FILES := router.cpp
 

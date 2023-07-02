@@ -1,4 +1,5 @@
-EXE_NAME := example/network/01-io-echo
+PROJECT := example/network/buffered_fd/01-io-echo
+EXE_NAME := 01-io-echo
 
 CPP_SRC_FILES := io_echo.cpp
 

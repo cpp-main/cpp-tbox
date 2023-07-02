@@ -1,4 +1,5 @@
-EXE_NAME := example/eventx/thread_pool
+PROJECT := example/eventx/thread_pool
+EXE_NAME := thread_pool
 
 CPP_SRC_FILES := main.cpp
 

@@ -1,4 +1,5 @@
-EXE_NAME := example/network/udp_socket/request
+PROJECT := example/network/udp_socket/request
+EXE_NAME := request
 
 CPP_SRC_FILES := request.cpp
 

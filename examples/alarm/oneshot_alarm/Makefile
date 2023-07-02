@@ -1,4 +1,5 @@
-EXE_NAME := example/alarm/oneshot_alarm
+PROJECT := example/alarm/oneshot_alarm
+EXE_NAME := oneshot_alarm
 
 CPP_SRC_FILES := main.cpp
 

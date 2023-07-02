@@ -1,3 +1,4 @@
+PROJECT = alarm
 LIB_NAME = alarm
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -23,6 +24,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.alarm"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	workday_calendar_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base

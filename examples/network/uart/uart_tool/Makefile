@@ -1,4 +1,5 @@
-EXE_NAME := example/network/uart/uart_tool
+PROJECT := example/network/uart/uart_tool
+EXE_NAME := uart_tool
 
 CPP_SRC_FILES := uart_tool.cpp
 

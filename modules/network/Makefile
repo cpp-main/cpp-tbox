@@ -1,3 +1,4 @@
+PROJECT = network
 LIB_NAME = network
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
@@ -44,6 +45,7 @@ CPP_SRC_FILES = \
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.network"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
 	fd_test.cpp \
 	buffer_test.cpp \
 	buffered_fd_test.cpp \

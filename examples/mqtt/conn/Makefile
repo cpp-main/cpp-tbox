@@ -1,4 +1,5 @@
-EXE_NAME := example/mqtt/conn
+PROJECT := example/mqtt/conn
+EXE_NAME := conn
 
 CPP_SRC_FILES := conn.cpp
 
