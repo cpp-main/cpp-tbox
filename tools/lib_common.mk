@@ -63,21 +63,21 @@ define CREATE_CPP_OBJECT
 $(call CPP_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
 	@install -d $$(dir $$@)
-	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
+	@$(CXX) $(CXXFLAGS) -fPIC -o $$@ -c $$^
 endef
 
 define CREATE_CC_OBJECT
 $(call CC_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCXX $$^\033[0m"
 	@install -d $$(dir $$@)
-	@$(CXX) $(CXXFLAGS) -o $$@ -c $$^
+	@$(CXX) $(CXXFLAGS) -fPIC -o $$@ -c $$^
 endef
 
 define CREATE_C_OBJECT
 $(call C_SOURCE_TO_OBJECT,$(1)) : $(1)
 	@echo "\033[32mCC $$^\033[0m"
 	@install -d $$(dir $$@)
-	@$(CC) $(CFLAGS) -o $$@ -c $$^
+	@$(CC) $(CFLAGS) -fPIC -o $$@ -c $$^
 endef
 
 $(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_OBJECT,$(src))))
@@ -94,60 +94,13 @@ $(LIB_BUILD_DIR)/$(STATIC_LIB) : $(OBJECTS)
 	@install -d $(dir $@)
 	@$(AR) rc $@ $(OBJECTS)
 
-#build_static_lib : print_static_vars $(LIB_BUILD_DIR)/$(STATIC_LIB)
-build_static_lib : $(LIB_BUILD_DIR)/$(STATIC_LIB)
-
-################################################################
-# shared library
-################################################################
-
-CPP_SOURCE_TO_SHARED_OBJECT = $(LIB_BUILD_DIR)/$(subst .cpp,.oS,$(1))
-CC_SOURCE_TO_SHARED_OBJECT = $(LIB_BUILD_DIR)/$(subst .cc,.oS,$(1))
-C_SOURCE_TO_SHARED_OBJECT = $(LIB_BUILD_DIR)/$(subst .c,.oS,$(1))
-
-SHARED_OBJECTS := $(foreach src,$(CPP_SRC_FILES),$(call CPP_SOURCE_TO_SHARED_OBJECT,$(src)))
-SHARED_OBJECTS += $(foreach src,$(CC_SRC_FILES),$(call CC_SOURCE_TO_SHARED_OBJECT,$(src)))
-SHARED_OBJECTS += $(foreach src,$(C_SRC_FILES),$(call C_SOURCE_TO_SHARED_OBJECT,$(src)))
-
-SHARED_CXXFLAGS := $(CXXFLAGS) -fPIC
-SHARED_CFLAGS := $(CFLAGS) -fPIC
-
-define CREATE_CPP_SHARED_OBJECT
-$(call CPP_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCXX $$^\033[0m"
-	@install -d $$(dir $$@)
-	@$(CXX) $(SHARED_CXXFLAGS) -o $$@ -c $$^
-endef
-
-define CREATE_CC_SHARED_OBJECT
-$(call CC_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCXX $$^\033[0m"
-	@install -d $$(dir $$@)
-	@$(CXX) $(SHARED_CXXFLAGS) -o $$@ -c $$^
-endef
-
-define CREATE_C_SHARED_OBJECT
-$(call C_SOURCE_TO_SHARED_OBJECT,$(1)) : $(1)
-	@echo "\033[32mCC $$^\033[0m"
-	@install -d $$(dir $$@)
-	@$(CC) $(SHARED_CFLAGS) -o $$@ -c $$^
-endef
-
-$(foreach src,$(CPP_SRC_FILES),$(eval $(call CREATE_CPP_SHARED_OBJECT,$(src))))
-$(foreach src,$(CC_SRC_FILES),$(eval $(call CREATE_CC_SHARED_OBJECT,$(src))))
-$(foreach src,$(C_SRC_FILES),$(eval $(call CREATE_C_SHARED_OBJECT,$(src))))
-
-print_shared_vars :
-	@echo SHARED_CFLAGS=$(SHARED_CFLAGS)
-	@echo SHARED_CXXFLAGS=$(SHARED_CXXFLAGS)
-	@echo SHARED_OBJECTS=$(SHARED_OBJECTS)
-
-$(LIB_BUILD_DIR)/$(SHARED_LIB) : $(SHARED_OBJECTS)
+$(LIB_BUILD_DIR)/$(SHARED_LIB) : $(OBJECTS)
 	@echo "\033[35mBUILD $(SHARED_LIB)\033[0m"
 	@install -d $(dir $@)
-	$(CXX) -shared $(SHARED_OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@ $(LDFLAGS)
+	@$(CXX) -shared $(OBJECTS) -Wl,-soname,$(LIB_BASENAME).so.$(LIB_VERSION_X).$(LIB_VERSION_Y) -o $@ $(LDFLAGS)
 
-#build_shared_lib : print_shared_vars $(LIB_BUILD_DIR)/$(SHARED_LIB)
+build_static_lib : $(LIB_BUILD_DIR)/$(STATIC_LIB)
+
 build_shared_lib : $(LIB_BUILD_DIR)/$(SHARED_LIB)
 
 ################################################################

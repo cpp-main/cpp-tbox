@@ -6,7 +6,7 @@ include version.mk
 CCFLAGS := -Wall
 
 RELEASE ?= 0
-ENABLE_ASAN ?= 1
+ENABLE_ASAN ?= 0
 ENABLE_GPROF ?= 0
 
 CCFLAGS += \
