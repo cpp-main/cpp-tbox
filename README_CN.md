@@ -87,6 +87,7 @@
 | network | 网络库 | 实现了串口、终端、UDP、TCP 通信模块 |
 | terminal | 终端 | 类似shell的命令终端,可实现运行时与程序进行命令交互 |
 | **main** | 主框架 | 实现了完备的程序启动流程与框架,让开发者只需关心业务代码 |
+| run | 执行器 | 是个可执行程序，可加载多个由参数`-l xxx`指定的动态库，并运行其中的Module |
 | mqtt | MQTT客户端库 | |
 | coroutine | 协程库 | 众所周知,异步框架不方便处理顺序性业务,协程弥补之 |
 | http | HTTP库 | 在network的基础上实现了HTTP的Server与Client模块 |
@@ -128,14 +129,17 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
 # 使用教程
-1. 关于如何使用 cpp-tbox 开发自己的程序，详见教程：
+关于如何使用 cpp-tbox 开发自己的程序，详见教程：
 [cpp-tbox-tutorials](https://gitee.com/cpp-master/cpp-tbox-tutorials/blob/master/README_CN.md)  
 
-2. 使用CMake **find_package**:
-tbox 使用CMake的components构建, 使用库的方法如下(CMakeLists.txt):
+使用`find_package`的例子:
+
 ```
-find_package(tbox COMPONENTS base util alarm event eventx ... REQUIRED) or find_package(tbox COMPONENTS base REQUIRED PATHS /your/install/path)
-target_link_libraries(your_target PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx ...)
+cmake_minimum_required(VERSION 3.10)
+project(tbox-find_package)
+find_package(tbox COMPONENTS base util alarm event eventx)
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx)
 ```
 
 # 外部库依赖

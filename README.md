@@ -87,6 +87,7 @@ When various program exceptions occur in the program, such as: segment fault, as
 | network | Realized serial port, terminal, UDP, TCP communication module |
 | terminal | A shell-like command terminal that enables command interaction with programs during runtime |
 | **main** | Realized a complete program startup process and framework, so that developers only need to care about business code |
+| run | It's an ELF. It loads one or more lib\*.so file which specified by parameter `-l xxx`, then run Modules in side |
 | mqtt | MQTT Client |
 | coroutine | coroutine function |
 | http | Implemented HTTP Server and Client modules on the basis of network |
@@ -128,14 +129,16 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 ```
 
 # Tutorial
-1. For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
+For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
 [cpp-tbox-tutorials](https://github.com/cpp-main/cpp-tbox-tutorials/blob/master/README.md)  
 
-2. Using CMake **find_package**:
-If cpp-tbox is build by CMake components, Your CMakeLists.txt need contains:
+For example to use `find_package`:
 ```
-find_package(tbox COMPONENTS base util alarm event eventx ... REQUIRED) or find_package(tbox COMPONENTS base REQUIRED PATHS /your/install/path)
-target_link_libraries(your_target PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx ...)
+cmake_minimum_required(VERSION 3.10)
+project(tbox-find_package)
+find_package(tbox COMPONENTS base util alarm event eventx)
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_alarm tbox::tbox_event tbox::tbox_eventx)
 ```
 
 # Dependencies
