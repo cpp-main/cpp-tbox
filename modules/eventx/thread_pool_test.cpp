@@ -225,4 +225,28 @@ TEST(ThreadPool, getStatus) {
     delete loop;
 }
 
+/**
+ * 在妥派的任务结束前执行cleanup()
+ *
+ * 注：之所以添加该单元测试，是因为在1.4.12之前存在线程多重join()的问题
+ */
+TEST(ThreadPool, cleanup_before_finish) {
+    Loop *loop = Loop::New();
+    ThreadPool *tp = new ThreadPool(loop);
+
+    tp->initialize(0,1);
+    loop->run(
+        [=] {
+            tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
+        }
+    );
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    tp->cleanup();
+
+    delete tp;
+    delete loop;
+}
+
 }
