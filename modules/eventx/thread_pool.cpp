@@ -213,6 +213,7 @@ void ThreadPool::cleanup()
     if (!d_->is_ready)
         return;
 
+    std::vector<std::thread*> thread_vec;
     {
         std::lock_guard<std::mutex> lg(d_->lock);
         //! 清空task中的任务
@@ -224,19 +225,25 @@ void ThreadPool::cleanup()
                 tasks_token.pop_front();
             }
         }
+
+        //! 将threads_cabinet中的线程搬到thread_vec
+        thread_vec.reserve(d_->threads_cabinet.size());
+        d_->threads_cabinet.foreach(
+            [&](std::thread *t) {
+                thread_vec.push_back(t);
+            }
+        );
+        d_->threads_cabinet.clear();
     }
 
     d_->all_threads_stop_flag = true;
     d_->cond_var.notify_all();
 
     //! 等待所有的线程退出
-    d_->threads_cabinet.foreach(
-        [](std::thread *t) {
-            t->join();
-            delete t;
-        }
-    );
-    d_->threads_cabinet.clear();
+    for (auto t : thread_vec) {
+        t->join();
+        delete t;
+    }
 
     d_->is_ready = false;
 }
@@ -272,7 +279,11 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
                 auto t = d_->threads_cabinet.free(thread_token);
-                d_->wp_loop->runInLoop([t]{ t->join(); delete t; }, "ThreadPool::threadProc, join and delete t");
+                if (t != nullptr)   //! 如果取得到，说明还没有被cleanup()
+                    d_->wp_loop->runInLoop(
+                        [t]{ t->join(); delete t; },
+                        "ThreadPool::threadProc, join and delete t"
+                    );
                 break;
             }
 
