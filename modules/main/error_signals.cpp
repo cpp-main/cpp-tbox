@@ -30,6 +30,8 @@ using SignalHandler = void (*) (int);
 
 std::map<int, SignalHandler> _old_handler_map;
 
+bool _is_recursion_call = false;
+
 #ifdef  TBOX_USE_SIGACTION
 void InvokeOldHandler(int signo, siginfo_t *siginfo, void *context)
 #else
@@ -73,16 +75,24 @@ void OnErrorSignal(int signo)
     InvokeOldHandler(signo);
 #endif
 
-    const std::string &stack_str = DumpBacktrace();
+    if (!_is_recursion_call) {
+        _is_recursion_call = true;
 
-    LogFatal("Receive signal %d", signo);
-    LogFatal("main: <%p>\n-----call stack-----\n%s",
-      ::main, stack_str.c_str());
+        LogFatal("Receive signal %d", signo);
 
-    LogFatal("Process abort!");
+        const std::string &stack_str = DumpBacktrace();
+        LogFatal("main: <%p>\n-----call stack-----\n%s", ::main, stack_str.c_str());
 
-    if (error_exit_func)    //! 执行一些善后处理
-        error_exit_func();
+        LogFatal("Process abort!");
+
+        if (error_exit_func)    //! 执行一些善后处理
+            error_exit_func();
+
+        _is_recursion_call = false;
+
+    } else {
+        LogFatal("Recursion signal %d", signo);
+    }
 
     signal(SIGABRT, SIG_DFL);
     std::abort();
