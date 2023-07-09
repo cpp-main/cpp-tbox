@@ -136,8 +136,8 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
             for (auto item : node_info_vec) {
                 ss << "- " << item.name;
                 auto node = nodes_.at(item.token);
-                if (node->type() == NodeType::kFunc)
-                    ss << '*';
+                if (node->type() == NodeType::kDir)
+                    ss << '/';
                 ss << "\r\n";
             }
 
@@ -226,7 +226,7 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
                     auto curr_node = nodes_.at(curr_node_info.token);
                     if (curr_node->type() == NodeType::kFunc) {
                         //! 如果是Func，就打印一下名称就可以了
-                        ss << "*\r\n";
+                        ss << "\r\n";
                     } else if (curr_node->type() == NodeType::kDir) {
                         //! 如果是Dir，则需要再深入地遍历其子Node
                         //! 首先需要查重，防止循环路径引起的死循环
