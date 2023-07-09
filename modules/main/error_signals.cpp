@@ -85,14 +85,14 @@ void OnErrorSignal(int signo)
 
         LogFatal("Process abort!");
 
-        if (error_exit_func)    //! 执行一些善后处理
-            error_exit_func();
-
         _is_recursion_call = false;
 
     } else {
         LogFatal("Recursion signal %d", signo);
     }
+
+    if (error_exit_func)    //! 执行一些善后处理
+        error_exit_func();
 
     signal(SIGABRT, SIG_DFL);
     std::abort();
