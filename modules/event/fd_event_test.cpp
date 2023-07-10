@@ -8,6 +8,8 @@
 #include "loop.h"
 #include "fd_event.h"
 
+#include "event/misc.h"
+
 namespace tbox {
 namespace event {
 
@@ -322,6 +324,55 @@ TEST(FdEvent, Reinitialize)
         delete fd_event;
         delete loop;
     }
+}
+
+/// Test exception events
+TEST(FdEvent, Exception)
+{
+    int read_fd, write_fd;
+    bool ok = tbox::event::CreateFdPair(read_fd, write_fd);
+    EXPECT_TRUE(ok);
+
+    auto loop = Loop::New();
+    auto read_fd_event = loop->newFdEvent();
+    auto write_fd_event = loop->newFdEvent();
+    ASSERT_TRUE(read_fd_event != nullptr);
+    ASSERT_TRUE(write_fd_event != nullptr);
+
+    EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    read_fd_event->setCallback([&](short events){
+        if (events & FdEvent::kReadEvent) {
+            char data[100] = { 0};
+            ssize_t len = read(read_fd, data, sizeof(data));
+            EXPECT_EQ(len, sizeof(int));
+        }
+
+        if (events & FdEvent::kExceptEvent) {
+            loop->exitLoop();
+        }
+    });
+
+    read_fd_event->enable();
+
+    EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    write_fd_event->setCallback([&](short events){
+        if (events & FdEvent::kWriteEvent) {
+            int data = 0;
+            ssize_t ret = write(write_fd, &data, sizeof(data));
+            EXPECT_EQ(ret, sizeof(data));
+            close(write_fd);
+        }
+    });
+
+    write_fd_event->enable();
+
+loop->runLoop();
+read_fd_event->disable();
+    write_fd_event->disable();
+
+    delete read_fd_event;
+    delete write_fd_event;
+    delete loop;
 }
 
 }
