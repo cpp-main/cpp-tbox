@@ -8,7 +8,7 @@
 #include "loop.h"
 #include "fd_event.h"
 
-#include "event/misc.h"
+#include "misc.h"
 
 namespace tbox {
 namespace event {
@@ -331,13 +331,16 @@ TEST(FdEvent, Exception)
 {
     int read_fd, write_fd;
     bool ok = tbox::event::CreateFdPair(read_fd, write_fd);
-    EXPECT_TRUE(ok);
+    ASSERT_TRUE(ok);
 
     auto loop = Loop::New();
     auto read_fd_event = loop->newFdEvent();
     auto write_fd_event = loop->newFdEvent();
+
     ASSERT_TRUE(read_fd_event != nullptr);
     ASSERT_TRUE(write_fd_event != nullptr);
+
+    int run_time = 0;
 
     EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
     read_fd_event->setCallback([&](short events){
@@ -348,6 +351,7 @@ TEST(FdEvent, Exception)
         }
 
         if (events & FdEvent::kExceptEvent) {
+            ++run_time;
             loop->exitLoop();
         }
     });
@@ -366,8 +370,11 @@ TEST(FdEvent, Exception)
 
     write_fd_event->enable();
 
-loop->runLoop();
-read_fd_event->disable();
+    loop->runLoop();
+
+    EXPECT_EQ(run_time, 1);
+
+    read_fd_event->disable();
     write_fd_event->disable();
 
     delete read_fd_event;
