@@ -161,7 +161,7 @@ target_link_libraries(demo PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_al
 # 反馈途径
 
 - Issue: 任何问题都欢迎在issue里交流
-- 微信: hevake\_lee
+- 微信: hevake\_lee (备注: cpp-tbox)
 - QQ群: 738084942 (cpp-tbox 技术交流)
 
 # 鼓励我们

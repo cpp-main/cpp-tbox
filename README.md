@@ -160,7 +160,7 @@ Open the config.mk file, you don’t need to block the modules corresponding to 
 # Feedback
 
 - Issue: Any questions are welcome to communicate in issue
-- WeChat: hevake\_lee
+- WeChat: hevake\_lee (Note: cpp-tbox)
 - QQ Group: 738084942 (cpp-tbox 技术交流)
 
 # Encourage us
