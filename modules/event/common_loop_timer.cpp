@@ -56,7 +56,7 @@ void CommonLoop::handleExpiredTimers()
             // remove the last element
             timer_min_heap_.pop_back();
             timer_cabinet_.free(t->token);
-            CHECK_DELETE_RESET_OBJ(t);
+            timer_object_pool_.free(t);
         } else {
             t->expired += t->interval;
             // push the last element to heap again
@@ -95,7 +95,7 @@ cabinet::Token CommonLoop::addTimer(uint64_t interval, uint64_t repeat, const Ti
 
     auto now = GetCurrentSteadyClockMilliseconds();
 
-    Timer *t = new Timer;
+    Timer *t = timer_object_pool_.alloc();
     TBOX_ASSERT(t != nullptr);
 
     t->token = this->timer_cabinet_.alloc(t);
@@ -129,7 +129,7 @@ void CommonLoop::deleteTimer(const cabinet::Token& token)
     timer_min_heap_.pop_back();
 #endif
 
-    run([timer] { delete timer; }, __func__); //! Delete later, avoid delete itself
+    run([this, timer] { timer_object_pool_.free(timer); }, __func__); //! Delete later, avoid delete itself
 }
 
 TimerEvent* CommonLoop::newTimerEvent(const std::string &what)

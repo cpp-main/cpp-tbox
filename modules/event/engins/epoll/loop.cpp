@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <cstdint>
+#include <cstring>
 
 #include <vector>
 #include <algorithm>
@@ -75,24 +76,40 @@ void EpollLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-void EpollLoop::addFdSharedData(int fd, EpollFdSharedData *fd_event)
+EpollFdSharedData* EpollLoop::refFdSharedData(int fd)
 {
-    fd_data_map_.insert(std::make_pair(fd, fd_event));
-}
+    EpollFdSharedData *fd_shared_data = nullptr;
 
-void EpollLoop::removeFdSharedData(int fd)
-{
-    fd_data_map_.erase(fd);
-}
-
-EpollFdSharedData* EpollLoop::queryFdSharedData(int fd) const
-{
     auto it = fd_data_map_.find(fd);
     if (it != fd_data_map_.end())
-        return it->second;
-    return nullptr;
+        fd_shared_data = it->second;
+
+    if (fd_shared_data == nullptr) {
+        fd_shared_data = fd_shared_data_pool_.alloc();
+        TBOX_ASSERT(fd_shared_data != nullptr);
+
+        ::memset(&fd_shared_data->ev, 0, sizeof(fd_shared_data->ev));
+        fd_shared_data->ev.data.ptr = static_cast<void *>(fd_shared_data);
+
+        fd_data_map_.insert(std::make_pair(fd, fd_shared_data));
+    }
+
+    ++fd_shared_data->ref;
+    return fd_shared_data;
 }
 
+void EpollLoop::unrefFdSharedData(int fd)
+{
+    auto it = fd_data_map_.find(fd);
+    if (it != fd_data_map_.end()) {
+        auto fd_shared_data = it->second;
+        --fd_shared_data->ref;
+        if (fd_shared_data->ref == 0) {
+            fd_data_map_.erase(fd);
+            fd_shared_data_pool_.free(fd_shared_data);
+        }
+    }
+}
 
 FdEvent* EpollLoop::newFdEvent(const std::string &what)
 {

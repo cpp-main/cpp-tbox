@@ -5,14 +5,15 @@
 
 #include "../../common_loop.h"
 
+#include <tbox/base/object_pool.hpp>
+#include "types.h"
+
 #ifndef DEFAULT_MAX_LOOP_ENTRIES
 #define DEFAULT_MAX_LOOP_ENTRIES (256)
 #endif
 
 namespace tbox {
 namespace event {
-
-struct EpollFdSharedData;
 
 class EpollLoop : public CommonLoop {
   public:
@@ -27,9 +28,8 @@ class EpollLoop : public CommonLoop {
   public:
     inline int epollFd() const { return epoll_fd_; }
 
-    void addFdSharedData(int fd, EpollFdSharedData *fd_data);
-    void removeFdSharedData(int fd);
-    EpollFdSharedData *queryFdSharedData(int fd) const;
+    EpollFdSharedData* refFdSharedData(int fd);
+    void unrefFdSharedData(int fd);
 
   protected:
     virtual void stopLoop() { keep_running_ = false; }
@@ -40,6 +40,7 @@ class EpollLoop : public CommonLoop {
     bool keep_running_ = true;
 
     std::unordered_map<int, EpollFdSharedData*> fd_data_map_;
+    ObjectPool<EpollFdSharedData> fd_shared_data_pool_{64};
 };
 
 }
