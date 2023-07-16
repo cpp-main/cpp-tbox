@@ -15,6 +15,7 @@ struct EpollFdSharedData {
     struct epoll_event ev;
     std::vector<EpollFdEvent*> read_events;
     std::vector<EpollFdEvent*> write_events;
+    std::vector<EpollFdEvent*> exception_events;
 };
 
 }

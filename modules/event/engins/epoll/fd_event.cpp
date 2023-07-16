@@ -56,6 +56,9 @@ bool EpollFdEvent::enable()
     if (events_ & kWriteEvent)
         d_->write_events.push_back(this);
 
+    if (events_ & kExceptEvent)
+        d_->exception_events.push_back(this);
+
     reloadEpoll();
 
     is_enabled_ = true;
@@ -75,6 +78,11 @@ bool EpollFdEvent::disable()
     if (events_ & kWriteEvent) {
         auto iter = std::find(d_->write_events.begin(), d_->write_events.end(), this);
         d_->write_events.erase(iter);
+    }
+
+    if (events_ & kExceptEvent) {
+        auto iter = std::find(d_->exception_events.begin(), d_->exception_events.end(), this);
+        d_->exception_events.erase(iter);
     }
 
     reloadEpoll();
@@ -98,6 +106,8 @@ void EpollFdEvent::reloadEpoll()
         new_events |= EPOLLOUT;
     if (!d_->read_events.empty())
         new_events |= EPOLLIN;
+    if (!d_->exception_events.empty())
+        new_events |= (EPOLLHUP | EPOLLERR);
 
     d_->ev.events = new_events;
 
@@ -124,6 +134,11 @@ void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
     if (events & EPOLLOUT) {
         for (EpollFdEvent *event : d->write_events)
             event->onEvent(kWriteEvent);
+    }
+
+    if (events & EPOLLHUP || events & EPOLLERR) {
+        for (EpollFdEvent *event : d->exception_events)
+            event->onEvent(kExceptEvent);
     }
 
     (void)fd;
