@@ -2,6 +2,8 @@
 #define TBOX_OBJECT_POOL_H
 
 #include <cstdlib>
+#include <new>
+#include <limits>
 #include <utility>
 #include <limits>
 

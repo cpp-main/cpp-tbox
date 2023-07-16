@@ -33,7 +33,7 @@ std::string UrlEncode(const std::string &local_str, bool path_mode)
 
     for (const char c : local_str) {
         //! 如果非ASCII或是特殊字符
-        if (special_chars.find(c) != std::string::npos) {
+        if (special_chars.find(c) != std::string::npos || !std::isprint(c)) {
             url_str.push_back('%');
             url_str.push_back(char_to_hex[c >> 4]);
             url_str.push_back(char_to_hex[c & 0xf]);

@@ -115,7 +115,7 @@ string ToIPv4String(const struct sockaddr_storage &addr)
 string ToLocalString(const struct sockaddr_storage &addr, socklen_t len)
 {
     struct sockaddr_un *p_addr = (struct sockaddr_un*)&addr;
-    return string(p_addr->sun_path, len - kSockAddrUnHeadSize); //! Path 未必是以 \0 结束的，要指定长度
+    return string(p_addr->sun_path, len - kSockAddrUnHeadSize - 1); //! Path 未必是以 \0 结束的，要指定长度
 }
 }
 
