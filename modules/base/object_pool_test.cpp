@@ -60,5 +60,70 @@ TEST(ObjectPool, MyStruct) {
     }
 }
 
+TEST(ObjectPool, Stat_1) {
+    ObjectPool<int> pool;
+    for (int i = 0; i < 10; ++i) {
+        auto p = pool.alloc();
+        pool.free(p);
+    }
+
+    auto stat = pool.getStat();
+    EXPECT_EQ(stat.total_alloc_times, 10);
+    EXPECT_EQ(stat.total_free_times, 10);
+    EXPECT_EQ(stat.peak_alloc_number, 1);
+    EXPECT_EQ(stat.peak_free_number, 1);
+}
+
+TEST(ObjectPool, Stat_2) {
+    ObjectPool<int> pool(5);
+    std::vector<int*> vec;
+
+    //! 先申请10
+    for (int i = 0; i < 10; ++i) {
+        auto p = pool.alloc();
+        vec.push_back(p);
+    }
+
+    auto stat = pool.getStat();
+    EXPECT_EQ(stat.total_alloc_times, 10);
+    EXPECT_EQ(stat.total_free_times, 0);
+    EXPECT_EQ(stat.peak_alloc_number, 10);
+    EXPECT_EQ(stat.peak_free_number, 0);
+
+    //! 释放10
+    for (auto p : vec)
+        pool.free(p);
+    vec.clear();
+
+    stat = pool.getStat();
+    EXPECT_EQ(stat.total_alloc_times, 10);
+    EXPECT_EQ(stat.total_free_times, 10);
+    EXPECT_EQ(stat.peak_alloc_number, 10);
+    EXPECT_EQ(stat.peak_free_number, 5);
+
+    //! 再申请3个
+    for (int i = 0; i < 3; ++i) {
+        auto p = pool.alloc();
+        vec.push_back(p);
+    }
+
+    stat = pool.getStat();
+    EXPECT_EQ(stat.total_alloc_times, 13);
+    EXPECT_EQ(stat.total_free_times, 10);
+    EXPECT_EQ(stat.peak_alloc_number, 10);
+    EXPECT_EQ(stat.peak_free_number, 5);
+
+    //! 释放3个
+    for (auto p : vec)
+        pool.free(p);
+    vec.clear();
+
+    stat = pool.getStat();
+    EXPECT_EQ(stat.total_alloc_times, 13);
+    EXPECT_EQ(stat.total_free_times, 13);
+    EXPECT_EQ(stat.peak_alloc_number, 10);
+    EXPECT_EQ(stat.peak_free_number, 5);
+}
+
 }
 }
