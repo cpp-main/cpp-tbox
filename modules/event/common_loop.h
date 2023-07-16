@@ -8,6 +8,7 @@
 #include <set>
 
 #include <tbox/base/cabinet.hpp>
+#include <tbox/base/object_pool.hpp>
 
 #include "loop.h"
 #include "signal_event_impl.h"
@@ -135,6 +136,7 @@ class CommonLoop : public Loop {
     TimerEvent *sp_exit_timer_ = nullptr;
     cabinet::Cabinet<Timer> timer_cabinet_;
     std::vector<Timer*>     timer_min_heap_;
+    ObjectPool<Timer>       timer_object_pool_{64};
 
     //! 警告水位线
     WaterLine water_line_ = {

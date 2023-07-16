@@ -42,6 +42,16 @@ namespace tbox {
  * 注意：
  * - 凡是使用 ObjectPool 分配的对象，一定要使用 ObjectPool 进行释放
  */
+
+//! 统计数据
+struct ObjectPoolStat {
+    size_t total_alloc_times = 0;   //!< 总共调用 alloc() 的次数
+    size_t total_free_times  = 0;   //!< 总共调用 free() 的次数
+    size_t peak_alloc_number = 0;   //!< 最大申请数
+    size_t peak_free_number  = 0;   //!< 最大空间对象数
+};
+
+//! 对象池模板类
 template <typename T>
 class ObjectPool {
   public:
@@ -81,6 +91,12 @@ class ObjectPool {
         T *p = reinterpret_cast<T*>(block);
         //! 执行对象的构造函数
         new (p) T(std::forward<Args>(args)...);
+
+        ++stat_.total_alloc_times;
+        auto curr_alloc_number = stat_.total_alloc_times - stat_.total_free_times;
+        if (curr_alloc_number > stat_.peak_alloc_number)
+            stat_.peak_alloc_number = curr_alloc_number;
+
         return p;
     }
 
@@ -96,16 +112,25 @@ class ObjectPool {
             block->next = free_header_;
             free_header_ = block;
             ++free_number_;
+
+            if (free_number_ > stat_.peak_free_number)
+                stat_.peak_free_number = free_number_;
         } else {
             //! 否则就直接释放掉
             ::free(block);
         }
+
+        ++stat_.total_free_times;
     }
+
+    ObjectPoolStat getStat() const { return stat_; }
 
   private:
     size_t keep_number_ = std::numeric_limits<size_t>::max();
     size_t free_number_ = 0;        //!< 空闲块数量
     Block *free_header_ = nullptr;  //!< 空闲块链表
+
+    ObjectPoolStat stat_;   //!< 统计数据
 };
 
 }

@@ -1,4 +1,3 @@
-#include <cstring>
 #include <algorithm>
 #include <vector>
 
@@ -11,14 +10,6 @@
 namespace tbox {
 namespace event {
 
-//! 同一个fd共享的数据
-struct EpollFdSharedData {
-    int ref = 0;    //! 引用计数
-    struct epoll_event ev;
-    std::vector<EpollFdEvent*> read_events;
-    std::vector<EpollFdEvent*> write_events;
-};
-
 EpollFdEvent::EpollFdEvent(EpollLoop *wp_loop, const std::string &what)
   : FdEvent(what)
   , wp_loop_(wp_loop)
@@ -30,7 +21,7 @@ EpollFdEvent::~EpollFdEvent()
 
     disable();
 
-    unrefFdSharedData();
+    wp_loop_->unrefFdSharedData(fd_);
 }
 
 bool EpollFdEvent::initialize(int fd, short events, Mode mode)
@@ -38,25 +29,16 @@ bool EpollFdEvent::initialize(int fd, short events, Mode mode)
     if (isEnabled())
         return false;
 
-    unrefFdSharedData();
+    if (fd != fd_) {
+        wp_loop_->unrefFdSharedData(fd_);
+        fd_ = fd;
+        d_ = wp_loop_->refFdSharedData(fd_);
+    }
 
-    fd_ = fd;
     events_ = events;
     if (mode == FdEvent::Mode::kOneshot)
         is_stop_after_trigger_ = true;
 
-    d_ = wp_loop_->queryFdSharedData(fd_);
-    if (d_ == nullptr) {
-        d_ = new EpollFdSharedData; 
-        TBOX_ASSERT(d_ != nullptr);
-
-        memset(&d_->ev, 0, sizeof(d_->ev));
-        d_->ev.data.ptr = static_cast<void *>(d_);
-
-        wp_loop_->addFdSharedData(fd_, d_);
-    }
-
-    ++d_->ref;
     return true;
 }
 
@@ -73,6 +55,9 @@ bool EpollFdEvent::enable()
 
     if (events_ & kWriteEvent)
         d_->write_events.push_back(this);
+
+    if (events_ & kExceptEvent)
+        d_->exception_events.push_back(this);
 
     reloadEpoll();
 
@@ -93,6 +78,11 @@ bool EpollFdEvent::disable()
     if (events_ & kWriteEvent) {
         auto iter = std::find(d_->write_events.begin(), d_->write_events.end(), this);
         d_->write_events.erase(iter);
+    }
+
+    if (events_ & kExceptEvent) {
+        auto iter = std::find(d_->exception_events.begin(), d_->exception_events.end(), this);
+        d_->exception_events.erase(iter);
     }
 
     reloadEpoll();
@@ -116,6 +106,8 @@ void EpollFdEvent::reloadEpoll()
         new_events |= EPOLLOUT;
     if (!d_->read_events.empty())
         new_events |= EPOLLIN;
+    if (!d_->exception_events.empty())
+        new_events |= (EPOLLHUP | EPOLLERR);
 
     d_->ev.events = new_events;
 
@@ -144,6 +136,11 @@ void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
             event->onEvent(kWriteEvent);
     }
 
+    if (events & EPOLLHUP || events & EPOLLERR) {
+        for (EpollFdEvent *event : d->exception_events)
+            event->onEvent(kExceptEvent);
+    }
+
     (void)fd;
 }
 
@@ -159,19 +156,6 @@ void EpollFdEvent::onEvent(short events)
         --cb_level_;
     }
     wp_loop_->endEventProcess(this);
-}
-
-void EpollFdEvent::unrefFdSharedData()
-{
-    if (d_ != nullptr) {
-        --d_->ref;
-        if (d_->ref == 0) {
-            wp_loop_->removeFdSharedData(fd_);
-            delete d_;
-            d_ = nullptr;
-            fd_ = -1;
-        }
-    }
 }
 
 }
