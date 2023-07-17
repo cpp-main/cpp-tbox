@@ -98,7 +98,7 @@ bool TimerFd::enable()
     if (!d_->timer_fd_event->enable())
         return false;
 
-    if (timerfd_settime(d_->timer_fd, TFD_TIMER_CANCEL_ON_SET, &d_->ts, NULL) < 0) {
+    if (timerfd_settime(d_->timer_fd, 0, &d_->ts, NULL) < 0) {
         LogWarn("timerfd_settime() failed: errno=%d", errno);
         return false;
     }
@@ -116,7 +116,7 @@ bool TimerFd::disable()
         return true;
 
     struct itimerspec ts = {0};
-    if (timerfd_settime(d_->timer_fd, TFD_TIMER_CANCEL_ON_SET, &ts, NULL) < 0) {
+    if (timerfd_settime(d_->timer_fd, 0, &ts, NULL) < 0) {
         LogWarn("timerfd_settime() failed: errno=%d", errno);
         return false;
     }
