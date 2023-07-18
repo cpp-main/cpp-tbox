@@ -110,6 +110,8 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
     if (!util::json::HasArrayField(js, "states"))
         return;
 
+    oss << "state_" << curr_sm_id << R"(_start [shape="circle",style="filled",fillcolor="black",label=""])";
+
     const auto &js_state_array = js["states"];
     for (auto &js_state : js_state_array) {
         int state_id = 0;
@@ -129,15 +131,15 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
         if (has_sub_sm)
             oss << R"(shape="box3d",)";
 
+        oss << R"(label=")" << state_id;
+        if (!label.empty())
+            oss << '.' << label;
+        oss << R"("];)" << std::endl;
+
         if (state_id == init_state) {
-            oss << R"(shape="circle",label="")";
-        } else {
-            oss << R"(label=")" << state_id;
-            if (!label.empty())
-                oss << '.' << label;
-            oss << R"(")";
+            oss << "state_" << curr_sm_id << "_start->"
+                << "state_" << curr_sm_id << '_' << state_id << ';' << std::endl;
         }
-        oss << R"(];)" << std::endl;
 
         if (util::json::HasArrayField(js_state, "routes")) {
             auto &js_route_array = js_state["routes"];
@@ -190,7 +192,7 @@ std::string ActionJsonToGraphviz(const Json &js)
 {
     std::ostringstream oss;
     oss << "digraph {" << std::endl
-        << "rankdir=TB;" << std::endl
+        << "rankdir=LR;" << std::endl
         << R"(node [shape="rect",style="filled"];)" << std::endl;
     ActionJsonToGraphviz(js, oss);
     oss << '}' << std::endl;
@@ -203,7 +205,7 @@ std::string StateMachineJsonToGraphviz(const Json &js)
     int sm_id_alloc = 0;
 
     oss << "digraph {" << std::endl
-        << "rankdir=LR;" << std::endl
+        << "rankdir=TB;" << std::endl
         << R"(node [shape="rect",style="filled,rounded"];)" << std::endl;
     StateMachineJsonToGraphviz(js, oss, sm_id_alloc);
     oss << '}' << std::endl;
