@@ -12,7 +12,7 @@ CXXFLAGS := -DLOG_MODULE_ID='"tbox.mqtt"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -lmosquitto -levent_core -lev
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -lmosquitto
 
 ENABLE_SHARED_LIB = no
 

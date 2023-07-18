@@ -12,5 +12,6 @@ LDFLAGS += \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
+	-lpthread
 
 include ${TOP_DIR}/tools/exe_common.mk
