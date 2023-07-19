@@ -40,8 +40,8 @@ SockAddr::SockAddr(const DomainSockPath &path)
 
     auto &sock_path = path.get();
     //!NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
-    ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size() + 1);
-    len_ = kSockAddrUnHeadSize + sock_path.size() + 1;
+    ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size());
+    len_ = kSockAddrUnHeadSize + sock_path.size();
 }
 
 SockAddr::SockAddr(const struct sockaddr &addr, socklen_t len)
@@ -115,7 +115,7 @@ string ToIPv4String(const struct sockaddr_storage &addr)
 string ToLocalString(const struct sockaddr_storage &addr, socklen_t len)
 {
     struct sockaddr_un *p_addr = (struct sockaddr_un*)&addr;
-    return string(p_addr->sun_path, len - kSockAddrUnHeadSize - 1); //! Path 未必是以 \0 结束的，要指定长度
+    return string(p_addr->sun_path, len - kSockAddrUnHeadSize); //! Path 未必是以 \0 结束的，要指定长度
 }
 }
 
