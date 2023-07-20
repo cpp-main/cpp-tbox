@@ -13,7 +13,7 @@
 namespace tbox {
 namespace http {
 
-class Respond;
+struct Respond;
 
 namespace server {
 
@@ -62,7 +62,6 @@ class Server::Impl {
 
   private:
     Server *wp_parent_;
-    Loop   *wp_loop_;
 
     TcpServer tcp_server_;
     vector<RequestCallback> req_cb_;

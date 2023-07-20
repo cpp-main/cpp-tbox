@@ -32,7 +32,7 @@ class EpollLoop : public CommonLoop {
     void unrefFdSharedData(int fd);
 
   protected:
-    virtual void stopLoop() { keep_running_ = false; }
+    virtual void stopLoop() override { keep_running_ = false; }
 
   private:
     int  max_loop_entries_ = DEFAULT_MAX_LOOP_ENTRIES;

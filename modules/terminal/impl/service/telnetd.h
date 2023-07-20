@@ -32,7 +32,7 @@ class Telnetd::Impl : public Connection {
     virtual bool isValid(const SessionToken &st) const override;
 
   protected:
-    enum Cmd {
+    enum Cmd : uint8_t {
         kEOF = 236,
         kSUSP,
         kABORT,
@@ -52,7 +52,7 @@ class Telnetd::Impl : public Connection {
         kIAC
     };
 
-    enum Opt {
+    enum Opt : uint8_t {
         kECHO = 1,
         kSGA = 3,
         kSTATUS = 5,

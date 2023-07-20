@@ -16,7 +16,7 @@ class LoopAction : public Action {
     explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
     virtual ~LoopAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
   protected:
     virtual bool onStart() override;

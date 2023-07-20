@@ -17,7 +17,6 @@ using namespace network;
 
 Server::Impl::Impl(Server *wp_parent, Loop *wp_loop) :
     wp_parent_(wp_parent),
-    wp_loop_(wp_loop),
     tcp_server_(wp_loop)
 { }
 

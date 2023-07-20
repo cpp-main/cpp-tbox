@@ -12,7 +12,6 @@ namespace alarm {
 
 namespace {
 constexpr auto kSecondsOfDay = 60 * 60 * 24;
-constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
 }
 
 bool WorkdayAlarm::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday) {

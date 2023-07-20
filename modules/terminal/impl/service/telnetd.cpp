@@ -160,12 +160,10 @@ void Telnetd::Impl::sendCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 void Telnetd::Impl::sendSub(const TcpServer::ConnToken &ct, Opt o, const uint8_t *p, size_t s)
 {
     size_t size = s + 5;
-    uint8_t tmp[size] = {
-        [0] = Cmd::kIAC,
-        [1] = Cmd::kSB,
-        [2] = o,
-    };
-
+    uint8_t tmp[size];
+    tmp[0] = Cmd::kIAC;
+    tmp[1] = Cmd::kSB;
+    tmp[2] = 0;
     memcpy(tmp + 3, p, s);
     tmp[size-2] = Cmd::kIAC;
     tmp[size-1] = Cmd::kSE;

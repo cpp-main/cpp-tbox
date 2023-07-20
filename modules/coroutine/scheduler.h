@@ -8,7 +8,7 @@
 namespace tbox {
 namespace coroutine {
 
-class Routine;
+struct Routine;
 class Scheduler;
 
 using RoutineToken  = cabinet::Token;

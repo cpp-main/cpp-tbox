@@ -139,7 +139,7 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
 {
     {
         auto func_node = term.createFuncNode(
-            [this, &log_ch] (const Session &s, const Args &args) {
+            [&log_ch] (const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -166,7 +166,7 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
 
     {
         auto func_node = term.createFuncNode(
-            [this, &log_ch] (const Session &s, const Args &args) {
+            [&log_ch] (const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -193,7 +193,7 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
 
     {
         auto func_node = term.createFuncNode(
-            [this, &log_ch] (const Session &s, const Args &args) {
+            [&log_ch] (const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 3) {
@@ -236,7 +236,7 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
 
     {
         auto func_node = term.createFuncNode(
-            [this, &log_ch] (const Session &s, const Args &args) {
+            [&log_ch] (const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {

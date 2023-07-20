@@ -594,7 +594,7 @@ void ContextImp::initShell()
 
         {
             auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
+                [] (const Session &s, const Args &args) {
                     std::stringstream ss;
                     int major = 0, minor = 0, rev = 0, build = 0;
                     GetAppVersion(major, minor, rev, build);
@@ -607,7 +607,7 @@ void ContextImp::initShell()
         }
         {
             auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
+                [] (const Session &s, const Args &args) {
                     std::stringstream ss;
                     int major = 0, minor = 0, rev = 0;
                     GetTboxVersion(major, minor, rev);
@@ -620,7 +620,7 @@ void ContextImp::initShell()
         }
         {
             auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
+                [] (const Session &s, const Args &args) {
                     std::stringstream ss;
                     ss << GetAppBuildTime() << "\r\n";
                     s.send(ss.str());
@@ -631,7 +631,7 @@ void ContextImp::initShell()
         }
         {
             auto func_node = wp_nodes->createFuncNode(
-                [this] (const Session &s, const Args &args) {
+                [] (const Session &s, const Args &args) {
                     std::stringstream ss;
                     ss << GetAppDescribe() << "\r\n";
                     s.send(ss.str());

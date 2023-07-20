@@ -9,7 +9,7 @@
 namespace tbox {
 namespace terminal {
 
-class SessionContext;
+struct SessionContext;
 
 class Terminal::Impl {
   public:

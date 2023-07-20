@@ -18,7 +18,7 @@ class RepeatAction : public Action {
                           Mode mode = Mode::kNoBreak);
     virtual ~RepeatAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
   protected:
     virtual bool onStart() override;

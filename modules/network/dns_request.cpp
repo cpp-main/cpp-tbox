@@ -15,9 +15,6 @@ namespace network {
 
 namespace {
 
-constexpr const char *HOSTS_FILE = "/etc/hosts";
-constexpr const char *RESOLV_FILE = "/etc/resolv.conf";
-
 enum DNS_TYPE {
     DNS_TYPE_A      = 1,    //!< 期望获得查询名的IP地址
     DNS_TYPE_NS     = 2,    //!< 一个授权的域名服务器
@@ -82,8 +79,9 @@ std::string FetchDomain(util::Deserializer &parser)
             oss << FetchDomain(sub_parser);
             break;
         } else {
-            char str[len + 1] = { 0 };
+            char str[len + 1];
             parser.fetch(str, len);
+            str[len] = '\0';
             oss << str;
         }
     }

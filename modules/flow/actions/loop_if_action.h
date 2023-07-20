@@ -13,7 +13,7 @@ class LoopIfAction : public Action {
                           Action *exec_action);
     virtual ~LoopIfAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
     //! 默认结束结果是true，如果需要可以设定
     void setFinishResult(bool succ) { finish_result_ = succ; }

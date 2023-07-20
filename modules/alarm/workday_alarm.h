@@ -33,8 +33,8 @@ class WorkdayAlarm : public Alarm
 
   protected:
     virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
-    virtual bool onEnable();
-    virtual bool onDisable();
+    virtual bool onEnable() override;
+    virtual bool onDisable() override;
 
   private:
     int seconds_of_day_ = 0;

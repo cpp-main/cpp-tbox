@@ -31,7 +31,7 @@ class SequenceAction : public Action {
     explicit SequenceAction(event::Loop &loop);
     virtual ~SequenceAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
     int append(Action *action);
 

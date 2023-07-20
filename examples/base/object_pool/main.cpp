@@ -8,7 +8,7 @@
 struct MyStruct {
   public:
     MyStruct(int i) : i_(i) { }
-  private:
+
     int i_;
     char array[100];
 };

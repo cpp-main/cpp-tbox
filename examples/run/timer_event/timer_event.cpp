@@ -20,12 +20,12 @@ class MyModule : public tbox::main::Module {
         return true;
     }
     /// 启动
-    virtual bool onStart() {
+    virtual bool onStart() override {
         tick_timer_->enable();
         return true;
     }
     /// 停止
-    virtual void onStop() {
+    virtual void onStop() override {
         tick_timer_->disable();
     }
 

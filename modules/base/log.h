@@ -2,9 +2,6 @@
 #ifndef TBOX_LOG_H_20170512
 #define TBOX_LOG_H_20170512
 
-#include <stdlib.h>
-#include <inttypes.h>
-
 //! Define log levels
 #define LOG_LEVEL_FATAL     0   //!< Program will crash
 #define LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle

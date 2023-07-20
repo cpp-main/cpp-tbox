@@ -20,7 +20,7 @@ class IfElseAction : public Action {
                           Action *succ_action, Action *fail_action);
     virtual ~IfElseAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
   protected:
     virtual bool onStart() override;

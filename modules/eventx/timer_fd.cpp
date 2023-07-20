@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <sys/timerfd.h>
+#include <cstring>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
@@ -23,7 +24,7 @@ struct TimerFd::Data {
     int timer_fd { -1 };
     bool is_inited { false };
     bool is_enabled { false };
-    struct itimerspec ts { 0 };
+    struct itimerspec ts;
     int cb_level {0};
 };
 
@@ -33,6 +34,7 @@ TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what)
     d_->loop = loop;
     d_->timer_fd_event = loop->newFdEvent(what);
     d_->timer_fd_event->setCallback(std::bind(&TimerFd::onEvent, this, std::placeholders::_1));
+    memset(&d_->ts, 0, sizeof(d_->ts));
 }
 
 TimerFd::~TimerFd()
@@ -115,7 +117,9 @@ bool TimerFd::disable()
     if (!d_->is_enabled)
         return true;
 
-    struct itimerspec ts = {0};
+    struct itimerspec ts;
+    memset(&ts, 0, sizeof(ts));
+
     if (timerfd_settime(d_->timer_fd, 0, &ts, NULL) < 0) {
         LogWarn("timerfd_settime() failed: errno=%d", errno);
         return false;
@@ -133,6 +137,8 @@ std::chrono::nanoseconds TimerFd::remainTime() const
     std::chrono::nanoseconds remain_time = std::chrono::nanoseconds::zero();
 
     struct itimerspec ts;
+    memset(&ts, 0, sizeof(ts));
+
     int ret = ::timerfd_gettime(d_->timer_fd, &ts);
     if (ret == 0) {
         remain_time += std::chrono::seconds(ts.it_value.tv_sec);

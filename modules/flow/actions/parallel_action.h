@@ -14,7 +14,7 @@ class ParallelAction : public Action {
     explicit ParallelAction(event::Loop &loop);
     virtual ~ParallelAction();
 
-    virtual void toJson(Json &js) const;
+    virtual void toJson(Json &js) const override;
 
     int append(Action *action);
 

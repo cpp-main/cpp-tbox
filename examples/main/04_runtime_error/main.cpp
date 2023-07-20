@@ -18,7 +18,7 @@ class TestModule : public Module {
 
         {
             auto func_node = shell.createFuncNode(
-                [this] (const Session &, const Args &) {
+                [] (const Session &, const Args &) {
                     static_cast<char*>(nullptr)[0] = 0;
                 }
             );
@@ -37,7 +37,7 @@ class TestModule : public Module {
 
         {
             auto func_node = shell.createFuncNode(
-                [this] (const Session &, const Args &) {
+                [] (const Session &, const Args &) {
                     throw 10;
                 }
             );
@@ -45,7 +45,7 @@ class TestModule : public Module {
         }
         {
             auto func_node = shell.createFuncNode(
-                [this] (const Session &, const Args &) {
+                [] (const Session &, const Args &) {
                     throw std::runtime_error("runtime error");
                 }
             );
@@ -73,7 +73,7 @@ class TestModule : public Module {
         }
         {
             auto func_node = shell.createFuncNode(
-                [this] (const Session &, const Args &) {
+                [] (const Session &, const Args &) {
                     std::this_thread::sleep_for(std::chrono::seconds(3));
                 }
             );

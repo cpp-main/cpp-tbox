@@ -3,6 +3,7 @@
 #include <thread>
 #include <unistd.h>
 #include <signal.h>
+#include <cinttypes>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
