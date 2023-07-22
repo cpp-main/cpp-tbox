@@ -46,7 +46,7 @@ TEST(ToGraphviz, StateMachineJson)
     using SM = StateMachine;
 
     enum class StateId { kTerm, kInit, k1, k2 };
-    enum class EventId { kTerm, k1, k2, k3 };
+    enum class EventId { kAny, k1, k2, k3 };
 
     SM sm, sub_sm;
 

@@ -110,7 +110,11 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
     if (!util::json::HasArrayField(js, "states"))
         return;
 
-    oss << "state_" << curr_sm_id << R"(_start [shape="circle",style="filled",fillcolor="black",label=""])";
+    oss << "state_" << curr_sm_id
+        << R"(_start [shape="circle",style="filled",fillcolor="black",label=""];)"
+        << std::endl;
+
+    bool has_route_to_end = false;
 
     const auto &js_state_array = js["states"];
     for (auto &js_state : js_state_array) {
@@ -164,6 +168,9 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
                 if (!label.empty())
                     oss << '.' << label;
                 oss << R"("];)" << std::endl;
+
+                if (next_state_id == 0)
+                    has_route_to_end = true;
             }
         }
 
@@ -182,8 +189,10 @@ void StateMachineJsonToGraphviz(const Json &js, std::ostringstream &oss, int &sm
         }
     }
 
-    oss << "state_" << curr_sm_id << '_' << 0
-        << R"( [shape="doublecircle",style="filled",fillcolor="black",label=""];)" << std::endl;
+    if (has_route_to_end) {
+        oss << "state_" << curr_sm_id << '_' << 0
+            << R"( [shape="doublecircle",style="filled",fillcolor="black",label=""];)" << std::endl;
+    }
 }
 
 }
