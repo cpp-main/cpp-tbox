@@ -23,6 +23,6 @@ Fix it, then add corresponding unit test case in `xxx_test.cpp`.
 
 ## Add new components
 
-If you have added xxx.cpp and xxx.h files, you should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases. And make sure all unit tests pass.
+If you have added xxx.cpp and xxx.h files, you should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases, and make sure all unit tests pass.  
 You'd better also implement the corresponding sample program to show how to use this module.
 
