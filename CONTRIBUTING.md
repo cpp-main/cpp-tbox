@@ -9,12 +9,11 @@ Exceptions:
 
 - Source file postfix: .cpp, not .cc
 - Indentation: 4 spaces
-- Name of class member variable: `xxx_`, example: `int count_;`
-- Name of class static variable: `_xxx_`, example: `static int _ref_count_;`
 - Name of class member function: `aaaBbb()`, example: `void setBindPort(int port);`
-- Name of class static function: `AaaBbb()`, example: `Object* CreateObject();`
-- Name of static function: `_AaaBbb()`, example: `_PrintIt(int v);`
-- Name of static variable: `_xxx`, example: `int _count;`
+- Name of class static function: `AaaBbb()`, example: `static Object* CreateObject();`
+- Name of class static variable: `_xxx_`, example: `static int _ref_count_;`
+- Name of static function: `_AaaBbb()`, example: `static void _PrintIt(int v);`
+- Name of static variable: `_xxx`, example: `static int _count;`
 - Avoid using smart pointers unless you have to.
 
 ## Fix bugs
