@@ -2,7 +2,7 @@
 
 ## Coding style
 
-Follow most of Google's code style.
+Follow most of Google's code style.  
 refer to: https://google.github.io/styleguide/cppguide.html
 
 Exceptions:
@@ -23,6 +23,9 @@ Fix it, then add corresponding unit test case in `xxx_test.cpp`.
 
 ## Add new components
 
-If you have added xxx.cpp and xxx.h files, you should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases, and make sure all unit tests pass.  
-You'd better also implement the corresponding sample program to show how to use this module.
+If you add new components named `xxx`.  
+
+1. You should added xxx.cpp and xxx.h files.  
+2. You should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases, and make sure all unit tests pass.  
+3. You'd better also implement the corresponding sample program to show how to use this module.  
 
