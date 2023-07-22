@@ -1,0 +1,28 @@
+# Contributing to cpp-tbox
+
+## Coding style
+
+Follow most of Google's code style.
+refer to: https://google.github.io/styleguide/cppguide.html
+
+Exceptions:
+
+- Source file postfix: .cpp, not .cc
+- Indentation: 4 spaces
+- Name of class member variable: `xxx_`, example: `int count_;`
+- Name of class static variable: `_xxx_`, example: `static int _ref_count_;`
+- Name of class member function: `aaaBbb()`, example: `void setBindPort(int port);`
+- Name of class static function: `AaaBbb()`, example: `Object* CreateObject();`
+- Name of static function: `_AaaBbb()`, example: `_PrintIt(int v);`
+- Name of static variable: `_xxx`, example: `int _count;`
+- Avoid using smart pointers unless you have to.
+
+## Fix bugs
+
+Fix it, then add corresponding unit test case in `xxx_test.cpp`.
+
+## Add new components
+
+If you have added xxx.cpp and xxx.h files, you should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases. And make sure all unit tests pass.
+You'd better also implement the corresponding sample program to show how to use this module.
+
