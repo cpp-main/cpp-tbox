@@ -11,11 +11,12 @@ namespace network {
 //! socket 文件描述符
 class SocketFd : public Fd {
   public:
-    using Fd::Fd;
+    SocketFd();
+    SocketFd(int fd);
+    SocketFd(const Fd &fd);
+
     using Fd::operator=;
     using Fd::swap;
-
-    SocketFd(const Fd &fd);
 
   public:
     static SocketFd CreateSocket(int domain, int type, int protocal);
