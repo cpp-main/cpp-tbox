@@ -17,4 +17,4 @@ jobs:
           sudo apt install libgtest-dev libgmock-dev libmosquitto-dev
       - uses: actions/checkout@v2
       - name: build
-        run: make 3rd-party modules RELEASE=1 STAGING_DIR=$HOME/.tbox
+        run: make

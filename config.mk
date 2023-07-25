@@ -10,12 +10,12 @@ MODULES += main
 MODULES += run
 
 ## 非核心模块，请根据需要选择
-#MODULES += coroutine
-#MODULES += http
-#MODULES += mqtt
-#MODULES += flow
-#MODULES += alarm
-#MODULES += crypto
+MODULES += coroutine
+MODULES += http
+MODULES += mqtt
+MODULES += flow
+MODULES += alarm
+MODULES += crypto
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
