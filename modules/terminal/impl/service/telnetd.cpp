@@ -172,7 +172,7 @@ void Telnetd::Impl::sendNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt o)
 
 void Telnetd::Impl::sendCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, cmd};
+    const uint8_t tmp[] = { Cmd::kIAC, cmd };
     send(ct, tmp, sizeof(tmp));
 }
 
@@ -182,7 +182,7 @@ void Telnetd::Impl::sendSub(const TcpServer::ConnToken &ct, Opt o, const uint8_t
     uint8_t tmp[size];
     tmp[0] = Cmd::kIAC;
     tmp[1] = Cmd::kSB;
-    tmp[2] = 0;
+    tmp[2] = o;
     memcpy(tmp + 3, p, s);
     tmp[size-2] = Cmd::kIAC;
     tmp[size-1] = Cmd::kSE;
