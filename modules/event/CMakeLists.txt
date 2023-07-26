@@ -48,8 +48,8 @@ set(TBOX_EVENT_SOURCES
             signal_event_impl.cpp
             misc.cpp
             stat.cpp
-            engins/epoll/loop.cpp
-            engins/epoll/fd_event.cpp)
+            engines/epoll/loop.cpp
+            engines/epoll/fd_event.cpp)
 
 set(TBOX_EVENT_TEST_SOURCES
             common_loop_test.cpp

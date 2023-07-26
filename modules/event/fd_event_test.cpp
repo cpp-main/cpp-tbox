@@ -36,9 +36,9 @@ using namespace std;
 
 TEST(FdEvent, DisableSelfInReadCallback)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         int fds[2] = { 0 };
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
@@ -84,9 +84,9 @@ TEST(FdEvent, DisableSelfInReadCallback)
 
 TEST(FdEvent, DisableSelfInWriteCallback)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         int fds[2] = { 0 };
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
@@ -125,9 +125,9 @@ TEST(FdEvent, DisableSelfInWriteCallback)
 
 TEST(FdEvent, OneWriteMultiRead)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         int fds[2] = { 0 };
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
@@ -193,9 +193,9 @@ TEST(FdEvent, OneWriteMultiRead)
 
 TEST(FdEvent, MultiWriteOneRead)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         int fds[2] = { 0 };
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
@@ -267,9 +267,9 @@ TEST(FdEvent, MultiWriteOneRead)
 
 TEST(FdEvent, DeleteLater)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto sp_fd_event = sp_loop->newFdEvent();
         sp_fd_event->initialize(1, FdEvent::kReadEvent, Event::Mode::kPersist);
@@ -280,9 +280,9 @@ TEST(FdEvent, DeleteLater)
 
 TEST(FdEvent, Benchmark)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         int fds[2] = { 0 };
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
@@ -326,9 +326,9 @@ TEST(FdEvent, Benchmark)
 /// 检查重复initialize()时会不会出现内存泄漏问题
 TEST(FdEvent, Reinitialize)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         auto loop = Loop::New(e);
         auto fd_event = loop->newFdEvent();

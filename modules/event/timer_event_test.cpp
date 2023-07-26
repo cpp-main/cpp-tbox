@@ -33,9 +33,9 @@ const int kAcceptableError = 10;
 
 TEST(TimerEvent, Oneshot)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto timer_event = sp_loop->newTimerEvent();
         EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kOneshot));
@@ -57,9 +57,9 @@ TEST(TimerEvent, Oneshot)
 
 TEST(TimerEvent, Persist)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto timer_event = sp_loop->newTimerEvent();
         EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kPersist));
@@ -81,9 +81,9 @@ TEST(TimerEvent, Persist)
 
 TEST(TimerEvent, DisableSelfInCallback)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto timer_event = sp_loop->newTimerEvent();
         EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kPersist));
@@ -109,9 +109,9 @@ TEST(TimerEvent, DisableSelfInCallback)
 
 TEST(TimerEvent, Precision)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto timer_event = sp_loop->newTimerEvent();
         EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(100), Event::Mode::kPersist));
