@@ -14,7 +14,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install build-essential cmake
-          sudo apt install libgtest-dev libgmock-dev libmosquitto-dev
+          sudo apt install libgtest-dev libgmock-dev
+          sudo apt install libmosquitto-dev
       - uses: actions/checkout@v3
       - name: Build
         run: cmake -B build && cmake --build build
