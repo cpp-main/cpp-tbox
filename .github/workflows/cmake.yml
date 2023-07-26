@@ -1,4 +1,4 @@
-name: CMake Build
+name: CMake Build and Test
 
 on:
   push:
@@ -17,4 +17,6 @@ jobs:
           sudo apt install libgtest-dev libgmock-dev libmosquitto-dev
       - uses: actions/checkout@v3
       - name: build
-        run: cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox && cmake --build build
+        run: cmake -B build && cmake --build build
+      - name: test
+        run: find ./build -name *_test -exec {} \;
