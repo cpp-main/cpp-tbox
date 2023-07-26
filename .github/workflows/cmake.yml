@@ -10,13 +10,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: setup
+      - name: Setup
         run: |
           sudo apt update
           sudo apt install build-essential cmake
           sudo apt install libgtest-dev libgmock-dev libmosquitto-dev
       - uses: actions/checkout@v3
-      - name: build
+      - name: Build
         run: cmake -B build && cmake --build build
-      - name: test
+      - name: Test
         run: find ./build -name *_test -exec {} \;
