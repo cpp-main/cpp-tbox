@@ -28,6 +28,7 @@
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
 #include <tbox/util/pid_file.h>
+#include <tbox/util/json.h>
 
 #include "module.h"
 #include "context_imp.h"
@@ -49,163 +50,160 @@ extern std::function<void()> error_exit_func;
 
 namespace {
 struct Runtime {
-  Log log;
-  ContextImp ctx;
-  Module apps;
-  int loop_exit_wait = 1;
-  std::thread thread;
+    Log log;
+    ContextImp ctx;
+    Module apps;
 
-  Runtime() : apps("", ctx) {
-    RegisterApps(apps, ctx);
-  }
+    util::PidFile pid_file;
+    int loop_exit_wait = 1;
+    bool error_exit_wait = false;
+    std::thread thread;
+
+    Runtime() : apps("", ctx) {
+        RegisterApps(apps, ctx);
+    }
 };
 
 Runtime* _runtime = nullptr;
 
 void RunInBackend()
 {
-  auto loop = _runtime->ctx.loop();
+    auto loop = _runtime->ctx.loop();
 
-  auto warn_signal = loop->newSignalEvent("main::RunInBackend::warn_signal");
-  SetScopeExitAction([=] { delete warn_signal; });
+    auto warn_signal = loop->newSignalEvent("main::RunInBackend::warn_signal");
+    SetScopeExitAction([=] { delete warn_signal; });
 
-  warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
-  warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
+    warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
+    warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
 
-  //! 启动前准备
-  eventx::LoopWDog::Start();
-  eventx::LoopWDog::Register(loop, "main");
+    //! 启动前准备
+    eventx::LoopWDog::Start();
+    eventx::LoopWDog::Register(loop, "main");
 
-  warn_signal->enable();
+    warn_signal->enable();
 
-  LogDbg("Start!");
-  loop->runLoop();
-  LogDbg("Stoped");
+    LogDbg("Start!");
+    loop->runLoop();
+    LogDbg("Stoped");
 
-  eventx::LoopWDog::Unregister(loop);
-  eventx::LoopWDog::Stop();
+    eventx::LoopWDog::Unregister(loop);
+    eventx::LoopWDog::Stop();
 }
 
 void End()
 {
-  LogInfo("Bye!");
+    LogInfo("Bye!");
 
-  LogOutput_Enable();
-  _runtime->log.cleanup();
+    LogOutput_Enable();
+    _runtime->log.cleanup();
 
-  CHECK_DELETE_RESET_OBJ(_runtime);
+    CHECK_DELETE_RESET_OBJ(_runtime);
 
-  UninstallErrorSignals();
+    UninstallErrorSignals();
 }
 
 }
 
-bool Start(int argc, char **argv) {
-  if (_runtime != nullptr) {
-    std::cerr << "Err: process started" << std::endl;
-    return false;
-  }
+bool Start(int argc, char **argv)
+{
+    if (_runtime != nullptr) {
+        std::cerr << "Err: process started" << std::endl;
+        return false;
+    }
 
-  LogOutput_Enable();
+    LogOutput_Enable();
 
-  InstallErrorSignals();
-  InstallTerminate();
+    InstallErrorSignals();
+    InstallTerminate();
 
-  _runtime = new Runtime;
+    _runtime = new Runtime;
 
-  auto &log = _runtime->log;
-  auto &ctx = _runtime->ctx;
-  auto &apps = _runtime->apps;
+    auto &log = _runtime->log;
+    auto &ctx = _runtime->ctx;
+    auto &apps = _runtime->apps;
 
-  Json js_conf;
-  Args args(js_conf);
+    Json js_conf;
+    Args args(js_conf);
 
-  log.fillDefaultConfig(js_conf);
-  ctx.fillDefaultConfig(js_conf);
-  apps.fillDefaultConfig(js_conf);
+    log.fillDefaultConfig(js_conf);
+    ctx.fillDefaultConfig(js_conf);
+    apps.fillDefaultConfig(js_conf);
 
-  if (!args.parse(argc, argv))
-    return false;
+    if (!args.parse(argc, argv))
+        return false;
 
-  util::PidFile pid_file;
-  if (js_conf.contains("pid_file")) {
-    auto &js_pidfile = js_conf["pid_file"];
-    if (js_pidfile.is_string()) {
-      auto pid_filename = js_pidfile.get<std::string>();
-      if (!pid_filename.empty()) {
-        if (!pid_file.lock(js_pidfile.get<std::string>())) {
-          std::cerr << "Warn: another process is running, exit" << std::endl;
-          return false;
+    std::string pid_filename;
+    util::json::GetField(js_conf, "pid_file", pid_filename);
+    if (!pid_filename.empty()) {
+        if (!_runtime->pid_file.lock(pid_filename)) {
+            std::cerr << "Warn: another process is running, exit" << std::endl;
+            return false;
         }
-      }
     }
-  }
 
-  if (js_conf.contains("loop_exit_wait")) {
-    auto js_loop_exit_wait = js_conf.at("loop_exit_wait");
-    if (js_loop_exit_wait.is_number()) {
-      _runtime->loop_exit_wait = js_loop_exit_wait.get<int>();
-    } else {
-      std::cerr << "Warn: loop_exit_wait invaild" << std::endl;
-    }
-  }
+    util::json::GetField(js_conf, "loop_exit_wait", _runtime->loop_exit_wait);
+    util::json::GetField(js_conf, "error_exit_wait", _runtime->error_exit_wait);
 
-  log.initialize(argv[0], ctx, js_conf);
-  LogOutput_Disable();
+    log.initialize(argv[0], ctx, js_conf);
+    LogOutput_Disable();
 
-  SayHello();
+    SayHello();
 
-  error_exit_func = [&] {
-    log.cleanup();
-  };
+    error_exit_func = [&] {
+        log.cleanup();
 
-  if (ctx.initialize(js_conf)) {
-    if (apps.initialize(js_conf)) {
-      if (ctx.start()) {  //! 启动所有应用
-        if (apps.start()) {
-          _runtime->thread = std::thread(RunInBackend);
-          return true;
+        while (_runtime->error_exit_wait)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+    };
+
+    if (ctx.initialize(js_conf)) {
+        if (apps.initialize(js_conf)) {
+            if (ctx.start()) {  //! 启动所有应用
+                if (apps.start()) {
+                    _runtime->thread = std::thread(RunInBackend);
+                    return true;
+                } else {
+                    LogErr("App start fail");
+                }
+                ctx.stop();
+            } else {
+                LogErr("Ctx start fail");
+            }
+            apps.cleanup();
         } else {
-          LogErr("App start fail");
+            LogErr("Apps init fail");
         }
-        ctx.stop();
-      } else {
-        LogErr("Ctx start fail");
-      }
-      apps.cleanup();
+        ctx.cleanup();
     } else {
-      LogErr("Apps init fail");
+        LogErr("Context init fail");
     }
-    ctx.cleanup();
-  } else {
-    LogErr("Context init fail");
-  }
 
-  End();
-  return false;
+    End();
+    return false;
 }
 
-void Stop() {
-  if (_runtime == nullptr) {
-    std::cerr << "Err: process not start" << std::endl;
-    return;
-  }
+void Stop()
+{
+    if (_runtime == nullptr) {
+        std::cerr << "Err: process not start" << std::endl;
+        return;
+    }
 
-  _runtime->ctx.loop()->runInLoop(
-    [] {
-      _runtime->apps.stop();
-      _runtime->ctx.stop();
-      _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
-      LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
-    },
-    "main::Stop"
-  );
-  _runtime->thread.join();
+    _runtime->ctx.loop()->runInLoop(
+        [] {
+            _runtime->apps.stop();
+            _runtime->ctx.stop();
+            _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
+            LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
+        },
+        "main::Stop"
+    );
+    _runtime->thread.join();
 
-  _runtime->apps.cleanup();  //! cleanup所有应用
-  _runtime->ctx.cleanup();
+    _runtime->apps.cleanup();  //! cleanup所有应用
+    _runtime->ctx.cleanup();
 
-  End();
+    End();
 }
 
 }

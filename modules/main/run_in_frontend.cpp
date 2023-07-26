@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <iostream>
+#include <thread>
 
 #include <tbox/base/log.h>
 #include <tbox/base/scope_exit.hpp>
@@ -27,6 +28,7 @@
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
 #include <tbox/util/pid_file.h>
+#include <tbox/util/json.h>
 
 #include "module.h"
 #include "context_imp.h"
@@ -114,29 +116,21 @@ int Main(int argc, char **argv)
     if (!args.parse(argc, argv))
         return 0;
 
+    std::string pid_filename;
     util::PidFile pid_file;
-    if (js_conf.contains("pid_file")) {
-        auto &js_pidfile = js_conf["pid_file"];
-        if (js_pidfile.is_string()) {
-            auto pid_filename = js_pidfile.get<std::string>();
-            if (!pid_filename.empty()) {
-                if (!pid_file.lock(js_pidfile.get<std::string>())) {
-                    std::cerr << "Warn: another process is running, exit" << std::endl;
-                    return 0;
-                }
-            }
+    util::json::GetField(js_conf, "pid_file", pid_filename);
+    if (!pid_filename.empty()) {
+        if (!pid_file.lock(pid_filename)) {
+            std::cerr << "Warn: another process is running, exit" << std::endl;
+            return false;
         }
     }
 
     int loop_exit_wait = 1;
-    if (js_conf.contains("loop_exit_wait")) {
-        auto js_loop_exit_wait = js_conf.at("loop_exit_wait");
-        if (js_loop_exit_wait.is_number()) {
-            loop_exit_wait = js_loop_exit_wait.get<int>();
-        } else {
-            std::cerr << "Warn: loop_exit_wait invaild" << std::endl;
-        }
-    }
+    util::json::GetField(js_conf, "loop_exit_wait", loop_exit_wait);
+
+    bool error_exit_wait = false;
+    util::json::GetField(js_conf, "error_exit_wait", error_exit_wait);
 
     log.initialize(argv[0], ctx, js_conf);
     LogOutput_Disable();
@@ -147,6 +141,9 @@ int Main(int argc, char **argv)
     error_exit_func = [&] {
         //! 主要是保存日志
         log.cleanup();
+
+        while (error_exit_wait)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
     if (ctx.initialize(js_conf)) {
