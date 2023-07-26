@@ -78,12 +78,12 @@ option(TBOX_ENABLE_NETWORK "build network" ON)
 option(TBOX_ENABLE_TERMINAL "build terminal" ON)
 option(TBOX_ENABLE_MAIN "build main" ON)
 
-option(TBOX_ENABLE_COROUTINE "build coroutine" OFF)
-option(TBOX_ENABLE_HTTP "build http" OFF)
-option(TBOX_ENABLE_MQTT "build mqtt" OFF)
-option(TBOX_ENABLE_FLOW "build flow" OFF)
-option(TBOX_ENABLE_ALARM "build alarm" OFF)
-option(TBOX_ENABLE_CRYPTO "build crypto" OFF)
+option(TBOX_ENABLE_COROUTINE "build coroutine" ON)
+option(TBOX_ENABLE_HTTP "build http" ON)
+option(TBOX_ENABLE_MQTT "build mqtt" ON)
+option(TBOX_ENABLE_FLOW "build flow" ON)
+option(TBOX_ENABLE_ALARM "build alarm" ON)
+option(TBOX_ENABLE_CRYPTO "build crypto" ON)
 
 #
 # 3rd-party libraries
@@ -226,4 +226,3 @@ install(
     "${CMAKE_CURRENT_BINARY_DIR}/tboxConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tbox
 )
-
