@@ -43,8 +43,8 @@ CPP_SRC_FILES = \
 	signal_event_impl.cpp \
 	misc.cpp \
 	stat.cpp \
-	engins/epoll/loop.cpp \
-	engins/epoll/fd_event.cpp \
+	engines/epoll/loop.cpp \
+	engines/epoll/fd_event.cpp \
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

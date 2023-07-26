@@ -35,9 +35,9 @@ using namespace std::chrono;
 
 TEST(CommonLoop, isRunning)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -64,9 +64,9 @@ TEST(CommonLoop, isRunning)
 
 TEST(CommonLoop, isInLoopThread)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -102,9 +102,9 @@ TEST(CommonLoop, isInLoopThread)
 
 TEST(CommonLoop, runNextInsideLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
@@ -145,9 +145,9 @@ TEST(CommonLoop, runNextInsideLoop)
 //! runNext() 支持在Loop之前操作
 TEST(CommonLoop, runNextBeforeLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -174,9 +174,9 @@ TEST(CommonLoop, runNextBeforeLoop)
 
 TEST(CommonLoop, runNextForever)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         int count = 0;
@@ -200,9 +200,9 @@ TEST(CommonLoop, runNextForever)
 
 TEST(CommonLoop, runInLoopInsideLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
@@ -242,9 +242,9 @@ TEST(CommonLoop, runInLoopInsideLoop)
 
 TEST(CommonLoop, runInLoopBeforeLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -271,9 +271,9 @@ TEST(CommonLoop, runInLoopBeforeLoop)
 
 TEST(CommonLoop, runInLoopCrossThread)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -310,9 +310,9 @@ TEST(CommonLoop, runInLoopCrossThread)
 
 TEST(CommonLoop, runInsideLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
@@ -352,9 +352,9 @@ TEST(CommonLoop, runInsideLoop)
 
 TEST(CommonLoop, runBeforeLoop)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -381,9 +381,9 @@ TEST(CommonLoop, runBeforeLoop)
 
 TEST(CommonLoop, runCrossThread)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
         SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
@@ -420,9 +420,9 @@ TEST(CommonLoop, runCrossThread)
 
 TEST(CommonLoop, runForever)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         int count = 0;
@@ -445,9 +445,9 @@ TEST(CommonLoop, runForever)
 
 TEST(CommonLoop, cleanupDeferedTask)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         SetScopeExitAction(
@@ -481,9 +481,9 @@ TEST(CommonLoop, cleanupDeferedTask)
 
 TEST(CommonLoop, cleanupDeferedTask1)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         SetScopeExitAction( [&]{ delete sp_loop; });
 
@@ -501,9 +501,9 @@ TEST(CommonLoop, cleanupDeferedTask1)
 
 TEST(CommonLoop, RunInLoopBenchmark)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         int counter = 0;
@@ -523,9 +523,9 @@ TEST(CommonLoop, RunInLoopBenchmark)
 
 TEST(CommonLoop, RunNextBenchmark)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         int counter = 0;
@@ -545,9 +545,9 @@ TEST(CommonLoop, RunNextBenchmark)
 
 TEST(CommonLoop, RunBenchmark)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         int counter = 0;
@@ -567,9 +567,9 @@ TEST(CommonLoop, RunBenchmark)
 
 TEST(CommonLoop, ExitLoopMultiTimes)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
 
         sp_loop->runInLoop([sp_loop] { sp_loop->exitLoop(); });

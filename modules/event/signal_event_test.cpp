@@ -45,9 +45,9 @@ void TestSignalAction(int signo, siginfo_t *siginfo, void *context) { ++_test_si
 //! 注意单次信号事件，触发信号两次，期望只回调一次
 TEST(SignalEvent, Oneshot)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
@@ -76,9 +76,9 @@ TEST(SignalEvent, Oneshot)
 
 TEST(SignalEvent, PersistWithTimerEvent)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
 
         auto signal_event = sp_loop->newSignalEvent();
@@ -119,9 +119,9 @@ TEST(SignalEvent, PersistWithTimerEvent)
 
 TEST(SignalEvent, MultiSignalMultiEvents)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto user1_signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(user1_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
@@ -167,9 +167,9 @@ TEST(SignalEvent, MultiSignalMultiEvents)
 
 TEST(SignalEvent, MultiThread)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto user1_signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(user1_signal_event->initialize(SIGUSR1, Event::Mode::kOneshot));
@@ -249,9 +249,9 @@ TEST(SignalEvent, MultiThread)
 //! 同一种信号被多个事件监听
 TEST(SignalEvent, OneSignalMultiEvents)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
 
         auto signal_event_1 = sp_loop->newSignalEvent();
@@ -296,9 +296,9 @@ TEST(SignalEvent, OneSignalMultiEvents)
 //! 多线程下多个Loop的事件监听同一个信号
 TEST(SignalEvent, OneSignalMultiLoopInMultiThread)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         auto thread_func = [e] (int &run_time) {
             auto sp_loop = Loop::New(e);
@@ -339,9 +339,9 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
 {
     LogOutput_Enable();
 
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         auto thread_func = [e] (int &user1_run_time, int &user2_run_time) {
             auto sp_loop = Loop::New(e);
@@ -389,9 +389,9 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
 //! 同一个事件，监听多个事件
 TEST(SignalEvent, OneEventMultiSignal)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(signal_event->initialize({ SIGUSR1, SIGUSR2 }, Event::Mode::kPersist));
@@ -431,9 +431,9 @@ TEST(SignalEvent, OneEventMultiSignal)
 //! 短时间内触发非常多的信号
 TEST(SignalEvent, LargeNumberOfSignals)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
         EXPECT_TRUE(signal_event->initialize(SIGUSR1, Event::Mode::kPersist));
@@ -473,9 +473,9 @@ TEST(SignalEvent, LargeNumberOfSignals)
 //! 测试原始signal()注册的信号处理函数，在使能event信号事件后能不能继续有效，在关闭event信号事件后还能不能有效
 TEST(SignalEvent, OldSignalHandlerNeedInvoke)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
         auto old_handler = ::signal(SIGUSR1, TestSignalHander);
 
         _test_signal_count = 0;
@@ -507,9 +507,9 @@ TEST(SignalEvent, OldSignalHandlerNeedInvoke)
 //! 测试原始sigaction()注册的信号处理函数，在使能event信号事件后能不能继续有效，在event关闭信号事件后还能不能有效
 TEST(SignalEvent, OldSigactionNeedInvoke)
 {
-    auto engins = Loop::Engines();
-    for (auto e : engins) {
-        cout << "engin: " << e << endl;
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
         struct sigaction old_handler;
         struct sigaction new_handler;
