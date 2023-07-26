@@ -1,4 +1,4 @@
-name: Build
+name: CMake Build
 
 on:
   push:
@@ -13,8 +13,8 @@ jobs:
       - name: setup
         run: |
           sudo apt update
-          sudo apt install build-essential
+          sudo apt install build-essential cmake
           sudo apt install libgtest-dev libgmock-dev libmosquitto-dev
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: build
-        run: make
+        run: cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox && cmake --build build
