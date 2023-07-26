@@ -101,10 +101,19 @@ When various program exceptions occur in the program, such as: segment fault, as
 
 # Download & build
 
+## Prepare
+```
+sudo apt update
+sudo apt install build-essential
+sudo apt install libgtest-dev libgmock-dev
+sudo apt install libmosquitto-dev
+
+git clone https://gitee.com/cpp-master/cpp-tbox.git
+cd cpp-tbox
+```
+
 ## Using GNU Make
 ```
-git clone https://gitee.com/cpp-master/cpp-tbox.git
-cd cpp-tbox;
 make 3rd-party modules RELEASE=1
 ```
 After completion, the header files and library files are in the .staging directory.  
@@ -117,8 +126,6 @@ After completion, the header files and library files are in the $HOME/.tbox path
 
 ## Using CMake
 ```
-git clone https://gitee.com/cpp-master/cpp-tbox.git
-cd cpp-tbox
 cmake -B build
 cmake --build build
 cmake --install build

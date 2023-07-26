@@ -101,10 +101,19 @@
 
 # 下载与构建
 
+## 准备
+```
+sudo apt update
+sudo apt install build-essential
+sudo apt install libgtest-dev libgmock-dev
+sudo apt install libmosquitto-dev
+
+git clone https://gitee.com/cpp-master/cpp-tbox.git
+cd cpp-tbox
+```
+
 ## 方法一：GNU Make
 ```
-git clone https://gitee.com/cpp-master/cpp-tbox.git
-cd cpp-tbox;
 make 3rd-party modules RELEASE=1
 ```
 完成之后，头文件与库文件都在 .staging 目录下。  
@@ -117,8 +126,6 @@ make 3rd-party modules RELEASE=1 STAGING_DIR=$HOME/.tbox
 
 ## 方法二：CMake
 ```
-git clone https://gitee.com/cpp-master/cpp-tbox.git
-cd cpp-tbox
 cmake -B build
 cmake --build build
 cmake --install build
