@@ -54,7 +54,7 @@ install(
 # install header file
 install(
     FILES ${TBOX_MQTT_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/mqtt
 )
 
 
