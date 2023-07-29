@@ -16,6 +16,7 @@ MODULES += mqtt
 MODULES += flow
 MODULES += alarm
 MODULES += crypto
+MODULES += dbus
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
