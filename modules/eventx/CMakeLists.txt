@@ -89,7 +89,7 @@ install(
 # install header file
 install(
     FILES ${TBOX_EVENTX_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/eventx
 )
 
 # generate and install export file
