@@ -24,7 +24,15 @@ Fix it, then add corresponding unit test case in `xxx_test.cpp`.
 
 If you add new components named `xxx`.  
 
-1. You should added xxx.cpp and xxx.h files.  
-2. You should add the corresponding xxx\_test.cpp files in the same directory and implement its unit test cases, and make sure all unit tests pass.  
+1. You should added `xxx.cpp` and `xxx.h` files.  
+2. You should add the corresponding `xxx_test.cpp` files in the same directory and implement its unit test cases, and make sure all unit tests pass.  
 3. You'd better also implement the corresponding sample program to show how to use this module.  
 
+File require:
+
+- Formart: unix
+- Encoding: utf-8
+
+## Pull request
+
+- Pull request to develop branch, not master.

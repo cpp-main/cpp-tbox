@@ -26,7 +26,7 @@ namespace tbox {
 namespace network {
 
 /**
- * »º³åÇøÀà
+ * ç¼“å†²åŒºç±»
  *
  * buffer_ptr_                        buffer_size_
  *   |                                      |
@@ -38,17 +38,17 @@ namespace network {
  *        |                |
  *    read_index_       write_index_
  *
- * Ê¹ÓÃÊ¾Àı£º
+ * ä½¿ç”¨ç¤ºä¾‹ï¼š
  *  Buffer b;
- *  b.append("abc", 4);  //! Íù»º³åÖĞĞ´Èë4×Ö½ÚµÄÊı¾İ
+ *  b.append("abc", 4);  //! å¾€ç¼“å†²ä¸­å†™å…¥4å­—èŠ‚çš„æ•°æ®
  *  char buff[10];
- *  b.fetch(buff, 4);    //! ´Ó»º³åÖĞÈ¡³ö4×Ö½ÚµÄÊı¾İ
+ *  b.fetch(buff, 4);    //! ä»ç¼“å†²ä¸­å–å‡º4å­—èŠ‚çš„æ•°æ®
  *
- *  b.ensureWritableSize(10);   //! Ô¤Áô10¸ö×Ö½Ú
- *  memset(b.writableBegin(), 0xcc, 10);    //! ½«¸Ã10¸ö×Ö½ÚÈ«ÖÃÎª0xcc
- *  b.hasWritten(10);           //! ±ê¸ÃÒÑĞ´Èë10¸ö×Ö½Ú
+ *  b.ensureWritableSize(10);   //! é¢„ç•™10ä¸ªå­—èŠ‚
+ *  memset(b.writableBegin(), 0xcc, 10);    //! å°†è¯¥10ä¸ªå­—èŠ‚å…¨ç½®ä¸º0xcc
+ *  b.hasWritten(10);           //! æ ‡è¯¥å·²å†™å…¥10ä¸ªå­—èŠ‚
  *
- * \warnning    ¶àÏß³ÌÊ¹ÓÃĞèÔÚÍâ²¿¼ÓËø
+ * \warnning    å¤šçº¿ç¨‹ä½¿ç”¨éœ€åœ¨å¤–éƒ¨åŠ é”
  */
 class Buffer {
   public:
@@ -68,62 +68,62 @@ class Buffer {
 
   public:
     /**
-     * Ğ´»º³å²Ù×÷
+     * å†™ç¼“å†²æ“ä½œ
      */
 
-    //! »ñÈ¡¿ÉĞ´¿Õ¼ä´óĞ¡
+    //! è·å–å¯å†™ç©ºé—´å¤§å°
     inline size_t writableSize() const { return buffer_size_ - write_index_; }
 
-    //! ±£ÕÏÓĞÖ¸¶¨ÈİÁ¿µÄ¿ÉĞ´¿Õ¼ä
+    //! ä¿éšœæœ‰æŒ‡å®šå®¹é‡çš„å¯å†™ç©ºé—´
     bool ensureWritableSize(size_t write_size);
 
-    //! »ñÈ¡Ğ´Ê×µØÖ·
+    //! è·å–å†™é¦–åœ°å€
     inline uint8_t* writableBegin() const {
         return (buffer_ptr_ != nullptr) ? (buffer_ptr_ + write_index_) : nullptr;
     }
 
-    //! ±ê¼ÇÒÑĞ´ÈëÊı¾İ´óĞ¡
+    //! æ ‡è®°å·²å†™å…¥æ•°æ®å¤§å°
     void hasWritten(size_t write_size);
 
-    //! Íù»º³åÇø×·¼ÓÖ¸¶¨µÄÊı¾İ¿é£¬·µ»ØÊµÏÖĞ´ÈëµÄ´óĞ¡
+    //! å¾€ç¼“å†²åŒºè¿½åŠ æŒ‡å®šçš„æ•°æ®å—ï¼Œè¿”å›å®ç°å†™å…¥çš„å¤§å°
     size_t append(const void *p_data, size_t data_size);
 
     /**
-     * ¶Á»º³å²Ù×÷
+     * è¯»ç¼“å†²æ“ä½œ
      */
 
-    //! »ñÈ¡¿É¶ÁÇøÓò´óĞ¡
+    //! è·å–å¯è¯»åŒºåŸŸå¤§å°
     inline size_t readableSize() const { return write_index_ - read_index_; }
 
-    //! »ñÈ¡¿É¶ÁÇøÊ×µØÖ·
+    //! è·å–å¯è¯»åŒºé¦–åœ°å€
     inline uint8_t* readableBegin() const {
         return (buffer_ptr_ != nullptr) ? (buffer_ptr_ + read_index_) : nullptr;
     }
 
-    //! ±ê¼ÇÒÑ¶ÁÊı¾İ´óĞ¡
+    //! æ ‡è®°å·²è¯»æ•°æ®å¤§å°
     void hasRead(size_t read_size);
 
-    //! ±ê¼ÇÒÑ¶ÁÈ¡È«²¿Êı¾İ
+    //! æ ‡è®°å·²è¯»å–å…¨éƒ¨æ•°æ®
     void hasReadAll();
 
-    //! ´Ó»º³åÇø¶ÁÈ¡Ö¸¶¨µÄÊı¾İ¿é£¬·µ»ØÊµ¼Ê¶Áµ½µÄÊı¾İ´óĞ¡
+    //! ä»ç¼“å†²åŒºè¯»å–æŒ‡å®šçš„æ•°æ®å—ï¼Œè¿”å›å®é™…è¯»åˆ°çš„æ•°æ®å¤§å°
     size_t fetch(void *p_buff, size_t buff_size);
 
     /**
-     * ÆäËü
+     * å…¶å®ƒ
      */
-    //! Ëõ¼õ»º³å¶àÓàÈİÁ¿
+    //! ç¼©å‡ç¼“å†²å¤šä½™å®¹é‡
     void shrink();
 
   protected:
     void cloneFrom(const Buffer &other);
 
   private:
-    uint8_t *buffer_ptr_  = nullptr; //! »º³åÇøµØÖ·
-    size_t   buffer_size_ = 0;       //! »º³åÇø´óĞ¡
+    uint8_t *buffer_ptr_  = nullptr; //! ç¼“å†²åŒºåœ°å€
+    size_t   buffer_size_ = 0;       //! ç¼“å†²åŒºå¤§å°
 
-    size_t   read_index_  = 0;       //! ¶ÁÎ»ÖÃÆ«ÒÆ
-    size_t   write_index_ = 0;       //! Ğ´Î»ÖÃÆ«ÒÆ
+    size_t   read_index_  = 0;       //! è¯»ä½ç½®åç§»
+    size_t   write_index_ = 0;       //! å†™ä½ç½®åç§»
 };
 
 }
