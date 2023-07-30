@@ -33,11 +33,13 @@ CPP_SRC_FILES = \
 	setup_with_loop.cpp \
 	connection.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.dbus"' $(CXXFLAGS)
+CXXFLAGS += -DLOG_MODULE_ID='"tbox.dbus"'
+CXXFLAGS += $(shell pkg-config --cflags dbus-1) 
+LDFLAGS += $(shell pkg-config --libs dbus-1)
 
 TEST_CPP_SRC_FILES = \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldbus-1 -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk

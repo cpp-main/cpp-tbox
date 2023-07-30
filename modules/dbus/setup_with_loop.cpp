@@ -179,7 +179,7 @@ class TimeoutHandler {
   public:
     TimeoutHandler(event::Loop *loop, DBusTimeout *dbus_timeout)
       : tbox_timer_(loop->newTimerEvent())
-      , dbus_timeout_(dbus_timeout_)
+      , dbus_timeout_(dbus_timeout)
     {
       LogTag();
       int interval_ms = ::dbus_timeout_get_interval(dbus_timeout);

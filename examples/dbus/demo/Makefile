@@ -24,10 +24,11 @@ EXE_NAME := dbus-demo
 CPP_SRC_FILES := main.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS += $(shell pkg-config --cflags dbus-1) 
+LDFLAGS += $(shell pkg-config --libs dbus-1)
 LDFLAGS += \
 	-ltbox_dbus \
 	-ltbox_event \
 	-ltbox_base \
-	-ldbus-1
 
 include ${TOP_DIR}/tools/exe_common.mk
