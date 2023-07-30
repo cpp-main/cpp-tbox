@@ -107,6 +107,7 @@ sudo apt update
 sudo apt install build-essential
 sudo apt install libgtest-dev libgmock-dev
 sudo apt install libmosquitto-dev
+sudo apt install libdbus-1-dev
 
 git clone https://gitee.com/cpp-master/cpp-tbox.git
 cd cpp-tbox
@@ -154,7 +155,8 @@ target_link_libraries(demo PRIVATE tbox::tbox_base tbox::tbox_util tbox::tbox_al
 |:----:|:--------:|:--:|:----:|:--------:|
 | libgtest-dev | all | no | unit testing | sudo apt install libgtest-dev |
 | libgmock-dev | all | no |unit testing | sudo apt install libgmock-dev |
-| mosquitto | mqtt | no | MQTT | sudo apt install libmosquitto-dev |
+| libmosquitto-dev | mqtt | no | MQTT | sudo apt install libmosquitto-dev |
+| libdbus-1-dev | dbus | no | DBus | sudo apt install libdbus-1-dev |
 
 # Configure
 
