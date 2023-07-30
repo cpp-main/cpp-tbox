@@ -125,6 +125,7 @@ int main() {
 
   DesinitDbus();
 
+  delete timer;
   delete signal;
   delete g_loop;
   return 0;
