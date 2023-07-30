@@ -94,13 +94,22 @@ class WatchHandler {
       auto dbus_flags = ::dbus_watch_get_flags(dbus_watch);
       LogTrace("fd:%d, dbus_flags:%04x", fd_, dbus_flags);
 
-      short tbox_flags = 0;
-      if (dbus_flags & DBUS_WATCH_READABLE)
-        tbox_flags |= tbox::event::FdEvent::kReadEvent;
-      if (dbus_flags & DBUS_WATCH_WRITABLE)
-        tbox_flags |= tbox::event::FdEvent::kWriteEvent;
+      TBOX_ASSERT((dbus_flags & (dbus_flags - 1)) == 0);  //! 仅允许读事件，或者是写事件
 
-      tbox_fd_->initialize(fd_, tbox_flags, event::Event::Mode::kOneshot);
+      short tbox_flags = 0;
+      event::Event::Mode mode;
+
+      if (dbus_flags & DBUS_WATCH_READABLE) {
+        tbox_flags |= tbox::event::FdEvent::kReadEvent;
+        mode = event::Event::Mode::kPersist;
+      }
+
+      if (dbus_flags & DBUS_WATCH_WRITABLE) {
+        tbox_flags |= tbox::event::FdEvent::kWriteEvent;
+        mode = event::Event::Mode::kOneshot;
+      }
+
+      tbox_fd_->initialize(fd_, tbox_flags, mode);
       tbox_fd_->setCallback([this](short events) { onWatch(events); });
     }
 
