@@ -291,6 +291,10 @@ void SetupWithLoop(DBusConnection *dbus_conn, event::Loop *loop)
     auto dispatch_ctx = new Context(loop, dbus_conn);
     ::dbus_connection_set_dispatch_status_function(dbus_conn,
             _DispatchStatus, dispatch_ctx, _ContextDeleter);
+
+    //! 尝试处理队列中的事件
+    auto dispatch_status = dbus_connection_get_dispatch_status(dbus_conn);
+    _QueueDispatch(dispatch_ctx, dispatch_status);
 }
 
 }
