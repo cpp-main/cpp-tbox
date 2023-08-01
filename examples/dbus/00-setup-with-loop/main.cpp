@@ -33,8 +33,6 @@ DBusHandlerResult MessageFilter(DBusConnection *, DBusMessage *dbus_msg, void *d
 {
     if (dbus_message_is_signal(dbus_msg, "test.signal.Type", "Test")) {
         DBusMessageIter msg_args_iter;
-        char* sigvalue;
-
         if (!dbus_message_iter_init(dbus_msg, &msg_args_iter)) {
             LogWarn("dbus_msg init failed");
             return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
@@ -45,6 +43,7 @@ DBusHandlerResult MessageFilter(DBusConnection *, DBusMessage *dbus_msg, void *d
             return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
         }
 
+        char* sigvalue;
         dbus_message_iter_get_basic(&msg_args_iter, &sigvalue);
         LogDbg("got signal dbus_msg: '%s'", sigvalue);
 
@@ -101,27 +100,29 @@ void AddWatchs()
 void SendSignalMessage()
 {
     LogTag();
-    dbus_uint32_t seq = 0;
-    DBusMessage *bus_msg;
-    DBusMessageIter msg_args_iter;
-    void *sigvalue = (void *)"hello tbox dbus";
 
-    bus_msg = dbus_message_new_signal("/test/signal/Object", "test.signal.Type", "Test");
+    DBusMessage *bus_msg = dbus_message_new_signal("/test/signal/Object", "test.signal.Type", "Test");
     if (bus_msg == nullptr) {
         LogErr("new message fail");
         return;
     }
+
+    void *sigvalue = (void *)"hello tbox dbus";
+    DBusMessageIter msg_args_iter;
     dbus_message_iter_init_append(bus_msg, &msg_args_iter);
     if (!dbus_message_iter_append_basic(&msg_args_iter, DBUS_TYPE_STRING, &sigvalue)) {
         LogErr("fail");
         return;
     }
 
+    dbus_uint32_t seq = 0;
     if (!dbus_connection_send(g_dbus_conn, bus_msg, &seq)) {
         LogErr("fail");
         return;
     }
+
     LogDbg("seq:%u", seq);
+    dbus_message_unref(bus_msg);
 }
 
 int main()
