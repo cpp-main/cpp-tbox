@@ -18,7 +18,7 @@
  * of the source tree.
  */
 
-#include "setup_with_loop.h"
+#include "loop.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
@@ -53,13 +53,14 @@ class Context {
 
 void _ContextDeleter(void *p)
 {
-    auto ctx = static_cast<Context*>(p);
-    delete ctx;
+    TBOX_ASSERT(p != nullptr);
+    delete static_cast<Context*>(p);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+// 异步派发动作
+//////////////////////////////////////////////////////////////////////
+
 void _QueueDispatch(Context *ctx, DBusDispatchStatus status)
 {
     if (status == DBUS_DISPATCH_DATA_REMAINS) {
@@ -71,6 +72,17 @@ void _QueueDispatch(Context *ctx, DBusDispatchStatus status)
                 dbus_connection_unref(dbus_conn);
             }
         );
+    }
+}
+
+void _DispatchStatus(DBusConnection *dbus_conn, DBusDispatchStatus status, void *data)
+{
+    TBOX_ASSERT(dbus_conn != nullptr);
+    TBOX_ASSERT(data != nullptr);
+
+    if (dbus_connection_get_is_connected(dbus_conn)) {
+        Context *ctx = static_cast<Context*>(data);
+        _QueueDispatch(ctx, status);
     }
 }
 
@@ -143,13 +155,15 @@ class WatchHandler {
 
 void _WatchHandlerDeleter(void *p)
 {
-    auto handler = static_cast<WatchHandler*>(p);
-    TBOX_ASSERT(handler != nullptr);
-    delete handler;
+    TBOX_ASSERT(p != nullptr);
+    delete static_cast<WatchHandler*>(p);
 }
 
 dbus_bool_t _AddWatch(DBusWatch *watch, void *data)
 {
+    TBOX_ASSERT(watch != nullptr);
+    TBOX_ASSERT(data != nullptr);
+
     auto handler = static_cast<WatchHandler*>(::dbus_watch_get_data(watch));
     if (handler == nullptr) {
         auto ctx = static_cast<Context*>(data);
@@ -161,16 +175,20 @@ dbus_bool_t _AddWatch(DBusWatch *watch, void *data)
     return true;
 }
 
-void _RemoveWatch(DBusWatch *watch, void *data)
+void _RemoveWatch(DBusWatch *watch, void *)
 {
+    TBOX_ASSERT(watch != nullptr);
+
     auto handler = static_cast<WatchHandler*>(::dbus_watch_get_data(watch));
     TBOX_ASSERT(handler != nullptr);
 
     handler->disable();
 }
 
-void _ToggledWatch(DBusWatch *watch, void *data)
+void _ToggledWatch(DBusWatch *watch, void *)
 {
+    TBOX_ASSERT(watch != nullptr);
+
     auto handler = static_cast<WatchHandler*>(::dbus_watch_get_data(watch));
     TBOX_ASSERT(handler != nullptr);
 
@@ -219,13 +237,15 @@ class TimeoutHandler {
 
 void _TimeoutHandlerDeleter(void *p)
 {
-    auto handler = static_cast<TimeoutHandler*>(p);
-    TBOX_ASSERT(handler != nullptr);
-    delete handler;
+    TBOX_ASSERT(p != nullptr);
+    delete static_cast<TimeoutHandler*>(p);
 }
 
 dbus_bool_t _AddTimeout(DBusTimeout *timeout, void *data)
 {
+    TBOX_ASSERT(timeout != nullptr);
+    TBOX_ASSERT(data != nullptr);
+
     auto handler = static_cast<TimeoutHandler*>(::dbus_timeout_get_data(timeout));
     if (handler == nullptr) {
         auto ctx = static_cast<Context*>(data);
@@ -239,6 +259,8 @@ dbus_bool_t _AddTimeout(DBusTimeout *timeout, void *data)
 
 void _RemoveTimeout(DBusTimeout *timeout, void *)
 {
+    TBOX_ASSERT(timeout != nullptr);
+
     auto handler = static_cast<TimeoutHandler*>(::dbus_timeout_get_data(timeout));
     TBOX_ASSERT(handler != nullptr);
 
@@ -247,6 +269,8 @@ void _RemoveTimeout(DBusTimeout *timeout, void *)
 
 void _ToggledTimeout(DBusTimeout *timeout, void *)
 {
+    TBOX_ASSERT(timeout != nullptr);
+
     auto handler = static_cast<TimeoutHandler*>(::dbus_timeout_get_data(timeout));
     TBOX_ASSERT(handler != nullptr);
 
@@ -256,21 +280,13 @@ void _ToggledTimeout(DBusTimeout *timeout, void *)
         handler->disable();
 }
 
-//////////////////////////////////////////////////////////////////////
-// 异步派发动作
-//////////////////////////////////////////////////////////////////////
-
-void _DispatchStatus(DBusConnection *conn, DBusDispatchStatus status, void *data)
-{
-    if (dbus_connection_get_is_connected(conn)) {
-        Context *ctx = static_cast<Context*>(data);
-        _QueueDispatch(ctx, status);
-    }
 }
 
-}
+//////////////////////////////////////////////////////////////////////
+// AttachLoop() 与 DetachLoop() 实现
+//////////////////////////////////////////////////////////////////////
 
-void SetupWithLoop(DBusConnection *dbus_conn, event::Loop *loop)
+void AttachLoop(DBusConnection *dbus_conn, event::Loop *loop)
 {
     TBOX_ASSERT(dbus_conn != nullptr);
     TBOX_ASSERT(loop != nullptr);
@@ -295,6 +311,16 @@ void SetupWithLoop(DBusConnection *dbus_conn, event::Loop *loop)
     //! 尝试处理队列中的事件
     auto dispatch_status = dbus_connection_get_dispatch_status(dbus_conn);
     _QueueDispatch(dispatch_ctx, dispatch_status);
+}
+
+void DetachLoop(DBusConnection *dbus_conn)
+{
+    TBOX_ASSERT(dbus_conn != nullptr);
+
+    //! 逐一清空AttachLoop()中设置的内容
+    ::dbus_connection_set_watch_functions(dbus_conn, nullptr, nullptr, nullptr, nullptr, nullptr);
+    ::dbus_connection_set_timeout_functions(dbus_conn, nullptr, nullptr, nullptr, nullptr, nullptr);
+    ::dbus_connection_set_dispatch_status_function(dbus_conn, nullptr, nullptr, nullptr);
 }
 
 }

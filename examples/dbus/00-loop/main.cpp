@@ -23,7 +23,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/event/timer_event.h>
-#include "tbox/dbus/setup_with_loop.h"
+#include <tbox/dbus/loop.h>
 
 tbox::event::Loop *g_loop = nullptr;
 DBusConnection *g_dbus_conn = nullptr;
@@ -74,7 +74,7 @@ bool InitDbus()
         dbus_error_free(&dbus_error);
     }
 
-    tbox::dbus::SetupWithLoop(g_dbus_conn, g_loop);
+    tbox::dbus::AttachLoop(g_dbus_conn, g_loop);
 
     dbus_connection_add_filter(g_dbus_conn, MessageFilter, nullptr, nullptr);
     dbus_connection_set_exit_on_disconnect(g_dbus_conn, false);
@@ -85,6 +85,8 @@ void DesinitDbus()
 {
     dbus_connection_close(g_dbus_conn);
     dbus_connection_unref(g_dbus_conn);
+
+    tbox::dbus::DetachLoop(g_dbus_conn);
 }
 
 void AddWatchs()
@@ -99,8 +101,6 @@ void AddWatchs()
 
 void SendSignalMessage()
 {
-    LogTag();
-
     DBusMessage *bus_msg = dbus_message_new_signal("/test/signal/Object", "test.signal.Type", "Test");
     if (bus_msg == nullptr) {
         LogErr("new message fail");

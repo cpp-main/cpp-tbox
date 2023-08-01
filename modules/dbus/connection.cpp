@@ -21,7 +21,7 @@
 #include "connection.h"
 
 #include <tbox/base/log.h>
-#include "setup_with_loop.h"
+#include "loop.h"
 
 namespace tbox {
 namespace dbus {
@@ -50,7 +50,7 @@ bool Connection::initialize(BusType bus_type)
         return false;
     }
 
-    SetupWithLoop(dbus_conn_, loop_);
+    AttachLoop(dbus_conn_, loop_);
     return true;
    
 }
@@ -69,13 +69,16 @@ bool Connection::initialize(const std::string bus_address)
         return false;
     }
 
-    SetupWithLoop(dbus_conn_, loop_);
+    AttachLoop(dbus_conn_, loop_);
     return true;
 }
 
 void Connection::cleanup()
 {
-    LogUndo();
+    ::dbus_connection_close(dbus_conn_);
+    DetachLoop(dbus_conn_);
+
+    ::dbus_connection_unref(dbus_conn_);
 }
 
 }

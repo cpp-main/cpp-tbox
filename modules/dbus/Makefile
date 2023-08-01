@@ -26,11 +26,11 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	setup_with_loop.h \
+	loop.h \
 	connection.h
 
 CPP_SRC_FILES = \
-	setup_with_loop.cpp \
+	loop.cpp \
 	connection.cpp
 
 CXXFLAGS += -DLOG_MODULE_ID='"tbox.dbus"'

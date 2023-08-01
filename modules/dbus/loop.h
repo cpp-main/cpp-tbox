@@ -28,14 +28,19 @@ namespace tbox {
 namespace dbus {
 
 /**
- * 将 DBusConnection 对象的事件驱动安装到 event::Loop 上
+ * 将 DBusConnection 对象挂载到 event::Loop 上
  *
  * \param dbus_conn     DBusConnection 对象指针
  * \param loop          event::Loop 对象指针
- *
- * \note    不要重复操作
  */
-void SetupWithLoop(DBusConnection *dbus_conn, event::Loop *loop);
+void AttachLoop(DBusConnection *dbus_conn, event::Loop *loop);
+
+/**
+ * 将 DBusConnection 对象从 event::Loop 上卸载
+ *
+ * \param dbus_conn     DBusConnection 对象指针
+ */
+void DetachLoop(DBusConnection *dbus_conn);
 
 }
 }
