@@ -85,7 +85,7 @@ install(
 # install header file
 install(
     FILES ${TBOX_TERMINAL_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/terminal
 )
 
 
