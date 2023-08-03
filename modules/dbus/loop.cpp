@@ -95,7 +95,7 @@ class WatchHandler {
     WatchHandler(Context *ctx, DBusWatch *dbus_watch)
       : ctx_(ctx)
       , dbus_watch_(dbus_watch)
-      , tbox_fd_(ctx->loop()->newFdEvent())
+      , tbox_fd_(ctx->loop()->newFdEvent("dbus_watch"))
     {
         auto fd = ::dbus_watch_get_unix_fd(dbus_watch);
         auto dbus_flags = ::dbus_watch_get_flags(dbus_watch);
@@ -205,7 +205,7 @@ void _ToggledWatch(DBusWatch *watch, void *)
 class TimeoutHandler {
   public:
     TimeoutHandler(event::Loop *loop, DBusTimeout *dbus_timeout)
-      : tbox_timer_(loop->newTimerEvent())
+      : tbox_timer_(loop->newTimerEvent("dbus_timeout"))
       , dbus_timeout_(dbus_timeout)
     {
         int interval_ms = ::dbus_timeout_get_interval(dbus_timeout);
