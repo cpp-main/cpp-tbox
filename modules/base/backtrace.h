@@ -30,6 +30,6 @@ std::string DumpBacktrace(const unsigned int max_frames = 64);
 
 }
 
-#define LogBacktrace() LogTrace("call stack:\n%s", tbox::DumpBacktrace().c_str())
+#define LogBacktrace(level) LogPrintf((level), "call stack:\n%s", tbox::DumpBacktrace().c_str())
 
 #endif // TBOX_BACKTRACE_H_20220708
