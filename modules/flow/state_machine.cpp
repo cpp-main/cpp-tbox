@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2023 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -63,7 +63,11 @@ class StateMachine::Impl {
     void stop();
 
     bool run(Event event);
+
     StateID currentState() const;
+    StateID lastState() const;
+    StateID nextState() const;
+
     bool isTerminated() const;
 
     void toJson(Json &js) const;
@@ -92,7 +96,9 @@ class StateMachine::Impl {
 
     StateID init_state_id_ = 1;     //! 初始状态
 
+    State *last_state_ = nullptr;   //! 上一个状态指针
     State *curr_state_ = nullptr;   //! 当前状态指针
+    State *next_state_ = nullptr;   //! 下一个状态指针
     map<StateID, State*> states_;   //! 状态对象表
 
     StateChangedCallback state_changed_cb_;
@@ -165,6 +171,16 @@ bool StateMachine::run(Event event)
 StateMachine::StateID StateMachine::currentState() const
 {
     return impl_->currentState();
+}
+
+StateMachine::StateID StateMachine::lastState() const
+{
+    return impl_->lastState();
+}
+
+StateMachine::StateID StateMachine::nextState() const
+{
+    return impl_->nextState();
 }
 
 bool StateMachine::isTerminated() const
@@ -291,12 +307,12 @@ bool StateMachine::Impl::start()
         return false;
     }
 
+    curr_state_ = init_state;
+
     ++cb_level_;
     if (init_state->enter_action)
         init_state->enter_action(Event());
     --cb_level_;
-
-    curr_state_ = init_state;
 
     //! 如果有子状态机，在启动子状态机
     if (curr_state_->sub_sm != nullptr)
@@ -378,10 +394,10 @@ bool StateMachine::Impl::run(Event event)
         route_action = route_iter->action;
     }
 
-    State *next_state = findState(next_state_id);
-    if (next_state == nullptr) {
+    next_state_ = findState(next_state_id);
+    if (next_state_ == nullptr) {
         if (next_state_id == 0) {
-            next_state = &_term_state_;
+            next_state_ = &_term_state_;
         } else {
             LogErr("Should not happen");
             return false;
@@ -392,16 +408,20 @@ bool StateMachine::Impl::run(Event event)
     if (curr_state_->exit_action)
         curr_state_->exit_action(event);
 
+    last_state_ = curr_state_;
+    curr_state_ = nullptr;
+
     if (route_action)
         route_action(event);
 
-    if (next_state->enter_action)
-        next_state->enter_action(event);
+    curr_state_ = next_state_;
+    next_state_ = nullptr;
 
-    auto last_state = curr_state_;
-    curr_state_ = next_state;
+    if (curr_state_->enter_action)
+        curr_state_->enter_action(event);
+
     if (state_changed_cb_)
-        state_changed_cb_(last_state->id, curr_state_->id, event);
+        state_changed_cb_(last_state_->id, curr_state_->id, event);
 
     //! 如果新的状态有子状态机，则启动子状态机并将事件交给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
@@ -415,12 +435,23 @@ bool StateMachine::Impl::run(Event event)
 
 StateMachine::StateID StateMachine::Impl::currentState() const
 {
-    if (curr_state_ == nullptr) {
-        LogWarn("need start first");
-        return -1;
-    }
+    if (curr_state_ != nullptr)
+        return curr_state_->id;
+    return -1;
+}
 
-    return curr_state_->id;
+StateMachine::StateID StateMachine::Impl::lastState() const
+{
+    if (last_state_ != nullptr)
+        return last_state_->id;
+    return -1;
+}
+
+StateMachine::StateID StateMachine::Impl::nextState() const
+{
+    if (next_state_ != nullptr)
+        return next_state_->id;
+    return -1;
 }
 
 bool StateMachine::Impl::isTerminated() const

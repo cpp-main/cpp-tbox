@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2023 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -172,12 +172,34 @@ class StateMachine {
      * \brief   获取当前状态ID
      *
      * \return  >=0 当前状态ID
-     * \return  -1  状态机未启动
+     * \return  -1  状态机未启动，或转换中
      */
     StateID currentState() const;
-
     template <typename S>
     S currentState() const { return static_cast<S>(currentState()); }
+
+    /**
+     * \brief   获取上一个状态ID
+     *
+     * \return  >=0 上一个状态ID
+     * \return  -1  无上一个状态
+     */
+    StateID lastState() const;
+    template <typename S>
+    S lastState() const { return static_cast<S>(lastState()); }
+
+    /**
+     * \brief   获取下一个状态ID
+     *
+     * \return  >=0 下一个状态ID
+     * \return  -1  无下一个状态
+     *
+     * \note    在退出状态动作与路由动作中有效
+     */
+    StateID nextState() const;
+    template <typename S>
+    S nextState() const { return static_cast<S>(nextState()); }
+
 
     //! 是否已终止
     bool isTerminated() const;

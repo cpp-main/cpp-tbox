@@ -70,7 +70,8 @@ void _QueueDispatch(Context *ctx, DBusDispatchStatus status)
             [dbus_conn] {
                 while (dbus_connection_dispatch(dbus_conn) == DBUS_DISPATCH_DATA_REMAINS);
                 dbus_connection_unref(dbus_conn);
-            }
+            },
+            "dbus_dispatch"
         );
     }
 }

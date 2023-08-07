@@ -635,5 +635,85 @@ TEST(StateMachine, SetInitState_Fail)
     EXPECT_FALSE(sm.start());
 }
 
+TEST(StateMachine, LastNextState)
+{
+    enum class StateId {
+        kNone = -1,
+        kTerm = 0,
+        kInit,
+        kA
+    };
+    enum class EventId {
+        kAny,
+        k1
+    };
+
+    SM sm;
+
+    int count = 0;
+    sm.setInitState(StateId::kInit);
+    sm.newState(StateId::kInit,
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
+            EXPECT_EQ(sm.lastState(), -1);
+            EXPECT_EQ(sm.nextState(), -1);
+        },
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
+            EXPECT_EQ(sm.lastState(), -1);
+            EXPECT_EQ(sm.nextState<StateId>(), StateId::kA);
+        }
+    );
+    sm.newState(StateId::kA,
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState<StateId>(), StateId::kA);
+            EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
+            EXPECT_EQ(sm.nextState(), -1);
+        },
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState<StateId>(), StateId::kA);
+            EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
+            EXPECT_EQ(sm.nextState<StateId>(), StateId::kTerm);
+        }
+    );
+    sm.newState(StateId::kTerm,
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState<StateId>(), StateId::kTerm);
+            EXPECT_EQ(sm.lastState<StateId>(), StateId::kA);
+            EXPECT_EQ(sm.nextState(), -1);
+        },
+        nullptr
+    );
+
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::kA, nullptr,
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState(), -1);
+            EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
+            EXPECT_EQ(sm.nextState<StateId>(), StateId::kA);
+        }
+    );
+    sm.addRoute(StateId::kA, EventId::k1, StateId::kTerm, nullptr,
+        [&] (Event) {
+            ++count;
+            EXPECT_EQ(sm.currentState(), -1);
+            EXPECT_EQ(sm.lastState<StateId>(), StateId::kA);
+            EXPECT_EQ(sm.nextState<StateId>(), StateId::kTerm);
+        }
+    );
+
+    sm.start();
+
+    sm.run(EventId::k1);
+    sm.run(EventId::k1);
+
+    EXPECT_EQ(count, 7);
+}
+
 }
 }
