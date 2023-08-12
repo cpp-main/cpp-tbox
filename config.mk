@@ -17,6 +17,7 @@ MODULES += flow
 MODULES += alarm
 MODULES += crypto
 MODULES += dbus
+MODULES += jsonrpc
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
