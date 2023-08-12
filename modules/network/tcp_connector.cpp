@@ -93,7 +93,7 @@ bool TcpConnector::start()
 
 void TcpConnector::stop()
 {
-    if ((state_ == State::kConnecting) || (state_ == State::kNone))
+    if ((state_ == State::kInited) || (state_ == State::kNone))
         return;
 
     if (state_ == State::kConnecting)
