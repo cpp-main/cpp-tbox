@@ -24,7 +24,9 @@ class Proto {
     void setCallbacks(const Callbacks &cbs) { cbs_ = cbs; }
 
   public:
-    void sendRequest(int id, const std::string &method, const Json &js_params = Json());
+    void sendRequest(int id, const std::string &method);
+    void sendRequest(int id, const std::string &method, const Json &js_params);
+
     void sendResult(int id, const Json &js_result);
     void sendError(int id, int errcode, const std::string &message = "");
 

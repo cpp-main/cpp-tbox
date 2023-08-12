@@ -22,6 +22,11 @@ void Proto::sendRequest(int id, const std::string &method, const Json &js_params
     sendJson(js);
 }
 
+void Proto::sendRequest(int id, const std::string &method)
+{
+    sendRequest(id, method, Json());
+}
+
 void Proto::sendResult(int id, const Json &js_result)
 {
     Json js = {
@@ -50,6 +55,13 @@ void Proto::sendError(int id, int errcode, const std::string &message)
 void Proto::onRecvJson(const Json &js)
 {
     if (js.is_object()) {
+
+        std::string version;
+        if (!util::json::GetField(js, "jsonrpc", version) || version != "2.0") {
+            LogNotice("no jsonrpc field, or version not match");
+            return;
+        }
+
         if (js.contains("method")) {
             if (!cbs_.recv_request_cb)
                 return;
