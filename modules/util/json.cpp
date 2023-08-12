@@ -22,6 +22,7 @@
 #include <fstream>
 
 #include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace util {
@@ -180,6 +181,59 @@ Json Load(const std::string &filename)
     }
 
     return js;
+}
+
+/**
+ * 通过数[],{},"的方式找JSON字串的结束位置
+ */
+int FindEndPos(const char *str_ptr, size_t str_len)
+{
+    TBOX_ASSERT(str_ptr != nullptr);
+
+    bool is_started = false;//! 是否已开始，防止开头是空格或TAB
+    int braces_level = 0;   //! 花括号的层级
+    int square_level = 0;   //! 方括号的层级
+    bool in_string = false; //! 是否在字串中
+
+    for (size_t i = 0; i < str_len; ++i) {
+        char ch = str_ptr[i];
+        if (!is_started && ::isgraph(ch))
+            is_started = true;
+
+        if (ch == '"') {
+            if (in_string) {
+                //! 要防止 \" 与 \\" \\\\\" 这些转义符的情况
+                //! 如果 " 前面是连续的 \ 那就对应数 \ 的个数。如果是单数，则"失效
+                in_string = false;
+                for (size_t j = (i - 1); j != 0 && str_ptr[j] == '\\'; --j)
+                    in_string = !in_string;
+            } else {
+                in_string = true;
+            }
+        } else {
+            if (in_string)  //! 如果在字串里，就直接略过
+                continue;
+
+            switch (ch) {
+                case '[': ++square_level; break;
+                case ']': --square_level; break;
+                case '{': ++braces_level; break;
+                case '}': --braces_level; break;
+            }
+        }
+
+        if (braces_level == 0 &&
+            square_level == 0 &&
+            !in_string &&
+            is_started) {
+            return i + 1;
+        }
+
+        if (braces_level < 0 || square_level < 0)
+            return -1;
+    }
+
+    return 0;
 }
 
 }

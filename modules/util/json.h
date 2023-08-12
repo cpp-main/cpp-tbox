@@ -87,6 +87,19 @@ struct ParseJsonFileError : public std::runtime_error {
  */
 Json Load(const std::string &filename);
 
+/// 从字串中找到JSON的结束位置
+/**
+ * \param str_ptr   JSON字串地址
+ * \param str_len   JSON字串长度
+ *
+ * \return 0    没有找到结束位置
+ * \return >0   JSON字串的结束位置
+ * \return -1   JSON字串中[]{}不配对
+ *
+ * \note    目前只能正确地识别 [...] {...} "..." 结构的JSON字串
+ */
+int FindEndPos(const char *str_ptr, size_t str_len);
+
 }
 }
 }
