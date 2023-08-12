@@ -43,6 +43,9 @@ TcpConnection::~TcpConnection()
 {
     TBOX_ASSERT(cb_level_ == 0);
     CHECK_DELETE_RESET_OBJ(sp_buffered_fd_);
+
+    if (sp_context_ != nullptr && context_deleter_)
+        context_deleter_(sp_context_);
 }
 
 void TcpConnection::enable()
@@ -86,11 +89,13 @@ SocketFd TcpConnection::socketFd() const
     return SocketFd();
 }
 
-void* TcpConnection::setContext(void *new_context)
+void TcpConnection::setContext(void *context, ContextDeleter &&deleter)
 {
-    auto old_context = wp_context_;
-    wp_context_ = new_context;
-    return old_context;
+    if (sp_context_ != nullptr && context_deleter_)
+        context_deleter_(sp_context_);
+
+    sp_context_ = context;
+    context_deleter_ = std::move(deleter);
 }
 
 void TcpConnection::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)

@@ -52,8 +52,9 @@ class TcpConnection : public ByteStream {
     //! 是否已经失效了
     bool isExpired() const { return sp_buffered_fd_ == nullptr; }
 
-    void* setContext(void *new_context);
-    void* getContext() const { return wp_context_; }
+    using ContextDeleter = std::function<void(void*)>;
+    void  setContext(void *context, ContextDeleter &&deleter = nullptr);
+    void* getContext() const { return sp_context_; }
 
   public:
     //! 实现ByteStream的接口
@@ -76,7 +77,8 @@ class TcpConnection : public ByteStream {
     SockAddr    peer_addr_;
 
     DisconnectedCallback disconnected_cb_;
-    void *wp_context_ = nullptr;
+    void *sp_context_ = nullptr;
+    ContextDeleter context_deleter_;
 
     int cb_level_ = 0;
 };

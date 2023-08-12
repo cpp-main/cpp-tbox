@@ -81,9 +81,9 @@ class TcpServer {
     SockAddr getClientAddress(const ConnToken &client) const;
 
     //! 设置上下文
-    void* setContext(const ConnToken &client, void* context);
+    using ContextDeleter = std::function<void(void*)>;
+    void  setContext(const ConnToken &client, void *context, ContextDeleter &&deleter = nullptr);
     void* getContext(const ConnToken &client) const;
-    //! 注意：TcpServer只是保存该指针，不负责管理期生命期
 
     State state() const;
 
