@@ -3,6 +3,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/catch_throw.h>
 #include <tbox/util/json.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace jsonrpc {
@@ -17,6 +18,11 @@ void RawProto::sendJson(const Json &js)
 
 ssize_t RawProto::onRecvData(const void *data_ptr, size_t data_size)
 {
+    TBOX_ASSERT(data_ptr != nullptr);
+
+    if (data_size < 2)
+        return 0;
+
     const char *str_ptr = static_cast<const char*>(data_ptr);
     auto str_len = util::json::FindEndPos(str_ptr, data_size);
     if (str_len > 0) {

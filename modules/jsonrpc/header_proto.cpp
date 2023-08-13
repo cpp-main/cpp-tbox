@@ -5,6 +5,7 @@
 #include <tbox/base/catch_throw.h>
 #include <tbox/util/json.h>
 #include <tbox/util/serializer.h>
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace jsonrpc {
@@ -28,6 +29,8 @@ void HeaderProto::sendJson(const Json &js)
 
 ssize_t HeaderProto::onRecvData(const void *data_ptr, size_t data_size)
 {
+    TBOX_ASSERT(data_ptr != nullptr);
+
     if (data_size < kHeadSize)
         return 0;
 
