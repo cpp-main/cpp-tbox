@@ -43,7 +43,7 @@ void Proto::sendError(int id, int errcode, const std::string &message)
     Json js = {
         {"jsonrpc", "2.0"},
         {"id", id},
-        {"error", { "code", errcode} }
+        {"error", { {"code", errcode } } }
     };
 
     if (!message.empty())
@@ -78,7 +78,7 @@ void Proto::onRecvJson(const Json &js)
 
         } else if (js.contains("result")) {
             //! 按结果回复进行处理
-             if (!cbs_.recv_result_cb)
+            if (!cbs_.recv_respond_cb)
                 return;
 
             int id = 0; 
@@ -86,11 +86,11 @@ void Proto::onRecvJson(const Json &js)
                 LogNotice("no method field in respond");
                 return;
             }
-            cbs_.recv_result_cb(id, js["result"]);
+            cbs_.recv_respond_cb(id, 0, js["result"]);
 
         } else if (js.contains("error")) {
             //! 按错误回复进行处理
-            if (!cbs_.recv_error_cb)
+            if (!cbs_.recv_respond_cb)
                 return;
 
             int id = 0; 
@@ -103,7 +103,7 @@ void Proto::onRecvJson(const Json &js)
                 return;
             }
 
-            cbs_.recv_error_cb(id, errcode);
+            cbs_.recv_respond_cb(id, errcode, Json());
 
         } else {
             LogNotice("not jsonrpc format");

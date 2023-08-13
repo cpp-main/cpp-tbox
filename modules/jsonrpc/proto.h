@@ -10,14 +10,12 @@ namespace jsonrpc {
 class Proto {
   public:
     using RecvRequestCallback = std::function<void(int id, const std::string &method, const Json &params)>;
-    using RecvResultCallback = std::function<void(int id, const Json &result)>;
-    using RecvErrorCallback = std::function<void(int id, int errcode)>;
+    using RecvRespondCallback = std::function<void(int id, int errcode, const Json &result)>;
     using SendDataCallback = std::function<void(const void* data_ptr, size_t data_size)>;
 
     struct Callbacks {
         RecvRequestCallback recv_request_cb;
-        RecvResultCallback  recv_result_cb;
-        RecvErrorCallback   recv_error_cb;
+        RecvRespondCallback recv_respond_cb;
         SendDataCallback    send_data_cb;
     };
 
