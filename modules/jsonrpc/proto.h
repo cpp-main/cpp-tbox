@@ -13,13 +13,8 @@ class Proto {
     using RecvRespondCallback = std::function<void(int id, int errcode, const Json &result)>;
     using SendDataCallback = std::function<void(const void* data_ptr, size_t data_size)>;
 
-    struct Callbacks {
-        RecvRequestCallback recv_request_cb;
-        RecvRespondCallback recv_respond_cb;
-        SendDataCallback    send_data_cb;
-    };
-
-    void setCallbacks(const Callbacks &cbs) { cbs_ = cbs; }
+    void setRecvCallback(RecvRequestCallback &&req_cb, RecvRespondCallback &&rsp_cb);
+    void setSendCallback(SendDataCallback &&cb);
 
   public:
     void sendRequest(int id, const std::string &method);
@@ -39,7 +34,9 @@ class Proto {
 
     void onRecvJson(const Json &js);
 
-    Callbacks cbs_;
+    RecvRequestCallback recv_request_cb_;
+    RecvRespondCallback recv_respond_cb_;
+    SendDataCallback    send_data_cb_;
 };
 
 }

@@ -52,6 +52,17 @@ void Proto::sendError(int id, int errcode, const std::string &message)
     sendJson(js);
 }
 
+void Proto::setRecvCallback(RecvRequestCallback &&req_cb, RecvRespondCallback &&rsp_cb)
+{
+    recv_request_cb_ = std::move(req_cb);
+    recv_respond_cb_ = std::move(rsp_cb);
+}
+
+void Proto::setSendCallback(SendDataCallback &&cb)
+{
+    send_data_cb_ = std::move(cb);
+}
+
 void Proto::onRecvJson(const Json &js)
 {
     if (js.is_object()) {
@@ -63,7 +74,7 @@ void Proto::onRecvJson(const Json &js)
         }
 
         if (js.contains("method")) {
-            if (!cbs_.recv_request_cb)
+            if (!recv_request_cb_)
                 return;
 
             //! 按请求进行处理
@@ -74,11 +85,11 @@ void Proto::onRecvJson(const Json &js)
                 return;
             }
             util::json::GetField(js, "id", id);
-            cbs_.recv_request_cb(id, method, js.contains("params") ? js["params"] : Json());
+            recv_request_cb_(id, method, js.contains("params") ? js["params"] : Json());
 
         } else if (js.contains("result")) {
             //! 按结果回复进行处理
-            if (!cbs_.recv_respond_cb)
+            if (!recv_respond_cb_)
                 return;
 
             int id = 0; 
@@ -86,11 +97,11 @@ void Proto::onRecvJson(const Json &js)
                 LogNotice("no method field in respond");
                 return;
             }
-            cbs_.recv_respond_cb(id, 0, js["result"]);
+            recv_respond_cb_(id, 0, js["result"]);
 
         } else if (js.contains("error")) {
             //! 按错误回复进行处理
-            if (!cbs_.recv_respond_cb)
+            if (!recv_respond_cb_)
                 return;
 
             int id = 0; 
@@ -103,7 +114,7 @@ void Proto::onRecvJson(const Json &js)
                 return;
             }
 
-            cbs_.recv_respond_cb(id, errcode, Json());
+            recv_respond_cb_(id, errcode, Json());
 
         } else {
             LogNotice("not jsonrpc format");

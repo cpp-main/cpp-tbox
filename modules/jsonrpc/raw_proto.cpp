@@ -10,9 +10,9 @@ namespace jsonrpc {
 
 void RawProto::sendJson(const Json &js)
 {
-    if (cbs_.send_data_cb) {
+    if (send_data_cb_) {
         const auto &json_text = js.dump();
-        cbs_.send_data_cb(json_text.data(), json_text.size());
+        send_data_cb_(json_text.data(), json_text.size());
     }
 }
 

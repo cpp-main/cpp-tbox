@@ -23,8 +23,8 @@ void HeaderProto::sendJson(const Json &js)
     pack << kHeadMagic << static_cast<uint32_t>(json_text.size());
     pack.append(json_text.data(), json_text.size());
 
-    if (cbs_.send_data_cb)
-        cbs_.send_data_cb(buff.data(), buff.size());
+    if (send_data_cb_)
+        send_data_cb_(buff.data(), buff.size());
 }
 
 ssize_t HeaderProto::onRecvData(const void *data_ptr, size_t data_size)
