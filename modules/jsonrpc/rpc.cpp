@@ -32,9 +32,6 @@ Rpc::Rpc(event::Loop *loop)
     , request_timeout_(loop)
     , respond_timeout_(loop)
 {
-    request_timeout_.initialize(std::chrono::seconds(1), 30);
-    respond_timeout_.initialize(std::chrono::seconds(1), 30);
-
     using namespace std::placeholders;
     request_timeout_.setCallback(std::bind(&Rpc::onRequestTimeout, this, _1));
     respond_timeout_.setCallback(std::bind(&Rpc::onRespondTimeout, this, _1));
@@ -46,9 +43,12 @@ Rpc::~Rpc()
     request_timeout_.cleanup();
 }
 
-bool Rpc::initialize(Proto *proto)
+bool Rpc::initialize(Proto *proto, int timeout_sec)
 {
     using namespace std::placeholders;
+
+    request_timeout_.initialize(std::chrono::seconds(1), timeout_sec);
+    respond_timeout_.initialize(std::chrono::seconds(1), timeout_sec);
 
     proto->setRecvCallback(
         std::bind(&Rpc::onRecvRequest, this, _1, _2, _3),
@@ -61,6 +61,8 @@ bool Rpc::initialize(Proto *proto)
 
 void Rpc::cleanup()
 {
+    respond_timeout_.cleanup();
+    request_timeout_.cleanup();
     method_services_.clear();
     proto_->setRecvCallback(nullptr, nullptr);
     proto_ = nullptr;
@@ -68,19 +70,33 @@ void Rpc::cleanup()
 
 void Rpc::request(const std::string &method, const Json &js_params, RequestCallback &&cb)
 {
+    int id = 0;
     if (cb) {
-        int id = ++id_alloc_;
-        proto_->sendRequest(id, method, js_params);
+        id = ++id_alloc_;
         request_callback_[id] = std::move(cb);
         request_timeout_.add(id);
-    } else {
-        proto_->sendRequest(0, method, js_params);
     }
+    proto_->sendRequest(id, method, js_params);
+}
+
+void Rpc::request(const std::string &method, const Json &js_params)
+{
+    request(method, js_params, nullptr);
+}
+
+void Rpc::request(const std::string &method, RequestCallback &&cb)
+{
+    request(method, Json(), std::move(cb));
+}
+
+void Rpc::request(const std::string &method)
+{
+    request(method, Json(), nullptr);
 }
 
 void Rpc::registeService(const std::string &method, ServiceCallback &&cb)
 {
-    method_services_["method"] = std::move(cb);
+    method_services_[method] = std::move(cb);
 }
 
 void Rpc::respond(int id, int errcode, const Json &js_result)
@@ -96,6 +112,28 @@ void Rpc::respond(int id, int errcode, const Json &js_result)
         proto_->sendError(id, errcode);
     }
 
+    tobe_respond_.erase(id);
+}
+
+void Rpc::respond(int id, const Json &js_result)
+{
+    if (id == 0) {
+        LogWarn("send id == 0 respond");
+        return;
+    }
+
+    proto_->sendResult(id, js_result);
+    tobe_respond_.erase(id);
+}
+
+void Rpc::respond(int id, int errcode)
+{
+    if (id == 0) {
+        LogWarn("send id == 0 respond");
+        return;
+    }
+
+    proto_->sendError(id, errcode);
     tobe_respond_.erase(id);
 }
 

@@ -44,7 +44,7 @@ TEST_CPP_SRC_FILES = \
 	header_proto_test.cpp \
 	rpc_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include ../../tools/lib_tbox_common.mk

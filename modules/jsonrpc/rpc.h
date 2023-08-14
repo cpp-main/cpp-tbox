@@ -41,13 +41,22 @@ class Rpc {
     explicit Rpc(event::Loop *loop);
     virtual ~Rpc();
 
-    bool initialize(Proto *proto);
+    bool initialize(Proto *proto, int timeout_sec = 30);
     void cleanup();
 
-    void request(const std::string &method, const Json &js_params, RequestCallback &&cb);  //! 发送请求或消息，如果cb==nullptr，则是消息
+    //! 发送请求或消息，如果cb==nullptr，则是消息
+    void request(const std::string &method, const Json &js_params, RequestCallback &&cb);
+    void request(const std::string &method, const Json &js_params);
+    void request(const std::string &method, RequestCallback &&cb);
+    void request(const std::string &method);
 
-    void registeService(const std::string &method, ServiceCallback &&cb);  //! 注册当方法被调用时回调什么
+    //! 注册当方法被调用时回调什么
+    void registeService(const std::string &method, ServiceCallback &&cb);
+
+    //! 发送异步回复
     void respond(int id, int errcode, const Json &js_result);
+    void respond(int id, const Json &js_result);
+    void respond(int id, int errcode);
 
   protected:
     void onRecvRequest(int id, const std::string &method, const Json &params);
@@ -67,7 +76,6 @@ class Rpc {
     eventx::TimeoutMonitor<int> request_timeout_;   //! 请求超时监测
     eventx::TimeoutMonitor<int> respond_timeout_;   //! 回复超时监测
 };
-
 
 }
 }
