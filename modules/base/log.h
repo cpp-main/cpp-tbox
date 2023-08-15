@@ -38,10 +38,10 @@
 
 //! Define commonly macros
 #define LogPrintf(level, fmt, ...) \
-    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, true, fmt, ## __VA_ARGS__)
+    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, 1, fmt, ## __VA_ARGS__)
 
 #define LogPuts(level, text) \
-    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, false, text)
+    LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, 0, text)
 
 #define LogFatal(fmt, ...)  LogPrintf(LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
 #define LogErr(fmt, ...)    LogPrintf(LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
@@ -87,7 +87,7 @@ extern "C" {
 //!         It's your duty to implement it.
 //!
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
-                   int line, int level, bool with_args, const char *fmt, ...);
+                   int line, int level, int with_args, const char *fmt, ...);
 
 #ifdef __cplusplus
 }

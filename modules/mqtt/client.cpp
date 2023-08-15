@@ -574,7 +574,7 @@ void Client::onLog(int level, const char *str)
             break;
         default:; //! regard MOSQ_LOG_INFO as LOG_LEVEL_DEBUG
     }
-    LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, "%s", str);
+    LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, 0, str);
 }
 
 void Client::onTcpConnectDone(int ret, bool first_connect)

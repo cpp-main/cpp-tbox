@@ -79,7 +79,7 @@ void Dispatch(const LogContent &content)
  * 2.将日志数据打包成 LogContent，然后调用 _output_channels 指向的函数进行输出
  */
 void LogPrintfFunc(const char *module_id, const char *func_name, const char *file_name,
-                   int line, int level, bool with_args, const char *fmt, ...)
+                   int line, int level, int with_args, const char *fmt, ...)
 {
     if (CantDispatch())
         return;
