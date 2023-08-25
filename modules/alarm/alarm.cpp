@@ -106,10 +106,18 @@ uint32_t Alarm::remainSeconds() const {
 namespace {
 //! 获取系统的时区偏移秒数
 int GetSystemTimezoneOffsetSeconds() {
-	long tm_gmtoff{};		
-	errno_t errn = _get_timezone(&tm_gmtoff);
-	if (errn)
-		return 0;
+	long tm_gmtoff{};
+#if (defined(_MSC_VER) || defined(_UCRT)) && !defined(__BIONIC__)
+	{
+		errno_t errn = _get_timezone(&tm_gmtoff);
+		if (errn)
+			return 0;
+	}
+#elif defined(_WIN32) && !defined(__BIONIC__) && !defined(__WINE__) && !defined(__CYGWIN__)
+	tm_gmtoff = _timezone;
+#else
+	tm_gmtoff = timezone;
+#endif
 	return static_cast<int>(tm_gmtoff);
 }
 }
