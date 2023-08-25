@@ -109,7 +109,7 @@ int GetSystemTimezoneOffsetSeconds() {
 #if (defined(__MINGW32__) && !__has_include(<_mingw_stat64.h>))
 	return 0;
 #else
-	long tm_gmtoff{};
+	long tm_gmtoff = 0;
 #if (defined(_MSC_VER) || defined(_UCRT)) && !defined(__BIONIC__)
 	{
 		errno_t errn = _get_timezone(&tm_gmtoff);
