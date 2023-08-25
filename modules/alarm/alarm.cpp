@@ -106,6 +106,9 @@ uint32_t Alarm::remainSeconds() const {
 namespace {
 //! 获取系统的时区偏移秒数
 int GetSystemTimezoneOffsetSeconds() {
+#if (defined(__MINGW32__) && !__has_include(<_mingw_stat64.h>))
+	return 0;
+#else
 	long tm_gmtoff{};
 #if (defined(_MSC_VER) || defined(_UCRT)) && !defined(__BIONIC__)
 	{
@@ -119,6 +122,7 @@ int GetSystemTimezoneOffsetSeconds() {
 	tm_gmtoff = timezone;
 #endif
 	return static_cast<int>(tm_gmtoff);
+#endif
 }
 }
 
