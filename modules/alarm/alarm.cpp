@@ -106,6 +106,7 @@ uint32_t Alarm::remainSeconds() const {
 namespace {
 //! 获取系统的时区偏移秒数
 int GetSystemTimezoneOffsetSeconds() {
+#if defined(__MINGW32__) || defined(_MSC_VER) || defined(_WIN32)
 #if (defined(__MINGW32__) && !__has_include(<_mingw_stat64.h>))
 	return 0;
 #else
@@ -122,6 +123,20 @@ int GetSystemTimezoneOffsetSeconds() {
 	tm_gmtoff = timezone;
 #endif
 	return static_cast<int>(tm_gmtoff);
+#endif
+#else
+  //! 假设当前0时区的时间是 1970-1-1 12:00，即 utc_ts = 12 * 3600
+  //! 通过 localtime_r() 获取本地的时间 local_tm。
+  //! 通过 local_tm 中的 hour, min, sec 可计算出本地的时间戳 local_ts。
+  //! 再用本地的时间戳减去 utc_ts 即可得出期望的值。
+  //
+  //! 为什么选用0时区的12时，而不是其它时间点呢？
+  //! 因为在这个时间点上，计算出的任何一个时间的时间都是在 00:00 ~ 23:59 之间的
+  struct tm local_tm;
+  time_t utc_ts = 12 * 3600;
+  localtime_r(&utc_ts, &local_tm);
+  int local_ts = local_tm.tm_hour * 3600 + local_tm.tm_min * 60 + local_tm.tm_sec;
+  return (local_ts - static_cast<int>(utc_ts));
 #endif
 }
 }
