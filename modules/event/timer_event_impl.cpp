@@ -93,10 +93,10 @@ Loop* TimerEventImpl::getLoop() const
 
 void TimerEventImpl::onEvent()
 {
-    if (mode_ == Mode::kOneshot) {
-        is_enabled_ = false;
-        token_.reset();
-    }
+    // if (mode_ == Mode::kOneshot) {
+    //     is_enabled_ = false;
+    //     token_.reset();
+    // }
 
     wp_loop_->beginEventProcess();
     if (cb_) {
@@ -105,6 +105,11 @@ void TimerEventImpl::onEvent()
         --cb_level_;
     }
     wp_loop_->endEventProcess(this);
+    if (mode_ == Mode::kOneshot) {
+        is_enabled_ = false;
+        token_.reset();
+        cb_ = nullptr;
+    }
 }
 
 }
