@@ -108,21 +108,21 @@ namespace {
 int GetSystemTimezoneOffsetSeconds() {
 #if defined(__MINGW32__) || defined(_MSC_VER) || defined(_WIN32)
 #if (defined(__MINGW32__) && !__has_include(<_mingw_stat64.h>))
-	return 0;
+  return 0;
 #else
-	long tm_gmtoff = 0;
+  long tm_gmtoff = 0;
 #if (defined(_MSC_VER) || defined(_UCRT)) && !defined(__BIONIC__)
-	{
-		errno_t errn = _get_timezone(&tm_gmtoff);
-		if (errn)
-			return 0;
-	}
+  {
+    errno_t errn = _get_timezone(&tm_gmtoff);
+    if (errn)
+      return 0;
+  }
 #elif defined(_WIN32) && !defined(__BIONIC__) && !defined(__WINE__) && !defined(__CYGWIN__)
-	tm_gmtoff = _timezone;
+  tm_gmtoff = _timezone;
 #else
-	tm_gmtoff = timezone;
+  tm_gmtoff = timezone;
 #endif
-	return static_cast<int>(tm_gmtoff);
+  return static_cast<int>(tm_gmtoff);
 #endif
 #else
   //! 假设当前0时区的时间是 1970-1-1 12:00，即 utc_ts = 12 * 3600
