@@ -115,6 +115,7 @@ int GetSystemTimezoneOffsetSeconds() {
   {
     errno_t errn = _get_timezone(&tm_gmtoff);
     if (errn != 0) {
+      LogErr("can't get timezone offset, not support.");
       LogErr("_get_timezone() error:%d", errn);
       return 0;
     }
