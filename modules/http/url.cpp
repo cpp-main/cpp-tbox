@@ -50,12 +50,13 @@ std::string UrlEncode(const std::string &local_str, bool path_mode)
     std::string url_str;
     url_str.reserve(local_str.size() * 5 / 4); //! 预留1.25倍的空间
 
-    for (const char c : local_str) {
+    for (char c : local_str) {
         //! 如果非ASCII或是特殊字符
         if (special_chars.find(c) != std::string::npos || !std::isprint(c)) {
+            unsigned char uc = static_cast<unsigned char>(c);
             url_str.push_back('%');
-            url_str.push_back(char_to_hex[c >> 4]);
-            url_str.push_back(char_to_hex[c & 0xf]);
+            url_str.push_back(char_to_hex[uc >> 4]);
+            url_str.push_back(char_to_hex[uc & 0xf]);
         } else
             url_str.push_back(c);
     }
