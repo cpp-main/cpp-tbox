@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2023 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -17,17 +17,28 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/json.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/signal_event.h>
-#include <tbox/network/tcp_client.h>
-#include <tbox/network/buffer.h>
-#include <tbox/util/json.h>
-#include <tbox/jsonrpc/raw_proto.h>
-#include <tbox/jsonrpc/rpc.h>
+
+/**
+ * 这是JsonRpc模块ping/pong示例中ping的一方
+ *
+ * 它主动去连接/tmp/ping_pong.sock，连接成功后就会发送ping请求，并在请
+ * 求中附带一个count参数。该count参数在每次请求之前都会自增1。
+ * pong端收到ping请求后，将count作为结果回复该请求。
+ * ping端收到回复后，就立即发送下一个ping请求。
+ * 如此周而复始，直至与pong端断开，或者接收到了SIGINT停止信号
+ */
+
+#include <tbox/base/log.h>  //! 打印日志
+#include <tbox/base/log_output.h>   //! 使能日志输出
+#include <tbox/base/scope_exit.hpp> //! 使用 SetScopeExitAction()
+#include <tbox/base/json.hpp>   //! 操作JSON对象用
+#include <tbox/event/loop.h>    //! 事件循环
+#include <tbox/event/signal_event.h>    //! ctrl+c信号事件
+#include <tbox/network/tcp_client.h>    //! 导入TcpClient模块
+#include <tbox/network/buffer.h>        //! 对Buffer进行操作
+#include <tbox/util/json.h>     //! 使用JSON操作的辅助函数 GetField()
+#include <tbox/jsonrpc/raw_proto.h>     //! 导入 jsonrpc::RawProto
+#include <tbox/jsonrpc/rpc.h>   //! 导入 jsonrpc::Rpc
 
 using namespace tbox;
 
@@ -39,11 +50,10 @@ int main(int argc, char **argv)
 
     auto loop = event::Loop::New();
     auto sig_event = loop->newSignalEvent();
-    auto timer = loop->newTimerEvent();
 
+    //! 设置退出时，要释放loop与sig_event
     SetScopeExitAction(
         [=] {
-            delete timer;
             delete sig_event;
             delete loop;
         }
@@ -57,10 +67,12 @@ int main(int argc, char **argv)
     std::string srv_addr = "/tmp/ping_pong.sock";
 
     tcp_client.initialize(network::SockAddr::FromString(srv_addr));
+    //! 设置接收到数据后的处理
     tcp_client.setReceiveCallback([&] (network::Buffer &buff) {
         while (buff.readableSize() > 0) {
+            //! 将buff中的数据交给proto进行解析
             auto ret = proto.onRecvData(buff.readableBegin(), buff.readableSize());
-            if (ret > 0) {
+            if (ret > 0) {  //! 正常解析
                 buff.hasRead(ret);
             } else if (ret < 0) {   //! 有错误
                 tcp_client.stop();
@@ -70,18 +82,21 @@ int main(int argc, char **argv)
         }
     }, 0);
 
+    //! 设置proto发送数据的方法
     proto.setSendCallback([&] (const void* data_ptr, size_t data_size) {
-        tcp_client.send(data_ptr, data_size);
+        tcp_client.send(data_ptr, data_size);   //! 将数据交给tcp_client去发送
     });
 
     tcp_client.start();
 
     int ping_count = 0;
     std::function<void()> send_ping;
+    //! 定义ping动作
     send_ping = [&] {
         ++ping_count;
-        Json js_params = {{"count", ping_count}};
+        Json js_params = {{"count", ping_count}};   //! 组装请求参数
 
+        //! 发送ping请求，并在收到回复后，进行下一个ping动作
         rpc.request("ping", js_params,
             [&] (int errcode, const Json &js_result) {
                 int pong_count = 0;
@@ -95,15 +110,17 @@ int main(int argc, char **argv)
         LogDbg("send ping: %d", ping_count);
     };
 
+    //! 设置一旦tcp_client连接上就进行ping动作
     tcp_client.setConnectedCallback(send_ping);
 
+    //! 设置程序安全退出条件
     sig_event->initialize(SIGINT, event::Event::Mode::kPersist);
     sig_event->enable();
 
+    //! 设置程序退出动作
     sig_event->setCallback(
         [&] (int) {
             tcp_client.stop();
-            timer->disable();
             loop->exitLoop();
         }
     );
