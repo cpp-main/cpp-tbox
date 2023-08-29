@@ -108,6 +108,7 @@ namespace {
 int GetSystemTimezoneOffsetSeconds() {
 #if defined(__MINGW32__) || defined(_MSC_VER) || defined(_WIN32)
 #if defined(__MINGW32__) && !__has_include(<_mingw_stat64.h>)
+  LogErr("can't get timezone offset, not support.");
   return 0;
 #else
   long tm_gmtoff = 0;
@@ -115,7 +116,6 @@ int GetSystemTimezoneOffsetSeconds() {
   {
     errno_t errn = _get_timezone(&tm_gmtoff);
     if (errn != 0) {
-      LogErr("can't get timezone offset, not support.");
       LogErr("_get_timezone() error:%d", errn);
       return 0;
     }
