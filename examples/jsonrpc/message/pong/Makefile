@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/jsonrpc/pong
-EXE_NAME := jsonrpc/pong
+PROJECT := example/jsonrpc/message/pong
+EXE_NAME := jsonrpc/message/pong
 
 CPP_SRC_FILES := pong.cpp
 

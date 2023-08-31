@@ -18,10 +18,10 @@
 # of the source tree.
 #
 
-PROJECT := example/jsonrpc/ping
-EXE_NAME := jsonrpc/ping
+PROJECT := example/jsonrpc/req_rsp/pong
+EXE_NAME := jsonrpc/req_rsp/pong
 
-CPP_SRC_FILES := ping.cpp
+CPP_SRC_FILES := pong.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

@@ -98,11 +98,12 @@ int main(int argc, char **argv)
     tcp_server.start(); //! 启动tcp服务
 
     //! 注册ping的服务处理函数
-    rpc.registeService("ping", [&] (int id, const Json &js_params, int &errcode, Json &js_result) {
+    rpc.registeService("ping", [&] (int id, const Json &js_params, int &, Json &) {
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
-        js_result = js_params;
-        return true;    //! 表示在函数返回后立即发送回复
+        LogDbg("got ping_count: %d", ping_count);
+        rpc.request("pong", js_params);
+        return false;    //! 表示不回复
     });
 
     //! 设置程序安全退出条件
