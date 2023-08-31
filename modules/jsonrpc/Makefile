@@ -26,22 +26,25 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	proto.h \
-	raw_proto.h \
-	header_proto.h \
+	protos/raw_stream_proto.h \
+	protos/header_stream_proto.h \
+	protos/packet_proto.h \
 	rpc.h \
 
 CPP_SRC_FILES = \
 	proto.cpp \
-	raw_proto.cpp \
-	header_proto.cpp \
+	protos/raw_stream_proto.cpp \
+	protos/header_stream_proto.cpp \
+	protos/packet_proto.cpp \
 	rpc.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.jsonrpc"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
-	raw_proto_test.cpp \
-	header_proto_test.cpp \
+	protos/raw_stream_proto_test.cpp \
+	protos/header_stream_proto_test.cpp \
+	protos/packet_proto_test.cpp \
 	rpc_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base -ldl

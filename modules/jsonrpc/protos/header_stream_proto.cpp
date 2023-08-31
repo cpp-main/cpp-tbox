@@ -17,7 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "header_proto.h"
+#include "header_stream_proto.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
@@ -32,7 +32,7 @@ namespace jsonrpc {
 const uint16_t kHeadMagic = 0xCAFE;
 const uint16_t kHeadSize = 6;   //! HeadMagic(2) + ContentLength(4)
 
-void HeaderProto::sendJson(const Json &js)
+void HeaderStreamProto::sendJson(const Json &js)
 {
     const auto &json_text = js.dump();
 
@@ -46,7 +46,7 @@ void HeaderProto::sendJson(const Json &js)
         send_data_cb_(buff.data(), buff.size());
 }
 
-ssize_t HeaderProto::onRecvData(const void *data_ptr, size_t data_size)
+ssize_t HeaderStreamProto::onRecvData(const void *data_ptr, size_t data_size)
 {
     TBOX_ASSERT(data_ptr != nullptr);
 
@@ -70,8 +70,10 @@ ssize_t HeaderProto::onRecvData(const void *data_ptr, size_t data_size)
     const char *str_ptr = static_cast<const char*>(unpack.fetchNoCopy(content_size));
     Json js;
     bool is_throw = tbox::CatchThrow([&] { js = Json::parse(str_ptr, str_ptr + content_size); });
-    if (is_throw)
+    if (is_throw) {
+        LogNotice("parse json fail");
         return -1;
+    }
 
     onRecvJson(js);
     return unpack.pos();

@@ -17,15 +17,21 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_JSONRPC_RAW_PROTO_H_20230812
-#define TBOX_JSONRPC_RAW_PROTO_H_20230812
+#ifndef TBOX_JSONRPC_PACKET_PROTO_H_20230831
+#define TBOX_JSONRPC_PACKET_PROTO_H_20230831
 
-#include "proto.h"
+#include "../proto.h"
 
 namespace tbox {
 namespace jsonrpc {
 
-class RawProto : public Proto {
+/**
+ * 分包协议
+ *
+ * 约定onRecvData()中指定的内容都是一个完整的JSON字串
+ * 适用于已经有分包机制的传输协议，如：UDP, MQTT, HTTP
+ */
+class PacketProto : public Proto {
   public:
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) override;
 
@@ -36,4 +42,4 @@ class RawProto : public Proto {
 }
 }
 
-#endif //TBOX_JSONRPC_RAW_PROTO_H_20230812
+#endif //TBOX_JSONRPC_PACKET_PROTO_H_20230831

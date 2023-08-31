@@ -21,15 +21,15 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/log_output.h>
 
-#include "raw_proto.h"
+#include "raw_stream_proto.h"
 
 namespace tbox {
 namespace jsonrpc {
 
-TEST(RawProto, sendRequest) {
+TEST(RawStreamProto, sendRequest) {
     LogOutput_Enable();
 
-    RawProto proto;
+    RawStreamProto proto;
 
     int count = 0;
     proto.setRecvCallback(
@@ -53,14 +53,14 @@ TEST(RawProto, sendRequest) {
     LogOutput_Disable();
 }
 
-TEST(RawProto, sendRequestWithParams) {
+TEST(RawStreamProto, sendRequestWithParams) {
     Json js_send_params = {
         {"a", 123},
         {"b", {"hello", "world", "!"}},
     };
     LogOutput_Enable();
 
-    RawProto proto;
+    RawStreamProto proto;
 
     int count = 0;
     proto.setRecvCallback(
@@ -84,14 +84,14 @@ TEST(RawProto, sendRequestWithParams) {
     LogOutput_Disable();
 }
 
-TEST(RawProto, sendResult) {
+TEST(RawStreamProto, sendResult) {
     Json js_send_result = {
         {"a", 123},
         {"b", {"hello", "world", "!"}},
     };
     LogOutput_Enable();
 
-    RawProto proto;
+    RawStreamProto proto;
 
     int count = 0;
     proto.setRecvCallback(
@@ -114,10 +114,10 @@ TEST(RawProto, sendResult) {
     LogOutput_Disable();
 }
 
-TEST(RawProto, sendError) {
+TEST(RawStreamProto, sendError) {
     LogOutput_Enable();
 
-    RawProto proto;
+    RawStreamProto proto;
 
     int count = 0;
     proto.setRecvCallback(
@@ -140,10 +140,10 @@ TEST(RawProto, sendError) {
     LogOutput_Disable();
 }
 
-TEST(RawProto, RecvUncompleteData) {
+TEST(RawStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
-    RawProto proto;
+    RawStreamProto proto;
 
     int count = 0;
     proto.setRecvCallback(

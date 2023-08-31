@@ -17,7 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "raw_proto.h"
+#include "raw_stream_proto.h"
 
 #include <tbox/base/json.hpp>
 #include <tbox/base/catch_throw.h>
@@ -27,7 +27,7 @@
 namespace tbox {
 namespace jsonrpc {
 
-void RawProto::sendJson(const Json &js)
+void RawStreamProto::sendJson(const Json &js)
 {
     if (send_data_cb_) {
         const auto &json_text = js.dump();
@@ -35,7 +35,7 @@ void RawProto::sendJson(const Json &js)
     }
 }
 
-ssize_t RawProto::onRecvData(const void *data_ptr, size_t data_size)
+ssize_t RawStreamProto::onRecvData(const void *data_ptr, size_t data_size)
 {
     TBOX_ASSERT(data_ptr != nullptr);
 
@@ -47,8 +47,10 @@ ssize_t RawProto::onRecvData(const void *data_ptr, size_t data_size)
     if (str_len > 0) {
         Json js;
         bool is_throw = tbox::CatchThrow([&] { js = Json::parse(str_ptr, str_ptr + str_len); });
-        if (is_throw)
+        if (is_throw) {
+            LogNotice("parse json fail");
             return -1;
+        }
 
         onRecvJson(js);
         return str_len;

@@ -34,7 +34,7 @@
 #include <tbox/network/tcp_server.h>    //! TcpServer
 #include <tbox/network/buffer.h>    //! 对Buffer的操作
 #include <tbox/util/json.h>     //! util::json::GetField()
-#include <tbox/jsonrpc/raw_proto.h> //! jsonrpc::RawProto
+#include <tbox/jsonrpc/protos/raw_stream_proto.h> //! jsonrpc::RawStreamProto
 #include <tbox/jsonrpc/rpc.h>   //! jsonrpc::Rpc
 
 using namespace tbox;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     );
 
     network::TcpServer tcp_server(loop);
-    jsonrpc::RawProto proto;
+    jsonrpc::RawStreamProto proto;
     jsonrpc::Rpc rpc(loop);
 
     rpc.initialize(&proto, 3);

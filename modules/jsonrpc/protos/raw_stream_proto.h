@@ -17,15 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_JSONRPC_HEADER_PROTO_H_20230812
-#define TBOX_JSONRPC_HEADER_PROTO_H_20230812
+#ifndef TBOX_JSONRPC_RAW_STREAM_PROTO_H_20230812
+#define TBOX_JSONRPC_RAW_STREAM_PROTO_H_20230812
 
-#include "proto.h"
+#include "../proto.h"
 
 namespace tbox {
 namespace jsonrpc {
 
-class HeaderProto : public Proto {
+class RawStreamProto : public Proto {
   public:
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) override;
 
@@ -36,4 +36,4 @@ class HeaderProto : public Proto {
 }
 }
 
-#endif //TBOX_JSONRPC_HEADER_PROTO_H_20230812
+#endif //TBOX_JSONRPC_RAW_STREAM_PROTO_H_20230812

@@ -23,7 +23,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
 
-#include "raw_proto.h"
+#include "protos/raw_stream_proto.h"
 #include "rpc.h"
 
 namespace tbox {
@@ -34,7 +34,7 @@ class RpcTest : public testing::Test {
     event::Loop *loop;
     //! 生成两个端，让它们通信
     Rpc rpc_a, rpc_b;
-    RawProto proto_a, proto_b;
+    RawStreamProto proto_a, proto_b;
 
   public:
     RpcTest()
@@ -176,7 +176,7 @@ TEST(Rpc, RequestTimeout) {
     SetScopeExitAction([=] { delete loop; });
 
     Rpc rpc(loop);
-    RawProto proto;
+    RawStreamProto proto;
     rpc.initialize(&proto, 1);
 
     bool is_method_cb_invoke = false;
