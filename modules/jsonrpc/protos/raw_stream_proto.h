@@ -25,6 +25,16 @@
 namespace tbox {
 namespace jsonrpc {
 
+/**
+ * 裸流协议
+ *
+ * "{ .... }[ ... ]"
+ *
+ * 它通过对JSON的特征标志字符'[', ']', '{', '}' 进行计数来界定JSON数据包
+ *
+ * 适用于流式协议，如 TCP
+ */
+
 class RawStreamProto : public Proto {
   public:
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) override;

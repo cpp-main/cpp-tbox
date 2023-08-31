@@ -25,6 +25,19 @@
 namespace tbox {
 namespace jsonrpc {
 
+/**
+ * 含头部信息的流协议
+ *
+ * +--------+--------+---------------+
+ * | 0xCAFE | Length |     JSON      |
+ * +--------+--------+---------------+
+ * |   2B   |   4B   |     Length    |
+ * +--------+--------+---------------+
+ *
+ * 采用 [魔幻数+长度] 的形式进行数据包界定
+ *
+ * 适用于流式协议，如 TCP
+ */
 class HeaderStreamProto : public Proto {
   public:
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) override;
