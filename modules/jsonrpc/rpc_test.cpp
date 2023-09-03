@@ -22,6 +22,7 @@
 #include <tbox/base/log_output.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/defines.h>
 
 #include "protos/raw_stream_proto.h"
 #include "rpc.h"
@@ -85,6 +86,7 @@ TEST_F(RpcTest, SendRequestNormally) {
             errcode = 0;
             js_result = js_rsp_result;
             is_service_invoke = true;
+            UNUSED_VAR(id);
             return true;
         }
     );
@@ -137,6 +139,7 @@ TEST_F(RpcTest, SendMessageNoService) {
     rpc_b.registeService("B",
         [&] (int id, const Json &, int &, Json &) {
             is_service_invoke = true;
+            UNUSED_VAR(id);
             return true;
         }
     );
@@ -185,6 +188,7 @@ TEST(Rpc, RequestTimeout) {
             rpc.request("A", Json(),
                 [&] (int errcode, const Json &js_result) {
                     EXPECT_EQ(errcode, -32000);
+                    UNUSED_VAR(js_result);
                     is_method_cb_invoke = true;
                 }
             );

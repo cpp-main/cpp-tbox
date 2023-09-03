@@ -72,4 +72,9 @@
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #endif
 
+//! No warnings
+#ifndef UNUSED_VAR
+#define UNUSED_VAR(x) (void)(x)
+#endif
+
 #endif //TBOX_BASE_DEFINES_H_20171030
