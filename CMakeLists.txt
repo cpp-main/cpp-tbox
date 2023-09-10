@@ -84,6 +84,7 @@ option(TBOX_ENABLE_MQTT "build mqtt" ON)
 option(TBOX_ENABLE_FLOW "build flow" ON)
 option(TBOX_ENABLE_ALARM "build alarm" ON)
 option(TBOX_ENABLE_CRYPTO "build crypto" ON)
+option(TBOX_ENABLE_JSONRPC "build jsonrpc" ON)
 
 #
 # 3rd-party libraries
@@ -188,6 +189,11 @@ endif()
 if(TBOX_ENABLE_CRYPTO)
     message(STATUS "crypto module enabled")
     list(APPEND TBOX_COMPONENTS crypto)
+endif()
+
+if(TBOX_ENABLE_JSONRPC)
+    message(STATUS "jsonrpc module enabled")
+    list(APPEND TBOX_COMPONENTS jsonrpc)
 endif()
 
 

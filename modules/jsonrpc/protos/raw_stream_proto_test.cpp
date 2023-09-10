@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <tbox/base/json.hpp>
 #include <tbox/base/log_output.h>
+#include <tbox/base/defines.h>
 
 #include "raw_stream_proto.h"
 
@@ -39,7 +40,7 @@ TEST(RawStreamProto, sendRequest) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        [&] (int id, int errcode, const Json &js_result) { ++count; }
+        [&] (int id, int errcode, const Json &js_result) { ++count; UNUSED_VAR(id); UNUSED_VAR(errcode); UNUSED_VAR(js_result); }
     );
     proto.setSendCallback(
         [&] (const void *data_ptr, size_t data_size) {
@@ -70,7 +71,7 @@ TEST(RawStreamProto, sendRequestWithParams) {
             EXPECT_EQ(js_params, js_send_params);
             ++count;
         },
-        [&] (int id, int errcode, const Json &js_result) { ++count; }
+        [&] (int id, int errcode, const Json &js_result) { ++count; UNUSED_VAR(id), UNUSED_VAR(errcode), UNUSED_VAR(js_result); }
     );
     proto.setSendCallback(
         [&] (const void *data_ptr, size_t data_size) {
@@ -95,11 +96,12 @@ TEST(RawStreamProto, sendResult) {
 
     int count = 0;
     proto.setRecvCallback(
-        [&] (int id, const std::string &method, const Json &js_params) { ++count; },
+        [&] (int id, const std::string &method, const Json &js_params) { ++count; UNUSED_VAR(id), UNUSED_VAR(method), UNUSED_VAR(js_params); },
         [&] (int id, int errcode, const Json &js_result) {
             EXPECT_EQ(id, 1);
             EXPECT_EQ(js_result, js_send_result);
             ++count;
+            UNUSED_VAR(errcode);
         }
     );
     proto.setSendCallback(
@@ -121,7 +123,7 @@ TEST(RawStreamProto, sendError) {
 
     int count = 0;
     proto.setRecvCallback(
-        [&] (int id, const std::string &method, const Json &js_params) { ++count; },
+        [&] (int id, const std::string &method, const Json &js_params) { ++count; UNUSED_VAR(id), UNUSED_VAR(method), UNUSED_VAR(js_params); },
         [&] (int id, int errcode, const Json &) {
             EXPECT_EQ(id, 1);
             EXPECT_EQ(errcode, -1000);
