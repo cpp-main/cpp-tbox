@@ -20,19 +20,17 @@
 #include "tcp_connector.h"
 
 #include <sys/un.h>
-
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
 
 #include "tcp_connection.h"
 
 namespace tbox {
 namespace network {
 
-TcpConnector::TcpConnector(event::Loop *wp_loop) :
-    wp_loop_(wp_loop),
-    reconn_delay_calc_func_([](int) {return 1;})
-{ }
+TcpConnector::TcpConnector(event::Loop *wp_loop)
+    : wp_loop_(wp_loop), reconn_delay_calc_func_([](int) { return 1; })
+{}
 
 TcpConnector::~TcpConnector()
 {
@@ -47,8 +45,7 @@ TcpConnector::~TcpConnector()
 void TcpConnector::checkSettingAndTryEnterIdleState()
 {
     if (state_ == State::kNone) {
-        if (server_addr_.type() != SockAddr::Type::kNone && connected_cb_)
-            state_ = State::kInited;
+        if (server_addr_.type() != SockAddr::Type::kNone && connected_cb_) state_ = State::kInited;
     }
 }
 
@@ -93,8 +90,7 @@ bool TcpConnector::start()
 
 void TcpConnector::stop()
 {
-    if ((state_ == State::kInited) || (state_ == State::kNone))
-        return;
+    if ((state_ == State::kInited) || (state_ == State::kNone)) return;
 
     if (state_ == State::kConnecting)
         exitConnectingState();
@@ -106,14 +102,13 @@ void TcpConnector::stop()
 
 void TcpConnector::cleanup()
 {
-    if (state_ <= State::kNone)
-        return;
+    if (state_ <= State::kNone) return;
 
     stop();
 
     connected_cb_ = nullptr;
     connect_fail_cb_ = nullptr;
-    reconn_delay_calc_func_ = [](int) {return 1;};
+    reconn_delay_calc_func_ = [](int) { return 1; };
     try_times_ = 0;
     conn_fail_times_ = 0;
 
@@ -141,11 +136,11 @@ int TcpConnector::connect(SocketFd sock_fd, const SockAddr &addr) const
     if (addr.type() == SockAddr::Type::kIPv4) {
         struct sockaddr_in conn_addr;
         socklen_t addr_len = addr.toSockAddr(conn_addr);
-        ret = sock_fd.connect((struct sockaddr*)&conn_addr, addr_len);
+        ret = sock_fd.connect((struct sockaddr *)&conn_addr, addr_len);
     } else if (addr.type() == SockAddr::Type::kLocal) {
         struct sockaddr_un conn_addr;
         socklen_t addr_len = addr.toSockAddr(conn_addr);
-        ret = sock_fd.connect((struct sockaddr*)&conn_addr, addr_len);
+        ret = sock_fd.connect((struct sockaddr *)&conn_addr, addr_len);
     } else
         LogErr("not support");
 
@@ -156,8 +151,7 @@ void TcpConnector::enterConnectingState()
 {
     //! 创建Socket
     SocketFd new_sock_fd = createSocket(server_addr_.type());
-    if (new_sock_fd.isNull())
-        return;
+    if (new_sock_fd.isNull()) return;
 
     LogDbg("server_addr:%s", server_addr_.toString().c_str());
 
@@ -166,24 +160,24 @@ void TcpConnector::enterConnectingState()
     int conn_errno = conn_ret == 0 ? 0 : errno;
 
     //! 检查错误码
-    if ((conn_errno == 0) || (conn_errno == EINPROGRESS)
-        || (conn_errno == EINTR) || (conn_errno == EISCONN)) {
+    if ((conn_errno == 0) || (conn_errno == EINPROGRESS) || (conn_errno == EINTR) ||
+        (conn_errno == EISCONN)) {
         //! 正常情况
         sock_fd_ = std::move(new_sock_fd);
 
         CHECK_DELETE_RESET_OBJ(sp_write_ev_);
         sp_write_ev_ = wp_loop_->newFdEvent("TcpConnector::sp_write_ev_");
-        sp_write_ev_->initialize(sock_fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
+        sp_write_ev_->initialize(
+            sock_fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kOneshot);
         sp_write_ev_->setCallback(std::bind(&TcpConnector::onSocketWritable, this));
         sp_write_ev_->enable();
 
         state_ = State::kConnecting;
         LogDbg("enter connecting state");
 
-    } else if ((conn_errno == EAGAIN)
-        || (conn_errno == EADDRINUSE) || (conn_errno == EADDRNOTAVAIL)
-        || (conn_errno == ECONNREFUSED) || (conn_errno == ENETUNREACH)
-        || (conn_errno == ENOENT)) {
+    } else if ((conn_errno == EAGAIN) || (conn_errno == EADDRINUSE) ||
+               (conn_errno == EADDRNOTAVAIL) || (conn_errno == ECONNREFUSED) ||
+               (conn_errno == ENETUNREACH) || (conn_errno == ENOENT)) {
         LogWarn("connent fail, errno:%d, %s", conn_errno, strerror(conn_errno));
         //! 条件暂时不具备
         onConnectFail();
@@ -192,7 +186,7 @@ void TcpConnector::enterConnectingState()
         //! 如果参数不正确
         LogErr("params errno:%d, %s", conn_errno, strerror(conn_errno));
         state_ = State::kNone;
-        //!TODO: 如果真失败了该怎么办呢？
+        //! TODO: 如果真失败了该怎么办呢？
     }
 }
 
@@ -204,10 +198,8 @@ void TcpConnector::exitConnectingState()
     event::FdEvent *tmp = nullptr;
     std::swap(tmp, sp_write_ev_);
 
-    wp_loop_->runNext(
-        [tmp] { CHECK_DELETE_OBJ(tmp); },
-        "TcpConnector::exitConnectingState, delete tmp"
-    );
+    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); },
+                      "TcpConnector::exitConnectingState, delete tmp");
 
     //! 关闭 socket
     sock_fd_.close();
@@ -241,10 +233,8 @@ void TcpConnector::exitReconnectDelayState()
     event::TimerEvent *tmp = nullptr;
     std::swap(tmp, sp_delay_ev_);
 
-    wp_loop_->runNext(
-        [tmp] { CHECK_DELETE_OBJ(tmp); },
-        "TcpConnector::exitReconnectDelayState, delete tmp"
-    );
+    wp_loop_->runNext([tmp] { CHECK_DELETE_OBJ(tmp); },
+                      "TcpConnector::exitReconnectDelayState, delete tmp");
 
     LogDbg("exit reconnect delay state");
 }
@@ -290,13 +280,13 @@ void TcpConnector::onSocketWritable()
             } else
                 LogWarn("connected callback is not set");
 
-        } else {    //! 连接失败
+        } else {  //! 连接失败
             LogNotice("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));
             //! 状态切换：kConnecting --> kReconnectDelay
             exitConnectingState();
             onConnectFail();
         }
-    } else {    //! 没有读取到 SO_ERROR
+    } else {  //! 没有读取到 SO_ERROR
         LogErr("getSocketOpt fail, errno:%d, %s", errno, strerror(errno));
     }
 }
@@ -308,5 +298,5 @@ void TcpConnector::onDelayTimeout()
     enterConnectingState();
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

@@ -17,11 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "cabinet_token.h"
-#include <vector>
-#include <unordered_set>
+
+#include <gtest/gtest.h>
+
 #include <set>
+#include <unordered_set>
+#include <vector>
 
 namespace tbox {
 namespace cabinet {
@@ -59,6 +61,6 @@ TEST(CabinetToken, token_as_unordered_set_key)
     EXPECT_EQ(token_set.size(), 2u);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace cabinet
+}  // namespace tbox

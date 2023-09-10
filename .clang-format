@@ -1,0 +1,36 @@
+---
+BasedOnStyle:  Google
+IndentWidth: 4
+ColumnLimit: 100
+---
+Language:        Cpp
+AccessModifierOffset: -2
+DerivePointerAlignment: false
+PointerAlignment: Right
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+Standard: c++11
+TabWidth: 4
+UseTab: Never
+...
+

@@ -19,15 +19,15 @@
  */
 #include "timer_fd.h"
 
-#include <unistd.h>
 #include <sys/timerfd.h>
-#include <cstring>
-
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
-#include <tbox/event/loop.h>
+#include <tbox/base/log.h>
 #include <tbox/event/fd_event.h>
+#include <tbox/event/loop.h>
+#include <unistd.h>
+
+#include <cstring>
 
 namespace tbox {
 namespace eventx {
@@ -36,19 +36,19 @@ namespace {
 constexpr auto NANOSECS_PER_SECOND = 1000000000ul;
 }
 
-struct TimerFd::Data {
+struct TimerFd::Data
+{
     Callback cb;
-    tbox::event::Loop *loop { nullptr };
-    tbox::event::FdEvent *timer_fd_event { nullptr };
-    int timer_fd { -1 };
-    bool is_inited { false };
-    bool is_enabled { false };
+    tbox::event::Loop *loop{nullptr};
+    tbox::event::FdEvent *timer_fd_event{nullptr};
+    int timer_fd{-1};
+    bool is_inited{false};
+    bool is_enabled{false};
     struct itimerspec ts;
-    int cb_level {0};
+    int cb_level{0};
 };
 
-TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what)
-    : d_(new Data)
+TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what) : d_(new Data)
 {
     d_->loop = loop;
     d_->timer_fd_event = loop->newFdEvent(what);
@@ -65,14 +65,13 @@ TimerFd::~TimerFd()
     CHECK_DELETE_RESET_OBJ(d_);
 }
 
-bool TimerFd::initialize(const std::chrono::nanoseconds first, 
+bool TimerFd::initialize(const std::chrono::nanoseconds first,
                          const std::chrono::nanoseconds repeat)
 {
     cleanup();
 
     int timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    if (timer_fd < 0)
-        return false;
+    if (timer_fd < 0) return false;
 
     d_->timer_fd = timer_fd;
 
@@ -81,7 +80,7 @@ bool TimerFd::initialize(const std::chrono::nanoseconds first,
 
     d_->ts.it_value.tv_sec = first_nanosec / NANOSECS_PER_SECOND;
     d_->ts.it_value.tv_nsec = first_nanosec % NANOSECS_PER_SECOND;
-    d_->ts.it_interval.tv_sec = repeat_nanosec / NANOSECS_PER_SECOND; 
+    d_->ts.it_interval.tv_sec = repeat_nanosec / NANOSECS_PER_SECOND;
     d_->ts.it_interval.tv_nsec = repeat_nanosec % NANOSECS_PER_SECOND;
 
     auto mode = repeat_nanosec != 0 ? event::Event::Mode::kPersist : event::Event::Mode::kOneshot;
@@ -94,8 +93,7 @@ bool TimerFd::initialize(const std::chrono::nanoseconds first,
 
 void TimerFd::cleanup()
 {
-    if (!d_->is_inited)
-        return;
+    if (!d_->is_inited) return;
 
     disable();
     CHECK_CLOSE_RESET_FD(d_->timer_fd);
@@ -110,14 +108,11 @@ bool TimerFd::isEnabled() const
 
 bool TimerFd::enable()
 {
-    if (!d_->is_inited)
-        return false;
+    if (!d_->is_inited) return false;
 
-    if (d_->is_enabled)
-        return true;
+    if (d_->is_enabled) return true;
 
-    if (!d_->timer_fd_event->enable())
-        return false;
+    if (!d_->timer_fd_event->enable()) return false;
 
     if (timerfd_settime(d_->timer_fd, 0, &d_->ts, NULL) < 0) {
         LogWarn("timerfd_settime() failed: errno=%d", errno);
@@ -130,11 +125,9 @@ bool TimerFd::enable()
 
 bool TimerFd::disable()
 {
-    if (!d_->is_inited)
-        return false;
+    if (!d_->is_inited) return false;
 
-    if (!d_->is_enabled)
-        return true;
+    if (!d_->is_enabled) return true;
 
     struct itimerspec ts;
     memset(&ts, 0, sizeof(ts));
@@ -144,8 +137,7 @@ bool TimerFd::disable()
         return false;
     }
 
-    if (!d_->timer_fd_event->disable())
-        return false;
+    if (!d_->timer_fd_event->disable()) return false;
 
     d_->is_enabled = false;
     return true;
@@ -173,9 +165,8 @@ void TimerFd::onEvent(short events)
 {
     if (events & tbox::event::FdEvent::kReadEvent) {
         uint64_t exp = 0;
-        int len  = ::read(d_->timer_fd, &exp, sizeof(exp));
-        if (len <= 0)
-            return;
+        int len = ::read(d_->timer_fd, &exp, sizeof(exp));
+        if (len <= 0) return;
 
         if (d_->cb) {
             ++d_->cb_level;
@@ -190,5 +181,5 @@ void TimerFd::setCallback(Callback &&cb)
     d_->cb = std::move(cb);
 }
 
-}
-}
+}  // namespace eventx
+}  // namespace tbox

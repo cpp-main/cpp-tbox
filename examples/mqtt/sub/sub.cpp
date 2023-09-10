@@ -17,15 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <cstring>
-
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/signal_event.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/mqtt/client.h>
+
+#include <cstring>
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     const char *topic = argv[1];
     LogOutput_Enable();
 
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     mqtt::Client mqtt(sp_loop);
@@ -56,16 +56,16 @@ int main(int argc, char **argv)
         LogInfo("connected");
         mqtt.subscribe(topic, &sub_mid);
     };
-    cbs.disconnected = [] {
-        LogInfo("disconnected");
+    cbs.disconnected = [] { LogInfo("disconnected"); };
+    cbs.subscribed = [&](int mid, int, const int *) {
+        if (mid == sub_mid) cout << "subscribe success" << endl;
     };
-    cbs.subscribed = [&] (int mid, int, const int *) {
-        if (mid == sub_mid)
-            cout << "subscribe success" << endl;
-    };
-    cbs.message_recv = [&] (int mid, const string &topic,
-                            const void *payload_ptr, int payload_len,
-                            int qos, bool retain) {
+    cbs.message_recv = [&](int mid,
+                           const string &topic,
+                           const void *payload_ptr,
+                           int payload_len,
+                           int qos,
+                           bool retain) {
         cout << topic << ' ' << static_cast<const char *>(payload_ptr) << endl;
     };
 
@@ -80,12 +80,10 @@ int main(int argc, char **argv)
     SetScopeExitAction([stop_ev] { delete stop_ev; });
     stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     stop_ev->enable();
-    stop_ev->setCallback(
-        [sp_loop, &mqtt] (int) {
-            mqtt.stop();
-            sp_loop->exitLoop();
-        }
-    );
+    stop_ev->setCallback([sp_loop, &mqtt](int) {
+        mqtt.stop();
+        sp_loop->exitLoop();
+    });
 
     LogInfo("Start");
     sp_loop->runLoop(Loop::Mode::kForever);

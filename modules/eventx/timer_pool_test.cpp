@@ -17,10 +17,12 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "timer_pool.h"
+
+#include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -40,19 +42,17 @@ TEST(TimerPool, doEvery)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     auto start_time = steady_clock::now();
     int count = 0;
     TimerPool::TimerToken token;
-    token = timer_pool.doEvery(milliseconds(100),
-        [&] {
-            ++count;
-            auto d = steady_clock::now() - start_time;
-            EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
-            EXPECT_LT(d, milliseconds(count * 100 + kAcceptableError));
-        }
-    );
+    token = timer_pool.doEvery(milliseconds(100), [&] {
+        ++count;
+        auto d = steady_clock::now() - start_time;
+        EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
+        EXPECT_LT(d, milliseconds(count * 100 + kAcceptableError));
+    });
     sp_loop->exitLoop(chrono::milliseconds(1010));
     sp_loop->runLoop();
 
@@ -69,19 +69,17 @@ TEST(TimerPool, doAfter)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     auto start_time = steady_clock::now();
     TimerPool::TimerToken token;
     bool is_run = false;
-    token = timer_pool.doAfter(milliseconds(500),
-        [&] {
-            auto d = steady_clock::now() - start_time;
-            EXPECT_GT(d, milliseconds(500 - kAcceptableError));
-            EXPECT_LT(d, milliseconds(500 + kAcceptableError));
-            is_run = true;
-        }
-    );
+    token = timer_pool.doAfter(milliseconds(500), [&] {
+        auto d = steady_clock::now() - start_time;
+        EXPECT_GT(d, milliseconds(500 - kAcceptableError));
+        EXPECT_LT(d, milliseconds(500 + kAcceptableError));
+        is_run = true;
+    });
     sp_loop->exitLoop(chrono::milliseconds(1500));
     sp_loop->runLoop();
 
@@ -98,17 +96,13 @@ TEST(TimerPool, cancel_inside_loop)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     bool is_run = false;
-    auto token = timer_pool.doAfter(milliseconds(100),
-        [&] {
-            is_run = true;
-        }
-    );
+    auto token = timer_pool.doAfter(milliseconds(100), [&] { is_run = true; });
 
     auto t = sp_loop->newTimerEvent();
-    SetScopeExitAction([t]{ delete t;});
+    SetScopeExitAction([t] { delete t; });
     t->initialize(chrono::milliseconds(50), Event::Mode::kOneshot);
     t->setCallback([&] { timer_pool.cancel(token); });
     t->enable();
@@ -130,14 +124,10 @@ TEST(TimerPool, cancel_outside_loop)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     bool is_run = false;
-    auto token = timer_pool.doAfter(milliseconds(100),
-        [&] {
-            is_run = true;
-        }
-    );
+    auto token = timer_pool.doAfter(milliseconds(100), [&] { is_run = true; });
 
     timer_pool.cancel(token);
     sp_loop->exitLoop(chrono::milliseconds(200));
@@ -156,19 +146,17 @@ TEST(TimerPool, doAt)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     auto start_time = system_clock::now();
     TimerPool::TimerToken token;
     bool is_run = false;
-    token = timer_pool.doAt(start_time + milliseconds(1000),
-        [&] {
-            auto d = system_clock::now() - start_time;
-            EXPECT_GT(d, milliseconds(1000 - kAcceptableError));
-            EXPECT_LT(d, milliseconds(1000 + kAcceptableError));
-            is_run = true;
-        }
-    );
+    token = timer_pool.doAt(start_time + milliseconds(1000), [&] {
+        auto d = system_clock::now() - start_time;
+        EXPECT_GT(d, milliseconds(1000 - kAcceptableError));
+        EXPECT_LT(d, milliseconds(1000 + kAcceptableError));
+        is_run = true;
+    });
     sp_loop->exitLoop(chrono::milliseconds(1500));
     sp_loop->runLoop();
 
@@ -186,36 +174,28 @@ TEST(TimerPool, all)
 {
     Loop *sp_loop = event::Loop::New();
     TimerPool timer_pool(sp_loop);
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     auto start_time = steady_clock::now();
 
     int count = 0;
-    TimerPool::TimerToken token = timer_pool.doEvery(milliseconds(100),
-        [&] {
-            auto d = steady_clock::now() - start_time;
-            ++count;
-            EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
-            EXPECT_LT(d, milliseconds(count * 100 + kAcceptableError));
-        }
-    );
+    TimerPool::TimerToken token = timer_pool.doEvery(milliseconds(100), [&] {
+        auto d = steady_clock::now() - start_time;
+        ++count;
+        EXPECT_GT(d, milliseconds(count * 100 - kAcceptableError));
+        EXPECT_LT(d, milliseconds(count * 100 + kAcceptableError));
+    });
 
     bool is_run = false;
-    timer_pool.doAfter(milliseconds(510),
-        [&] {
-            auto d = steady_clock::now() - start_time;
-            EXPECT_GT(d, milliseconds(510 - kAcceptableError));
-            EXPECT_LT(d, milliseconds(510 + kAcceptableError));
-            timer_pool.cancel(token);
-            is_run = true;
-        }
-    );
+    timer_pool.doAfter(milliseconds(510), [&] {
+        auto d = steady_clock::now() - start_time;
+        EXPECT_GT(d, milliseconds(510 - kAcceptableError));
+        EXPECT_LT(d, milliseconds(510 + kAcceptableError));
+        timer_pool.cancel(token);
+        is_run = true;
+    });
 
-    timer_pool.doAfter(milliseconds(1010),
-        [&] {
-            sp_loop->exitLoop();
-        }
-    );
+    timer_pool.doAfter(milliseconds(1010), [&] { sp_loop->exitLoop(); });
 
     sp_loop->runLoop();
 

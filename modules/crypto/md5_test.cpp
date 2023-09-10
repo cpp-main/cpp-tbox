@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "md5.h"
+
+#include <gtest/gtest.h>
 #include <tbox/util/string.h>
 
 namespace tbox {
@@ -36,22 +37,27 @@ std::string Calculate(const std::string &plain_text)
     return tbox::util::string::RawDataToHexStr(md5_digest, 16, false, "");
 }
 
-TEST(MD5, EmptyString) {
+TEST(MD5, EmptyString)
+{
     const char *str = "";
     EXPECT_EQ(Calculate(str), "d41d8cd98f00b204e9800998ecf8427e");
 }
 
-TEST(MD5, NormalString_1) {
+TEST(MD5, NormalString_1)
+{
     const char *str = "this is cpp-tbox, welcome.";
     EXPECT_EQ(Calculate(str), "ec10b76be2635a050e83a760c4b179b6");
 }
 
-TEST(MD5, NormalString_2) {
-    const char *str = "cpp-tbox, C++ Treasure Box, is an event-based service application development library.";
+TEST(MD5, NormalString_2)
+{
+    const char *str =
+        "cpp-tbox, C++ Treasure Box, is an event-based service application development library.";
     EXPECT_EQ(Calculate(str), "7a7f7121eeac412e0a286f011c46abf1");
 }
 
-TEST(MD5, UpdateTwice) {
+TEST(MD5, UpdateTwice)
+{
     const char *str1 = "cpp-tbox, C++ Treasure Box,";
     const char *str2 = " is an event-based service application development library.";
 
@@ -66,6 +72,5 @@ TEST(MD5, UpdateTwice) {
     EXPECT_EQ(result, "7a7f7121eeac412e0a286f011c46abf1");
 }
 
-
-}
-}
+}  // namespace crypto
+}  // namespace tbox

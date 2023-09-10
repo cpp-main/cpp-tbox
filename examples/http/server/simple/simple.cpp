@@ -18,10 +18,11 @@
  * of the source tree.
  */
 #include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/log/async_stdout_sink.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
+#include <tbox/log/async_stdout_sink.h>
+
+#include <tbox/base/scope_exit.hpp>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -46,12 +47,10 @@ int main(int argc, char **argv)
     auto sp_loop = Loop::New();
     auto sp_sig_event = sp_loop->newSignalEvent();
 
-    SetScopeExitAction(
-        [=] {
-            delete sp_sig_event;
-            delete sp_loop;
-        }
-    );
+    SetScopeExitAction([=] {
+        delete sp_sig_event;
+        delete sp_loop;
+    });
 
     sp_sig_event->initialize(SIGINT, Event::Mode::kPersist);
     sp_sig_event->enable();
@@ -66,19 +65,15 @@ int main(int argc, char **argv)
     srv.setContextLogEnable(true);
 
     //! 添加请求处理
-    srv.use(
-        [&](ContextSptr ctx, const NextFunc &next) {
-            ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "Hello!";
-        }
-    );
+    srv.use([&](ContextSptr ctx, const NextFunc &next) {
+        ctx->res().status_code = StatusCode::k200_OK;
+        ctx->res().body = "Hello!";
+    });
 
-    sp_sig_event->setCallback(
-        [&] (int) {
-            srv.stop();
-            sp_loop->exitLoop();
-        }
-    );
+    sp_sig_event->setCallback([&](int) {
+        srv.stop();
+        sp_loop->exitLoop();
+    });
 
     LogInfo("start");
     sp_loop->runLoop();

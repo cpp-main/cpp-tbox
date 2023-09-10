@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "scope_exit.hpp"
+
+#include <gtest/gtest.h>
 
 namespace tbox {
 namespace {
@@ -27,7 +28,7 @@ TEST(ScopeExitAction, no_name)
 {
     bool tag = false;
     {
-        SetScopeExitAction([&] {tag = true;});
+        SetScopeExitAction([&] { tag = true; });
         EXPECT_FALSE(tag);
     }
     EXPECT_TRUE(tag);
@@ -47,7 +48,7 @@ TEST(ScopeExitAction, named)
 {
     bool tag = false;
     {
-        tbox::ScopeExitActionGuard a1([&] {tag = true;});
+        tbox::ScopeExitActionGuard a1([&] { tag = true; });
         EXPECT_FALSE(tag);
     }
     EXPECT_TRUE(tag);
@@ -57,12 +58,12 @@ TEST(ScopeExitAction, cancel)
 {
     bool tag = false;
     {
-        tbox::ScopeExitActionGuard a1([&] {tag = true;});
+        tbox::ScopeExitActionGuard a1([&] { tag = true; });
         EXPECT_FALSE(tag);
         a1.cancel();
     }
     EXPECT_FALSE(tag);
 }
 
-}
-}
+}  // namespace
+}  // namespace tbox

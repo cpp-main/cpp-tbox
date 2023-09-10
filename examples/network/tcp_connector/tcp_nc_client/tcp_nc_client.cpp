@@ -25,16 +25,15 @@
  * 本示例主要用于演示TcpConnector的使用方法
  */
 
-#include <iostream>
-
-#include <tbox/network/tcp_connector.h>
-#include <tbox/network/tcp_connection.h>
-#include <tbox/network/stdio_stream.h>
-
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
+#include <tbox/network/stdio_stream.h>
+#include <tbox/network/tcp_connection.h>
+#include <tbox/network/tcp_connector.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -69,41 +68,34 @@ int main(int argc, char **argv)
     TcpConnector connector(sp_loop);
     connector.initialize(bind_addr);
     //! 指定有Client连接上后该做的事务
-    connector.setConnectedCallback(
-        [&] (TcpConnection *new_conn) {
-            //! (1) 指定Client将来断开时要做的事务
-            new_conn->setDisconnectedCallback(
-                [&, new_conn] {
-                    sp_curr = nullptr;
-                    connector.start();  //! 重新启动连接
-                    sp_loop->runNext([new_conn] { delete new_conn; });
-                }
-            );
-            sp_curr = new_conn;
-            new_conn->bind(&stdio);     //! (2) TCP的数据往终端输出
-            stdio.bind(new_conn);       //! (3) 终端上的输入往TCP输出
-        }
-    );
+    connector.setConnectedCallback([&](TcpConnection *new_conn) {
+        //! (1) 指定Client将来断开时要做的事务
+        new_conn->setDisconnectedCallback([&, new_conn] {
+            sp_curr = nullptr;
+            connector.start();  //! 重新启动连接
+            sp_loop->runNext([new_conn] { delete new_conn; });
+        });
+        sp_curr = new_conn;
+        new_conn->bind(&stdio);  //! (2) TCP的数据往终端输出
+        stdio.bind(new_conn);    //! (3) 终端上的输入往TCP输出
+    });
 
     //! 设置连接尝试次数，与多次尝试失败后的处理
     connector.setTryTimes(3);
-    connector.setConnectFailCallback(
-        [&] {
-            //! 打印提示要开服务
-            cout << "Connect server fail!" << endl
-                 << "You should run command:" << endl;
-            if (bind_addr.type() == SockAddr::Type::kIPv4) {
-                IPAddress ip;
-                uint16_t port;
-                bind_addr.get(ip, port);
-                cout << "  nc -l " << port << endl;
-            } else {
-                cout << "  nc -lU " << bind_addr.toString() << endl;
-            }
-            cout << "first." << endl;
-            sp_loop->exitLoop();    //! (3) 退出事件循环
+    connector.setConnectFailCallback([&] {
+        //! 打印提示要开服务
+        cout << "Connect server fail!" << endl << "You should run command:" << endl;
+        if (bind_addr.type() == SockAddr::Type::kIPv4) {
+            IPAddress ip;
+            uint16_t port;
+            bind_addr.get(ip, port);
+            cout << "  nc -l " << port << endl;
+        } else {
+            cout << "  nc -lU " << bind_addr.toString() << endl;
         }
-    );
+        cout << "first." << endl;
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
 
     connector.start();
 
@@ -112,15 +104,14 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [sp_loop, &sp_curr] (int) {
-            if (sp_curr != nullptr) {
-                sp_curr->disconnect();  //! (1) 主动断开连接
-                delete sp_curr;         //! (2) 销毁Client对象。思考：为什么这里可以直接delete，而L51不可以？
-            }
-            sp_loop->exitLoop();    //! (3) 退出事件循环
+    sp_stop_ev->setCallback([sp_loop, &sp_curr](int) {
+        if (sp_curr != nullptr) {
+            sp_curr->disconnect();  //! (1) 主动断开连接
+            delete sp_curr;         //! (2)
+                             //! 销毁Client对象。思考：为什么这里可以直接delete，而L51不可以？
         }
-    );
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");

@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "timestamp.h"
+
 #include <sys/time.h>
 
 namespace tbox {
@@ -41,7 +42,5 @@ uint64_t GetCurrentMillisecondsFrom1970()
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-}
-}
-
-
+}  // namespace util
+}  // namespace tbox

@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "request_pool.hpp"
+
+#include <gtest/gtest.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
@@ -31,7 +33,7 @@ using namespace std::chrono;
 TEST(RequestPool, Timeout)
 {
     auto sp_loop = Loop::New();
-    SetScopeExitAction([=] {delete sp_loop;});
+    SetScopeExitAction([=] { delete sp_loop; });
 
     RequestPool<int> rp(sp_loop);
     rp.initialize(milliseconds(100), 10);
@@ -40,7 +42,7 @@ TEST(RequestPool, Timeout)
 
     rp.newRequest(new int(123));
     bool run = false;
-    rp.setTimeoutAction([&] (int *p) {
+    rp.setTimeoutAction([&](int *p) {
         EXPECT_EQ(*p, 123);
 
         auto d = steady_clock::now() - start_time;
@@ -58,14 +60,17 @@ TEST(RequestPool, Timeout)
 TEST(RequestPool, NotTimeout)
 {
     auto sp_loop = Loop::New();
-    SetScopeExitAction([=] {delete sp_loop;});
+    SetScopeExitAction([=] { delete sp_loop; });
 
     RequestPool<int> rp(sp_loop);
     rp.initialize(milliseconds(100), 10);
 
     auto token = rp.newRequest(new int(123));
     bool run = false;
-    rp.setTimeoutAction([&] (int *p) { run = true; (void)p; });
+    rp.setTimeoutAction([&](int *p) {
+        run = true;
+        (void)p;
+    });
 
     auto req = rp.removeRequest(token);
     EXPECT_TRUE(req != nullptr);
@@ -81,14 +86,17 @@ TEST(RequestPool, NotTimeout)
 TEST(RequestPool, NotTimeout_2)
 {
     auto sp_loop = Loop::New();
-    SetScopeExitAction([=] {delete sp_loop;});
+    SetScopeExitAction([=] { delete sp_loop; });
 
     RequestPool<int> rp(sp_loop);
     rp.initialize(milliseconds(100), 10);
 
     auto token = rp.newRequest(new int(123));
     bool run = false;
-    rp.setTimeoutAction([&] (int *p) { run = true; (void)p; });
+    rp.setTimeoutAction([&](int *p) {
+        run = true;
+        (void)p;
+    });
 
     sp_loop->runInLoop([&] {
         auto req = rp.removeRequest(token);
@@ -107,16 +115,18 @@ TEST(RequestPool, NotTimeout_2)
 TEST(RequestPool, Lost)
 {
     auto sp_loop = Loop::New();
-    SetScopeExitAction([=] {delete sp_loop;});
+    SetScopeExitAction([=] { delete sp_loop; });
 
     RequestPool<int> rp(sp_loop);
     rp.initialize(milliseconds(100), 10);
 
-    for (int i = 0; i < 100; ++i)
-        rp.newRequest(new int(123));
+    for (int i = 0; i < 100; ++i) rp.newRequest(new int(123));
 
     int count = 0;
-    rp.setTimeoutAction([&] (int *p) { ++count; (void)p; });
+    rp.setTimeoutAction([&](int *p) {
+        ++count;
+        (void)p;
+    });
 
     sp_loop->exitLoop(milliseconds(1200));
     sp_loop->runLoop();
@@ -124,6 +134,6 @@ TEST(RequestPool, Lost)
     EXPECT_EQ(count, 100);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace eventx
+}  // namespace tbox

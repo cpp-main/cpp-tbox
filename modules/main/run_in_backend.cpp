@@ -17,23 +17,23 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <thread>
-
 #include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/json.hpp>
 #include <tbox/base/log_output.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
-#include <tbox/util/pid_file.h>
 #include <tbox/util/json.h>
+#include <tbox/util/pid_file.h>
 
-#include "module.h"
-#include "context_imp.h"
+#include <iostream>
+#include <tbox/base/json.hpp>
+#include <tbox/base/scope_exit.hpp>
+#include <thread>
+
 #include "args.h"
+#include "context_imp.h"
 #include "log.h"
+#include "module.h"
 
 namespace tbox {
 namespace main {
@@ -49,7 +49,8 @@ extern void SayHello();
 extern std::function<void()> error_exit_func;
 
 namespace {
-struct Runtime {
+struct Runtime
+{
     Log log;
     ContextImp ctx;
     Module apps;
@@ -59,12 +60,10 @@ struct Runtime {
     bool error_exit_wait = false;
     std::thread thread;
 
-    Runtime() : apps("", ctx) {
-        RegisterApps(apps, ctx);
-    }
+    Runtime() : apps("", ctx) { RegisterApps(apps, ctx); }
 };
 
-Runtime* _runtime = nullptr;
+Runtime *_runtime = nullptr;
 
 void RunInBackend()
 {
@@ -102,7 +101,7 @@ void End()
     UninstallErrorSignals();
 }
 
-}
+}  // namespace
 
 bool Start(int argc, char **argv)
 {
@@ -129,8 +128,7 @@ bool Start(int argc, char **argv)
     ctx.fillDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
-    if (!args.parse(argc, argv))
-        return false;
+    if (!args.parse(argc, argv)) return false;
 
     std::string pid_filename;
     util::json::GetField(js_conf, "pid_file", pid_filename);
@@ -152,8 +150,7 @@ bool Start(int argc, char **argv)
     error_exit_func = [&] {
         log.cleanup();
 
-        while (_runtime->error_exit_wait)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+        while (_runtime->error_exit_wait) std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
     if (ctx.initialize(js_conf)) {
@@ -196,8 +193,7 @@ void Stop()
             _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
             LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
         },
-        "main::Stop"
-    );
+        "main::Stop");
     _runtime->thread.join();
 
     _runtime->apps.cleanup();  //! cleanup所有应用
@@ -206,5 +202,5 @@ void Stop()
     End();
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

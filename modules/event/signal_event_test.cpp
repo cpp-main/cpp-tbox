@@ -17,16 +17,18 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "signal_event.h"
+
 #include <gtest/gtest.h>
 #include <signal.h>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 #include "loop.h"
-#include "signal_event.h"
 #include "timer_event.h"
 
 namespace tbox {
@@ -38,9 +40,19 @@ namespace {
 int _test_signal_count = 0;
 int _test_sigaction_count = 0;
 
-void TestSignalHander(int signo) { ++_test_signal_count; (void)signo; }
-void TestSignalAction(int signo, siginfo_t *siginfo, void *context) { ++_test_sigaction_count; (void)signo; (void)siginfo; (void)context; }
+void TestSignalHander(int signo)
+{
+    ++_test_signal_count;
+    (void)signo;
 }
+void TestSignalAction(int signo, siginfo_t *siginfo, void *context)
+{
+    ++_test_sigaction_count;
+    (void)signo;
+    (void)siginfo;
+    (void)context;
+}
+}  // namespace
 
 //! 注意单次信号事件，触发信号两次，期望只回调一次
 TEST(SignalEvent, Oneshot)
@@ -54,12 +66,10 @@ TEST(SignalEvent, Oneshot)
         EXPECT_TRUE(signal_event->enable());
 
         int run_time = 0;
-        signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++run_time;
-            }
-        );
+        signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++run_time;
+        });
 
         sp_loop->run([] { raise(SIGUSR1); });
         sp_loop->run([] { raise(SIGUSR1); });
@@ -89,22 +99,18 @@ TEST(SignalEvent, PersistWithTimerEvent)
         EXPECT_TRUE(timer_event->initialize(chrono::milliseconds(10), Event::Mode::kPersist));
         EXPECT_TRUE(timer_event->enable());
         int count = 0;
-        timer_event->setCallback([&]
-            {
-                ++count;
-                if (count <= 5) {
-                    raise(SIGUSR1);
-                }
+        timer_event->setCallback([&] {
+            ++count;
+            if (count <= 5) {
+                raise(SIGUSR1);
             }
-        );
+        });
 
         int run_time = 0;
-        signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++run_time;
-            }
-        );
+        signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++run_time;
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
@@ -132,32 +138,25 @@ TEST(SignalEvent, MultiSignalMultiEvents)
         EXPECT_TRUE(user2_signal_event->enable());
 
         int user1_run_time = 0;
-        user1_signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++user1_run_time;
-            }
-        );
+        user1_signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++user1_run_time;
+        });
         int user2_run_time = 0;
-        user2_signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR2);
-                ++user2_run_time;
-            }
-        );
+        user2_signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR2);
+            ++user2_run_time;
+        });
 
-        sp_loop->run([]
-            {
-                raise(SIGUSR1);
-                raise(SIGUSR2);
-            }
-        );
+        sp_loop->run([] {
+            raise(SIGUSR1);
+            raise(SIGUSR2);
+        });
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
 
         EXPECT_EQ(user1_run_time, 1);
         EXPECT_EQ(user2_run_time, 1);
-
 
         delete user1_signal_event;
         delete user2_signal_event;
@@ -180,49 +179,38 @@ TEST(SignalEvent, MultiThread)
         EXPECT_TRUE(user2_signal_event->enable());
 
         int user1_run_time = 0;
-        user1_signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++user1_run_time;
-            }
-        );
+        user1_signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++user1_run_time;
+        });
         int user2_run_time = 0;
-        user2_signal_event->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR2);
-                ++user2_run_time;
-            }
-        );
+        user2_signal_event->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR2);
+            ++user2_run_time;
+        });
 
-        sp_loop->run([]
-            {
-                raise(SIGUSR1);
-                raise(SIGUSR2);
-            }
-        );
+        sp_loop->run([] {
+            raise(SIGUSR1);
+            raise(SIGUSR2);
+        });
 
         bool t1_run = false;
         //! t1 线程sleep 200ms
-        auto t1 = std::thread(
-            [&] {
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                t1_run = true;
-            }
-        );
+        auto t1 = std::thread([&] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            t1_run = true;
+        });
 
         //! t2 线程等待一个信号
         bool exit_thread = false;
         std::mutex lock;
         std::condition_variable cond_var;
         bool t2_run = false;
-        auto t2 = std::thread(
-            [&] {
-                std::unique_lock<std::mutex> lk(lock);
-                cond_var.wait(lk, [&]{ return exit_thread; });
-                t2_run = true;
-            }
-        );
-
+        auto t2 = std::thread([&] {
+            std::unique_lock<std::mutex> lk(lock);
+            cond_var.wait(lk, [&] { return exit_thread; });
+            t2_run = true;
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
@@ -266,18 +254,14 @@ TEST(SignalEvent, OneSignalMultiEvents)
         int run_time_1 = 0;
         int run_time_2 = 0;
 
-        signal_event_1->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++run_time_1;
-            }
-        );
-        signal_event_2->setCallback(
-            [&](int signo) {
-                EXPECT_EQ(signo, SIGUSR1);
-                ++run_time_2;
-            }
-        );
+        signal_event_1->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++run_time_1;
+        });
+        signal_event_2->setCallback([&](int signo) {
+            EXPECT_EQ(signo, SIGUSR1);
+            ++run_time_2;
+        });
 
         sp_loop->run([] { raise(SIGUSR1); });
         sp_loop->exitLoop(std::chrono::milliseconds(100));
@@ -285,7 +269,6 @@ TEST(SignalEvent, OneSignalMultiEvents)
 
         EXPECT_EQ(run_time_1, 1);
         EXPECT_EQ(run_time_2, 1);
-
 
         delete signal_event_1;
         delete signal_event_2;
@@ -300,7 +283,7 @@ TEST(SignalEvent, OneSignalMultiLoopInMultiThread)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        auto thread_func = [e] (int &run_time) {
+        auto thread_func = [e](int &run_time) {
             auto sp_loop = Loop::New(e);
             auto signal_event = sp_loop->newSignalEvent();
             signal_event->initialize(SIGUSR1, Event::Mode::kPersist);
@@ -343,7 +326,7 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        auto thread_func = [e] (int &user1_run_time, int &user2_run_time) {
+        auto thread_func = [e](int &user1_run_time, int &user2_run_time) {
             auto sp_loop = Loop::New(e);
 
             auto user1_signal_event = sp_loop->newSignalEvent();
@@ -367,8 +350,10 @@ TEST(SignalEvent, MultiSignalMultiLoopInMultiThread)
         int user1_run_time_1 = 0, user2_run_time_1 = 0;
         int user1_run_time_2 = 0, user2_run_time_2 = 0;
 
-        auto t1 = std::thread(std::bind(thread_func, std::ref(user1_run_time_1), std::ref(user2_run_time_1)));
-        auto t2 = std::thread(std::bind(thread_func, std::ref(user1_run_time_2), std::ref(user2_run_time_2)));
+        auto t1 = std::thread(
+            std::bind(thread_func, std::ref(user1_run_time_1), std::ref(user2_run_time_1)));
+        auto t2 = std::thread(
+            std::bind(thread_func, std::ref(user1_run_time_2), std::ref(user2_run_time_2)));
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         raise(SIGUSR1);
@@ -394,28 +379,25 @@ TEST(SignalEvent, OneEventMultiSignal)
         cout << "engine: " << e << endl;
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
-        EXPECT_TRUE(signal_event->initialize({ SIGUSR1, SIGUSR2 }, Event::Mode::kPersist));
+        EXPECT_TRUE(signal_event->initialize({SIGUSR1, SIGUSR2}, Event::Mode::kPersist));
         EXPECT_TRUE(signal_event->enable());
 
         int user1_run_time = 0;
         int user2_run_time = 0;
-        signal_event->setCallback(
-            [&](int signo) {
-                //LogTrace("signo:%d", signo);
-                if (signo == SIGUSR1)
-                    ++user1_run_time;
-                else if (signo == SIGUSR2)
-                    ++user2_run_time;
-                else {}
+        signal_event->setCallback([&](int signo) {
+            // LogTrace("signo:%d", signo);
+            if (signo == SIGUSR1)
+                ++user1_run_time;
+            else if (signo == SIGUSR2)
+                ++user2_run_time;
+            else {
             }
-        );
+        });
 
-        sp_loop->run(
-            [] {
-                raise(SIGUSR1);
-                raise(SIGUSR2);
-            }
-        );
+        sp_loop->run([] {
+            raise(SIGUSR1);
+            raise(SIGUSR2);
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
@@ -440,16 +422,12 @@ TEST(SignalEvent, LargeNumberOfSignals)
         EXPECT_TRUE(signal_event->enable());
 
         int user1_run_time = 0;
-        signal_event->setCallback(
-            [&](int signo) {
-                if (signo == SIGUSR1)
-                    ++user1_run_time;
-            }
-        );
+        signal_event->setCallback([&](int signo) {
+            if (signo == SIGUSR1) ++user1_run_time;
+        });
 
         int remain = 1000;
-        std::function<void()> func = \
-        [&] {
+        std::function<void()> func = [&] {
             --remain;
             if (remain >= 0) {
                 raise(SIGUSR1);
@@ -484,12 +462,12 @@ TEST(SignalEvent, OldSignalHandlerNeedInvoke)
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
         signal_event->initialize(SIGUSR1, Event::Mode::kOneshot);
-        signal_event->setCallback([&count] (int) { ++count; });
+        signal_event->setCallback([&count](int) { ++count; });
 
-        sp_loop->run([]{ raise(SIGUSR1); });
-        sp_loop->run([=]{ signal_event->enable(); });
-        sp_loop->run([]{ raise(SIGUSR1); });
-        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([] { raise(SIGUSR1); });
+        sp_loop->run([=] { signal_event->enable(); });
+        sp_loop->run([] { raise(SIGUSR1); });
+        sp_loop->run([] { raise(SIGUSR1); });
 
         sp_loop->exitLoop(std::chrono::milliseconds(10));
         sp_loop->runLoop();
@@ -525,12 +503,12 @@ TEST(SignalEvent, OldSigactionNeedInvoke)
         auto sp_loop = Loop::New(e);
         auto signal_event = sp_loop->newSignalEvent();
         signal_event->initialize(SIGUSR1, Event::Mode::kOneshot);
-        signal_event->setCallback([&count] (int) { ++count; });
+        signal_event->setCallback([&count](int) { ++count; });
 
-        sp_loop->run([]{ raise(SIGUSR1); });
-        sp_loop->run([=]{ signal_event->enable(); });
-        sp_loop->run([]{ raise(SIGUSR1); });
-        sp_loop->run([]{ raise(SIGUSR1); });
+        sp_loop->run([] { raise(SIGUSR1); });
+        sp_loop->run([=] { signal_event->enable(); });
+        sp_loop->run([] { raise(SIGUSR1); });
+        sp_loop->run([] { raise(SIGUSR1); });
 
         sp_loop->exitLoop(std::chrono::milliseconds(10));
         sp_loop->runLoop();
@@ -545,5 +523,5 @@ TEST(SignalEvent, OldSigactionNeedInvoke)
     }
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

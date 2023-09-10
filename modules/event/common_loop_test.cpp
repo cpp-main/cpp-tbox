@@ -18,14 +18,14 @@
  * of the source tree.
  */
 #include <gtest/gtest.h>
+#include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
+
+#include <tbox/base/scope_exit.hpp>
 #include <thread>
 
 #include "loop.h"
 #include "timer_event.h"
-
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
 namespace event {
@@ -40,16 +40,17 @@ TEST(CommonLoop, isRunning)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run = false;
-        sp_timer->setCallback(
-            [sp_loop, &is_run] {
-                is_run = true;
-                EXPECT_TRUE(sp_loop->isRunning());
-            }
-        );
+        sp_timer->setCallback([sp_loop, &is_run] {
+            is_run = true;
+            EXPECT_TRUE(sp_loop->isRunning());
+        });
         sp_timer->enable();
 
         EXPECT_FALSE(sp_loop->isRunning());
@@ -69,26 +70,25 @@ TEST(CommonLoop, isInLoopThread)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer->setCallback(
-            [sp_loop, &is_timer_run] {
-                is_timer_run = true;
-                EXPECT_TRUE(sp_loop->isInLoopThread());
-            }
-        );
+        sp_timer->setCallback([sp_loop, &is_timer_run] {
+            is_timer_run = true;
+            EXPECT_TRUE(sp_loop->isInLoopThread());
+        });
         sp_timer->enable();
 
         bool is_thread_run = false;
-        auto t = thread(
-            [sp_loop, &is_thread_run] {
-                is_thread_run = true;
-                this_thread::sleep_for(chrono::milliseconds(10));
-                EXPECT_FALSE(sp_loop->isInLoopThread());
-            }
-        );
+        auto t = thread([sp_loop, &is_thread_run] {
+            is_thread_run = true;
+            this_thread::sleep_for(chrono::milliseconds(10));
+            EXPECT_FALSE(sp_loop->isInLoopThread());
+        });
 
         sp_loop->exitLoop(chrono::milliseconds(50));
         sp_loop->runLoop();
@@ -108,32 +108,24 @@ TEST(CommonLoop, runNextInsideLoop)
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
-        SetScopeExitAction(
-            [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_timer2;
-                delete sp_timer1;
-                delete sp_loop;
-            }
-        );
+        SetScopeExitAction([sp_loop, sp_timer1, sp_timer2] {
+            delete sp_timer2;
+            delete sp_timer1;
+            delete sp_loop;
+        });
 
         sp_timer1->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run = false;
-        sp_timer1->setCallback(
-            [&] {
-                sp_loop->runNext([&] { is_run = true; });
-            }
-        );
+        sp_timer1->setCallback([&] { sp_loop->runNext([&] { is_run = true; }); });
         sp_timer1->enable();
 
         sp_timer2->initialize(chrono::milliseconds(20), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer2->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-                sp_loop->exitLoop();
-            }
-        );
+        sp_timer2->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+            sp_loop->exitLoop();
+        });
         sp_timer2->enable();
 
         sp_loop->runLoop();
@@ -150,20 +142,21 @@ TEST(CommonLoop, runNextBeforeLoop)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         bool is_run_next_run = false;
         sp_loop->runNext([&] { is_run_next_run = true; });
 
         bool is_timer_run = false;
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
-        sp_timer->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run_next_run);
-                sp_loop->exitLoop();
-            }
-        );
+        sp_timer->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run_next_run);
+            sp_loop->exitLoop();
+        });
         sp_timer->enable();
 
         sp_loop->runLoop();
@@ -206,32 +199,24 @@ TEST(CommonLoop, runInLoopInsideLoop)
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
-        SetScopeExitAction(
-            [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_timer2;
-                delete sp_timer1;
-                delete sp_loop;
-            }
-        );
+        SetScopeExitAction([sp_loop, sp_timer1, sp_timer2] {
+            delete sp_timer2;
+            delete sp_timer1;
+            delete sp_loop;
+        });
 
         sp_timer1->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run = false;
-        sp_timer1->setCallback(
-            [&] {
-                sp_loop->runInLoop([&] { is_run = true; });
-            }
-        );
+        sp_timer1->setCallback([&] { sp_loop->runInLoop([&] { is_run = true; }); });
         sp_timer1->enable();
 
         sp_timer2->initialize(chrono::milliseconds(20), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer2->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-                sp_loop->exitLoop();
-            }
-        );
+        sp_timer2->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+            sp_loop->exitLoop();
+        });
         sp_timer2->enable();
 
         sp_loop->runLoop();
@@ -247,19 +232,20 @@ TEST(CommonLoop, runInLoopBeforeLoop)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         bool is_run = false;
         sp_loop->runInLoop([&] { is_run = true; });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-            }
-        );
+        sp_timer->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+        });
         sp_timer->enable();
 
         sp_loop->exitLoop(chrono::milliseconds(20));
@@ -276,26 +262,25 @@ TEST(CommonLoop, runInLoopCrossThread)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         bool is_thread_run = false;
         bool is_run = false;
-        auto t = thread(
-            [&] {
-                is_thread_run = true;
-                this_thread::sleep_for(chrono::milliseconds(10));
-                sp_loop->runInLoop([&]{ is_run = true; });
-            }
-        );
+        auto t = thread([&] {
+            is_thread_run = true;
+            this_thread::sleep_for(chrono::milliseconds(10));
+            sp_loop->runInLoop([&] { is_run = true; });
+        });
 
         sp_timer->initialize(chrono::milliseconds(20), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-            }
-        );
+        sp_timer->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+        });
         sp_timer->enable();
 
         sp_loop->exitLoop(chrono::milliseconds(50));
@@ -316,32 +301,24 @@ TEST(CommonLoop, runInsideLoop)
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
         TimerEvent *sp_timer2 = sp_loop->newTimerEvent();
-        SetScopeExitAction(
-            [sp_loop, sp_timer1, sp_timer2]{
-                delete sp_timer2;
-                delete sp_timer1;
-                delete sp_loop;
-            }
-        );
+        SetScopeExitAction([sp_loop, sp_timer1, sp_timer2] {
+            delete sp_timer2;
+            delete sp_timer1;
+            delete sp_loop;
+        });
 
         sp_timer1->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run = false;
-        sp_timer1->setCallback(
-            [&] {
-                sp_loop->run([&] { is_run = true; });
-            }
-        );
+        sp_timer1->setCallback([&] { sp_loop->run([&] { is_run = true; }); });
         sp_timer1->enable();
 
         sp_timer2->initialize(chrono::milliseconds(20), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer2->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-                sp_loop->exitLoop();
-            }
-        );
+        sp_timer2->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+            sp_loop->exitLoop();
+        });
         sp_timer2->enable();
 
         sp_loop->runLoop();
@@ -357,19 +334,20 @@ TEST(CommonLoop, runBeforeLoop)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         bool is_run = false;
         sp_loop->run([&] { is_run = true; });
 
         sp_timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-            }
-        );
+        sp_timer->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+        });
         sp_timer->enable();
 
         sp_loop->exitLoop(chrono::milliseconds(20));
@@ -386,26 +364,25 @@ TEST(CommonLoop, runCrossThread)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer = sp_loop->newTimerEvent();
-        SetScopeExitAction([sp_loop, sp_timer]{ delete sp_timer; delete sp_loop; });
+        SetScopeExitAction([sp_loop, sp_timer] {
+            delete sp_timer;
+            delete sp_loop;
+        });
 
         bool is_thread_run = false;
         bool is_run = false;
-        auto t = thread(
-            [&] {
-                is_thread_run = true;
-                this_thread::sleep_for(chrono::milliseconds(10));
-                sp_loop->run([&]{ is_run = true; });
-            }
-        );
+        auto t = thread([&] {
+            is_thread_run = true;
+            this_thread::sleep_for(chrono::milliseconds(10));
+            sp_loop->run([&] { is_run = true; });
+        });
 
         sp_timer->initialize(chrono::milliseconds(40), Event::Mode::kOneshot);
         bool is_timer_run = false;
-        sp_timer->setCallback(
-            [&] {
-                is_timer_run = true;
-                EXPECT_TRUE(is_run);
-            }
-        );
+        sp_timer->setCallback([&] {
+            is_timer_run = true;
+            EXPECT_TRUE(is_run);
+        });
         sp_timer->enable();
 
         sp_loop->exitLoop(chrono::milliseconds(50));
@@ -450,25 +427,21 @@ TEST(CommonLoop, cleanupDeferedTask)
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
         TimerEvent *sp_timer1 = sp_loop->newTimerEvent();
-        SetScopeExitAction(
-            [&]{
-                delete sp_timer1;
-                delete sp_loop;
-            }
-        );
+        SetScopeExitAction([&] {
+            delete sp_timer1;
+            delete sp_loop;
+        });
 
         sp_timer1->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
         bool is_run_1 = false;
         bool is_run_2 = false;
         bool is_run_3 = false;
-        sp_timer1->setCallback(
-            [&] {
-                sp_loop->runInLoop([&] { is_run_1 = true; });
-                sp_loop->runNext([&] { is_run_2 = true; });
-                sp_loop->run([&] { is_run_3 = true; });
-                sp_loop->exitLoop();
-            }
-        );
+        sp_timer1->setCallback([&] {
+            sp_loop->runInLoop([&] { is_run_1 = true; });
+            sp_loop->runNext([&] { is_run_2 = true; });
+            sp_loop->run([&] { is_run_3 = true; });
+            sp_loop->exitLoop();
+        });
         sp_timer1->enable();
 
         sp_loop->runLoop();
@@ -485,7 +458,7 @@ TEST(CommonLoop, cleanupDeferedTask1)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
         Loop *sp_loop = event::Loop::New(e);
-        SetScopeExitAction( [&]{ delete sp_loop; });
+        SetScopeExitAction([&] { delete sp_loop; });
 
         std::function<void()> func;
         func = [&] {
@@ -580,5 +553,5 @@ TEST(CommonLoop, ExitLoopMultiTimes)
     }
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

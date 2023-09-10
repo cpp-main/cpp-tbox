@@ -17,19 +17,22 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "wrapper_action.h"
+
 #include <gtest/gtest.h>
-#include <tbox/event/loop.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
 
-#include "wrapper_action.h"
+#include <tbox/base/scope_exit.hpp>
+
 #include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
 
-TEST(WrapperAction, NormalSucc) {
+TEST(WrapperAction, NormalSucc)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -37,12 +40,10 @@ TEST(WrapperAction, NormalSucc) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_TRUE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_TRUE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -50,7 +51,8 @@ TEST(WrapperAction, NormalSucc) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, NormalFail) {
+TEST(WrapperAction, NormalFail)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -58,12 +60,10 @@ TEST(WrapperAction, NormalFail) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_FALSE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_FALSE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -71,8 +71,8 @@ TEST(WrapperAction, NormalFail) {
     EXPECT_TRUE(is_callback);
 }
 
-
-TEST(WrapperAction, InvertSucc) {
+TEST(WrapperAction, InvertSucc)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -80,12 +80,10 @@ TEST(WrapperAction, InvertSucc) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_FALSE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_FALSE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -93,7 +91,8 @@ TEST(WrapperAction, InvertSucc) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, InvertFail) {
+TEST(WrapperAction, InvertFail)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -101,12 +100,10 @@ TEST(WrapperAction, InvertFail) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_TRUE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_TRUE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -114,7 +111,8 @@ TEST(WrapperAction, InvertFail) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, AlwaySuccSucc) {
+TEST(WrapperAction, AlwaySuccSucc)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -122,12 +120,10 @@ TEST(WrapperAction, AlwaySuccSucc) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_TRUE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_TRUE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -135,7 +131,8 @@ TEST(WrapperAction, AlwaySuccSucc) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, AlwaySuccFail) {
+TEST(WrapperAction, AlwaySuccFail)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -143,12 +140,10 @@ TEST(WrapperAction, AlwaySuccFail) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_TRUE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_TRUE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -156,7 +151,8 @@ TEST(WrapperAction, AlwaySuccFail) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, AlwayFailSucc) {
+TEST(WrapperAction, AlwayFailSucc)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -164,12 +160,10 @@ TEST(WrapperAction, AlwayFailSucc) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_FALSE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_FALSE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -177,7 +171,8 @@ TEST(WrapperAction, AlwayFailSucc) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(WrapperAction, AlwayFailFail) {
+TEST(WrapperAction, AlwayFailFail)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -185,12 +180,10 @@ TEST(WrapperAction, AlwayFailFail) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_FALSE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_FALSE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -198,5 +191,5 @@ TEST(WrapperAction, AlwayFailFail) {
     EXPECT_TRUE(is_callback);
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

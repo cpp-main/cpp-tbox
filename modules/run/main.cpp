@@ -17,34 +17,32 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <tbox/main/main.h>
+#include <dlfcn.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/main/main.h>
 #include <tbox/util/argument_parser.h>
 #include <tbox/util/fs.h>
 
 #include <iostream>
-#include <dlfcn.h>
 
 namespace {
 
-typedef void(*RegisterAppsFunc) (tbox::main::Module &, tbox::main::Context &);
+typedef void (*RegisterAppsFunc)(tbox::main::Module &, tbox::main::Context &);
 
-std::vector<void*> _dl_handle_vec;
+std::vector<void *> _dl_handle_vec;
 std::vector<RegisterAppsFunc> _register_func_vec;
 
 /// 解决参数中的'-l <module>' 与 '--load <module>' 参数作为模块动态库列表
-void ParseArgs(int argc, char **argv,
-               std::vector<std::string> &module_file_vec)
+void ParseArgs(int argc, char **argv, std::vector<std::string> &module_file_vec)
 {
-    tbox::util::ArgumentParser parser(
-        [&] (char short_option, const std::string &long_option,
-             tbox::util::ArgumentParser::OptionValue &option_value) {
-            if (short_option == 'l' || long_option == "load")
-                module_file_vec.push_back(option_value.get());
-            return true;
-        }
-    );
+    tbox::util::ArgumentParser parser([&](char short_option,
+                                          const std::string &long_option,
+                                          tbox::util::ArgumentParser::OptionValue &option_value) {
+        if (short_option == 'l' || long_option == "load")
+            module_file_vec.push_back(option_value.get());
+        return true;
+    });
 
     parser.parse(argc, argv);
 }
@@ -65,8 +63,7 @@ void Load(int argc, char **argv)
         if (dl_handle == nullptr) {
             LogWarn("load %s faild.", module_file.c_str());
             const char *err_str = dlerror();
-            if (err_str != nullptr)
-                LogNotice("reason: %s", err_str);
+            if (err_str != nullptr) LogNotice("reason: %s", err_str);
             continue;
         }
 
@@ -87,12 +84,11 @@ void Load(int argc, char **argv)
 /// 关闭模块动态库
 void Release()
 {
-    for (void *dl_handle : _dl_handle_vec)
-        ::dlclose(dl_handle);
+    for (void *dl_handle : _dl_handle_vec) ::dlclose(dl_handle);
     _dl_handle_vec.clear();
 }
 
-}
+}  // namespace
 
 namespace tbox {
 namespace main {
@@ -104,14 +100,19 @@ void RegisterApps(Module &apps, Context &ctx)
         return;
     }
 
-    for (auto register_func : _register_func_vec)
-        register_func(apps, ctx);
+    for (auto register_func : _register_func_vec) register_func(apps, ctx);
     _register_func_vec.clear();
 }
 
-std::string GetAppDescribe() { return "modules runner"; }
+std::string GetAppDescribe()
+{
+    return "modules runner";
+}
 
-std::string GetAppBuildTime() { return __DATE__ " " __TIME__; }
+std::string GetAppBuildTime()
+{
+    return __DATE__ " " __TIME__;
+}
 
 void GetAppVersion(int &major, int &minor, int &rev, int &build)
 {
@@ -121,8 +122,8 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox
 
 int main(int argc, char **argv)
 {

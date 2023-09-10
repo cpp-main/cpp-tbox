@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "terminal.h"
+
 #include <tbox/base/assert.h>
 
 #include "impl/terminal.h"
@@ -25,8 +26,7 @@
 namespace tbox {
 namespace terminal {
 
-Terminal::Terminal() :
-    impl_(new Impl)
+Terminal::Terminal() : impl_(new Impl)
 {
     TBOX_ASSERT(impl_ != nullptr);
 }
@@ -101,5 +101,5 @@ bool Terminal::mountNode(const NodeToken &parent, const NodeToken &child, const 
     return impl_->mountNode(parent, child, name);
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

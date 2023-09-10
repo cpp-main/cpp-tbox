@@ -18,17 +18,16 @@
  * of the source tree.
  */
 #include "loop_thread.h"
+
 #include "loop_wdog.h"
 
 namespace tbox {
 namespace eventx {
 
 LoopThread::LoopThread(bool run_now, const std::string &loop_name)
-    : name_(loop_name)
-    , loop_(event::Loop::New())
+    : name_(loop_name), loop_(event::Loop::New())
 {
-    if (run_now)
-        start();
+    if (run_now) start();
 }
 
 LoopThread::~LoopThread()
@@ -39,23 +38,19 @@ LoopThread::~LoopThread()
 
 void LoopThread::start()
 {
-    if (is_running_)
-        return;
+    if (is_running_) return;
     is_running_ = true;
 
-    thread_ = std::thread(
-        [this] {
-            LoopWDog::Register(loop_, name_);
-            loop_->runLoop();
-            LoopWDog::Unregister(loop_);
-        }
-    );
+    thread_ = std::thread([this] {
+        LoopWDog::Register(loop_, name_);
+        loop_->runLoop();
+        LoopWDog::Unregister(loop_);
+    });
 }
 
 void LoopThread::stop()
 {
-    if (!is_running_)
-        return;
+    if (!is_running_) return;
 
     loop_->runInLoop([this] { loop_->exitLoop(); });
     thread_.join();
@@ -63,5 +58,5 @@ void LoopThread::stop()
     is_running_ = false;
 }
 
-}
-}
+}  // namespace eventx
+}  // namespace tbox

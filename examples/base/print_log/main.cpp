@@ -22,11 +22,12 @@
 
 extern "C" void DoSomeThing();
 
-int main() {
-  LogOutput_Enable();
+int main()
+{
+    LogOutput_Enable();
 
-  LogInfo("this log print in C++ file");
-  DoSomeThing();
+    LogInfo("this log print in C++ file");
+    DoSomeThing();
 
-  return 0;
+    return 0;
 }

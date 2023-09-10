@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "respond.h"
+
 #include <sstream>
 
 namespace tbox {
@@ -32,8 +33,7 @@ std::string Respond::toString() const
 {
     std::ostringstream oss;
     oss << HttpVerToString(http_ver) << " " << StatusCodeToString(status_code) << CRLF;
-    for (auto &head : headers)
-        oss << head.first << ": " << head.second << CRLF;
+    for (auto &head : headers) oss << head.first << ": " << head.second << CRLF;
     oss << "Content-Length: " << body.length() << CRLF;
     oss << CRLF;
     oss << body;
@@ -41,6 +41,5 @@ std::string Respond::toString() const
     return oss.str();
 }
 
-}
-}
-
+}  // namespace http
+}  // namespace tbox

@@ -17,13 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
 #include <tbox/event/loop.h>
 
+#include <iostream>
+
 #ifdef USE_LITE
-    #include "game_lite.h"
+#include "game_lite.h"
 #else
-    #include "game.h"
+#include "game.h"
 #endif
 
 using namespace std;
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
 
     using namespace tbox::event;
 
-    Loop* sp_loop = Loop::New(argv[1]);
+    Loop *sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         PrintUsage(argv[0]);
         return 0;

@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "key_event_scanner.h"
+
 #include <algorithm>
 #include <cctype>
 
@@ -238,5 +239,5 @@ KeyEventScanner::Status KeyEventScanner::stop()
     }
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

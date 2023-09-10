@@ -18,27 +18,29 @@
  * of the source tree.
  */
 #include "async_pipe.h"
+
 #include <tbox/base/defines.h>
 
-#include <cstring>
 #include <cassert>
-
-#include <vector>
-#include <deque>
 #include <chrono>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
+#include <cstring>
+#include <deque>
 #include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 namespace tbox {
 namespace util {
 
 using namespace std;
 
-class AsyncPipe::Impl {
+class AsyncPipe::Impl
+{
   public:
-    class Buffer {
+    class Buffer
+    {
       public:
         Buffer(size_t cap);
         ~Buffer();
@@ -49,15 +51,15 @@ class AsyncPipe::Impl {
       public:
         size_t append(const void *data_ptr, size_t data_size);
 
-        inline bool   full()  const { return capacity_ == size_; }
-        inline bool   empty() const { return size_ == 0; }
-        inline void  *data()  const { return data_; }
-        inline size_t size()  const { return size_; }
-        inline void   reset() { size_ = 0; }
+        inline bool full() const { return capacity_ == size_; }
+        inline bool empty() const { return size_ == 0; }
+        inline void *data() const { return data_; }
+        inline size_t size() const { return size_; }
+        inline void reset() { size_ = 0; }
 
       private:
-        size_t  capacity_;
-        size_t  size_ = 0;
+        size_t capacity_;
+        size_t size_ = 0;
         uint8_t *data_ = nullptr;
     };
 
@@ -74,42 +76,40 @@ class AsyncPipe::Impl {
     void threadFunc();
 
   private:
-    Config      cfg_;
-    Callback    cb_;
+    Config cfg_;
+    Callback cb_;
 
-    Buffer*         curr_buffer_ = nullptr; //!< 当前缓冲
-    vector<Buffer*> free_buffers_;  //!< 可用缓冲数组
-    deque<Buffer*>  full_buffers_;  //!< 已满缓冲队列
-    size_t          buff_num_;      //!< 缓冲个数
+    Buffer *curr_buffer_ = nullptr;  //!< 当前缓冲
+    vector<Buffer *> free_buffers_;  //!< 可用缓冲数组
+    deque<Buffer *> full_buffers_;   //!< 已满缓冲队列
+    size_t buff_num_;                //!< 缓冲个数
 
-    bool    inited_ = false;        //!< 是否已经启动子线程
-    bool    stop_signal_ = false;   //!< 停止信号
-    thread  backend_thread_;
+    bool inited_ = false;       //!< 是否已经启动子线程
+    bool stop_signal_ = false;  //!< 停止信号
+    thread backend_thread_;
 
-    mutex   curr_buffer_mutex_;     //!< 锁 curr_buffer_ 的
-    mutex   full_buffers_mutex_;    //!< 锁 full_buffers_ 的
-    mutex   free_buffers_mutex_;    //!< 锁 free_buffers_ 的
-    mutex   buff_num_mutex_;        //!< 锁 free_buffers_ 的
-    condition_variable full_buffers_cv_;    //!< full_buffers_ 不为空条件变量
-    condition_variable free_buffers_cv_;    //!< free_buffers_ 不为空条件变量
+    mutex curr_buffer_mutex_;             //!< 锁 curr_buffer_ 的
+    mutex full_buffers_mutex_;            //!< 锁 full_buffers_ 的
+    mutex free_buffers_mutex_;            //!< 锁 free_buffers_ 的
+    mutex buff_num_mutex_;                //!< 锁 free_buffers_ 的
+    condition_variable full_buffers_cv_;  //!< full_buffers_ 不为空条件变量
+    condition_variable free_buffers_cv_;  //!< free_buffers_ 不为空条件变量
 };
 
-AsyncPipe::Impl::Buffer::Buffer(size_t cap) :
-    capacity_(cap)
+AsyncPipe::Impl::Buffer::Buffer(size_t cap) : capacity_(cap)
 {
-    data_ = new uint8_t [cap];
+    data_ = new uint8_t[cap];
 }
 
 AsyncPipe::Impl::Buffer::~Buffer()
 {
-    delete [] data_;
+    delete[] data_;
 }
 
 size_t AsyncPipe::Impl::Buffer::append(const void *data_ptr, size_t data_size)
 {
     size_t wsize = data_size;
-    if ((size_ + data_size) > capacity_)
-        wsize = capacity_ - size_;
+    if ((size_ + data_size) > capacity_) wsize = capacity_ - size_;
 
     ::memcpy((data_ + size_), data_ptr, wsize);
     size_ += wsize;
@@ -117,9 +117,7 @@ size_t AsyncPipe::Impl::Buffer::append(const void *data_ptr, size_t data_size)
     return wsize;
 }
 
-AsyncPipe::AsyncPipe() :
-    impl_(new Impl)
-{ }
+AsyncPipe::AsyncPipe() : impl_(new Impl) {}
 
 AsyncPipe::~AsyncPipe()
 {
@@ -146,8 +144,7 @@ void AsyncPipe::append(const void *data_ptr, size_t data_size)
     impl_->append(data_ptr, data_size);
 }
 
-AsyncPipe::Impl::Impl()
-{ }
+AsyncPipe::Impl::Impl() {}
 
 AsyncPipe::Impl::~Impl()
 {
@@ -191,8 +188,7 @@ bool AsyncPipe::Impl::initialize(const Config &cfg)
 
 void AsyncPipe::Impl::cleanup()
 {
-    if (!inited_)
-        return;
+    if (!inited_) return;
 
     stop_signal_ = true;
     full_buffers_cv_.notify_all();
@@ -201,8 +197,7 @@ void AsyncPipe::Impl::cleanup()
 
     assert(full_buffers_.empty());
     CHECK_DELETE_RESET_OBJ(curr_buffer_);
-    for (auto item : free_buffers_)
-        CHECK_DELETE_RESET_OBJ(item);
+    for (auto item : free_buffers_) CHECK_DELETE_RESET_OBJ(item);
     free_buffers_.clear();
 
     cb_ = nullptr;
@@ -211,15 +206,15 @@ void AsyncPipe::Impl::cleanup()
 
 void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
 {
-    const uint8_t *ptr = static_cast<const uint8_t*>(data_ptr);
-    size_t  remain_size = data_size;
+    const uint8_t *ptr = static_cast<const uint8_t *>(data_ptr);
+    size_t remain_size = data_size;
 
     std::lock_guard<std::mutex> lg(curr_buffer_mutex_);
     while (remain_size > 0) {
         if (curr_buffer_ == nullptr) {
             //! 如果 curr_buffer_ 没有分配，则应该从 free_buffers_ 中取一个出来
             std::unique_lock<std::mutex> lk(free_buffers_mutex_);
-            if (free_buffers_.empty()) {    //! 如里 free_buffers_ 为空，则要等
+            if (free_buffers_.empty()) {  //! 如里 free_buffers_ 为空，则要等
                 buff_num_mutex_.lock();
                 if (buff_num_ < cfg_.buff_max_num) {
                     ++buff_num_;
@@ -244,7 +239,7 @@ void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
             //! 如果当前缓冲满了
             std::lock_guard<std::mutex> lg2(full_buffers_mutex_);
             full_buffers_.push_back(curr_buffer_);  //! 将 curr_buffer_ 放到 full_buffers_ 中
-            full_buffers_cv_.notify_all();  //! 通知后台线程开始干活
+            full_buffers_cv_.notify_all();          //! 通知后台线程开始干活
             curr_buffer_ = nullptr;
         }
         ptr += size;
@@ -259,11 +254,9 @@ void AsyncPipe::Impl::threadFunc()
             //! 等待唤醒信号
             std::unique_lock<std::mutex> lk(full_buffers_mutex_);
             //! 等待三种情况: 1.超时，2.停止，3.full_buffers_不为空
-            full_buffers_cv_.wait_for(lk, std::chrono::milliseconds(cfg_.interval),
-                [=] {
-                    return stop_signal_ || !full_buffers_.empty();
-                }
-            );
+            full_buffers_cv_.wait_for(lk, std::chrono::milliseconds(cfg_.interval), [=] {
+                return stop_signal_ || !full_buffers_.empty();
+            });
         }
         //! 先处理 full_buffers_ 中的数据
         for (;;) {
@@ -280,8 +273,7 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {
                 //! 进行处理
-                if (cb_)
-                    cb_(buff->data(), buff->size());
+                if (cb_) cb_(buff->data(), buff->size());
                 buff->reset();
 
                 buff_num_mutex_.lock();
@@ -313,8 +305,7 @@ void AsyncPipe::Impl::threadFunc()
 
             if (buff != nullptr) {  //! 如果没取出来
                 //! 进行处理
-                if (cb_)
-                    cb_(buff->data(), buff->size());
+                if (cb_) cb_(buff->data(), buff->size());
                 buff->reset();
                 //! 然后将处理后的buff放入到free_buffers_中
                 std::lock_guard<std::mutex> lg(free_buffers_mutex_);
@@ -327,5 +318,5 @@ void AsyncPipe::Impl::threadFunc()
     //! 因为我们期望就算是退出了，Buff中的数据都应该先被处理掉
 }
 
-}
-}
+}  // namespace util
+}  // namespace tbox

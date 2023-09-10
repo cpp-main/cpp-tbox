@@ -18,12 +18,12 @@
  * of the source tree.
  */
 #include "app.h"
+
 #include <tbox/base/log.h>
 
 namespace app1 {
 
-App::App(tbox::main::Context &ctx) :
-    Module("app1", ctx)
+App::App(tbox::main::Context &ctx) : Module("app1", ctx)
 {
     LogTag();
 }
@@ -55,4 +55,4 @@ void App::onCleanup()
     LogTag();
 }
 
-}
+}  // namespace app1

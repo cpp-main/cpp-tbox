@@ -19,21 +19,22 @@
  */
 #include "state_machine.h"
 
-#include <vector>
+#include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+
+#include <algorithm>
 #include <map>
 #include <stdexcept>
-#include <algorithm>
-
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
 #include <tbox/base/json.hpp>
+#include <vector>
 
 namespace tbox {
 namespace flow {
 
 using namespace std;
 
-class StateMachine::Impl {
+class StateMachine::Impl
+{
   public:
     ~Impl();
 
@@ -50,9 +51,7 @@ class StateMachine::Impl {
                   const ActionFunc &action,
                   const std::string &label);
 
-    bool addEvent(StateID state_id,
-                  EventID event_id,
-                  const EventFunc &action);
+    bool addEvent(StateID state_id, EventID event_id, const EventFunc &action);
 
     void setInitState(StateID init_state_id) { init_state_id_ = init_state_id; }
 
@@ -73,33 +72,35 @@ class StateMachine::Impl {
     void toJson(Json &js) const;
 
   private:
-    struct Route {
+    struct Route
+    {
         EventID event_id;
         StateID next_state_id;
-        GuardFunc  guard;
+        GuardFunc guard;
         ActionFunc action;
         std::string label;
     };
 
-    struct State {
+    struct State
+    {
         StateID id;
         ActionFunc enter_action;
         ActionFunc exit_action;
         std::string label;
-        StateMachine::Impl *sub_sm; //! 子状态机
-        vector<Route> routes;   //! 转换路由
+        StateMachine::Impl *sub_sm;      //! 子状态机
+        vector<Route> routes;            //! 转换路由
         map<EventID, EventFunc> events;  //! 内部事件
         EventFunc default_event;
     };
 
-    State* findState(StateID state_id) const;
+    State *findState(StateID state_id) const;
 
-    StateID init_state_id_ = 1;     //! 初始状态
+    StateID init_state_id_ = 1;  //! 初始状态
 
     State *last_state_ = nullptr;   //! 上一个状态指针
     State *curr_state_ = nullptr;   //! 当前状态指针
     State *next_state_ = nullptr;   //! 下一个状态指针
-    map<StateID, State*> states_;   //! 状态对象表
+    map<StateID, State *> states_;  //! 状态对象表
 
     StateChangedCallback state_changed_cb_;
 
@@ -108,21 +109,27 @@ class StateMachine::Impl {
     int cb_level_ = 0;
 };
 
-StateMachine::StateMachine() : impl_(new Impl)
-{ }
+StateMachine::StateMachine() : impl_(new Impl) {}
 
 StateMachine::~StateMachine()
 {
     delete impl_;
 }
 
-bool StateMachine::newState(StateID state_id, const ActionFunc &enter_action, const ActionFunc &exit_action, const std::string &label)
+bool StateMachine::newState(StateID state_id,
+                            const ActionFunc &enter_action,
+                            const ActionFunc &exit_action,
+                            const std::string &label)
 {
     return impl_->newState(state_id, enter_action, exit_action, label);
 }
 
-bool StateMachine::addRoute(StateID from_state_id, EventID event_id, StateID to_state_id,
-                            const GuardFunc &guard, const ActionFunc &action, const std::string &label)
+bool StateMachine::addRoute(StateID from_state_id,
+                            EventID event_id,
+                            StateID to_state_id,
+                            const GuardFunc &guard,
+                            const ActionFunc &action,
+                            const std::string &label)
 {
     return impl_->addRoute(from_state_id, event_id, to_state_id, guard, action, label);
 }
@@ -195,14 +202,14 @@ void StateMachine::toJson(Json &js) const
 
 ///////////////////////
 
-StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, "Term", nullptr, { } };
+StateMachine::Impl::State StateMachine::Impl::_term_state_ = {
+    0, nullptr, nullptr, "Term", nullptr, {}};
 
 StateMachine::Impl::~Impl()
 {
     TBOX_ASSERT(cb_level_ == 0);
 
-    for (auto &item : states_)
-        delete item.second;
+    for (auto &item : states_) delete item.second;
 
     states_.clear();
 }
@@ -218,7 +225,7 @@ bool StateMachine::Impl::newState(StateID state_id,
         return false;
     }
 
-    auto new_state = new State { state_id, enter_action, exit_action, label, nullptr, { } };
+    auto new_state = new State{state_id, enter_action, exit_action, label, nullptr, {}};
     states_[state_id] = new_state;
 
     return true;
@@ -244,13 +251,11 @@ bool StateMachine::Impl::addRoute(StateID from_state_id,
         return false;
     }
 
-    from_state->routes.emplace_back(Route{ event_id, to_state_id, guard, action, label });
+    from_state->routes.emplace_back(Route{event_id, to_state_id, guard, action, label});
     return true;
 }
 
-bool StateMachine::Impl::addEvent(StateID state_id,
-                                  EventID event_id,
-                                  const EventFunc &action)
+bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
 {
     if (action == nullptr) {
         LogWarn("action is nullptr", state_id);
@@ -310,21 +315,18 @@ bool StateMachine::Impl::start()
     curr_state_ = init_state;
 
     ++cb_level_;
-    if (init_state->enter_action)
-        init_state->enter_action(Event());
+    if (init_state->enter_action) init_state->enter_action(Event());
     --cb_level_;
 
     //! 如果有子状态机，在启动子状态机
-    if (curr_state_->sub_sm != nullptr)
-        curr_state_->sub_sm->start();
+    if (curr_state_->sub_sm != nullptr) curr_state_->sub_sm->start();
 
     return true;
 }
 
 void StateMachine::Impl::stop()
 {
-    if (curr_state_ == nullptr)
-        return;
+    if (curr_state_ == nullptr) return;
 
     if (cb_level_ != 0) {
         LogWarn("recursion invoke");
@@ -332,8 +334,7 @@ void StateMachine::Impl::stop()
     }
 
     ++cb_level_;
-    if (curr_state_->exit_action)
-        curr_state_->exit_action(Event());
+    if (curr_state_->exit_action) curr_state_->exit_action(Event());
     --cb_level_;
 
     curr_state_ = nullptr;
@@ -354,8 +355,7 @@ bool StateMachine::Impl::run(Event event)
     //! 如果有子状态机，则给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
         bool ret = curr_state_->sub_sm->run(event);
-        if (!curr_state_->sub_sm->isTerminated())
-            return ret;
+        if (!curr_state_->sub_sm->isTerminated()) return ret;
         curr_state_->sub_sm->stop();
     }
 
@@ -374,20 +374,19 @@ bool StateMachine::Impl::run(Event event)
     if (next_state_id < 0) {
         //! 找出可行的路径
         ++cb_level_;
-        auto route_iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
-            [event] (const Route &item) -> bool {
-                if (item.event_id != 0 && item.event_id != event.id)
-                    return false;
-                if (item.guard != nullptr && !item.guard(event))
-                    return false;
-                return true;
-            }
-        );
+        auto route_iter = std::find_if(curr_state_->routes.begin(),
+                                       curr_state_->routes.end(),
+                                       [event](const Route &item) -> bool {
+                                           if (item.event_id != 0 && item.event_id != event.id)
+                                               return false;
+                                           if (item.guard != nullptr && !item.guard(event))
+                                               return false;
+                                           return true;
+                                       });
         --cb_level_;
 
         //! 如果没有跳转则直接退出
-        if (route_iter == curr_state_->routes.end())
-            return false;
+        if (route_iter == curr_state_->routes.end()) return false;
 
         //! 以下是有跳转的情况
         next_state_id = route_iter->next_state_id;
@@ -405,23 +404,19 @@ bool StateMachine::Impl::run(Event event)
     }
 
     ++cb_level_;
-    if (curr_state_->exit_action)
-        curr_state_->exit_action(event);
+    if (curr_state_->exit_action) curr_state_->exit_action(event);
 
     last_state_ = curr_state_;
     curr_state_ = nullptr;
 
-    if (route_action)
-        route_action(event);
+    if (route_action) route_action(event);
 
     curr_state_ = next_state_;
     next_state_ = nullptr;
 
-    if (curr_state_->enter_action)
-        curr_state_->enter_action(event);
+    if (curr_state_->enter_action) curr_state_->enter_action(event);
 
-    if (state_changed_cb_)
-        state_changed_cb_(last_state_->id, curr_state_->id, event);
+    if (state_changed_cb_) state_changed_cb_(last_state_->id, curr_state_->id, event);
 
     //! 如果新的状态有子状态机，则启动子状态机并将事件交给子状态机处理
     if (curr_state_->sub_sm != nullptr) {
@@ -435,22 +430,19 @@ bool StateMachine::Impl::run(Event event)
 
 StateMachine::StateID StateMachine::Impl::currentState() const
 {
-    if (curr_state_ != nullptr)
-        return curr_state_->id;
+    if (curr_state_ != nullptr) return curr_state_->id;
     return -1;
 }
 
 StateMachine::StateID StateMachine::Impl::lastState() const
 {
-    if (last_state_ != nullptr)
-        return last_state_->id;
+    if (last_state_ != nullptr) return last_state_->id;
     return -1;
 }
 
 StateMachine::StateID StateMachine::Impl::nextState() const
 {
-    if (next_state_ != nullptr)
-        return next_state_->id;
+    if (next_state_ != nullptr) return next_state_->id;
     return -1;
 }
 
@@ -464,7 +456,7 @@ bool StateMachine::Impl::isTerminated() const
     return curr_state_->id == 0;
 }
 
-StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
+StateMachine::Impl::State *StateMachine::Impl::findState(StateID state_id) const
 {
     try {
         return states_.at(state_id);
@@ -477,8 +469,7 @@ void StateMachine::Impl::toJson(Json &js) const
 {
     js["init_state"] = init_state_id_;
     js["term_state"] = 0;
-    if (curr_state_ != nullptr)
-        js["curr_state"] = curr_state_->id;
+    if (curr_state_ != nullptr) js["curr_state"] = curr_state_->id;
 
     auto &js_state_array = js["states"];
     for (auto &item : states_) {
@@ -487,8 +478,7 @@ void StateMachine::Impl::toJson(Json &js) const
         js_state["id"] = state->id;
         js_state["label"] = state->label;
 
-        if (state->sub_sm != nullptr)
-            state->sub_sm->toJson(js_state["sub_sm"]);
+        if (state->sub_sm != nullptr) state->sub_sm->toJson(js_state["sub_sm"]);
 
         auto &js_route_array = js_state["routes"];
         for (auto &route : state->routes) {
@@ -500,12 +490,11 @@ void StateMachine::Impl::toJson(Json &js) const
         }
 
         auto &js_event_array = js_state["events"];
-        for (auto &item : state->events)
-            js_event_array.push_back(item.first);
+        for (auto &item : state->events) js_event_array.push_back(item.first);
 
         js_state_array.push_back(std::move(js_state));
     }
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

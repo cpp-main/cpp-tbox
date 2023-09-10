@@ -20,6 +20,7 @@
 #include "ip_address.h"
 
 #include <arpa/inet.h>
+
 #include <sstream>
 
 namespace tbox {
@@ -39,11 +40,11 @@ std::string IPAddress::toString() const
     return ip_str_buff;
 }
 
-IPAddress IPAddress::FromString(const std::string &ip_str) {
+IPAddress IPAddress::FromString(const std::string &ip_str)
+{
     struct in_addr addr;
     auto ret = inet_aton(ip_str.c_str(), &addr);
-    if (ret == 0)
-        throw FormatInvalid(ip_str);
+    if (ret == 0) throw FormatInvalid(ip_str);
     return IPAddress(addr.s_addr);
 }
 
@@ -57,5 +58,5 @@ IPAddress IPAddress::Loop()
     return IPAddress(0x0100007F);
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

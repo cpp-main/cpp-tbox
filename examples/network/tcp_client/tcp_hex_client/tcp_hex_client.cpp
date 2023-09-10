@@ -25,16 +25,15 @@
  * 本示例主要用于演示TcpClient的使用方法
  */
 
-#include <iostream>
-
-#include <tbox/network/tcp_client.h>
-#include <tbox/network/stdio_stream.h>
-
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
+#include <tbox/network/stdio_stream.h>
+#include <tbox/network/tcp_client.h>
 #include <tbox/util/string.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -76,49 +75,46 @@ int main(int argc, char **argv)
     };
 
     auto print_endline = [&] {
-        if (is_prompt_print)
-            cout << endl;
+        if (is_prompt_print) cout << endl;
         is_prompt_print = false;
     };
 
     client.setReceiveCallback(
-        [&] (Buffer &buff) {
-            string hex_str = util::string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
+        [&](Buffer &buff) {
+            string hex_str =
+                util::string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
             print_endline();
             cout << "recv " << buff.readableSize() << " : " << hex_str << endl;
             buff.hasReadAll();
-        }
-        , 0
-    );
+        },
+        0);
 
-    client.setConnectedCallback(
-        [&] {
-            is_connected = true;
-            print_endline();
-            cout << "connected." << endl;
-            print_prompt();
-        }
-    );
+    client.setConnectedCallback([&] {
+        is_connected = true;
+        print_endline();
+        cout << "connected." << endl;
+        print_prompt();
+    });
 
-    client.setDisconnectedCallback(
-        [&] {
-            is_connected = false;
-            print_endline();
-            cout << "disconnected." << endl;
-        }
-    );
+    client.setDisconnectedCallback([&] {
+        is_connected = false;
+        print_endline();
+        cout << "disconnected." << endl;
+    });
 
     stdio.setReceiveCallback(
-        [&] (Buffer &buff) {
+        [&](Buffer &buff) {
             if (is_connected) {
                 if (buff.readableSize() > 1) {
                     try {
                         vector<uint8_t> raw_data;
-                        std::string input_str(reinterpret_cast<const char*>(buff.readableBegin()), buff.readableSize() - 1);
+                        std::string input_str(reinterpret_cast<const char *>(buff.readableBegin()),
+                                              buff.readableSize() - 1);
                         util::string::HexStrToRawData(input_str, raw_data, "\t ");
                         client.send(raw_data.data(), raw_data.size());
 
-                        string hex_str = util::string::RawDataToHexStr(raw_data.data(), raw_data.size());
+                        string hex_str =
+                            util::string::RawDataToHexStr(raw_data.data(), raw_data.size());
                         cout << "send " << raw_data.size() << " : " << hex_str << endl;
 
                     } catch (const exception &e) {
@@ -132,21 +128,18 @@ int main(int argc, char **argv)
             }
 
             buff.hasReadAll();
-        }
-        , 0
-    );
+        },
+        0);
 
     //! 注册ctrl+C停止信号
     SignalEvent *sp_stop_ev = sp_loop->newSignalEvent();
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [sp_loop, &client] (int) {
-            client.stop();
-            sp_loop->exitLoop();    //! (3) 退出事件循环
-        }
-    );
+    sp_stop_ev->setCallback([sp_loop, &client](int) {
+        client.stop();
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");

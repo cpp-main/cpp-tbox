@@ -17,19 +17,18 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "terminal.h"
-
-#include <iomanip>
-#include <sstream>
-
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
 #include <tbox/util/string.h>
 
-#include "session_context.h"
+#include <iomanip>
+#include <sstream>
+
+#include "../connection.h"
 #include "dir_node.h"
 #include "func_node.h"
-#include "../connection.h"
+#include "session_context.h"
+#include "terminal.h"
 
 namespace tbox {
 namespace terminal {
@@ -42,8 +41,7 @@ bool Terminal::Impl::execute(SessionContext *s)
     util::string::Split(s->curr_input, ";", cmdlines);
 
     for (auto &cmdline : cmdlines) {
-        if (!executeCmd(s, cmdline))
-            return false;
+        if (!executeCmd(s, cmdline)) return false;
     }
 
     return true;
@@ -51,8 +49,7 @@ bool Terminal::Impl::execute(SessionContext *s)
 
 bool Terminal::Impl::executeCmd(SessionContext *s, const std::string &cmdline)
 {
-    if (cmdline.empty())
-        return false;
+    if (cmdline.empty()) return false;
 
     LogInfo("cmdline: %s", cmdline.c_str());
 
@@ -73,7 +70,7 @@ bool Terminal::Impl::executeCmd(SessionContext *s, const std::string &cmdline)
         executeHelpCmd(s, args);
     } else if (cmd == "history") {
         executeHistoryCmd(s, args);
-        return false;   //! 查看历史命令不要再存历史
+        return false;  //! 查看历史命令不要再存历史
     } else if (cmd == "exit" || cmd == "quit") {
         executeExitCmd(s, args);
     } else if (cmd == "tree") {
@@ -89,8 +86,7 @@ bool Terminal::Impl::executeCmd(SessionContext *s, const std::string &cmdline)
 void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
 {
     string path_str = "/";
-    if (args.size() >= 2)
-        path_str = args[1];
+    if (args.size() >= 2) path_str = args[1];
 
     stringstream ss;
 
@@ -102,7 +98,8 @@ void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
         if (top_node->type() == NodeType::kDir) {
             s->path = node_path;
         } else {
-            ss << "Error: '" << path_str << "' not directory" << "\r\n";
+            ss << "Error: '" << path_str << "' not directory"
+               << "\r\n";
         }
     } else {
         ss << "Error: cannot access '" << path_str << "'\r\n";
@@ -137,8 +134,7 @@ void Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
 void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
-    if (args.size() >= 2)
-        path_str = args[1];
+    if (args.size() >= 2) path_str = args[1];
 
     stringstream ss;
 
@@ -148,21 +144,21 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kDir) {
-            auto top_dir_node = static_cast<DirNode*>(top_node);
+            auto top_dir_node = static_cast<DirNode *>(top_node);
             vector<NodeInfo> node_info_vec;
             top_dir_node->children(node_info_vec);
 
             for (auto item : node_info_vec) {
                 ss << "- " << item.name;
                 auto node = nodes_.at(item.token);
-                if (node->type() == NodeType::kDir)
-                    ss << '/';
+                if (node->type() == NodeType::kDir) ss << '/';
                 ss << "\r\n";
             }
 
             ss << "\r\n";
         } else {
-            ss << path_str << " is function" << "\r\n";
+            ss << path_str << " is function"
+               << "\r\n";
         }
     } else {
         ss << "Error: cannot access '" << path_str << "'\r\n";
@@ -184,8 +180,7 @@ void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
 
 void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
 {
-    if (!(s->options & kQuietMode))
-        s->wp_conn->send(s->token, "Bye!\r\n");
+    if (!(s->options & kQuietMode)) s->wp_conn->send(s->token, "Bye!\r\n");
     s->wp_conn->endSession(s->token);
     (void)args;
 }
@@ -193,8 +188,7 @@ void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
 void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
-    if (args.size() >= 2)
-        path_str = args[1];
+    if (args.size() >= 2) path_str = args[1];
 
     stringstream ss;
 
@@ -206,30 +200,29 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
         auto top_node = nodes_.at(top_node_token);
 
         if (top_node->type() == NodeType::kDir) {
-            vector<vector<NodeInfo>> node_token_stack;    //!< 遍历栈
-            string indent_str;  //!< 缩进字串
+            vector<vector<NodeInfo>> node_token_stack;  //!< 遍历栈
+            string indent_str;                          //!< 缩进字串
 
             {
                 //! 先将被 tree 结点的子节点找出来，压入到 node_token_stack 中
-                auto top_dir_node = static_cast<DirNode*>(top_node);
+                auto top_dir_node = static_cast<DirNode *>(top_node);
                 vector<NodeInfo> node_info_vec;
                 top_dir_node->children(node_info_vec);
-                if (!node_info_vec.empty())
-                    node_token_stack.push_back(node_info_vec);
+                if (!node_info_vec.empty()) node_token_stack.push_back(node_info_vec);
             }
-/**
- * Print like below:
- * |-- a
- * |   |-- aa
- * |   |   |-- aaa
- * |   |   `-- aab
- * |   `-- ab
- * |-- b
- * |   |-- ba
- * |   `-- bb
- * `-- c
- *     `- ca
- */
+            /**
+             * Print like below:
+             * |-- a
+             * |   |-- aa
+             * |   |   |-- aaa
+             * |   |   `-- aab
+             * |   `-- ab
+             * |-- b
+             * |   |-- ba
+             * |   `-- bb
+             * `-- c
+             *     `- ca
+             */
             //! 开始循环遍历，深度搜索
             while (!node_token_stack.empty()) {
                 auto &last_level = node_token_stack.back();
@@ -255,20 +248,20 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
                                 is_repeat = true;
                         }
 
-                        if (is_repeat)
-                            ss << "(R)";
+                        if (is_repeat) ss << "(R)";
 
                         ss << "\r\n";
 
                         if (!is_repeat) {
                             //! 找出该Dir下所有的子Node。
-                            auto curr_dir_node = static_cast<DirNode*>(curr_node);
+                            auto curr_dir_node = static_cast<DirNode *>(curr_node);
                             vector<NodeInfo> node_info_vec;
                             curr_dir_node->children(node_info_vec);
                             if (!node_info_vec.empty()) {
                                 //! 如果存在子Node，则将Node列表压入到node_token_stack，添加新的层级
                                 node_token_stack.push_back(node_info_vec);
-                                indent_str += (is_last_node ? "    " : "|   "); //! 同时修改缩时字串
+                                indent_str +=
+                                    (is_last_node ? "    " : "|   ");  //! 同时修改缩时字串
                                 break;
                             }
                         }
@@ -276,11 +269,13 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
 
                     //! 运行到这里，表示已完成一个Node的处理。开始做清理操作
                     while (!node_token_stack.empty()) {
-                        node_token_stack.back().erase(node_token_stack.back().begin()); //! 删除当前Node
-                        if (node_token_stack.back().empty()) {  //! 检查当前级是否已经没有Node需要遍历了
-                            node_token_stack.pop_back();    //! 如果是，则弹出该层级
+                        node_token_stack.back().erase(
+                            node_token_stack.back().begin());  //! 删除当前Node
+                        if (node_token_stack.back()
+                                .empty()) {  //! 检查当前级是否已经没有Node需要遍历了
+                            node_token_stack.pop_back();  //! 如果是，则弹出该层级
                             if (!indent_str.empty())
-                                indent_str.erase(indent_str.size() - 4); //! 同步修改缩进字串
+                                indent_str.erase(indent_str.size() - 4);  //! 同步修改缩进字串
                         } else
                             break;
                     }
@@ -302,8 +297,7 @@ void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &args)
     ss << '/';
     for (size_t i = 0; i < s->path.size(); ++i) {
         ss << s->path.at(i).first;
-        if ((i + 1) != s->path.size())
-            ss << '/';
+        if ((i + 1) != s->path.size()) ss << '/';
     }
     ss << "\r\n";
     s->wp_conn->send(s->token, ss.str());
@@ -357,7 +351,7 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
         if (top_node->type() == NodeType::kFunc) {
-            auto top_func_node = static_cast<FuncNode*>(top_node);
+            auto top_func_node = static_cast<FuncNode *>(top_node);
             Session session(s->wp_conn, s->token);
             top_func_node->execute(session, args);
         } else {
@@ -370,5 +364,5 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
     s->wp_conn->send(s->token, ss.str());
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

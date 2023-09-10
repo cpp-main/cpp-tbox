@@ -17,19 +17,31 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "serializer.h"
+
+#include <gtest/gtest.h>
 
 using namespace tbox::util;
 
-TEST(Serializer, big_endian_raw) {
-    uint8_t data_to_be[] = {
-        0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x21, 0x22
-    };
+TEST(Serializer, big_endian_raw)
+{
+    uint8_t data_to_be[] = {0x01,
+                            0x02,
+                            0x03,
+                            0x04,
+                            0x05,
+                            0x06,
+                            0x07,
+                            0x11,
+                            0x12,
+                            0x13,
+                            0x14,
+                            0x15,
+                            0x16,
+                            0x17,
+                            0x18,
+                            0x21,
+                            0x22};
     uint8_t data_be_write[17] = {0x00};
 
     Serializer w(data_be_write, sizeof(data_be_write));
@@ -46,14 +58,25 @@ TEST(Serializer, big_endian_raw) {
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write, sizeof(data_be_write)));
 }
 
-TEST(Serializer, big_endian_vector) {
-    uint8_t data_to_be[] = {
-        0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x21, 0x22
-    };
+TEST(Serializer, big_endian_vector)
+{
+    uint8_t data_to_be[] = {0x01,
+                            0x02,
+                            0x03,
+                            0x04,
+                            0x05,
+                            0x06,
+                            0x07,
+                            0x11,
+                            0x12,
+                            0x13,
+                            0x14,
+                            0x15,
+                            0x16,
+                            0x17,
+                            0x18,
+                            0x21,
+                            0x22};
 
     std::vector<uint8_t> data_be_write;
     Serializer w(data_be_write);
@@ -70,29 +93,53 @@ TEST(Serializer, big_endian_vector) {
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write.data(), sizeof(data_to_be)));
 }
 
-TEST(Serializer, big_endian_stream) {
+TEST(Serializer, big_endian_stream)
+{
     const uint8_t data_to_be[] = {
         0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
     };
     uint8_t data_be_write[sizeof(data_to_be)] = {0x00};
 
     Serializer w(data_be_write, sizeof(data_be_write));
-    w << Endian::kBig << uint8_t(1) << uint16_t(0x0203) << uint32_t(0x04050607) << uint64_t(0x1112131415161718ull);
+    w << Endian::kBig << uint8_t(1) << uint16_t(0x0203) << uint32_t(0x04050607)
+      << uint64_t(0x1112131415161718ull);
 
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write, sizeof(data_to_be)));
 }
 
-TEST(Serializer, little_endian) {
-    const uint8_t data_to_be[] = {
-        0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x21, 0x22
-    };
+TEST(Serializer, little_endian)
+{
+    const uint8_t data_to_be[] = {0x01,
+                                  0x02,
+                                  0x03,
+                                  0x04,
+                                  0x05,
+                                  0x06,
+                                  0x07,
+                                  0x11,
+                                  0x12,
+                                  0x13,
+                                  0x14,
+                                  0x15,
+                                  0x16,
+                                  0x17,
+                                  0x18,
+                                  0x21,
+                                  0x22};
     uint8_t data_be_write[sizeof(data_to_be)] = {0x00};
 
     Serializer w(data_be_write, sizeof(data_be_write));
@@ -109,29 +156,55 @@ TEST(Serializer, little_endian) {
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write, sizeof(data_to_be)));
 }
 
-TEST(Serializer, little_endian_stream) {
+TEST(Serializer, little_endian_stream)
+{
     uint8_t data_to_be[] = {
         0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
     };
     uint8_t data_be_write[sizeof(data_to_be)] = {0x00};
 
     Serializer w(data_be_write, sizeof(data_be_write));
-    w << Endian::kLittle << uint8_t(1) << uint16_t(0x0302) << uint32_t(0x07060504) << uint64_t(0x1817161514131211ull);
+    w << Endian::kLittle << uint8_t(1) << uint16_t(0x0302) << uint32_t(0x07060504)
+      << uint64_t(0x1817161514131211ull);
 
     EXPECT_EQ(0, memcmp(data_to_be, data_be_write, sizeof(data_to_be)));
 }
 
-TEST(Deserializer, big_endian) {
-    uint8_t data_be_read[] = {
-        0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x21, 0x22, 0x23, 0x24
-    };
+TEST(Deserializer, big_endian)
+{
+    uint8_t data_be_read[] = {0x01,
+                              0x02,
+                              0x03,
+                              0x04,
+                              0x05,
+                              0x06,
+                              0x07,
+                              0x11,
+                              0x12,
+                              0x13,
+                              0x14,
+                              0x15,
+                              0x16,
+                              0x17,
+                              0x18,
+                              0x21,
+                              0x22,
+                              0x23,
+                              0x24};
 
     Deserializer r(data_be_read, sizeof(data_be_read));
     r.setEndian(Endian::kBig);
@@ -160,12 +233,24 @@ TEST(Deserializer, big_endian) {
     EXPECT_FALSE(r.fetch(u32));
 }
 
-TEST(Deserializer, big_endian_stream) {
+TEST(Deserializer, big_endian_stream)
+{
     uint8_t data_be_read[] = {
         0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
     };
 
     Deserializer r(data_be_read, sizeof(data_be_read));
@@ -183,14 +268,27 @@ TEST(Deserializer, big_endian_stream) {
     EXPECT_EQ(u64, 0x1112131415161718ull);
 }
 
-TEST(Deserializer, little_endian) {
-    uint8_t data_be_read[] = {
-        0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x21, 0x22, 0x23, 0x24
-    };
+TEST(Deserializer, little_endian)
+{
+    uint8_t data_be_read[] = {0x01,
+                              0x02,
+                              0x03,
+                              0x04,
+                              0x05,
+                              0x06,
+                              0x07,
+                              0x11,
+                              0x12,
+                              0x13,
+                              0x14,
+                              0x15,
+                              0x16,
+                              0x17,
+                              0x18,
+                              0x21,
+                              0x22,
+                              0x23,
+                              0x24};
 
     Deserializer r(data_be_read, sizeof(data_be_read));
     r.setEndian(Endian::kLittle);
@@ -219,12 +317,24 @@ TEST(Deserializer, little_endian) {
     EXPECT_FALSE(r.fetch(u32));
 }
 
-TEST(Deserializer, little_endian_stream) {
+TEST(Deserializer, little_endian_stream)
+{
     uint8_t data_be_read[] = {
         0x01,
-        0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
     };
 
     Deserializer r(data_be_read, sizeof(data_be_read));
@@ -247,7 +357,7 @@ TEST(SerializerDeserialize, big_endian)
     uint8_t buff[50];
     Serializer s(buff, sizeof(buff), Endian::kBig);
     s << int8_t(-1) << uint8_t(2) << int16_t(-3) << uint16_t(4) << int32_t(-5) << uint32_t(6)
-        << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
+      << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
 
     int8_t i8;
     uint8_t u8;
@@ -280,7 +390,7 @@ TEST(SerializerDeserialize, little_endian)
     uint8_t buff[50];
     Serializer s(buff, sizeof(buff), Endian::kLittle);
     s << int8_t(-1) << uint8_t(2) << int16_t(-3) << uint16_t(4) << int32_t(-5) << uint32_t(6)
-        << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
+      << int64_t(-7) << uint64_t(8) << float(1.0) << double(12.3);
 
     int8_t i8;
     uint8_t u8;
@@ -307,4 +417,3 @@ TEST(SerializerDeserialize, little_endian)
     EXPECT_FLOAT_EQ(ff, 1.0);
     EXPECT_DOUBLE_EQ(dd, 12.3);
 }
-

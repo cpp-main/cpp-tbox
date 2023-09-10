@@ -17,14 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <string>
-#include <thread>   //! 引用std::this_thread::sleep_for
-#include <memory>   //! 引入智能指针
-
-#include <tbox/event/loop.h>
-#include <tbox/eventx/thread_pool.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
+#include <tbox/eventx/thread_pool.h>
+
+#include <memory>  //! 引入智能指针
+#include <string>
+#include <thread>  //! 引用std::this_thread::sleep_for
 
 using namespace std;
 using namespace tbox::event;
@@ -43,37 +43,36 @@ int main(int argc, char **argv)
 {
     LogOutput_Enable();
 
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     ThreadPool *sp_tp = new ThreadPool(sp_loop);
     sp_tp->initialize();
 
-    struct StoreDataToFileTask {
+    struct StoreDataToFileTask
+    {
         string filename;
         string content;
         int ret = -1;
     };
 
-    sp_loop->runInLoop(
-        [=] {
-            //! 准备任务明细
-            auto sp_data = std::make_shared<StoreDataToFileTask>();
-            sp_data->filename = "/tmp/test.txt";
-            sp_data->content = "this is a test of threadpool";
+    sp_loop->runInLoop([=] {
+        //! 准备任务明细
+        auto sp_data = std::make_shared<StoreDataToFileTask>();
+        sp_data->filename = "/tmp/test.txt";
+        sp_data->content = "this is a test of threadpool";
 
-            LogInfo("Before commit task");
-            //! 向线程池提交任务
-            sp_tp->execute(
-                [sp_data]{  //! 指定任务线程要做的事情
-                    sp_data->ret = StoreDataToFile(sp_data->filename, sp_data->content);
-                },
-                [sp_data, sp_loop]{ //! 指定任务线程完成了任务后主线程接下来要做的事情
-                    LogInfo("ret:%d", sp_data->ret);
-                    sp_loop->exitLoop();
-                }
-            );
-            LogInfo("After commit task");
-        }
-    );
+        LogInfo("Before commit task");
+        //! 向线程池提交任务
+        sp_tp->execute(
+            [sp_data] {  //! 指定任务线程要做的事情
+                sp_data->ret = StoreDataToFile(sp_data->filename, sp_data->content);
+            },
+            [sp_data,
+             sp_loop] {  //! 指定任务线程完成了任务后主线程接下来要做的事情
+                LogInfo("ret:%d", sp_data->ret);
+                sp_loop->exitLoop();
+            });
+        LogInfo("After commit task");
+    });
 
     LogInfo("Start");
     sp_loop->runLoop();

@@ -19,18 +19,20 @@
  */
 #include "timer_pool.h"
 
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
-#include <tbox/base/cabinet.hpp>
+#include <tbox/base/log.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
+
+#include <tbox/base/cabinet.hpp>
 
 namespace tbox {
 namespace eventx {
 
-class TimerPool::Impl {
+class TimerPool::Impl
+{
   public:
-    Impl(event::Loop *wp_loop) : wp_loop_(wp_loop) { }
+    Impl(event::Loop *wp_loop) : wp_loop_(wp_loop) {}
     ~Impl();
 
   public:
@@ -107,15 +109,13 @@ bool TimerPool::Impl::cancel(const TimerToken &token)
 
 void TimerPool::Impl::cleanup()
 {
-    timers_.foreach(
-        [this](event::TimerEvent *timer) {
-            timer->disable();
-            if (wp_loop_->isRunning())
-                wp_loop_->run([timer]{ delete timer; }, "TimerPool::cleanup");
-            else
-                delete timer;
-        }
-    );
+    timers_.foreach ([this](event::TimerEvent *timer) {
+        timer->disable();
+        if (wp_loop_->isRunning())
+            wp_loop_->run([timer] { delete timer; }, "TimerPool::cleanup");
+        else
+            delete timer;
+    });
     timers_.clear();
 }
 
@@ -123,8 +123,7 @@ void TimerPool::Impl::cleanup()
 // wrapper
 /////////////////////////////////////////////////////////////////////////////
 
-TimerPool::TimerPool(event::Loop *wp_loop) :
-    impl_(new Impl(wp_loop))
+TimerPool::TimerPool(event::Loop *wp_loop) : impl_(new Impl(wp_loop))
 {
     TBOX_ASSERT(impl_ != nullptr);
 }
@@ -159,5 +158,5 @@ void TimerPool::cleanup()
     impl_->cleanup();
 }
 
-}
-}
+}  // namespace eventx
+}  // namespace tbox

@@ -17,9 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-
 #include "split_cmdline.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace tbox::util;

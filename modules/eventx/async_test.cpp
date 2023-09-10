@@ -28,7 +28,8 @@ namespace tbox {
 namespace eventx {
 namespace {
 
-class AsyncTest : public testing::Test {
+class AsyncTest : public testing::Test
+{
   protected:
     event::Loop *loop_;
     eventx::ThreadPool *thread_pool_;
@@ -36,14 +37,16 @@ class AsyncTest : public testing::Test {
     std::string filename = "/tmp/async_test.txt";
 
   public:
-    void SetUp() override {
+    void SetUp() override
+    {
         loop_ = event::Loop::New();
         thread_pool_ = new eventx::ThreadPool(loop_);
         thread_pool_->initialize(1, 1);
         async_ = new Async(thread_pool_);
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         thread_pool_->cleanup();
         delete async_;
         delete thread_pool_;
@@ -53,7 +56,8 @@ class AsyncTest : public testing::Test {
 };
 
 /// 测试 Async::writeFile() 函数
-TEST_F(AsyncTest, WriteFile) {
+TEST_F(AsyncTest, WriteFile)
+{
     std::string wcontent = "This is AsyncTest::WriteFile";
     int errcode = -1;
 
@@ -70,7 +74,8 @@ TEST_F(AsyncTest, WriteFile) {
 }
 
 /// 测试 Async::writeFile() 函数，不带回调
-TEST_F(AsyncTest, WriteFileNoCallback) {
+TEST_F(AsyncTest, WriteFileNoCallback)
+{
     std::string wcontent = "This is AsyncTest::WriteFile";
 
     async_->writeFile(filename, wcontent);
@@ -84,7 +89,8 @@ TEST_F(AsyncTest, WriteFileNoCallback) {
 }
 
 /// 测试 Async::appendFile() 函数
-TEST_F(AsyncTest, appendFile) {
+TEST_F(AsyncTest, appendFile)
+{
     std::string wcontent_1 = "This is string1;";
     std::string wcontent_2 = "This is string2.";
     int errcode_1 = -1;
@@ -105,7 +111,8 @@ TEST_F(AsyncTest, appendFile) {
 }
 
 /// 测试 Async::appendFile() 函数，不带回调
-TEST_F(AsyncTest, appendFileNoCallback) {
+TEST_F(AsyncTest, appendFileNoCallback)
+{
     std::string wcontent_1 = "This is string1;";
     std::string wcontent_2 = "This is string2.";
 
@@ -121,19 +128,18 @@ TEST_F(AsyncTest, appendFileNoCallback) {
 }
 
 /// 测试 Async::readFile() 函数
-TEST_F(AsyncTest, ReadFile) {
+TEST_F(AsyncTest, ReadFile)
+{
     std::string wcontent = "This is AsyncTest::ReadFile";
 
     ASSERT_TRUE(util::fs::WriteStringToTextFile(filename, wcontent));
 
     int errcode = -1;
     std::string rcontent;
-    async_->readFile(filename,
-        [&](int code, const std::string &content) {
-            errcode = code;
-            rcontent = content;
-        }
-    );
+    async_->readFile(filename, [&](int code, const std::string &content) {
+        errcode = code;
+        rcontent = content;
+    });
 
     loop_->exitLoop(std::chrono::milliseconds(100));
     loop_->runLoop();
@@ -143,19 +149,18 @@ TEST_F(AsyncTest, ReadFile) {
 }
 
 /// 测试 Async::readFileLines() 函数
-TEST_F(AsyncTest, ReadFileLines) {
+TEST_F(AsyncTest, ReadFileLines)
+{
     std::string wcontent = "first\nsecond\nthird";
 
     ASSERT_TRUE(util::fs::WriteStringToTextFile(filename, wcontent));
 
     int errcode = -1;
     std::vector<std::string> rcontent_vec;
-    async_->readFileLines(filename,
-        [&](int code, std::vector<std::string> &lines) {
-            errcode = code;
-            rcontent_vec = std::move(lines);
-        }
-    );
+    async_->readFileLines(filename, [&](int code, std::vector<std::string> &lines) {
+        errcode = code;
+        rcontent_vec = std::move(lines);
+    });
 
     loop_->exitLoop(std::chrono::milliseconds(100));
     loop_->runLoop();
@@ -167,7 +172,8 @@ TEST_F(AsyncTest, ReadFileLines) {
 }
 
 /// 测试 Async::removeFile() 函数，不带回调
-TEST_F(AsyncTest, removeFileNoCallback) {
+TEST_F(AsyncTest, removeFileNoCallback)
+{
     util::fs::WriteStringToTextFile(filename, "any");
     ASSERT_TRUE(util::fs::IsFileExist(filename));
 
@@ -179,7 +185,8 @@ TEST_F(AsyncTest, removeFileNoCallback) {
     ASSERT_FALSE(util::fs::IsFileExist(filename));
 }
 
-TEST_F(AsyncTest, executeCmdOnly) {
+TEST_F(AsyncTest, executeCmdOnly)
+{
     std::string wcontent = "This is AsyncTest::executeCmd";
 
     async_->executeCmd("echo -n '" + wcontent + "' > " + filename);
@@ -192,18 +199,17 @@ TEST_F(AsyncTest, executeCmdOnly) {
     EXPECT_EQ(rcontent, wcontent);
 }
 
-TEST_F(AsyncTest, executeCmdThenGetResult) {
+TEST_F(AsyncTest, executeCmdThenGetResult)
+{
     std::string wcontent = "This is AsyncTest::executeCmd with cb";
     ASSERT_TRUE(util::fs::WriteStringToTextFile(filename, wcontent));
 
     int errcode = -1;
     std::string rcontent;
-    async_->executeCmd("cat " + filename,
-        [&](int code, const std::string &content) {
-            errcode = code;
-            rcontent = content;
-        }
-    );
+    async_->executeCmd("cat " + filename, [&](int code, const std::string &content) {
+        errcode = code;
+        rcontent = content;
+    });
 
     loop_->exitLoop(std::chrono::milliseconds(100));
     loop_->runLoop();
@@ -212,6 +218,6 @@ TEST_F(AsyncTest, executeCmdThenGetResult) {
     EXPECT_EQ(rcontent, wcontent);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace eventx
+}  // namespace tbox

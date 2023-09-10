@@ -17,9 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-#include "log.h"
 #include "log_output.h"
+
+#include <gtest/gtest.h>
+
+#include "log.h"
 
 TEST(Log, Levels)
 {

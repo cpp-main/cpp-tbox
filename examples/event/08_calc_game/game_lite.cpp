@@ -18,26 +18,26 @@
  * of the source tree.
  */
 #include "game_lite.h"
+
 #include <unistd.h>
+
 #include <cmath>
 #include <iostream>
 
 using namespace tbox;
 using namespace std;
 
-GameLite::GameLite() :
-    wp_loop_(nullptr),
-    sp_30sec_timer_(nullptr),
-    sp_20sec_timer_(nullptr),
-    sp_10sec_timer_(nullptr),
-    sp_stdin_read_ev_(nullptr),
-    right_answer_(0),
-    remain_question_number_(5)
-{ }
+GameLite::GameLite()
+    : wp_loop_(nullptr),
+      sp_30sec_timer_(nullptr),
+      sp_20sec_timer_(nullptr),
+      sp_10sec_timer_(nullptr),
+      sp_stdin_read_ev_(nullptr),
+      right_answer_(0),
+      remain_question_number_(5)
+{}
 
-GameLite::~GameLite()
-{
-}
+GameLite::~GameLite() {}
 
 void GameLite::init(Loop *wp_loop)
 {
@@ -62,7 +62,9 @@ void GameLite::init(Loop *wp_loop)
     sp_stdin_read_ev_->setCallback(std::bind(&GameLite::onStdinReadable, this, _1));
 
     cout << "Welcome to Calculate GameLite." << endl
-         << "You need answer 5 questions in 30 second. Each question has only 10 second." << endl
+         << "You need answer 5 questions in 30 second. Each question has only "
+            "10 second."
+         << endl
          << "Here we go!" << endl;
 
     srand(time(NULL));

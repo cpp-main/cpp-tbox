@@ -17,10 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "condition.hpp"
-#include "broadcast.hpp"
+
+#include <gtest/gtest.h>
+
 #include <tbox/base/scope_exit.hpp>
+
+#include "broadcast.hpp"
 
 using namespace std;
 using namespace tbox;
@@ -33,7 +36,7 @@ using namespace tbox::coroutine;
 TEST(Condition, WaitAll)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -42,22 +45,22 @@ TEST(Condition, WaitAll)
 
     int number = 0;
 
-    auto wait_entry = [&] (Scheduler &sch) {
+    auto wait_entry = [&](Scheduler &sch) {
         cond.add("post1");
         cond.add("post2");
-        cond.wait();    //! 要等 post_entry 对应的协程执行完才能执行
+        cond.wait();  //! 要等 post_entry 对应的协程执行完才能执行
         EXPECT_EQ(number, 2);
 
         cond.add("post1");
         cond.add("post2");
         bc.post();
-        cond.wait();    //! 再次等 post_entry 对应的协程执行完
+        cond.wait();  //! 再次等 post_entry 对应的协程执行完
 
         EXPECT_EQ(number, 4);
         (void)sch;
     };
 
-    auto post_entry = [&] (Scheduler &sch) {
+    auto post_entry = [&](Scheduler &sch) {
         number += 1;
         cond.post(sch.getName());
 
@@ -79,7 +82,7 @@ TEST(Condition, WaitAll)
 TEST(Condition, WaitAll_NotMeet)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -88,7 +91,7 @@ TEST(Condition, WaitAll_NotMeet)
 
     bool wait_done = false;
 
-    auto wait_entry = [&] (Scheduler &sch) {
+    auto wait_entry = [&](Scheduler &sch) {
         cond.add("post1");
         cond.add("post2");
         cond.wait();
@@ -96,9 +99,7 @@ TEST(Condition, WaitAll_NotMeet)
         (void)sch;
     };
 
-    auto post_entry = [&] (Scheduler &sch) {
-        cond.post(sch.getName());
-    };
+    auto post_entry = [&](Scheduler &sch) { cond.post(sch.getName()); };
 
     sch.create(wait_entry);
     sch.create(post_entry, true, "post1");
@@ -112,22 +113,22 @@ TEST(Condition, WaitAll_NotMeet)
 TEST(Condition, WaitAny)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     Condition<string> cond(sch, Condition<string>::Logic::kAny);
     bool post_run = false;
 
-    auto wait_entry = [&] (Scheduler &sch) {
+    auto wait_entry = [&](Scheduler &sch) {
         cond.add("post1");
         cond.add("post2");
-        cond.wait();    //! 要等 post_entry 对应的协程执行完才能执行
+        cond.wait();  //! 要等 post_entry 对应的协程执行完才能执行
         EXPECT_TRUE(post_run);
         (void)sch;
     };
 
-    auto post_entry = [&] (Scheduler &sch) {
+    auto post_entry = [&](Scheduler &sch) {
         post_run = true;
         cond.post(sch.getName());
     };
@@ -141,4 +142,3 @@ TEST(Condition, WaitAny)
 
     sch.cleanup();
 }
-

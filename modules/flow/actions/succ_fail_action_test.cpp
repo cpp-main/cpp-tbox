@@ -17,18 +17,20 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "succ_fail_action.h"
+
 #include <gtest/gtest.h>
-#include <tbox/event/loop.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
 
-#include "succ_fail_action.h"
+#include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
 namespace flow {
 
-TEST(SuccAction, base) {
+TEST(SuccAction, base)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -36,12 +38,10 @@ TEST(SuccAction, base) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_TRUE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_TRUE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -49,7 +49,8 @@ TEST(SuccAction, base) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(FailAction, base) {
+TEST(FailAction, base)
+{
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -57,12 +58,10 @@ TEST(FailAction, base) {
     action.start();
 
     bool is_callback = false;
-    action.setFinishCallback(
-        [&](bool succ) {
-            EXPECT_FALSE(succ);
-            is_callback = true;
-        }
-    );
+    action.setFinishCallback([&](bool succ) {
+        EXPECT_FALSE(succ);
+        is_callback = true;
+    });
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -70,5 +69,5 @@ TEST(FailAction, base) {
     EXPECT_TRUE(is_callback);
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

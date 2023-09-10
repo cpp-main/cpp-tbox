@@ -25,15 +25,14 @@
  * 本示例主要用于演示TcpClient的使用方法
  */
 
-#include <iostream>
-
-#include <tbox/network/tcp_client.h>
-#include <tbox/network/stdio_stream.h>
-
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
+#include <tbox/network/stdio_stream.h>
+#include <tbox/network/tcp_client.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -67,20 +66,18 @@ int main(int argc, char **argv)
     client.initialize(bind_addr);
     client.start();
 
-    client.bind(&stdio);   //!< client绑定stdio
-    stdio.bind(&client);   //!< stdio绑定client
+    client.bind(&stdio);  //!< client绑定stdio
+    stdio.bind(&client);  //!< stdio绑定client
 
     //! 注册ctrl+C停止信号
     SignalEvent *sp_stop_ev = sp_loop->newSignalEvent();
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [sp_loop, &client] (int) {
-            client.stop();
-            sp_loop->exitLoop();    //! (3) 退出事件循环
-        }
-    );
+    sp_stop_ev->setCallback([sp_loop, &client](int) {
+        client.stop();
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");

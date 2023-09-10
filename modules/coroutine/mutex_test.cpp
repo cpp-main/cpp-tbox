@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "mutex.hpp"
+
+#include <gtest/gtest.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -32,14 +34,14 @@ using namespace tbox::coroutine;
 TEST(Mutex, TwoRoutineUsingSharedValue)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     Mutex mutex(sch);
-    int shared_var = 1; //! 共享的变量
+    int shared_var = 1;  //! 共享的变量
 
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 10; ++i) {
             mutex.lock();
             shared_var *= 2;
@@ -48,11 +50,11 @@ TEST(Mutex, TwoRoutineUsingSharedValue)
             sch.yield();
             shared_var /= 10;
             mutex.unlock();
-            //cout << "1: " << shared_var << endl;
+            // cout << "1: " << shared_var << endl;
         }
     };
 
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 10; ++i) {
             mutex.lock();
             shared_var += 4;
@@ -61,7 +63,7 @@ TEST(Mutex, TwoRoutineUsingSharedValue)
             sch.yield();
             shared_var -= 7;
             mutex.unlock();
-            //cout << "2: " << shared_var << endl;
+            // cout << "2: " << shared_var << endl;
         }
     };
 
@@ -80,7 +82,7 @@ TEST(Mutex, TwoRoutineUsingSharedValue)
 TEST(Mutex, DuplicateLock)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -88,7 +90,7 @@ TEST(Mutex, DuplicateLock)
     int times = 3;
     int count = 0;
 
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i = 0; i < times; ++i) {
             mutex.lock();
             ++count;
@@ -110,7 +112,7 @@ TEST(Mutex, DuplicateLock)
 TEST(Mutex, InvalidUnlock)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -119,25 +121,23 @@ TEST(Mutex, InvalidUnlock)
     bool is_routine2_run = false;
 
     //! 第一个协程，直接对资源进行加锁，然后就退了
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         mutex.lock();
         (void)sch;
     };
     //! 第二个协程，申请资源得不到，应该阻塞这里了
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         sch.yield();
         mutex.lock();
-        if (sch.isCanceled())
-            return;
+        if (sch.isCanceled()) return;
         is_routine2_run = true;
     };
     //! 第三个协程，伪造unlock()操作，试图让协程2继续下去
-    auto routine3_entry = [&] (Scheduler &sch) {
+    auto routine3_entry = [&](Scheduler &sch) {
         sch.yield();
         sch.yield();
         mutex.unlock();
     };
-
 
     sch.create(routine1_entry);
     sch.create(routine2_entry);
@@ -156,14 +156,14 @@ TEST(Mutex, InvalidUnlock)
 TEST(MutexLocker, TwoRoutineUsingSharedValue)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     Mutex mutex(sch);
-    int shared_var = 1; //! 共享的变量
+    int shared_var = 1;  //! 共享的变量
 
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 10; ++i) {
             Mutex::Locker _l(mutex);
             shared_var *= 2;
@@ -171,11 +171,11 @@ TEST(MutexLocker, TwoRoutineUsingSharedValue)
             shared_var *= 5;
             sch.yield();
             shared_var /= 10;
-            //cout << "1: " << shared_var << endl;
+            // cout << "1: " << shared_var << endl;
         }
     };
 
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 10; ++i) {
             Mutex::Locker _l(mutex);
             shared_var += 4;
@@ -183,7 +183,7 @@ TEST(MutexLocker, TwoRoutineUsingSharedValue)
             shared_var += 3;
             sch.yield();
             shared_var -= 7;
-            //cout << "2: " << shared_var << endl;
+            // cout << "2: " << shared_var << endl;
         }
     };
 
@@ -197,4 +197,3 @@ TEST(MutexLocker, TwoRoutineUsingSharedValue)
 
     sch.cleanup();
 }
-

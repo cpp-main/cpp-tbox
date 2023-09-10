@@ -17,18 +17,20 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-
-#include <tbox/base/json.hpp>
 #include <tbox/util/json_deep_loader.h>
+
+#include <iostream>
+#include <tbox/base/json.hpp>
 
 using namespace std;
 
-void PrintUsage(const char *proc) {
+void PrintUsage(const char *proc)
+{
     cout << "Usage: " << proc << " your.json" << endl;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     if (argc < 2) {
         PrintUsage(argv[0]);
         return 0;

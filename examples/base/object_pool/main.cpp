@@ -18,25 +18,29 @@
  * of the source tree.
  */
 /**
- * 本示例对 ObjectPool 与 new,delete 的时间耗时进行了统计，然后打印出两者平均耗时
+ * 本示例对 ObjectPool 与 new,delete
+ * 的时间耗时进行了统计，然后打印出两者平均耗时
  */
-#include <tbox/base/object_pool.hpp>
 #include <chrono>
 #include <iostream>
+#include <tbox/base/object_pool.hpp>
 
-struct MyStruct {
+struct MyStruct
+{
   public:
-    MyStruct(int i) : i_(i) { }
+    MyStruct(int i) : i_(i) {}
 
     int i_;
     char array[100];
 };
 
-struct MyBlock {
+struct MyBlock
+{
     char array[1500];
 };
 
-int main() {
+int main()
+{
     tbox::ObjectPool<int> op1;
     tbox::ObjectPool<MyStruct> op2;
     tbox::ObjectPool<MyBlock> op3;

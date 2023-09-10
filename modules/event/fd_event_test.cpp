@@ -17,16 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include "fd_event.h"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <gtest/gtest.h>
+#include <unistd.h>
+
 #include <cstring>
 
 #include "loop.h"
-#include "fd_event.h"
-
 #include "misc.h"
 
 namespace tbox {
@@ -40,7 +40,7 @@ TEST(FdEvent, DisableSelfInReadCallback)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        int fds[2] = { 0 };
+        int fds[2] = {0};
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
 
         int read_fd(fds[0]);
@@ -52,27 +52,25 @@ TEST(FdEvent, DisableSelfInReadCallback)
         EXPECT_TRUE(read_event->enable());
 
         int run_time = 0;
-        read_event->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kReadEvent);
-                char tmp[11] = {0};
-                auto rsize = read(read_fd, tmp, 10);
-                EXPECT_EQ(rsize, 10);
-                EXPECT_STREQ(tmp, "0123456789");
-                ++run_time;
+        read_event->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kReadEvent);
+            char tmp[11] = {0};
+            auto rsize = read(read_fd, tmp, 10);
+            EXPECT_EQ(rsize, 10);
+            EXPECT_STREQ(tmp, "0123456789");
+            ++run_time;
 
-                auto wsize = ::write(write_fd, "0123456789", 10);
-                (void)wsize;
-                read_event->disable();
-            }
-        );
+            auto wsize = ::write(write_fd, "0123456789", 10);
+            (void)wsize;
+            read_event->disable();
+        });
 
         auto wsize = ::write(write_fd, "0123456789", 10);
         (void)wsize;
         sp_loop->exitLoop(std::chrono::milliseconds(50));
         sp_loop->runLoop();
 
-        EXPECT_EQ(run_time, 1); //! 应该只执行一次
+        EXPECT_EQ(run_time, 1);  //! 应该只执行一次
 
         delete read_event;
         delete sp_loop;
@@ -88,7 +86,7 @@ TEST(FdEvent, DisableSelfInWriteCallback)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        int fds[2] = { 0 };
+        int fds[2] = {0};
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
 
         int read_fd(fds[0]);
@@ -100,20 +98,18 @@ TEST(FdEvent, DisableSelfInWriteCallback)
         EXPECT_TRUE(write_event->enable());
 
         int run_time = 0;
-        write_event->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kWriteEvent);
-                auto wsize = ::write(write_fd, "0", 1);
-                (void)wsize;
-                ++run_time;
-                write_event->disable();
-            }
-        );
+        write_event->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kWriteEvent);
+            auto wsize = ::write(write_fd, "0", 1);
+            (void)wsize;
+            ++run_time;
+            write_event->disable();
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(50));
         sp_loop->runLoop();
 
-        EXPECT_EQ(run_time, 1); //! 应该只执行一次
+        EXPECT_EQ(run_time, 1);  //! 应该只执行一次
 
         delete write_event;
         delete sp_loop;
@@ -129,7 +125,7 @@ TEST(FdEvent, OneWriteMultiRead)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        int fds[2] = { 0 };
+        int fds[2] = {0};
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
 
         int read_fd(fds[0]);
@@ -149,30 +145,26 @@ TEST(FdEvent, OneWriteMultiRead)
         bool event1_run = false;
         bool event2_run = false;
 
-        read_event1->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kReadEvent);
-                char tmp[11] = {0};
-                auto rsize = read(read_fd, tmp, 10);
-                if (rsize == -1)
-                    EXPECT_EQ(errno, EAGAIN);
-                else
-                    EXPECT_STREQ(tmp, "0123456789");
-                event1_run = true;
-            }
-        );
-        read_event2->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kReadEvent);
-                char tmp[11] = {0};
-                auto rsize = read(read_fd, tmp, 10);
-                if (rsize == -1)
-                    EXPECT_EQ(errno, EAGAIN);
-                else
-                    EXPECT_STREQ(tmp, "0123456789");
-                event2_run = true;
-            }
-        );
+        read_event1->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kReadEvent);
+            char tmp[11] = {0};
+            auto rsize = read(read_fd, tmp, 10);
+            if (rsize == -1)
+                EXPECT_EQ(errno, EAGAIN);
+            else
+                EXPECT_STREQ(tmp, "0123456789");
+            event1_run = true;
+        });
+        read_event2->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kReadEvent);
+            char tmp[11] = {0};
+            auto rsize = read(read_fd, tmp, 10);
+            if (rsize == -1)
+                EXPECT_EQ(errno, EAGAIN);
+            else
+                EXPECT_STREQ(tmp, "0123456789");
+            event2_run = true;
+        });
 
         auto wsize = ::write(write_fd, "0123456789", 10);
         (void)wsize;
@@ -197,7 +189,7 @@ TEST(FdEvent, MultiWriteOneRead)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        int fds[2] = { 0 };
+        int fds[2] = {0};
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
 
         int read_fd(fds[0]);
@@ -210,42 +202,38 @@ TEST(FdEvent, MultiWriteOneRead)
         auto write_event2 = sp_loop->newFdEvent();
 
         EXPECT_TRUE(read_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist));
-        EXPECT_TRUE(write_event1->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kOneshot));
-        EXPECT_TRUE(write_event2->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kOneshot));
+        EXPECT_TRUE(
+            write_event1->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kOneshot));
+        EXPECT_TRUE(
+            write_event2->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kOneshot));
 
         EXPECT_TRUE(read_event->enable());
         EXPECT_TRUE(write_event1->enable());
         EXPECT_TRUE(write_event2->enable());
 
-        bool event_run  = false;
+        bool event_run = false;
         bool event1_run = false;
         bool event2_run = false;
 
-        read_event->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kReadEvent);
-                char recv[21] = {0};
-                auto rsize = read(read_fd, recv, 20);
-                EXPECT_EQ(rsize, 20);
-                event_run = true;
-            }
-        );
-        write_event1->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kWriteEvent);
-                auto wsize = ::write(write_fd, "abcdefghij", 10);
-                EXPECT_EQ(wsize, 10);
-                event1_run = true;
-            }
-        );
-        write_event2->setCallback(
-            [&] (short events) {
-                EXPECT_EQ(events, FdEvent::kWriteEvent);
-                auto wsize = ::write(write_fd, "0123456789", 10);
-                EXPECT_EQ(wsize, 10);
-                event2_run = true;
-            }
-        );
+        read_event->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kReadEvent);
+            char recv[21] = {0};
+            auto rsize = read(read_fd, recv, 20);
+            EXPECT_EQ(rsize, 20);
+            event_run = true;
+        });
+        write_event1->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kWriteEvent);
+            auto wsize = ::write(write_fd, "abcdefghij", 10);
+            EXPECT_EQ(wsize, 10);
+            event1_run = true;
+        });
+        write_event2->setCallback([&](short events) {
+            EXPECT_EQ(events, FdEvent::kWriteEvent);
+            auto wsize = ::write(write_fd, "0123456789", 10);
+            EXPECT_EQ(wsize, 10);
+            event2_run = true;
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(50));
         sp_loop->runLoop();
@@ -263,7 +251,6 @@ TEST(FdEvent, MultiWriteOneRead)
         close(read_fd);
     }
 }
-
 
 TEST(FdEvent, DeleteLater)
 {
@@ -284,7 +271,7 @@ TEST(FdEvent, Benchmark)
     for (auto e : engines) {
         cout << "engine: " << e << endl;
 
-        int fds[2] = { 0 };
+        int fds[2] = {0};
         ASSERT_EQ(pipe2(fds, O_CLOEXEC | O_NONBLOCK), 0);
 
         int read_fd(fds[0]);
@@ -296,15 +283,13 @@ TEST(FdEvent, Benchmark)
         read_event->enable();
 
         int run_time = 0;
-        read_event->setCallback(
-            [&] (short events) {
-                char dummy = 0;
-                auto wsize = ::write(write_fd, &dummy, 1);
-                ++run_time;
-                (void)wsize;
-                (void)events;
-            }
-        );
+        read_event->setCallback([&](short events) {
+            char dummy = 0;
+            auto wsize = ::write(write_fd, &dummy, 1);
+            ++run_time;
+            (void)wsize;
+            (void)events;
+        });
 
         char dummy = 0;
         auto wsize = ::write(write_fd, &dummy, 1);
@@ -321,7 +306,6 @@ TEST(FdEvent, Benchmark)
         close(read_fd);
     }
 }
-
 
 /// 检查重复initialize()时会不会出现内存泄漏问题
 TEST(FdEvent, Reinitialize)
@@ -361,10 +345,11 @@ TEST(FdEvent, Exception)
 
     int run_time = 0;
 
-    EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
-    read_fd_event->setCallback([&](short events){
+    EXPECT_TRUE(read_fd_event->initialize(
+        read_fd, FdEvent::kReadEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    read_fd_event->setCallback([&](short events) {
         if (events & FdEvent::kReadEvent) {
-            char data[100] = { 0};
+            char data[100] = {0};
             ssize_t len = read(read_fd, data, sizeof(data));
             EXPECT_EQ(len, sizeof(int));
         }
@@ -377,8 +362,9 @@ TEST(FdEvent, Exception)
 
     read_fd_event->enable();
 
-    EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
-    write_fd_event->setCallback([&](short events){
+    EXPECT_TRUE(write_fd_event->initialize(
+        write_fd, FdEvent::kWriteEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    write_fd_event->setCallback([&](short events) {
         if (events & FdEvent::kWriteEvent) {
             int data = 0;
             ssize_t ret = write(write_fd, &data, sizeof(data));
@@ -401,5 +387,5 @@ TEST(FdEvent, Exception)
     delete loop;
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

@@ -20,10 +20,10 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/dbus/loop.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/event/timer_event.h>
-#include <tbox/dbus/loop.h>
 
 tbox::event::Loop *g_loop = nullptr;
 DBusConnection *g_dbus_conn = nullptr;
@@ -43,7 +43,7 @@ DBusHandlerResult MessageFilter(DBusConnection *, DBusMessage *dbus_msg, void *d
             return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
         }
 
-        char* sigvalue;
+        char *sigvalue;
         dbus_message_iter_get_basic(&msg_args_iter, &sigvalue);
         LogDbg("got signal dbus_msg: '%s'", sigvalue);
 
@@ -92,7 +92,9 @@ void DesinitDbus()
 void AddWatchs()
 {
     DBusError dbus_error = DBUS_ERROR_INIT;
-    dbus_bus_add_match(g_dbus_conn, "type='signal',path='/test/signal/Object',interface='test.signal.Type'",&dbus_error);
+    dbus_bus_add_match(g_dbus_conn,
+                       "type='signal',path='/test/signal/Object',interface='test.signal.Type'",
+                       &dbus_error);
     if (dbus_error_is_set(&dbus_error)) {
         LogErr("open dbus fail, %s", dbus_error.message);
         dbus_error_free(&dbus_error);
@@ -101,7 +103,8 @@ void AddWatchs()
 
 void SendSignalMessage()
 {
-    DBusMessage *bus_msg = dbus_message_new_signal("/test/signal/Object", "test.signal.Type", "Test");
+    DBusMessage *bus_msg =
+        dbus_message_new_signal("/test/signal/Object", "test.signal.Type", "Test");
     if (bus_msg == nullptr) {
         LogErr("new message fail");
         return;
@@ -131,8 +134,7 @@ int main()
 
     g_loop = tbox::event::Loop::New();
 
-    if (!InitDbus())
-        return 0;
+    if (!InitDbus()) return 0;
 
     AddWatchs();
 
@@ -157,4 +159,3 @@ int main()
     delete g_loop;
     return 0;
 }
-

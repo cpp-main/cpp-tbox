@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "request.h"
+
+#include <gtest/gtest.h>
 
 namespace tbox {
 namespace http {
@@ -37,12 +38,11 @@ TEST(Request, ToString_Get)
 
     EXPECT_TRUE(req.isValid());
 
-    const char *target_str = \
+    const char *target_str =
         "GET /get_user_info.php?id=john%20hans HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 0\r\n"
-        "\r\n"
-        ;
+        "\r\n";
 
     EXPECT_EQ(req.toString(), target_str);
 }
@@ -59,17 +59,16 @@ TEST(Request, ToString_Post)
 
     EXPECT_TRUE(req.isValid());
 
-    const char *target_str = \
+    const char *target_str =
         "POST /login.php#tag HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
-        "username=hevake&pwd=abc123"
-        ;
+        "username=hevake&pwd=abc123";
 
     EXPECT_EQ(req.toString(), target_str);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace http
+}  // namespace tbox

@@ -17,12 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "timer_event.h"
+
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include "loop.h"
-#include "timer_event.h"
 
 namespace tbox {
 namespace event {
@@ -90,17 +91,15 @@ TEST(TimerEvent, DisableSelfInCallback)
         EXPECT_TRUE(timer_event->enable());
 
         int run_time = 0;
-        timer_event->setCallback(
-            [&] () {
-                timer_event->disable();
-                ++run_time;
-            }
-        );
+        timer_event->setCallback([&]() {
+            timer_event->disable();
+            ++run_time;
+        });
 
         sp_loop->exitLoop(std::chrono::milliseconds(100));
         sp_loop->runLoop();
 
-        EXPECT_EQ(run_time, 1); //! 应该只执行一次
+        EXPECT_EQ(run_time, 1);  //! 应该只执行一次
 
         delete timer_event;
         delete sp_loop;
@@ -119,18 +118,15 @@ TEST(TimerEvent, Precision)
 
         int count = 0;
         auto start_time = chrono::steady_clock::now();
-        timer_event->setCallback(
-            [&] {
-                ++count;
+        timer_event->setCallback([&] {
+            ++count;
 
-                auto d = chrono::steady_clock::now() - start_time;
-                EXPECT_GT(d, chrono::milliseconds(count * 100 - kAcceptableError));
-                EXPECT_LT(d, chrono::milliseconds(count * 100 + kAcceptableError));
+            auto d = chrono::steady_clock::now() - start_time;
+            EXPECT_GT(d, chrono::milliseconds(count * 100 - kAcceptableError));
+            EXPECT_LT(d, chrono::milliseconds(count * 100 + kAcceptableError));
 
-                if (count == 20)
-                    sp_loop->exitLoop();
-            }
-        );
+            if (count == 20) sp_loop->exitLoop();
+        });
         sp_loop->runLoop();
 
         delete timer_event;
@@ -138,5 +134,5 @@ TEST(TimerEvent, Precision)
     }
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

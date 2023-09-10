@@ -17,15 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <cstring>
-
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/loop.h>
-#include <tbox/event/signal_event.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
+#include <tbox/event/signal_event.h>
 #include <tbox/mqtt/client.h>
+
+#include <cstring>
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
     LogOutput_Enable();
 
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
     mqtt::Client mqtt(sp_loop);
 
@@ -69,12 +69,10 @@ int main(int argc, char **argv)
     SetScopeExitAction([stop_ev] { delete stop_ev; });
     stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     stop_ev->enable();
-    stop_ev->setCallback(
-        [sp_loop, &mqtt] (int) {
-            mqtt.stop();
-            sp_loop->exitLoop();
-        }
-    );
+    stop_ev->setCallback([sp_loop, &mqtt](int) {
+        mqtt.stop();
+        sp_loop->exitLoop();
+    });
 
     LogInfo("Start");
     sp_loop->runLoop(Loop::Mode::kForever);

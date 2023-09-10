@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "broadcast.hpp"
+
+#include <gtest/gtest.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -32,7 +34,7 @@ using namespace tbox::coroutine;
 TEST(Broadcast, TwoRoutineUsingSharedValue)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -40,15 +42,14 @@ TEST(Broadcast, TwoRoutineUsingSharedValue)
     int start_count = 0;
     int end_count = 0;
 
-    auto wait_entry = [&] (Scheduler &sch) {
+    auto wait_entry = [&](Scheduler &sch) {
         ++start_count;
         bc.wait();
-        if (sch.isCanceled())
-            return;
+        if (sch.isCanceled()) return;
         ++end_count;
     };
 
-    auto post_entry = [&] (Scheduler &sch) {
+    auto post_entry = [&](Scheduler &sch) {
         sch.yield();
         EXPECT_EQ(start_count, 3);  //! 检查是不是所有的协程都在等
         EXPECT_EQ(end_count, 0);
@@ -63,7 +64,7 @@ TEST(Broadcast, TwoRoutineUsingSharedValue)
     sp_loop->exitLoop(chrono::milliseconds(100));
     sp_loop->runLoop();
 
-    EXPECT_EQ(end_count, 3);    //! 检查是不是所有的协程都等到了
+    EXPECT_EQ(end_count, 3);  //! 检查是不是所有的协程都等到了
 
     sch.cleanup();
 }

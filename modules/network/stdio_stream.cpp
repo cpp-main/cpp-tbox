@@ -24,8 +24,7 @@
 namespace tbox {
 namespace network {
 
-StdinStream::StdinStream(event::Loop *wp_loop) :
-    buff_fd_(wp_loop)
+StdinStream::StdinStream(event::Loop *wp_loop) : buff_fd_(wp_loop)
 {
     buff_fd_.initialize(STDIN_FILENO, BufferedFd::kReadOnly);
 }
@@ -45,8 +44,7 @@ bool StdinStream::disable()
     return buff_fd_.disable();
 }
 
-StdoutStream::StdoutStream(event::Loop *wp_loop) :
-    buff_fd_(wp_loop)
+StdoutStream::StdoutStream(event::Loop *wp_loop) : buff_fd_(wp_loop)
 {
     buff_fd_.initialize(STDOUT_FILENO, BufferedFd::kWriteOnly);
 }
@@ -66,9 +64,7 @@ bool StdoutStream::disable()
     return buff_fd_.disable();
 }
 
-StdioStream::StdioStream(event::Loop *wp_loop) :
-    in_buff_fd_(wp_loop),
-    out_buff_fd_(wp_loop)
+StdioStream::StdioStream(event::Loop *wp_loop) : in_buff_fd_(wp_loop), out_buff_fd_(wp_loop)
 {
     in_buff_fd_.initialize(STDIN_FILENO, BufferedFd::kReadOnly);
     out_buff_fd_.initialize(STDOUT_FILENO, BufferedFd::kWriteOnly);
@@ -94,5 +90,5 @@ bool StdioStream::disable()
     return in_buff_fd_.disable() && out_buff_fd_.disable();
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

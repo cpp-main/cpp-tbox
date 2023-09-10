@@ -17,9 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-
 #include "json.hpp"
+
+#include <gtest/gtest.h>
 
 TEST(Json, Parse)
 {
@@ -55,11 +55,11 @@ TEST(Json, Stringfy)
     j["name"] = "Niels";
     j["nothing"] = nullptr;
     j["answer"]["everything"] = 42;
-    j["list"] = { 1, 0, 2 };
-    j["object"] = { {"currency", "USD"}, {"value", 42.99} };
+    j["list"] = {1, 0, 2};
+    j["object"] = {{"currency", "USD"}, {"value", 42.99}};
 
-    std::string target_str = 
-R"({
+    std::string target_str =
+        R"({
     "answer": {
         "everything": 42
     },

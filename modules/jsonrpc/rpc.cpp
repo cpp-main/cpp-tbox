@@ -20,17 +20,16 @@
 #include "rpc.h"
 
 #include <tbox/base/log.h>
+
 #include <tbox/base/json.hpp>
-#include "proto.h"
+
 #include "inner_types.h"
+#include "proto.h"
 
 namespace tbox {
 namespace jsonrpc {
 
-Rpc::Rpc(event::Loop *loop)
-    : loop_(loop)
-    , request_timeout_(loop)
-    , respond_timeout_(loop)
+Rpc::Rpc(event::Loop *loop) : loop_(loop), request_timeout_(loop), respond_timeout_(loop)
 {
     using namespace std::placeholders;
     request_timeout_.setCallback(std::bind(&Rpc::onRequestTimeout, this, _1));
@@ -50,10 +49,8 @@ bool Rpc::initialize(Proto *proto, int timeout_sec)
     request_timeout_.initialize(std::chrono::seconds(1), timeout_sec);
     respond_timeout_.initialize(std::chrono::seconds(1), timeout_sec);
 
-    proto->setRecvCallback(
-        std::bind(&Rpc::onRecvRequest, this, _1, _2, _3),
-        std::bind(&Rpc::onRecvRespond, this, _1, _2, _3)
-    );
+    proto->setRecvCallback(std::bind(&Rpc::onRecvRequest, this, _1, _2, _3),
+                           std::bind(&Rpc::onRecvRespond, this, _1, _2, _3));
     proto_ = proto;
 
     return true;
@@ -162,8 +159,7 @@ void Rpc::onRecvRespond(int id, int errcode, const Json &js_result)
 {
     auto iter = request_callback_.find(id);
     if (iter != request_callback_.end()) {
-        if (iter->second)
-            iter->second(errcode, js_result);
+        if (iter->second) iter->second(errcode, js_result);
         request_callback_.erase(iter);
     }
 }
@@ -172,8 +168,7 @@ void Rpc::onRequestTimeout(int id)
 {
     auto iter = request_callback_.find(id);
     if (iter != request_callback_.end()) {
-        if (iter->second)
-            iter->second(ErrorCode::kRequestTimeout, Json());
+        if (iter->second) iter->second(ErrorCode::kRequestTimeout, Json());
         request_callback_.erase(iter);
     }
 }
@@ -182,10 +177,10 @@ void Rpc::onRespondTimeout(int id)
 {
     auto iter = tobe_respond_.find(id);
     if (iter != tobe_respond_.end()) {
-        LogWarn("respond timeout"); //! 仅仅是提示作用
+        LogWarn("respond timeout");  //! 仅仅是提示作用
         tobe_respond_.erase(iter);
     }
 }
 
-}
-}
+}  // namespace jsonrpc
+}  // namespace tbox

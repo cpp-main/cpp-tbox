@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "ip_address.h"
+
 #include <gtest/gtest.h>
 
 using namespace tbox::network;

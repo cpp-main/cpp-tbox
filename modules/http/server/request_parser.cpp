@@ -18,9 +18,11 @@
  * of the source tree.
  */
 #include "request_parser.h"
-#include <limits>
+
 #include <tbox/base/defines.h>
 #include <tbox/util/string.h>
+
+#include <limits>
 
 namespace tbox {
 namespace http {
@@ -33,13 +35,12 @@ RequestParser::~RequestParser()
 
 size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 {
-    std::string str(static_cast<const char*>(data_ptr), data_size);
+    std::string str(static_cast<const char *>(data_ptr), data_size);
     size_t pos = 0;
 
     if (state_ == State::kInit) {
         content_length_ = std::numeric_limits<size_t>::max();
-        if (sp_request_ == nullptr)
-            sp_request_ = new Request;
+        if (sp_request_ == nullptr) sp_request_ = new Request;
 
         //! 获取 method
         auto method_str_end = str.find_first_of(' ', pos);
@@ -52,7 +53,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
         /* 解析："GET /index.html HTTP/1.1\r\n" */
         auto end_pos = str.find(CRLF, method_str_end);
-        if (end_pos == std::string::npos)   //! 如果没有找到首行 \r\n，则放弃
+        if (end_pos == std::string::npos)  //! 如果没有找到首行 \r\n，则放弃
             return 0;
 
         sp_request_->method = method;
@@ -107,7 +108,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         for (;;) {
             auto end_pos = str.find(CRLF, pos);
 
-            if (end_pos == pos) {   //! 找到了空白行
+            if (end_pos == pos) {  //! 找到了空白行
                 state_ = State::kFinishedHeads;
                 pos += 2;
                 break;
@@ -128,19 +129,19 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
                 return pos;
             }
 
-            auto head_value_end_pos   = end_pos;
-            auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
+            auto head_value_end_pos = end_pos;
+            auto head_value = util::string::Strip(
+                str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
             sp_request_->headers[head_key] = head_value;
 
-            if (head_key == "Content-Length")
-                content_length_ = std::stoi(head_value);
+            if (head_key == "Content-Length") content_length_ = std::stoi(head_value);
 
             pos = end_pos + 2;
         }
     }
-    
+
     if (state_ == State::kFinishedHeads) {
-        if (content_length_ != std::numeric_limits<size_t>::max()) { //! 如果有指定 Content-Lenght
+        if (content_length_ != std::numeric_limits<size_t>::max()) {  //! 如果有指定 Content-Lenght
             if ((data_size - pos) >= content_length_) {
                 sp_request_->body = str.substr(pos, content_length_);
                 pos += content_length_;
@@ -156,7 +157,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
     return pos;
 }
 
-Request* RequestParser::getRequest()
+Request *RequestParser::getRequest()
 {
     Request *ret = nullptr;
     if (state_ == State::kFinishedAll) {
@@ -180,6 +181,6 @@ void RequestParser::reset()
     swap(tmp);
 }
 
-}
-}
-}
+}  // namespace server
+}  // namespace http
+}  // namespace tbox

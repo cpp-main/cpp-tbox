@@ -18,29 +18,30 @@
  * of the source tree.
  */
 #include "game.h"
+
 #include <unistd.h>
+
 #include <cmath>
 #include <iostream>
 
 using namespace tbox;
 using namespace std;
 
-Game::Game() :
-    wp_loop_(nullptr),
-    sp_start_timer_(nullptr),
-    sp_30sec_timer_(nullptr),
-    sp_20sec_timer_(nullptr),
-    sp_10sec_timer_(nullptr),
-    sp_stdin_read_ev_(nullptr),
-    start_countdown_(3),
-    right_answer_(0),
-    remain_question_number_(5),
-    start_tstamp_(0),
-    user_start_(false)
-{ }
+Game::Game()
+    : wp_loop_(nullptr),
+      sp_start_timer_(nullptr),
+      sp_30sec_timer_(nullptr),
+      sp_20sec_timer_(nullptr),
+      sp_10sec_timer_(nullptr),
+      sp_stdin_read_ev_(nullptr),
+      start_countdown_(3),
+      right_answer_(0),
+      remain_question_number_(5),
+      start_tstamp_(0),
+      user_start_(false)
+{}
 
-Game::~Game()
-{ }
+Game::~Game() {}
 
 void Game::init(Loop *wp_loop)
 {
@@ -69,7 +70,9 @@ void Game::init(Loop *wp_loop)
     sp_stdin_read_ev_->setCallback(std::bind(&Game::onStdinReadable, this, _1));
 
     cout << "Welcome to Calculate Game." << endl
-         << "You need answer 5 questions in 30 second. Each question has only 10 second." << endl
+         << "You need answer 5 questions in 30 second. Each question has only "
+            "10 second."
+         << endl
          << "Press ENTER to start." << endl;
 
     sp_stdin_read_ev_->enable();

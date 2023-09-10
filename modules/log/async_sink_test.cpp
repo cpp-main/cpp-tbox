@@ -17,30 +17,36 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "async_sink.h"
+
 #include <gtest/gtest.h>
 
-#include <iostream>
-#include <chrono>
 #include <algorithm>
-
-#include "async_sink.h"
+#include <chrono>
+#include <iostream>
 
 using namespace std;
 using namespace tbox::log;
 
-class TestAsyncSink : public AsyncSink {
+class TestAsyncSink : public AsyncSink
+{
   protected:
-    virtual void appendLog(const char *str, size_t len) {
+    virtual void appendLog(const char *str, size_t len)
+    {
         cout << str << endl;
         (void)len;
     }
 };
 
-class EmptyTestAsyncSink : public AsyncSink {
+class EmptyTestAsyncSink : public AsyncSink
+{
   protected:
-    virtual void appendLog(const char *str, size_t len) { (void)str; (void)len; }
+    virtual void appendLog(const char *str, size_t len)
+    {
+        (void)str;
+        (void)len;
+    }
 };
-
 
 TEST(AsyncSink, Format)
 {
@@ -78,8 +84,7 @@ TEST(AsyncSink, Benchmark)
 
     int counter = 0;
     function<void()> func = [&] {
-        for (int i = 0; i < 100; ++i)
-            LogInfo("%d %s", i, tmp.c_str());
+        for (int i = 0; i < 100; ++i) LogInfo("%d %s", i, tmp.c_str());
         sp_loop->runInLoop(func);
         counter += 100;
     };
@@ -89,7 +94,7 @@ TEST(AsyncSink, Benchmark)
     sp_loop->runLoop();
 
     delete sp_loop;
-    cout << "count in sec: " << counter/10 << endl;
+    cout << "count in sec: " << counter / 10 << endl;
     ch.cleanup();
 }
 
@@ -103,8 +108,7 @@ TEST(AsyncSink, Benchmark_Empty)
 
     int counter = 0;
     function<void()> func = [&] {
-        for (int i = 0; i < 100; ++i)
-            LogInfo("%d %s", i, tmp.c_str());
+        for (int i = 0; i < 100; ++i) LogInfo("%d %s", i, tmp.c_str());
         sp_loop->run(func);
         counter += 100;
     };
@@ -114,7 +118,6 @@ TEST(AsyncSink, Benchmark_Empty)
     sp_loop->runLoop();
 
     delete sp_loop;
-    cout << "count in sec: " << counter/10 << endl;
+    cout << "count in sec: " << counter / 10 << endl;
     ch.cleanup();
 }
-

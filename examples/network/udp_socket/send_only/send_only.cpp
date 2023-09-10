@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
 #include <tbox/network/udp_socket.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace tbox::network;

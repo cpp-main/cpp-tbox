@@ -21,19 +21,17 @@
  * 实现一个tcp的echo服务，对方发送什么就回复什么
  */
 
-#include <iostream>
-
-#include <tbox/network/tcp_acceptor.h>
-#include <tbox/network/tcp_connection.h>
-#include <tbox/network/stdio_stream.h>
-
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/fd_event.h>
 #include <tbox/event/signal_event.h>
+#include <tbox/network/stdio_stream.h>
+#include <tbox/network/tcp_acceptor.h>
+#include <tbox/network/tcp_connection.h>
 
+#include <iostream>
 #include <set>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -64,32 +62,27 @@ int main(int argc, char **argv)
     StdioStream stdio(sp_loop);
     stdio.enable();
 
-    set<TcpConnection*> conns;
+    set<TcpConnection *> conns;
 
     stdio.setReceiveCallback(
-        [&] (Buffer &buff) {
-            for (auto conn : conns)
-                conn->send(buff.readableBegin(), buff.readableSize());
+        [&](Buffer &buff) {
+            for (auto conn : conns) conn->send(buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
-        }, 0
-    );
+        },
+        0);
 
     TcpAcceptor acceptor(sp_loop);
     acceptor.initialize(bind_addr, 1);
     //! 指定有Client连接上了该做的事务
-    acceptor.setNewConnectionCallback(
-        [&] (TcpConnection *new_conn) {
-            //! (1) 指定Client将来断开时要做的事务
-            new_conn->setDisconnectedCallback(
-                [&conns, new_conn, sp_loop] {
-                    conns.erase(new_conn);  //! 将自己从 conns 中删除
-                    sp_loop->runNext([new_conn] { delete new_conn; });  //! 延后销毁自己
-                }
-            );
-            new_conn->bind(&stdio);     //! (2) 信息流绑定终端输出
-            conns.insert(new_conn);     //! (3) 将自己注册到 conns 中
-        }
-    );
+    acceptor.setNewConnectionCallback([&](TcpConnection *new_conn) {
+        //! (1) 指定Client将来断开时要做的事务
+        new_conn->setDisconnectedCallback([&conns, new_conn, sp_loop] {
+            conns.erase(new_conn);                              //! 将自己从 conns 中删除
+            sp_loop->runNext([new_conn] { delete new_conn; });  //! 延后销毁自己
+        });
+        new_conn->bind(&stdio);  //! (2) 信息流绑定终端输出
+        conns.insert(new_conn);  //! (3) 将自己注册到 conns 中
+    });
     acceptor.start();
 
     //! 注册ctrl+C停止信号
@@ -97,15 +90,14 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [sp_loop, &conns] (int) {
-            for (auto conn : conns) {
-                conn->disconnect(); //! (1) 主动断开连接
-                delete conn;        //! (2) 销毁Client对象。思考：为什么这里可以直接delete，而L51不可以？
-            }
-            sp_loop->exitLoop();    //! (3) 退出事件循环
+    sp_stop_ev->setCallback([sp_loop, &conns](int) {
+        for (auto conn : conns) {
+            conn->disconnect();  //! (1) 主动断开连接
+            delete conn;         //! (2)
+                          //! 销毁Client对象。思考：为什么这里可以直接delete，而L51不可以？
         }
-    );
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");

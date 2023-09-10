@@ -17,10 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "state_machine.h"
+
 #include <gtest/gtest.h>
 
 #include <tbox/base/json.hpp>
-#include "state_machine.h"
 
 using namespace std;
 
@@ -49,8 +50,8 @@ enum EventId {
 TEST(StateMachine, NewState)
 {
     SM sm;
-    EXPECT_TRUE (sm.newState(STATE_A, nullptr, nullptr));
-    EXPECT_TRUE (sm.newState(STATE_B, nullptr, nullptr));
+    EXPECT_TRUE(sm.newState(STATE_A, nullptr, nullptr));
+    EXPECT_TRUE(sm.newState(STATE_B, nullptr, nullptr));
     EXPECT_FALSE(sm.newState(STATE_A, nullptr, nullptr));
 }
 
@@ -61,7 +62,7 @@ TEST(StateMachine, AddRoute)
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
 
-    EXPECT_TRUE (sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr));
+    EXPECT_TRUE(sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr));
     EXPECT_FALSE(sm.addRoute(STATE_A, EVENT_1, STATE_C, nullptr, nullptr));
     EXPECT_FALSE(sm.addRoute(STATE_C, EVENT_1, STATE_B, nullptr, nullptr));
     EXPECT_FALSE(sm.addRoute(STATE_C, EVENT_1, STATE_D, nullptr, nullptr));
@@ -92,8 +93,10 @@ TEST(StateMachine, RouteWithGuard)
     sm.newState(STATE_C, nullptr, nullptr);
 
     bool condition = false;
-    sm.addRoute(STATE_A, EVENT_1, STATE_B, [&](Event){ return !condition; }, nullptr);
-    sm.addRoute(STATE_A, EVENT_1, STATE_C, [&](Event){ return condition; },  nullptr);
+    sm.addRoute(
+        STATE_A, EVENT_1, STATE_B, [&](Event) { return !condition; }, nullptr);
+    sm.addRoute(
+        STATE_A, EVENT_1, STATE_C, [&](Event) { return condition; }, nullptr);
     sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, nullptr);
     sm.addRoute(STATE_C, EVENT_2, STATE_A, nullptr, nullptr);
     sm.setInitState(STATE_A);
@@ -126,8 +129,10 @@ TEST(StateMachine, StateWithEnterAndExitAction)
     int b_enter_counter = 0;
     int b_exit_counter = 0;
 
-    sm.newState(STATE_A, [&](Event){ ++a_enter_counter; }, [&](Event){ ++a_exit_counter; });
-    sm.newState(STATE_B, [&](Event){ ++b_enter_counter; }, [&](Event){ ++b_exit_counter; });
+    sm.newState(
+        STATE_A, [&](Event) { ++a_enter_counter; }, [&](Event) { ++a_exit_counter; });
+    sm.newState(
+        STATE_B, [&](Event) { ++b_enter_counter; }, [&](Event) { ++b_exit_counter; });
 
     sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
     sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, nullptr);
@@ -157,8 +162,8 @@ TEST(StateMachine, EventWithAction)
     int count_1 = 0;
     int count_2 = 0;
 
-    sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, [&](Event){ ++count_1; });
-    sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, [&](Event){ ++count_2; });
+    sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, [&](Event) { ++count_1; });
+    sm.addRoute(STATE_B, EVENT_2, STATE_A, nullptr, [&](Event) { ++count_2; });
     sm.setInitState(STATE_A);
     sm.start();
 
@@ -198,8 +203,10 @@ TEST(StateMachine, Restart)
     int b_enter_counter = 0;
     int b_exit_counter = 0;
 
-    sm.newState(STATE_A, [&](Event){ ++a_enter_counter; }, [&](Event){ ++a_exit_counter; });
-    sm.newState(STATE_B, [&](Event){ ++b_enter_counter; }, [&](Event){ ++b_exit_counter; });
+    sm.newState(
+        STATE_A, [&](Event) { ++a_enter_counter; }, [&](Event) { ++a_exit_counter; });
+    sm.newState(
+        STATE_B, [&](Event) { ++b_enter_counter; }, [&](Event) { ++b_exit_counter; });
 
     sm.addRoute(STATE_A, EVENT_1, STATE_B, nullptr, nullptr);
     sm.setInitState(STATE_A);
@@ -224,7 +231,8 @@ TEST(StateMachine, EnumClass)
     int enter_counter = 0;
     int exit_counter = 0;
 
-    sm.newState(StateId::k1, [&](Event){ ++enter_counter; }, [&](Event){ ++exit_counter; });
+    sm.newState(
+        StateId::k1, [&](Event) { ++enter_counter; }, [&](Event) { ++exit_counter; });
     sm.newState(StateId::k2, nullptr, nullptr);
 
     sm.addRoute(StateId::k1, EventId::k1, StateId::k2, nullptr, nullptr);
@@ -247,30 +255,30 @@ TEST(StateMachine, SubSM)
     SM sm, sub_sm;
 
     sm.newState(StateId::kInit, nullptr, nullptr);
-    sm.newState(StateId::k1,    nullptr, nullptr);
-    sm.newState(StateId::k2,    nullptr, nullptr);
+    sm.newState(StateId::k1, nullptr, nullptr);
+    sm.newState(StateId::k2, nullptr, nullptr);
 
-    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, nullptr);
-    sm.addRoute(StateId::kInit, EventId::k2, StateId::k2,    nullptr, nullptr);
-    sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, nullptr);
-    sm.addRoute(StateId::k1,    EventId::k2, StateId::k2,    nullptr, nullptr);
-    sm.addRoute(StateId::k2,    EventId::k1, StateId::k1,    nullptr, nullptr);
-    sm.addRoute(StateId::k2,    EventId::k2, StateId::k1,    nullptr, nullptr);
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1, nullptr, nullptr);
+    sm.addRoute(StateId::kInit, EventId::k2, StateId::k2, nullptr, nullptr);
+    sm.addRoute(StateId::k1, EventId::k1, StateId::kTerm, nullptr, nullptr);
+    sm.addRoute(StateId::k1, EventId::k2, StateId::k2, nullptr, nullptr);
+    sm.addRoute(StateId::k2, EventId::k1, StateId::k1, nullptr, nullptr);
+    sm.addRoute(StateId::k2, EventId::k2, StateId::k1, nullptr, nullptr);
 
     sub_sm.newState(StateId::kInit, nullptr, nullptr);
-    sub_sm.newState(StateId::k1,    nullptr, nullptr);
-    sub_sm.newState(StateId::k2,    nullptr, nullptr);
+    sub_sm.newState(StateId::k1, nullptr, nullptr);
+    sub_sm.newState(StateId::k2, nullptr, nullptr);
 
-    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, nullptr);
-    sub_sm.addRoute(StateId::kInit, EventId::k2, StateId::k2,    nullptr, nullptr);
-    sub_sm.addRoute(StateId::k1,    EventId::k2, StateId::k2,    nullptr, nullptr);
-    sub_sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, nullptr);
-    sub_sm.addRoute(StateId::k2,    EventId::k1, StateId::k1,    nullptr, nullptr);
-    sub_sm.addRoute(StateId::k2,    EventId::k2, StateId::kTerm, nullptr, nullptr);
+    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::k1, nullptr, nullptr);
+    sub_sm.addRoute(StateId::kInit, EventId::k2, StateId::k2, nullptr, nullptr);
+    sub_sm.addRoute(StateId::k1, EventId::k2, StateId::k2, nullptr, nullptr);
+    sub_sm.addRoute(StateId::k1, EventId::k1, StateId::kTerm, nullptr, nullptr);
+    sub_sm.addRoute(StateId::k2, EventId::k1, StateId::k1, nullptr, nullptr);
+    sub_sm.addRoute(StateId::k2, EventId::k2, StateId::kTerm, nullptr, nullptr);
 
     sm.setSubStateMachine(StateId::k1, &sub_sm);
 
-    {   //! 直通
+    {  //! 直通
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
@@ -289,7 +297,7 @@ TEST(StateMachine, SubSM)
         sm.stop();
     }
 
-    {   //! 在子状态机里转了一下
+    {  //! 在子状态机里转了一下
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
@@ -315,7 +323,7 @@ TEST(StateMachine, SubSM)
         sm.stop();
     }
 
-    {   //! 从S2进的S1的子状态机，再出来回到S2，再进去
+    {  //! 从S2进的S1的子状态机，再出来回到S2，再进去
         sm.start();
 
         EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
@@ -357,21 +365,19 @@ TEST(StateMachine, StateChangedCallback)
     SM sm;
 
     sm.newState(StateId::kInit, nullptr, nullptr);
-    sm.newState(StateId::k1,    nullptr, nullptr);
+    sm.newState(StateId::k1, nullptr, nullptr);
 
-    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, nullptr);
-    sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, nullptr);
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1, nullptr, nullptr);
+    sm.addRoute(StateId::k1, EventId::k1, StateId::kTerm, nullptr, nullptr);
 
     StateId from, to;
     EventId event;
 
-    sm.setStateChangedCallback(
-        [&] (SM::StateID f, SM::StateID t, Event e) {
-            from = static_cast<StateId>(f);
-            to = static_cast<StateId>(t);
-            event = static_cast<EventId>(e.id);
-        }
-    );
+    sm.setStateChangedCallback([&](SM::StateID f, SM::StateID t, Event e) {
+        from = static_cast<StateId>(f);
+        to = static_cast<StateId>(t);
+        event = static_cast<EventId>(e.id);
+    });
     sm.start();
     sm.run(EventId::k1);
     EXPECT_EQ(from, StateId::kInit);
@@ -394,13 +400,55 @@ TEST(StateMachine, InitStateHasSubMachine)
     SM sub_sm;
 
     int step = 0;
-    sm.newState(StateId::kInit, [&](Event){ EXPECT_EQ(step, 0); ++step; }, [&](Event){ EXPECT_EQ(step, 6); ++step; });
-    sm.newState(StateId::kTerm, [&](Event){ EXPECT_EQ(step, 8); ++step; }, [&](Event){ EXPECT_EQ(step, 9); ++step; });
-    sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event){ EXPECT_EQ(step, 7); ++step; });
+    sm.newState(
+        StateId::kInit,
+        [&](Event) {
+            EXPECT_EQ(step, 0);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 6);
+            ++step;
+        });
+    sm.newState(
+        StateId::kTerm,
+        [&](Event) {
+            EXPECT_EQ(step, 8);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 9);
+            ++step;
+        });
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event) {
+        EXPECT_EQ(step, 7);
+        ++step;
+    });
 
-    sub_sm.newState(StateId::kInit, [&](Event){ EXPECT_EQ(step, 1); ++step; }, [&](Event){ EXPECT_EQ(step, 2); ++step; });
-    sub_sm.newState(StateId::kTerm, [&](Event){ EXPECT_EQ(step, 4); ++step; }, [&](Event){ EXPECT_EQ(step, 5); ++step; });
-    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event){ EXPECT_EQ(step, 3); ++step; });
+    sub_sm.newState(
+        StateId::kInit,
+        [&](Event) {
+            EXPECT_EQ(step, 1);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 2);
+            ++step;
+        });
+    sub_sm.newState(
+        StateId::kTerm,
+        [&](Event) {
+            EXPECT_EQ(step, 4);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 5);
+            ++step;
+        });
+    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event) {
+        EXPECT_EQ(step, 3);
+        ++step;
+    });
 
     sm.setSubStateMachine(StateId::kInit, &sub_sm);
 #if 0
@@ -423,23 +471,77 @@ TEST(StateMachine, InitStateHasSubMachine)
 //! 测试各种Action之间的执行顺序
 TEST(StateMachine, SubSMActionOrder)
 {
-    enum class StateId { kTerm, kInit, k1};
+    enum class StateId { kTerm, kInit, k1 };
     enum class EventId { kAny, k1 };
 
     SM sm;
     SM sub_sm;
 
     int step = 0;
-    sm.newState(StateId::kInit, [&](Event){ EXPECT_EQ(step, 0); ++step; }, [&](Event){ EXPECT_EQ(step, 1); ++step; });
-    sm.newState(StateId::k1,    [&](Event){ EXPECT_EQ(step, 3); ++step; }, [&](Event){ EXPECT_EQ(step, 9); ++step; });
-    sm.newState(StateId::kTerm, [&](Event){ EXPECT_EQ(step, 11); ++step; }, [&](Event){ EXPECT_EQ(step, 12); ++step; });
+    sm.newState(
+        StateId::kInit,
+        [&](Event) {
+            EXPECT_EQ(step, 0);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 1);
+            ++step;
+        });
+    sm.newState(
+        StateId::k1,
+        [&](Event) {
+            EXPECT_EQ(step, 3);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 9);
+            ++step;
+        });
+    sm.newState(
+        StateId::kTerm,
+        [&](Event) {
+            EXPECT_EQ(step, 11);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 12);
+            ++step;
+        });
 
-    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1,    nullptr, [&](Event){ EXPECT_EQ(step, 2); ++step; });
-    sm.addRoute(StateId::k1,    EventId::k1, StateId::kTerm, nullptr, [&](Event){ EXPECT_EQ(step, 10); ++step; });
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::k1, nullptr, [&](Event) {
+        EXPECT_EQ(step, 2);
+        ++step;
+    });
+    sm.addRoute(StateId::k1, EventId::k1, StateId::kTerm, nullptr, [&](Event) {
+        EXPECT_EQ(step, 10);
+        ++step;
+    });
 
-    sub_sm.newState(StateId::kInit, [&](Event){ EXPECT_EQ(step, 4); ++step; }, [&](Event){ EXPECT_EQ(step, 5); ++step; });
-    sub_sm.newState(StateId::kTerm, [&](Event){ EXPECT_EQ(step, 7); ++step; }, [&](Event){ EXPECT_EQ(step, 8); ++step; });
-    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event){ EXPECT_EQ(step, 6); ++step; });
+    sub_sm.newState(
+        StateId::kInit,
+        [&](Event) {
+            EXPECT_EQ(step, 4);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 5);
+            ++step;
+        });
+    sub_sm.newState(
+        StateId::kTerm,
+        [&](Event) {
+            EXPECT_EQ(step, 7);
+            ++step;
+        },
+        [&](Event) {
+            EXPECT_EQ(step, 8);
+            ++step;
+        });
+    sub_sm.addRoute(StateId::kInit, EventId::k1, StateId::kTerm, nullptr, [&](Event) {
+        EXPECT_EQ(step, 6);
+        ++step;
+    });
 
     sm.setSubStateMachine(StateId::k1, &sub_sm);
 #if 0
@@ -468,62 +570,63 @@ TEST(StateMachine, EventExtra)
 
     int extra_data = 100;
     int count = 0;
-    sm.newState(StateId::kInit,
-        [&](Event e){
+    sm.newState(
+        StateId::kInit,
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 0);
             EXPECT_EQ(e.extra, nullptr);
         },
-        [&](Event e){
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 10);
             EXPECT_EQ(e.extra, &extra_data);
-        }
-    );
-    sm.newState(StateId::kTerm,
-        [&](Event e){
+        });
+    sm.newState(
+        StateId::kTerm,
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 10);
             EXPECT_EQ(e.extra, &extra_data);
         },
-        [&](Event e){
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 0);
             EXPECT_EQ(e.extra, nullptr);
-        }
-    );
+        });
 
-    sm.addRoute(StateId::kInit, 10, StateId::kTerm,
-        [&](Event e){
+    sm.addRoute(
+        StateId::kInit,
+        10,
+        StateId::kTerm,
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 10);
             EXPECT_EQ(e.extra, &extra_data);
             return true;
         },
-        [&](Event e){
+        [&](Event e) {
             ++count;
             EXPECT_EQ(e.id, 10);
             EXPECT_EQ(e.extra, &extra_data);
-        }
-    );
+        });
 
-    sm.setStateChangedCallback(
-        [&] (SM::StateID f, SM::StateID t, Event e) {
-            ++count;
-            EXPECT_EQ(e.id, 10);
-            EXPECT_EQ(e.extra, &extra_data);
-            (void)f;
-            (void)t;
-        }
-    );
+    sm.setStateChangedCallback([&](SM::StateID f, SM::StateID t, Event e) {
+        ++count;
+        EXPECT_EQ(e.id, 10);
+        EXPECT_EQ(e.extra, &extra_data);
+        (void)f;
+        (void)t;
+    });
 
     sm.start();
     sm.run(Event(10, &extra_data));
     sm.stop();
     EXPECT_EQ(count, 7);
-} 
+}
 
-TEST(StateMachine, InnerEvent) {
+TEST(StateMachine, InnerEvent)
+{
     enum class StateId { kTerm, k1, k2 };
     enum class EventId { kAny, k1 };
 
@@ -535,9 +638,15 @@ TEST(StateMachine, InnerEvent) {
     sm.setInitState(StateId::k1);
     sm.newState(StateId::k1, nullptr, nullptr);
     sm.newState(StateId::k2, nullptr, nullptr);
-    sm.addEvent(StateId::k1, EventId::k1, [&](Event) { is_k1_event_run = true; return -1; });
+    sm.addEvent(StateId::k1, EventId::k1, [&](Event) {
+        is_k1_event_run = true;
+        return -1;
+    });
     sm.addRoute(StateId::k1, EventId::k1, StateId::k2, nullptr, nullptr);
-    sm.addEvent(StateId::k2, EventId::k1, [&](Event) { is_k2_event_run = true; return -1; });
+    sm.addEvent(StateId::k2, EventId::k1, [&](Event) {
+        is_k2_event_run = true;
+        return -1;
+    });
 
     sm.start();
     sm.run(EventId::k1);
@@ -551,7 +660,8 @@ TEST(StateMachine, InnerEvent) {
     EXPECT_TRUE(is_k2_event_run);
 }
 
-TEST(StateMachine, InnerAnyEvent) {
+TEST(StateMachine, InnerAnyEvent)
+{
     enum class StateId { kTerm, k1 };
     enum class EventId { kAny, k1, k2 };
 
@@ -562,8 +672,14 @@ TEST(StateMachine, InnerAnyEvent) {
 
     sm.setInitState(StateId::k1);
     sm.newState(StateId::k1, nullptr, nullptr);
-    sm.addEvent(StateId::k1, EventId::k1, [&](Event) { is_k1_event_run = true; return -1; });
-    sm.addEvent(StateId::k1, EventId::kAny, [&](Event) { is_any_event_run = true; return -1; });
+    sm.addEvent(StateId::k1, EventId::k1, [&](Event) {
+        is_k1_event_run = true;
+        return -1;
+    });
+    sm.addEvent(StateId::k1, EventId::kAny, [&](Event) {
+        is_any_event_run = true;
+        return -1;
+    });
 
     sm.start();
     sm.run(EventId::k1);
@@ -576,24 +692,22 @@ TEST(StateMachine, InnerAnyEvent) {
     EXPECT_TRUE(is_any_event_run);
 }
 
-TEST(StateMachine, SwitchStateInEvent) {
+TEST(StateMachine, SwitchStateInEvent)
+{
     SM sm;
     sm.newState(STATE_A, nullptr, nullptr);
     sm.newState(STATE_B, nullptr, nullptr);
     sm.setInitState(STATE_A);
 
-    sm.addEvent(STATE_A, EVENT_ANY,
-        [](Event e) -> SM::StateID {
-            if (e.id == EVENT_1)
-                return STATE_B;
-            if (e.id == EVENT_2)
-                return STATE_TERM;
-            return -1;
-        }
-    );
-    sm.addEvent(STATE_B, EVENT_1,
-        [](Event e) -> SM::StateID { return STATE_A; (void)e; }
-    );
+    sm.addEvent(STATE_A, EVENT_ANY, [](Event e) -> SM::StateID {
+        if (e.id == EVENT_1) return STATE_B;
+        if (e.id == EVENT_2) return STATE_TERM;
+        return -1;
+    });
+    sm.addEvent(STATE_B, EVENT_1, [](Event e) -> SM::StateID {
+        return STATE_A;
+        (void)e;
+    });
     sm.start();
 
     EXPECT_EQ(sm.currentState(), STATE_A);
@@ -616,7 +730,7 @@ TEST(StateMachine, SetInitState)
 
     sm.setInitState(StateId::kInit);
     sm.newState(StateId::kInit, nullptr, nullptr);
-    sm.newState(StateId::k1,    nullptr, nullptr);
+    sm.newState(StateId::k1, nullptr, nullptr);
 
     EXPECT_TRUE(sm.start());
     EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
@@ -630,82 +744,70 @@ TEST(StateMachine, SetInitState_Fail)
     SM sm;
 
     sm.setInitState(StateId::kInit);
-    sm.newState(StateId::k1,    nullptr, nullptr);
+    sm.newState(StateId::k1, nullptr, nullptr);
 
     EXPECT_FALSE(sm.start());
 }
 
 TEST(StateMachine, LastNextState)
 {
-    enum class StateId {
-        kNone = -1,
-        kTerm = 0,
-        kInit,
-        kA
-    };
-    enum class EventId {
-        kAny,
-        k1
-    };
+    enum class StateId { kNone = -1, kTerm = 0, kInit, kA };
+    enum class EventId { kAny, k1 };
 
     SM sm;
 
     int count = 0;
     sm.setInitState(StateId::kInit);
-    sm.newState(StateId::kInit,
-        [&] (Event) {
+    sm.newState(
+        StateId::kInit,
+        [&](Event) {
             ++count;
             EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
             EXPECT_EQ(sm.lastState(), -1);
             EXPECT_EQ(sm.nextState(), -1);
         },
-        [&] (Event) {
+        [&](Event) {
             ++count;
             EXPECT_EQ(sm.currentState<StateId>(), StateId::kInit);
             EXPECT_EQ(sm.lastState(), -1);
             EXPECT_EQ(sm.nextState<StateId>(), StateId::kA);
-        }
-    );
-    sm.newState(StateId::kA,
-        [&] (Event) {
+        });
+    sm.newState(
+        StateId::kA,
+        [&](Event) {
             ++count;
             EXPECT_EQ(sm.currentState<StateId>(), StateId::kA);
             EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
             EXPECT_EQ(sm.nextState(), -1);
         },
-        [&] (Event) {
+        [&](Event) {
             ++count;
             EXPECT_EQ(sm.currentState<StateId>(), StateId::kA);
             EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
             EXPECT_EQ(sm.nextState<StateId>(), StateId::kTerm);
-        }
-    );
-    sm.newState(StateId::kTerm,
-        [&] (Event) {
+        });
+    sm.newState(
+        StateId::kTerm,
+        [&](Event) {
             ++count;
             EXPECT_EQ(sm.currentState<StateId>(), StateId::kTerm);
             EXPECT_EQ(sm.lastState<StateId>(), StateId::kA);
             EXPECT_EQ(sm.nextState(), -1);
         },
-        nullptr
-    );
+        nullptr);
 
-    sm.addRoute(StateId::kInit, EventId::k1, StateId::kA, nullptr,
-        [&] (Event) {
-            ++count;
-            EXPECT_EQ(sm.currentState(), -1);
-            EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
-            EXPECT_EQ(sm.nextState<StateId>(), StateId::kA);
-        }
-    );
-    sm.addRoute(StateId::kA, EventId::k1, StateId::kTerm, nullptr,
-        [&] (Event) {
-            ++count;
-            EXPECT_EQ(sm.currentState(), -1);
-            EXPECT_EQ(sm.lastState<StateId>(), StateId::kA);
-            EXPECT_EQ(sm.nextState<StateId>(), StateId::kTerm);
-        }
-    );
+    sm.addRoute(StateId::kInit, EventId::k1, StateId::kA, nullptr, [&](Event) {
+        ++count;
+        EXPECT_EQ(sm.currentState(), -1);
+        EXPECT_EQ(sm.lastState<StateId>(), StateId::kInit);
+        EXPECT_EQ(sm.nextState<StateId>(), StateId::kA);
+    });
+    sm.addRoute(StateId::kA, EventId::k1, StateId::kTerm, nullptr, [&](Event) {
+        ++count;
+        EXPECT_EQ(sm.currentState(), -1);
+        EXPECT_EQ(sm.lastState<StateId>(), StateId::kA);
+        EXPECT_EQ(sm.nextState<StateId>(), StateId::kTerm);
+    });
 
     sm.start();
 
@@ -715,5 +817,5 @@ TEST(StateMachine, LastNextState)
     EXPECT_EQ(count, 7);
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

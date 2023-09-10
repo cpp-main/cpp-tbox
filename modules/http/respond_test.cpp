@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "respond.h"
+
+#include <gtest/gtest.h>
 
 namespace tbox {
 namespace http {
@@ -36,7 +37,7 @@ TEST(Respond, ToString)
 
     EXPECT_TRUE(rsp.isValid());
 
-    const char *target_str = \
+    const char *target_str =
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 12\r\n"
@@ -46,6 +47,6 @@ TEST(Respond, ToString)
     EXPECT_EQ(rsp.toString(), target_str);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace http
+}  // namespace tbox

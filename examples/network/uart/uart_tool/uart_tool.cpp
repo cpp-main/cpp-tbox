@@ -17,12 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/network/stdio_stream.h>
 #include <tbox/network/uart.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -42,11 +43,11 @@ int main(int argc, char **argv)
 
     cout << "dev:" << argv[1] << ", mode:" << argv[2] << endl;
 
-    auto sp_loop  = event::Loop::New();
+    auto sp_loop = event::Loop::New();
     SetScopeExitAction([=] { delete sp_loop; });
     auto sp_stdio = new network::StdioStream(sp_loop);
     SetScopeExitAction([=] { delete sp_stdio; });
-    auto sp_uart  = new network::Uart(sp_loop);
+    auto sp_uart = new network::Uart(sp_loop);
     SetScopeExitAction([=] { delete sp_uart; });
 
     if (!sp_uart->initialize(argv[1], argv[2])) {
@@ -65,12 +66,10 @@ int main(int argc, char **argv)
     SetScopeExitAction([=] { delete sp_exit; });
     sp_exit->initialize(SIGINT, event::Event::Mode::kOneshot);
     sp_exit->enable();
-    sp_exit->setCallback(
-        [=] (int) {
-            cout << "Info: Exit Loop" << endl;
-            sp_loop->exitLoop();
-        }
-    );
+    sp_exit->setCallback([=](int) {
+        cout << "Info: Exit Loop" << endl;
+        sp_loop->exitLoop();
+    });
 
     cout << "Info: Start Loop" << endl;
     sp_loop->runLoop();

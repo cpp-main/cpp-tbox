@@ -17,13 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "object_pool.hpp"
+
+#include <gtest/gtest.h>
 
 namespace tbox {
 namespace {
 
-TEST(ObjectPool, Char) {
+TEST(ObjectPool, Char)
+{
     ObjectPool<char> pool;
     for (int i = 0; i < 10; ++i) {
         auto p = pool.alloc('a' + i);
@@ -32,17 +34,17 @@ TEST(ObjectPool, Char) {
     }
 }
 
-TEST(ObjectPool, AllocMany) {
+TEST(ObjectPool, AllocMany)
+{
     ObjectPool<int> pool(50);
-    std::vector<int*> tmp;
+    std::vector<int *> tmp;
 
     for (int i = 0; i < 100; ++i) {
         auto p = pool.alloc(i);
         tmp.push_back(p);
     }
 
-    for (int *p : tmp)
-        pool.free(p);
+    for (int *p : tmp) pool.free(p);
     tmp.clear();
 
     for (int i = 0; i < 50; ++i) {
@@ -50,12 +52,12 @@ TEST(ObjectPool, AllocMany) {
         tmp.push_back(p);
     }
 
-    for (int *p : tmp)
-        pool.free(p);
+    for (int *p : tmp) pool.free(p);
     tmp.clear();
 }
 
-TEST(ObjectPool, Int) {
+TEST(ObjectPool, Int)
+{
     ObjectPool<int> pool;
     for (int i = 0; i < 10; ++i) {
         auto p = pool.alloc(123);
@@ -64,9 +66,11 @@ TEST(ObjectPool, Int) {
     }
 }
 
-TEST(ObjectPool, MyStruct) {
-    struct MyStruct {
-        MyStruct(int i) : i_(i) { }
+TEST(ObjectPool, MyStruct)
+{
+    struct MyStruct
+    {
+        MyStruct(int i) : i_(i) {}
         char rev[100];
         int i_;
     };
@@ -79,7 +83,8 @@ TEST(ObjectPool, MyStruct) {
     }
 }
 
-TEST(ObjectPool, Stat_1) {
+TEST(ObjectPool, Stat_1)
+{
     ObjectPool<int> pool;
     for (int i = 0; i < 10; ++i) {
         auto p = pool.alloc();
@@ -93,9 +98,10 @@ TEST(ObjectPool, Stat_1) {
     EXPECT_EQ(stat.peak_free_number, 1);
 }
 
-TEST(ObjectPool, Stat_2) {
+TEST(ObjectPool, Stat_2)
+{
     ObjectPool<int> pool(5);
-    std::vector<int*> vec;
+    std::vector<int *> vec;
 
     //! 先申请10
     for (int i = 0; i < 10; ++i) {
@@ -110,8 +116,7 @@ TEST(ObjectPool, Stat_2) {
     EXPECT_EQ(stat.peak_free_number, 0);
 
     //! 释放10
-    for (auto p : vec)
-        pool.free(p);
+    for (auto p : vec) pool.free(p);
     vec.clear();
 
     stat = pool.getStat();
@@ -133,8 +138,7 @@ TEST(ObjectPool, Stat_2) {
     EXPECT_EQ(stat.peak_free_number, 5);
 
     //! 释放3个
-    for (auto p : vec)
-        pool.free(p);
+    for (auto p : vec) pool.free(p);
     vec.clear();
 
     stat = pool.getStat();
@@ -144,5 +148,5 @@ TEST(ObjectPool, Stat_2) {
     EXPECT_EQ(stat.peak_free_number, 5);
 }
 
-}
-}
+}  // namespace
+}  // namespace tbox

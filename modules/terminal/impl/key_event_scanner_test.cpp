@@ -17,9 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-
 #include "key_event_scanner.h"
+
+#include <gtest/gtest.h>
 
 using namespace tbox::terminal;
 
@@ -416,4 +416,3 @@ TEST(KeyEventScanner, F12)
     EXPECT_EQ(ks.next(0x7e), KeyEventScanner::Status::kEnsure);
     EXPECT_EQ(ks.result(), KeyEventScanner::Result::kF12);
 }
-

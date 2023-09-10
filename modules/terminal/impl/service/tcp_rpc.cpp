@@ -19,19 +19,17 @@
  */
 #include "tcp_rpc.h"
 
-#include <iostream>
-#include <algorithm>
-
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+
+#include <algorithm>
+#include <iostream>
 
 namespace tbox {
 namespace terminal {
 
-TcpRpc::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
-    wp_loop_(wp_loop),
-    wp_terminal_(wp_terminal),
-    sp_tcp_(new TcpServer(wp_loop))
+TcpRpc::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal)
+    : wp_loop_(wp_loop), wp_terminal_(wp_terminal), sp_tcp_(new TcpServer(wp_loop))
 {
     TBOX_ASSERT(wp_loop_ != nullptr);
     TBOX_ASSERT(wp_terminal_ != nullptr);
@@ -46,8 +44,7 @@ TcpRpc::Impl::~Impl()
 bool TcpRpc::Impl::initialize(const std::string &bind_addr_str)
 {
     auto bind_addr = SockAddr::FromString(bind_addr_str);
-    if (!sp_tcp_->initialize(bind_addr, 1))
-        return false;
+    if (!sp_tcp_->initialize(bind_addr, 1)) return false;
 
     sp_tcp_->setConnectedCallback(std::bind(&Impl::onTcpConnected, this, _1));
     sp_tcp_->setReceiveCallback(std::bind(&Impl::onTcpReceived, this, _1, _2), 1);
@@ -73,8 +70,7 @@ void TcpRpc::Impl::cleanup()
 bool TcpRpc::Impl::send(const SessionToken &st, const std::string &str)
 {
     auto ct = session_to_client_.at(st);
-    if (st.isNull())
-        return false;
+    if (st.isNull()) return false;
 
     send(ct, str.c_str(), str.size());
     return true;
@@ -83,8 +79,7 @@ bool TcpRpc::Impl::send(const SessionToken &st, const std::string &str)
 bool TcpRpc::Impl::send(const SessionToken &st, char ch)
 {
     auto ct = session_to_client_.at(st);
-    if (st.isNull())
-        return false;
+    if (st.isNull()) return false;
 
     send(ct, &ch, 1);
     return true;
@@ -93,8 +88,7 @@ bool TcpRpc::Impl::send(const SessionToken &st, char ch)
 bool TcpRpc::Impl::endSession(const SessionToken &st)
 {
     auto ct = session_to_client_.at(st);
-    if (ct.isNull())
-        return false;
+    if (ct.isNull()) return false;
 
     //! 委托执行，否则会出自我销毁的异常
     wp_loop_->runNext(
@@ -103,8 +97,7 @@ bool TcpRpc::Impl::endSession(const SessionToken &st)
             session_to_client_.erase(st);
             sp_tcp_->disconnect(ct);
         },
-        "TcpRpc::endSession"
-    );
+        "TcpRpc::endSession");
 
     return true;
 }
@@ -147,7 +140,8 @@ bool TcpRpc::Impl::send(const TcpServer::ConnToken &ct, const void *data_ptr, si
 
 void TcpRpc::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
-    onRecvString(ct, std::string(reinterpret_cast<const char *>(buff.readableBegin()), buff.readableSize()));
+    onRecvString(
+        ct, std::string(reinterpret_cast<const char *>(buff.readableBegin()), buff.readableSize()));
     buff.hasReadAll();
 }
 
@@ -157,5 +151,5 @@ void TcpRpc::Impl::onRecvString(const TcpServer::ConnToken &ct, const std::strin
     wp_terminal_->onRecvString(st, str);
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

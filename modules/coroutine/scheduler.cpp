@@ -19,13 +19,12 @@
  */
 #include "scheduler.h"
 
-#include <cstring>
-
-#include <queue>
+#include <tbox/base/assert.h>
+#include <tbox/base/log.h>
 #include <ucontext.h>
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+#include <cstring>
+#include <queue>
 #include <tbox/base/cabinet.hpp>
 
 namespace tbox {
@@ -37,37 +36,39 @@ using namespace event;
 using RoutineCabinet = cabinet::Cabinet<Routine>;
 
 //! 调度器的数据
-struct Scheduler::Data {
+struct Scheduler::Data
+{
     event::Loop *wp_loop = nullptr;
 
-    ucontext_t main_ctx;   //! 主协程上下文
+    ucontext_t main_ctx;  //! 主协程上下文
     RoutineCabinet routine_cabinet;
-    Routine *curr_routine = nullptr;    //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
+    Routine *curr_routine = nullptr;  //! 当前协程的 Routine 对象指针，为 nullptr 表示主协程
 
     using ReadyRoutineQueue = std::queue<RoutineToken>;
-    ReadyRoutineQueue ready_routines;      //! 已就绪的 Routine 链表
+    ReadyRoutineQueue ready_routines;  //! 已就绪的 Routine 链表
 };
 
 //! 协程对象
-struct Routine {
-    RoutineToken token; //! 协程索引
-    RoutineEntry entry; //! 协程函数入口
-    string       name;  //! 协程名
-    Scheduler   &scheduler; //! 协度器引用
+struct Routine
+{
+    RoutineToken token;    //! 协程索引
+    RoutineEntry entry;    //! 协程函数入口
+    string name;           //! 协程名
+    Scheduler &scheduler;  //! 协度器引用
 
-    ucontext_t   ctx;   //! 协程上下文
+    ucontext_t ctx;  //! 协程上下文
 
     //! 协程状态
     enum class State {
-        kSuspend,   //!< 挂起，等待被resume()
-        kReady,     //!< 就绪
-        kRunning,   //!< 正在运行
-        kDead,      //!< 已死亡
+        kSuspend,  //!< 挂起，等待被resume()
+        kReady,    //!< 就绪
+        kRunning,  //!< 正在运行
+        kDead,     //!< 已死亡
     };
     State state = State::kSuspend;
-    bool is_started  = false;
+    bool is_started = false;
     bool is_canceled = false;
-    RoutineToken join_token;    //! 等待其结束的协程
+    RoutineToken join_token;  //! 等待其结束的协程
 
     void mainEntry()
     {
@@ -78,26 +79,23 @@ struct Routine {
         LogDbg("Routine %u:%s end", token.id(), name.c_str());
     }
 
-    static void RoutineMainEntry(Routine *p_routine)
-    {
-        p_routine->mainEntry();
-    }
+    static void RoutineMainEntry(Routine *p_routine) { p_routine->mainEntry(); }
 
-    Routine(const RoutineEntry &e, const string &n, size_t ss, Scheduler &sch) :
-        entry(e), name(n), scheduler(sch)
+    Routine(const RoutineEntry &e, const string &n, size_t ss, Scheduler &sch)
+        : entry(e), name(n), scheduler(sch)
     {
         LogDbg("Routine(%u)", token.id());
 
         void *p_stack_mem = malloc(ss);
         TBOX_ASSERT(p_stack_mem != nullptr);
 
-        //!TODO: 是否可以加哨兵标记，检查栈溢出
+        //! TODO: 是否可以加哨兵标记，检查栈溢出
 
         getcontext(&ctx);
         ctx.uc_stack.ss_size = ss;
         ctx.uc_stack.ss_sp = p_stack_mem;
         ctx.uc_link = &(scheduler.d_->main_ctx);
-        makecontext(&ctx, (void(*)(void))RoutineMainEntry, 1, this);
+        makecontext(&ctx, (void (*)(void))RoutineMainEntry, 1, this);
     }
 
     ~Routine()
@@ -112,8 +110,7 @@ struct Routine {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Scheduler::Scheduler(Loop *wp_loop) :
-    d_(new Data)
+Scheduler::Scheduler(Loop *wp_loop) : d_(new Data)
 {
     TBOX_ASSERT(d_ != nullptr);
     d_->wp_loop = wp_loop;
@@ -127,21 +124,22 @@ Scheduler::~Scheduler()
     delete d_;
 }
 
-RoutineToken Scheduler::create(const RoutineEntry &entry, bool run_now, const string &name, size_t stack_size)
+RoutineToken Scheduler::create(const RoutineEntry &entry,
+                               bool run_now,
+                               const string &name,
+                               size_t stack_size)
 {
     Routine *new_routine = new Routine(entry, name, stack_size, *this);
     RoutineToken token = d_->routine_cabinet.alloc(new_routine);
     new_routine->token = token;
-    if (run_now)
-        makeRoutineReady(new_routine);
+    if (run_now) makeRoutineReady(new_routine);
     return token;
 }
 
 bool Scheduler::resume(const RoutineToken &token)
 {
     Routine *routine = d_->routine_cabinet.at(token);
-    if (routine != nullptr)
-        return makeRoutineReady(routine);
+    if (routine != nullptr) return makeRoutineReady(routine);
     return false;
 }
 
@@ -160,24 +158,18 @@ void Scheduler::cleanup()
     TBOX_ASSERT(isInMainRoutine());  //! 仅限主协程使用
 
     //! 遍历所有协程，如果未启动的协程则直接删除，如果已启动则标记取消
-    d_->routine_cabinet.foreach(
-        [this] (Routine *routine) {
-            if (!routine->is_started) {
-                d_->routine_cabinet.free(routine->token);
-                delete routine;
-            } else {
-                routine->is_canceled = true;
-            }
+    d_->routine_cabinet.foreach ([this](Routine *routine) {
+        if (!routine->is_started) {
+            d_->routine_cabinet.free(routine->token);
+            delete routine;
+        } else {
+            routine->is_canceled = true;
         }
-    );
+    });
 
     //! 令已启动的协程尽快正常退出
     while (!d_->routine_cabinet.empty()) {
-        d_->routine_cabinet.foreach(
-            [this] (Routine *routine) {
-                switchToRoutine(routine);
-            }
-        );
+        d_->routine_cabinet.foreach ([this](Routine *routine) { switchToRoutine(routine); });
     }
     //! 思考：为什么不能直接删除已启动的协程？
     //!
@@ -191,8 +183,7 @@ void Scheduler::cleanup()
 void Scheduler::wait()
 {
     TBOX_ASSERT(!isInMainRoutine());
-    if (d_->curr_routine->is_canceled)
-        return;
+    if (d_->curr_routine->is_canceled) return;
 
     d_->curr_routine->state = Routine::State::kSuspend;
     swapcontext(&(d_->curr_routine->ctx), &d_->main_ctx);
@@ -201,8 +192,7 @@ void Scheduler::wait()
 void Scheduler::yield()
 {
     TBOX_ASSERT(!isInMainRoutine());
-    if (d_->curr_routine->is_canceled)
-        return;
+    if (d_->curr_routine->is_canceled) return;
 
     makeRoutineReady(d_->curr_routine);
     swapcontext(&(d_->curr_routine->ctx), &d_->main_ctx);
@@ -211,17 +201,14 @@ void Scheduler::yield()
 bool Scheduler::join(const RoutineToken &other_routine)
 {
     TBOX_ASSERT(!isInMainRoutine());
-    if (d_->curr_routine->is_canceled)
-        return false;
+    if (d_->curr_routine->is_canceled) return false;
 
     Routine *routine = d_->routine_cabinet.at(other_routine);
     if (routine != nullptr) {
         //! 如果已经结束了的，就直接返回成功
-        if (routine->state == Routine::State::kDead)
-            return true;
+        if (routine->state == Routine::State::kDead) return true;
         //! 如果已被其它协程join()了的，就返回失败
-        if (!routine->join_token.isNull())
-            return false;
+        if (!routine->join_token.isNull()) return false;
 
         routine->join_token = d_->curr_routine->token;
 
@@ -252,7 +239,7 @@ string Scheduler::getName() const
     return d_->curr_routine->name;
 }
 
-event::Loop* Scheduler::getLoop() const
+event::Loop *Scheduler::getLoop() const
 {
     return d_->wp_loop;
 }
@@ -262,16 +249,12 @@ event::Loop* Scheduler::getLoop() const
  */
 bool Scheduler::makeRoutineReady(Routine *routine)
 {
-    if (routine->state == Routine::State::kReady
-        || routine->state == Routine::State::kDead)
+    if (routine->state == Routine::State::kReady || routine->state == Routine::State::kDead)
         return false;
 
     routine->state = Routine::State::kReady;
     d_->ready_routines.push(routine->token);
-    d_->wp_loop->runNext(
-        std::bind(&Scheduler::schedule, this),
-        "Scheduler::makeRoutineReady"
-    );
+    d_->wp_loop->runNext(std::bind(&Scheduler::schedule, this), "Scheduler::makeRoutineReady");
     return true;
 }
 
@@ -291,8 +274,7 @@ void Scheduler::switchToRoutine(Routine *routine)
         d_->routine_cabinet.free(routine->token);
 
         //! 如果有其它协程在join这个协程，那么要唤醒等待的协程
-        if (!d_->curr_routine->join_token.isNull())
-            resume(d_->curr_routine->join_token);
+        if (!d_->curr_routine->join_token.isNull()) resume(d_->curr_routine->join_token);
 
         delete d_->curr_routine;
     }
@@ -316,8 +298,7 @@ void Scheduler::schedule()
     //! 逐一切换到就绪链表对应的协程去执行，直到就绪链表为空
     while (!tmp.empty()) {
         Routine *routine = d_->routine_cabinet.at(tmp.front());
-        if (routine != nullptr)
-            switchToRoutine(routine);
+        if (routine != nullptr) switchToRoutine(routine);
         tmp.pop();
     }
 }
@@ -327,5 +308,5 @@ bool Scheduler::isInMainRoutine() const
     return d_->curr_routine == nullptr;
 }
 
-}
-}
+}  // namespace coroutine
+}  // namespace tbox

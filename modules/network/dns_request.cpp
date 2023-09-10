@@ -19,15 +19,15 @@
  */
 #include "dns_request.h"
 
-#include <unistd.h>
-#include <sstream>
-#include <map>
-#include <memory>
-
 #include <tbox/base/assert.h>
+#include <tbox/util/fs.h>
 #include <tbox/util/serializer.h>
 #include <tbox/util/string.h>
-#include <tbox/util/fs.h>
+#include <unistd.h>
+
+#include <map>
+#include <memory>
+#include <sstream>
 
 namespace tbox {
 namespace network {
@@ -35,26 +35,26 @@ namespace network {
 namespace {
 
 enum DNS_TYPE {
-    DNS_TYPE_A      = 1,    //!< 期望获得查询名的IP地址
-    DNS_TYPE_NS     = 2,    //!< 一个授权的域名服务器
-    DNS_TYPE_CNAME  = 5,    //!< 规范名称
-    DNS_TYPE_PTR    = 12,   //!< 指针记录
-    DNS_TYPE_HINFO  = 13,   //!< 主机信息
-    DNS_TYPE_MX     = 15,   //!< 邮件交换记录
-    DNS_TYPE_AXFR   = 252,  //!< 对区域转换的请求
-    DNS_TYPE_ANY    = 255,  //!< 对所有记录的请求
+    DNS_TYPE_A = 1,       //!< 期望获得查询名的IP地址
+    DNS_TYPE_NS = 2,      //!< 一个授权的域名服务器
+    DNS_TYPE_CNAME = 5,   //!< 规范名称
+    DNS_TYPE_PTR = 12,    //!< 指针记录
+    DNS_TYPE_HINFO = 13,  //!< 主机信息
+    DNS_TYPE_MX = 15,     //!< 邮件交换记录
+    DNS_TYPE_AXFR = 252,  //!< 对区域转换的请求
+    DNS_TYPE_ANY = 255,   //!< 对所有记录的请求
 };
 
 enum DNS_CLASS {
-    DNS_CLASS_IN    = 1,    //!< 互联网地址
+    DNS_CLASS_IN = 1,  //!< 互联网地址
 };
 
 enum DNS_RC {
-    DNS_RC_FORMAT_ERROR = 1,    //!< 数据包格式错误
-    DNS_RC_SERVER_FAIL  = 2,    //!< 服务器的错误
-    DNS_RC_NAME_ERROR   = 3,    //!< 名称不存在
-    DNS_RC_NOT_IMPL     = 4,    //!< 服务器不支持查询
-    DNS_RC_REFUSED      = 5,    //!< 服务器拒绝
+    DNS_RC_FORMAT_ERROR = 1,  //!< 数据包格式错误
+    DNS_RC_SERVER_FAIL = 2,   //!< 服务器的错误
+    DNS_RC_NAME_ERROR = 3,    //!< 名称不存在
+    DNS_RC_NOT_IMPL = 4,      //!< 服务器不支持查询
+    DNS_RC_REFUSED = 5,       //!< 服务器拒绝
 };
 
 /// 将domain写入到缓冲
@@ -81,11 +81,9 @@ std::string FetchDomain(util::Deserializer &parser)
     for (;;) {
         uint8_t len = 0;
         parser >> len;
-        if (len == 0)
-            break;
+        if (len == 0) break;
 
-        if (!first)
-            oss << '.';
+        if (!first) oss << '.';
         first = false;
 
         //! 处理压缩的字串
@@ -107,24 +105,21 @@ std::string FetchDomain(util::Deserializer &parser)
     return oss.str();
 }
 
-}
+}  // namespace
 
-DnsRequest::DnsRequest(event::Loop *wp_loop) :
-    udp_(wp_loop),
-    timeout_monitor_(wp_loop)
+DnsRequest::DnsRequest(event::Loop *wp_loop) : udp_(wp_loop), timeout_monitor_(wp_loop)
 {
     init();
 }
 
-DnsRequest::DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec) :
-    udp_(wp_loop),
-    timeout_monitor_(wp_loop),
-    dns_ip_vec_(dns_ip_vec)
+DnsRequest::DnsRequest(event::Loop *wp_loop, const IPAddressVec &dns_ip_vec)
+    : udp_(wp_loop), timeout_monitor_(wp_loop), dns_ip_vec_(dns_ip_vec)
 {
     init();
 }
 
-DnsRequest::~DnsRequest() {
+DnsRequest::~DnsRequest()
+{
     udp_.disable();
 }
 
@@ -154,26 +149,20 @@ DnsRequest::ReqId DnsRequest::request(const DomainName &domain, const Callback &
 
     util::Serializer dump(send_buff);
 
-    uint16_t flags = 0x0100; //!< QR:请求, OPCODE:标准查询, RA:期望递归
+    uint16_t flags = 0x0100;  //!< QR:请求, OPCODE:标准查询, RA:期望递归
     uint16_t qd_count = 1;
     uint16_t an_count = 0;
     uint16_t ns_count = 0;
     uint16_t ar_count = 0;
 
-    dump << req_id
-         << flags
-         << qd_count
-         << an_count
-         << ns_count
-         << ar_count;
+    dump << req_id << flags << qd_count << an_count << ns_count << ar_count;
 
     AppendDomain(dump, domain.toString());
 
-    uint16_t dns_type  = DNS_TYPE_A;
+    uint16_t dns_type = DNS_TYPE_A;
     uint16_t dns_class = DNS_CLASS_IN;
 
-    dump << dns_type
-         << dns_class;
+    dump << dns_type << dns_class;
 
 #if 0
     std::string hex_str = util::string::RawDataToHexStr(send_buff.data(), send_buff.size());
@@ -207,8 +196,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     LogTrace("recv from %s : %s", from.toString().c_str(), hex_str.c_str());
 #endif
 
-    if (requests_.empty())
-        return;
+    if (requests_.empty()) return;
 
     util::Deserializer parser(data_ptr, data_size);
 
@@ -216,10 +204,9 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     parser >> req_id >> flags;
 
     Request *req = findRequest(req_id);
-    if (req == nullptr)
-        return;
+    if (req == nullptr) return;
 
-    if ((flags & 0x8000) == 0)   //! 必须是回复包
+    if ((flags & 0x8000) == 0)  //! 必须是回复包
         return;
 
     //! 检查flags
@@ -227,7 +214,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
 
     Result result;
 
-    if (rcode == 0) {   //! 正常
+    if (rcode == 0) {  //! 正常
         uint16_t qd_count, an_count, ns_count, ar_count;
         parser >> qd_count >> an_count >> ns_count >> ar_count;
 
@@ -257,12 +244,12 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
                 auto old_endian = parser.setEndian(util::Endian::kLittle);
                 parser >> ip_value;
                 parser.setEndian(old_endian);
-                A a = { an_ttl, IPAddress(ip_value) };
+                A a = {an_ttl, IPAddress(ip_value)};
                 result.a_vec.push_back(a);
 
             } else if (an_type == DNS_TYPE_CNAME) {
                 std::string domain = FetchDomain(parser);
-                CNAME cname = { an_ttl, DomainName(domain) };
+                CNAME cname = {an_ttl, DomainName(domain)};
                 result.cname_vec.push_back(cname);
 
             } else {
@@ -276,19 +263,17 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
             //! 如果是域名自身的问题，则直接返回失败
             result.status = Result::Status::kDomainError;
         } else if (rcode == DNS_RC_FORMAT_ERROR) {
-            LogNotice("dns packet error");    //! 不应该发生
+            LogNotice("dns packet error");  //! 不应该发生
             result.status = Result::Status::kFail;
         } else {
             //! 如果是服务器的问题，则略过当前数据，等待其它服务器的数据
             ++req->response_count;
-            if (req->response_count < dns_ip_vec_.size())
-                return;
+            if (req->response_count < dns_ip_vec_.size()) return;
             result.status = Result::Status::kAllDnsFail;
         }
     }
 
-    if (req->cb)
-        req->cb(result);
+    if (req->cb) req->cb(result);
 
     deleteRequest(req_id);
     (void)from;
@@ -297,22 +282,19 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
 void DnsRequest::onRequestTimeout(ReqId req_id)
 {
     auto req = findRequest(req_id);
-    if (req == nullptr)
-        return;
+    if (req == nullptr) return;
 
     Result result;
     result.status = Result::Status::kTimeout;
 
-    if (req->cb)
-        req->cb(result);
+    if (req->cb) req->cb(result);
 
     deleteRequest(req_id);
 }
 
 void DnsRequest::addRequest(ReqId req_id, const Callback &cb)
 {
-    if (requests_.empty())
-        udp_.enable();
+    if (requests_.empty()) udp_.enable();
 
     Request req;
     req.cb = cb;
@@ -321,11 +303,10 @@ void DnsRequest::addRequest(ReqId req_id, const Callback &cb)
     timeout_monitor_.add(req_id);
 }
 
-DnsRequest::Request* DnsRequest::findRequest(ReqId req_id)
+DnsRequest::Request *DnsRequest::findRequest(ReqId req_id)
 {
     auto iter = requests_.find(req_id);
-    if (iter != requests_.end())
-        return &(iter->second);
+    if (iter != requests_.end()) return &(iter->second);
     return nullptr;
 }
 
@@ -334,12 +315,11 @@ bool DnsRequest::deleteRequest(ReqId req_id)
     auto iter = requests_.find(req_id);
     if (iter != requests_.end()) {
         requests_.erase(iter);
-        if (requests_.empty())
-            udp_.disable();
+        if (requests_.empty()) udp_.disable();
         return true;
     }
     return false;
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

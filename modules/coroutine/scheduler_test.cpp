@@ -17,10 +17,12 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "scheduler.h"
+
+#include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 using namespace std;
@@ -31,12 +33,12 @@ using namespace tbox::coroutine;
 TEST(Scheduler, CreateTwoRoutineThenStop)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     int exec_count = 0;
     {
         Scheduler sch(sp_loop);
-        auto entry = [&exec_count] (Scheduler &sch) {
+        auto entry = [&exec_count](Scheduler &sch) {
             ++exec_count;
             (void)sch;
         };
@@ -53,12 +55,12 @@ TEST(Scheduler, CreateTwoRoutineThenStop)
 TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     int exec_count = 0;
     {
         Scheduler sch(sp_loop);
-        auto entry = [&exec_count] (Scheduler &sch) {
+        auto entry = [&exec_count](Scheduler &sch) {
             ++exec_count;
             (void)sch;
         };
@@ -76,14 +78,14 @@ TEST(Scheduler, CreateTwoRoutineStartOneThenStop)
 TEST(Scheduler, GetInfoInRoutine)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     string read_name;
-    RoutineToken  read_token;
+    RoutineToken read_token;
 
-    auto entry = [&] (Scheduler &sch) {
+    auto entry = [&](Scheduler &sch) {
         read_name = sch.getName();
         read_token = sch.getToken();
     };
@@ -101,23 +103,22 @@ TEST(Scheduler, GetInfoInRoutine)
 TEST(Scheduler, RoutineCreateAnotherRoutine)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     bool routine1_run = false;
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         routine1_run = true;
         (void)sch;
     };
 
     bool routine2_end = false;
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         sch.create(routine1_entry);
         sch.yield();
         routine2_end = true;
     };
-
 
     sch.create(routine2_entry);
 
@@ -132,19 +133,19 @@ TEST(Scheduler, RoutineCreateAnotherRoutine)
 TEST(Scheduler, Yield)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     int routine1_count = 0;
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 20; ++i) {
             ++routine1_count;
             sch.yield();
         }
     };
     int routine2_count = 0;
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         for (int i = 0; i < 10; ++i) {
             ++routine2_count;
             sch.yield();
@@ -165,13 +166,13 @@ TEST(Scheduler, Yield)
 TEST(Scheduler, Wait)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     bool routine_begin = false;
     bool routine_end = false;
-    auto routine_entry = [&] (Scheduler &sch) {
+    auto routine_entry = [&](Scheduler &sch) {
         routine_begin = true;
         sch.wait();
         routine_end = true;
@@ -180,16 +181,14 @@ TEST(Scheduler, Wait)
 
     //! 创建定时器，1秒后唤醒协程
     auto timer = sp_loop->newTimerEvent();
-    SetScopeExitAction([timer]{ delete timer;});
+    SetScopeExitAction([timer] { delete timer; });
     timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
-    timer->setCallback(
-        [&] {
-            EXPECT_TRUE(routine_begin);
-            EXPECT_FALSE(routine_end);
-            sch.resume(token);
-            sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
-        }
-    );
+    timer->setCallback([&] {
+        EXPECT_TRUE(routine_begin);
+        EXPECT_FALSE(routine_end);
+        sch.resume(token);
+        sp_loop->exitLoop(chrono::milliseconds(10));  //! 不能直接停，要预留一点时间
+    });
     timer->enable();
 
     sp_loop->runLoop();
@@ -202,18 +201,17 @@ TEST(Scheduler, Wait)
 TEST(Scheduler, CancelRoutineByTimer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
     bool routine_stop = false;
-    int  count = 0;
-    auto routine_entry = [&] (Scheduler &sch) {
+    int count = 0;
+    auto routine_entry = [&](Scheduler &sch) {
         while (true) {
             ++count;
             sch.yield();
-            if (sch.isCanceled())
-                break;
+            if (sch.isCanceled()) break;
         }
         routine_stop = true;
     };
@@ -221,14 +219,12 @@ TEST(Scheduler, CancelRoutineByTimer)
 
     //! 创建定时器，1秒后取消协程
     auto timer = sp_loop->newTimerEvent();
-    SetScopeExitAction([timer]{ delete timer;});
+    SetScopeExitAction([timer] { delete timer; });
     timer->initialize(chrono::milliseconds(10), Event::Mode::kOneshot);
-    timer->setCallback(
-        [&] {
-            sch.cancel(token);
-            sp_loop->exitLoop(chrono::milliseconds(10));    //! 不能直接停，要预留一点时间
-        }
-    );
+    timer->setCallback([&] {
+        sch.cancel(token);
+        sp_loop->exitLoop(chrono::milliseconds(10));  //! 不能直接停，要预留一点时间
+    });
     timer->enable();
 
     sp_loop->runLoop();
@@ -241,13 +237,13 @@ TEST(Scheduler, CancelRoutineByTimer)
 TEST(Scheduler, JoinSubRoutine)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
     bool sub_exit = false;
     int count = 0;
     int times = 10;
-    auto sub_entry = [&] (Scheduler &sch) {
+    auto sub_entry = [&](Scheduler &sch) {
         for (int i = 0; i < times; ++i) {
             sch.yield();
             ++count;
@@ -256,8 +252,8 @@ TEST(Scheduler, JoinSubRoutine)
     };
 
     bool main_exit = false;
-    auto main_entry = [&] (Scheduler &sch) {
-        sch.join(sch.create(sub_entry));    //! 创建子协程，并等待其结束
+    auto main_entry = [&](Scheduler &sch) {
+        sch.join(sch.create(sub_entry));  //! 创建子协程，并等待其结束
 
         EXPECT_TRUE(sub_exit);
         EXPECT_EQ(count, times);
@@ -277,7 +273,7 @@ TEST(Scheduler, JoinSubRoutine)
 TEST(Scheduler, OneLoopTwoSchedule)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch1(sp_loop);
     Scheduler sch2(sp_loop);
@@ -286,24 +282,18 @@ TEST(Scheduler, OneLoopTwoSchedule)
     bool sch1_routine2_run = false;
     bool sch2_routine_run = false;
 
-    sch1.create(
-        [&](Scheduler &sch) {
-            sch1_routine1_run = true;
-            (void)sch;
-        }
-    );
-    sch1.create(
-        [&](Scheduler &sch) {
-            sch1_routine2_run = true;
-            (void)sch;
-        }
-    );
-    sch2.create(
-        [&](Scheduler &sch) {
-            sch2_routine_run = true;
-            (void)sch;
-        }
-    );
+    sch1.create([&](Scheduler &sch) {
+        sch1_routine1_run = true;
+        (void)sch;
+    });
+    sch1.create([&](Scheduler &sch) {
+        sch1_routine2_run = true;
+        (void)sch;
+    });
+    sch2.create([&](Scheduler &sch) {
+        sch2_routine_run = true;
+        (void)sch;
+    });
 
     sp_loop->exitLoop(chrono::milliseconds(100));
     sp_loop->runLoop();

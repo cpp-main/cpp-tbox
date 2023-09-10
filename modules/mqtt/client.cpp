@@ -19,15 +19,14 @@
  */
 #include "client.h"
 
-#include <thread>
-
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
-#include <tbox/base/lifetime_tag.hpp>
-#include <tbox/event/timer_event.h>
-#include <tbox/event/fd_event.h>
-
 #include <mosquitto.h>
+#include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+#include <tbox/event/fd_event.h>
+#include <tbox/event/timer_event.h>
+
+#include <tbox/base/lifetime_tag.hpp>
+#include <thread>
 
 namespace tbox {
 namespace mqtt {
@@ -35,21 +34,22 @@ namespace mqtt {
 using namespace std;
 using namespace event;
 
-struct Client::Data {
-    Loop        *wp_loop = nullptr;
+struct Client::Data
+{
+    Loop *wp_loop = nullptr;
 
-    Config      config;
-    Callbacks   callbacks;
+    Config config;
+    Callbacks callbacks;
 
-    mosquitto  *sp_mosq = nullptr;  //!< mosquitto 对象
+    mosquitto *sp_mosq = nullptr;  //!< mosquitto 对象
 
-    TimerEvent *sp_timer_ev      = nullptr;
-    FdEvent    *sp_sock_read_ev  = nullptr;
-    FdEvent    *sp_sock_write_ev = nullptr;
+    TimerEvent *sp_timer_ev = nullptr;
+    FdEvent *sp_sock_read_ev = nullptr;
+    FdEvent *sp_sock_write_ev = nullptr;
 
     State state = State::kNone;
 
-    int cb_level = 0;   //! 回调层级
+    int cb_level = 0;  //! 回调层级
 
     std::thread *sp_thread = nullptr;
 
@@ -85,14 +85,12 @@ struct Client::Data {
 
 int Client::Data::_instance_count = 0;
 
-Client::Client(Loop *wp_loop) :
-    d_(new Data)
+Client::Client(Loop *wp_loop) : d_(new Data)
 {
     TBOX_ASSERT(d_ != nullptr);
     d_->wp_loop = wp_loop;
 
-    if (Data::_instance_count == 0)
-        mosquitto_lib_init();
+    if (Data::_instance_count == 0) mosquitto_lib_init();
     ++Data::_instance_count;
 
     d_->sp_mosq = mosquitto_new(nullptr, true, this);
@@ -101,7 +99,7 @@ Client::Client(Loop *wp_loop) :
     d_->sp_timer_ev->initialize(chrono::seconds(1), Event::Mode::kPersist);
     d_->sp_timer_ev->setCallback(std::bind(&Client::onTimerTick, this));
 
-    d_->sp_sock_read_ev  = wp_loop->newFdEvent("mqtt::Client::sp_sock_read_ev");
+    d_->sp_sock_read_ev = wp_loop->newFdEvent("mqtt::Client::sp_sock_read_ev");
     d_->sp_sock_read_ev->setCallback(std::bind(&Client::onSocketRead, this));
 
     d_->sp_sock_write_ev = wp_loop->newFdEvent("mqtt::Client::sp_sock_write_ev");
@@ -122,8 +120,7 @@ Client::~Client()
 
     if (Data::_instance_count > 0) {
         --Data::_instance_count;
-        if (Data::_instance_count == 0)
-            mosquitto_lib_cleanup();
+        if (Data::_instance_count == 0) mosquitto_lib_cleanup();
     }
 }
 
@@ -180,8 +177,7 @@ bool Client::initialize(const Config &config, const Callbacks &callbacks)
         return false;
     }
 
-    if (!config.isValid())
-        return false;
+    if (!config.isValid()) return false;
 
     d_->config = config;
     d_->callbacks = callbacks;
@@ -192,8 +188,7 @@ bool Client::initialize(const Config &config, const Callbacks &callbacks)
 
 void Client::cleanup()
 {
-    if (d_->state <= State::kNone)
-        return;
+    if (d_->state <= State::kNone) return;
 
     stop();
 
@@ -211,8 +206,7 @@ bool Client::start()
 
     //! 基础设置
     const char *client_id = nullptr;
-    if (!d_->config.base.client_id.empty())
-        client_id = d_->config.base.client_id.c_str();
+    if (!d_->config.base.client_id.empty()) client_id = d_->config.base.client_id.c_str();
 
     int ret = mosquitto_reinitialise(d_->sp_mosq, client_id, true, this);
     if (ret == MOSQ_ERR_SUCCESS) {
@@ -230,20 +224,18 @@ bool Client::start()
 
     //! TLS 设置
     if (d_->config.tls.enabled) {
-        const char *ca_file   = nullptr;
-        const char *ca_path   = nullptr;
+        const char *ca_file = nullptr;
+        const char *ca_path = nullptr;
         const char *cert_file = nullptr;
-        const char *key_file  = nullptr;
+        const char *key_file = nullptr;
 
-        if (!d_->config.tls.ca_file.empty())
-            ca_file = d_->config.tls.ca_file.c_str();
+        if (!d_->config.tls.ca_file.empty()) ca_file = d_->config.tls.ca_file.c_str();
 
-        if (!d_->config.tls.ca_path.empty())
-            ca_path = d_->config.tls.ca_path.c_str();
+        if (!d_->config.tls.ca_path.empty()) ca_path = d_->config.tls.ca_path.c_str();
 
         if (!d_->config.tls.cert_file.empty()) {
             cert_file = d_->config.tls.cert_file.c_str();
-            key_file  = d_->config.tls.key_file.c_str();
+            key_file = d_->config.tls.key_file.c_str();
         }
 
         //! TODO: 没有完善 pw_callback 功能，将来需要再实现，暂时填nullptr
@@ -252,10 +244,10 @@ bool Client::start()
         const char *ssl_version = nullptr;
         const char *ciphers = nullptr;  //! TODO: 暂不设置
 
-        if (!d_->config.tls.ssl_version.empty())
-            ssl_version = d_->config.tls.ssl_version.c_str();
+        if (!d_->config.tls.ssl_version.empty()) ssl_version = d_->config.tls.ssl_version.c_str();
 
-        mosquitto_tls_opts_set(d_->sp_mosq, d_->config.tls.is_require_peer_cert, ssl_version, ciphers);
+        mosquitto_tls_opts_set(
+            d_->sp_mosq, d_->config.tls.is_require_peer_cert, ssl_version, ciphers);
         mosquitto_tls_insecure_set(d_->sp_mosq, d_->config.tls.is_insecure);
     }
 
@@ -270,16 +262,13 @@ bool Client::start()
     }
 
     const char *username = nullptr;
-    const char *passwd   = nullptr;
+    const char *passwd = nullptr;
 
-    if (!d_->config.base.username.empty())
-        username = d_->config.base.username.c_str();
+    if (!d_->config.base.username.empty()) username = d_->config.base.username.c_str();
 
-    if (!d_->config.base.passwd.empty())
-        passwd = d_->config.base.passwd.c_str();
+    if (!d_->config.base.passwd.empty()) passwd = d_->config.base.passwd.c_str();
 
-    if (username != nullptr)
-        mosquitto_username_pw_set(d_->sp_mosq, username, passwd);
+    if (username != nullptr) mosquitto_username_pw_set(d_->sp_mosq, username, passwd);
 
     d_->state = State::kConnecting;
 
@@ -287,33 +276,28 @@ bool Client::start()
     auto is_alive = d_->alive_tag.get();  //! 原理见Q1
 
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
-    d_->sp_thread = new thread(
-        [this, is_alive] {
-            int ret = mosquitto_connect_async(d_->sp_mosq,
-                                              d_->config.base.broker.domain.c_str(),
-                                              d_->config.base.broker.port,
-                                              d_->config.base.keepalive);
-            d_->wp_loop->runInLoop(
-                [this, is_alive, ret] {
-                    if (!is_alive)  //!< 判定this指针是否有效
-                        return;
-                    onTcpConnectDone(ret, true);
-                },
-                "mqtt::Client::start, connect done"
-            );
-        }
-    );
+    d_->sp_thread = new thread([this, is_alive] {
+        int ret = mosquitto_connect_async(d_->sp_mosq,
+                                          d_->config.base.broker.domain.c_str(),
+                                          d_->config.base.broker.port,
+                                          d_->config.base.keepalive);
+        d_->wp_loop->runInLoop(
+            [this, is_alive, ret] {
+                if (!is_alive)  //!< 判定this指针是否有效
+                    return;
+                onTcpConnectDone(ret, true);
+            },
+            "mqtt::Client::start, connect done");
+    });
 
     return true;
 }
 
 void Client::stop()
 {
-    if (d_->state <= State::kInited)
-        return;
+    if (d_->state <= State::kInited) return;
 
-    if (d_->state == State::kTcpConnected ||
-        d_->state == State::kMqttConnected) {
+    if (d_->state == State::kTcpConnected || d_->state == State::kMqttConnected) {
         //! 如果已成功连接，则立即断开
         mosquitto_disconnect(d_->sp_mosq);  //! 请求断开，后续工作在 onDisconnected() 中处理
     } else {
@@ -339,8 +323,7 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
 
     int mid = 0;
     int ret = mosquitto_subscribe(d_->sp_mosq, &mid, topic.c_str(), qos);
-    if (p_mid != nullptr)
-        *p_mid = mid;
+    if (p_mid != nullptr) *p_mid = mid;
 
     enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
@@ -355,15 +338,18 @@ int Client::unsubscribe(const std::string &topic, int *p_mid)
 
     int mid = 0;
     int ret = mosquitto_unsubscribe(d_->sp_mosq, &mid, topic.c_str());
-    if (p_mid != nullptr)
-        *p_mid = mid;
+    if (p_mid != nullptr) *p_mid = mid;
 
     enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
 }
 
-int Client::publish(const std::string &topic, const void *payload_ptr, size_t payload_size,
-                    int qos, bool retain, int *p_mid)
+int Client::publish(const std::string &topic,
+                    const void *payload_ptr,
+                    size_t payload_size,
+                    int qos,
+                    bool retain,
+                    int *p_mid)
 {
     if (d_->state != State::kMqttConnected) {
         LogWarn("mqtt is not connected");
@@ -371,11 +357,9 @@ int Client::publish(const std::string &topic, const void *payload_ptr, size_t pa
     }
 
     int mid = 0;
-    int ret = mosquitto_publish(d_->sp_mosq, &mid, topic.c_str(),
-                                payload_size, payload_ptr,
-                                qos, retain);
-    if (p_mid != nullptr)
-        *p_mid = mid;
+    int ret =
+        mosquitto_publish(d_->sp_mosq, &mid, topic.c_str(), payload_size, payload_ptr, qos, retain);
+    if (p_mid != nullptr) *p_mid = mid;
 
     enableSocketWriteIfNeed();
     return ret == MOSQ_ERR_SUCCESS;
@@ -388,8 +372,7 @@ Client::State Client::getState() const
 
 void Client::onTimerTick()
 {
-    if (d_->state == State::kTcpConnected ||
-        d_->state == State::kMqttConnected) {
+    if (d_->state == State::kTcpConnected || d_->state == State::kMqttConnected) {
         mosquitto_loop_misc(d_->sp_mosq);
 
         if (mosquitto_socket(d_->sp_mosq) < 0) {
@@ -403,19 +386,16 @@ void Client::onTimerTick()
     if (d_->state == State::kConnecting) {
         if (d_->sp_thread == nullptr) {
             auto is_alive = d_->alive_tag.get();  //! 原理见Q1
-            d_->sp_thread = new thread(
-                [this, is_alive] {
-                    int ret = mosquitto_reconnect_async(d_->sp_mosq);
-                    d_->wp_loop->runInLoop(
-                        [this, is_alive, ret] {
-                            if (!is_alive)  //!< 判定this指针是否有效
-                                return;
-                            onTcpConnectDone(ret, false);
-                        },
-                        "mqtt::Client::onTimerTick, reconnect done"
-                    );
-                }
-            );
+            d_->sp_thread = new thread([this, is_alive] {
+                int ret = mosquitto_reconnect_async(d_->sp_mosq);
+                d_->wp_loop->runInLoop(
+                    [this, is_alive, ret] {
+                        if (!is_alive)  //!< 判定this指针是否有效
+                            return;
+                        onTcpConnectDone(ret, false);
+                    },
+                    "mqtt::Client::onTimerTick, reconnect done");
+            });
         }
     }
 }
@@ -434,43 +414,46 @@ void Client::onSocketWrite()
 
 void Client::OnConnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onConnected(rc);
 }
 
 void Client::OnDisconnectWrapper(struct mosquitto *, void *userdata, int rc)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onDisconnected(rc);
 }
 
 void Client::OnPublishWrapper(struct mosquitto *, void *userdata, int mid)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onPublish(mid);
 }
 
-void Client::OnMessageWrapper(struct mosquitto *, void *userdata, const struct mosquitto_message *msg)
+void Client::OnMessageWrapper(struct mosquitto *,
+                              void *userdata,
+                              const struct mosquitto_message *msg)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onMessage(msg);
 }
 
-void Client::OnSubscribeWrapper(struct mosquitto *, void *userdata, int mid, int qos_count, const int *granted_qos)
+void Client::OnSubscribeWrapper(
+    struct mosquitto *, void *userdata, int mid, int qos_count, const int *granted_qos)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onSubscribe(mid, qos_count, granted_qos);
 }
 
 void Client::OnUnsubscribeWrapper(struct mosquitto *, void *userdata, int mid)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onUnsubscribe(mid);
 }
 
 void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const char *str)
 {
-    Client *p_this = static_cast<Client*>(userdata);
+    Client *p_this = static_cast<Client *>(userdata);
     p_this->onLog(level, str);
 }
 
@@ -486,8 +469,7 @@ void Client::onConnected(int rc)
     if (d_->state != State::kMqttConnected) {
         d_->state = State::kMqttConnected;
         ++d_->cb_level;
-        if (d_->callbacks.connected)
-            d_->callbacks.connected();
+        if (d_->callbacks.connected) d_->callbacks.connected();
         --d_->cb_level;
     }
 }
@@ -502,8 +484,7 @@ void Client::onDisconnected(int rc)
     if (d_->state >= State::kTcpConnected) {
         if (d_->state == State::kMqttConnected) {
             ++d_->cb_level;
-            if (d_->callbacks.disconnected)
-                d_->callbacks.disconnected();
+            if (d_->callbacks.disconnected) d_->callbacks.disconnected();
             --d_->cb_level;
         }
         d_->state = State::kConnecting;
@@ -516,8 +497,7 @@ void Client::onPublish(int mid)
     LogInfo("mid:%d", mid);
 
     ++d_->cb_level;
-    if (d_->callbacks.message_pub)
-        d_->callbacks.message_pub(mid);
+    if (d_->callbacks.message_pub) d_->callbacks.message_pub(mid);
     --d_->cb_level;
 }
 
@@ -526,8 +506,7 @@ void Client::onSubscribe(int mid, int qos, const int *granted_qos)
     LogInfo("mid:%d, qos:%d", mid, qos);
 
     ++d_->cb_level;
-    if (d_->callbacks.subscribed)
-        d_->callbacks.subscribed(mid, qos, granted_qos);
+    if (d_->callbacks.subscribed) d_->callbacks.subscribed(mid, qos, granted_qos);
     --d_->cb_level;
 }
 
@@ -536,26 +515,20 @@ void Client::onUnsubscribe(int mid)
     LogInfo("mid:%d", mid);
 
     ++d_->cb_level;
-    if (d_->callbacks.unsubscribed)
-        d_->callbacks.unsubscribed(mid);
+    if (d_->callbacks.unsubscribed) d_->callbacks.unsubscribed(mid);
     --d_->cb_level;
 }
 
 void Client::onMessage(const struct mosquitto_message *msg)
 {
-    if (msg == nullptr)
-        return;
+    if (msg == nullptr) return;
 
     LogInfo("mid:%d, topic:%s", msg->mid, msg->topic);
 
     ++d_->cb_level;
     if (d_->callbacks.message_recv)
-        d_->callbacks.message_recv(msg->mid,
-                                   msg->topic,
-                                   msg->payload,
-                                   msg->payloadlen,
-                                   msg->qos,
-                                   msg->retain);
+        d_->callbacks.message_recv(
+            msg->mid, msg->topic, msg->payload, msg->payloadlen, msg->qos, msg->retain);
     --d_->cb_level;
 }
 
@@ -572,15 +545,14 @@ void Client::onLog(int level, const char *str)
         case MOSQ_LOG_NOTICE:
             new_level = LOG_LEVEL_NOTICE;
             break;
-        default:; //! regard MOSQ_LOG_INFO as LOG_LEVEL_DEBUG
+        default:;  //! regard MOSQ_LOG_INFO as LOG_LEVEL_DEBUG
     }
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, 0, str);
 }
 
 void Client::onTcpConnectDone(int ret, bool first_connect)
 {
-    if (d_->sp_thread == nullptr)
-        return;
+    if (d_->sp_thread == nullptr) return;
 
     d_->sp_thread->join();
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
@@ -594,38 +566,34 @@ void Client::onTcpConnectDone(int ret, bool first_connect)
     }
 
     //! 如果是首次连接要启动定时器，重连的不需要
-    if (first_connect)
-        enableTimer();
+    if (first_connect) enableTimer();
 }
 
 void Client::enableSocketRead()
 {
-    if (mosquitto_socket(d_->sp_mosq) < 0)
-        return;
+    if (mosquitto_socket(d_->sp_mosq) < 0) return;
 
-    if (d_->sp_sock_read_ev->isEnabled())
-        return;
+    if (d_->sp_sock_read_ev->isEnabled()) return;
 
-    d_->sp_sock_read_ev->initialize(mosquitto_socket(d_->sp_mosq), FdEvent::kReadEvent, Event::Mode::kPersist);
+    d_->sp_sock_read_ev->initialize(
+        mosquitto_socket(d_->sp_mosq), FdEvent::kReadEvent, Event::Mode::kPersist);
     d_->sp_sock_read_ev->enable();
 }
 
 void Client::enableSocketWrite()
 {
-    if (mosquitto_socket(d_->sp_mosq) < 0)
-        return;
+    if (mosquitto_socket(d_->sp_mosq) < 0) return;
 
-    if (d_->sp_sock_write_ev->isEnabled())
-        return;
+    if (d_->sp_sock_write_ev->isEnabled()) return;
 
-    d_->sp_sock_write_ev->initialize(mosquitto_socket(d_->sp_mosq), FdEvent::kWriteEvent, Event::Mode::kOneshot);
+    d_->sp_sock_write_ev->initialize(
+        mosquitto_socket(d_->sp_mosq), FdEvent::kWriteEvent, Event::Mode::kOneshot);
     d_->sp_sock_write_ev->enable();
 }
 
 void Client::enableSocketWriteIfNeed()
 {
-    if (mosquitto_want_write(d_->sp_mosq))
-        enableSocketWrite();
+    if (mosquitto_want_write(d_->sp_mosq)) enableSocketWrite();
 }
 
 void Client::enableTimer()
@@ -648,5 +616,5 @@ void Client::disableTimer()
     d_->sp_timer_ev->disable();
 }
 
-}
-}
+}  // namespace mqtt
+}  // namespace tbox

@@ -18,11 +18,12 @@
  * of the source tree.
  */
 #include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/log/async_stdout_sink.h>
 #include <tbox/event/signal_event.h>
-#include <tbox/http/server/server.h>
 #include <tbox/http/server/router.h>
+#include <tbox/http/server/server.h>
+#include <tbox/log/async_stdout_sink.h>
+
+#include <tbox/base/scope_exit.hpp>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -47,12 +48,10 @@ int main(int argc, char **argv)
     auto sp_loop = Loop::New();
     auto sp_sig_event = sp_loop->newSignalEvent();
 
-    SetScopeExitAction(
-        [=] {
-            delete sp_sig_event;
-            delete sp_loop;
-        }
-    );
+    SetScopeExitAction([=] {
+        delete sp_sig_event;
+        delete sp_loop;
+    });
 
     sp_sig_event->initialize(SIGINT, Event::Mode::kPersist);
     sp_sig_event->enable();
@@ -70,10 +69,11 @@ int main(int argc, char **argv)
     srv.use(&router);
 
     router
-        .get("/", [](ContextSptr ctx, const NextFunc &next) {
-            ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = 
-R"(
+        .get("/",
+             [](ContextSptr ctx, const NextFunc &next) {
+                 ctx->res().status_code = StatusCode::k200_OK;
+                 ctx->res().body =
+                     R"(
 <head>
 </head>
 <body>
@@ -81,22 +81,21 @@ R"(
     <p> <a href="/2" target="_blank">page_2</a> </p>
 </body>
 )";
-        })
-        .get("/1", [](ContextSptr ctx, const NextFunc &next) {
-            ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "<p>page 1</p>";
-        })
+             })
+        .get("/1",
+             [](ContextSptr ctx, const NextFunc &next) {
+                 ctx->res().status_code = StatusCode::k200_OK;
+                 ctx->res().body = "<p>page 1</p>";
+             })
         .get("/2", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
             ctx->res().body = "<p>page 2</p>";
         });
 
-    sp_sig_event->setCallback(
-        [&] (int) {
-            srv.stop();
-            sp_loop->exitLoop();
-        }
-    );
+    sp_sig_event->setCallback([&](int) {
+        srv.stop();
+        sp_loop->exitLoop();
+    });
 
     LogInfo("start");
     sp_loop->runLoop();

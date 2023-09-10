@@ -17,13 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-
 #include <tbox/base/log.h>
 #include <tbox/base/version.h>
 
-#include "module.h"
+#include <iostream>
+
 #include "context.h"
+#include "module.h"
 
 namespace tbox {
 namespace main {
@@ -34,7 +34,7 @@ void GetVersion(int &major, int &minor, int &rev, int &build)
 {
     major = 1;
     minor = 0;
-    rev   = 0;
+    rev = 0;
     build = 0;
 }
 
@@ -56,26 +56,23 @@ void RegisterApps(Module &apps, Context &ctx)
 }
 )";
     std::cerr << "WARN: You should implement tbox::main::RegisterApps().\nExp:" << std::endl
-         << src_text << std::endl;
+              << src_text << std::endl;
 
     (void)apps;
     (void)ctx;
 }
 
-__attribute__((weak))
-std::string GetAppBuildTime()
+__attribute__((weak)) std::string GetAppBuildTime()
 {
     return "Unknown";
 }
 
-__attribute__((weak))
-std::string GetAppDescribe()
+__attribute__((weak)) std::string GetAppDescribe()
 {
     return "Author didn't specify";
 }
 
-__attribute__((weak))
-void GetAppVersion(int &major, int &minor, int &rev, int &build)
+__attribute__((weak)) void GetAppVersion(int &major, int &minor, int &rev, int &build)
 {
     major = minor = rev = build = 0;
 }
@@ -93,5 +90,5 @@ void SayHello()
     LogInfo("Tbox Version: %d.%d.%d", major, minor, rev);
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

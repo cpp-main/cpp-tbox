@@ -19,8 +19,9 @@
  */
 #include "md5.h"
 
-#include <cstring>
 #include <tbox/base/assert.h>
+
+#include <cstring>
 
 namespace tbox {
 namespace crypto {
@@ -48,7 +49,6 @@ namespace {
 #define H(x, y, z) (x ^ y ^ z)
 #define I(x, y, z) (y ^ (x | ~z))
 
-
 //! 向左环移n个单位
 #define ROTATE_LEFT(x, n) ((x << n) | (x >> (32 - n)))
 
@@ -75,15 +75,35 @@ namespace {
  * a=ROTATE_LEFT( F(b,c,d)+a+x+ac , s )+b
  */
 
-#define FF(a, b, c, d, x, s, ac) { a += F(b, c, d) + x + ac;  a = ROTATE_LEFT(a, s); a += b; }
-#define GG(a, b, c, d, x, s, ac) { a += G(b, c, d) + x + ac;  a = ROTATE_LEFT(a, s); a += b; }
-#define HH(a, b, c, d, x, s, ac) { a += H(b, c, d) + x + ac;  a = ROTATE_LEFT(a, s); a += b; }
-#define II(a, b, c, d, x, s, ac) { a += I(b, c, d) + x + ac;  a = ROTATE_LEFT(a, s); a += b; }
+#define FF(a, b, c, d, x, s, ac)  \
+    {                             \
+        a += F(b, c, d) + x + ac; \
+        a = ROTATE_LEFT(a, s);    \
+        a += b;                   \
+    }
+#define GG(a, b, c, d, x, s, ac)  \
+    {                             \
+        a += G(b, c, d) + x + ac; \
+        a = ROTATE_LEFT(a, s);    \
+        a += b;                   \
+    }
+#define HH(a, b, c, d, x, s, ac)  \
+    {                             \
+        a += H(b, c, d) + x + ac; \
+        a = ROTATE_LEFT(a, s);    \
+        a += b;                   \
+    }
+#define II(a, b, c, d, x, s, ac)  \
+    {                             \
+        a += I(b, c, d) + x + ac; \
+        a = ROTATE_LEFT(a, s);    \
+        a += b;                   \
+    }
 
 //! 第一位1 其后若干个0,用于Final函数时的补足
-const uint8_t PADDING[] = { 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const uint8_t PADDING[] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /**
  * \brief   利用位操作，按1->4方式把数字分解成字符
@@ -121,8 +141,7 @@ void Decode(uint32_t *output, const uint8_t *input, size_t len)
          * 因为FF GG HH II和非线性函数都只能对数字进行处理
          * 第一个字符占前8位，第二个占8-16位，第三个占16-24位，第四个占24-32位。
          */
-        output[i] = (input[j]) | (input[j + 1] << 8) | (input[j + 2] << 16)
-                    | (input[j + 3] << 24);
+        output[i] = (input[j]) | (input[j + 1] << 8) | (input[j + 2] << 16) | (input[j + 3] << 24);
         i++;
         j += 4;
     }
@@ -235,7 +254,7 @@ void Transform(uint32_t state_[4], const uint8_t block[64])
     state_[2] += c;
     state_[3] += d;
 }
-}
+}  // namespace
 
 MD5::MD5()
 {
@@ -248,7 +267,7 @@ MD5::MD5()
     state_[3] = 0x10325476;
 }
 
-void MD5::update(const void* plain_text_ptr, size_t plain_text_len)
+void MD5::update(const void *plain_text_ptr, size_t plain_text_len)
 {
     TBOX_ASSERT(plain_text_ptr != nullptr);
     TBOX_ASSERT(!is_finished_);
@@ -265,12 +284,11 @@ void MD5::update(const void* plain_text_ptr, size_t plain_text_len)
 
     //! 当其出现溢出的情况时，通过以下操作把两个16位的数连在一块，生成一个
     //! 32位的二进制数串，从而扩大其储存范围
-    if (count_[0] < (plain_text_len << 3))
-        count_[1]++;
+    if (count_[0] < (plain_text_len << 3)) count_[1]++;
 
     count_[1] += plain_text_len >> 29;
 
-    const uint8_t *plain_text_u8_ptr = static_cast<const uint8_t*>(plain_text_ptr);
+    const uint8_t *plain_text_u8_ptr = static_cast<const uint8_t *>(plain_text_ptr);
 
     uint32_t i = 0;
     //! 当其输入字节数的大于其可以补足64字节的字节数，进行补足
@@ -324,5 +342,5 @@ void MD5::finish(uint8_t digest[16])
     is_finished_ = true;
 }
 
-}
-}
+}  // namespace crypto
+}  // namespace tbox

@@ -27,5 +27,5 @@ std::string GetAppBuildTime()
     return __DATE__ " " __TIME__;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

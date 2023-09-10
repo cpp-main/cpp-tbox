@@ -21,17 +21,18 @@
 
 #include <errno.h>
 #include <sys/socket.h>
-#include <cstring>
 #include <tbox/base/log.h>
+
+#include <cstring>
 
 namespace tbox {
 namespace network {
 
-SocketFd::SocketFd() { }
+SocketFd::SocketFd() {}
 
-SocketFd::SocketFd(int fd) : Fd(fd) { }
+SocketFd::SocketFd(int fd) : Fd(fd) {}
 
-SocketFd::SocketFd(const Fd &fd) : Fd(fd) { }
+SocketFd::SocketFd(const Fd &fd) : Fd(fd) {}
 
 SocketFd SocketFd::CreateSocket(int domain, int type, int protocal)
 {
@@ -57,72 +58,65 @@ SocketFd SocketFd::CreateTcpSocket()
 int SocketFd::connect(const struct sockaddr *addr, socklen_t addrlen)
 {
     int ret = ::connect(get(), addr, addrlen);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
 int SocketFd::bind(const struct sockaddr *addr, socklen_t addrlen)
 {
     int ret = ::bind(get(), addr, addrlen);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
 int SocketFd::listen(int backlog)
 {
     int ret = ::listen(get(), backlog);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
 int SocketFd::accept(struct sockaddr *addr, socklen_t *addrlen)
 {
     int ret = ::accept(get(), addr, addrlen);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
-ssize_t SocketFd::send(const void* data_ptr, size_t data_size, int flag)
+ssize_t SocketFd::send(const void *data_ptr, size_t data_size, int flag)
 {
     ssize_t ret = ::send(get(), data_ptr, data_size, flag);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
-ssize_t SocketFd::recv(void* data_ptr, size_t data_size, int flag)
+ssize_t SocketFd::recv(void *data_ptr, size_t data_size, int flag)
 {
     ssize_t ret = ::recv(get(), data_ptr, data_size, flag);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
-ssize_t SocketFd::sendTo(const void* data_ptr, size_t data_size, int flag, const sockaddr *dest_addr, socklen_t addrlen)
+ssize_t SocketFd::sendTo(
+    const void *data_ptr, size_t data_size, int flag, const sockaddr *dest_addr, socklen_t addrlen)
 {
     ssize_t ret = ::sendto(get(), data_ptr, data_size, flag, dest_addr, addrlen);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
-ssize_t SocketFd::recvFrom(void* data_ptr, size_t data_size, int flag, sockaddr *dest_addr, socklen_t *addrlen)
+ssize_t SocketFd::recvFrom(
+    void *data_ptr, size_t data_size, int flag, sockaddr *dest_addr, socklen_t *addrlen)
 {
     ssize_t ret = ::recvfrom(get(), data_ptr, data_size, flag, dest_addr, addrlen);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
 int SocketFd::shutdown(int howto)
 {
     int ret = ::shutdown(get(), howto);
-    if (ret < 0)
-        LogDbg("fail, errno:%d, %s", errno, strerror(errno));
+    if (ret < 0) LogDbg("fail, errno:%d, %s", errno, strerror(errno));
     return ret;
 }
 
@@ -190,12 +184,9 @@ bool SocketFd::setSendLowWater(int size)
 
 bool SocketFd::setLinger(bool enable, int linger)
 {
-    struct linger value = {
-        .l_onoff = enable,
-        .l_linger = linger
-    };
+    struct linger value = {.l_onoff = enable, .l_linger = linger};
     return setSocketOpt(SOL_SOCKET, SO_LINGER, &value, sizeof(value));
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

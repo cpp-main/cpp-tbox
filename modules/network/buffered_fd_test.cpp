@@ -21,8 +21,8 @@
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/network/buffered_fd.h>
-
 #include <unistd.h>
+
 #include <iostream>
 
 using namespace std;
@@ -39,10 +39,10 @@ using namespace tbox::network;
 
 TEST(BufferedFd, pipe_test)
 {
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     ASSERT_TRUE(sp_loop);
 
-    int fds[2] = { 0 };
+    int fds[2] = {0};
     ASSERT_EQ(pipe(fds), 0);
 
     int recv_count = 0;
@@ -51,54 +51,47 @@ TEST(BufferedFd, pipe_test)
     BufferedFd *read_buff_fd = new BufferedFd(sp_loop);
     read_buff_fd->initialize(fds[0]);
     read_buff_fd->setReceiveCallback(
-        [&recv_count] (Buffer &buff){
-            //cout << "Info: Recv, size(): " << buff.readableSize() << endl;
+        [&recv_count](Buffer &buff) {
+            // cout << "Info: Recv, size(): " << buff.readableSize() << endl;
             while (buff.readableSize() >= 10) {
                 char read_data[10];
                 buff.fetch(read_data, 10);
-                ASSERT_STREQ(read_data, "123456789");   //! 检查每个数据包收到的内容是否正确
+                ASSERT_STREQ(read_data, "123456789");  //! 检查每个数据包收到的内容是否正确
                 ++recv_count;
             }
-        }
-    , 10);
+        },
+        10);
     read_buff_fd->enable();
 
     //! 创建发送的BufferedFd
     BufferedFd *write_buff_fd = new BufferedFd(sp_loop);
     write_buff_fd->initialize(fds[1]);
-    write_buff_fd->setSendCompleteCallback(
-        [] {
-            //cout << "Info: All message sent" << endl;
-        }
-    );
+    write_buff_fd->setSendCompleteCallback([] {
+        // cout << "Info: All message sent" << endl;
+    });
     write_buff_fd->enable();
 
     //! 创建定时发送的定时器，每20ms一次，执行10次
     int send_times = 0;
-    TimerEvent* sp_timer_send = sp_loop->newTimerEvent();
+    TimerEvent *sp_timer_send = sp_loop->newTimerEvent();
     sp_timer_send->initialize(std::chrono::milliseconds(20), event::Event::Mode::kPersist);
-    sp_timer_send->setCallback(
-        [=, &send_times] {
-            ++send_times;
-            //cout << "Info: Send, time: " << send_times << endl;
-            for (int i = 0; i < 10000; ++i)
-                write_buff_fd->send("123456789", 10);
+    sp_timer_send->setCallback([=, &send_times] {
+        ++send_times;
+        // cout << "Info: Send, time: " << send_times << endl;
+        for (int i = 0; i < 10000; ++i) write_buff_fd->send("123456789", 10);
 
-            if (send_times == 10)
-                sp_timer_send->disable();
-        }
-    );
+        if (send_times == 10) sp_timer_send->disable();
+    });
     sp_timer_send->enable();
 
     //! 在runLoop()前发送10万个数据
-    //cout << "Info: Send 100000 package" << endl;
-    for (int i = 0; i < 100000; ++i)
-        write_buff_fd->send("123456789", 10);
+    // cout << "Info: Send 100000 package" << endl;
+    for (int i = 0; i < 100000; ++i) write_buff_fd->send("123456789", 10);
 
-    //cout << "Info: Start Loop" << endl;
+    // cout << "Info: Start Loop" << endl;
     sp_loop->exitLoop(std::chrono::seconds(2));
     sp_loop->runLoop();
-    //cout << "Info: End Loop" << endl;
+    // cout << "Info: End Loop" << endl;
 
     EXPECT_EQ(recv_count, 200000);  //! 检查是否共收到20万的数据包
 

@@ -17,10 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
 #include <signal.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace tbox;
@@ -50,13 +51,13 @@ int main(int argc, char *argv[])
 
     ::signal(SIGINT, OldSignalCallback);
 
-    Loop* sp_loop = Loop::New(argv[1]);
+    Loop *sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
         return 0;
     }
 
-    SignalEvent* sp_signal = sp_loop->newSignalEvent();
+    SignalEvent *sp_signal = sp_loop->newSignalEvent();
     sp_signal->initialize(SIGINT, Event::Mode::kOneshot);
     sp_signal->setCallback(NewSignalCallback);
     sp_signal->enable();

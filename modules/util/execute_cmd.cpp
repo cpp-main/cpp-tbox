@@ -19,10 +19,9 @@
  */
 #include "execute_cmd.h"
 
-#include <unistd.h>
 #include <fcntl.h>
-
 #include <tbox/base/log.h>
+#include <unistd.h>
 
 namespace tbox {
 namespace util {
@@ -51,8 +50,7 @@ bool ExecuteCmd(const std::string &cmd, std::string &result)
     for (;;) {
         char buff[1025];
         auto rsize = ::fread(buff, 1, (sizeof(buff) - 1), fp);
-        if (rsize == 0)
-            break;
+        if (rsize == 0) break;
         buff[rsize] = '\0';
         result += buff;
     }
@@ -69,5 +67,5 @@ bool ExecuteCmd(const std::string &cmd, std::string &result)
     return true;
 }
 
-}
-}
+}  // namespace util
+}  // namespace tbox

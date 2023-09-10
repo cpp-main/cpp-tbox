@@ -27,10 +27,11 @@
  *
  * 在程序启动时，由 ping 首先发送第一个字节。
  */
-#include <iostream>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/network/udp_socket.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox::event;
@@ -50,26 +51,23 @@ int main()
     ping.connect(SockAddr::FromString("127.0.0.1:6671"));
     pong.connect(SockAddr::FromString("127.0.0.1:6670"));
 
-    ping.setRecvCallback(
-        [&ping] (const void *data_ptr, size_t data_size, const SockAddr &from) {
-            char dummy = 0;
-            ping.send(&dummy, 1);
-        }
-    );
+    ping.setRecvCallback([&ping](const void *data_ptr, size_t data_size, const SockAddr &from) {
+        char dummy = 0;
+        ping.send(&dummy, 1);
+    });
     int count = 0;
     pong.setRecvCallback(
-        [&pong, &count] (const void *data_ptr, size_t data_size, const SockAddr &from) {
+        [&pong, &count](const void *data_ptr, size_t data_size, const SockAddr &from) {
             char dummy = 1;
             pong.send(&dummy, 1);
             ++count;
-        }
-    );
+        });
 
     ping.enable();
     pong.enable();
 
     char dummy = 0;
-    ping.send(&dummy, 1);   //! 发球
+    ping.send(&dummy, 1);  //! 发球
 
     sp_loop->exitLoop(chrono::seconds(5));  //! 5秒后自动停止
     sp_loop->runLoop();

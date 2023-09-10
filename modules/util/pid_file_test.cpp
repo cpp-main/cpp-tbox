@@ -17,9 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <thread>
-#include <gtest/gtest.h>
 #include "pid_file.h"
+
+#include <gtest/gtest.h>
+
+#include <thread>
 
 using namespace tbox::util;
 
@@ -31,9 +33,9 @@ TEST(PidFile, base)
         PidFile pid;
         ASSERT_TRUE(pid.lock(pid_file));
 
-        EXPECT_EQ(::access(pid_file, R_OK), 0); //! 文件应该存在
+        EXPECT_EQ(::access(pid_file, R_OK), 0);  //! 文件应该存在
     }
 
-    EXPECT_EQ(::access(pid_file, R_OK), -1);    //! 文件应该打不开，因为已经删除了
+    EXPECT_EQ(::access(pid_file, R_OK), -1);  //! 文件应该打不开，因为已经删除了
     EXPECT_EQ(errno, ENOENT);
 }

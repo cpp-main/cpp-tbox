@@ -17,9 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-#include <cstring>
 #include "request_parser.h"
+
+#include <gtest/gtest.h>
+
+#include <cstring>
 
 namespace tbox {
 namespace http {
@@ -28,12 +30,11 @@ namespace {
 
 TEST(RequestParser, Get)
 {
-    const char *text = \
+    const char *text =
         "GET /index.html HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 0\r\n"
-        "\r\n"
-        ;
+        "\r\n";
     size_t text_len = ::strlen(text);
     RequestParser pp;
     EXPECT_EQ(pp.parse(text, text_len), text_len);
@@ -51,18 +52,19 @@ TEST(RequestParser, Get)
 
 TEST(RequestParser, Get_1)
 {
-    const char *text = \
+    const char *text =
         "GET /?sl=auto&tl=en&text=%E5%86%92%E5%8F%B7&op=translate HTTP/1.1\r\n"
         "Host: 192.168.0.15:55555\r\n"
-        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0\r\n"
-        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n"
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 "
+        "Firefox/99.0\r\n"
+        "Accept: "
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n"
         "Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2\r\n"
         "Accept-Encoding: gzip, deflate\r\n"
         "DNT: 1\r\n"
         "Connection: keep-alive\r\n"
         "Upgrade-Insecure-Requests: 1\r\n"
-        "\r\n"
-        ;
+        "\r\n";
     size_t text_len = ::strlen(text);
     RequestParser pp;
     EXPECT_EQ(pp.parse(text, text_len), text_len);
@@ -78,9 +80,13 @@ TEST(RequestParser, Get_1)
     EXPECT_EQ(req->url.query["op"], "translate");
     EXPECT_EQ(req->http_ver, HttpVer::k1_1);
     EXPECT_EQ(req->headers["Host"], "192.168.0.15:55555");
-    EXPECT_EQ(req->headers["User-Agent"], "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
-    EXPECT_EQ(req->headers["Accept"], "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
-    EXPECT_EQ(req->headers["Accept-Language"], "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
+    EXPECT_EQ(req->headers["User-Agent"],
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
+    EXPECT_EQ(
+        req->headers["Accept"],
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+    EXPECT_EQ(req->headers["Accept-Language"],
+              "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2");
     EXPECT_EQ(req->headers["Accept-Encoding"], "gzip, deflate");
     EXPECT_EQ(req->headers["DNT"], "1");
     EXPECT_EQ(req->headers["Connection"], "keep-alive");
@@ -92,13 +98,12 @@ TEST(RequestParser, Get_1)
 //! 测试 POST 请求，即含用 body 的请求
 TEST(RequestParser, Post)
 {
-    const char *text = \
+    const char *text =
         "POST /login.php HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
-        "username=hevake&pwd=abc123"
-        ;
+        "username=hevake&pwd=abc123";
     size_t text_len = ::strlen(text);
     RequestParser pp;
     EXPECT_EQ(pp.parse(text, text_len), text_len);
@@ -117,12 +122,11 @@ TEST(RequestParser, Post)
 //! 测试 POST 请求，即含用 body 的请求
 TEST(RequestParser, Post_NoContentLength)
 {
-    const char *text = \
+    const char *text =
         "POST /login.php HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "\r\n"
-        "username=hevake&pwd=abc123"
-        ;
+        "username=hevake&pwd=abc123";
     size_t text_len = ::strlen(text);
     RequestParser pp;
     EXPECT_EQ(pp.parse(text, text_len), text_len);
@@ -140,7 +144,7 @@ TEST(RequestParser, Post_NoContentLength)
 //! 测试同一个连接下多次请求
 TEST(RequestParser, GetAndPost)
 {
-    const char *text = \
+    const char *text =
         "GET /index.html HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 0\r\n"
@@ -149,8 +153,7 @@ TEST(RequestParser, GetAndPost)
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
-        "username=hevake&pwd=abc123"
-        ;
+        "username=hevake&pwd=abc123";
     size_t text_len = ::strlen(text);
     RequestParser pp;
     size_t pos = pp.parse(text, text_len);
@@ -181,10 +184,9 @@ TEST(RequestParser, GetAndPost)
 //! 测试一个请求分多次发送的情况
 TEST(RequestParser, PostIn3Pice)
 {
-    const char *text1 = \
+    const char *text1 =
         "POST /login.php HTTP/1.1\r\n"
-        "Content-Type: plain/text\r\n"
-        ;
+        "Content-Type: plain/text\r\n";
 
     size_t text1_len = ::strlen(text1);
     RequestParser pp;
@@ -193,17 +195,15 @@ TEST(RequestParser, PostIn3Pice)
     auto req = pp.getRequest();
     EXPECT_EQ(req, nullptr);
 
-    const char *text2 = \
+    const char *text2 =
         "Content-Length: 26\r\n"
-        "\r\n"
-        ;
+        "\r\n";
 
     size_t text2_len = ::strlen(text2);
     EXPECT_EQ(pp.parse(text2, text2_len), text2_len);
     EXPECT_EQ(pp.state(), RequestParser::State::kFinishedHeads);
 
-    const char *text3 = \
-        "username=hevake&pwd=abc123";
+    const char *text3 = "username=hevake&pwd=abc123";
 
     size_t text3_len = ::strlen(text3);
     EXPECT_EQ(pp.parse(text3, text3_len), text3_len);
@@ -229,7 +229,8 @@ TEST(RequestParser, StartLineNotEnough)
     EXPECT_EQ(pp.parse(text.c_str(), text.size()), 0);
     EXPECT_EQ(pp.state(), RequestParser::State::kInit);
 
-    text += "HTTP/1.1\r\n"
+    text +=
+        "HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
@@ -246,7 +247,6 @@ TEST(RequestParser, StartLineNotEnough)
     EXPECT_EQ(req->headers["Content-Length"], "26");
     EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
     delete req;
-
 }
 
 //! 测试Head不完整的情况
@@ -254,14 +254,15 @@ TEST(RequestParser, HeaderNotEnough)
 {
     RequestParser pp;
 
-    std::string text = \
+    std::string text =
         "POST /login.php HTTP/1.1\r\n"
         "Content-Type: plain";
     EXPECT_EQ(pp.parse(text.c_str(), text.size()), 26);
     EXPECT_EQ(pp.state(), RequestParser::State::kFinishedStartLine);
 
     text.erase(0, 26);
-    text += "/text\r\n"
+    text +=
+        "/text\r\n"
         "Content-Length: 26\r\n"
         "\r\n"
         "username=hevake&pwd=abc123";
@@ -284,7 +285,7 @@ TEST(RequestParser, BodyNotEnough)
 {
     RequestParser pp;
 
-    std::string text = \
+    std::string text =
         "POST /login.php HTTP/1.1\r\n"
         "Content-Type: plain/text\r\n"
         "Content-Length: 26\r\n"
@@ -315,9 +316,7 @@ TEST(RequestParser, StartLineError_NoMethod)
 {
     RequestParser pp;
 
-    std::string text = 
-        "/login.php HTTP/1.1\r\n"
-        ;
+    std::string text = "/login.php HTTP/1.1\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -326,9 +325,7 @@ TEST(RequestParser, StartLineError_MethodNotSupport)
 {
     RequestParser pp;
 
-    std::string text = 
-        "XXX /login.php HTTP/1.1\r\n"
-        ;
+    std::string text = "XXX /login.php HTTP/1.1\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -337,9 +334,7 @@ TEST(RequestParser, StartLineError_NoUrl)
 {
     RequestParser pp;
 
-    std::string text = 
-        "POST HTTP/1.1\r\n"
-        ;
+    std::string text = "POST HTTP/1.1\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -348,9 +343,7 @@ TEST(RequestParser, StartLineError_NoVer)
 {
     RequestParser pp;
 
-    std::string text = 
-        "POST /login.php\r\n"
-        ;
+    std::string text = "POST /login.php\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -359,9 +352,7 @@ TEST(RequestParser, StartLineError_VerUnknow)
 {
     RequestParser pp;
 
-    std::string text = 
-        "POST /login.php XXXX\r\n"
-        ;
+    std::string text = "POST /login.php XXXX\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -370,10 +361,9 @@ TEST(RequestParser, HeaderError_NoColon)
 {
     RequestParser pp;
 
-    std::string text = \
+    std::string text =
         "POST /login.php HTTP/1.1\r\n"
-        "Content-Type plain/text\r\n"
-        ;
+        "Content-Type plain/text\r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
@@ -382,16 +372,14 @@ TEST(RequestParser, HeaderError_Empty)
 {
     RequestParser pp;
 
-    std::string text = \
+    std::string text =
         "POST /login.php HTTP/1.1\r\n"
-        " \r\n"
-        ;
+        " \r\n";
     pp.parse(text.c_str(), text.size());
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
 
-}
-}
-}
-}
-
+}  // namespace
+}  // namespace server
+}  // namespace http
+}  // namespace tbox

@@ -19,10 +19,11 @@
  */
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/timer_fd.h>
+
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox::event;
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
 {
     LogOutput_Enable();
 
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     SetScopeExitAction([=] { delete sp_loop; });
 
     /// 注册SIGINT信号，使得ctrl+c能正常退出程序

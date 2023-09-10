@@ -17,8 +17,9 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
 #include <tbox/event/loop.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace tbox::event;
@@ -35,21 +36,19 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Loop* sp_loop = Loop::New(argv[1]);
+    Loop *sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
         return 0;
     }
 
-    sp_loop->runInLoop(
-        [sp_loop] {
-            cout << "A" << endl;
-            sp_loop->runInLoop( [] { cout << "B" << endl; });
-            sp_loop->runNext( [] { cout << "C" << endl; } );
-            sp_loop->runNext( [] { cout << "D" << endl; } );
-            cout << "a" << endl;
-        }
-    );
+    sp_loop->runInLoop([sp_loop] {
+        cout << "A" << endl;
+        sp_loop->runInLoop([] { cout << "B" << endl; });
+        sp_loop->runNext([] { cout << "C" << endl; });
+        sp_loop->runNext([] { cout << "D" << endl; });
+        cout << "a" << endl;
+    });
 
     sp_loop->exitLoop(std::chrono::seconds(1));
     sp_loop->runLoop(Loop::Mode::kForever);

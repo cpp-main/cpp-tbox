@@ -18,17 +18,18 @@
  * of the source tree.
  */
 #include "signal_event_impl.h"
-#include "common_loop.h"
-#include <tbox/base/log.h>
+
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+
+#include "common_loop.h"
 
 namespace tbox {
 namespace event {
 
 SignalEventImpl::SignalEventImpl(CommonLoop *wp_loop, const std::string &what)
-    : SignalEvent(what)
-    , wp_loop_(wp_loop)
-{ }
+    : SignalEvent(what), wp_loop_(wp_loop)
+{}
 
 SignalEventImpl::~SignalEventImpl()
 {
@@ -56,8 +57,7 @@ bool SignalEventImpl::initialize(const std::set<int> &sigset, Mode mode)
 
 bool SignalEventImpl::initialize(const std::initializer_list<int> &sigset, Mode mode)
 {
-    for (auto signo : sigset)
-        sigset_.insert(signo);
+    for (auto signo : sigset) sigset_.insert(signo);
 
     mode_ = mode;
 
@@ -91,15 +91,14 @@ bool SignalEventImpl::disable()
     return true;
 }
 
-Loop* SignalEventImpl::getLoop() const
+Loop *SignalEventImpl::getLoop() const
 {
     return wp_loop_;
 }
 
 void SignalEventImpl::onSignal(int signo)
 {
-    if (mode_ == Mode::kOneshot)
-        disable();
+    if (mode_ == Mode::kOneshot) disable();
 
     wp_loop_->beginEventProcess();
     if (cb_) {
@@ -110,5 +109,5 @@ void SignalEventImpl::onSignal(int signo)
     wp_loop_->endEventProcess(this);
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

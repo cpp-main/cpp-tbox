@@ -17,12 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
+#include "repeat_action.h"
+
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+
+#include <iostream>
 #include <tbox/base/scope_exit.hpp>
 
-#include "repeat_action.h"
 #include "function_action.h"
 
 namespace tbox {
@@ -34,29 +36,28 @@ namespace flow {
  *    ++loop_times;
  *  }
  */
-TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
-  auto loop = event::Loop::New();
+TEST(RepeatAction, FunctionActionRepeat3NoBreak)
+{
+    auto loop = event::Loop::New();
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return true;
-    }
-  );
-  RepeatAction repeat_action(*loop, function_action, 3, RepeatAction::Mode::kNoBreak);
-  bool is_finished = false;
-  repeat_action.setFinishCallback([&] (bool) { is_finished = true; });
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop, [&] {
+        ++loop_times;
+        return true;
+    });
+    RepeatAction repeat_action(*loop, function_action, 3, RepeatAction::Mode::kNoBreak);
+    bool is_finished = false;
+    repeat_action.setFinishCallback([&](bool) { is_finished = true; });
 
-  repeat_action.start();
-  loop->exitLoop(std::chrono::milliseconds(10));
-  loop->runLoop();
+    repeat_action.start();
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
 
-  delete loop;
+    delete loop;
 
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(loop_times, 3);
-  EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(loop_times, 3);
+    EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
 }
 
 /**
@@ -65,31 +66,30 @@ TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
  *    ++loop_times;
  *  }
  */
-TEST(RepeatAction, FunctionActionForeverNoBreak) {
-  auto loop = event::Loop::New();
+TEST(RepeatAction, FunctionActionForeverNoBreak)
+{
+    auto loop = event::Loop::New();
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return true;
-    }
-  );
-  RepeatAction repeat_action(*loop, function_action, 0, RepeatAction::Mode::kNoBreak);
-  bool is_finished = false;
-  repeat_action.setFinishCallback([&] (bool) { is_finished = true; });
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop, [&] {
+        ++loop_times;
+        return true;
+    });
+    RepeatAction repeat_action(*loop, function_action, 0, RepeatAction::Mode::kNoBreak);
+    bool is_finished = false;
+    repeat_action.setFinishCallback([&](bool) { is_finished = true; });
 
-  repeat_action.start();
-  loop->exitLoop(std::chrono::milliseconds(1000));
-  loop->runLoop();
+    repeat_action.start();
+    loop->exitLoop(std::chrono::milliseconds(1000));
+    loop->runLoop();
 
-  repeat_action.stop();
+    repeat_action.stop();
 
-  delete loop;
+    delete loop;
 
-  EXPECT_FALSE(is_finished);
-  EXPECT_GT(loop_times, 1000);
-  EXPECT_EQ(repeat_action.state(), Action::State::kStoped);
+    EXPECT_FALSE(is_finished);
+    EXPECT_GT(loop_times, 1000);
+    EXPECT_EQ(repeat_action.state(), Action::State::kStoped);
 }
 
 /**
@@ -100,34 +100,31 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
  *      return true;
  *  }
  */
-TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
-  auto loop = event::Loop::New();
+TEST(RepeatAction, FunctionActionRepeat5BreakFail)
+{
+    auto loop = event::Loop::New();
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return loop_times < 3;
-    }
-  );
-  RepeatAction repeat_action(*loop, function_action, 5, RepeatAction::Mode::kBreakFail);
-  bool is_finished = false;
-  repeat_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_FALSE(is_succ);
-      is_finished = true;
-    }
-  );
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop, [&] {
+        ++loop_times;
+        return loop_times < 3;
+    });
+    RepeatAction repeat_action(*loop, function_action, 5, RepeatAction::Mode::kBreakFail);
+    bool is_finished = false;
+    repeat_action.setFinishCallback([&](bool is_succ) {
+        EXPECT_FALSE(is_succ);
+        is_finished = true;
+    });
 
-  repeat_action.start();
-  loop->exitLoop(std::chrono::milliseconds(10));
-  loop->runLoop();
+    repeat_action.start();
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
 
-  delete loop;
+    delete loop;
 
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(loop_times, 3);
-  EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(loop_times, 3);
+    EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
 }
 
 /**
@@ -138,35 +135,32 @@ TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
  *      return true;
  *  }
  */
-TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
-  auto loop = event::Loop::New();
+TEST(RepeatAction, FunctionActionRepeat5BreakSucc)
+{
+    auto loop = event::Loop::New();
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return loop_times >= 3;
-    }
-  );
-  RepeatAction repeat_action(*loop, function_action, 5, RepeatAction::Mode::kBreakSucc);
-  bool is_finished = false;
-  repeat_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      is_finished = true;
-    }
-  );
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop, [&] {
+        ++loop_times;
+        return loop_times >= 3;
+    });
+    RepeatAction repeat_action(*loop, function_action, 5, RepeatAction::Mode::kBreakSucc);
+    bool is_finished = false;
+    repeat_action.setFinishCallback([&](bool is_succ) {
+        EXPECT_TRUE(is_succ);
+        is_finished = true;
+    });
 
-  repeat_action.start();
-  loop->exitLoop(std::chrono::milliseconds(10));
-  loop->runLoop();
+    repeat_action.start();
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
 
-  delete loop;
+    delete loop;
 
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(loop_times, 3);
-  EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(loop_times, 3);
+    EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

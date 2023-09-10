@@ -19,11 +19,11 @@
  */
 #include <cxxabi.h>
 #include <signal.h>
-
-#include <functional>
-#include <exception>
-#include <tbox/base/log.h>
 #include <tbox/base/backtrace.h>
+#include <tbox/base/log.h>
+
+#include <exception>
+#include <functional>
 
 int main(int argc, char **argv);
 
@@ -52,23 +52,24 @@ void Terminate()
         const char *readable_name = name;
         int status = -1;
         char *demangled = abi::__cxa_demangle(name, 0, 0, &status);
-        if (demangled != nullptr)
-            readable_name = demangled;
+        if (demangled != nullptr) readable_name = demangled;
 
         LogFatal("terminate called after throwing an instance of '%s'", readable_name);
 
-        if (status == 0)
-            free(demangled);
+        if (status == 0) free(demangled);
 
         // If the exception is derived from std::exception, we can
         // give more information.
-        __try { __throw_exception_again; }
+        __try {
+            __throw_exception_again;
+        }
 #ifdef __EXCEPTIONS
-        __catch(const std::exception& e) {
+        __catch(const std::exception &e)
+        {
             LogFatal("what(): %s", e.what());
         }
 #endif
-        __catch(...) { }
+        __catch(...) {}
     } else {
         LogFatal("terminate called without an active exception");
     }
@@ -80,19 +81,19 @@ void Terminate()
 
     LogFatal("Process abort!");
 
-    if (error_exit_func)    //! 执行一些善后处理
+    if (error_exit_func)  //! 执行一些善后处理
         error_exit_func();
 
     signal(SIGABRT, SIG_DFL);
     std::abort();
 }
 
-}
+}  // namespace
 
 void InstallTerminate()
 {
     std::set_terminate(Terminate);
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

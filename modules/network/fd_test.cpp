@@ -66,9 +66,13 @@ TEST(Fd, reset)
     EXPECT_EQ(fd.get(), -1);
 }
 
-TEST(Fd, close) {
+TEST(Fd, close)
+{
     int close_times = 0;
-    Fd fd1(12, [&](int v) { ++close_times; (void)v; });
+    Fd fd1(12, [&](int v) {
+        ++close_times;
+        (void)v;
+    });
     {
         Fd fd2 = fd1;
         {
@@ -99,8 +103,11 @@ TEST(Fd, copy_construct)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
-        Fd fd2(fd1);    //! 执行了一个复制构造
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
+        Fd fd2(fd1);  //! 执行了一个复制构造
         EXPECT_EQ(close_times, 0);
         EXPECT_EQ(fd2.get(), 12);
     }
@@ -113,7 +120,10 @@ TEST(Fd, copy_assign_no_value)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
         Fd fd2;
         fd2 = fd1;  //! 执行了一次复制赋值
         EXPECT_EQ(close_times, 0);
@@ -128,8 +138,14 @@ TEST(Fd, copy_assign_has_value)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
-        Fd fd2(13, [&](int v) { closed_fd = v; ++close_times; });
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
+        Fd fd2(13, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
         fd2 = fd1;  //! 执行了一次复制赋值，13被释放了
         EXPECT_EQ(close_times, 1);
         EXPECT_EQ(closed_fd, 13);
@@ -144,8 +160,11 @@ TEST(Fd, move_construct)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
-        Fd fd2(std::move(fd1)); //! 移动构造
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
+        Fd fd2(std::move(fd1));  //! 移动构造
         EXPECT_EQ(close_times, 0);
         EXPECT_EQ(fd2.get(), 12);
         EXPECT_TRUE(fd1.isNull());
@@ -160,7 +179,10 @@ TEST(Fd, move_assign_1)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
         Fd fd2;
         fd2 = std::move(fd1);
         EXPECT_EQ(close_times, 0);
@@ -178,7 +200,10 @@ TEST(Fd, move_assign_2)
     int close_times = 0;
 
     Fd fd1;
-    Fd fd2(12, [&](int v) { closed_fd = v; ++close_times; });
+    Fd fd2(12, [&](int v) {
+        closed_fd = v;
+        ++close_times;
+    });
     fd2 = std::move(fd1);
     EXPECT_EQ(close_times, 1);
     EXPECT_EQ(closed_fd, 12);
@@ -194,8 +219,14 @@ TEST(Fd, move_assign_3)
     int closed_fd = -1;
     int close_times = 0;
     {
-        Fd fd1(12, [&](int v) { closed_fd = v; ++close_times; });
-        Fd fd2(13, [&](int v) { closed_fd = v; ++close_times; });
+        Fd fd1(12, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
+        Fd fd2(13, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
         fd2 = std::move(fd1);
         EXPECT_EQ(close_times, 1);
         EXPECT_EQ(closed_fd, 13);
@@ -213,7 +244,10 @@ TEST(Fd, move_assign_4)
     int close_times = 0;
     {
         Fd fd1;
-        Fd fd2(13, [&](int v) { closed_fd = v; ++close_times; });
+        Fd fd2(13, [&](int v) {
+            closed_fd = v;
+            ++close_times;
+        });
         fd2 = std::move(fd1);
         EXPECT_EQ(close_times, 1);
         EXPECT_EQ(closed_fd, 13);
@@ -222,4 +256,3 @@ TEST(Fd, move_assign_4)
     }
     EXPECT_EQ(close_times, 1);
 }
-

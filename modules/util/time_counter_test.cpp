@@ -17,10 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-#include <thread>
-
 #include "time_counter.h"
+
+#include <gtest/gtest.h>
+
+#include <thread>
 
 namespace tbox {
 namespace util {
@@ -89,5 +90,5 @@ TEST(TimeCounter, CpuTimeCounter)
     tc.print("do nothing");
 }
 
-}
-}
+}  // namespace util
+}  // namespace tbox

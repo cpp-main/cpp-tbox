@@ -17,13 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "string.h"
+
+#include <gtest/gtest.h>
 
 using namespace tbox;
 using namespace tbox::util::string;
 
-TEST(string, Split) {
+TEST(string, Split)
+{
     std::vector<std::string> str_vec;
     ASSERT_EQ(Split("A::BB:C::DD ", "::", str_vec), 3u);
     EXPECT_EQ(str_vec[0], std::string("A"));
@@ -44,7 +46,8 @@ TEST(string, Split) {
     EXPECT_EQ(str_vec[5], std::string("DD "));
 }
 
-TEST(string, SplitBySpace) {
+TEST(string, SplitBySpace)
+{
     std::vector<std::string> str_vec;
     ASSERT_EQ(SplitBySpace(" aa bb \t  cc  d ", str_vec), 4u);
     EXPECT_EQ(str_vec[0], "aa");
@@ -56,23 +59,26 @@ TEST(string, SplitBySpace) {
     ASSERT_EQ(SplitBySpace("aa b", str_vec), 2u);
     EXPECT_EQ(str_vec[0], "aa");
     EXPECT_EQ(str_vec[1], "b");
-
 }
 
-TEST(string, StripLeft) {
+TEST(string, StripLeft)
+{
     EXPECT_EQ(StripLeft(" A "), "A ");
 }
 
-TEST(string, StripRight) {
+TEST(string, StripRight)
+{
     EXPECT_EQ(StripRight(" A "), " A");
 }
 
-TEST(string, Strip) {
+TEST(string, Strip)
+{
     EXPECT_EQ(Strip(" A "), "A");
     EXPECT_EQ(Strip("  "), "");
 }
 
-TEST(string, StripQuot) {
+TEST(string, StripQuot)
+{
     EXPECT_EQ(StripQuot(R"("A")"), "A");
     EXPECT_EQ(StripQuot(R"('A')"), "A");
     EXPECT_EQ(StripQuot(R"(A)"), "A");
@@ -82,16 +88,18 @@ TEST(string, StripQuot) {
     EXPECT_EQ(StripQuot(R"(A')"), R"(A')");
 }
 
-TEST(string, RawDataToHexStr) {
-    uint8_t tmp[] = { 0x0e, 0x00, 0xa8 };
+TEST(string, RawDataToHexStr)
+{
+    uint8_t tmp[] = {0x0e, 0x00, 0xa8};
     EXPECT_EQ(RawDataToHexStr(tmp, sizeof(tmp), false, ""), "0e00a8");
     EXPECT_EQ(RawDataToHexStr(tmp, sizeof(tmp), false, " "), "0e 00 a8");
     EXPECT_EQ(RawDataToHexStr(tmp, sizeof(tmp), true, ""), "0E00A8");
     EXPECT_EQ(RawDataToHexStr(tmp, sizeof(tmp), true, " "), "0E 00 A8");
 }
 
-TEST(string, HexStrToRawDataFixSizeBuffer) {
-    uint8_t tmp[100] = { 0 };
+TEST(string, HexStrToRawDataFixSizeBuffer)
+{
+    uint8_t tmp[100] = {0};
     EXPECT_EQ(HexStrToRawData("0123456789aBcDEf", tmp, 16), 8u);
     EXPECT_EQ(tmp[0], 0x01);
     EXPECT_EQ(tmp[1], 0x23);
@@ -122,7 +130,8 @@ TEST(string, HexStrToRawDataFixSizeBuffer) {
     EXPECT_EQ(tmp[3], 0x00);
 }
 
-TEST(string, HexStrToRawDataVector1) {
+TEST(string, HexStrToRawDataVector1)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("01 2f Ab 67", out, " \t");
     EXPECT_EQ(out.size(), 4u);
@@ -132,7 +141,8 @@ TEST(string, HexStrToRawDataVector1) {
     EXPECT_EQ(out[3], 0x67);
 }
 
-TEST(string, HexStrToRawDataVector1_1) {
+TEST(string, HexStrToRawDataVector1_1)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("01:2f:Ab:67", out, ":");
     EXPECT_EQ(out.size(), 4u);
@@ -142,7 +152,8 @@ TEST(string, HexStrToRawDataVector1_1) {
     EXPECT_EQ(out[3], 0x67);
 }
 
-TEST(string, HexStrToRawDataVector1_2) {
+TEST(string, HexStrToRawDataVector1_2)
+{
     std::vector<uint8_t> out;
     HexStrToRawData(" : 01 :2f : Ab: 67 :", out, ": ");
     EXPECT_EQ(out.size(), 4u);
@@ -152,7 +163,8 @@ TEST(string, HexStrToRawDataVector1_2) {
     EXPECT_EQ(out[3], 0x67);
 }
 
-TEST(string, HexStrToRawDataVector2) {
+TEST(string, HexStrToRawDataVector2)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("\t 01 \t23 \t 45\t67\t ", out, "\t ");
     EXPECT_EQ(out.size(), 4u);
@@ -162,7 +174,8 @@ TEST(string, HexStrToRawDataVector2) {
     EXPECT_EQ(out[3], 0x67);
 }
 
-TEST(string, HexStrToRawDataVector3) {
+TEST(string, HexStrToRawDataVector3)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("1 2 3 4", out, " ");
     EXPECT_EQ(out.size(), 4u);
@@ -172,7 +185,8 @@ TEST(string, HexStrToRawDataVector3) {
     EXPECT_EQ(out[3], 0x04);
 }
 
-TEST(string, HexStrToRawDataVector4) {
+TEST(string, HexStrToRawDataVector4)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("   1     2 ", out, " ");
     EXPECT_EQ(out.size(), 2u);
@@ -180,28 +194,33 @@ TEST(string, HexStrToRawDataVector4) {
     EXPECT_EQ(out[1], 0x02);
 }
 
-TEST(string, HexStrToRawDataVector5) {
+TEST(string, HexStrToRawDataVector5)
+{
     std::vector<uint8_t> out;
     EXPECT_THROW(HexStrToRawData("ZY", out), NotAZaz09Exception);
 }
 
-TEST(string, HexStrToRawDataVector6) {
+TEST(string, HexStrToRawDataVector6)
+{
     std::vector<uint8_t> out;
     EXPECT_THROW(HexStrToRawData(" 123  ", out, " "), MoreThan2CharException);
 }
 
-TEST(string, HexStrToRawDataVector7) {
+TEST(string, HexStrToRawDataVector7)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("    ", out, " ");
     EXPECT_EQ(out.size(), 0u);
 }
 
-TEST(string, HexStrToRawDataVector8) {
+TEST(string, HexStrToRawDataVector8)
+{
     std::vector<uint8_t> out;
     EXPECT_THROW(HexStrToRawData(" __zs a", out, " "), MoreThan2CharException);
 }
 
-TEST(string, HexStrToRawDataVector9) {
+TEST(string, HexStrToRawDataVector9)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("123456", out);
     EXPECT_EQ(out.size(), 3u);
@@ -210,7 +229,8 @@ TEST(string, HexStrToRawDataVector9) {
     EXPECT_EQ(out[2], 0x56);
 }
 
-TEST(string, HexStrToRawDataVector10) {
+TEST(string, HexStrToRawDataVector10)
+{
     std::vector<uint8_t> out;
     HexStrToRawData("  123456 ", out);
     EXPECT_EQ(out.size(), 3u);
@@ -219,34 +239,36 @@ TEST(string, HexStrToRawDataVector10) {
     EXPECT_EQ(out[2], 0x56);
 }
 
-TEST(string, HexStrToRawDataVector11) {
+TEST(string, HexStrToRawDataVector11)
+{
     std::vector<uint8_t> out;
     EXPECT_THROW(HexStrToRawData("12 3456", out), NotAZaz09Exception);
 }
 
-TEST(string, Replace) {
-    if (true) { //! 全替换
+TEST(string, Replace)
+{
+    if (true) {  //! 全替换
         std::string t("aa bbaa aab aaaa aab");
         std::string r;
         Replace(t, "aa", "cc");
         EXPECT_STREQ(t.c_str(), "cc bbcc ccb cccc ccb");
     }
 
-    if (true) { //! 从某位置替换
+    if (true) {  //! 从某位置替换
         std::string t("aa bbaa aab aaaa aab");
         std::string r;
         Replace(t, "aa", "cc", 6);
         EXPECT_STREQ(t.c_str(), "aa bbaa ccb cccc ccb");
     }
 
-    if (true) { //! 指定位置与替换次数
+    if (true) {  //! 指定位置与替换次数
         std::string t("aa bbaa aab aaaa aab");
         std::string r;
         Replace(t, "aa", "cc", 6, 2);
         EXPECT_STREQ(t.c_str(), "aa bbaa ccb ccaa aab");
     }
 
-    if (true) { //! 起始位置超出
+    if (true) {  //! 起始位置超出
         std::string t("aa bbaa aab aaaa aab");
         std::string r;
         Replace(t, "aa", "cc", t.size());

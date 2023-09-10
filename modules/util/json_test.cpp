@@ -17,9 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
-#include <tbox/base/json.hpp>
 #include "json.h"
+
+#include <gtest/gtest.h>
+
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace util {
@@ -159,13 +161,14 @@ TEST(Json, HasField)
     EXPECT_FALSE(HasArrayField(js, "string"));
 }
 
-TEST(Json, FindEndPos) {
+TEST(Json, FindEndPos)
+{
     EXPECT_EQ(FindEndPos("", 0), 0);
-    EXPECT_EQ(FindEndPos(R"({})", 2), 2);   //! {}
-    EXPECT_EQ(FindEndPos(R"([])", 2), 2);   //! []
+    EXPECT_EQ(FindEndPos(R"({})", 2), 2);  //! {}
+    EXPECT_EQ(FindEndPos(R"([])", 2), 2);  //! []
 
     //! 测试[] {}嵌套
-    EXPECT_EQ(FindEndPos(R"([12,{"name":"hevake"}])", 22), 22); //! [] 中嵌 {}
+    EXPECT_EQ(FindEndPos(R"([12,{"name":"hevake"}])", 22), 22);  //! [] 中嵌 {}
     EXPECT_EQ(FindEndPos(R"([12,{"name":"hevake}])", 21), 0);
     EXPECT_EQ(FindEndPos(R"([1,{"a":"}]"}])", 14), 14);
     EXPECT_EQ(FindEndPos(R"([1,{"a":"\"abc"}])", 17), 17);
@@ -188,6 +191,6 @@ TEST(Json, FindEndPos) {
     EXPECT_EQ(FindEndPos(R"([})", 2), -1);
 }
 
-}
-}
-}
+}  // namespace json
+}  // namespace util
+}  // namespace tbox

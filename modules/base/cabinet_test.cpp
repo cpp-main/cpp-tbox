@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "cabinet.hpp"
+
+#include <gtest/gtest.h>
+
 #include <vector>
 
 namespace tbox {
@@ -101,7 +103,7 @@ TEST(Cabinet, alloc_update)
     auto t = c.alloc();
     EXPECT_EQ(c.at(t), nullptr);
 
-    int *p = new int (10);
+    int *p = new int(10);
     c.update(t, p);
     EXPECT_EQ(c.at(t), p);
 
@@ -118,6 +120,6 @@ TEST(Cabinet, NullToken)
     EXPECT_EQ(oc.at(null_token), nullptr);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace cabinet
+}  // namespace tbox

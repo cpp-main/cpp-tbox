@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "timeout_monitor.hpp"
+
+#include <gtest/gtest.h>
+
 #include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
@@ -31,7 +33,7 @@ using namespace std::chrono;
 TEST(TimeoutMonitor, Basic)
 {
     auto sp_loop = Loop::New();
-    SetScopeExitAction([=] {delete sp_loop;});
+    SetScopeExitAction([=] { delete sp_loop; });
 
     TimeoutMonitor<int> tm(sp_loop);
     tm.initialize(milliseconds(100), 10);
@@ -39,7 +41,7 @@ TEST(TimeoutMonitor, Basic)
     auto start_time = steady_clock::now();
 
     bool run = false;
-    tm.setCallback([&] (int value) {
+    tm.setCallback([&](int value) {
         EXPECT_EQ(value, 100);
 
         auto d = steady_clock::now() - start_time;
@@ -55,6 +57,6 @@ TEST(TimeoutMonitor, Basic)
     EXPECT_TRUE(run);
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace eventx
+}  // namespace tbox

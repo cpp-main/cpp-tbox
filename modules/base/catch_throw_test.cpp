@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "catch_throw.h"
+
 #include <gtest/gtest.h>
 
 #include "log_output.h"
@@ -29,9 +30,7 @@ TEST(CatchThrow, NoThrow)
     LogOutput_Enable();
 
     bool tag = false;
-    bool has_catch = CatchThrow([&]{
-        tag = true;
-    });
+    bool has_catch = CatchThrow([&] { tag = true; });
 
     EXPECT_TRUE(tag);
     EXPECT_FALSE(has_catch);
@@ -44,7 +43,7 @@ TEST(CatchThrow, ThrowRuntimeError)
     LogOutput_Enable();
 
     bool tag = false;
-    bool has_catch = CatchThrow([&]{
+    bool has_catch = CatchThrow([&] {
         throw std::runtime_error("test");
         tag = true;
     });
@@ -59,9 +58,7 @@ TEST(CatchThrow, ThrowInt)
 {
     LogOutput_Enable();
 
-    bool has_catch = CatchThrow([&]{
-        throw 100;
-    });
+    bool has_catch = CatchThrow([&] { throw 100; });
 
     EXPECT_TRUE(has_catch);
 
@@ -72,9 +69,7 @@ TEST(CatchThrow, ThrowRawString)
 {
     LogOutput_Enable();
 
-    bool has_catch = CatchThrow([&]{
-        throw "this is const char*";
-    });
+    bool has_catch = CatchThrow([&] { throw "this is const char*"; });
 
     EXPECT_TRUE(has_catch);
 
@@ -85,9 +80,7 @@ TEST(CatchThrow, ThrowStdString)
 {
     LogOutput_Enable();
 
-    bool has_catch = CatchThrow([&]{
-        throw std::string("this is std::string");
-    });
+    bool has_catch = CatchThrow([&] { throw std::string("this is std::string"); });
 
     EXPECT_TRUE(has_catch);
 
@@ -98,10 +91,9 @@ TEST(CatchThrow, ThrowCustomType)
 {
     LogOutput_Enable();
 
-    struct CustomType {};
-    bool has_catch = CatchThrow([&]{
-        throw CustomType();
-    });
+    struct CustomType
+    {};
+    bool has_catch = CatchThrow([&] { throw CustomType(); });
 
     EXPECT_TRUE(has_catch);
 
@@ -112,9 +104,7 @@ TEST(CatchThrow, ThrowPrintStack)
 {
     LogOutput_Enable();
 
-    bool has_catch = CatchThrow([&]{
-        throw 10;
-    }, true);
+    bool has_catch = CatchThrow([&] { throw 10; }, true);
 
     EXPECT_TRUE(has_catch);
 
@@ -123,14 +113,14 @@ TEST(CatchThrow, ThrowPrintStack)
 
 TEST(CatchThrowQuietly, Throw)
 {
-    bool has_catch = CatchThrowQuietly([&]{ throw 10; });
+    bool has_catch = CatchThrowQuietly([&] { throw 10; });
     EXPECT_TRUE(has_catch);
 }
 
 TEST(CatchThrowQuietly, NoThrow)
 {
-    bool has_catch = CatchThrowQuietly([&]{ });
+    bool has_catch = CatchThrowQuietly([&] {});
     EXPECT_FALSE(has_catch);
 }
 
-}
+}  // namespace tbox

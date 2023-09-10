@@ -18,13 +18,14 @@
  * of the source tree.
  */
 #include "app.h"
+
 #include <tbox/base/log.h>
+
 #include <tbox/base/json.hpp>
 
 namespace app2 {
 
-App::App(tbox::main::Context &ctx) :
-    Module("app2", ctx)
+App::App(tbox::main::Context &ctx) : Module("app2", ctx)
 {
     LogTag();
 }
@@ -41,8 +42,7 @@ void App::onFillDefaultConfig(tbox::Json &cfg)
 
 bool App::onInit(const tbox::Json &cfg)
 {
-    if (!cfg.contains("ok"))
-        return false;
+    if (!cfg.contains("ok")) return false;
 
     bool ok = cfg["ok"].get<bool>();
     LogTrace("ok: %s", ok ? "true" : "false");
@@ -65,4 +65,4 @@ void App::onCleanup()
     LogTag();
 }
 
-}
+}  // namespace app2

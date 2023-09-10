@@ -18,33 +18,37 @@
  * of the source tree.
  */
 #include "composite_action.h"
-#include <tbox/base/defines.h>
+
 #include <tbox/base/assert.h>
+#include <tbox/base/defines.h>
+
 #include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace flow {
 
-CompositeAction::~CompositeAction() {
+CompositeAction::~CompositeAction()
+{
     CHECK_DELETE_RESET_OBJ(child_);
 }
 
-void CompositeAction::setChild(Action *child) {
+void CompositeAction::setChild(Action *child)
+{
     TBOX_ASSERT(child != nullptr);
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    child_->setFinishCallback(
-        [this](bool succ) { finish(succ); }
-    );
+    child_->setFinishCallback([this](bool succ) { finish(succ); });
 }
 
-void CompositeAction::toJson(Json &js) const {
+void CompositeAction::toJson(Json &js) const
+{
     Action::toJson(js);
     child_->toJson(js["child"]);
 }
 
-bool CompositeAction::onStart() {
+bool CompositeAction::onStart()
+{
     if (child_ == nullptr) {
         LogWarn("no child in %d:%s(%s)", id(), type().c_str(), label().c_str());
         return false;
@@ -52,21 +56,25 @@ bool CompositeAction::onStart() {
     return child_->start();
 }
 
-bool CompositeAction::onStop() {
+bool CompositeAction::onStop()
+{
     return child_->stop();
 }
 
-bool CompositeAction::onPause() {
+bool CompositeAction::onPause()
+{
     return child_->pause();
 }
 
-bool CompositeAction::onResume() {
+bool CompositeAction::onResume()
+{
     return child_->resume();
 }
 
-void CompositeAction::onReset() {
+void CompositeAction::onReset()
+{
     child_->reset();
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

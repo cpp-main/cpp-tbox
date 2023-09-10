@@ -19,11 +19,11 @@
  */
 #include "udp_socket.h"
 
-#include <tbox/base/log.h>
-#include <tbox/base/assert.h>
 #include <errno.h>
+#include <tbox/base/assert.h>
+#include <tbox/base/log.h>
 
-#define RECV_BUFF_SIZE  4096
+#define RECV_BUFF_SIZE 4096
 
 namespace tbox {
 namespace network {
@@ -42,7 +42,8 @@ UdpSocket::UdpSocket(event::Loop *wp_loop, bool enable_broadcast)
     socket_.setBroadcast(enable_broadcast);
 
     sp_socket_ev_ = wp_loop->newFdEvent("UdpSocket::sp_socket_ev_");
-    sp_socket_ev_->initialize(socket_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
+    sp_socket_ev_->initialize(
+        socket_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
     sp_socket_ev_->setCallback(std::bind(&UdpSocket::onSocketEvent, this, _1));
 }
 
@@ -58,7 +59,7 @@ bool UdpSocket::bind(const SockAddr &addr)
 
     struct sockaddr_storage s_addr;
     socklen_t s_len = addr.toSockAddr(s_addr);
-    return socket_.bind((struct sockaddr*)&s_addr, s_len) == 0;
+    return socket_.bind((struct sockaddr *)&s_addr, s_len) == 0;
 }
 
 bool UdpSocket::connect(const SockAddr &addr)
@@ -67,7 +68,7 @@ bool UdpSocket::connect(const SockAddr &addr)
 
     struct sockaddr_storage s_addr;
     socklen_t s_len = addr.toSockAddr(s_addr);
-    if (socket_.connect((struct sockaddr*)&s_addr, s_len) == 0) {
+    if (socket_.connect((struct sockaddr *)&s_addr, s_len) == 0) {
         connected_ = true;
         return true;
     }
@@ -93,27 +94,25 @@ ssize_t UdpSocket::send(const void *data_ptr, size_t data_size)
 
 bool UdpSocket::enable()
 {
-    if (sp_socket_ev_ != nullptr)
-        return sp_socket_ev_->enable();
+    if (sp_socket_ev_ != nullptr) return sp_socket_ev_->enable();
     return false;
 }
 
 bool UdpSocket::disable()
 {
-    if (sp_socket_ev_ != nullptr)
-        return sp_socket_ev_->disable();
+    if (sp_socket_ev_ != nullptr) return sp_socket_ev_->disable();
     return false;
 }
 
 void UdpSocket::onSocketEvent(short events)
 {
-    if ((events & event::FdEvent::kReadEvent) == 0)
-        return;
+    if ((events & event::FdEvent::kReadEvent) == 0) return;
 
     uint8_t read_buff[RECV_BUFF_SIZE];
     struct sockaddr_in peer_addr;
     socklen_t addr_size = sizeof(peer_addr);
-    ssize_t rsize = socket_.recvFrom(read_buff, RECV_BUFF_SIZE, 0, (struct sockaddr*)&peer_addr, &addr_size);
+    ssize_t rsize =
+        socket_.recvFrom(read_buff, RECV_BUFF_SIZE, 0, (struct sockaddr *)&peer_addr, &addr_size);
     if (rsize > 0) {
         if (recv_cb_) {
             ++cb_level_;
@@ -127,5 +126,5 @@ void UdpSocket::onSocketEvent(short events)
     }
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

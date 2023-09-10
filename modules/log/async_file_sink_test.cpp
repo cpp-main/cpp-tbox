@@ -17,12 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "async_file_sink.h"
-#include <iostream>
-#include <chrono>
-#include <thread>
+
+#include <gtest/gtest.h>
 #include <tbox/util/fs.h>
+
+#include <chrono>
+#include <iostream>
+#include <thread>
 
 using namespace std;
 using namespace tbox;
@@ -73,8 +75,7 @@ TEST(AsyncFileSink, FileDivide)
     std::string tmp(30, 'z');
 
     LogInfo("start");
-    for (size_t s = 0; s < 20; ++s)
-        LogInfo("%s", tmp.c_str());
+    for (size_t s = 0; s < 20; ++s) LogInfo("%s", tmp.c_str());
     LogInfo("end");
 
     ch.cleanup();
@@ -131,8 +132,7 @@ TEST(AsyncFileSink, Benchmark)
 
     int counter = 0;
     function<void()> func = [&] {
-        for (int i = 0; i < 100; ++i)
-            LogInfo("%d %s", i, tmp.c_str());
+        for (int i = 0; i < 100; ++i) LogInfo("%d %s", i, tmp.c_str());
         sp_loop->run(func);
         counter += 100;
     };
@@ -142,7 +142,6 @@ TEST(AsyncFileSink, Benchmark)
     sp_loop->runLoop();
 
     delete sp_loop;
-    cout << "count in sec: " << counter/10 << endl;
+    cout << "count in sec: " << counter / 10 << endl;
     ch.cleanup();
 }
-

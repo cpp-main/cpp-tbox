@@ -17,23 +17,23 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <thread>
-
 #include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/base/json.hpp>
 #include <tbox/base/log_output.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/loop_wdog.h>
-#include <tbox/util/pid_file.h>
 #include <tbox/util/json.h>
+#include <tbox/util/pid_file.h>
 
-#include "module.h"
-#include "context_imp.h"
+#include <iostream>
+#include <tbox/base/json.hpp>
+#include <tbox/base/scope_exit.hpp>
+#include <thread>
+
 #include "args.h"
+#include "context_imp.h"
 #include "log.h"
+#include "module.h"
 
 namespace tbox {
 namespace main {
@@ -55,23 +55,20 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     auto warn_signal = ctx.loop()->newSignalEvent("main::RunInFrontend::warn_signal");
 
     //! 预定在离开时自动释放对象，确保无内存泄漏
-    SetScopeExitAction(
-        [=] {
-            delete warn_signal;
-            delete stop_signal;
-        }
-    );
+    SetScopeExitAction([=] {
+        delete warn_signal;
+        delete stop_signal;
+    });
 
-    stop_signal->initialize({SIGINT, SIGTERM, SIGQUIT, SIGTSTP, SIGPWR}, event::Event::Mode::kOneshot);
-    stop_signal->setCallback(
-        [&] (int signo) {
-            LogInfo("Got signal %d", signo);
-            apps.stop();
-            ctx.stop();
-            ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-            LogDbg("Loop will exit after %d sec", loop_exit_wait);
-        }
-    );
+    stop_signal->initialize({SIGINT, SIGTERM, SIGQUIT, SIGTSTP, SIGPWR},
+                            event::Event::Mode::kOneshot);
+    stop_signal->setCallback([&](int signo) {
+        LogInfo("Got signal %d", signo);
+        apps.stop();
+        ctx.stop();
+        ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
+        LogDbg("Loop will exit after %d sec", loop_exit_wait);
+    });
 
     warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
     warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
@@ -90,7 +87,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     eventx::LoopWDog::Unregister(ctx.loop());
     eventx::LoopWDog::Stop();
 }
-}
+}  // namespace
 
 int Main(int argc, char **argv)
 {
@@ -113,8 +110,7 @@ int Main(int argc, char **argv)
     ctx.fillDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
-    if (!args.parse(argc, argv))
-        return 0;
+    if (!args.parse(argc, argv)) return 0;
 
     std::string pid_filename;
     util::PidFile pid_file;
@@ -142,8 +138,7 @@ int Main(int argc, char **argv)
         //! 主要是保存日志
         log.cleanup();
 
-        while (error_exit_wait)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+        while (error_exit_wait) std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
     if (ctx.initialize(js_conf)) {
@@ -170,8 +165,8 @@ int Main(int argc, char **argv)
     return 0;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox
 
 __attribute__((weak))
 //! 定义为弱定义，允许用户自己定义。

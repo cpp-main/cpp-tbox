@@ -17,11 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "channel.hpp"
-#include <tbox/base/scope_exit.hpp>
+
+#include <gtest/gtest.h>
 #include <tbox/event/timer_event.h>
+
 #include <algorithm>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -34,7 +36,7 @@ using namespace tbox::coroutine;
 TEST(Channel, TwoRoutines_ProduceAndConsumer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -44,12 +46,11 @@ TEST(Channel, TwoRoutines_ProduceAndConsumer)
     vector<int> recv_vec;
 
     int times = 200;
-    for (int i = 0; i < times; ++i)
-        send_vec.push_back(i);
+    for (int i = 0; i < times; ++i) send_vec.push_back(i);
     random_shuffle(send_vec.begin(), send_vec.end());
 
     //! 生产者，将 send_vec 中的数据逐一发送到 ch
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i : send_vec) {
             ch << i;
             sch.yield();
@@ -57,7 +58,7 @@ TEST(Channel, TwoRoutines_ProduceAndConsumer)
     };
 
     //! 消费者，从 ch 中读取数据，存入到 recv_vec 中
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         while (!sch.isCanceled()) {
             int i = 0;
             if (ch >> i) {
@@ -84,7 +85,7 @@ TEST(Channel, TwoRoutines_ProduceAndConsumer)
 TEST(Channel, ThreeRoutines_OneProduceAndTwoConsumer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -94,28 +95,26 @@ TEST(Channel, ThreeRoutines_OneProduceAndTwoConsumer)
     vector<int> recv_vec;
 
     int times = 200;
-    for (int i = 0; i < times; ++i)
-        send_vec.push_back(i);
+    for (int i = 0; i < times; ++i) send_vec.push_back(i);
     random_shuffle(send_vec.begin(), send_vec.end());
 
     //! 生产者，将 send_vec 中的数据逐一发送到 ch
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i : send_vec) {
             ch << i;
-            //cout << sch.getName() << " << " << i << endl;
+            // cout << sch.getName() << " << " << i << endl;
             sch.yield();
-            if (sch.isCanceled())
-                break;
+            if (sch.isCanceled()) break;
         }
     };
 
     //! 消费者，从 ch 中读取数据，存入到 recv_vec 中
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         while (!sch.isCanceled()) {
             int i = 0;
             if (ch >> i) {
                 recv_vec.push_back(i);
-                //cout << sch.getName() << " >> " << i << endl;
+                // cout << sch.getName() << " >> " << i << endl;
             }
         }
     };
@@ -139,7 +138,7 @@ TEST(Channel, ThreeRoutines_OneProduceAndTwoConsumer)
 TEST(Channel, TimerProduceAndConsumer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -149,28 +148,25 @@ TEST(Channel, TimerProduceAndConsumer)
     vector<int> recv_vec;
 
     int times = 10;
-    for (int i = 0; i < times; ++i)
-        send_vec.push_back(i);
+    for (int i = 0; i < times; ++i) send_vec.push_back(i);
     random_shuffle(send_vec.begin(), send_vec.end());
 
     size_t index = 0;
     auto timer = sp_loop->newTimerEvent();
-    SetScopeExitAction([timer]{ delete timer;});
+    SetScopeExitAction([timer] { delete timer; });
     timer->initialize(chrono::milliseconds(10), Event::Mode::kPersist);
-    timer->setCallback(
-        [&] {
-            if (index < send_vec.size()) {
-                ch << send_vec.at(index);
-                ++index;
-            } else {
-                sp_loop->exitLoop();
-            }
+    timer->setCallback([&] {
+        if (index < send_vec.size()) {
+            ch << send_vec.at(index);
+            ++index;
+        } else {
+            sp_loop->exitLoop();
         }
-    );
+    });
     timer->enable();
 
     //! 消费者，从 ch 中读取数据，存入到 recv_vec 中
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         while (!sch.isCanceled()) {
             int i = 0;
             if (ch >> i) {
@@ -188,4 +184,3 @@ TEST(Channel, TimerProduceAndConsumer)
 
     sch.cleanup();
 }
-

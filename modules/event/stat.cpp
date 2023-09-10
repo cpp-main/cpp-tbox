@@ -18,11 +18,12 @@
  * of the source tree.
  */
 #include "stat.h"
+
 #include <iomanip>
 
 using namespace std;
 
-ostream& operator<< (ostream &os, const tbox::event::Stat &stat)
+ostream &operator<<(ostream &os, const tbox::event::Stat &stat)
 {
     os << std::setprecision(3);
 

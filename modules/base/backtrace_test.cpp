@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "backtrace.h"
+
 #include <gtest/gtest.h>
 
 #include "log_output.h"
@@ -31,4 +32,4 @@ TEST(Backtrace, _)
     LogOutput_Disable();
 }
 
-}
+}  // namespace tbox

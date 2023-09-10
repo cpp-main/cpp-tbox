@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "stat.h"
+
+#include <gtest/gtest.h>
+
 #include <ostream>
 
 namespace tbox {
@@ -48,5 +50,5 @@ cpu: 0.6 %
     EXPECT_EQ(oss.str(), target_str);
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

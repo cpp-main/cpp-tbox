@@ -18,11 +18,12 @@
  * of the source tree.
  */
 #include <tbox/base/log.h>
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/log/async_stdout_sink.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/http/server/server.h>
+#include <tbox/log/async_stdout_sink.h>
+
+#include <tbox/base/scope_exit.hpp>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -50,12 +51,10 @@ int main(int argc, char **argv)
 
     TimerPool timers(sp_loop);
 
-    SetScopeExitAction(
-        [=] {
-            delete sp_sig_event;
-            delete sp_loop;
-        }
-    );
+    SetScopeExitAction([=] {
+        delete sp_sig_event;
+        delete sp_loop;
+    });
 
     sp_sig_event->initialize(SIGINT, Event::Mode::kPersist);
     sp_sig_event->enable();
@@ -70,12 +69,11 @@ int main(int argc, char **argv)
     srv.setContextLogEnable(true);
 
     //! 添加请求处理
-    srv.use(
-        [&](ContextSptr ctx, const NextFunc &next) {
-            if (ctx->req().url.path == "/") {
-                ctx->res().status_code = StatusCode::k200_OK;
-                ctx->res().body = \
-R"(
+    srv.use([&](ContextSptr ctx, const NextFunc &next) {
+        if (ctx->req().url.path == "/") {
+            ctx->res().status_code = StatusCode::k200_OK;
+            ctx->res().body =
+                R"(
 <head>
 </head>
 <body>
@@ -83,24 +81,21 @@ R"(
     <p> <a href="/2" target="_blank">now</a> </p>
 </body>
 )";
-            } else if (ctx->req().url.path == "/1") {
-                timers.doAfter(std::chrono::seconds(10), [ctx] {
-                    ctx->res().status_code = StatusCode::k200_OK;
-                    ctx->res().body = ctx->req().url.path;
-                });
-            } else if (ctx->req().url.path == "/2") {
+        } else if (ctx->req().url.path == "/1") {
+            timers.doAfter(std::chrono::seconds(10), [ctx] {
                 ctx->res().status_code = StatusCode::k200_OK;
                 ctx->res().body = ctx->req().url.path;
-            }
+            });
+        } else if (ctx->req().url.path == "/2") {
+            ctx->res().status_code = StatusCode::k200_OK;
+            ctx->res().body = ctx->req().url.path;
         }
-    );
+    });
 
-    sp_sig_event->setCallback(
-        [&] (int) {
-            srv.stop();
-            sp_loop->exitLoop();
-        }
-    );
+    sp_sig_event->setCallback([&](int) {
+        srv.stop();
+        sp_loop->exitLoop();
+    });
 
     LogInfo("start");
     sp_loop->runLoop();

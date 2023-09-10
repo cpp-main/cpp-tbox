@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "loop.h"
+
 #include <tbox/base/log.h>
 
 #include "engines/epoll/loop.h"
@@ -25,15 +26,14 @@
 namespace tbox {
 namespace event {
 
-Loop* Loop::New()
+Loop *Loop::New()
 {
     return new EpollLoop;
 }
 
-Loop* Loop::New(const std::string &engine_type)
+Loop *Loop::New(const std::string &engine_type)
 {
-    if (engine_type == "epoll")
-        return new EpollLoop;
+    if (engine_type == "epoll") return new EpollLoop;
 
     return nullptr;
 }
@@ -46,5 +46,5 @@ std::vector<std::string> Loop::Engines()
     return types;
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

@@ -17,14 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <thread>
-#include <gtest/gtest.h>
+#include "work_thread.h"
 
+#include <gtest/gtest.h>
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 
-#include "work_thread.h"
+#include <thread>
 
 using namespace std;
 using namespace tbox::event;
@@ -32,24 +32,24 @@ using namespace tbox::eventx;
 
 namespace {
 
-auto backend_func = \
-        [](int id) {
-            LogDbg("<<task %d run in back", id);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            LogDbg("task %d run in back>>", id);
-        };
+auto backend_func = [](int id) {
+    LogDbg("<<task %d run in back", id);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    LogDbg("task %d run in back>>", id);
+};
 
 WorkThread::TaskToken null_task_token;
 
 /**
  * 测试是否所有的任务都能被执行
  */
-TEST(WorkThread, all_task_executed_without_loop) {
+TEST(WorkThread, all_task_executed_without_loop)
+{
     WorkThread *tp = new WorkThread;
 
     int count = 0;
     for (int i = 0; i < 3; ++i) {
-        tp->execute([&] {++count;});
+        tp->execute([&] { ++count; });
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -60,14 +60,15 @@ TEST(WorkThread, all_task_executed_without_loop) {
 /**
  * 测试是否所有的任务都能被执行
  */
-TEST(WorkThread, all_task_executed_with_loop) {
+TEST(WorkThread, all_task_executed_with_loop)
+{
     Loop *loop = Loop::New();
 
     WorkThread *tp = new WorkThread(loop);
 
     int count = 0;
     for (int i = 0; i < 3; ++i) {
-        tp->execute([]{}, [&]{++count;});
+        tp->execute([] {}, [&] { ++count; });
     }
 
     LogDbg("run in main");
@@ -84,7 +85,8 @@ TEST(WorkThread, all_task_executed_with_loop) {
  * 不等其完成工作就退出主线程
  * 主要是检查有没有内存泄漏
  */
-TEST(WorkThread, exit_before_finish) {
+TEST(WorkThread, exit_before_finish)
+{
     Loop *loop = Loop::New();
 
     WorkThread *tp = new WorkThread(loop);
@@ -106,7 +108,8 @@ TEST(WorkThread, exit_before_finish) {
  *
  * 创建三个任务。在1.5秒时全部取消。
  */
-TEST(WorkThread, cancel_task) {
+TEST(WorkThread, cancel_task)
+{
     Loop *loop = Loop::New();
 
     WorkThread *tp = new WorkThread(loop);
@@ -132,4 +135,4 @@ TEST(WorkThread, cancel_task) {
     delete loop;
 }
 
-}
+}  // namespace

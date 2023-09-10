@@ -17,16 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "common_loop.h"
-
-#include <unistd.h>
 #include <string.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <unistd.h>
+
 #include <tbox/base/scope_exit.hpp>
 
-#include "misc.h"
+#include "common_loop.h"
 #include "fd_event.h"
+#include "misc.h"
 
 #define TBOX_USE_SIGACTION
 
@@ -35,22 +35,23 @@ namespace event {
 
 namespace {
 
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
 using SignalHandler = struct sigaction;
 #else
-using SignalHandler = void (*) (int);
+using SignalHandler = void (*)(int);
 #endif
 
-struct SignalCtx {
+struct SignalCtx
+{
     std::set<int> write_fds;    //! 通知 Loop 的 fd，每个 Loop 注册一个
     SignalHandler old_handler;  //! 原始的信号处理函数
 };
 
-std::mutex _signal_lock_;    //! 保护 _signal_ctxs_ 用
+std::mutex _signal_lock_;  //! 保护 _signal_ctxs_ 用
 std::map<int, SignalCtx> _signal_ctxs_;
 
 //! 信号处理函数
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
 void SignalHandlerFunc(int signo, siginfo_t *siginfo, void *context)
 #else
 void SignalHandlerFunc(int signo)
@@ -63,40 +64,36 @@ void SignalHandlerFunc(int signo)
 
     //! 先执行旧的信号
     const auto &old_handler = this_signal_ctx.old_handler;
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
     if (old_handler.sa_flags & SA_SIGINFO) {
-        if (old_handler.sa_sigaction)
-            old_handler.sa_sigaction(signo, siginfo, context);
+        if (old_handler.sa_sigaction) old_handler.sa_sigaction(signo, siginfo, context);
     } else {
-        if (SIG_ERR != old_handler.sa_handler &&
-            SIG_IGN != old_handler.sa_handler &&
+        if (SIG_ERR != old_handler.sa_handler && SIG_IGN != old_handler.sa_handler &&
             SIG_DFL != old_handler.sa_handler)
             old_handler.sa_handler(signo);
     }
 #else
-    if (SIG_ERR != old_handler &&
-        SIG_IGN != old_handler &&
-        SIG_DFL != old_handler)
+    if (SIG_ERR != old_handler && SIG_IGN != old_handler && SIG_DFL != old_handler)
         old_handler(signo);
 #endif
 
     //! 再执行自己的
     for (int fd : this_signal_ctx.write_fds) {
         auto wsize = write(fd, &signo, sizeof(signo));
-        (void)wsize;    //! 消除编译警告
+        (void)wsize;  //! 消除编译警告
     }
 }
 
-}
+}  // namespace
 
 bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 {
-    if (signal_read_fd_ == -1) {    //! 如果还没有创建对应的信号
-        if (!CreateFdPair(signal_read_fd_, signal_write_fd_))
-            return false;
+    if (signal_read_fd_ == -1) {  //! 如果还没有创建对应的信号
+        if (!CreateFdPair(signal_read_fd_, signal_write_fd_)) return false;
 
         sp_signal_read_event_ = newFdEvent("CommonLoop::sp_signal_read_event_");
-        sp_signal_read_event_->initialize(signal_read_fd_, FdEvent::kReadEvent, Event::Mode::kPersist);
+        sp_signal_read_event_->initialize(
+            signal_read_fd_, FdEvent::kReadEvent, Event::Mode::kPersist);
         sp_signal_read_event_->setCallback(std::bind(&CommonLoop::onSignal, this));
         sp_signal_read_event_->enable();
     }
@@ -114,7 +111,7 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
         //! 设置退出后恢复信号
         SetScopeExitAction([&] { sigprocmask(SIG_SETMASK, &old_sigmask, 0); });
 
-        auto & this_signal_ctx = _signal_ctxs_[signo];
+        auto &this_signal_ctx = _signal_ctxs_[signo];
         if (this_signal_ctx.write_fds.empty()) {
             bool is_fail = false;
 #ifdef TBOX_USE_SIGACTION
@@ -132,7 +129,8 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
             if (is_fail) {
                 all_signals_subscribers_.erase(signo);
                 //! Q: 为什么这里要进行一次删除操作？
-                //! A: 因为L63在访问all_signals_subscribers_[signo]时，如果不存在，就会默认创建一个。
+                //! A:
+                //! 因为L63在访问all_signals_subscribers_[signo]时，如果不存在，就会默认创建一个。
                 //!    创建的这个this_signal_subscribers一定是空的。可直接删除。
                 //! 注意：erase()操作之后，this_signal_subscribers 是失效了的，不能再被访问
 
@@ -161,12 +159,12 @@ bool CommonLoop::subscribeSignal(int signo, SignalSubscribuer *who)
 bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 {
     auto &this_signal_subscribers = all_signals_subscribers_[signo];
-    this_signal_subscribers.erase(who);          //! 将订阅信息删除
-    if (!this_signal_subscribers.empty())        //! 检查本Loop中是否已经没有SignalSubscribuer订阅该信号了
-        return true;    //! 如果还有，就到此为止
+    this_signal_subscribers.erase(who);  //! 将订阅信息删除
+    if (!this_signal_subscribers.empty())  //! 检查本Loop中是否已经没有SignalSubscribuer订阅该信号了
+        return true;                       //! 如果还有，就到此为止
 
     //! 如果本Loop已经没有SignalSubscribuer订阅该信号了
-    all_signals_subscribers_.erase(signo);    //! 则将该信号的订阅记录表删除
+    all_signals_subscribers_.erase(signo);  //! 则将该信号的订阅记录表删除
     {
         std::unique_lock<std::mutex> _g(_signal_lock_);
 
@@ -189,13 +187,12 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
             if (this_signal_ctx.old_handler != SIG_ERR)
                 ::signal(signo, this_signal_ctx.old_handler);
 #endif
-            //LogTrace("unset signal:%d", signo);
+            // LogTrace("unset signal:%d", signo);
             _signal_ctxs_.erase(signo);
         }
     }
 
-    if (!all_signals_subscribers_.empty())
-        return true;
+    if (!all_signals_subscribers_.empty()) return true;
 
     //! 已经没有任何SignalSubscribuer订阅任何信号了
     sp_signal_read_event_->disable();
@@ -212,17 +209,18 @@ bool CommonLoop::unsubscribeSignal(int signo, SignalSubscribuer *who)
 void CommonLoop::onSignal()
 {
     while (signal_read_fd_ != -1) {
-        int signo_array[10];    //! 一次性读10个
+        int signo_array[10];  //! 一次性读10个
         auto rsize = read(signal_read_fd_, &signo_array, sizeof(signo_array));
         if (rsize > 0) {
             const auto num = rsize / sizeof(int);
-            //LogTrace("rsize:%d, num:%u", rsize, num);
+            // LogTrace("rsize:%d, num:%u", rsize, num);
             for (size_t i = 0; i < num; ++i) {
                 int signo = signo_array[i];
-                //LogTrace("signo:%d", signo);
+                // LogTrace("signo:%d", signo);
                 auto iter = all_signals_subscribers_.find(signo);
                 if (iter != all_signals_subscribers_.end()) {
-                    auto todo = iter->second;   //!FIXME:Crash if SignalSubscribuer be deleted in callback
+                    auto todo =
+                        iter->second;  //! FIXME:Crash if SignalSubscribuer be deleted in callback
                     for (auto s : todo) {
                         s->onSignal(signo);
                     }
@@ -236,10 +234,10 @@ void CommonLoop::onSignal()
     }
 }
 
-SignalEvent* CommonLoop::newSignalEvent(const std::string &what)
+SignalEvent *CommonLoop::newSignalEvent(const std::string &what)
 {
     return new SignalEventImpl(this, what);
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

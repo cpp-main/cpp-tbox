@@ -18,9 +18,11 @@
  * of the source tree.
  */
 #include "async_pipe.h"
+
 #include <gtest/gtest.h>
-#include <vector>
+
 #include <thread>
+#include <vector>
 
 using namespace tbox::util;
 using namespace std;
@@ -31,15 +33,11 @@ void TestByConfig(AsyncPipe::Config cfg)
 
     AsyncPipe ap;
     EXPECT_TRUE(ap.initialize(cfg));
-    ap.setCallback(
-        [&] (const void *ptr, size_t size) {
-            const uint8_t *p = static_cast<const uint8_t*>(ptr);
-            for (size_t i = 0; i < size; ++i)
-                out_data.push_back(p[i]);
-            this_thread::sleep_for(chrono::milliseconds(10));
-        }
-    );
-
+    ap.setCallback([&](const void *ptr, size_t size) {
+        const uint8_t *p = static_cast<const uint8_t *>(ptr);
+        for (size_t i = 0; i < size; ++i) out_data.push_back(p[i]);
+        this_thread::sleep_for(chrono::milliseconds(10));
+    });
 
     for (size_t i = 0; i < 256; ++i) {
         uint8_t v = i;
@@ -57,8 +55,8 @@ TEST(AsyncPipe, Size1Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 1;
-    cfg.buff_min_num  = 1;
-    cfg.buff_max_num  = 1;
+    cfg.buff_min_num = 1;
+    cfg.buff_max_num = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -68,8 +66,8 @@ TEST(AsyncPipe, Size1Num2)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 1;
-    cfg.buff_min_num  = 2;
-    cfg.buff_max_num  = 2;
+    cfg.buff_min_num = 2;
+    cfg.buff_max_num = 2;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -79,8 +77,8 @@ TEST(AsyncPipe, Size1MinNum2MaxNum10)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 1;
-    cfg.buff_min_num  = 2;
-    cfg.buff_max_num  = 10;
+    cfg.buff_min_num = 2;
+    cfg.buff_max_num = 10;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -90,8 +88,8 @@ TEST(AsyncPipe, Size2Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 2;
-    cfg.buff_min_num  = 1;
-    cfg.buff_max_num  = 1;
+    cfg.buff_min_num = 1;
+    cfg.buff_max_num = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -101,8 +99,8 @@ TEST(AsyncPipe, Size50Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_min_num  = 1;
-    cfg.buff_max_num  = 1;
+    cfg.buff_min_num = 1;
+    cfg.buff_max_num = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -112,8 +110,8 @@ TEST(AsyncPipe, Size50Num2)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_min_num  = 2;
-    cfg.buff_max_num  = 2;
+    cfg.buff_min_num = 2;
+    cfg.buff_max_num = 2;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -123,8 +121,8 @@ TEST(AsyncPipe, Size50Num3)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 50;
-    cfg.buff_min_num  = 3;
-    cfg.buff_max_num  = 3;
+    cfg.buff_min_num = 3;
+    cfg.buff_max_num = 3;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -134,8 +132,8 @@ TEST(AsyncPipe, Size500Num1)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_min_num  = 1;
-    cfg.buff_max_num  = 1;
+    cfg.buff_min_num = 1;
+    cfg.buff_max_num = 1;
     cfg.interval = 10;
 
     TestByConfig(cfg);
@@ -150,21 +148,18 @@ TEST(AsyncPipe, PeriodSync)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_min_num  = 1;
-    cfg.buff_max_num  = 1;
+    cfg.buff_min_num = 1;
+    cfg.buff_max_num = 1;
     cfg.interval = 10;
 
     vector<uint8_t> out_data;
 
     AsyncPipe ap;
     EXPECT_TRUE(ap.initialize(cfg));
-    ap.setCallback(
-        [&] (const void *ptr, size_t size) {
-            const uint8_t *p = static_cast<const uint8_t*>(ptr);
-            for (size_t i = 0; i < size; ++i)
-                out_data.push_back(p[i]);
-        }
-    );
+    ap.setCallback([&](const void *ptr, size_t size) {
+        const uint8_t *p = static_cast<const uint8_t *>(ptr);
+        for (size_t i = 0; i < size; ++i) out_data.push_back(p[i]);
+    });
 
     uint8_t dummy = 12;
     ap.append(&dummy, 1);
@@ -180,21 +175,18 @@ TEST(AsyncPipe, ForgetCleanup)
 {
     AsyncPipe::Config cfg;
     cfg.buff_size = 500;
-    cfg.buff_min_num  = 3;
-    cfg.buff_max_num  = 3;
+    cfg.buff_min_num = 3;
+    cfg.buff_max_num = 3;
     cfg.interval = 10;
 
     vector<uint8_t> out_data;
 
     AsyncPipe ap;
     EXPECT_TRUE(ap.initialize(cfg));
-    ap.setCallback(
-        [&] (const void *ptr, size_t size) {
-            const uint8_t *p = static_cast<const uint8_t*>(ptr);
-            for (size_t i = 0; i < size; ++i)
-                out_data.push_back(p[i]);
-        }
-    );
+    ap.setCallback([&](const void *ptr, size_t size) {
+        const uint8_t *p = static_cast<const uint8_t *>(ptr);
+        for (size_t i = 0; i < size; ++i) out_data.push_back(p[i]);
+    });
 
     uint8_t dummy = 12;
     ap.append(&dummy, 1);

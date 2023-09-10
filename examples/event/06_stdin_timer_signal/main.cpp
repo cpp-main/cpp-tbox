@@ -17,15 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <unistd.h>
 #include <signal.h>
-#include <iostream>
-#include <string>
-#include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
-#include <tbox/event/timer_event.h>
+#include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/event/stat.h>
+#include <tbox/event/timer_event.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <string>
 
 using namespace std;
 using namespace tbox;
@@ -52,7 +53,7 @@ void printStat(Loop *wp_loop)
     cout << stat;
 }
 
-void StdinReadCallback(short events, Loop* wp_loop, TimerEvent* wp_timer)
+void StdinReadCallback(short events, Loop *wp_loop, TimerEvent *wp_timer)
 {
     if (events & FdEvent::kReadEvent) {
         char buff[32];
@@ -80,7 +81,7 @@ void StdinReadCallback(short events, Loop* wp_loop, TimerEvent* wp_timer)
     }
 }
 
-void IntSignalCallback(Loop* wp_loop)
+void IntSignalCallback(Loop *wp_loop)
 {
     cout << "got signal" << endl;
     wp_loop->exitLoop(std::chrono::seconds(3));
@@ -99,29 +100,28 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Loop* sp_loop = Loop::New(argv[1]);
+    Loop *sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
         return 0;
     }
 
-
-    TimerEvent* sp_timer = sp_loop->newTimerEvent();
+    TimerEvent *sp_timer = sp_loop->newTimerEvent();
     sp_timer->initialize(std::chrono::seconds(1), Event::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();
 
-    TimerEvent* sp_timer_1 = sp_loop->newTimerEvent();
+    TimerEvent *sp_timer_1 = sp_loop->newTimerEvent();
     sp_timer_1->initialize(std::chrono::seconds(5), Event::Mode::kOneshot);
     sp_timer_1->setCallback(OneshotTimerCallback);
     sp_timer_1->enable();
 
-    FdEvent* sp_stdin = sp_loop->newFdEvent();
+    FdEvent *sp_stdin = sp_loop->newFdEvent();
     sp_stdin->initialize(STDIN_FILENO, FdEvent::kReadEvent, Event::Mode::kPersist);
     sp_stdin->setCallback(bind(StdinReadCallback, std::placeholders::_1, sp_loop, sp_timer));
     sp_stdin->enable();
 
-    SignalEvent* sp_sig_int = sp_loop->newSignalEvent();
+    SignalEvent *sp_sig_int = sp_loop->newSignalEvent();
     sp_sig_int->initialize(SIGINT, Event::Mode::kPersist);
     sp_sig_int->setCallback(bind(IntSignalCallback, sp_loop));
     sp_sig_int->enable();

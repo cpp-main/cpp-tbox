@@ -17,16 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <unistd.h>
-#include <execinfo.h>
+#include "backtrace.h"
+
 #include <cxxabi.h>
 #include <dlfcn.h>
+#include <execinfo.h>
+#include <unistd.h>
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
-
-#include "backtrace.h"
 
 namespace tbox {
 
@@ -59,16 +59,15 @@ std::string DumpBacktrace(const unsigned int max_frames)
             func_name = (symbols != nullptr ? symbols[i] : "null");
         }
 
-        oss << '[' << std::setw(2) << i << "]: " << func_name << " <" << callstack[i] << '>' << std::endl;
+        oss << '[' << std::setw(2) << i << "]: " << func_name << " <" << callstack[i] << '>'
+            << std::endl;
     }
 
-    if (symbols != nullptr)
-        free(symbols);
+    if (symbols != nullptr) free(symbols);
 
-    if (number_frames >= max_frames)
-        oss << "[truncated]" << std::endl;
+    if (number_frames >= max_frames) oss << "[truncated]" << std::endl;
 
     return oss.str();
 }
 
-}
+}  // namespace tbox

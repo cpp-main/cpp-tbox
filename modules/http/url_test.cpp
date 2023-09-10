@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "url.h"
+
 #include <gtest/gtest.h>
 
 namespace tbox {
@@ -211,5 +212,5 @@ TEST(Url, StringToUrl_Short)
     EXPECT_EQ(url.path.frag, "");
 }
 
-}
-}
+}  // namespace http
+}  // namespace tbox

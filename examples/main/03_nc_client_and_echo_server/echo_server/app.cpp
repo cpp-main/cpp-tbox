@@ -19,9 +19,10 @@
  */
 #include "app.h"
 
-#include <cassert>
-#include <tbox/base/log.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
+
+#include <cassert>
 #include <tbox/base/json.hpp>
 
 namespace echo_server {
@@ -29,10 +30,7 @@ namespace echo_server {
 using namespace tbox::main;
 using namespace tbox::network;
 
-App::App(Context &ctx) :
-    Module("echo_server", ctx),
-    server_(new TcpServer(ctx.loop()))
-{ }
+App::App(Context &ctx) : Module("echo_server", ctx), server_(new TcpServer(ctx.loop())) {}
 
 App::~App()
 {
@@ -47,18 +45,16 @@ void App::onFillDefaultConfig(Json &cfg)
 bool App::onInit(const tbox::Json &cfg)
 {
     auto js_bind = cfg["bind"];
-    if (!js_bind.is_string())
-        return false;
+    if (!js_bind.is_string()) return false;
 
-    if (!server_->initialize(SockAddr::FromString(js_bind.get<std::string>()), 2))
-        return false;
+    if (!server_->initialize(SockAddr::FromString(js_bind.get<std::string>()), 2)) return false;
 
     server_->setReceiveCallback(
-        [this] (const TcpServer::ConnToken &client, Buffer &buff) {
+        [this](const TcpServer::ConnToken &client, Buffer &buff) {
             server_->send(client, buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
-        }, 0
-    );
+        },
+        0);
     return true;
 }
 
@@ -77,4 +73,4 @@ void App::onCleanup()
     server_->cleanup();
 }
 
-}
+}  // namespace echo_server

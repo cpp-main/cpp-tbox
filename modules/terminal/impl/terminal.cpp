@@ -19,14 +19,14 @@
  */
 #include "terminal.h"
 
-#include <sstream>
-
 #include <tbox/base/log.h>
 
+#include <sstream>
+
 #include "../connection.h"
-#include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"
+#include "session_context.h"
 
 namespace tbox {
 namespace terminal {
@@ -40,18 +40,10 @@ Terminal::Impl::Impl()
 
 Terminal::Impl::~Impl()
 {
-    sessions_.foreach(
-        [](SessionContext *p) {
-            delete p;
-        }
-    );
+    sessions_.foreach ([](SessionContext *p) { delete p; });
     sessions_.clear();
 
-    nodes_.foreach(
-        [](Node *p) {
-            delete p;
-        }
-    );
+    nodes_.foreach ([](Node *p) { delete p; });
     nodes_.clear();
 }
 
@@ -77,8 +69,7 @@ bool Terminal::Impl::deleteSession(const SessionToken &st)
 uint32_t Terminal::Impl::getOptions(const SessionToken &st) const
 {
     auto s = sessions_.at(st);
-    if (s == nullptr)
-        return 0;
+    if (s == nullptr) return 0;
 
     return s->options;
 }
@@ -86,8 +77,7 @@ uint32_t Terminal::Impl::getOptions(const SessionToken &st) const
 void Terminal::Impl::setOptions(const SessionToken &st, uint32_t options)
 {
     auto s = sessions_.at(st);
-    if (s == nullptr)
-        return;
+    if (s == nullptr) return;
 
     s->options = options;
 }
@@ -95,16 +85,14 @@ void Terminal::Impl::setOptions(const SessionToken &st, uint32_t options)
 bool Terminal::Impl::onBegin(const SessionToken &st)
 {
     auto s = sessions_.at(st);
-    if (s == nullptr)
-        return false;
+    if (s == nullptr) return false;
 
     if (!(s->options & kQuietMode)) {
         s->wp_conn->send(st,
-            "\r\n"
-            "Welcome to CppTBox Terminal.\r\n"
-            "Type 'help' for more information.\r\n"
-            "\r\n"
-        );
+                         "\r\n"
+                         "Welcome to CppTBox Terminal.\r\n"
+                         "Type 'help' for more information.\r\n"
+                         "\r\n");
     }
     printPrompt(s);
 
@@ -114,8 +102,7 @@ bool Terminal::Impl::onBegin(const SessionToken &st)
 bool Terminal::Impl::onExit(const SessionToken &st)
 {
     auto s = sessions_.at(st);
-    if (s == nullptr)
-        return false;
+    if (s == nullptr) return false;
 
     s->wp_conn->send(st, "Bye!");
     return true;
@@ -124,8 +111,7 @@ bool Terminal::Impl::onExit(const SessionToken &st)
 bool Terminal::Impl::onRecvString(const SessionToken &st, const string &str)
 {
     auto s = sessions_.at(st);
-    if (s == nullptr)
-        return false;
+    if (s == nullptr) return false;
 
     s->key_event_scanner_.start();
     KeyEventScanner::Status status = KeyEventScanner::Status::kUnsure;
@@ -201,13 +187,12 @@ bool Terminal::Impl::onRecvWindowSize(const SessionToken &st, uint16_t w, uint16
 
 void Terminal::Impl::printPrompt(SessionContext *s)
 {
-    if (!(s->options & kQuietMode))
-        s->wp_conn->send(s->token, "# ");
+    if (!(s->options & kQuietMode)) s->wp_conn->send(s->token, "# ");
 }
 
 void Terminal::Impl::printHelp(SessionContext *s)
 {
-    const char *help_str = \
+    const char *help_str =
         "This terminal is designed by Hevake Lee <hevake@126.com>, integrated in CppTBox.\r\n"
         "It provides a way to interact with the program in the form of shell.\r\n"
         "\r\n"
@@ -227,14 +212,13 @@ void Terminal::Impl::printHelp(SessionContext *s)
     s->wp_conn->send(s->token, help_str);
 
     if (s->options & kEnableEcho) {
-        const char *extra_str = \
+        const char *extra_str =
             "Besides, UP,DOWN,LEFT,RIGHT,HOME,END,DELETE keys are available.\r\n"
             "Try them.\r\n"
-            "\r\n"
-            ;
+            "\r\n";
         s->wp_conn->send(s->token, extra_str);
     }
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <tbox/main/main.h>
+
 #include "app.h"
 
 namespace tbox {
@@ -46,5 +47,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

@@ -19,22 +19,22 @@
  */
 #include "work_thread.h"
 
-#include <cinttypes>
-#include <set>
-#include <deque>
-#include <thread>
-#include <mutex>
-#include <algorithm>
-#include <condition_variable>
-#include <chrono>
-
-#include <tbox/base/log.h>
-#include <tbox/base/defines.h>
-#include <tbox/base/cabinet.hpp>
-#include <tbox/base/catch_throw.h>
-#include <tbox/base/object_pool.hpp>
 #include <tbox/base/assert.h>
+#include <tbox/base/catch_throw.h>
+#include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 #include <tbox/event/loop.h>
+
+#include <algorithm>
+#include <chrono>
+#include <cinttypes>
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <set>
+#include <tbox/base/cabinet.hpp>
+#include <tbox/base/object_pool.hpp>
+#include <thread>
 
 namespace tbox {
 namespace eventx {
@@ -42,32 +42,34 @@ namespace eventx {
 using Clock = std::chrono::steady_clock;
 
 //! WorkThread 的私有数据
-struct WorkThread::Data {
-    event::Loop *default_main_loop = nullptr; //!< 主线程
+struct WorkThread::Data
+{
+    event::Loop *default_main_loop = nullptr;  //!< 主线程
 
-    std::mutex lock;                    //!< 互斥锁
-    std::condition_variable cond_var;   //!< 条件变量
+    std::mutex lock;                   //!< 互斥锁
+    std::condition_variable cond_var;  //!< 条件变量
 
     std::thread work_thread;
 
     cabinet::Cabinet<Task> undo_tasks_cabinet;
 
-    std::deque<TaskToken> undo_tasks_token_deque;   //!< 排队中的任务队列
-    std::set<TaskToken> doing_tasks_token;          //!< 正在处理的任务集合
+    std::deque<TaskToken> undo_tasks_token_deque;  //!< 排队中的任务队列
+    std::set<TaskToken> doing_tasks_token;         //!< 正在处理的任务集合
 
     ObjectPool<Task> task_pool{64};
 
-    bool stop_flag = false; //!< 是否立即停止标记
+    bool stop_flag = false;  //!< 是否立即停止标记
 };
 
 /**
  * 任务项
  */
-struct WorkThread::Task {
+struct WorkThread::Task
+{
     TaskToken token;
-    NonReturnFunc backend_task;   //! 任务在工作线程中执行函数
-    NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
-    event::Loop  *main_loop = nullptr;
+    NonReturnFunc backend_task;  //! 任务在工作线程中执行函数
+    NonReturnFunc main_cb;       //! 任务执行完成后由main_loop执行的回调函数
+    event::Loop *main_loop = nullptr;
     Clock::time_point create_time_point;
 
     Task *next = nullptr;
@@ -75,8 +77,7 @@ struct WorkThread::Task {
 
 /////////////////////////////////////////////////////////////////////////////////
 
-WorkThread::WorkThread(event::Loop *main_loop) :
-    d_(new Data)
+WorkThread::WorkThread(event::Loop *main_loop) : d_(new Data)
 {
     d_->default_main_loop = main_loop;
     d_->work_thread = std::thread(std::bind(&WorkThread::threadProc, this));
@@ -99,7 +100,9 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
     return execute(std::move(backend_task_copy), nullptr, nullptr);
 }
 
-WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
+WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task,
+                                          NonReturnFunc &&main_cb,
+                                          event::Loop *main_loop)
 {
     TaskToken token;
 
@@ -127,7 +130,9 @@ WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonRetur
     return token;
 }
 
-WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task,
+                                          const NonReturnFunc &main_cb,
+                                          event::Loop *main_loop)
 {
     NonReturnFunc backend_task_copy(backend_task);
     NonReturnFunc main_cb_copy(main_cb);
@@ -143,8 +148,7 @@ WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
 
     std::lock_guard<std::mutex> lg(d_->lock);
 
-    if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
-        return TaskStatus::kWaiting;
+    if (d_->undo_tasks_cabinet.at(task_token) != nullptr) return TaskStatus::kWaiting;
 
     if (d_->doing_tasks_token.find(task_token) != d_->doing_tasks_token.end())
         return TaskStatus::kExecuting;
@@ -169,11 +173,12 @@ int WorkThread::cancel(TaskToken token)
 
     //! 如果正在执行
     if (d_->doing_tasks_token.find(token) != d_->doing_tasks_token.end())
-        return 2;   //! 返回正在执行
+        return 2;  //! 返回正在执行
 
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     if (!d_->undo_tasks_token_deque.empty()) {
-        auto iter = std::find(d_->undo_tasks_token_deque.begin(), d_->undo_tasks_token_deque.end(), token);
+        auto iter =
+            std::find(d_->undo_tasks_token_deque.begin(), d_->undo_tasks_token_deque.end(), token);
         if (iter != d_->undo_tasks_token_deque.end()) {
             d_->undo_tasks_token_deque.erase(iter);
             d_->task_pool.free(d_->undo_tasks_cabinet.free(token));
@@ -181,13 +186,13 @@ int WorkThread::cancel(TaskToken token)
         }
     }
 
-    return 1;   //! 返回没有找到
+    return 1;  //! 返回没有找到
 }
 
 void WorkThread::threadProc()
 {
     while (true) {
-        Task* item = nullptr;
+        Task *item = nullptr;
         {
             std::unique_lock<std::mutex> lk(d_->lock);
 
@@ -206,7 +211,7 @@ void WorkThread::threadProc()
                 break;
             }
 
-            item = popOneTask();    //! 从任务队列中取出优先级最高的任务
+            item = popOneTask();  //! 从任务队列中取出优先级最高的任务
         }
 
         //! 后面就是去执行任务，不需要再加锁了
@@ -249,7 +254,7 @@ bool WorkThread::shouldThreadExitWaiting() const
     return d_->stop_flag || !d_->undo_tasks_token_deque.empty();
 }
 
-WorkThread::Task* WorkThread::popOneTask()
+WorkThread::Task *WorkThread::popOneTask()
 {
     if (!d_->undo_tasks_token_deque.empty()) {
         TaskToken token = d_->undo_tasks_token_deque.front();
@@ -261,8 +266,7 @@ WorkThread::Task* WorkThread::popOneTask()
 
 void WorkThread::cleanup()
 {
-    if (d_ == nullptr)
-        return;
+    if (d_ == nullptr) return;
 
     {
         std::lock_guard<std::mutex> lg(d_->lock);
@@ -282,5 +286,5 @@ void WorkThread::cleanup()
     CHECK_DELETE_RESET_OBJ(d_);
 }
 
-}
-}
+}  // namespace eventx
+}  // namespace tbox

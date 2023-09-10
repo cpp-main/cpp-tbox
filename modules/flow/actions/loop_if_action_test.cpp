@@ -17,14 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "loop_if_action.h"
+
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+
 #include <tbox/base/scope_exit.hpp>
 
-#include "loop_if_action.h"
 #include "function_action.h"
-#include "sleep_action.h"
 #include "sequence_action.h"
+#include "sleep_action.h"
 
 namespace tbox {
 namespace flow {
@@ -35,25 +37,29 @@ namespace flow {
  *    --remain;
  *  }
  */
-TEST(LoopIfAction, LoopRemainTimes) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+TEST(LoopIfAction, LoopRemainTimes)
+{
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int remain = 10;
-  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
-  auto exec_action = new FunctionAction(*loop, [&] { --remain; return true; });
-  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
+    int remain = 10;
+    auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
+    auto exec_action = new FunctionAction(*loop, [&] {
+        --remain;
+        return true;
+    });
+    LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
-  bool is_finished = false;
-  loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
-  loop_if_action.start();
+    bool is_finished = false;
+    loop_if_action.setFinishCallback([&](bool) { is_finished = true; });
+    loop_if_action.start();
 
-  loop->exitLoop(std::chrono::milliseconds(10));
-  loop->runLoop();
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
 
-  EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(remain, 0);
+    EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(remain, 0);
 }
 
 /**
@@ -63,29 +69,32 @@ TEST(LoopIfAction, LoopRemainTimes) {
  *    delay_ms(10);
  *  }
  */
-TEST(LoopIfAction, MultiAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+TEST(LoopIfAction, MultiAction)
+{
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int remain = 10;
-  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
-  auto exec_action = new SequenceAction(*loop);
-  exec_action->append(new FunctionAction(*loop, [&] { --remain; return true; }));
-  exec_action->append(new SleepAction(*loop, std::chrono::milliseconds(10)));
-  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
+    int remain = 10;
+    auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
+    auto exec_action = new SequenceAction(*loop);
+    exec_action->append(new FunctionAction(*loop, [&] {
+        --remain;
+        return true;
+    }));
+    exec_action->append(new SleepAction(*loop, std::chrono::milliseconds(10)));
+    LoopIfAction loop_if_action(*loop, cond_action, exec_action);
 
-  bool is_finished = false;
-  loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
-  loop_if_action.start();
+    bool is_finished = false;
+    loop_if_action.setFinishCallback([&](bool) { is_finished = true; });
+    loop_if_action.start();
 
-  loop->exitLoop(std::chrono::milliseconds(200));
-  loop->runLoop();
+    loop->exitLoop(std::chrono::milliseconds(200));
+    loop->runLoop();
 
-  EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(remain, 0);
+    EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(remain, 0);
 }
 
-
-}
-}
+}  // namespace flow
+}  // namespace tbox

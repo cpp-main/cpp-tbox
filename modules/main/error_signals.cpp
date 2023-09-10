@@ -17,18 +17,17 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <signal.h>
 #include <execinfo.h>
+#include <signal.h>
+#include <tbox/base/backtrace.h>
+#include <tbox/base/log.h>
 
 #include <cstring>
-#include <iostream>
-#include <sstream>
 #include <functional>
+#include <iostream>
 #include <map>
-
-#include <tbox/base/log.h>
+#include <sstream>
 #include <tbox/base/scope_exit.hpp>
-#include <tbox/base/backtrace.h>
 
 #define TBOX_USE_SIGACTION
 
@@ -41,42 +40,37 @@ extern std::function<void()> error_exit_func;
 
 namespace {
 
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
 using SignalHandler = struct sigaction;
 #else
-using SignalHandler = void (*) (int);
+using SignalHandler = void (*)(int);
 #endif
 
 std::map<int, SignalHandler> _old_handler_map;
 
 bool _is_recursion_call = false;
 
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
 void InvokeOldHandler(int signo, siginfo_t *siginfo, void *context)
 #else
 void InvokeOldHandler(int signo)
 #endif
 {
     auto iter = _old_handler_map.find(signo);
-    if (iter == _old_handler_map.end())
-        return;
+    if (iter == _old_handler_map.end()) return;
 
     const auto &old_handler = iter->second;
 
-#ifdef  TBOX_USE_SIGACTION
+#ifdef TBOX_USE_SIGACTION
     if (old_handler.sa_flags & SA_SIGINFO) {
-        if (old_handler.sa_sigaction)
-            old_handler.sa_sigaction(signo, siginfo, context);
+        if (old_handler.sa_sigaction) old_handler.sa_sigaction(signo, siginfo, context);
     } else {
-        if (SIG_ERR != old_handler.sa_handler &&
-            SIG_IGN != old_handler.sa_handler &&
+        if (SIG_ERR != old_handler.sa_handler && SIG_IGN != old_handler.sa_handler &&
             SIG_DFL != old_handler.sa_handler)
             old_handler.sa_handler(signo);
     }
 #else
-    if (SIG_ERR != old_handler &&
-        SIG_IGN != old_handler &&
-        SIG_DFL != old_handler)
+    if (SIG_ERR != old_handler && SIG_IGN != old_handler && SIG_DFL != old_handler)
         old_handler(signo);
 #endif
 }
@@ -110,7 +104,7 @@ void OnErrorSignal(int signo)
         LogFatal("Recursion signal %d", signo);
     }
 
-    if (error_exit_func)    //! 执行一些善后处理
+    if (error_exit_func)  //! 执行一些善后处理
         error_exit_func();
 
     signal(SIGABRT, SIG_DFL);
@@ -139,7 +133,7 @@ bool InstallSignal(int signo)
     return is_succ;
 }
 
-}
+}  // namespace
 
 void InstallErrorSignals()
 {
@@ -173,12 +167,11 @@ void UninstallErrorSignals()
 #ifdef TBOX_USE_SIGACTION
         ::sigaction(signo, &old_handler, nullptr);
 #else
-        if (old_handler != SIG_ERR)
-            ::signal(signo, old_handler);
+        if (old_handler != SIG_ERR) ::signal(signo, old_handler);
 #endif
     }
     _old_handler_map.clear();
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

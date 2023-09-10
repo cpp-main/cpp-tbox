@@ -19,10 +19,11 @@
  */
 #include "packet_proto.h"
 
-#include <tbox/base/json.hpp>
+#include <tbox/base/assert.h>
 #include <tbox/base/catch_throw.h>
 #include <tbox/util/json.h>
-#include <tbox/base/assert.h>
+
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace jsonrpc {
@@ -42,10 +43,9 @@ ssize_t PacketProto::onRecvData(const void *data_ptr, size_t data_size)
 {
     TBOX_ASSERT(data_ptr != nullptr);
 
-    if (data_size < 2)
-        return 0;
+    if (data_size < 2) return 0;
 
-    const char *str_ptr = static_cast<const char*>(data_ptr);
+    const char *str_ptr = static_cast<const char *>(data_ptr);
     const size_t str_len = data_size;
 
     Json js;
@@ -59,5 +59,5 @@ ssize_t PacketProto::onRecvData(const void *data_ptr, size_t data_size)
     return str_len;
 }
 
-}
-}
+}  // namespace jsonrpc
+}  // namespace tbox

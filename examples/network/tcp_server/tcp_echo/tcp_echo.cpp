@@ -21,14 +21,13 @@
  * 实现一个tcp的echo服务，对方发送什么就回复什么
  */
 
-#include <iostream>
-
-#include <tbox/network/tcp_server.h>
-
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
-#include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
+#include <tbox/network/tcp_server.h>
+
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -60,11 +59,11 @@ int main(int argc, char **argv)
     server.initialize(bind_addr, 1);
     //! 当收到数据时，直接往client指定对象发回去
     server.setReceiveCallback(
-        [&server] (const TcpServer::ConnToken &client, Buffer &buff) {
+        [&server](const TcpServer::ConnToken &client, Buffer &buff) {
             server.send(client, buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
-        }, 0
-    );
+        },
+        0);
     server.start();
 
     //! 注册ctrl+C停止信号
@@ -72,12 +71,10 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
     sp_stop_ev->initialize(SIGINT, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [sp_loop, &server] (int) {
-            server.stop();
-            sp_loop->exitLoop();    //! (3) 退出事件循环
-        }
-    );
+    sp_stop_ev->setCallback([sp_loop, &server](int) {
+        server.stop();
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     LogInfo("service runing ...");

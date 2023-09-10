@@ -17,13 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <cstring>
-#include <utility>
+#include "buffer.h"
 
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 
-#include "buffer.h"
+#include <cstring>
+#include <utility>
 
 namespace tbox {
 namespace network {
@@ -32,7 +32,7 @@ Buffer::Buffer(size_t reverse_size)
 {
     //! 如果预留空间大小，那么要为缓冲分配空间
     if (reverse_size > 0) {
-        uint8_t *p_buff = new uint8_t [reverse_size];
+        uint8_t *p_buff = new uint8_t[reverse_size];
         TBOX_ASSERT(p_buff != nullptr);
         buffer_ptr_ = p_buff;
         buffer_size_ = reverse_size;
@@ -54,15 +54,14 @@ Buffer::~Buffer()
     CHECK_DELETE_RESET_ARRAY(buffer_ptr_);
 }
 
-Buffer& Buffer::operator = (const Buffer &other)
+Buffer &Buffer::operator=(const Buffer &other)
 {
-    if (this != &other)
-        cloneFrom(other);
+    if (this != &other) cloneFrom(other);
 
     return *this;
 }
 
-Buffer& Buffer::operator = (Buffer &&other)
+Buffer &Buffer::operator=(Buffer &&other)
 {
     if (this != &other) {
         reset();
@@ -74,12 +73,11 @@ Buffer& Buffer::operator = (Buffer &&other)
 
 void Buffer::swap(Buffer &other)
 {
-    if (&other == this)
-        return;
+    if (&other == this) return;
 
-    std::swap(other.buffer_ptr_,  buffer_ptr_);
+    std::swap(other.buffer_ptr_, buffer_ptr_);
     std::swap(other.buffer_size_, buffer_size_);
-    std::swap(other.read_index_,  read_index_);
+    std::swap(other.read_index_, read_index_);
     std::swap(other.write_index_, write_index_);
 }
 
@@ -91,12 +89,10 @@ void Buffer::reset()
 
 bool Buffer::ensureWritableSize(size_t write_size)
 {
-    if (write_size == 0)
-        return true;
+    if (write_size == 0) return true;
 
     //! 空间足够
-    if (writableSize() >= write_size)
-        return true;
+    if (writableSize() >= write_size) return true;
 
     //! 检查是否可以通过将数据往前挪是否可以满足空间要求
     if ((writableSize() + read_index_) >= write_size) {
@@ -106,19 +102,19 @@ bool Buffer::ensureWritableSize(size_t write_size)
         read_index_ = 0;
         return true;
 
-    } else {    //! 只有重新分配更多的空间才可以
+    } else {  //! 只有重新分配更多的空间才可以
         size_t new_size = (write_index_ + write_size) << 1;  //! 两倍扩展
         uint8_t *p_buff = new uint8_t[new_size];
-        if (p_buff == nullptr)
-            return false;
+        if (p_buff == nullptr) return false;
 
         if (buffer_ptr_ != nullptr) {
             //! 只需要复制 readable 部分数据
-            ::memcpy((p_buff + read_index_), (buffer_ptr_ + read_index_), (write_index_ - read_index_));
-            delete [] buffer_ptr_;
+            ::memcpy(
+                (p_buff + read_index_), (buffer_ptr_ + read_index_), (write_index_ - read_index_));
+            delete[] buffer_ptr_;
         }
 
-        buffer_ptr_  = p_buff;
+        buffer_ptr_ = p_buff;
         buffer_size_ = new_size;
 
         return true;
@@ -150,8 +146,7 @@ void Buffer::hasRead(size_t read_size)
         read_index_ = write_index_ = 0;
     } else {
         read_index_ += read_size;
-        if (read_index_ == write_index_)
-            read_index_ = write_index_ = 0;
+        if (read_index_ == write_index_) read_index_ = write_index_ = 0;
     }
 }
 
@@ -178,11 +173,11 @@ void Buffer::cloneFrom(const Buffer &other)
         uint8_t *p_buff = new uint8_t[other.readableSize()];
         TBOX_ASSERT(p_buff != nullptr);
         ::memcpy(p_buff, other.readableBegin(), other.readableSize());
-        buffer_ptr_  = p_buff;
+        buffer_ptr_ = p_buff;
         buffer_size_ = write_index_ = other.readableSize();
 
     } else {
-        buffer_ptr_  = nullptr;
+        buffer_ptr_ = nullptr;
         buffer_size_ = write_index_ = 0;
     }
 
@@ -195,5 +190,5 @@ void Buffer::shrink()
     swap(tmp);          //! 与 tmp 交换
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

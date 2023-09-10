@@ -19,25 +19,27 @@
  */
 #include "fd.h"
 
-#include <utility>
-#include <fcntl.h>
 #include <errno.h>
-
+#include <fcntl.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
-#include <tbox/base/assert.h>
+
+#include <utility>
 
 namespace tbox {
 namespace network {
 
-Fd::Fd() { }
+Fd::Fd() {}
 
-Fd::Fd(int fd) {
+Fd::Fd(int fd)
+{
     detail_ = new Detail;
     detail_->fd = fd;
 }
 
-Fd::Fd(int fd, const CloseFunc &close_func) {
+Fd::Fd(int fd, const CloseFunc &close_func)
+{
     detail_ = new Detail;
     detail_->fd = fd;
     detail_->close_func = close_func;
@@ -45,8 +47,7 @@ Fd::Fd(int fd, const CloseFunc &close_func) {
 
 Fd::~Fd()
 {
-    if (detail_ == nullptr)
-        return;
+    if (detail_ == nullptr) return;
 
     TBOX_ASSERT(detail_->ref_count > 0);
 
@@ -62,7 +63,7 @@ Fd::~Fd()
     }
 }
 
-Fd::Fd(const Fd& other)
+Fd::Fd(const Fd &other)
 {
     if (other.detail_ != nullptr) {
         ++other.detail_->ref_count;
@@ -70,7 +71,7 @@ Fd::Fd(const Fd& other)
     }
 }
 
-Fd& Fd::operator = (const Fd& other)
+Fd &Fd::operator=(const Fd &other)
 {
     if (this != &other) {
         reset();
@@ -103,40 +104,35 @@ void Fd::close()
 
 ssize_t Fd::read(void *ptr, size_t size) const
 {
-    if (detail_ == nullptr)
-        return -1;
+    if (detail_ == nullptr) return -1;
 
     return ::read(detail_->fd, ptr, size);
 }
 
 ssize_t Fd::readv(const struct iovec *iov, int iovcnt) const
 {
-    if (detail_ == nullptr)
-        return -1;
+    if (detail_ == nullptr) return -1;
 
     return ::readv(detail_->fd, iov, iovcnt);
 }
 
 ssize_t Fd::write(const void *ptr, size_t size) const
 {
-    if (detail_ == nullptr)
-        return -1;
+    if (detail_ == nullptr) return -1;
 
     return ::write(detail_->fd, ptr, size);
 }
 
 ssize_t Fd::writev(const struct iovec *iov, int iovcnt) const
 {
-    if (detail_ == nullptr)
-        return -1;
+    if (detail_ == nullptr) return -1;
 
     return ::writev(detail_->fd, iov, iovcnt);
 }
 
 void Fd::setNonBlock(bool enable) const
 {
-    if (detail_ == nullptr)
-        return;
+    if (detail_ == nullptr) return;
 
 #ifdef O_NONBLOCK
     int old_flags = fcntl(detail_->fd, F_GETFL, 0);
@@ -149,8 +145,7 @@ void Fd::setNonBlock(bool enable) const
 
     if (new_flags != old_flags) {
         int ret = fcntl(detail_->fd, F_SETFL, new_flags);
-        if (ret == -1)
-            LogErr("fcntl error, errno:%d", errno);
+        if (ret == -1) LogErr("fcntl error, errno:%d", errno);
     }
 #else
 #error No way found to set non-blocking mode for fds.
@@ -159,8 +154,7 @@ void Fd::setNonBlock(bool enable) const
 
 bool Fd::isNonBlock() const
 {
-    if (detail_ == nullptr)
-        return false;
+    if (detail_ == nullptr) return false;
 
 #ifdef O_NONBLOCK
     int flags = fcntl(detail_->fd, F_GETFL, 0);
@@ -172,16 +166,14 @@ bool Fd::isNonBlock() const
 
 void Fd::setCloseOnExec() const
 {
-    if (detail_ == nullptr)
-        return;
+    if (detail_ == nullptr) return;
 
 #ifdef FD_CLOEXEC
     int old_flags = fcntl(detail_->fd, F_GETFD, 0);
     int new_flags = old_flags | FD_CLOEXEC;
     if (new_flags != old_flags) {
         int ret = fcntl(detail_->fd, F_SETFL, new_flags);
-        if (ret == -1)
-            LogErr("fcntl error, errno:%d", errno);
+        if (ret == -1) LogErr("fcntl error, errno:%d", errno);
     }
 #else
     UNUSED(fd);
@@ -199,5 +191,5 @@ Fd Fd::Open(const char *filename, int flags)
     return Fd(fd);
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

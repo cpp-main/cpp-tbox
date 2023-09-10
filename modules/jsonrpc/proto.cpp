@@ -18,25 +18,22 @@
  * of the source tree.
  */
 #include "proto.h"
-#include <tbox/base/json.hpp>
+
 #include <tbox/base/assert.h>
 #include <tbox/util/json.h>
+
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace jsonrpc {
 
 void Proto::sendRequest(int id, const std::string &method, const Json &js_params)
 {
-    Json js = {
-        {"jsonrpc", "2.0"},
-        {"method", method}
-    };
+    Json js = {{"jsonrpc", "2.0"}, {"method", method}};
 
-    if (id != 0)
-        js["id"] = id;
+    if (id != 0) js["id"] = id;
 
-    if (!js_params.is_null())
-        js["params"] = js_params;
+    if (!js_params.is_null()) js["params"] = js_params;
 
     sendJson(js);
 }
@@ -48,25 +45,16 @@ void Proto::sendRequest(int id, const std::string &method)
 
 void Proto::sendResult(int id, const Json &js_result)
 {
-    Json js = {
-        {"jsonrpc", "2.0"},
-        {"id", id},
-        {"result", js_result}
-    };
+    Json js = {{"jsonrpc", "2.0"}, {"id", id}, {"result", js_result}};
 
     sendJson(js);
 }
 
 void Proto::sendError(int id, int errcode, const std::string &message)
 {
-    Json js = {
-        {"jsonrpc", "2.0"},
-        {"id", id},
-        {"error", { {"code", errcode } } }
-    };
+    Json js = {{"jsonrpc", "2.0"}, {"id", id}, {"error", {{"code", errcode}}}};
 
-    if (!message.empty())
-        js["error"]["message"] = message;
+    if (!message.empty()) js["error"]["message"] = message;
 
     sendJson(js);
 }
@@ -85,7 +73,6 @@ void Proto::setSendCallback(SendDataCallback &&cb)
 void Proto::onRecvJson(const Json &js)
 {
     if (js.is_object()) {
-
         std::string version;
         if (!util::json::GetField(js, "jsonrpc", version) || version != "2.0") {
             LogNotice("no jsonrpc field, or version not match");
@@ -93,8 +80,7 @@ void Proto::onRecvJson(const Json &js)
         }
 
         if (js.contains("method")) {
-            if (!recv_request_cb_)
-                return;
+            if (!recv_request_cb_) return;
 
             //! 按请求进行处理
             std::string method;
@@ -108,10 +94,9 @@ void Proto::onRecvJson(const Json &js)
 
         } else if (js.contains("result")) {
             //! 按结果回复进行处理
-            if (!recv_respond_cb_)
-                return;
+            if (!recv_respond_cb_) return;
 
-            int id = 0; 
+            int id = 0;
             if (!util::json::GetField(js, "id", id)) {
                 LogNotice("no method field in respond");
                 return;
@@ -120,10 +105,9 @@ void Proto::onRecvJson(const Json &js)
 
         } else if (js.contains("error")) {
             //! 按错误回复进行处理
-            if (!recv_respond_cb_)
-                return;
+            if (!recv_respond_cb_) return;
 
-            int id = 0; 
+            int id = 0;
             util::json::GetField(js, "id", id);
 
             auto &js_error = js["error"];
@@ -146,5 +130,5 @@ void Proto::onRecvJson(const Json &js)
     }
 }
 
-}
-}
+}  // namespace jsonrpc
+}  // namespace tbox

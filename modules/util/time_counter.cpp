@@ -22,11 +22,11 @@
 #define USE_PRINTF 1
 
 #if USE_PRINTF
-# include <cstdio>
-# include <cinttypes>
+#include <cinttypes>
+#include <cstdio>
 #else
-# include <iostream>
-# include <iomanip>
+#include <iomanip>
+#include <iostream>
 #endif
 
 namespace tbox {
@@ -36,22 +36,19 @@ using namespace std;
 using namespace std::chrono;
 
 namespace {
-const char* Basename(const char *full_path)
+const char *Basename(const char *full_path)
 {
     const char *p_last = full_path;
     if (p_last != nullptr) {
         for (const char *p = full_path; *p; ++p) {
-            if (*p == '/')
-                p_last = p + 1;
+            if (*p == '/') p_last = p + 1;
         }
     }
     return p_last;
 }
-}
+}  // namespace
 
-TimeCounter::TimeCounter()
-    : start_time_point_(steady_clock::now())
-{ }
+TimeCounter::TimeCounter() : start_time_point_(steady_clock::now()) {}
 
 void TimeCounter::start()
 {
@@ -67,16 +64,16 @@ uint64_t TimeCounter::elapsed() const
 void TimeCounter::print(const char *tag, uint64_t threshold_ns) const
 {
     auto ns_count = elapsed();
-    if (ns_count <= threshold_ns)
-        return;
+    if (ns_count <= threshold_ns) return;
 
 #if USE_PRINTF
     printf("TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at [%s] \n",
-           ns_count / 1000, ns_count % 1000, tag);
+           ns_count / 1000,
+           ns_count % 1000,
+           tag);
 #else
-    cout << "TIME_COST: " << setw(8) << ns_count / 1000
-         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
-         << " us on [" << tag << ']' << endl;
+    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << setw(3) << setfill('0')
+         << ns_count % 1000 << setfill(' ') << " us on [" << tag << ']' << endl;
 #endif
 }
 
@@ -105,16 +102,16 @@ uint64_t CpuTimeCounter::elapsed() const
 void CpuTimeCounter::print(const char *tag, uint64_t threshold_ns) const
 {
     auto ns_count = elapsed();
-    if (ns_count <= threshold_ns)
-        return;
+    if (ns_count <= threshold_ns) return;
 
 #if USE_PRINTF
     printf("CPU_TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at [%s] \n",
-           ns_count / 1000, ns_count % 1000, tag);
+           ns_count / 1000,
+           ns_count % 1000,
+           tag);
 #else
-    cout << "CPU_TIME_COST: " << setw(8) << ns_count / 1000
-         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
-         << " us on [" << tag << ']' << endl;
+    cout << "CPU_TIME_COST: " << setw(8) << ns_count / 1000 << '.' << setw(3) << setfill('0')
+         << ns_count % 1000 << setfill(' ') << " us on [" << tag << ']' << endl;
 #endif
 }
 
@@ -122,11 +119,14 @@ void CpuTimeCounter::print(const char *tag, uint64_t threshold_ns) const
 // FixedTimeCounter
 /////////////////////
 
-FixedTimeCounter::FixedTimeCounter(const char *file_name, const char *func_name, int line, uint64_t threshold_ns) :
-    file_name_(file_name),
-    func_name_(func_name),
-    line_(line),
-    threshold_(std::chrono::nanoseconds(threshold_ns))
+FixedTimeCounter::FixedTimeCounter(const char *file_name,
+                                   const char *func_name,
+                                   int line,
+                                   uint64_t threshold_ns)
+    : file_name_(file_name),
+      func_name_(func_name),
+      line_(line),
+      threshold_(std::chrono::nanoseconds(threshold_ns))
 {
     start_time_point_ = steady_clock::now();
 }
@@ -138,31 +138,29 @@ FixedTimeCounter::~FixedTimeCounter()
 
 void FixedTimeCounter::stop()
 {
-    if (stoped_)
-        return;
+    if (stoped_) return;
     stoped_ = true;
 
     auto cost = steady_clock::now() - start_time_point_;
-    if (cost < threshold_)
-        return;
+    if (cost < threshold_) return;
 
     auto ns_count = cost.count();
 
 #if USE_PRINTF
     printf("TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at %s() in %s:%u\n",
-           ns_count / 1000, ns_count % 1000,
-           func_name_, Basename(file_name_), line_);
+           ns_count / 1000,
+           ns_count % 1000,
+           func_name_,
+           Basename(file_name_),
+           line_);
 #else
-    cout << "TIME_COST: " << setw(8) << ns_count / 1000
-         << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
-         << " us at " << func_name_ << "() in "
+    cout << "TIME_COST: " << setw(8) << ns_count / 1000 << '.' << setw(3) << setfill('0')
+         << ns_count % 1000 << setfill(' ') << " us at " << func_name_ << "() in "
          << Basename(file_name_) << ':' << line_ << endl;
 #endif
-
 }
 
-}
-}
+}  // namespace util
+}  // namespace tbox
 
 #undef USE_PRINTF
-

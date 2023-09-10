@@ -17,10 +17,12 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "semaphore.hpp"
-#include <tbox/base/scope_exit.hpp>
+
+#include <gtest/gtest.h>
 #include <tbox/event/timer_event.h>
+
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 using namespace tbox;
@@ -33,7 +35,7 @@ using namespace tbox::coroutine;
 TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
 
@@ -42,7 +44,7 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
     int times = 200;
     int count = 0;
     //! 生产者
-    auto routine1_entry = [&] (Scheduler &sch) {
+    auto routine1_entry = [&](Scheduler &sch) {
         for (int i = 0; i < times; ++i) {
             sem.release();
             sch.yield();
@@ -50,7 +52,7 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
     };
 
     //! 消费者
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         while (!sch.isCanceled()) {
             sem.acquire();
             ++count;
@@ -76,7 +78,7 @@ TEST(Semaphore, TwoRoutines_ProduceAndConsumer)
 TEST(Semaphore, TimerProduceAndConsumer)
 {
     Loop *sp_loop = event::Loop::New();
-    SetScopeExitAction([sp_loop]{ delete sp_loop;});
+    SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Scheduler sch(sp_loop);
     Semaphore sem(sch, 0);
@@ -88,21 +90,19 @@ TEST(Semaphore, TimerProduceAndConsumer)
     int index = 0;
     auto timer = sp_loop->newTimerEvent();
     timer->initialize(chrono::milliseconds(10), Event::Mode::kPersist);
-    SetScopeExitAction([timer]{ delete timer;});
-    timer->setCallback(
-        [&] {
-            if (index < times) {
-                sem.release();
-                ++index;
-            } else {
-                sp_loop->exitLoop();
-            }
+    SetScopeExitAction([timer] { delete timer; });
+    timer->setCallback([&] {
+        if (index < times) {
+            sem.release();
+            ++index;
+        } else {
+            sp_loop->exitLoop();
         }
-    );
+    });
     timer->enable();
 
     //! 消费者
-    auto routine2_entry = [&] (Scheduler &sch) {
+    auto routine2_entry = [&](Scheduler &sch) {
         while (!sch.isCanceled()) {
             sem.acquire();
             ++count;
@@ -117,4 +117,3 @@ TEST(Semaphore, TimerProduceAndConsumer)
 
     sch.cleanup();
 }
-

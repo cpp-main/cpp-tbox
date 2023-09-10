@@ -17,13 +17,12 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "terminal.h"
-
 #include <tbox/base/log.h>
 #include <tbox/util/string.h>
 
 #include "dir_node.h"
 #include "func_node.h"
+#include "terminal.h"
 
 namespace tbox {
 namespace terminal {
@@ -65,8 +64,7 @@ bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, 
     auto p_node = nodes_.at(parent);
     auto c_node = nodes_.at(child);
 
-    if (p_node == nullptr || c_node == nullptr ||
-        p_node->type() != NodeType::kDir) {
+    if (p_node == nullptr || c_node == nullptr || p_node->type() != NodeType::kDir) {
         LogWarn("mount '%s' fail, parent or child is invalid", name.c_str());
         return false;
     }
@@ -76,7 +74,7 @@ bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, 
         return false;
     }
 
-    auto p_dir_node = static_cast<DirNode*>(p_node);
+    auto p_dir_node = static_cast<DirNode *>(p_node);
     return p_dir_node->addChild(child, name);
 }
 
@@ -102,13 +100,11 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
         } else {
             NodeToken top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
             Node *top_node = nodes_.at(top_node_token);
-            if (top_node->type() == NodeType::kFunc)
-                return false;
+            if (top_node->type() == NodeType::kFunc) return false;
 
-            DirNode *top_dir_node = static_cast<DirNode*>(top_node);
+            DirNode *top_dir_node = static_cast<DirNode *>(top_node);
             auto next_node_token = top_dir_node->findChild(node_name);
-            if (next_node_token.isNull())
-                return false;
+            if (next_node_token.isNull()) return false;
 
             node_path.push_back(make_pair(node_name, next_node_token));
         }
@@ -116,5 +112,5 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
     return true;
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

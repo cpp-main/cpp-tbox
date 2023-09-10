@@ -19,23 +19,23 @@
  */
 #include "thread_pool.h"
 
-#include <cinttypes>
-#include <array>
-#include <map>
-#include <set>
-#include <deque>
-#include <thread>
-#include <mutex>
-#include <algorithm>
-#include <condition_variable>
-#include <chrono>
-
-#include <tbox/base/log.h>
-#include <tbox/base/cabinet.hpp>
 #include <tbox/base/assert.h>
 #include <tbox/base/catch_throw.h>
-#include <tbox/base/object_pool.hpp>
+#include <tbox/base/log.h>
 #include <tbox/event/loop.h>
+
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cinttypes>
+#include <condition_variable>
+#include <deque>
+#include <map>
+#include <mutex>
+#include <set>
+#include <tbox/base/cabinet.hpp>
+#include <tbox/base/object_pool.hpp>
+#include <thread>
 
 namespace tbox {
 namespace eventx {
@@ -43,24 +43,26 @@ namespace eventx {
 using Clock = std::chrono::steady_clock;
 
 //! ThreadPool 的私有数据
-struct ThreadPool::Data {
-    event::Loop *wp_loop = nullptr; //!< 主线程
+struct ThreadPool::Data
+{
+    event::Loop *wp_loop = nullptr;  //!< 主线程
 
-    bool is_ready = false;     //! 是否已经初始化了
+    bool is_ready = false;  //! 是否已经初始化了
 
-    size_t min_thread_num = 0; //!< 最少的线程个数
-    size_t max_thread_num = 0; //!< 最多的线程个数
+    size_t min_thread_num = 0;  //!< 最少的线程个数
+    size_t max_thread_num = 0;  //!< 最多的线程个数
 
-    std::mutex lock;                //!< 互斥锁
-    std::condition_variable cond_var;   //!< 条件变量
+    std::mutex lock;                   //!< 互斥锁
+    std::condition_variable cond_var;  //!< 条件变量
 
     cabinet::Cabinet<Task> undo_tasks_cabinet;
-    std::array<std::deque<TaskToken>, THREAD_POOL_PRIO_SIZE> undo_tasks_token; //!< 优先级任务列表，THREAD_POOL_PRIO_SIZE级
-    std::set<TaskToken> doing_tasks_token;    //!< 记录正在从事的任务
+    std::array<std::deque<TaskToken>, THREAD_POOL_PRIO_SIZE>
+        undo_tasks_token;                   //!< 优先级任务列表，THREAD_POOL_PRIO_SIZE级
+    std::set<TaskToken> doing_tasks_token;  //!< 记录正在从事的任务
 
-    size_t idle_thread_num = 0;         //!< 空间线程个数
+    size_t idle_thread_num = 0;  //!< 空间线程个数
     cabinet::Cabinet<std::thread> threads_cabinet;
-    bool all_threads_stop_flag = false; //!< 是否所有工作线程立即停止标记
+    bool all_threads_stop_flag = false;  //!< 是否所有工作线程立即停止标记
 
     size_t undo_task_peak_num_ = 0;
 
@@ -70,10 +72,11 @@ struct ThreadPool::Data {
 /**
  * 任务项
  */
-struct ThreadPool::Task {
+struct ThreadPool::Task
+{
     TaskToken token;
-    NonReturnFunc backend_task;   //! 任务在工作线程中执行函数
-    NonReturnFunc main_cb;        //! 任务执行完成后由main_loop执行的回调函数
+    NonReturnFunc backend_task;  //! 任务在工作线程中执行函数
+    NonReturnFunc main_cb;       //! 任务执行完成后由main_loop执行的回调函数
     Clock::time_point create_time_point;
 
     Task *next = nullptr;
@@ -81,16 +84,14 @@ struct ThreadPool::Task {
 
 /////////////////////////////////////////////////////////////////////////////////
 
-ThreadPool::ThreadPool(event::Loop *main_loop) :
-    d_(new Data)
+ThreadPool::ThreadPool(event::Loop *main_loop) : d_(new Data)
 {
     d_->wp_loop = main_loop;
 }
 
 ThreadPool::~ThreadPool()
 {
-    if (d_->is_ready)
-        cleanup();
+    if (d_->is_ready) cleanup();
 
     delete d_;
 }
@@ -102,10 +103,11 @@ bool ThreadPool::initialize(ssize_t min_thread_num, ssize_t max_thread_num)
         return false;
     }
 
-    if (max_thread_num < 0 || min_thread_num < 0 ||
-            min_thread_num > max_thread_num || max_thread_num == 0) {
-
-        LogWarn("min_thread_num or max_thread_num invalid, min:%d, max:%d", min_thread_num, max_thread_num);
+    if (max_thread_num < 0 || min_thread_num < 0 || min_thread_num > max_thread_num ||
+        max_thread_num == 0) {
+        LogWarn("min_thread_num or max_thread_num invalid, min:%d, max:%d",
+                min_thread_num,
+                max_thread_num);
         return false;
     }
 
@@ -115,8 +117,7 @@ bool ThreadPool::initialize(ssize_t min_thread_num, ssize_t max_thread_num)
         d_->max_thread_num = max_thread_num;
 
         for (ssize_t i = 0; i < min_thread_num; ++i)
-            if (!createWorker())
-                return false;
+            if (!createWorker()) return false;
     }
 
     d_->all_threads_stop_flag = false;
@@ -135,7 +136,9 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int
     return execute(backend_task, nullptr, prio);
 }
 
-ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
+ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task,
+                                          NonReturnFunc &&main_cb,
+                                          int prio)
 {
     TaskToken token;
 
@@ -178,7 +181,9 @@ ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonRetur
     return token;
 }
 
-ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
+ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task,
+                                          const NonReturnFunc &main_cb,
+                                          int prio)
 {
     NonReturnFunc backend_task_copy(backend_task);
     NonReturnFunc main_cb_copy(main_cb);
@@ -189,8 +194,7 @@ ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
 {
     std::lock_guard<std::mutex> lg(d_->lock);
 
-    if (d_->undo_tasks_cabinet.at(task_token) != nullptr)
-        return TaskStatus::kWaiting;
+    if (d_->undo_tasks_cabinet.at(task_token) != nullptr) return TaskStatus::kWaiting;
 
     if (d_->doing_tasks_token.find(task_token) != d_->doing_tasks_token.end())
         return TaskStatus::kExecuting;
@@ -210,7 +214,7 @@ int ThreadPool::cancel(TaskToken token)
 
     //! 如果正在执行
     if (d_->doing_tasks_token.find(token) != d_->doing_tasks_token.end())
-        return 2;   //! 返回正在执行
+        return 2;  //! 返回正在执行
 
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     for (size_t i = 0; i < d_->undo_tasks_token.size(); ++i) {
@@ -225,15 +229,14 @@ int ThreadPool::cancel(TaskToken token)
         }
     }
 
-    return 1;   //! 返回没有找到
+    return 1;  //! 返回没有找到
 }
 
 void ThreadPool::cleanup()
 {
-    if (!d_->is_ready)
-        return;
+    if (!d_->is_ready) return;
 
-    std::vector<std::thread*> thread_vec;
+    std::vector<std::thread *> thread_vec;
     {
         std::lock_guard<std::mutex> lg(d_->lock);
         //! 清空task中的任务
@@ -248,11 +251,7 @@ void ThreadPool::cleanup()
 
         //! 将threads_cabinet中的线程搬到thread_vec
         thread_vec.reserve(d_->threads_cabinet.size());
-        d_->threads_cabinet.foreach(
-            [&](std::thread *t) {
-                thread_vec.push_back(t);
-            }
-        );
+        d_->threads_cabinet.foreach ([&](std::thread *t) { thread_vec.push_back(t); });
         d_->threads_cabinet.clear();
     }
 
@@ -288,22 +287,25 @@ void ThreadPool::threadProc(ThreadToken thread_token)
     LogDbg("thread %u start", thread_token.id());
 
     while (true) {
-        Task* item = nullptr;
+        Task *item = nullptr;
         {
             std::unique_lock<std::mutex> lk(d_->lock);
 
             /**
              * 如果当前空闲的线程数量大于等于未被领取的任务数，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
              */
-            if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) && (d_->threads_cabinet.size() > d_->min_thread_num)) {
+            if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) &&
+                (d_->threads_cabinet.size() > d_->min_thread_num)) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
                 //! 则将线程取出来，交给main_loop去join()，然后delete
                 auto t = d_->threads_cabinet.free(thread_token);
-                if (t != nullptr)   //! 如果取得到，说明还没有被cleanup()
+                if (t != nullptr)  //! 如果取得到，说明还没有被cleanup()
                     d_->wp_loop->runInLoop(
-                        [t]{ t->join(); delete t; },
-                        "ThreadPool::threadProc, join and delete t"
-                    );
+                        [t] {
+                            t->join();
+                            delete t;
+                        },
+                        "ThreadPool::threadProc, join and delete t");
                 break;
             }
 
@@ -324,7 +326,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                 break;
             }
 
-            item = popOneTask();    //! 从任务队列中取出优先级最高的任务
+            item = popOneTask();  //! 从任务队列中取出优先级最高的任务
         }
 
         //! 后面就是去执行任务，不需要再加锁了
@@ -344,7 +346,8 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             auto exec_time_cost = Clock::now() - exec_time_point;
 
             LogDbg("thread %u finish task %u, cost %" PRIu64 " + %" PRIu64 " us",
-                   thread_token.id(), item->token.id(),
+                   thread_token.id(),
+                   item->token.id(),
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
 
@@ -379,8 +382,7 @@ bool ThreadPool::createWorker()
 
 bool ThreadPool::shouldThreadExitWaiting() const
 {
-    if (d_->all_threads_stop_flag)
-        return true;
+    if (d_->all_threads_stop_flag) return true;
 
     for (size_t i = 0; i < d_->undo_tasks_token.size(); ++i) {
         const auto &tasks_token = d_->undo_tasks_token.at(i);
@@ -392,7 +394,7 @@ bool ThreadPool::shouldThreadExitWaiting() const
     return false;
 }
 
-ThreadPool::Task* ThreadPool::popOneTask()
+ThreadPool::Task *ThreadPool::popOneTask()
 {
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     for (size_t i = 0; i < d_->undo_tasks_token.size(); ++i) {
@@ -406,5 +408,5 @@ ThreadPool::Task* ThreadPool::popOneTask()
     return nullptr;
 }
 
-}
-}
+}  // namespace eventx
+}  // namespace tbox

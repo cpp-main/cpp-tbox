@@ -18,24 +18,25 @@
  * of the source tree.
  */
 #include "json_deep_loader.h"
-#include <fstream>
 
+#include <fstream>
 #include <tbox/base/json.hpp>
+
+#include "fs.h"
 #include "json.h"
 #include "string.h"
-#include "fs.h"
 
 namespace {
-    const std::string kInclude = "__include__";
+const std::string kInclude = "__include__";
 }
 
 namespace tbox {
 namespace util {
 namespace json {
 
-Json DeepLoader::load(const std::string &filename) {
-    if (checkDuplicateInclude(filename))
-        throw DuplicateIncludeError(filename);
+Json DeepLoader::load(const std::string &filename)
+{
+    if (checkDuplicateInclude(filename)) throw DuplicateIncludeError(filename);
 
     files_.push_back(filename);
     Json js = Load(filename);
@@ -44,7 +45,8 @@ Json DeepLoader::load(const std::string &filename) {
     return js;
 }
 
-void DeepLoader::traverse(Json &js) {
+void DeepLoader::traverse(Json &js)
+{
     if (js.is_object()) {
         Json js_patch;
         for (auto &item : js.items()) {
@@ -57,8 +59,7 @@ void DeepLoader::traverse(Json &js) {
         }
         js.erase(kInclude);
 
-        if (!js_patch.is_null())
-            js.merge_patch(js_patch);
+        if (!js_patch.is_null()) js.merge_patch(js_patch);
 
     } else if (js.is_array()) {
         for (auto &js_item : js) {
@@ -67,7 +68,8 @@ void DeepLoader::traverse(Json &js) {
     }
 }
 
-void DeepLoader::handleInclude(const Json &js_include, Json &js_parent) {
+void DeepLoader::handleInclude(const Json &js_include, Json &js_parent)
+{
     if (js_include.is_string()) {
         includeByDescriptor(js_include.get<std::string>(), js_parent);
     } else if (js_include.is_array()) {
@@ -82,7 +84,8 @@ void DeepLoader::handleInclude(const Json &js_include, Json &js_parent) {
     }
 }
 
-void DeepLoader::includeByDescriptor(const std::string &descriptor, Json &js) {
+void DeepLoader::includeByDescriptor(const std::string &descriptor, Json &js)
+{
     std::vector<std::string> str_vec;
     string::Split(descriptor, "=>", str_vec);
     std::string filename = string::Strip(str_vec.at(0));
@@ -94,7 +97,7 @@ void DeepLoader::includeByDescriptor(const std::string &descriptor, Json &js) {
     } else {
         real_filename = filename;
     }
- 
+
     auto js_load = load(real_filename);
 
     if (str_vec.size() >= 2) {
@@ -105,14 +108,16 @@ void DeepLoader::includeByDescriptor(const std::string &descriptor, Json &js) {
     }
 }
 
-bool DeepLoader::checkDuplicateInclude(const std::string &filename) const {
+bool DeepLoader::checkDuplicateInclude(const std::string &filename) const
+{
     return std::find(files_.begin(), files_.end(), filename) != files_.end();
 }
 
-Json LoadDeeply(const std::string &filename) {
+Json LoadDeeply(const std::string &filename)
+{
     return DeepLoader().load(filename);
 }
 
-}
-}
-}
+}  // namespace json
+}  // namespace util
+}  // namespace tbox

@@ -23,7 +23,7 @@
 #include <functional>
 #include <iostream>
 
-#define LOG_MAX_LEN (100 << 10)     //! 限定单条日志最大长度
+#define LOG_MAX_LEN (100 << 10)  //! 限定单条日志最大长度
 
 namespace tbox {
 namespace log {
@@ -90,17 +90,16 @@ bool Sink::filter(int level, const std::string &module)
 
 void Sink::HandleLog(const LogContent *content, void *ptr)
 {
-    Sink *pthis = static_cast<Sink*>(ptr);
+    Sink *pthis = static_cast<Sink *>(ptr);
     pthis->handleLog(content);
 }
 
 void Sink::handleLog(const LogContent *content)
 {
-    if (!filter(content->level, content->module_id))
-        return;
+    if (!filter(content->level, content->module_id)) return;
 
     onLogFrontEnd(content);
 }
 
-}
-}
+}  // namespace log
+}  // namespace tbox

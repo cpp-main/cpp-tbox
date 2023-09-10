@@ -18,17 +18,17 @@
  * of the source tree.
  */
 #include "wrapper_action.h"
-#include <tbox/base/defines.h>
+
 #include <tbox/base/assert.h>
+#include <tbox/base/defines.h>
+
 #include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace flow {
 
-WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode) :
-    Action(loop, "Wrapper"),
-    child_(child),
-    mode_(mode)
+WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
+    : Action(loop, "Wrapper"), child_(child), mode_(mode)
 {
     TBOX_ASSERT(child_ != nullptr);
 
@@ -44,44 +44,52 @@ WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode) :
         TBOX_ASSERT(false);
 }
 
-WrapperAction::~WrapperAction() {
+WrapperAction::~WrapperAction()
+{
     CHECK_DELETE_RESET_OBJ(child_);
 }
 
-void WrapperAction::toJson(Json &js) const {
+void WrapperAction::toJson(Json &js) const
+{
     Action::toJson(js);
     js["mode"] = ToString(mode_);
     child_->toJson(js["child"]);
 }
 
-bool WrapperAction::onStart() {
+bool WrapperAction::onStart()
+{
     return child_->start();
 }
 
-bool WrapperAction::onStop() {
+bool WrapperAction::onStop()
+{
     return child_->stop();
 }
 
-bool WrapperAction::onPause() {
+bool WrapperAction::onPause()
+{
     return child_->pause();
 }
 
-bool WrapperAction::onResume() {
+bool WrapperAction::onResume()
+{
     return child_->resume();
 }
 
-void WrapperAction::onReset() {
+void WrapperAction::onReset()
+{
     child_->reset();
 }
 
-std::string ToString(WrapperAction::Mode mode) {
+std::string ToString(WrapperAction::Mode mode)
+{
     const char *tbl[] = {"Normal", "Invert", "AlwaySucc", "AlwayFail"};
-    auto idx = static_cast<size_t>(mode); // size_t id always >= 0
+    auto idx = static_cast<size_t>(mode);  // size_t id always >= 0
     if (idx < NUMBER_OF_ARRAY(tbl))
         return tbl[idx];
     else
         return "Unknown";
 }
 
-}
-}
+}  // namespace flow
+}  // namespace tbox

@@ -19,10 +19,10 @@
  */
 #include "tcp_server.h"
 
-#include <limits>
-
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+
+#include <limits>
 #include <tbox/base/cabinet.hpp>
 
 #include "tcp_acceptor.h"
@@ -36,23 +36,23 @@ using namespace std::placeholders;
 using TcpConns = cabinet::Cabinet<TcpConnection>;
 
 //! 私有数据
-struct TcpServer::Data {
+struct TcpServer::Data
+{
     event::Loop *wp_loop = nullptr;
 
-    ConnectedCallback       connected_cb;
-    DisconnectedCallback    disconnected_cb;
-    ReceiveCallback         receive_cb;
-    size_t                  receive_threshold = 0;
+    ConnectedCallback connected_cb;
+    DisconnectedCallback disconnected_cb;
+    ReceiveCallback receive_cb;
+    size_t receive_threshold = 0;
 
     TcpAcceptor *sp_acceptor = nullptr;
-    TcpConns conns;     //!< TcpConnection 容器
+    TcpConns conns;  //!< TcpConnection 容器
 
     State state = State::kNone;
     int cb_level = 0;
 };
 
-TcpServer::TcpServer(event::Loop *wp_loop) :
-    d_(new Data)
+TcpServer::TcpServer(event::Loop *wp_loop) : d_(new Data)
 {
     TBOX_ASSERT(d_ != nullptr);
 
@@ -72,8 +72,7 @@ TcpServer::~TcpServer()
 
 bool TcpServer::initialize(const SockAddr &bind_addr, int listen_backlog)
 {
-    if (d_->state != State::kNone)
-        return false;
+    if (d_->state != State::kNone) return false;
 
     if (d_->sp_acceptor->initialize(bind_addr, listen_backlog)) {
         d_->sp_acceptor->setNewConnectionCallback(std::bind(&TcpServer::onTcpConnected, this, _1));
@@ -102,8 +101,7 @@ void TcpServer::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 
 bool TcpServer::start()
 {
-    if (d_->state != State::kInited)
-        return false;
+    if (d_->state != State::kInited) return false;
 
     if (d_->sp_acceptor->start()) {
         d_->state = State::kRunning;
@@ -114,15 +112,12 @@ bool TcpServer::start()
 
 void TcpServer::stop()
 {
-    if (d_->state != State::kRunning)
-        return;
+    if (d_->state != State::kRunning) return;
 
-    d_->conns.foreach(
-        [](TcpConnection *conn) {
-            conn->disconnect();
-            delete conn;
-        }
-    );
+    d_->conns.foreach ([](TcpConnection *conn) {
+        conn->disconnect();
+        delete conn;
+    });
     d_->conns.clear();
 
     d_->sp_acceptor->stop();
@@ -131,8 +126,7 @@ void TcpServer::stop()
 
 void TcpServer::cleanup()
 {
-    if (d_->state <= State::kNone)
-        return;
+    if (d_->state <= State::kNone) return;
 
     stop();
 
@@ -149,8 +143,7 @@ void TcpServer::cleanup()
 bool TcpServer::send(const ConnToken &client, const void *data_ptr, size_t data_size)
 {
     auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        return conn->send(data_ptr, data_size);
+    if (conn != nullptr) return conn->send(data_ptr, data_size);
     return false;
 }
 
@@ -168,8 +161,7 @@ bool TcpServer::disconnect(const ConnToken &client)
 bool TcpServer::shutdown(const ConnToken &client, int howto)
 {
     auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        return conn->shutdown(howto);
+    if (conn != nullptr) return conn->shutdown(howto);
     return false;
 }
 
@@ -181,23 +173,20 @@ bool TcpServer::isClientValid(const ConnToken &client) const
 SockAddr TcpServer::getClientAddress(const ConnToken &client) const
 {
     auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        return conn->peerAddr();
+    if (conn != nullptr) return conn->peerAddr();
     return SockAddr();
 }
 
-void TcpServer::setContext(const ConnToken &client, void* context, ContextDeleter &&deleter)
+void TcpServer::setContext(const ConnToken &client, void *context, ContextDeleter &&deleter)
 {
     auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        conn->setContext(context, std::move(deleter));
+    if (conn != nullptr) conn->setContext(context, std::move(deleter));
 }
 
-void* TcpServer::getContext(const ConnToken &client) const
+void *TcpServer::getContext(const ConnToken &client) const
 {
     auto conn = d_->conns.at(client);
-    if (conn != nullptr)
-        return conn->getContext();
+    if (conn != nullptr) return conn->getContext();
     return nullptr;
 }
 
@@ -209,37 +198,33 @@ TcpServer::State TcpServer::state() const
 void TcpServer::onTcpConnected(TcpConnection *new_conn)
 {
     ConnToken client = d_->conns.alloc(new_conn);
-    new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), d_->receive_threshold);
+    new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1),
+                                 d_->receive_threshold);
     new_conn->setDisconnectedCallback(std::bind(&TcpServer::onTcpDisconnected, this, client));
 
     ++d_->cb_level;
-    if (d_->connected_cb)
-        d_->connected_cb(client);
+    if (d_->connected_cb) d_->connected_cb(client);
     --d_->cb_level;
 }
 
 void TcpServer::onTcpDisconnected(const ConnToken &client)
 {
     ++d_->cb_level;
-    if (d_->disconnected_cb)
-        d_->disconnected_cb(client);
+    if (d_->disconnected_cb) d_->disconnected_cb(client);
     --d_->cb_level;
 
     TcpConnection *conn = d_->conns.free(client);
-    d_->wp_loop->runNext(
-        [conn] { CHECK_DELETE_OBJ(conn); },
-        "TcpServer::onTcpDisconnected, delete conn"
-    );
+    d_->wp_loop->runNext([conn] { CHECK_DELETE_OBJ(conn); },
+                         "TcpServer::onTcpDisconnected, delete conn");
     //! 为什么先回调，再访问后面？是为了在回调中还能访问到TcpConnection对象
 }
 
 void TcpServer::onTcpReceived(const ConnToken &client, Buffer &buff)
 {
     ++d_->cb_level;
-    if (d_->receive_cb)
-        d_->receive_cb(client, buff);
+    if (d_->receive_cb) d_->receive_cb(client, buff);
     --d_->cb_level;
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

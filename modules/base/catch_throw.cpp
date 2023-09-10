@@ -22,8 +22,8 @@
 #include <cxxabi.h>
 #include <signal.h>
 
-#include "log.h"
 #include "backtrace.h"
+#include "log.h"
 
 namespace tbox {
 
@@ -39,24 +39,20 @@ void CatchType()
         int status = -1;
 
         char *demangled = abi::__cxa_demangle(name, 0, 0, &status);
-        if (demangled != nullptr)
-            readable_name = demangled;
+        if (demangled != nullptr) readable_name = demangled;
 
         LogWarn(" Catch: '%s'", readable_name);
 
-        if (status == 0)
-            free(demangled);
+        if (status == 0) free(demangled);
     }
 }
 
-}
+}  // namespace
 
-bool CatchThrow(const std::function<void()> &func,
-                bool print_backtrace, bool abort_process)
+bool CatchThrow(const std::function<void()> &func, bool print_backtrace, bool abort_process)
 {
     try {
-        if (func)
-            func();
+        if (func) func();
         return false;
 
     } catch (const std::exception &e) {
@@ -96,8 +92,7 @@ bool CatchThrow(const std::function<void()> &func,
 bool CatchThrowQuietly(const std::function<void()> &func)
 {
     try {
-        if (func)
-            func();
+        if (func) func();
         return false;
 
     } catch (...) {
@@ -105,4 +100,4 @@ bool CatchThrowQuietly(const std::function<void()> &func)
     }
 }
 
-}
+}  // namespace tbox

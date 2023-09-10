@@ -17,14 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <thread>
-#include <gtest/gtest.h>
+#include "thread_pool.h"
 
+#include <gtest/gtest.h>
 #include <tbox/base/log.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 
-#include "thread_pool.h"
+#include <thread>
 
 using namespace std;
 using namespace tbox::event;
@@ -32,24 +32,24 @@ using namespace tbox::eventx;
 
 namespace {
 
-auto backend_func = \
-        [](int id) {
-            LogDbg("<<task %d run in back", id);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            LogDbg("task %d run in back>>", id);
-        };
+auto backend_func = [](int id) {
+    LogDbg("<<task %d run in back", id);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    LogDbg("task %d run in back>>", id);
+};
 
 ThreadPool::TaskToken null_task_token;
 
 /**
  * 最小线程数为2，最大线程数为5
  */
-TEST(ThreadPool, min2_max5) {
+TEST(ThreadPool, min2_max5)
+{
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(2,5));
+    ASSERT_TRUE(tp->initialize(2, 5));
 
     for (int i = 0; i < 12; ++i) {
         ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
@@ -68,11 +68,12 @@ TEST(ThreadPool, min2_max5) {
 /**
  * 最小线程数为0，最大线程数为5
  */
-TEST(ThreadPool, min0_max5) {
+TEST(ThreadPool, min0_max5)
+{
     Loop *loop = Loop::New();
 
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(0,5));
+    ASSERT_TRUE(tp->initialize(0, 5));
 
     for (int i = 0; i < 12; ++i) {
         ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
@@ -92,12 +93,13 @@ TEST(ThreadPool, min0_max5) {
  * 不等其完成工作就退出主线程
  * 主要是检查有没有内存泄漏
  */
-TEST(ThreadPool, exit_before_finish) {
+TEST(ThreadPool, exit_before_finish)
+{
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(1,1));
+    ASSERT_TRUE(tp->initialize(1, 1));
 
     for (int i = 0; i < 3; ++i) {
         ASSERT_NE(tp->execute(std::bind(backend_func, i)), null_task_token);
@@ -118,12 +120,13 @@ TEST(ThreadPool, exit_before_finish) {
  *
  * 创建三个任务。在1.5秒时全部取消。
  */
-TEST(ThreadPool, cancel_task) {
+TEST(ThreadPool, cancel_task)
+{
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(1,1));
+    ASSERT_TRUE(tp->initialize(1, 1));
 
     vector<ThreadPool::TaskToken> task_ids;
     for (int i = 0; i < 3; ++i) {
@@ -153,24 +156,23 @@ TEST(ThreadPool, cancel_task) {
  *
  * 期望优先级最高的先被执行
  */
-TEST(ThreadPool, prio) {
+TEST(ThreadPool, prio)
+{
     Loop *loop = Loop::New();
 
     LogDbg("%d", 123);
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(1,1));
+    ASSERT_TRUE(tp->initialize(1, 1));
 
     vector<int> task_ids;
-    auto backend_func = \
-        [&task_ids](int id) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            LogDbg("task id: %d", id);
-            task_ids.push_back(id);
-        };
+    auto backend_func = [&task_ids](int id) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        LogDbg("task id: %d", id);
+        task_ids.push_back(id);
+    };
 
     tp->execute([] { std::this_thread::sleep_for(std::chrono::seconds(1)); });
-    for (int i = 0; i < 5; ++i)
-        tp->execute(std::bind(backend_func, i), 2-i);
+    for (int i = 0; i < 5; ++i) tp->execute(std::bind(backend_func, i), 2 - i);
 
     loop->exitLoop(std::chrono::seconds(2));
     loop->runLoop();
@@ -193,11 +195,12 @@ TEST(ThreadPool, prio) {
  *
  * 期望优先级最高的先被执行
  */
-TEST(ThreadPool, getStatus) {
+TEST(ThreadPool, getStatus)
+{
     Loop *loop = Loop::New();
 
     ThreadPool *tp = new ThreadPool(loop);
-    ASSERT_TRUE(tp->initialize(1,1));
+    ASSERT_TRUE(tp->initialize(1, 1));
 
     auto task1 = tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
     auto task2 = tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
@@ -205,32 +208,26 @@ TEST(ThreadPool, getStatus) {
     auto t1 = loop->newTimerEvent();
     t1->initialize(chrono::milliseconds(50), Event::Mode::kOneshot);
     t1->enable();
-    t1->setCallback(
-        [&] {
-            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kExecuting);
-            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kWaiting);
-        }
-    );
+    t1->setCallback([&] {
+        EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kExecuting);
+        EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kWaiting);
+    });
 
     auto t2 = loop->newTimerEvent();
     t2->initialize(chrono::milliseconds(150), Event::Mode::kOneshot);
     t2->enable();
-    t2->setCallback(
-        [&] {
-            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
-            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kExecuting);
-        }
-    );
+    t2->setCallback([&] {
+        EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
+        EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kExecuting);
+    });
 
     auto t3 = loop->newTimerEvent();
     t3->initialize(chrono::milliseconds(250), Event::Mode::kOneshot);
     t3->enable();
-    t3->setCallback(
-        [&] {
-            EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
-            EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kNotFound);
-        }
-    );
+    t3->setCallback([&] {
+        EXPECT_EQ(tp->getTaskStatus(task1), ThreadPool::TaskStatus::kNotFound);
+        EXPECT_EQ(tp->getTaskStatus(task2), ThreadPool::TaskStatus::kNotFound);
+    });
 
     loop->exitLoop(std::chrono::milliseconds(300));
     loop->runLoop();
@@ -249,16 +246,14 @@ TEST(ThreadPool, getStatus) {
  *
  * 注：之所以添加该单元测试，是因为在1.4.12之前存在线程多重join()的问题
  */
-TEST(ThreadPool, cleanup_before_finish) {
+TEST(ThreadPool, cleanup_before_finish)
+{
     Loop *loop = Loop::New();
     ThreadPool *tp = new ThreadPool(loop);
 
-    tp->initialize(0,1);
+    tp->initialize(0, 1);
     loop->run(
-        [=] {
-            tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); });
-        }
-    );
+        [=] { tp->execute([] { std::this_thread::sleep_for(std::chrono::milliseconds(100)); }); });
     loop->exitLoop(std::chrono::milliseconds(10));
     loop->runLoop();
 
@@ -268,4 +263,4 @@ TEST(ThreadPool, cleanup_before_finish) {
     delete loop;
 }
 
-}
+}  // namespace

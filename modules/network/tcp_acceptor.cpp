@@ -19,28 +19,25 @@
  */
 #include "tcp_acceptor.h"
 
-#include <sys/un.h>
-#include <unistd.h>
 #include <errno.h>
-#include <cstring>
-
-#include <tbox/base/log.h>
+#include <sys/un.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+#include <unistd.h>
+
+#include <cstring>
 
 #include "tcp_connection.h"
 
 namespace tbox {
 namespace network {
 
-TcpAcceptor::TcpAcceptor(event::Loop *wp_loop) :
-    wp_loop_(wp_loop)
-{ }
+TcpAcceptor::TcpAcceptor(event::Loop *wp_loop) : wp_loop_(wp_loop) {}
 
 TcpAcceptor::~TcpAcceptor()
 {
     TBOX_ASSERT(cb_level_ == 0);
-    if (sp_read_ev_ != nullptr)
-        cleanup();
+    if (sp_read_ev_ != nullptr) cleanup();
 }
 
 bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
@@ -70,7 +67,8 @@ bool TcpAcceptor::initialize(const SockAddr &bind_addr, int listen_backlog)
     sock_fd_ = std::move(sock_fd);
     CHECK_DELETE_RESET_OBJ(sp_read_ev_);
     sp_read_ev_ = wp_loop_->newFdEvent("TcpAcceptor::sp_read_ev_");
-    sp_read_ev_->initialize(sock_fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
+    sp_read_ev_->initialize(
+        sock_fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
     sp_read_ev_->setCallback(std::bind(&TcpAcceptor::onSocketRead, this, std::placeholders::_1));
 
     return true;
@@ -96,7 +94,7 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 
         struct sockaddr_in sock_addr;
         socklen_t len = bind_addr.toSockAddr(sock_addr);
-        return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
+        return sock_fd.bind((const struct sockaddr *)&sock_addr, len);
 
     } else if (bind_addr.type() == SockAddr::Type::kLocal) {
         //! 为防止存在的同名文件导致bind失败，在bind之前要先尝试删除原有的文件
@@ -104,7 +102,7 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 
         struct sockaddr_un sock_addr;
         socklen_t len = bind_addr.toSockAddr(sock_addr);
-        return sock_fd.bind((const struct sockaddr*)&sock_addr, len);
+        return sock_fd.bind((const struct sockaddr *)&sock_addr, len);
     } else {
         LogErr("bind addr type not support");
         return -1;
@@ -113,15 +111,13 @@ int TcpAcceptor::bindAddress(SocketFd sock_fd, const SockAddr &bind_addr)
 
 bool TcpAcceptor::start()
 {
-    if (sp_read_ev_ != nullptr)
-        return sp_read_ev_->enable();
+    if (sp_read_ev_ != nullptr) return sp_read_ev_->enable();
     return false;
 }
 
 bool TcpAcceptor::stop()
 {
-    if (sp_read_ev_ != nullptr)
-        return sp_read_ev_->disable();
+    if (sp_read_ev_ != nullptr) return sp_read_ev_->disable();
     return false;
 }
 
@@ -135,14 +131,14 @@ void TcpAcceptor::cleanup()
         auto socket_file = bind_addr_.toString();
         int ret = ::unlink(socket_file.c_str());
         if (ret != 0)
-            LogWarn("remove file %s fail. errno:%d, %s", socket_file.c_str(), errno, strerror(errno));
+            LogWarn(
+                "remove file %s fail. errno:%d, %s", socket_file.c_str(), errno, strerror(errno));
     }
 }
 
 void TcpAcceptor::onSocketRead(short events)
 {
-    if (events & event::FdEvent::kReadEvent)
-        onClientConnected();
+    if (events & event::FdEvent::kReadEvent) onClientConnected();
 }
 
 void TcpAcceptor::onClientConnected()
@@ -156,7 +152,9 @@ void TcpAcceptor::onClientConnected()
     }
 
     SockAddr peer_addr(addr, addr_len);
-    LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
+    LogInfo("%s accepted new connection: %s",
+            bind_addr_.toString().c_str(),
+            peer_addr.toString().c_str());
 
     if (new_conn_cb_) {
         auto sp_connection = new TcpConnection(wp_loop_, peer_sock, peer_addr);
@@ -169,5 +167,5 @@ void TcpAcceptor::onClientConnected()
     }
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

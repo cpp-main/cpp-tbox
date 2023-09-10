@@ -17,10 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace tbox;
@@ -43,13 +43,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Loop* sp_loop = Loop::New(argv[1]);
+    Loop *sp_loop = Loop::New(argv[1]);
     if (sp_loop == nullptr) {
         cout << "fail, exit" << endl;
         return 0;
     }
 
-    TimerEvent* sp_timer = sp_loop->newTimerEvent();
+    TimerEvent *sp_timer = sp_loop->newTimerEvent();
     sp_timer->initialize(std::chrono::milliseconds(200), Event::Mode::kPersist);
     sp_timer->setCallback(TimerCallback);
     sp_timer->enable();

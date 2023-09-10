@@ -18,14 +18,16 @@
  * of the source tree.
  */
 #include "telnetd.h"
-#include "../impl/service/telnetd.h"
+
 #include <tbox/base/assert.h>
+
+#include "../impl/service/telnetd.h"
 
 namespace tbox {
 namespace terminal {
 
-Telnetd::Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
-    impl_(new Impl(wp_loop, wp_terminal))
+Telnetd::Telnetd(event::Loop *wp_loop, TerminalInteract *wp_terminal)
+    : impl_(new Impl(wp_loop, wp_terminal))
 {
     TBOX_ASSERT(impl_ != nullptr);
 }
@@ -55,5 +57,5 @@ void Telnetd::cleanup()
     return impl_->cleanup();
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

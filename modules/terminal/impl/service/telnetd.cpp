@@ -19,12 +19,12 @@
  */
 #include "telnetd.h"
 
-#include <iostream>
-#include <algorithm>
-
-#include <tbox/util/string.h>
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/log.h>
+#include <tbox/util/string.h>
+
+#include <algorithm>
+#include <iostream>
 
 #include "../../terminal_interact.h"
 
@@ -35,10 +35,8 @@ using namespace std;
 using namespace std::placeholders;
 using namespace util;
 
-Telnetd::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal) :
-    wp_loop_(wp_loop),
-    wp_terminal_(wp_terminal),
-    sp_tcp_(new TcpServer(wp_loop))
+Telnetd::Impl::Impl(event::Loop *wp_loop, TerminalInteract *wp_terminal)
+    : wp_loop_(wp_loop), wp_terminal_(wp_terminal), sp_tcp_(new TcpServer(wp_loop))
 {
     TBOX_ASSERT(wp_loop_ != nullptr);
     TBOX_ASSERT(wp_terminal_ != nullptr);
@@ -53,8 +51,7 @@ Telnetd::Impl::~Impl()
 bool Telnetd::Impl::initialize(const std::string &bind_addr_str)
 {
     auto bind_addr = SockAddr::FromString(bind_addr_str);
-    if (!sp_tcp_->initialize(bind_addr, 1))
-        return false;
+    if (!sp_tcp_->initialize(bind_addr, 1)) return false;
 
     sp_tcp_->setConnectedCallback(std::bind(&Impl::onTcpConnected, this, _1));
     sp_tcp_->setReceiveCallback(std::bind(&Impl::onTcpReceived, this, _1, _2), 1);
@@ -80,8 +77,7 @@ void Telnetd::Impl::cleanup()
 bool Telnetd::Impl::send(const SessionToken &st, const std::string &str)
 {
     auto ct = session_to_client_.at(st);
-    if (st.isNull())
-        return false;
+    if (st.isNull()) return false;
 
     send(ct, str.c_str(), str.size());
     return true;
@@ -90,8 +86,7 @@ bool Telnetd::Impl::send(const SessionToken &st, const std::string &str)
 bool Telnetd::Impl::send(const SessionToken &st, char ch)
 {
     auto ct = session_to_client_.at(st);
-    if (st.isNull())
-        return false;
+    if (st.isNull()) return false;
 
     send(ct, &ch, 1);
     return true;
@@ -100,8 +95,7 @@ bool Telnetd::Impl::send(const SessionToken &st, char ch)
 bool Telnetd::Impl::endSession(const SessionToken &st)
 {
     auto ct = session_to_client_.at(st);
-    if (ct.isNull())
-        return false;
+    if (ct.isNull()) return false;
 
     //! 委托执行，否则会出自我销毁的异常
     wp_loop_->runNext(
@@ -110,8 +104,7 @@ bool Telnetd::Impl::endSession(const SessionToken &st)
             session_to_client_.erase(st);
             sp_tcp_->disconnect(ct);
         },
-        "Telnetd::endSession"
-    );
+        "Telnetd::endSession");
 
     return true;
 }
@@ -166,13 +159,13 @@ void Telnetd::Impl::sendString(const TcpServer::ConnToken &ct, const std::string
 
 void Telnetd::Impl::sendNego(const TcpServer::ConnToken &ct, Cmd cmd, Opt o)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, cmd, o };
+    const uint8_t tmp[] = {Cmd::kIAC, cmd, o};
     send(ct, tmp, sizeof(tmp));
 }
 
 void Telnetd::Impl::sendCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 {
-    const uint8_t tmp[] = { Cmd::kIAC, cmd };
+    const uint8_t tmp[] = {Cmd::kIAC, cmd};
     send(ct, tmp, sizeof(tmp));
 }
 
@@ -184,8 +177,8 @@ void Telnetd::Impl::sendSub(const TcpServer::ConnToken &ct, Opt o, const uint8_t
     tmp[1] = Cmd::kSB;
     tmp[2] = o;
     memcpy(tmp + 3, p, s);
-    tmp[size-2] = Cmd::kIAC;
-    tmp[size-1] = Cmd::kSE;
+    tmp[size - 2] = Cmd::kIAC;
+    tmp[size - 1] = Cmd::kSE;
 
     send(ct, tmp, size);
 }
@@ -198,33 +191,28 @@ void Telnetd::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 #endif
     while (buff.readableSize() != 0) {
         auto begin = buff.readableBegin();
-        auto end   = begin + buff.readableSize();
-        auto iter  = std::find(begin, end, Cmd::kIAC);
+        auto end = begin + buff.readableSize();
+        auto iter = std::find(begin, end, Cmd::kIAC);
         auto size = iter - begin;
         if (size > 0) {
             onRecvString(ct, std::string(reinterpret_cast<const char *>(begin), size));
         } else {
-            if (buff.readableSize() < 2)
-                return;
+            if (buff.readableSize() < 2) return;
 
             //! start with IAC
             uint8_t cmd = begin[1];
             if (cmd == Cmd::kWILL || cmd == Cmd::kWONT || cmd == Cmd::kDO || cmd == Cmd::kDONT) {
-                if (buff.readableSize() < 3)
-                    return;
+                if (buff.readableSize() < 3) return;
                 onRecvNego(ct, static_cast<Cmd>(cmd), static_cast<Opt>(begin[2]));
                 size = 3;
 
             } else if (cmd == Cmd::kSB) {
-                if (buff.readableSize() < 6)
-                    return;
+                if (buff.readableSize() < 6) return;
 
                 Opt opt = static_cast<Opt>(begin[2]);
                 auto cmd_end_iac = std::find(begin + 4, end, Cmd::kIAC);
-                if (cmd_end_iac == end)
-                    return;
-                if ((cmd_end_iac + 1) == end)
-                    return;
+                if (cmd_end_iac == end) return;
+                if ((cmd_end_iac + 1) == end) return;
 
                 onRecvSub(ct, opt, begin + 3, (cmd_end_iac - begin - 3));
                 size = cmd_end_iac - begin + 2;
@@ -263,8 +251,7 @@ void Telnetd::Impl::onRecvCmd(const TcpServer::ConnToken &ct, Cmd cmd)
 {
     LogTrace("cmd:%x", cmd);
 
-    if (cmd == Cmd::kNOP)
-        sendCmd(ct, Cmd::kNOP);
+    if (cmd == Cmd::kNOP) sendCmd(ct, Cmd::kNOP);
 }
 
 void Telnetd::Impl::onRecvSub(const TcpServer::ConnToken &ct, Opt opt, const uint8_t *p, size_t s)
@@ -278,5 +265,5 @@ void Telnetd::Impl::onRecvSub(const TcpServer::ConnToken &ct, Opt opt, const uin
     }
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

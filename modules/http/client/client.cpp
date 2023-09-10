@@ -31,8 +31,7 @@ Client::Client(Loop *wp_loop)
     (void)wp_loop;
 }
 
-Client::~Client()
-{ }
+Client::~Client() {}
 
 bool Client::initialize(const SockAddr &server_addr)
 {
@@ -46,9 +45,8 @@ void Client::request(const Request &req, const RespondCallback &cb)
     (void)cb;
 }
 
-void Client::cleanup()
-{ }
+void Client::cleanup() {}
 
-}
-}
-}
+}  // namespace client
+}  // namespace http
+}  // namespace tbox

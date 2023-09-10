@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <tbox/main/main.h>
+
 #include "app.h"
 
 namespace tbox {
@@ -25,7 +26,7 @@ namespace main {
 
 void RegisterApps(Module &apps, Context &ctx)
 {
-   apps.add(new ::App(ctx));
+    apps.add(new ::App(ctx));
 }
 
 std::string GetAppDescribe()
@@ -46,5 +47,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

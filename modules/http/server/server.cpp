@@ -18,15 +18,14 @@
  * of the source tree.
  */
 #include "server.h"
+
 #include "server_imp.h"
 
 namespace tbox {
 namespace http {
 namespace server {
 
-Server::Server(Loop *wp_loop) :
-    impl_(new Impl(this, wp_loop))
-{ }
+Server::Server(Loop *wp_loop) : impl_(new Impl(this, wp_loop)) {}
 
 Server::~Server()
 {
@@ -73,6 +72,6 @@ void Server::use(Middleware *wp_middleware)
     impl_->use(wp_middleware);
 }
 
-}
-}
-}
+}  // namespace server
+}  // namespace http
+}  // namespace tbox

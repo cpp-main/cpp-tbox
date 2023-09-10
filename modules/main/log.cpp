@@ -18,13 +18,15 @@
  * of the source tree.
  */
 #include "log.h"
-#include <iostream>
-#include <sstream>
-#include <tbox/base/json.hpp>
+
 #include <tbox/base/catch_throw.h>
 #include <tbox/terminal/session.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/json.h>
+
+#include <iostream>
+#include <sstream>
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace main {
@@ -78,8 +80,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
             auto &js_file = js_log.at("file");
 
             std::string path;
-            if (util::json::GetField(js_file, "path", path))
-                async_file_sink_.setFilePath(path);
+            if (util::json::GetField(js_file, "path", path)) async_file_sink_.setFilePath(path);
 
             std::string prefix = util::fs::Basename(proc_name);
             util::json::GetField(js_file, "prefix", prefix);
@@ -121,13 +122,11 @@ void Log::initSink(const Json &js, log::Sink &ch)
     }
 
     bool enable_color = false;
-    if (util::json::GetField(js, "enable_color", enable_color))
-        ch.enableColor(enable_color);
+    if (util::json::GetField(js, "enable_color", enable_color)) ch.enableColor(enable_color);
 
     if (util::json::HasObjectField(js, "levels")) {
         auto &js_levels = js.at("levels");
-        for (auto &item : js_levels.items())
-            ch.setLevel(item.key(), item.value());
+        for (auto &item : js_levels.items()) ch.setLevel(item.key(), item.value());
     }
 }
 
@@ -154,11 +153,13 @@ void Log::initShell(TerminalNodes &term)
     }
 }
 
-void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node)
+void Log::initShellForSink(log::Sink &log_ch,
+                           terminal::TerminalNodes &term,
+                           terminal::NodeToken dir_node)
 {
     {
         auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
+            [&log_ch](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -174,18 +175,17 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
                     }
                 }
 
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
+                if (print_usage) oss << "Usage: " << args[0] << " on|off\r\n";
 
                 s.send(oss.str());
-            }
-        , "enable or disable");
+            },
+            "enable or disable");
         term.mountNode(dir_node, func_node, "enable");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
+            [&log_ch](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -201,18 +201,17 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
                     }
                 }
 
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
+                if (print_usage) oss << "Usage: " << args[0] << " on|off\r\n";
 
                 s.send(oss.str());
-            }
-        , "enable or disable color");
+            },
+            "enable or disable color");
         term.mountNode(dir_node, func_node, "enable_color");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
+            [&log_ch](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 3) {
@@ -237,25 +236,24 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
 
                 if (print_usage)
                     oss << "Usage: " << args[0] << " <module_id:string> <level:0-6>\r\n"
-                       << "LEVEL\r\n"
-                       << " 0: Fatal\r\n"
-                       << " 1: Error\r\n"
-                       << " 2: Warn\r\n"
-                       << " 3: Notice\r\n"
-                       << " 4: Info\r\n"
-                       << " 5: Debug\r\n"
-                       << " 6: Trace\r\n"
-                       ;
+                        << "LEVEL\r\n"
+                        << " 0: Fatal\r\n"
+                        << " 1: Error\r\n"
+                        << " 2: Warn\r\n"
+                        << " 3: Notice\r\n"
+                        << " 4: Info\r\n"
+                        << " 5: Debug\r\n"
+                        << " 6: Trace\r\n";
 
                 s.send(oss.str());
-            }
-        , "set log level");
+            },
+            "set log level");
         term.mountNode(dir_node, func_node, "set_level");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
+            [&log_ch](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -264,12 +262,11 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
                     oss << "done\r\n";
                 }
 
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " <module>\r\n";
+                if (print_usage) oss << "Usage: " << args[0] << " <module>\r\n";
 
                 s.send(oss.str());
-            }
-        , "unset log level");
+            },
+            "unset log level");
         term.mountNode(dir_node, func_node, "unset_level");
     }
 }
@@ -278,7 +275,7 @@ void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::Nod
 {
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -293,14 +290,14 @@ void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::Nod
                 }
 
                 s.send(oss.str());
-            }
-        , "set log file path");
+            },
+            "set log file path");
         term.mountNode(dir_node, func_node, "set_path");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -309,18 +306,17 @@ void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::Nod
                     oss << "done\r\n";
                 }
 
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " <prefix>\r\n";
+                if (print_usage) oss << "Usage: " << args[0] << " <prefix>\r\n";
 
                 s.send(oss.str());
-            }
-        , "set log file prefix");
+            },
+            "set log file prefix");
         term.mountNode(dir_node, func_node, "set_prefix");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -336,18 +332,17 @@ void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::Nod
                     }
                 }
 
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
+                if (print_usage) oss << "Usage: " << args[0] << " on|off\r\n";
 
                 s.send(oss.str());
-            }
-        , "enable or disable file sync");
+            },
+            "enable or disable file sync");
         term.mountNode(dir_node, func_node, "enable_sync");
     }
 
     {
         auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
+            [this](const Session &s, const Args &args) {
                 std::ostringstream oss;
                 bool print_usage = true;
                 if (args.size() >= 2) {
@@ -368,13 +363,11 @@ void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::Nod
                 }
 
                 s.send(oss.str());
-            }
-        , "set log file max size");
+            },
+            "set log file max size");
         term.mountNode(dir_node, func_node, "set_max_size");
     }
-
 }
 
-}
-}
-
+}  // namespace main
+}  // namespace tbox

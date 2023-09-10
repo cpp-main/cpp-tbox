@@ -19,28 +19,25 @@
  */
 #include "buffered_fd.h"
 
-#include <cstring>
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
-#include <tbox/event/loop.h>
+#include <tbox/base/log.h>
 #include <tbox/event/fd_event.h>
+#include <tbox/event/loop.h>
+
+#include <cstring>
 
 namespace tbox {
 namespace network {
 
 using namespace std::placeholders;
 
-BufferedFd::BufferedFd(event::Loop *wp_loop) :
-    wp_loop_(wp_loop),
-    send_buff_(0), recv_buff_(0)
-{ }
+BufferedFd::BufferedFd(event::Loop *wp_loop) : wp_loop_(wp_loop), send_buff_(0), recv_buff_(0) {}
 
 BufferedFd::~BufferedFd()
 {
     TBOX_ASSERT(cb_level_ == 0);
 
-    if (state_ == State::kRunning)
-        disable();
+    if (state_ == State::kRunning) disable();
 
     CHECK_DELETE_RESET_OBJ(sp_write_event_);
     CHECK_DELETE_RESET_OBJ(sp_read_event_);
@@ -71,13 +68,15 @@ bool BufferedFd::initialize(Fd fd, short events)
 
     if (events & kReadOnly) {
         sp_read_event_ = wp_loop_->newFdEvent("BufferedFd::sp_read_event_");
-        sp_read_event_->initialize(fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
+        sp_read_event_->initialize(
+            fd_.get(), event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
         sp_read_event_->setCallback(std::bind(&BufferedFd::onReadCallback, this, _1));
     }
 
     if (events & kWriteOnly) {
         sp_write_event_ = wp_loop_->newFdEvent("BufferedFd::sp_write_event_");
-        sp_write_event_->initialize(fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kPersist);
+        sp_write_event_->initialize(
+            fd_.get(), event::FdEvent::kWriteEvent, event::Event::Mode::kPersist);
         sp_write_event_->setCallback(std::bind(&BufferedFd::onWriteCallback, this, _1));
     }
 
@@ -94,16 +93,14 @@ void BufferedFd::setReceiveCallback(const ReceiveCallback &func, size_t threshol
 
 bool BufferedFd::enable()
 {
-    if (state_ == State::kRunning)
-        return true;
+    if (state_ == State::kRunning) return true;
 
     if (state_ != State::kInited) {
         LogWarn("please initialize() first");
         return false;
     }
 
-    if (sp_read_event_ != nullptr)
-        sp_read_event_->enable();
+    if (sp_read_event_ != nullptr) sp_read_event_->enable();
 
     state_ = State::kRunning;
 
@@ -112,19 +109,16 @@ bool BufferedFd::enable()
 
 bool BufferedFd::disable()
 {
-    if (state_ == State::kInited)
-        return true;
+    if (state_ == State::kInited) return true;
 
     if (state_ != State::kRunning) {
         LogWarn("please initialize() first");
         return false;
     }
 
-    if (sp_read_event_ != nullptr)
-        sp_read_event_->disable();
+    if (sp_read_event_ != nullptr) sp_read_event_->disable();
 
-    if (sp_write_event_ != nullptr)
-        sp_write_event_->disable();
+    if (sp_write_event_ != nullptr) sp_write_event_->disable();
 
     state_ = State::kInited;
 
@@ -145,21 +139,21 @@ bool BufferedFd::send(const void *data_ptr, size_t data_size)
     } else {
         //! 否则尝试发送
         ssize_t wsize = fd_.write(data_ptr, data_size);
-        if (wsize >= 0) {   //! 如果发送正常
+        if (wsize >= 0) {  //! 如果发送正常
             //! 如果没有发送完，还有剩余的数据
             if (static_cast<size_t>(wsize) < data_size) {
                 //! 则将剩余的数据放入到缓冲区
-                const uint8_t* p_remain = static_cast<const uint8_t*>(data_ptr) + wsize;
+                const uint8_t *p_remain = static_cast<const uint8_t *>(data_ptr) + wsize;
                 send_buff_.append(p_remain, (data_size - wsize));
                 sp_write_event_->enable();  //! 等待可写事件
             }
-        } else {    //! 否则就是出了错
+        } else {                    //! 否则就是出了错
             if (errno == EAGAIN) {  //! 文件操作繁忙
                 send_buff_.append(data_ptr, data_size);
                 sp_write_event_->enable();  //! 等待可写事件
             } else {
                 LogWarn("send fail, drop data. errno:%d, %s", errno, strerror(errno));
-                //!TODO
+                //! TODO
             }
         }
     }
@@ -186,17 +180,18 @@ void BufferedFd::onReadCallback(short)
 
     //! 优先将数据读入到 recv_buff_ 中去，如果它装不下就再存到 extbuff 中
     rbuf[0].iov_base = recv_buff_.writableBegin();
-    rbuf[0].iov_len  = writable_size;
+    rbuf[0].iov_len = writable_size;
     rbuf[1].iov_base = extbuf;
-    rbuf[1].iov_len  = sizeof(extbuf);
+    rbuf[1].iov_len = sizeof(extbuf);
 
     ssize_t rsize = fd_.readv(rbuf, 2);
-    if (rsize > 0) {    //! 读到了数据
+    if (rsize > 0) {  //! 读到了数据
         do {
             if (static_cast<size_t>(rsize) > writable_size) {
-                //! 如果实际读出的数据比 recv_buff_ 的可写区还大，说明有部分数据是写到了 extbuf 中去了
+                //! 如果实际读出的数据比 recv_buff_ 的可写区还大，说明有部分数据是写到了 extbuf
+                //! 中去了
                 recv_buff_.hasWritten(writable_size);
-                size_t remain_size = rsize - writable_size; //! 计算 extbuf 中的数据大小
+                size_t remain_size = rsize - writable_size;  //! 计算 extbuf 中的数据大小
                 recv_buff_.append(extbuf, remain_size);
             } else {
                 recv_buff_.hasWritten(rsize);
@@ -205,7 +200,7 @@ void BufferedFd::onReadCallback(short)
             //! 继续读，直到 rsize == 0，表示读完为止
             writable_size = recv_buff_.writableSize();
             rbuf[0].iov_base = recv_buff_.writableBegin();
-            rbuf[0].iov_len  = writable_size;
+            rbuf[0].iov_len = writable_size;
         } while ((rsize = fd_.readv(rbuf, 2)) > 0);
 
         //! 如果有绑定接收者，则应将数据直接转发给接收者
@@ -220,18 +215,18 @@ void BufferedFd::onReadCallback(short)
                 --cb_level_;
             } else {
                 LogWarn("receive_cb_ is not set");
-                recv_buff_.hasReadAll();    //! 丢弃数据，防止堆积
+                recv_buff_.hasReadAll();  //! 丢弃数据，防止堆积
             }
         }
 
-    } else if (rsize == 0) {    //! 读到0字节数据，说明fd_已不可读了
+    } else if (rsize == 0) {  //! 读到0字节数据，说明fd_已不可读了
         sp_read_event_->disable();
         if (read_zero_cb_) {
             ++cb_level_;
             read_zero_cb_();
             --cb_level_;
         }
-    } else {    //! 读出错了
+    } else {  //! 读出错了
         if (errno != EAGAIN) {
             if (error_cb_) {
                 ++cb_level_;
@@ -271,5 +266,5 @@ void BufferedFd::onWriteCallback(short)
     }
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

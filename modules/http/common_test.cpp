@@ -17,8 +17,10 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <gtest/gtest.h>
 #include "common.h"
+
+#include <gtest/gtest.h>
+
 #include <sstream>
 
 namespace tbox {
@@ -48,9 +50,10 @@ TEST(common, StateCodeToStream)
     EXPECT_EQ(StatusCodeToString(StatusCode::k200_OK), "200 OK");
     EXPECT_EQ(StatusCodeToString(StatusCode::k401_Unauthorized), "401 Unauthorized");
     EXPECT_EQ(StatusCodeToString(StatusCode::k404_NotFound), "404 Not Found");
-    EXPECT_EQ(StatusCodeToString(StatusCode::k505_HTTPVersionNotSupported), "505 HTTP Version Not Supported");
+    EXPECT_EQ(StatusCodeToString(StatusCode::k505_HTTPVersionNotSupported),
+              "505 HTTP Version Not Supported");
 }
 
-}
-}
-}
+}  // namespace
+}  // namespace http
+}  // namespace tbox

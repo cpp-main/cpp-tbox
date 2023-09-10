@@ -19,25 +19,24 @@
  */
 #include "fs.h"
 
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <tbox/base/log.h>
+#include <unistd.h>
+
+#include <cstring>
 #include <exception>
 #include <fstream>
-#include <errno.h>
-#include <cstring>
-
-#include <unistd.h>
-#include <fcntl.h>
-
-#include <tbox/base/log.h>
 #include <tbox/base/scope_exit.hpp>
 
 namespace tbox {
 namespace util {
 namespace fs {
 
+using std::exception;
 using std::ifstream;
 using std::ofstream;
-using std::exception;
 
 bool IsFileExist(const std::string &filename)
 {
@@ -55,8 +54,8 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
     try {
         ifstream f(filename);
         if (f) {
-            content = std::string((std::istreambuf_iterator<char>(f)),
-                                   std::istreambuf_iterator<char>());
+            content =
+                std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
             return true;
         } else {
             LogWarn("open failed, %s", filename.c_str());
@@ -67,14 +66,14 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
     return false;
 }
 
-bool ReadEachLineFromTextFile(const std::string &filename, const std::function<void(const std::string&)> &line_handle_func)
+bool ReadEachLineFromTextFile(const std::string &filename,
+                              const std::function<void(const std::string &)> &line_handle_func)
 {
     try {
         ifstream f(filename);
         if (f) {
             std::string line;
-            while (std::getline(f, line))
-                line_handle_func(line);
+            while (std::getline(f, line)) line_handle_func(line);
             return true;
         } else {
             LogWarn("open failed, %s", filename.c_str());
@@ -113,16 +112,14 @@ bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, boo
     //! 然而，标准C++的ofstream无法提供文件对象的fd。所以不得不使用原始的文件操作。
 
     int flag = O_CREAT | O_WRONLY | O_TRUNC;
-    if (sync_now)
-        flag |= O_SYNC; //! 加了这个参数后，相当于每次write()操作都执行了一次fsync(fd)
+    if (sync_now) flag |= O_SYNC;  //! 加了这个参数后，相当于每次write()操作都执行了一次fsync(fd)
 
     int fd = ::open(filename, flag, S_IRUSR | S_IWUSR);
     if (fd >= 0) {
         SetScopeExitAction([fd] { close(fd); });  //! 确保退出时一定会close(fd)
 
         auto wsize = ::write(fd, data_ptr, data_size);
-        if (wsize == static_cast<ssize_t>(data_size))
-            return true;
+        if (wsize == static_cast<ssize_t>(data_size)) return true;
 
         if (wsize == -1)
             LogWarn("write errno:%d, %s", errno, strerror(errno));
@@ -138,16 +135,14 @@ bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, boo
 bool AppendFile(const char *filename, const void *data_ptr, size_t data_size, bool sync_now)
 {
     int flag = O_CREAT | O_WRONLY | O_APPEND;
-    if (sync_now)
-        flag |= O_SYNC;
+    if (sync_now) flag |= O_SYNC;
 
     int fd = ::open(filename, flag, S_IRUSR | S_IWUSR);
     if (fd >= 0) {
         SetScopeExitAction([fd] { close(fd); });  //! 确保退出时一定会close(fd)
 
         auto wsize = ::write(fd, data_ptr, data_size);
-        if (wsize == static_cast<ssize_t>(data_size))
-            return true;
+        if (wsize == static_cast<ssize_t>(data_size)) return true;
 
         if (wsize == -1)
             LogWarn("write errno:%d, %s", errno, strerror(errno));
@@ -163,33 +158,27 @@ bool AppendFile(const char *filename, const void *data_ptr, size_t data_size, bo
 bool RemoveFile(const std::string &filename, bool allow_log_print)
 {
     int ret = ::unlink(filename.c_str());
-    if (ret == 0)
-        return true;
+    if (ret == 0) return true;
 
-    if (errno != ENOENT && allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+    if (errno != ENOENT && allow_log_print) LogWarn("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
 bool MakeSymbolLink(const std::string &old_path, const std::string &new_path, bool allow_log_print)
 {
     int ret = ::symlink(old_path.c_str(), new_path.c_str());
-    if (ret == 0)
-        return true;
+    if (ret == 0) return true;
 
-    if (allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+    if (allow_log_print) LogWarn("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
 bool MakeLink(const std::string &old_path, const std::string &new_path, bool allow_log_print)
 {
     int ret = ::link(old_path.c_str(), new_path.c_str());
-    if (ret == 0)
-        return true;
+    if (ret == 0) return true;
 
-    if (allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+    if (allow_log_print) LogWarn("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
@@ -203,13 +192,11 @@ bool IsDirectoryExist(const std::string &dir)
 bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
 {
     if (origin_dir_path.empty()) {
-        if (allow_log_print)
-            LogWarn("origin_dir_path is empty");
+        if (allow_log_print) LogWarn("origin_dir_path is empty");
         return false;
     }
 
-    if (IsDirectoryExist(origin_dir_path))
-        return true;
+    if (IsDirectoryExist(origin_dir_path)) return true;
 
     std::string trimmed_dir_path;
     trimmed_dir_path.reserve(origin_dir_path.size());
@@ -220,8 +207,7 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
     }
 
     //! 确保trimmed_dir_path以'/'字符结尾
-    if (trimmed_dir_path.back() != '/')
-        trimmed_dir_path.push_back('/');
+    if (trimmed_dir_path.back() != '/') trimmed_dir_path.push_back('/');
 
     for (size_t i = 1; i < trimmed_dir_path.size(); ++i) {
         if (trimmed_dir_path.at(i) == '/') {
@@ -231,15 +217,21 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
                 if (errno == ENOENT) {  //! 如果trimmed_dir_path指定的inode不存在，则创建目录
                     if (::mkdir(trimmed_dir_path.c_str(), 0775) != 0) {
                         if (allow_log_print)
-                            LogWarn("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                            LogWarn("mkdir(%s) fail, errno:%d, %s",
+                                    trimmed_dir_path.c_str(),
+                                    errno,
+                                    strerror(errno));
                         return false;
                     }
-                } else {    //! 如果是其它的错误
+                } else {  //! 如果是其它的错误
                     if (allow_log_print)
-                        LogWarn("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                        LogWarn("stat(%s) fail, errno:%d, %s",
+                                trimmed_dir_path.c_str(),
+                                errno,
+                                strerror(errno));
                     return false;
                 }
-            } else {    //! 如果 trimmed_dir_path 指定的inode存在
+            } else {                         //! 如果 trimmed_dir_path 指定的inode存在
                 if (!S_ISDIR(sb.st_mode)) {  //! 该inode并不是一个目录
                     if (allow_log_print)
                         LogWarn("inode %s is not directory", trimmed_dir_path.c_str());
@@ -282,20 +274,18 @@ std::string Basename(const std::string &full_path)
  */
 std::string Dirname(const std::string &full_path)
 {
-    auto start_pos = full_path.find_first_not_of("\t ");    //! 去除左边的空白符
+    auto start_pos = full_path.find_first_not_of("\t ");  //! 去除左边的空白符
     auto end_pos = full_path.find_last_of('/');
 
     //! 如果全是空白符或没有找到/，则推测为当前目录
-    if (start_pos == std::string::npos || end_pos == std::string::npos)
-        return ".";
+    if (start_pos == std::string::npos || end_pos == std::string::npos) return ".";
 
     //! 对以/开头的要特征处理，否则 "/a" 就会被处理成 ""
-    if (start_pos == end_pos)
-        return "/";
+    if (start_pos == end_pos) return "/";
 
     return full_path.substr(start_pos, end_pos - start_pos);
 }
 
-}
-}
-}
+}  // namespace fs
+}  // namespace util
+}  // namespace tbox

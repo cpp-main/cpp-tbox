@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "session.h"
+
 #include <tbox/base/log.h>
 
 #include "connection.h"
@@ -25,10 +26,7 @@
 namespace tbox {
 namespace terminal {
 
-Session::Session(Connection *wp_conn, const SessionToken &st) :
-    wp_conn_(wp_conn),
-    st_(st)
-{ }
+Session::Session(Connection *wp_conn, const SessionToken &st) : wp_conn_(wp_conn), st_(st) {}
 
 bool Session::send(char ch) const
 {
@@ -50,5 +48,5 @@ bool Session::isValid() const
     return wp_conn_->isValid(st_);
 }
 
-}
-}
+}  // namespace terminal
+}  // namespace tbox

@@ -16,6 +16,23 @@ Exceptions:
 - Name of static variable: `_xxx`, example: `static int _count;`
 - Avoid using smart pointers unless you have to.
 
+We use 'clang-format' for checking the code style, make sure you have installed clang-format.
+Ubuntu:
+```
+sudo apt install clang-format
+```
+
+CentOs:
+```
+sudo yum install clang-format
+```
+After your git add command, you should use command below for checking your code style:
+```
+git-clang-format
+```
+Check the results and now you can commit the code.
+
+
 ## Fix bugs
 
 Fix it, then add corresponding unit test case in `xxx_test.cpp`.

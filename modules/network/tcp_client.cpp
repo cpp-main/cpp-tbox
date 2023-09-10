@@ -19,35 +19,35 @@
  */
 #include "tcp_client.h"
 
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 
-#include "tcp_connector.h"
 #include "tcp_connection.h"
+#include "tcp_connector.h"
 
 namespace tbox {
 namespace network {
 
-struct TcpClient::Data {
+struct TcpClient::Data
+{
     event::Loop *wp_loop;
     State state = State::kNone;
 
-    ConnectedCallback    connected_cb;
+    ConnectedCallback connected_cb;
     DisconnectedCallback disconnected_cb;
-    ReceiveCallback      received_cb;
-    size_t               received_threshold = 0;
-    ByteStream          *wp_receiver = nullptr;
+    ReceiveCallback received_cb;
+    size_t received_threshold = 0;
+    ByteStream *wp_receiver = nullptr;
     bool reconnect_enabled = true;
 
-    TcpConnector  *sp_connector  = nullptr;
+    TcpConnector *sp_connector = nullptr;
     TcpConnection *sp_connection = nullptr;
 
     int cb_level = 0;
 };
 
-TcpClient::TcpClient(event::Loop *wp_loop) :
-    d_(new Data)
+TcpClient::TcpClient(event::Loop *wp_loop) : d_(new Data)
 {
     TBOX_ASSERT(d_ != nullptr);
 
@@ -119,10 +119,7 @@ void TcpClient::stop()
         std::swap(tobe_delete, d_->sp_connection);
         tobe_delete->disconnect();
 
-        d_->wp_loop->runNext(
-            [tobe_delete] { delete tobe_delete; },
-            "TcpClient::stop, delete"
-        );
+        d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; }, "TcpClient::stop, delete");
 
         d_->state = State::kInited;
     }
@@ -130,15 +127,13 @@ void TcpClient::stop()
 
 bool TcpClient::shutdown(int howto)
 {
-    if (d_->state == State::kConnected)
-        return d_->sp_connection->shutdown(howto);
+    if (d_->state == State::kConnected) return d_->sp_connection->shutdown(howto);
     return false;
 }
 
 void TcpClient::cleanup()
 {
-    if (d_->state <= State::kNone)
-        return;
+    if (d_->state <= State::kNone) return;
 
     stop();
 
@@ -161,8 +156,7 @@ TcpClient::State TcpClient::state() const
 
 void TcpClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
-    if (d_->sp_connection != nullptr)
-        d_->sp_connection->setReceiveCallback(cb, threshold);
+    if (d_->sp_connection != nullptr) d_->sp_connection->setReceiveCallback(cb, threshold);
 
     d_->received_cb = cb;
     d_->received_threshold = threshold;
@@ -170,24 +164,21 @@ void TcpClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 
 bool TcpClient::send(const void *data_ptr, size_t data_size)
 {
-    if (d_->sp_connection != nullptr)
-        return d_->sp_connection->send(data_ptr, data_size);
+    if (d_->sp_connection != nullptr) return d_->sp_connection->send(data_ptr, data_size);
 
     return false;
 }
 
 void TcpClient::bind(ByteStream *receiver)
 {
-    if (d_->sp_connection != nullptr)
-        d_->sp_connection->bind(receiver);
+    if (d_->sp_connection != nullptr) d_->sp_connection->bind(receiver);
 
     d_->wp_receiver = receiver;
 }
 
 void TcpClient::unbind()
 {
-    if (d_->sp_connection != nullptr)
-        d_->sp_connection->unbind();
+    if (d_->sp_connection != nullptr) d_->sp_connection->unbind();
 
     d_->wp_receiver = nullptr;
 }
@@ -196,8 +187,7 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
 {
     new_conn->setDisconnectedCallback(std::bind(&TcpClient::onTcpDisconnected, this));
     new_conn->setReceiveCallback(d_->received_cb, d_->received_threshold);
-    if (d_->wp_receiver != nullptr)
-        new_conn->bind(d_->wp_receiver);
+    if (d_->wp_receiver != nullptr) new_conn->bind(d_->wp_receiver);
 
     //! 可以直接释放，因为本函数一定是 d_->sp_connector 对象调用的
     CHECK_DELETE_RESET_OBJ(d_->sp_connection);
@@ -218,15 +208,12 @@ void TcpClient::onTcpDisconnected()
     std::swap(tobe_delete, d_->sp_connection);
 
     //! 这里要使用延后释放，因为本函数一定是 d_->sp_connection 对象自己调用的
-    d_->wp_loop->runNext(
-        [tobe_delete] { delete tobe_delete; },
-        "TcpClient::onTcpDisconnected, delete"
-    );
+    d_->wp_loop->runNext([tobe_delete] { delete tobe_delete; },
+                         "TcpClient::onTcpDisconnected, delete");
 
     d_->state = State::kInited;
 
-    if (d_->reconnect_enabled)
-        start();
+    if (d_->reconnect_enabled) start();
 
     if (d_->disconnected_cb) {
         ++d_->cb_level;
@@ -235,5 +222,5 @@ void TcpClient::onTcpDisconnected()
     }
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

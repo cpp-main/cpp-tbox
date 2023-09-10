@@ -17,27 +17,25 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "loop.h"
+
 #include <sys/epoll.h>
+#include <tbox/base/assert.h>
+#include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-
 #include <vector>
-#include <algorithm>
 
-#include "loop.h"
 #include "fd_event.h"
-
-#include <tbox/base/log.h>
-#include <tbox/base/defines.h>
-#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace event {
 
-EpollLoop::EpollLoop() :
-    epoll_fd_(epoll_create1(EPOLL_CLOEXEC))
+EpollLoop::EpollLoop() : epoll_fd_(epoll_create1(EPOLL_CLOEXEC))
 {
     TBOX_ASSERT(epoll_fd_ >= 0);
 }
@@ -51,16 +49,16 @@ EpollLoop::~EpollLoop()
 
 void EpollLoop::runLoop(Mode mode)
 {
-    if (epoll_fd_ < 0)
-        return;
+    if (epoll_fd_ < 0) return;
 
     std::vector<struct epoll_event> events;
     /*
      * Why not events.reserve()?
      * The reserve() method only allocates memory, but leaves it uninitialized,
      * it only affects capacity(), but size() will be unchanged.
-     * The standard only guarantees that std::vector::data returns a pointer and [data(), data() + size()] is a valid range,
-     * the capacity is not concerned. So we need use resize and ensure the [data(), data() + size()] is a valid range whitch used by epoll_wait.
+     * The standard only guarantees that std::vector::data returns a pointer and [data(), data() +
+     * size()] is a valid range, the capacity is not concerned. So we need use resize and ensure the
+     * [data(), data() + size()] is a valid range whitch used by epoll_wait.
      */
     events.resize(max_loop_entries_);
 
@@ -79,7 +77,7 @@ void EpollLoop::runLoop(Mode mode)
             EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
         }
 
-        //handleRunInLoopFunc();
+        // handleRunInLoopFunc();
         handleNextFunc();
 
         /// If the receiver array size is full, increase its size with 1.5 times.
@@ -95,13 +93,12 @@ void EpollLoop::runLoop(Mode mode)
     runThisAfterLoop();
 }
 
-EpollFdSharedData* EpollLoop::refFdSharedData(int fd)
+EpollFdSharedData *EpollLoop::refFdSharedData(int fd)
 {
     EpollFdSharedData *fd_shared_data = nullptr;
 
     auto it = fd_data_map_.find(fd);
-    if (it != fd_data_map_.end())
-        fd_shared_data = it->second;
+    if (it != fd_data_map_.end()) fd_shared_data = it->second;
 
     if (fd_shared_data == nullptr) {
         fd_shared_data = fd_shared_data_pool_.alloc();
@@ -130,10 +127,10 @@ void EpollLoop::unrefFdSharedData(int fd)
     }
 }
 
-FdEvent* EpollLoop::newFdEvent(const std::string &what)
+FdEvent *EpollLoop::newFdEvent(const std::string &what)
 {
     return new EpollFdEvent(this, what);
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

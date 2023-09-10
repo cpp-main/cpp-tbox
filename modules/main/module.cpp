@@ -18,43 +18,37 @@
  * of the source tree.
  */
 #include "module.h"
-#include <algorithm>
+
 #include <tbox/base/log.h>
+
+#include <algorithm>
 #include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace main {
 
-Module::Module(const std::string &name, Context &ctx) :
-    name_(name), ctx_(ctx)
-{ }
+Module::Module(const std::string &name, Context &ctx) : name_(name), ctx_(ctx) {}
 
 Module::~Module()
 {
     cleanup();
 
-    for (const auto &item : children_)
-        delete item.module_ptr;
+    for (const auto &item : children_) delete item.module_ptr;
     children_.clear();
 }
 
 bool Module::add(Module *child, bool required)
 {
-    if (state_ != State::kNone)
-        return false;
+    if (state_ != State::kNone) return false;
 
-    if (child == nullptr)
-        return false;
+    if (child == nullptr) return false;
 
-    auto iter = std::find_if(children_.begin(), children_.end(),
-        [child] (const ModuleItem &item) {
-            return item.module_ptr == child;
-        }
-    );
-    if (iter != children_.end())
-        return false;
+    auto iter = std::find_if(children_.begin(), children_.end(), [child](const ModuleItem &item) {
+        return item.module_ptr == child;
+    });
+    if (iter != children_.end()) return false;
 
-    children_.emplace_back(ModuleItem{ child, required });
+    children_.emplace_back(ModuleItem{child, required});
     return true;
 }
 
@@ -64,8 +58,7 @@ void Module::fillDefaultConfig(Json &js_parent)
 
     onFillDefaultConfig(js_this);
 
-    for (const auto &item : children_)
-        item.module_ptr->fillDefaultConfig(js_this);
+    for (const auto &item : children_) item.module_ptr->fillDefaultConfig(js_this);
 }
 
 bool Module::initialize(const Json &js_parent)
@@ -123,11 +116,9 @@ bool Module::start()
 
 void Module::stop()
 {
-    if (state_ != State::kRunning)
-        return;
+    if (state_ != State::kRunning) return;
 
-    for (auto iter = children_.rbegin(); iter != children_.rend(); ++iter)
-        iter->module_ptr->stop();
+    for (auto iter = children_.rbegin(); iter != children_.rend(); ++iter) iter->module_ptr->stop();
 
     onStop();
 
@@ -136,8 +127,7 @@ void Module::stop()
 
 void Module::cleanup()
 {
-    if (state_ == State::kNone)
-        return;
+    if (state_ == State::kNone) return;
 
     stop();
 
@@ -149,5 +139,5 @@ void Module::cleanup()
     state_ = State::kNone;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox

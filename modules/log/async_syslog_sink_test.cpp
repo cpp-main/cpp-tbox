@@ -17,11 +17,12 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <chrono>
+#include "async_syslog_sink.h"
+
 #include <gtest/gtest.h>
 
-#include "async_syslog_sink.h"
+#include <chrono>
+#include <iostream>
 
 using namespace std;
 using namespace tbox::log;
@@ -117,8 +118,7 @@ TEST(AsyncSyslogSink, Benchmark)
 
     int counter = 0;
     function<void()> func = [&] {
-        for (int i = 0; i < 100; ++i)
-            LogInfo("%d %s", i, tmp.c_str());
+        for (int i = 0; i < 100; ++i) LogInfo("%d %s", i, tmp.c_str());
         sp_loop->run(func);
         counter += 100;
     };
@@ -130,6 +130,5 @@ TEST(AsyncSyslogSink, Benchmark)
     delete sp_loop;
     ch.cleanup();
 
-    cout << "count in sec: " << counter/10 << endl;
+    cout << "count in sec: " << counter / 10 << endl;
 }
-

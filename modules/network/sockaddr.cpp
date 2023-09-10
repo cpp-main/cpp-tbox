@@ -17,21 +17,21 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include "sockaddr.h"
+
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <arpa/inet.h>
-
 #include <tbox/base/log.h>
-#include <sstream>
 
-#include "sockaddr.h"
+#include <sstream>
 
 namespace tbox {
 namespace network {
 
 using namespace std;
 
-const size_t kSockAddrUnHeadSize = (size_t)&(((struct sockaddr_un*)0)->sun_path);
+const size_t kSockAddrUnHeadSize = (size_t) & (((struct sockaddr_un *)0)->sun_path);
 
 SockAddr::SockAddr()
 {
@@ -58,7 +58,7 @@ SockAddr::SockAddr(const DomainSockPath &path)
     p_addr->sun_family = AF_LOCAL;
 
     auto &sock_path = path.get();
-    //!NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
+    //! NOTE: sock_path 字串中可能存在\0字符，所以不能当普通字串处理
     ::memcpy(p_addr->sun_path, sock_path.data(), sock_path.size());
     len_ = kSockAddrUnHeadSize + sock_path.size();
 }
@@ -81,7 +81,7 @@ SockAddr::SockAddr(const SockAddr &other)
     ::memcpy(&addr_, &other.addr_, len_);
 }
 
-SockAddr& SockAddr::operator = (const SockAddr &other)
+SockAddr &SockAddr::operator=(const SockAddr &other)
 {
     if (this != &other) {
         len_ = other.len_;
@@ -96,8 +96,8 @@ SockAddr SockAddr::FromString(const string &addr_str)
     auto colon_pos = addr_str.find(":");
     if (colon_pos != string::npos) {
         //! 当成 IPv4 处理
-        auto ipv4_str = addr_str.substr(0, colon_pos) ;
-        auto port_str = addr_str.substr(colon_pos + 1) ;
+        auto ipv4_str = addr_str.substr(0, colon_pos);
+        auto port_str = addr_str.substr(colon_pos + 1);
 
         try {
             uint16_t port = stoi(port_str);
@@ -114,16 +114,19 @@ SockAddr SockAddr::FromString(const string &addr_str)
 SockAddr::Type SockAddr::type() const
 {
     switch (addr_.ss_family) {
-        case AF_INET:   return Type::kIPv4;
-        case AF_LOCAL:  return Type::kLocal;
-        default:        return Type::kNone;
+        case AF_INET:
+            return Type::kIPv4;
+        case AF_LOCAL:
+            return Type::kLocal;
+        default:
+            return Type::kNone;
     }
 }
 
 namespace {
 string ToIPv4String(const struct sockaddr_storage &addr)
 {
-    struct sockaddr_in *p_addr = (struct sockaddr_in*)&addr;
+    struct sockaddr_in *p_addr = (struct sockaddr_in *)&addr;
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &p_addr->sin_addr, ip, sizeof(ip));
     ostringstream oss;
@@ -133,16 +136,19 @@ string ToIPv4String(const struct sockaddr_storage &addr)
 
 string ToLocalString(const struct sockaddr_storage &addr, socklen_t len)
 {
-    struct sockaddr_un *p_addr = (struct sockaddr_un*)&addr;
-    return string(p_addr->sun_path, len - kSockAddrUnHeadSize); //! Path 未必是以 \0 结束的，要指定长度
+    struct sockaddr_un *p_addr = (struct sockaddr_un *)&addr;
+    return string(p_addr->sun_path,
+                  len - kSockAddrUnHeadSize);  //! Path 未必是以 \0 结束的，要指定长度
 }
-}
+}  // namespace
 
 string SockAddr::toString() const
 {
     switch (addr_.ss_family) {
-        case AF_INET:   return ToIPv4String(addr_);
-        case AF_LOCAL:  return ToLocalString(addr_, len_);
+        case AF_INET:
+            return ToIPv4String(addr_);
+        case AF_LOCAL:
+            return ToLocalString(addr_, len_);
     }
     LogWarn("unspport family");
     return "";
@@ -151,7 +157,7 @@ string SockAddr::toString() const
 bool SockAddr::get(IPAddress &ip, uint16_t &port) const
 {
     if (addr_.ss_family == AF_INET) {
-        struct sockaddr_in *p_addr = (struct sockaddr_in*)&addr_;
+        struct sockaddr_in *p_addr = (struct sockaddr_in *)&addr_;
         ip = p_addr->sin_addr.s_addr;
         port = ntohs(p_addr->sin_port);
         return true;
@@ -160,13 +166,12 @@ bool SockAddr::get(IPAddress &ip, uint16_t &port) const
     return false;
 }
 
-bool SockAddr::operator == (const SockAddr &rhs) const
+bool SockAddr::operator==(const SockAddr &rhs) const
 {
-    if (len_ != rhs.len_)
-        return false;
+    if (len_ != rhs.len_) return false;
 
     return ::memcmp(&addr_, &rhs.addr_, len_) == 0;
 }
 
-}
-}
+}  // namespace network
+}  // namespace tbox

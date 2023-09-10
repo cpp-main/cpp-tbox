@@ -19,18 +19,18 @@
  */
 #include "common_loop.h"
 
-#include <thread>
-#include <unistd.h>
 #include <signal.h>
-#include <cinttypes>
-
-#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
+#include <unistd.h>
+
+#include <cinttypes>
+#include <thread>
 
 #include "fd_event.h"
-#include "stat.h"
 #include "misc.h"
+#include "stat.h"
 #include "timer_event.h"
 
 namespace tbox {
@@ -86,8 +86,7 @@ void CommonLoop::runThisBeforeLoop()
     run_event_fd_ = event_fd;
     sp_run_read_event_ = sp_read_event;
 
-    if (!run_in_loop_func_queue_.empty())
-        commitRunRequest();
+    if (!run_in_loop_func_queue_.empty()) commitRunRequest();
 
     resetStat();
 }
@@ -97,7 +96,7 @@ void CommonLoop::runThisAfterLoop()
     std::lock_guard<std::recursive_mutex> g(lock_);
     cleanupDeferredTasks();
 
-    loop_thread_id_ = std::thread::id();    //! 清空 loop_thread_id_
+    loop_thread_id_ = std::thread::id();  //! 清空 loop_thread_id_
     if (sp_run_read_event_ != nullptr) {
         CHECK_DELETE_RESET_OBJ(sp_run_read_event_);
         CHECK_CLOSE_RESET_FD(run_event_fd_);
@@ -114,11 +113,9 @@ void CommonLoop::endLoopProcess()
     auto cost = steady_clock::now() - loop_stat_start_;
     ++loop_count_;
     loop_acc_cost_ += cost;
-    if (loop_peak_cost_ < cost)
-        loop_peak_cost_ = cost;
+    if (loop_peak_cost_ < cost) loop_peak_cost_ = cost;
 
-    if (cost > water_line_.loop_cost)
-        LogNotice("loop_cost: %" PRIu64 " us", cost.count()/1000);
+    if (cost > water_line_.loop_cost) LogNotice("loop_cost: %" PRIu64 " us", cost.count() / 1000);
 }
 
 void CommonLoop::beginEventProcess()
@@ -131,14 +128,16 @@ void CommonLoop::endEventProcess(Event *event)
     auto cost = steady_clock::now() - event_cb_stat_start_;
     if (cost > water_line_.event_cb_cost)
         LogNotice("event_cb_cost: %" PRIu64 " us, what: '%s'",
-                  cost.count()/1000, event->what().c_str());
+                  cost.count() / 1000,
+                  event->what().c_str());
 }
 
 Stat CommonLoop::getStat() const
 {
     Stat stat;
     using namespace std::chrono;
-    stat.stat_time_us = duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
+    stat.stat_time_us =
+        duration_cast<microseconds>(steady_clock::now() - whole_stat_start_).count();
 
     stat.loop_count = loop_count_;
     stat.loop_acc_cost_us = duration_cast<microseconds>(loop_acc_cost_).count();
@@ -162,5 +161,5 @@ void CommonLoop::resetStat()
     run_next_peak_num_ = 0;
 }
 
-}
-}
+}  // namespace event
+}  // namespace tbox

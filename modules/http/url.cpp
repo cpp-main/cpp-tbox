@@ -18,8 +18,10 @@
  * of the source tree.
  */
 #include "url.h"
-#include <sstream>
+
 #include <tbox/util/string.h>
+
+#include <sstream>
 
 namespace tbox {
 namespace http {
@@ -41,14 +43,14 @@ char HexCharToValue(char hex_char)
     else
         throw std::out_of_range("should be A-Z a-z 0-9");
 }
-}
+}  // namespace
 
 std::string UrlEncode(const std::string &local_str, bool path_mode)
 {
-    const auto& special_chars = path_mode ? path_special_chars : full_special_chars;
+    const auto &special_chars = path_mode ? path_special_chars : full_special_chars;
 
     std::string url_str;
-    url_str.reserve(local_str.size() * 5 / 4); //! 预留1.25倍的空间
+    url_str.reserve(local_str.size() * 5 / 4);  //! 预留1.25倍的空间
 
     for (char c : local_str) {
         //! 如果非ASCII或是特殊字符
@@ -108,14 +110,12 @@ std::string UrlHostToString(const Url::Host &host)
 
     if (!host.user.empty()) {
         oss << host.user;
-        if (!host.password.empty())
-            oss << ':' << host.password;
+        if (!host.password.empty()) oss << ':' << host.password;
         oss << '@';
     }
 
     oss << host.host;
-    if (host.port != 0)
-        oss << ':' << host.port;
+    if (host.port != 0) oss << ':' << host.port;
 
     return oss.str();
 }
@@ -133,15 +133,13 @@ std::string UrlPathToString(const Url::Path &path)
         oss << '?';
         bool not_first = false;
         for (const auto &item : path.query) {
-            if (not_first)
-                oss << '&';
+            if (not_first) oss << '&';
             not_first = true;
             oss << UrlEncode(item.first) << '=' << UrlEncode(item.second);
         }
     }
 
-    if (!path.frag.empty())
-        oss << '#' << path.frag;
+    if (!path.frag.empty()) oss << '#' << path.frag;
 
     return oss.str();
 }
@@ -150,8 +148,7 @@ std::string UrlToString(const Url &url)
 {
     std::ostringstream oss;
 
-    if (!url.scheme.empty())
-        oss << url.scheme << "://";
+    if (!url.scheme.empty()) oss << url.scheme << "://";
 
     oss << UrlHostToString(url.host);
     oss << UrlPathToString(url.path);
@@ -182,8 +179,7 @@ bool StringToUrl(const std::string &str, Url &url)
         path_str = "/";
     }
 
-    return StringToUrlHost(host_str, url.host) &&
-           StringToUrlPath(path_str, url.path);
+    return StringToUrlHost(host_str, url.host) && StringToUrlPath(path_str, url.path);
 }
 
 bool StringToUrlHost(const std::string &str, Url::Host &host)
@@ -228,8 +224,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
 {
     //! /<path>;<params>?<query>#<frag>
 
-    if (str.empty() || str[0] != '/')
-        return false;
+    if (str.empty() || str[0] != '/') return false;
 
     auto semi_pos = str.find_first_of(';');
     auto query_pos = str.find_first_of('?');
@@ -260,8 +255,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
             for (const auto &param_str : params_vec) {
                 std::vector<std::string> kv;
                 util::string::Split(param_str, "=", kv);
-                if (kv.size() != 2 || kv[0].empty())
-                    return false;
+                if (kv.size() != 2 || kv[0].empty()) return false;
                 path.params[UrlDecode(kv[0])] = UrlDecode(kv[1]);
             }
         }
@@ -269,8 +263,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
         if (query_pos != std::string::npos) {
             //! 说明有 query
             auto querys_end_pos = std::string::npos;
-            if (pound_pos != std::string::npos)
-                querys_end_pos = pound_pos;
+            if (pound_pos != std::string::npos) querys_end_pos = pound_pos;
 
             auto querys_str = str.substr(query_pos + 1, querys_end_pos - query_pos - 1);
             std::vector<std::string> querys_vec;
@@ -278,8 +271,7 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
             for (const auto &query_str : querys_vec) {
                 std::vector<std::string> kv;
                 util::string::Split(query_str, "=", kv);
-                if (kv.size() != 2 || kv[0].empty())
-                    return false;
+                if (kv.size() != 2 || kv[0].empty()) return false;
                 path.query[UrlDecode(kv[0])] = UrlDecode(kv[1]);
             }
         }
@@ -296,5 +288,5 @@ bool StringToUrlPath(const std::string &str, Url::Path &path)
     return true;
 }
 
-}
-}
+}  // namespace http
+}  // namespace tbox

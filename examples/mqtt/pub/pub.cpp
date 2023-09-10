@@ -17,14 +17,14 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
-#include <cstring>
-
-#include <tbox/base/scope_exit.hpp>
-#include <tbox/event/loop.h>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
 #include <tbox/mqtt/client.h>
+
+#include <cstring>
+#include <iostream>
+#include <tbox/base/scope_exit.hpp>
 
 using namespace std;
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
     LogOutput_Enable();
 
-    Loop* sp_loop = Loop::New();
+    Loop *sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     mqtt::Client mqtt(sp_loop);
@@ -57,10 +57,8 @@ int main(int argc, char **argv)
         LogInfo("connected");
         mqtt.publish(topic, payload, strlen(payload), 0, false, &pub_mid);
     };
-    cbs.disconnected = [] {
-        LogInfo("disconnected");
-    };
-    cbs.message_pub = [&] (int mid) {
+    cbs.disconnected = [] { LogInfo("disconnected"); };
+    cbs.message_pub = [&](int mid) {
         if (mid == pub_mid) {
             LogInfo("publish success");
             mqtt.stop();

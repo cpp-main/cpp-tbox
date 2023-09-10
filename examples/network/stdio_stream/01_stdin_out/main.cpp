@@ -17,10 +17,11 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <iostream>
 #include <tbox/event/loop.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/network/stdio_stream.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace tbox;
@@ -39,12 +40,10 @@ int main()
 
     auto sp_exit = sp_loop->newSignalEvent();
     sp_exit->initialize(SIGINT, event::Event::Mode::kOneshot);
-    sp_exit->setCallback(
-        [=] (int) {
-            cout << "Info: Exit Loop" << endl;
-            sp_loop->exitLoop();
-        }
-    );
+    sp_exit->setCallback([=](int) {
+        cout << "Info: Exit Loop" << endl;
+        sp_loop->exitLoop();
+    });
     sp_exit->enable();
 
     cout << "Info: Start Loop" << endl;

@@ -21,18 +21,19 @@
 #include "connection.h"
 
 #include <tbox/base/log.h>
+
 #include "loop.h"
 
 namespace tbox {
 namespace dbus {
 
-Connection::Connection(event::Loop *loop)
-    : loop_(loop)
+Connection::Connection(event::Loop *loop) : loop_(loop)
 {
     LogUndo();
 }
 
-Connection::~Connection() {
+Connection::~Connection()
+{
     LogUndo();
 }
 
@@ -52,7 +53,6 @@ bool Connection::initialize(BusType bus_type)
 
     AttachLoop(dbus_conn_, loop_);
     return true;
-   
 }
 
 bool Connection::initialize(const std::string bus_address)
@@ -81,5 +81,5 @@ void Connection::cleanup()
     ::dbus_connection_unref(dbus_conn_);
 }
 
-}
-}
+}  // namespace dbus
+}  // namespace tbox

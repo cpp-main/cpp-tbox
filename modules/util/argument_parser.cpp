@@ -20,6 +20,7 @@
 #include "argument_parser.h"
 
 #include <tbox/base/assert.h>
+
 #include "string.h"
 
 namespace tbox {
@@ -32,63 +33,55 @@ namespace {
 bool PickKeyAndValue(const std::string &orig, std::string &key, std::string &value)
 {
     auto pos = orig.find_first_of('=');
-    if (pos == std::string::npos)
-        return false;
+    if (pos == std::string::npos) return false;
 
-    key   = orig.substr(0, pos);
+    key = orig.substr(0, pos);
     value = string::StripQuot(orig.substr(pos + 1));
     return true;
 }
-}
+}  // namespace
 
 bool ArgumentParser::parse(const std::vector<std::string> &args, int start)
 {
     for (size_t i = start; i < args.size(); ++i) {
         const std::string &curr = args.at(i);
         OptionValue opt_value;
-        if (i != (args.size() - 1))
-            opt_value.set(args.at(i + 1));
+        if (i != (args.size() - 1)) opt_value.set(args.at(i + 1));
 
         if (curr[0] == '-') {
-            if (curr[1] == '-') {   //! 匹配 --xxxx
+            if (curr[1] == '-') {  //! 匹配 --xxxx
                 const std::string opt = curr.substr(2);
                 std::string key, value;
                 //! handle '--key=value'
                 if (PickKeyAndValue(opt, key, value)) {
                     OptionValue tmp;
                     tmp.set(value);
-                    if (!handler_(0, key, tmp))
-                        return false;
+                    if (!handler_(0, key, tmp)) return false;
                 } else {
                     //! handle '--key value'
-                    if (!handler_(0, opt, opt_value))
-                        return false;
+                    if (!handler_(0, opt, opt_value)) return false;
                 }
-            } else {    //! handle -xyz pattern
+            } else {  //! handle -xyz pattern
                 for (size_t j = 1; j < curr.size(); ++j) {
                     char opt = curr[j];
                     if (j != (curr.size() - 1)) {
                         OptionValue tmp;
-                        if (!handler_(opt, "", tmp))
-                            return false;
+                        if (!handler_(opt, "", tmp)) return false;
                     } else {
                         //! only this last opt possess value
-                        if (!handler_(opt, "", opt_value))
-                            return false;
+                        if (!handler_(opt, "", opt_value)) return false;
                     }
                 }
             }
         }
 
-        if (opt_value.isUsed())
-            ++i;
+        if (opt_value.isUsed()) ++i;
     }
 
     return true;
-
 }
 
-bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
+bool ArgumentParser::parse(int argc, const char *const *const argv, int start)
 {
     TBOX_ASSERT(argc >= 1);
     TBOX_ASSERT(argv != nullptr);
@@ -97,12 +90,11 @@ bool ArgumentParser::parse(int argc, const char * const * const argv, int start)
     std::vector<std::string> args;
     for (int i = start; i < argc; ++i) {
         const char *curr = argv[i];
-        if (curr == nullptr)
-            return false;
+        if (curr == nullptr) return false;
         args.push_back(curr);
     }
     return parse(args, 0);
 }
 
-}
-}
+}  // namespace util
+}  // namespace tbox

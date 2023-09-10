@@ -17,24 +17,20 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <string>
-
 #include <signal.h>
+#include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
+#include <tbox/event/loop.h>
+#include <tbox/event/signal_event.h>
+#include <tbox/event/timer_event.h>
+#include <tbox/terminal/service/tcp_rpc.h>
+#include <tbox/terminal/session.h>
+#include <tbox/terminal/terminal.h>
 
 #include <iostream>
 #include <sstream>
-
-#include <tbox/base/log.h>
-#include <tbox/base/log_output.h>
+#include <string>
 #include <tbox/base/scope_exit.hpp>
-
-#include <tbox/event/loop.h>
-#include <tbox/event/timer_event.h>
-#include <tbox/event/signal_event.h>
-
-#include <tbox/terminal/terminal.h>
-#include <tbox/terminal/service/tcp_rpc.h>
-#include <tbox/terminal/session.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -45,8 +41,7 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop);
 int main(int argc, char **argv)
 {
     std::string bind_addr = "0.0.0.0:12345";
-    if (argc >= 2)
-        bind_addr = argv[1];
+    if (argc >= 2) bind_addr = argv[1];
 
     LogOutput_Enable();
 
@@ -63,14 +58,12 @@ int main(int argc, char **argv)
     //! 注册ctrl+C停止信号
     auto *sp_stop_ev = sp_loop->newSignalEvent();
     SetScopeExitAction([sp_stop_ev] { delete sp_stop_ev; });
-    sp_stop_ev->initialize({SIGINT,SIGTERM}, Event::Mode::kOneshot);
+    sp_stop_ev->initialize({SIGINT, SIGTERM}, Event::Mode::kOneshot);
     //! 指定ctrl+C时要做的事务
-    sp_stop_ev->setCallback(
-        [&] (int) {
-            rpc.stop();
-            sp_loop->exitLoop();    //! (3) 退出事件循环
-        }
-    );
+    sp_stop_ev->setCallback([&](int) {
+        rpc.stop();
+        sp_loop->exitLoop();  //! (3) 退出事件循环
+    });
     sp_stop_ev->enable();
 
     BuildNodes(term, sp_loop);
@@ -90,14 +83,12 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop)
      * sync_func 就是同步执行的命令函数
      * 当他被执行时，只需要调用 Session 的 send() 方法就可以输出信息到终端
      */
-    Func sync_func = \
-        [](const Session &s, const Args &args) {
-            std::stringstream ss;
-            ss << "This is sync_func.\r\nArgs:\r\n";
-            for (size_t i = 0; i < args.size(); ++i)
-                ss << '[' << i << "]: " << args.at(i) << "\r\n";
-            s.send(ss.str());
-        };
+    Func sync_func = [](const Session &s, const Args &args) {
+        std::stringstream ss;
+        ss << "This is sync_func.\r\nArgs:\r\n";
+        for (size_t i = 0; i < args.size(); ++i) ss << '[' << i << "]: " << args.at(i) << "\r\n";
+        s.send(ss.str());
+    };
 
     /**
      * async_func 是异步执行的命令函数
@@ -107,42 +98,41 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop)
      * 执行命令时，命令只是发出请求就结束。而结果则是在后面则到返回结果，或检测到异常
      * 时才会输出。
      */
-    Func async_func = \
-        [=](const Session &s, const Args &args) {
-            if (args.size() < 2) {
-                s.send(std::string("Usage: ") + args[0] + " <name>\r\n");
+    Func async_func = [=](const Session &s, const Args &args) {
+        if (args.size() < 2) {
+            s.send(std::string("Usage: ") + args[0] + " <name>\r\n");
+            return;
+        }
+
+        auto name = args[1];
+        //! 创建一个定时器，令其每秒打印
+        auto sp_timer = wp_loop->newTimerEvent();
+        sp_timer->initialize(std::chrono::seconds(1), Event::Mode::kPersist);
+        sp_timer->setCallback([=] {  //! 注意：这里用的是 =，而不是 &
+                                     //! 。用意是捕获 s 的副本，而不是引用它。
+            if (!s.isValid()) {      //! 可以检查 s 对应的 Session
+                                     //! 是否有效，如果无效则可以不做任何事情
+                sp_timer->disable();
+                wp_loop->run([sp_timer] { delete sp_timer; });
                 return;
             }
+            s.send(std::string("timer ") + name + " timeout\r\n");
+        });
+        sp_timer->enable();
+        s.send(std::string("timer ") + name + " start\r\n");
+    };
 
-            auto name = args[1];
-            //! 创建一个定时器，令其每秒打印
-            auto sp_timer = wp_loop->newTimerEvent();
-            sp_timer->initialize(std::chrono::seconds(1), Event::Mode::kPersist);
-            sp_timer->setCallback(
-                [=] {   //! 注意：这里用的是 =，而不是 & 。用意是捕获 s 的副本，而不是引用它。
-                    if (!s.isValid()) { //! 可以检查 s 对应的 Session 是否有效，如果无效则可以不做任何事情
-                        sp_timer->disable();
-                        wp_loop->run([sp_timer] { delete sp_timer; });
-                        return;
-                    }
-                    s.send(std::string("timer ") + name + " timeout\r\n");
-                }
-            );
-            sp_timer->enable();
-            s.send(std::string("timer ") + name + " start\r\n");
-        };
-
-/**
-构建如下结点树:
-|-- dir1
-|   |-- dir1_1
-|   |   |-- async*
-|   |   `-- root(R)
-|   `-- dir1_2
-|       `-- sync*
-|-- dir2
-`-- sync*
-*/
+    /**
+    构建如下结点树:
+    |-- dir1
+    |   |-- dir1_1
+    |   |   |-- async*
+    |   |   `-- root(R)
+    |   `-- dir1_2
+    |       `-- sync*
+    |-- dir2
+    `-- sync*
+    */
     auto sync_func_token = term.createFuncNode(sync_func, "This is sync func");
     auto async_func_token = term.createFuncNode(async_func, "This is async func");
 

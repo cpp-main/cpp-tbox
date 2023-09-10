@@ -51,5 +51,5 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     build = 0;
 }
 
-}
-}
+}  // namespace main
+}  // namespace tbox
