@@ -45,12 +45,13 @@ class CommonLoop : public Loop {
     virtual bool isInLoopThread() override;
     virtual bool isRunning() const override;
 
-    virtual void runInLoop(Func &&func, const std::string &what) override;
-    virtual void runInLoop(const Func &func, const std::string &what) override;
-    virtual void runNext(Func &&func, const std::string &what) override;
-    virtual void runNext(const Func &func, const std::string &what) override;
-    virtual void run(Func &&func, const std::string &what) override;
-    virtual void run(const Func &func, const std::string &what) override;
+    virtual RunId runInLoop(Func &&func, const std::string &what) override;
+    virtual RunId runInLoop(const Func &func, const std::string &what) override;
+    virtual RunId runNext(Func &&func, const std::string &what) override;
+    virtual RunId runNext(const Func &func, const std::string &what) override;
+    virtual RunId run(Func &&func, const std::string &what) override;
+    virtual RunId run(const Func &func, const std::string &what) override;
+    virtual bool  cancel(RunId run_id) override;
 
     virtual Stat getStat() const override;
     virtual void resetStat() override;
@@ -116,12 +117,20 @@ class CommonLoop : public Loop {
     };
 
     struct RunFuncItem {
-        RunFuncItem(Func &&func, const std::string &what);
+        RunFuncItem(RunId id, Func &&func, const std::string &what);
 
+        RunId id;
         std::chrono::steady_clock::time_point commit_time_point;
         Func func;
         std::string what;
     };
+
+    using RunFuncQueue = std::deque<RunFuncItem>;
+
+    RunId allocRunInLoopId();
+    RunId allocRunNextId();
+
+    static bool RemoveRunFuncItemById(RunFuncQueue &run_deqeue, RunId run_id);
 
   private:
     mutable std::recursive_mutex lock_;
@@ -132,8 +141,11 @@ class CommonLoop : public Loop {
     bool has_commit_run_req_ = false;
     int run_event_fd_ = -1;
     FdEvent *sp_run_read_event_ = nullptr;
-    std::deque<RunFuncItem> run_in_loop_func_queue_;
-    std::deque<RunFuncItem> run_next_func_queue_;
+    RunId run_in_loop_id_alloc_ = 0;    //! 偶数
+    RunId run_next_id_alloc_ = 1;       //! 奇数
+    RunFuncQueue run_in_loop_func_queue_;
+    RunFuncQueue run_next_func_queue_;
+    RunFuncQueue tmp_func_queue_;   //! 当前将要立即执行的任务队列
 
     //! 统计相关
     std::chrono::steady_clock::time_point whole_stat_start_;

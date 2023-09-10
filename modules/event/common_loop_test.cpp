@@ -565,6 +565,146 @@ TEST(CommonLoop, RunBenchmark)
     }
 }
 
+//! 测试取消runNext()委托的任务
+TEST(CommonLoop, CancelRunNext)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+
+        auto run_id = sp_loop->runNext([&] { ++counter; });
+        EXPECT_TRUE(sp_loop->cancel(run_id));
+
+        sp_loop->exitLoop(chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+
+        EXPECT_EQ(counter, 0);
+    }
+}
+
+//! 测试取消runInLoop()委托的任务
+TEST(CommonLoop, CancelRunInLoop)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+
+        auto run_id = sp_loop->runInLoop([&] { ++counter; });
+        EXPECT_TRUE(sp_loop->cancel(run_id));
+
+        sp_loop->exitLoop(chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+
+        EXPECT_EQ(counter, 0);
+    }
+}
+
+//! 测试同时取消runNext()与runInLoop()委托的任务
+TEST(CommonLoop, CancelRunNextAndRunInLoop)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        int counter = 0;
+
+        auto run_id_1 = sp_loop->runNext([&] { ++counter; });
+        auto run_id_2 = sp_loop->runInLoop([&] { ++counter; });
+
+        EXPECT_TRUE(sp_loop->cancel(run_id_1));
+        EXPECT_TRUE(sp_loop->cancel(run_id_2));
+
+        sp_loop->exitLoop(chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+
+        EXPECT_EQ(counter, 0);
+    }
+}
+
+//! 测试在在runNext()中同时取消另一个runNext()委托的任务
+TEST(CommonLoop, CancelRunNextInRunNext)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        bool is_cancel = false;
+        int counter = 0;
+
+        Loop::RunId run_id;
+        sp_loop->runNext([&] {
+            EXPECT_TRUE(sp_loop->cancel(run_id));
+            is_cancel = true;
+        });
+
+        run_id = sp_loop->runNext([&] { ++counter; });
+
+        sp_loop->exitLoop(chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+
+        EXPECT_TRUE(is_cancel);
+        EXPECT_EQ(counter, 0);
+    }
+}
+
+//! 测试在在runInLoop()中同时取消另一个runInLoop()委托的任务
+TEST(CommonLoop, CancelRunInLoopInRunInLoop)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        bool is_cancel = false;
+        int counter = 0;
+
+        Loop::RunId run_id;
+        sp_loop->runInLoop([&] {
+            EXPECT_TRUE(sp_loop->cancel(run_id));
+            is_cancel = true;
+        });
+
+        run_id = sp_loop->runInLoop([&] { ++counter; });
+
+        sp_loop->exitLoop(chrono::milliseconds(10));
+        sp_loop->runLoop();
+
+        delete sp_loop;
+
+        EXPECT_TRUE(is_cancel);
+        EXPECT_EQ(counter, 0);
+    }
+}
+
+TEST(CommonLoop, CancelNotExistRun)
+{
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
+        Loop *sp_loop = event::Loop::New(e);
+
+        EXPECT_FALSE(sp_loop->cancel(100));
+
+        delete sp_loop;
+    }
+}
+
 TEST(CommonLoop, ExitLoopMultiTimes)
 {
     auto engines = Loop::Engines();

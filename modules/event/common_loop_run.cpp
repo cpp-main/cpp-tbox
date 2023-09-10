@@ -21,6 +21,7 @@
 
 #include <unistd.h>
 #include <inttypes.h>
+#include <algorithm>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 
@@ -29,16 +30,31 @@ namespace event {
 
 using namespace std::chrono;
 
-CommonLoop::RunFuncItem::RunFuncItem(Func &&f, const std::string &w)
-    : commit_time_point(steady_clock::now())
+CommonLoop::RunFuncItem::RunFuncItem(RunId i, Func &&f, const std::string &w)
+    : id(i)
+    , commit_time_point(steady_clock::now())
     , func(std::move(f))
     , what(w)
 { }
 
-void CommonLoop::runInLoop(Func &&func, const std::string &what)
+Loop::RunId CommonLoop::allocRunInLoopId()
+{
+    run_in_loop_id_alloc_ += 2;
+    return run_in_loop_id_alloc_;
+}
+
+Loop::RunId CommonLoop::allocRunNextId()
+{
+    run_next_id_alloc_ += 2;
+    return run_next_id_alloc_;
+}
+
+Loop::RunId CommonLoop::runInLoop(Func &&func, const std::string &what)
 {
     std::lock_guard<std::recursive_mutex> g(lock_);
-    run_in_loop_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
+
+    RunId run_id = allocRunInLoopId();
+    run_in_loop_func_queue_.emplace_back(RunFuncItem(run_id, std::move(func), what));
 
     if (sp_run_read_event_ != nullptr)
         commitRunRequest();
@@ -49,17 +65,20 @@ void CommonLoop::runInLoop(Func &&func, const std::string &what)
 
     if (queue_size > run_in_loop_peak_num_)
         run_in_loop_peak_num_ = queue_size;
+
+    return run_id;
 }
 
-void CommonLoop::runInLoop(const Func &func, const std::string &what)
+Loop::RunId CommonLoop::runInLoop(const Func &func, const std::string &what)
 {
     Func func_copy(func);
-    runInLoop(std::move(func_copy), what);
+    return runInLoop(std::move(func_copy), what);
 }
 
-void CommonLoop::runNext(Func &&func, const std::string &what)
+Loop::RunId CommonLoop::runNext(Func &&func, const std::string &what)
 {
-    run_next_func_queue_.emplace_back(RunFuncItem(std::move(func), what));
+    RunId run_id = allocRunNextId();
+    run_next_func_queue_.emplace_back(RunFuncItem(run_id, std::move(func), what));
 
     auto queue_size = run_next_func_queue_.size();
     if (queue_size > water_line_.run_next_queue_size)
@@ -67,15 +86,17 @@ void CommonLoop::runNext(Func &&func, const std::string &what)
 
     if (queue_size > run_next_peak_num_)
         run_next_peak_num_ = queue_size;
+
+    return run_id;
 }
 
-void CommonLoop::runNext(const Func &func, const std::string &what)
+Loop::RunId CommonLoop::runNext(const Func &func, const std::string &what)
 {
     Func func_copy(func);
-    runNext(std::move(func_copy), what);
+    return runNext(std::move(func_copy), what);
 }
 
-void CommonLoop::run(Func &&func, const std::string &what)
+Loop::RunId CommonLoop::run(Func &&func, const std::string &what)
 {
     bool can_run_next = true;
     {
@@ -85,24 +106,62 @@ void CommonLoop::run(Func &&func, const std::string &what)
     }
 
     if (can_run_next)
-        runNext(std::move(func), what);
+        return runNext(std::move(func), what);
     else
-        runInLoop(std::move(func), what);
+        return runInLoop(std::move(func), what);
 }
 
-void CommonLoop::run(const Func &func, const std::string &what)
+Loop::RunId CommonLoop::run(const Func &func, const std::string &what)
 {
     Func func_copy(func);
-    run(std::move(func_copy), what);
+    return run(std::move(func_copy), what);
+}
+
+//! 从队列中删除指定run_id的项
+bool CommonLoop::RemoveRunFuncItemById(RunFuncQueue &run_deqeue, RunId run_id)
+{
+    auto is_run_id_match = [run_id] (RunFuncItem &item) { return item.id == run_id; };
+
+    auto end_iter = run_deqeue.end();
+    auto iter = std::remove_if(run_deqeue.begin(), end_iter, is_run_id_match);
+    if (iter != end_iter) {
+        run_deqeue.erase(iter, end_iter);
+        return true;
+    }
+    return false;
+};
+
+bool CommonLoop::cancel(RunId run_id)
+{
+    //! 先从正在执行的任务队列里删
+    if (RemoveRunFuncItemById(tmp_func_queue_, run_id))
+        return true;
+
+    if (run_id & 1) {   //! 奇数为runNext()的任务
+        return RemoveRunFuncItemById(run_next_func_queue_, run_id);
+    } else {    //! 偶数为runInLoop()的任务
+        std::lock_guard<std::recursive_mutex> g(lock_);
+        return RemoveRunFuncItemById(run_in_loop_func_queue_, run_id);
+    }
 }
 
 void CommonLoop::handleNextFunc()
 {
-    std::deque<RunFuncItem> tmp;
-    run_next_func_queue_.swap(tmp);
+    /**
+     * 这里使用 tmp_func_queue_ 将 run_next_func_queue_ 中的内容交换出去。然后再从
+     * tmp_func_queue_ 逐一取任务出来执行。其目的在于腾空 run_next_func_queue_，让
+     * 新 runNext() 的任务则会在下一轮循环中执行。从而防止无限 runNext() 引起的死循
+     * 环，导致其它事件得不到处理。
+     *
+     * 为什么tmp_func_queue_被定义成成员变量，而不是栈上的临时变量呢？
+     * 如果使用的是临时变量，那么run_next_func_queue_被swap()之后任务，就无法被cancel
+     * 这不符合cancel的功能要求。于是将其作为成员变量，方便cancel()的时候，被swap
+     * 的任务也可以被cancel。
+     */
+    run_next_func_queue_.swap(tmp_func_queue_);
 
-    while (!tmp.empty()) {
-        RunFuncItem &item = tmp.front();
+    while (!tmp_func_queue_.empty()) {
+        RunFuncItem &item = tmp_func_queue_.front();
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
@@ -121,7 +180,7 @@ void CommonLoop::handleNextFunc()
             LogNotice("run_cb_cost: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
 
-        tmp.pop_front();
+        tmp_func_queue_.pop_front();
     }
 }
 
@@ -132,23 +191,15 @@ bool CommonLoop::hasNextFunc() const
 
 void CommonLoop::handleRunInLoopFunc()
 {
-    /**
-     * NOTICE:
-     * 这里使用 tmp 将 run_in_loop_func_queue_ 中的内容交换出去。然后再从 tmp 逐一取任务出来执行。
-     * 其目的在于腾空 run_in_loop_func_queue_，让新 runInLoop() 的任务则会在下一轮循环中执行。
-     * 从而防止无限 runInLoop() 引起的死循环，导致其它事件得不到处理。
-     *
-     * 这点与 runNext() 不同
-     */
-    std::deque<RunFuncItem> tmp;
     {
+        //! 同handleNextFunc()的说明
         std::lock_guard<std::recursive_mutex> g(lock_);
-        run_in_loop_func_queue_.swap(tmp);
+        run_in_loop_func_queue_.swap(tmp_func_queue_);
         finishRunRequest();
     }
 
-    while (!tmp.empty()) {
-        RunFuncItem &item = tmp.front();
+    while (!tmp_func_queue_.empty()) {
+        RunFuncItem &item = tmp_func_queue_.front();
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
@@ -167,7 +218,7 @@ void CommonLoop::handleRunInLoopFunc()
             LogNotice("run_cb_cost: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
 
-        tmp.pop_front();
+        tmp_func_queue_.pop_front();
     }
 }
 
@@ -177,8 +228,8 @@ void CommonLoop::cleanupDeferredTasks()
     int remain_loop_count = 10; //! 限定次数，防止出现 runNext() 递归导致无法退出循环的问题
     while ((!run_in_loop_func_queue_.empty() || !run_next_func_queue_.empty()) && remain_loop_count-- > 0) {
 
-        std::deque<RunFuncItem> run_next_tasks = std::move(run_next_func_queue_);
-        std::deque<RunFuncItem> run_in_loop_tasks = std::move(run_in_loop_func_queue_);
+        RunFuncQueue run_next_tasks = std::move(run_next_func_queue_);
+        RunFuncQueue run_in_loop_tasks = std::move(run_in_loop_func_queue_);
 
         while (!run_next_tasks.empty()) {
             RunFuncItem &item = run_next_tasks.front();

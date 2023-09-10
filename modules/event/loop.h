@@ -55,14 +55,10 @@ class Loop {
     //! Loop是否正在运行
     virtual bool isRunning() const = 0;
 
-    //! 委托延后执行动作
+
+    //! 委托与取消委托延后执行动作
+    using RunId = uint64_t;
     using Func = std::function<void()>;
-    virtual void runInLoop(Func &&func, const std::string &what = "") = 0;
-    virtual void runInLoop(const Func &func, const std::string &what = "") = 0;
-    virtual void runNext(Func &&func, const std::string &what = "") = 0;
-    virtual void runNext(const Func &func, const std::string &what = "") = 0;
-    virtual void run(Func &&func, const std::string &what = "") = 0;
-    virtual void run(const Func &func, const std::string &what = "") = 0;
     /**
      * runInLoop(), runNext(), run() 区别
      *
@@ -86,6 +82,13 @@ class Loop {
      *   明确是Loop线程内的用 runNext(), 明确不是Loop线程内的用 runInLoop()。
      *   不清楚的直接用 run()。
      */
+    virtual RunId runInLoop(Func &&func, const std::string &what = "") = 0;
+    virtual RunId runInLoop(const Func &func, const std::string &what = "") = 0;
+    virtual RunId runNext(Func &&func, const std::string &what = "") = 0;
+    virtual RunId runNext(const Func &func, const std::string &what = "") = 0;
+    virtual RunId run(Func &&func, const std::string &what = "") = 0;
+    virtual RunId run(const Func &func, const std::string &what = "") = 0;
+    virtual bool  cancel(RunId run_id) = 0;
 
     //! 创建事件
     virtual FdEvent* newFdEvent(const std::string &what = "") = 0;
