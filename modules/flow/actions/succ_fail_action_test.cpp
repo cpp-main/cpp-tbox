@@ -33,7 +33,6 @@ TEST(SuccAction, base) {
     SetScopeExitAction([loop] { delete loop; });
 
     SuccAction action(*loop);
-    action.start();
 
     bool is_callback = false;
     action.setFinishCallback(
@@ -43,6 +42,7 @@ TEST(SuccAction, base) {
         }
     );
 
+    action.start();
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
 
@@ -54,7 +54,6 @@ TEST(FailAction, base) {
     SetScopeExitAction([loop] { delete loop; });
 
     FailAction action(*loop);
-    action.start();
 
     bool is_callback = false;
     action.setFinishCallback(
@@ -64,6 +63,7 @@ TEST(FailAction, base) {
         }
     );
 
+    action.start();
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
 

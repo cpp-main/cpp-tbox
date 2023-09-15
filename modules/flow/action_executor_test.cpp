@@ -36,6 +36,7 @@ TEST(ActionExecutor, OneAction) {
   bool is_run = false;
   bool is_action_started_cb_done = false;
   bool is_action_finished_cb_done = false;
+  bool is_all_action_finished_cb_done = false;
 
   ActionExecutor exec;
   exec.setActionStartedCallback(
@@ -52,22 +53,26 @@ TEST(ActionExecutor, OneAction) {
     }
   );
 
-  exec.setAllFinishedCallback([loop]{ loop->exitLoop(); });
+  exec.setAllFinishedCallback([&]{ is_all_action_finished_cb_done = true; });
 
   exec.append(new FunctionAction(*loop, [&]{ is_run = true; return true; }));
 
+  loop->exitLoop(std::chrono::milliseconds(5));
   loop->runLoop();
   EXPECT_TRUE(is_run);
   EXPECT_TRUE(is_action_started_cb_done);
   EXPECT_TRUE(is_action_finished_cb_done);
+  EXPECT_TRUE(is_all_action_finished_cb_done);
 }
 
 TEST(ActionExecutor, TwoActions) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
+  bool is_all_action_finished = false;
+
   ActionExecutor exec;
-  exec.setAllFinishedCallback([loop]{ loop->exitLoop(); });
+  exec.setAllFinishedCallback([&]{ is_all_action_finished = true; });
 
   bool is_run_1 = false;
   bool is_run_2 = false;
@@ -91,7 +96,9 @@ TEST(ActionExecutor, TwoActions) {
     )
   );
 
+  loop->exitLoop(std::chrono::milliseconds(5));
   loop->runLoop();
+
   EXPECT_TRUE(is_run_1);
   EXPECT_TRUE(is_run_2);
 }
@@ -101,12 +108,16 @@ TEST(ActionExecutor, CancelAction)
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });
 
+  bool is_all_action_finished = false;
+
   ActionExecutor exec;
-  exec.setAllFinishedCallback([loop]{ loop->exitLoop(); });
+  exec.setAllFinishedCallback([&]{ is_all_action_finished = true; });
 
   bool is_run_1 = false;
   bool is_run_2 = false;
   bool is_run_3 = false;
+
+  exec.append(new SleepAction(*loop, std::chrono::milliseconds(1)));
 
   exec.append(
     new FunctionAction(*loop,
@@ -118,7 +129,7 @@ TEST(ActionExecutor, CancelAction)
       }
     )
   );
-  exec.append(
+  auto tobe_cancel_action = exec.append(
     new FunctionAction(*loop,
       [&]{
         is_run_2 = true;
@@ -136,12 +147,14 @@ TEST(ActionExecutor, CancelAction)
     )
   );
 
-  exec.cancel(2);
+  exec.cancel(tobe_cancel_action);
 
+  loop->exitLoop(std::chrono::milliseconds(5));
   loop->runLoop();
   EXPECT_TRUE(is_run_1);
   EXPECT_FALSE(is_run_2);
   EXPECT_TRUE(is_run_3);
+  EXPECT_TRUE(is_all_action_finished);
 }
 
 /**

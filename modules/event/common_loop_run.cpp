@@ -167,7 +167,8 @@ void CommonLoop::handleNextFunc()
     run_next_func_queue_.swap(tmp_func_queue_);
 
     while (!tmp_func_queue_.empty()) {
-        RunFuncItem &item = tmp_func_queue_.front();
+        auto item = tmp_func_queue_.front();
+        tmp_func_queue_.pop_front();
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
@@ -185,8 +186,6 @@ void CommonLoop::handleNextFunc()
         if (cost > water_line_.run_cb_cost)
             LogNotice("run_cb_cost: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
-
-        tmp_func_queue_.pop_front();
     }
 }
 
@@ -205,7 +204,8 @@ void CommonLoop::handleRunInLoopFunc()
     }
 
     while (!tmp_func_queue_.empty()) {
-        RunFuncItem &item = tmp_func_queue_.front();
+        auto item = tmp_func_queue_.front();
+        tmp_func_queue_.pop_front();
 
         auto now = steady_clock::now();
         auto delay = now - item.commit_time_point;
@@ -223,8 +223,6 @@ void CommonLoop::handleRunInLoopFunc()
         if (cost > water_line_.run_cb_cost)
             LogNotice("run_cb_cost: %" PRIu64 " us, what: '%s'",
                       cost.count()/1000, item.what.c_str());
-
-        tmp_func_queue_.pop_front();
     }
 }
 
