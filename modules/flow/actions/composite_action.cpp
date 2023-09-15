@@ -25,6 +25,8 @@
 namespace tbox {
 namespace flow {
 
+using namespace std::placeholders;
+
 CompositeAction::~CompositeAction() {
     CHECK_DELETE_RESET_OBJ(child_);
 }
@@ -34,9 +36,7 @@ void CompositeAction::setChild(Action *child) {
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    child_->setFinishCallback(
-        [this](bool succ) { finish(succ); }
-    );
+    child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1));
 }
 
 void CompositeAction::toJson(Json &js) const {
@@ -61,11 +61,20 @@ bool CompositeAction::onPause() {
 }
 
 bool CompositeAction::onResume() {
+    if (child_->state() == State::kFinished) {
+        finish(child_->result() == Result::kSuccess);
+        return true;
+    }
     return child_->resume();
 }
 
 void CompositeAction::onReset() {
     child_->reset();
+}
+
+void CompositeAction::onChildFinished(bool is_succ) {
+    if (state() == State::kRunning)
+        finish(is_succ);
 }
 
 }

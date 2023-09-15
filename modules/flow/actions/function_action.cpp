@@ -31,7 +31,7 @@ FunctionAction::FunctionAction(event::Loop &loop, const Func &func) :
 }
 
 bool FunctionAction::onStart() {
-  loop_.runNext([this] { finish(func_()); }, "FunctionAction::onStart");
+  finish(func_());
   return true;
 }
 

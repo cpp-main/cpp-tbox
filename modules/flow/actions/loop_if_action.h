@@ -44,6 +44,9 @@ class LoopIfAction : public Action {
     virtual bool onResume() override;
     virtual void onReset() override;
 
+    void onIfFinished(bool is_succ);
+    void onExecFinished(bool is_succ);
+
   private:
     Action *if_action_;
     Action *exec_action_;

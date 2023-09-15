@@ -25,23 +25,15 @@
 namespace tbox {
 namespace flow {
 
+using namespace std::placeholders;
+
 WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode) :
     Action(loop, "Wrapper"),
     child_(child),
     mode_(mode)
 {
     TBOX_ASSERT(child_ != nullptr);
-
-    if (mode == Mode::kNormal)
-        child_->setFinishCallback([this](bool succ) { finish(succ); });
-    else if (mode == Mode::kInvert)
-        child_->setFinishCallback([this](bool succ) { finish(!succ); });
-    else if (mode == Mode::kAlwaySucc)
-        child_->setFinishCallback([this](bool) { finish(true); });
-    else if (mode == Mode::kAlwayFail)
-        child_->setFinishCallback([this](bool) { finish(false); });
-    else
-        TBOX_ASSERT(false);
+    child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
 }
 
 WrapperAction::~WrapperAction() {
@@ -67,11 +59,30 @@ bool WrapperAction::onPause() {
 }
 
 bool WrapperAction::onResume() {
+    if (child_->state() == State::kFinished) {
+        onChildFinished(child_->result() == Result::kSuccess);
+        return true;
+    }
     return child_->resume();
 }
 
 void WrapperAction::onReset() {
     child_->reset();
+}
+
+void WrapperAction::onChildFinished(bool is_succ) {
+    if (state() == State::kRunning) {
+        if (mode_ == Mode::kNormal)
+            finish(is_succ);
+        else if (mode_ == Mode::kInvert)
+            finish(!is_succ);
+        else if (mode_ == Mode::kAlwaySucc)
+            finish(true);
+        else if (mode_ == Mode::kAlwayFail)
+            finish(false);
+        else
+            TBOX_ASSERT(false);
+    }
 }
 
 std::string ToString(WrapperAction::Mode mode) {

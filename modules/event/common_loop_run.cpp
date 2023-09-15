@@ -40,6 +40,9 @@ CommonLoop::RunFuncItem::RunFuncItem(RunId i, Func &&f, const std::string &w)
 Loop::RunId CommonLoop::allocRunInLoopId()
 {
     run_in_loop_id_alloc_ += 2;
+    if (run_in_loop_id_alloc_ == 0) //! 确保分配到的ID一定不为0
+      run_in_loop_id_alloc_ += 2;
+
     return run_in_loop_id_alloc_;
 }
 
@@ -133,6 +136,9 @@ bool CommonLoop::RemoveRunFuncItemById(RunFuncQueue &run_deqeue, RunId run_id)
 
 bool CommonLoop::cancel(RunId run_id)
 {
+    if (run_id == 0)
+        return false;
+
     //! 先从正在执行的任务队列里删
     if (RemoveRunFuncItemById(tmp_func_queue_, run_id))
         return true;

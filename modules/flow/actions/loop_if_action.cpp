@@ -25,6 +25,8 @@
 namespace tbox {
 namespace flow {
 
+using namespace std::placeholders;
+
 LoopIfAction::LoopIfAction(event::Loop &loop, Action *if_action, Action *exec_action) :
   Action(loop, "LoopIf"),
   if_action_(if_action),
@@ -33,27 +35,8 @@ LoopIfAction::LoopIfAction(event::Loop &loop, Action *if_action, Action *exec_ac
   TBOX_ASSERT(if_action != nullptr);
   TBOX_ASSERT(exec_action != nullptr);
 
-  if_action_->setFinishCallback(
-    [this] (bool is_succ) {
-      if (is_succ) {
-        exec_action_->start();
-      } else {
-        finish(finish_result_);
-      }
-    }
-  );
-
-  exec_action_->setFinishCallback(
-    [this] (bool) {
-      if (state() == State::kRunning) {
-        if_action_->reset();
-        exec_action_->reset();
-
-        if (!if_action_->start())
-          finish(finish_result_);
-      }
-    }
-  );
+  if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1));
+  exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _1));
 }
 
 LoopIfAction::~LoopIfAction() {
@@ -89,6 +72,26 @@ bool LoopIfAction::onResume() {
 void LoopIfAction::onReset() {
   if_action_->reset();
   exec_action_->reset();
+}
+
+void LoopIfAction::onIfFinished(bool is_succ) {
+  if (state() == State::kRunning) {
+    if (is_succ) {
+      exec_action_->start();
+    } else {
+      finish(finish_result_);
+    }
+  }
+}
+
+void LoopIfAction::onExecFinished(bool is_succ) {
+  if (state() == State::kRunning) {
+    if_action_->reset();
+    exec_action_->reset();
+
+    if (!if_action_->start())
+      finish(finish_result_);
+  }
 }
 
 }

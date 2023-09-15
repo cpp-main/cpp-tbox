@@ -32,8 +32,8 @@ class SuccAction : public Action {
 
   protected:
     virtual bool onStart() {
-        loop_.runNext([this] { finish(true); });
-        return true;
+      finish(true);
+      return true;
     }
 };
 
@@ -44,7 +44,7 @@ class FailAction : public Action {
 
   protected:
     virtual bool onStart() {
-        loop_.runNext([this] { finish(false); });
+        finish(false);
         return true;
     }
 };

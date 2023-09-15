@@ -24,6 +24,8 @@
 namespace tbox {
 namespace flow {
 
+using namespace std::placeholders;
+
 RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode) :
   Action(loop, "Repeat"),
   child_(child),
@@ -31,23 +33,7 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
   mode_(mode)
 {
   TBOX_ASSERT(child != nullptr);
-
-  child_->setFinishCallback(
-    [this] (bool is_succ) {
-      if ((mode_ == Mode::kBreakSucc && is_succ) ||
-          (mode_ == Mode::kBreakFail && !is_succ)) {
-        finish(is_succ);
-      } else if (state() == State::kRunning) {
-        if (remain_times_ > 0) {
-          child_->reset();
-          child_->start();
-          --remain_times_;
-        } else {
-          finish(true);
-        }
-      }
-    }
-  );
+  child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
 }
 
 RepeatAction::~RepeatAction() {
@@ -80,6 +66,23 @@ bool RepeatAction::onResume() {
 
 void RepeatAction::onReset() {
   child_->reset();
+}
+
+void RepeatAction::onChildFinished(bool is_succ) {
+  if (state() == State::kRunning) {
+    if ((mode_ == Mode::kBreakSucc && is_succ) ||
+        (mode_ == Mode::kBreakFail && !is_succ)) {
+      finish(is_succ);
+    } else {
+      if (remain_times_ > 0) {
+        child_->reset();
+        child_->start();
+        --remain_times_;
+      } else {
+        finish(true);
+      }
+    }
+  }
 }
 
 }

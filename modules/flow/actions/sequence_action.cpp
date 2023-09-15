@@ -103,12 +103,14 @@ void SequenceAction::startOtheriseFinish(bool is_succ) {
 }
 
 void SequenceAction::onChildFinished(bool is_succ) {
-  if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
-      (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
-    finish(is_succ);
-  } else {
-    ++index_;
-    startOtheriseFinish(is_succ);
+  if (state() == State::kRunning) {
+    if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
+        (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
+      finish(is_succ);
+    } else {
+      ++index_;
+      startOtheriseFinish(is_succ);
+    }
   }
 }
 

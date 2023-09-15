@@ -88,10 +88,21 @@ bool IfElseAction::onPause() {
 
 bool IfElseAction::onResume() {
   if (if_action_->state() == Action::State::kFinished) {
-    if (if_action_->result() == Action::Result::kSuccess)
-      return succ_action_->resume();
-    else
-      return fail_action_->resume();
+    if (if_action_->result() == Action::Result::kSuccess) {
+      if (succ_action_->state() == State::kFinished) {
+        finish(succ_action_->result() == Result::kSuccess);
+        return true;
+      } else {
+        return succ_action_->resume();
+      }
+    } else {
+      if (fail_action_->state() == State::kFinished) {
+        finish(fail_action_->result() == Result::kSuccess);
+        return true;
+      } else {
+        return fail_action_->resume();
+      }
+    }
   } else {
     return if_action_->resume();
   }
@@ -108,19 +119,20 @@ void IfElseAction::onReset() {
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ) {
-  if (is_succ) {
-    if (succ_action_ != nullptr) {
-      succ_action_->start();
-      return;
+  if (state() == State::kRunning) {
+    if (is_succ) {
+      if (succ_action_ != nullptr) {
+        succ_action_->start();
+        return;
+      }
+    } else {
+      if (fail_action_ != nullptr) {
+        fail_action_->start();
+        return;
+      }
     }
-  } else {
-    if (fail_action_ != nullptr) {
-      fail_action_->start();
-      return;
-    }
+    finish(true);
   }
-
-  finish(true);
 }
 
 }

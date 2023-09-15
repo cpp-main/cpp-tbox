@@ -41,6 +41,8 @@ Action::~Action() {
             id_, type_.c_str(), label_.c_str(),
             ToString(state_).c_str());
   }
+
+  loop_.cancel(finish_cb_run_id_);
   CHECK_DELETE_RESET_OBJ(timer_ev_);
 }
 
@@ -62,16 +64,20 @@ bool Action::start() {
     return false;
   }
 
+  auto last_state = state_;
+
   LogDbg("start action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
   if (!onStart()) {
     LogWarn("start action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
-  if (timer_ev_ != nullptr)
-    timer_ev_->enable();
+  if (last_state == state_) {
+    if (timer_ev_ != nullptr)
+      timer_ev_->enable();
 
-  state_ = State::kRunning;
+    state_ = State::kRunning;
+  }
   return true;
 }
 
@@ -84,16 +90,20 @@ bool Action::pause() {
     return false;
   }
 
+  auto last_state = state_;
+
   LogDbg("pause action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
   if (!onPause()) {
     LogWarn("pause action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
-  if (timer_ev_ != nullptr)
-    timer_ev_->disable();
+  if (last_state == state_) {
+    if (timer_ev_ != nullptr)
+      timer_ev_->disable();
 
-  state_ = State::kPause;
+    state_ = State::kPause;
+  }
   return true;
 }
 
@@ -106,16 +116,20 @@ bool Action::resume() {
     return false;
   }
 
+  auto last_state = state_;
+
   LogDbg("resume action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
   if (!onResume()) {
     LogWarn("resume action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
-  if (timer_ev_ != nullptr)
-    timer_ev_->enable();
+  if (last_state == state_) {
+    if (timer_ev_ != nullptr)
+      timer_ev_->enable();
 
-  state_ = State::kRunning;
+    state_ = State::kRunning;
+  }
   return true;
 }
 
@@ -124,16 +138,20 @@ bool Action::stop() {
       state_ != State::kPause)
     return true;
 
+  auto last_state = state_;
+
   LogDbg("stop action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
   if (!onStop()) {
     LogWarn("stop action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
     return false;
   }
 
-  if (timer_ev_ != nullptr)
-    timer_ev_->disable();
+  if (last_state == state_) {
+    if (timer_ev_ != nullptr)
+      timer_ev_->disable();
 
-  state_ = State::kStoped;
+    state_ = State::kStoped;
+  }
   return true;
 }
 
@@ -195,7 +213,7 @@ bool Action::finish(bool is_succ) {
     result_ = is_succ ? Result::kSuccess : Result::kFail;
 
     if (finish_cb_)
-        loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
+        finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
     else
         LogWarn("action %d:%s[%s] no finish_cb", id_, type_.c_str(), label_.c_str());
 

@@ -24,24 +24,15 @@
 namespace tbox {
 namespace flow {
 
+using namespace std::placeholders;
+
 LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
   Action(loop, "Loop"),
   child_(child),
   mode_(mode)
 {
   TBOX_ASSERT(child != nullptr);
-
-  child_->setFinishCallback(
-    [this] (bool is_succ) {
-      if ((mode_ == Mode::kUntilSucc && is_succ) ||
-          (mode_ == Mode::kUntilFail && !is_succ)) {
-        finish(is_succ);
-      } else if (state() == State::kRunning) {
-        child_->reset();
-        child_->start();
-      }
-    }
-  );
+  child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
 }
 
 LoopAction::~LoopAction() {
@@ -71,6 +62,18 @@ bool LoopAction::onResume() {
 
 void LoopAction::onReset() {
   child_->reset();
+}
+
+void LoopAction::onChildFinished(bool is_succ) {
+  if (state() == State::kRunning) {
+    if ((mode_ == Mode::kUntilSucc && is_succ) ||
+        (mode_ == Mode::kUntilFail && !is_succ)) {
+      finish(is_succ);
+    } else if (state() == State::kRunning) {
+      child_->reset();
+      child_->start();
+    }
+  }
 }
 
 }

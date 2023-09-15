@@ -102,15 +102,17 @@ void ParallelAction::onReset() {
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {
-  if (is_succ)
-    succ_set_.insert(index);
-  else
-    fail_set_.insert(index);
+  if (state() == State::kRunning) {
+    if (is_succ)
+      succ_set_.insert(index);
+    else
+      fail_set_.insert(index);
 
-  if (succ_set_.size() == children_.size()) {
-    finish(true);
-  } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
-    finish(false);
+    if (succ_set_.size() == children_.size()) {
+      finish(true);
+    } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
+      finish(false);
+    }
   }
 }
 

@@ -50,6 +50,8 @@ class WrapperAction : public Action {
     virtual bool onResume() override;
     virtual void onReset() override;
 
+    void onChildFinished(bool is_succ);
+
   private:
     Action *child_;
     Mode mode_;

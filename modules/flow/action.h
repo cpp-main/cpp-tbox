@@ -26,7 +26,7 @@
 
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
-#include <tbox/event/forward.h>
+#include <tbox/event/loop.h>
 
 namespace tbox {
 namespace flow {
@@ -113,6 +113,7 @@ class Action {
     Result result_ = Result::kUnsure; //!< 运行结果
 
     event::TimerEvent *timer_ev_ = nullptr;
+    event::Loop::RunId finish_cb_run_id_ = 0; //!< runNext()的任务号，用于撤消
 };
 
 //! 枚举转字串
