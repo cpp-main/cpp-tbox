@@ -202,9 +202,9 @@ void Action::resetTimeout() {
 }
 
 bool Action::finish(bool is_succ) {
-  if (state_ != State::kFinished) {
+  if (state_ != State::kFinished && state_ != State::kStoped) {
     LogDbg("action %d:%s[%s] finished, is_succ: %s", id_, type_.c_str(), label_.c_str(),
-            (is_succ? "succ" : "fail"));
+           (is_succ? "succ" : "fail"));
     state_ = State::kFinished;
 
     if (timer_ev_ != nullptr)
