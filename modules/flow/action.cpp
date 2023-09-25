@@ -42,7 +42,11 @@ Action::~Action() {
             ToString(state_).c_str());
   }
 
-  loop_.cancel(finish_cb_run_id_);
+  if (finish_cb_run_id_ != 0) {
+    loop_.cancel(finish_cb_run_id_);
+    finish_cb_run_id_ = 0;
+  }
+
   CHECK_DELETE_RESET_OBJ(timer_ev_);
 }
 
@@ -164,6 +168,11 @@ void Action::reset() {
 
   if (timer_ev_ != nullptr)
     timer_ev_->disable();
+
+  if (finish_cb_run_id_ != 0) {
+    loop_.cancel(finish_cb_run_id_);
+    finish_cb_run_id_ = 0;
+  }
 
   state_ = State::kIdle;
   result_ = Result::kUnsure;

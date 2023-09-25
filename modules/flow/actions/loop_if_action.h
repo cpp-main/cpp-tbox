@@ -45,7 +45,7 @@ class LoopIfAction : public Action {
     virtual void onReset() override;
 
     void onIfFinished(bool is_succ);
-    void onExecFinished(bool is_succ);
+    void onExecFinished();
 
   private:
     Action *if_action_;

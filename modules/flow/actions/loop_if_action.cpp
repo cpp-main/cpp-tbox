@@ -36,7 +36,7 @@ LoopIfAction::LoopIfAction(event::Loop &loop, Action *if_action, Action *exec_ac
   TBOX_ASSERT(exec_action != nullptr);
 
   if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1));
-  exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _1));
+  exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this));
 }
 
 LoopIfAction::~LoopIfAction() {
@@ -84,7 +84,7 @@ void LoopIfAction::onIfFinished(bool is_succ) {
   }
 }
 
-void LoopIfAction::onExecFinished(bool is_succ) {
+void LoopIfAction::onExecFinished() {
   if (state() == State::kRunning) {
     if_action_->reset();
     exec_action_->reset();
