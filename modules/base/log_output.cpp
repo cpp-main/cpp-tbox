@@ -32,7 +32,7 @@
 
 #include "log_imp.h"
 
-#define TIMESTAMP_STRING_SIZE   22
+#define TIMESTAMP_STRING_SIZE   27
 
 namespace {
     const char *level_name = "FEWNIDT";
@@ -45,7 +45,7 @@ namespace {
         struct tm tm;
         localtime_r(&ts_sec, &tm);
         char tmp[15];
-        strftime(tmp, sizeof(tmp), "%m-%d %H:%M:%S", &tm);
+        strftime(tmp, sizeof(tmp), "%F %H:%M:%S", &tm);
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
 #else
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%u.%06u", content->timestamp.sec, content->timestamp.usec);

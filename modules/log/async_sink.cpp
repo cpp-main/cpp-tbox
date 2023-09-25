@@ -178,7 +178,7 @@ void AsyncSink::udpateTimestampStr(uint32_t sec)
         time_t ts_sec = sec;
         struct tm tm;
         localtime_r(&ts_sec, &tm);
-        strftime(timestamp_str_, sizeof(timestamp_str_), "%m-%d %H:%M:%S", &tm);
+        strftime(timestamp_str_, sizeof(timestamp_str_), "%F %H:%M:%S", &tm);
         timestamp_sec_ = sec;
     }
 }

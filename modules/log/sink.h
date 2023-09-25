@@ -26,7 +26,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/log_imp.h>
 
-#define TIMESTAMP_STRING_SIZE   15
+#define TIMESTAMP_STRING_SIZE   20
 
 namespace tbox {
 namespace log {
