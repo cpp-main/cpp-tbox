@@ -102,5 +102,16 @@ void Sink::handleLog(const LogContent *content)
     onLogFrontEnd(content);
 }
 
+void Sink::udpateTimestampStr(uint32_t sec)
+{
+    if (timestamp_sec_ != sec) {
+        time_t ts_sec = sec;
+        struct tm tm;
+        localtime_r(&ts_sec, &tm);
+        strftime(timestamp_str_, sizeof(timestamp_str_), "%F %H:%M:%S", &tm);
+        timestamp_sec_ = sec;
+    }
+}
+
 }
 }

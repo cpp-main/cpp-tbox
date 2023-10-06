@@ -184,6 +184,8 @@ bool Start(int argc, char **argv)
 
 void Stop()
 {
+    LogInfo("stop main");
+
     if (_runtime == nullptr) {
         std::cerr << "Err: process not start" << std::endl;
         return;

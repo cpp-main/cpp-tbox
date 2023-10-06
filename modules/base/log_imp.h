@@ -49,6 +49,10 @@ struct LogContent {
     const char *text_ptr;   //!< 内容地址
 };
 
+//! 日志等级颜色表
+extern const char*  LOG_LEVEL_COLOR_CODE;
+extern const int    LOG_LEVEL_COLOR_NUM[7];
+
 //! 定义日志输出函数
 typedef void (*LogPrintfFuncType)(const LogContent *content, void *ptr);
 

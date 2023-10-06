@@ -64,7 +64,7 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
         //! STDOUT
         if (util::json::HasObjectField(js_log, "stdout")) {
             auto &js_stdout = js_log.at("stdout");
-            initSink(js_stdout, async_stdout_sink_);
+            initSink(js_stdout, sync_stdout_sink_);
         }
 
         //! SYSLOG
@@ -103,11 +103,10 @@ void Log::cleanup()
 {
     async_file_sink_.disable();
     async_syslog_sink_.disable();
-    async_stdout_sink_.disable();
+    sync_stdout_sink_.disable();
 
     async_file_sink_.cleanup();
     async_syslog_sink_.cleanup();
-    async_stdout_sink_.cleanup();
 }
 
 void Log::initSink(const Json &js, log::Sink &ch)
@@ -139,7 +138,7 @@ void Log::initShell(TerminalNodes &term)
     {
         auto dir_node = term.createDirNode();
         term.mountNode(log_node, dir_node, "stdout");
-        initShellForSink(async_stdout_sink_, term, dir_node);
+        initShellForSink(sync_stdout_sink_, term, dir_node);
     }
     {
         auto dir_node = term.createDirNode();

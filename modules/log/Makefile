@@ -27,12 +27,14 @@ LIB_VERSION_Z = 0
 HEAD_FILES = \
 	sink.h \
 	async_sink.h \
+	sync_stdout_sink.h \
 	async_stdout_sink.h \
 	async_syslog_sink.h \
 	async_file_sink.h \
 
 CPP_SRC_FILES = \
 	sink.cpp \
+	sync_stdout_sink.cpp \
 	async_sink.cpp \
 	async_stdout_sink.cpp \
 	async_syslog_sink.cpp \

@@ -35,8 +35,6 @@
 #define TIMESTAMP_STRING_SIZE   27
 
 namespace {
-    const char *level_name = "FEWNIDT";
-    const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
 
     void _GetCurrTimeString(const LogContent *content, char *timestamp)
     {
@@ -57,20 +55,19 @@ namespace {
         char timestamp[TIMESTAMP_STRING_SIZE]; //!  "05-13 23:45:07.000000"
         _GetCurrTimeString(content, timestamp);
 
-        //! 开启色彩，显示日志等级
-        printf("\033[%dm%c ", level_color_num[content->level], level_name[content->level]);
-
-        //! 打印时间戳、线程号、模块名
-        printf("%s %ld %s ", timestamp, content->thread_id, content->module_id);
+        //! 打印色彩、等级、时间戳、线程号、模块名
+        printf("\033[%dm%c %s %ld %s ",
+            LOG_LEVEL_COLOR_NUM[content->level], LOG_LEVEL_COLOR_CODE[content->level],
+            timestamp, content->thread_id, content->module_id);
 
         if (content->func_name != nullptr)
             printf("%s() ", content->func_name);
 
-        printf("%s ", content->text_ptr);
+        if (content->text_len > 0)
+            printf("%s ", content->text_ptr);
 
-        if (content->file_name != nullptr) {
+        if (content->file_name != nullptr)
             printf("-- %s:%d", content->file_name, content->line);
-        }
 
         puts("\033[0m");    //! 恢复色彩
     }

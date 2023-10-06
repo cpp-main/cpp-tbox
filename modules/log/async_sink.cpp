@@ -85,14 +85,11 @@ void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
     }
 }
 
-namespace {
-const char *level_name = "FEWNIDT";
-const int level_color_num[] = {31, 91, 93, 33, 32, 36, 35};
-}
-
 void AsyncSink::onLogBackEnd(const LogContent *content)
 {
     size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
+
+    udpateTimestampStr(content->timestamp.sec);
 
     //! 加循环为了应对缓冲不够的情况
     for (;;) {
@@ -102,18 +99,17 @@ void AsyncSink::onLogBackEnd(const LogContent *content)
 #define REMAIN_SIZE ((buff_size > pos) ? (buff_size - pos) : 0)
 #define WRITE_PTR   (buff + pos)
 
-        udpateTimestampStr(content->timestamp.sec);
-
         size_t len = 0;
 
         //! 开启色彩，显示日志等级
         if (enable_color_) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%dm", level_color_num[content->level]);
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%dm", LOG_LEVEL_COLOR_NUM[content->level]);
             pos += len;
         }
 
+        //! 打印等级、时间戳、线程号、模块名
         len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
-                       level_name[content->level],
+                       LOG_LEVEL_COLOR_CODE[content->level],
                        timestamp_str_, content->timestamp.usec,
                        content->thread_id, content->module_id);
         pos += len;
@@ -169,17 +165,6 @@ void AsyncSink::onLogBackEnd(const LogContent *content)
             std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
             break;
         }
-    }
-}
-
-void AsyncSink::udpateTimestampStr(uint32_t sec)
-{
-    if (timestamp_sec_ != sec) {
-        time_t ts_sec = sec;
-        struct tm tm;
-        localtime_r(&ts_sec, &tm);
-        strftime(timestamp_str_, sizeof(timestamp_str_), "%F %H:%M:%S", &tm);
-        timestamp_sec_ = sec;
     }
 }
 

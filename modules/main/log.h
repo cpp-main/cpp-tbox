@@ -22,7 +22,7 @@
 
 #include <tbox/base/json_fwd.h>
 
-#include <tbox/log/async_stdout_sink.h>
+#include <tbox/log/sync_stdout_sink.h>
 #include <tbox/log/async_syslog_sink.h>
 #include <tbox/log/async_file_sink.h>
 
@@ -46,7 +46,7 @@ class Log {
     void initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::NodeToken dir_node);
 
   private:
-    log::AsyncStdoutSink async_stdout_sink_;
+    log::SyncStdoutSink  sync_stdout_sink_;
     log::AsyncSyslogSink async_syslog_sink_;
     log::AsyncFileSink   async_file_sink_;
 };

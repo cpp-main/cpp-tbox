@@ -56,8 +56,11 @@ class Sink {
     static void HandleLog(const LogContent *content, void *ptr);
     bool filter(int level, const std::string &module);
 
+    void udpateTimestampStr(uint32_t sec);
+
   protected:
     bool enable_color_ = false;
+    char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30
 
   private:
     std::mutex lock_;
@@ -65,6 +68,8 @@ class Sink {
     uint32_t output_id_ = 0;
     std::map<std::string, int> modules_level_;
     int default_level_ = LOG_LEVEL_INFO;
+
+    uint32_t timestamp_sec_ = 0;
 };
 
 }

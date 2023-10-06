@@ -72,6 +72,9 @@ void Dispatch(const LogContent &content)
 
 }
 
+const char*  LOG_LEVEL_COLOR_CODE = "FEWNIDT";
+const int    LOG_LEVEL_COLOR_NUM[7] = {31, 91, 93, 33, 32, 36, 35};
+
 /**
  * \brief   日志格式化打印接口的实现
  *

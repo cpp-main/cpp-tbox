@@ -42,7 +42,6 @@ class AsyncSink : public Sink {
     virtual void onLogFrontEnd(const LogContent *content) override;
     void onLogBackEndReadPipe(const void *data_ptr, size_t data_size);
     void onLogBackEnd(const LogContent *content);
-    void udpateTimestampStr(uint32_t sec);
     virtual void appendLog(const char *str, size_t len) = 0;
     virtual void flushLog() { }
 
@@ -50,9 +49,6 @@ class AsyncSink : public Sink {
     Config cfg_;
     util::AsyncPipe async_pipe_;
     bool is_pipe_inited_ = false;
-
-    uint32_t timestamp_sec_ = 0;
-    char timestamp_str_[TIMESTAMP_STRING_SIZE]; //!2022-04-12 14:33:30
 
     std::vector<char> buffer_;
 };
