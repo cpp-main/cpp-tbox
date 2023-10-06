@@ -47,9 +47,11 @@ class Terminal : public TerminalInteract,
   public:
     virtual NodeToken createFuncNode(const Func &func, const std::string &help) override;
     virtual NodeToken createDirNode(const std::string &help) override;
+    virtual bool deleteNode(NodeToken node_token) override;
     virtual NodeToken rootNode() const override;
     virtual NodeToken findNode(const std::string &path) const override;
     virtual bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
+    virtual bool umountNode(const NodeToken &parent, const std::string &name) override;
 
   private:
     class Impl;

@@ -27,6 +27,9 @@ namespace terminal {
 
 class Connection;
 
+/**
+ * 终端的交互接口
+ */
 class TerminalInteract {
   public:
     virtual SessionToken newSession(Connection *wp_conn) = 0;

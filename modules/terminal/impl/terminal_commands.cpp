@@ -99,13 +99,15 @@ void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-        if (top_node->type() == NodeType::kDir) {
+        if (top_node == nullptr) {
+            ss << "Error: '" << path_str << "' node has been deleted." << "\r\n";
+        } else if (top_node->type() == NodeType::kDir) {
             s->path = node_path;
         } else {
-            ss << "Error: '" << path_str << "' not directory" << "\r\n";
+            ss << "Error: '" << path_str << "' not directory." << "\r\n";
         }
     } else {
-        ss << "Error: cannot access '" << path_str << "'\r\n";
+        ss << "Error: cannot access '" << path_str << "'.\r\n";
     }
 
     s->wp_conn->send(s->token, ss.str());
@@ -126,9 +128,13 @@ void Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-        ss << top_node->help() << "\r\n";
+        if (top_node != nullptr) {
+            ss << top_node->help() << "\r\n";
+        } else {
+            ss << "Error: '" << path_str << "' node has been deleted.\r\n";
+        }
     } else {
-        ss << "Error: cannot access '" << path_str << "'\r\n";
+        ss << "Error: cannot access '" << path_str << "'.\r\n";
     }
 
     s->wp_conn->send(s->token, ss.str());
@@ -147,7 +153,9 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-        if (top_node->type() == NodeType::kDir) {
+        if (top_node == nullptr) {
+            ss << "Error: '" << path_str << "' node has been deleted.\r\n";
+        } else if (top_node->type() == NodeType::kDir) {
             auto top_dir_node = static_cast<DirNode*>(top_node);
             vector<NodeInfo> node_info_vec;
             top_dir_node->children(node_info_vec);
@@ -155,17 +163,18 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
             for (auto item : node_info_vec) {
                 ss << "- " << item.name;
                 auto node = nodes_.at(item.token);
-                if (node->type() == NodeType::kDir)
+                if (node == nullptr) {
+                    ss << "(X)";
+                } else if (node->type() == NodeType::kDir)
                     ss << '/';
                 ss << "\r\n";
             }
-
             ss << "\r\n";
         } else {
-            ss << path_str << " is function" << "\r\n";
+            ss << path_str << " is function" << ".\r\n";
         }
     } else {
-        ss << "Error: cannot access '" << path_str << "'\r\n";
+        ss << "Error: cannot access '" << path_str << "'.\r\n";
     }
 
     s->wp_conn->send(s->token, ss.str());
@@ -204,8 +213,9 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
     if (is_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-
-        if (top_node->type() == NodeType::kDir) {
+        if (top_node == nullptr) {
+            ss << node_path.back().first << " node has been deleted.\r\n";
+        } else if (top_node->type() == NodeType::kDir) {
             vector<vector<NodeInfo>> node_token_stack;    //!< 遍历栈
             string indent_str;  //!< 缩进字串
 
@@ -243,7 +253,10 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
                     ss << indent_str << curr_indent_str << curr_node_info.name;
 
                     auto curr_node = nodes_.at(curr_node_info.token);
-                    if (curr_node->type() == NodeType::kFunc) {
+                    if (curr_node == nullptr) {
+                        //! 如果已被删除了的结点，显示(X)
+                        ss << "(X)\r\n";
+                    } else if (curr_node->type() == NodeType::kFunc) {
                         //! 如果是Func，就打印一下名称就可以了
                         ss << "\r\n";
                     } else if (curr_node->type() == NodeType::kDir) {
@@ -287,10 +300,10 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
                 }
             }
         } else {
-            ss << node_path.back().first << " is a function\r\n";
+            ss << node_path.back().first << " is a function.\r\n";
         }
     } else {
-        ss << "Error: cannot access '" << path_str << "'\r\n";
+        ss << "Error: cannot access '" << path_str << "'.\r\n";
     }
 
     s->wp_conn->send(s->token, ss.str());
@@ -337,9 +350,9 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
             s->wp_conn->send(s->token, s->curr_input + "\r\n");
             return execute(s);
         } else
-            s->wp_conn->send(s->token, "Error: index out of range\r\n");
+            s->wp_conn->send(s->token, "Error: index out of range.\r\n");
     } catch (const invalid_argument &e) {
-        s->wp_conn->send(s->token, "Error: parse index fail\r\n");
+        s->wp_conn->send(s->token, "Error: parse index fail.\r\n");
     }
 
     return false;
@@ -356,7 +369,9 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
     if (is_cmd_found) {
         auto top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
         auto top_node = nodes_.at(top_node_token);
-        if (top_node->type() == NodeType::kFunc) {
+        if (top_node == nullptr) {
+            ss << "Error: '" << cmd << "' node has been deleted.\r\n";
+        } else if (top_node->type() == NodeType::kFunc) {
             auto top_func_node = static_cast<FuncNode*>(top_node);
             Session session(s->wp_conn, s->token);
             top_func_node->execute(session, args);
@@ -364,7 +379,7 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
             s->path = node_path;
         }
     } else {
-        ss << "Error: " << cmd << " not found\r\n";
+        ss << "Error: '" << cmd << "' not found.\r\n";
     }
 
     s->wp_conn->send(s->token, ss.str());

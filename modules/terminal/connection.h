@@ -25,6 +25,9 @@
 namespace tbox {
 namespace terminal {
 
+/**
+ * 连接接口
+ */
 class Connection {
   public:
     virtual bool send(const SessionToken &st, char ch) = 0;

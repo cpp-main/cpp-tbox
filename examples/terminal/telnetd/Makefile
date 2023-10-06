@@ -21,7 +21,7 @@
 PROJECT := example/terminal/telnetd
 EXE_NAME := telnetd
 
-CPP_SRC_FILES := main.cpp
+CPP_SRC_FILES := main.cpp ../build_nodes.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

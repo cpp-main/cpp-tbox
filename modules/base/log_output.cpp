@@ -44,7 +44,7 @@ namespace {
         time_t ts_sec = content->timestamp.sec;
         struct tm tm;
         localtime_r(&ts_sec, &tm);
-        char tmp[15];
+        char tmp[20];
         strftime(tmp, sizeof(tmp), "%F %H:%M:%S", &tm);
         snprintf(timestamp, TIMESTAMP_STRING_SIZE, "%s.%06u", tmp, content->timestamp.usec);
 #else

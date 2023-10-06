@@ -51,9 +51,11 @@ class Terminal::Impl {
   public:
     NodeToken createFuncNode(const Func &func, const std::string &help);
     NodeToken createDirNode(const std::string &help);
+    bool deleteNode(NodeToken node_token);
     NodeToken rootNode() const;
     NodeToken findNode(const std::string &path) const;
     bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name);
+    bool umountNode(const NodeToken &parent, const std::string &name);
 
   protected:
     void onChar(SessionContext *s, char ch);

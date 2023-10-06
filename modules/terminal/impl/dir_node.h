@@ -32,8 +32,10 @@ class DirNode : public Node {
 
     virtual NodeType type() const override { return NodeType::kDir; }
 
-    bool addChild(const NodeToken &nt, const std::string &child_name);
+    bool addChild(const std::string &child_name, const NodeToken &nt);
+    bool removeChild(const std::string &child_name);
     NodeToken findChild(const std::string &child_name) const;
+
     void children(std::vector<NodeInfo> &vec) const;
 
   private:

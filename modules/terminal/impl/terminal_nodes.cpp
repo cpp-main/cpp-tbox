@@ -42,6 +42,18 @@ NodeToken Terminal::Impl::createDirNode(const string &help)
     return nodes_.alloc(node);
 }
 
+bool Terminal::Impl::deleteNode(NodeToken node_token)
+{
+    auto node = nodes_.free(node_token);
+    if (node != nullptr) {
+        delete node;
+        return true;
+    } else {
+        LogWarn("node not exist.");
+        return false;
+    }
+}
+
 NodeToken Terminal::Impl::rootNode() const
 {
     return root_token_;
@@ -77,7 +89,26 @@ bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, 
     }
 
     auto p_dir_node = static_cast<DirNode*>(p_node);
-    return p_dir_node->addChild(child, name);
+    return p_dir_node->addChild(name, child);
+}
+
+bool Terminal::Impl::umountNode(const NodeToken &parent, const std::string &name)
+{
+    auto p_node = nodes_.at(parent);
+
+    if (p_node == nullptr ||
+        p_node->type() != NodeType::kDir) {
+        LogWarn("umount '%s' fail, parent is invalid", name.c_str());
+        return false;
+    }
+
+    auto p_dir_node = static_cast<DirNode*>(p_node);
+    if (!p_dir_node->removeChild(name)) {
+        LogWarn("umount '%s' fail, not exist", name.c_str());
+        return false;
+    }
+
+    return true;
 }
 
 bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
@@ -102,6 +133,10 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
         } else {
             NodeToken top_node_token = node_path.empty() ? root_token_ : node_path.back().second;
             Node *top_node = nodes_.at(top_node_token);
+
+            if (top_node == nullptr)
+                return false;
+
             if (top_node->type() == NodeType::kFunc)
                 return false;
 

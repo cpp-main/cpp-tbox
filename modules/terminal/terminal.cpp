@@ -86,6 +86,11 @@ NodeToken Terminal::createDirNode(const std::string &help)
     return impl_->createDirNode(help);
 }
 
+bool Terminal::deleteNode(NodeToken node_token)
+{
+    return impl_->deleteNode(node_token);
+}
+
 NodeToken Terminal::rootNode() const
 {
     return impl_->rootNode();
@@ -99,6 +104,11 @@ NodeToken Terminal::findNode(const std::string &path) const
 bool Terminal::mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name)
 {
     return impl_->mountNode(parent, child, name);
+}
+
+bool Terminal::umountNode(const NodeToken &parent, const std::string &name)
+{
+    return impl_->umountNode(parent, name);
 }
 
 }

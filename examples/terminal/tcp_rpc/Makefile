@@ -21,7 +21,7 @@
 PROJECT := example/terminal/tcp_rpc
 EXE_NAME := tcp_rpc
 
-CPP_SRC_FILES := main.cpp
+CPP_SRC_FILES := main.cpp ../build_nodes.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

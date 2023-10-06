@@ -22,13 +22,23 @@
 namespace tbox {
 namespace terminal {
 
-bool DirNode::addChild(const NodeToken &nt, const std::string &child_name)
+bool DirNode::addChild(const std::string &child_name, const NodeToken &nt)
 {
     auto iter = children_.find(child_name);
     if (iter != children_.end())
         return false;
 
     children_.insert(std::make_pair(child_name, nt));
+    return true;
+}
+
+bool DirNode::removeChild(const std::string &child_name)
+{
+    auto iter = children_.find(child_name);
+    if (iter == children_.end())
+        return false;
+
+    children_.erase(iter);
     return true;
 }
 
