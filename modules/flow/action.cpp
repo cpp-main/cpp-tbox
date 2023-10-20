@@ -164,6 +164,12 @@ void Action::reset() {
     return;
 
   LogDbg("reset action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
+
+  if (isUnderway()) {
+    LogWarn("be careful, action %d:%s[%s] in state:%s",
+            id_, type_.c_str(), label_.c_str(), ToString(state_).c_str());
+  }
+
   onReset();
 
   if (timer_ev_ != nullptr)
