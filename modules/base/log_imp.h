@@ -28,6 +28,8 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#include "log.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,8 +52,8 @@ struct LogContent {
 };
 
 //! 日志等级颜色表
-extern const char*  LOG_LEVEL_COLOR_CODE;
-extern const int    LOG_LEVEL_COLOR_NUM[7];
+extern const char   LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX];
+extern const char*  LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX];
 
 //! 定义日志输出函数
 typedef void (*LogPrintfFuncType)(const LogContent *content, void *ptr);

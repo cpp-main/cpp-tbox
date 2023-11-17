@@ -56,8 +56,8 @@ namespace {
         _GetCurrTimeString(content, timestamp);
 
         //! 打印色彩、等级、时间戳、线程号、模块名
-        printf("\033[%dm%c %s %ld %s ",
-            LOG_LEVEL_COLOR_NUM[content->level], LOG_LEVEL_COLOR_CODE[content->level],
+        printf("\033[%sm%c %s %ld %s ",
+            LOG_LEVEL_COLOR_CODE[content->level], LOG_LEVEL_LEVEL_CODE[content->level],
             timestamp, content->thread_id, content->module_id);
 
         if (content->func_name != nullptr)

@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2023 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -21,14 +21,14 @@
 #include <chrono>
 #include <gtest/gtest.h>
 
-#include "async_stdout_sink.h"
+#include "sync_stdout_sink.h"
 
 using namespace std;
 using namespace tbox::log;
 
-TEST(AsyncStdoutSink, DefaultLevel)
+TEST(SyncStdoutSink, DefaultLevel)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
     cout << "Should print INFO level" << endl;
 
@@ -41,13 +41,11 @@ TEST(AsyncStdoutSink, DefaultLevel)
     LogTrace("trace");
     LogUndo();
     LogTag();
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, TraceLevel)
+TEST(SyncStdoutSink, TraceLevel)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
     ch.setLevel("test.log", LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
@@ -61,13 +59,11 @@ TEST(AsyncStdoutSink, TraceLevel)
     LogTrace("trace");
     LogUndo();
     LogTag();
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, AllLevel)
+TEST(SyncStdoutSink, AllLevel)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
 
     ch.enable();
     ch.enableColor(true);
@@ -83,24 +79,20 @@ TEST(AsyncStdoutSink, AllLevel)
     LogTrace("trace");
     LogUndo();
     LogTag();
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, NullString)
+TEST(SyncStdoutSink, NullString)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
 
     LogInfo(nullptr);
     LogPuts(LOG_LEVEL_INFO, nullptr);
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, WillNotPrint)
+TEST(SyncStdoutSink, WillNotPrint)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     cout << "Should not print" << endl;
 
     LogFatal("fatal");
@@ -112,13 +104,11 @@ TEST(AsyncStdoutSink, WillNotPrint)
     LogTrace("trace");
     LogUndo();
     LogTag();
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, EnableColor)
+TEST(SyncStdoutSink, EnableColor)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
     ch.enableColor(true);
     ch.setLevel("test.log", LOG_LEVEL_TRACE);
@@ -133,56 +123,21 @@ TEST(AsyncStdoutSink, EnableColor)
     LogTrace("trace");
     LogUndo();
     LogTag();
-
-    ch.cleanup();
 }
 
-
-TEST(AsyncStdoutSink, Format)
+TEST(SyncStdoutSink, Format)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
 
     LogInfo("%s, %d, %f", "hello", 123456, 12.345);
     LogInfo("%d, %f, %s", 123456, 12.345, "world");
-
-    ch.cleanup();
 }
 
-TEST(AsyncStdoutSink, LongString)
+TEST(SyncStdoutSink, LongString)
 {
-    AsyncStdoutSink ch;
+    SyncStdoutSink ch;
     ch.enable();
     std::string tmp(4096, 'x');
     LogInfo("%s", tmp.c_str());
-    ch.cleanup();
-}
-
-#include <tbox/event/loop.h>
-using namespace tbox::event;
-
-TEST(AsyncStdoutSink, Benchmark)
-{
-    AsyncStdoutSink ch;
-    ch.enable();
-    std::string tmp(30, 'x');
-
-    auto sp_loop = Loop::New();
-
-    int counter = 0;
-    function<void()> func = [&] {
-        for (int i = 0; i < 100; ++i)
-            LogInfo("%d %s", i, tmp.c_str());
-        sp_loop->run(func);
-        counter += 100;
-    };
-    sp_loop->run(func);
-
-    sp_loop->exitLoop(chrono::seconds(10));
-    sp_loop->runLoop();
-
-    delete sp_loop;
-    ch.cleanup();
-
-    cout << "count in sec: " << counter/10 << endl;
 }

@@ -31,10 +31,10 @@ void SyncStdoutSink::onLogFrontEnd(const LogContent *content)
 
     //! 开启色彩，显示日志等级
     if (enable_color_)
-        printf("\033[%dm", LOG_LEVEL_COLOR_NUM[content->level]);
+        printf("\033[%sm", LOG_LEVEL_COLOR_CODE[content->level]);
 
     //! 打印等级、时间戳、线程号、模块名
-    printf("%c %s.%06u %ld %s ", LOG_LEVEL_COLOR_CODE[content->level],
+    printf("%c %s.%06u %ld %s ", LOG_LEVEL_LEVEL_CODE[content->level],
            timestamp_str_, content->timestamp.usec,
            content->thread_id, content->module_id);
 

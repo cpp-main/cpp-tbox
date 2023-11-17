@@ -18,7 +18,6 @@
  * of the source tree.
  */
 #include "log_imp.h"
-#include "log.h"
 
 #include <sys/time.h>
 #include <sys/syscall.h>
@@ -72,8 +71,20 @@ void Dispatch(const LogContent &content)
 
 }
 
-const char*  LOG_LEVEL_COLOR_CODE = "FEWNIDT";
-const int    LOG_LEVEL_COLOR_NUM[7] = {31, 91, 93, 33, 32, 36, 35};
+const char  LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX] = {
+    'F', 'E', 'W', 'N', 'I', 'I', 'D', 'T'
+};
+
+const char* LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX] = {
+    "91",   //! FATAL   亮红
+    "41",   //! ERROR   背景红
+    "43",   //! WARN    背景黄
+    "33",   //! NOTICE  黄
+    "42",   //! IMPORTANT   背景绿
+    "92",   //! INFO    亮绿
+    "36",   //! DEBUG   青
+    "35",   //! TRACE   洋葱红
+};
 
 /**
  * \brief   日志格式化打印接口的实现
@@ -88,7 +99,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         return;
 
     if (level < 0) level = 0;
-    if (level > LOG_LEVEL_TRACE) level = LOG_LEVEL_TRACE;
+    if (level >= LOG_LEVEL_MAX) level = (LOG_LEVEL_MAX - 1);
 
     const char *module_id_be_print = (module_id != nullptr) ? module_id : "???";
 

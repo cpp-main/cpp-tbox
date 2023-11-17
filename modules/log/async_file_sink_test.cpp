@@ -42,6 +42,30 @@ TEST(AsyncFileSink, Format)
     ch.cleanup();
 }
 
+TEST(AsyncFileSink, AllLevel)
+{
+    AsyncFileSink ch;
+
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("test");
+    ch.enable();
+    ch.enableColor(true);
+    ch.setLevel("", LOG_LEVEL_TRACE);
+
+    LogFatal("fatal");
+    LogErr("err");
+    LogWarn("warn");
+    LogNotice("notice");
+    LogImportant("important");
+    LogInfo("info");
+    LogDbg("debug");
+    LogTrace("trace");
+    LogUndo();
+    LogTag();
+
+    ch.cleanup();
+}
+
 TEST(AsyncFileSink, LongString)
 {
     AsyncFileSink ch;

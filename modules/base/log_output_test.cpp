@@ -21,13 +21,14 @@
 #include "log.h"
 #include "log_output.h"
 
-TEST(Log, Levels)
+TEST(Log, AllLevel)
 {
     LogOutput_Enable();
     LogFatal("fatal");
     LogErr("err");
     LogWarn("warn");
     LogNotice("notice");
+    LogImportant("important");
     LogInfo("info");
     LogDbg("debug");
     LogTrace("trace");

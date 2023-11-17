@@ -54,6 +54,29 @@ TEST(AsyncSink, Format)
     ch.cleanup();
 }
 
+TEST(AsyncSink, AllLevel)
+{
+    TestAsyncSink ch;
+
+    ch.enable();
+    ch.enableColor(true);
+    ch.setLevel("", LOG_LEVEL_TRACE);
+
+    LogFatal("fatal");
+    LogErr("err");
+    LogWarn("warn");
+    LogNotice("notice");
+    LogImportant("important");
+    LogInfo("info");
+    LogDbg("debug");
+    LogTrace("trace");
+    LogUndo();
+    LogTag();
+
+    ch.cleanup();
+}
+
+
 TEST(AsyncSink, LongString)
 {
     TestAsyncSink ch;

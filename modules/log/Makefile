@@ -46,6 +46,7 @@ TEST_CPP_SRC_FILES = \
 	async_stdout_sink_test.cpp \
 	async_syslog_sink_test.cpp \
 	async_file_sink_test.cpp \
+	sync_stdout_sink_test.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
 
