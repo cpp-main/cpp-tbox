@@ -76,14 +76,14 @@ const char  LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX] = {
 };
 
 const char* LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX] = {
-    "91",   //! FATAL   亮红
-    "41",   //! ERROR   背景红
-    "43",   //! WARN    背景黄
-    "33",   //! NOTICE  黄
-    "42",   //! IMPORTANT   背景绿
-    "92",   //! INFO    亮绿
-    "36",   //! DEBUG   青
-    "35",   //! TRACE   洋葱红
+    "31",       //! FATAL       红
+    "7;91",     //! ERROR       文字黑，背景亮红
+    "7;93",     //! WARN        文字黑，背景亮黄
+    "93",       //! NOTICE      亮黄
+    "7;92",     //! IMPORTANT   文字黑，背景亮绿
+    "32",       //! INFO        绿
+    "36",       //! DEBUG       青
+    "35",       //! TRACE       洋葱红
 };
 
 /**
