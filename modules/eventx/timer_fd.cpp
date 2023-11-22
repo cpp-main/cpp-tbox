@@ -38,13 +38,14 @@ constexpr auto NANOSECS_PER_SECOND = 1000000000ul;
 
 struct TimerFd::Data {
     Callback cb;
-    tbox::event::Loop *loop { nullptr };
-    tbox::event::FdEvent *timer_fd_event { nullptr };
-    int timer_fd { -1 };
-    bool is_inited { false };
-    bool is_enabled { false };
+    tbox::event::Loop *loop = nullptr;
+    tbox::event::FdEvent *timer_fd_event = nullptr;
+    int timer_fd = -1;
+    bool is_inited = false;
+    bool is_enabled = false;
+    bool is_stop_after_trigger = false;
     struct itimerspec ts;
-    int cb_level {0};
+    int cb_level = 0;
 };
 
 TimerFd::TimerFd(tbox::event::Loop *loop, const std::string &what)
@@ -84,9 +85,10 @@ bool TimerFd::initialize(const std::chrono::nanoseconds first,
     d_->ts.it_interval.tv_sec = repeat_nanosec / NANOSECS_PER_SECOND; 
     d_->ts.it_interval.tv_nsec = repeat_nanosec % NANOSECS_PER_SECOND;
 
-    auto mode = repeat_nanosec != 0 ? event::Event::Mode::kPersist : event::Event::Mode::kOneshot;
+    d_->timer_fd_event->initialize(d_->timer_fd, tbox::event::FdEvent::kReadEvent, event::Event::Mode::kPersist);
 
-    d_->timer_fd_event->initialize(d_->timer_fd, tbox::event::FdEvent::kReadEvent, mode);
+    if (repeat_nanosec == 0)
+        d_->is_stop_after_trigger = true;
 
     d_->is_inited = true;
     return true;
@@ -176,6 +178,9 @@ void TimerFd::onEvent(short events)
         int len  = ::read(d_->timer_fd, &exp, sizeof(exp));
         if (len <= 0)
             return;
+
+        if (d_->is_stop_after_trigger)
+            disable();
 
         if (d_->cb) {
             ++d_->cb_level;

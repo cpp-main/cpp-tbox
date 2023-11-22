@@ -23,6 +23,7 @@
 #include <time.h>
 
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 #include <tbox/base/scope_exit.hpp>
 #include "timer_fd.h"
 
@@ -160,6 +161,40 @@ TEST(TimerFd, NanoSeconds)
     uint64_t elapsed_ns = (stop_ts - start_ts).count();
     ASSERT_GE(elapsed_ns, min_interval_ns) << "Timer did not expire after " << min_interval_ns << "nanoseconds" << endl;
     ASSERT_LE(elapsed_ns, 2 * min_interval_ns) << "Timer expired too late, elapsed_ns=" << elapsed_ns << endl;
+}
+
+//! 检查单次触发后，状态是否自动变成disable
+TEST(TimerFd, OneshotCheckIsEnabled)
+{
+    auto sp_loop = Loop::New("epoll");
+    auto timer_event = new TimerFd(sp_loop, "101");
+    auto check_before_timer = sp_loop->newTimerEvent();
+    auto check_after_timer = sp_loop->newTimerEvent();
+
+    SetScopeExitAction([=] {
+        delete timer_event;
+        delete sp_loop;
+        delete check_before_timer;
+        delete check_after_timer;
+    });
+
+    bool has_check_before = false;
+    bool has_check_after = false;
+
+    EXPECT_TRUE(timer_event->initialize(chrono::seconds(1)));
+    EXPECT_TRUE(timer_event->enable());
+
+    check_before_timer->initialize(std::chrono::milliseconds(990), event::Event::Mode::kOneshot);
+    check_after_timer->initialize(std::chrono::milliseconds(1010), event::Event::Mode::kOneshot);
+    check_before_timer->setCallback([&] { has_check_before = true; EXPECT_TRUE(timer_event->isEnabled()); });
+    check_after_timer->setCallback([&] { has_check_after = true; EXPECT_FALSE(timer_event->isEnabled()); sp_loop->exitLoop(); });
+    check_before_timer->enable();
+    check_after_timer->enable();
+
+    sp_loop->runLoop();
+
+    EXPECT_TRUE(has_check_before);
+    EXPECT_TRUE(has_check_after);
 }
 
 }
