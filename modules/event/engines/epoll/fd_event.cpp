@@ -146,21 +146,26 @@ void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
     EpollFdSharedData *d = static_cast<EpollFdSharedData*>(obj);
 
     if (events & EPOLLIN) {
+        events &= ~EPOLLIN;
         for (EpollFdEvent *event : d->read_events)
             event->onEvent(kReadEvent);
     }
 
     if (events & EPOLLOUT) {
+        events &= ~EPOLLOUT;
         for (EpollFdEvent *event : d->write_events)
             event->onEvent(kWriteEvent);
     }
 
-    if (events & EPOLLHUP || events & EPOLLERR) {
+    if (events & (EPOLLHUP | EPOLLERR)) {
+        events &= ~(EPOLLHUP | EPOLLERR);
         for (EpollFdEvent *event : d->exception_events)
             event->onEvent(kExceptEvent);
     }
 
-    (void)fd;
+    if (events) {
+        LogNotice("unhandle events:%08X, fd:%d", events, fd);
+    }
 }
 
 void EpollFdEvent::onEvent(short events)
