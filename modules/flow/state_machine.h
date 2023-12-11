@@ -21,6 +21,8 @@
 #define TBOX_FLOW_STATE_MACHINE_H_20220320
 
 #include <functional>
+#include <string>
+
 #include <tbox/base/json_fwd.h>
 #include "event.h"
 
@@ -204,7 +206,11 @@ class StateMachine {
     //! 是否已终止
     bool isTerminated() const;
 
+    //! 将数据导出成JSON
     void toJson(Json &js) const;
+
+    //! 设置状态机的名称
+    void setName(const std::string &name);
 
   private:
     class Impl;
