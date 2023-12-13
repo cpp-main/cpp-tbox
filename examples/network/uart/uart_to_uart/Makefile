@@ -29,4 +29,4 @@ LDFLAGS += \
 	-ltbox_event \
 	-ltbox_base \
 
-include ${TOP_DIR}/tools/exe_common.mk
+include ../../tools/exe_common.mk

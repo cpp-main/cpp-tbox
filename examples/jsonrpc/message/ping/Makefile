@@ -33,4 +33,4 @@ LDFLAGS += \
 	-ltbox_base \
 	-lpthread -ldl
 
-include ${TOP_DIR}/tools/exe_common.mk
+include ../../tools/exe_common.mk

@@ -36,4 +36,4 @@ LDFLAGS += \
 	-ldl \
 	-rdynamic
 
-include ${TOP_DIR}/tools/exe_common.mk
+include ../../tools/exe_common.mk
