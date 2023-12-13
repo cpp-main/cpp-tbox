@@ -65,7 +65,6 @@ class Rpc {
     void onRespondTimeout(int id);
 
   private:
-    event::Loop *loop_;
     Proto *proto_ = nullptr;
 
     std::unordered_map<std::string, ServiceCallback> method_services_;

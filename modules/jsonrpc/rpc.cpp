@@ -28,8 +28,7 @@ namespace tbox {
 namespace jsonrpc {
 
 Rpc::Rpc(event::Loop *loop)
-    : loop_(loop)
-    , request_timeout_(loop)
+    : request_timeout_(loop)
     , respond_timeout_(loop)
 {
     using namespace std::placeholders;

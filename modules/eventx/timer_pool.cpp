@@ -44,12 +44,10 @@ class TimerPool::Impl {
   private:
     event::Loop *wp_loop_;
     cabinet::Cabinet<event::TimerEvent> timers_;
-    int cb_level_ = 0;
 };
 
 TimerPool::Impl::~Impl()
 {
-    TBOX_ASSERT(cb_level_ == 0);
     cleanup();
 }
 
