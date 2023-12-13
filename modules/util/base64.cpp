@@ -19,6 +19,7 @@
  */
 #include "base64.h"
 
+#include <cstdint>
 #include <cstring>
 #include <tbox/base/assert.h>
 

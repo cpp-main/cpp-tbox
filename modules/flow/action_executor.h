@@ -21,6 +21,7 @@
 #define TBOX_FLOW_EXECUTOR_H_20221112
 
 #include <deque>
+#include <array>
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
 

@@ -20,6 +20,7 @@
 #ifndef TBOX_CRYPTO_MD5_H_20221218
 #define TBOX_CRYPTO_MD5_H_20221218
 
+#include <cstdint>
 #include <string>
 
 namespace tbox {
