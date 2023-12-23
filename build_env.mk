@@ -1,5 +1,3 @@
-export TOP_DIR := $(PWD)
-
 export TOOLCHAIN_BIN_PREFIX ?=
 export BUILD_DIR ?= $(TOP_DIR)/.build
 export STAGING_DIR ?= $(TOP_DIR)/.staging

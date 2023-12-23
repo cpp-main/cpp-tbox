@@ -58,4 +58,4 @@ TEST_CPP_SRC_FILES = \
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_event -ltbox_util -ltbox_base
 ENABLE_SHARED_LIB = no
 
-include ../../tools/lib_tbox_common.mk
+include $(TOP_DIR)/tools/lib_tbox_common.mk

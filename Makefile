@@ -18,6 +18,8 @@
 # of the source tree.
 #
 
+export TOP_DIR:=$(PWD)
+
 include build_env.mk
 include version.mk
 
