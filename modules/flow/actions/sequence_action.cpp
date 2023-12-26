@@ -29,89 +29,92 @@ namespace flow {
 
 using namespace std::placeholders;
 
-SequenceAction::SequenceAction(event::Loop &loop) :
-  Action(loop, "Sequence")
+SequenceAction::SequenceAction(event::Loop &loop)
+    : Action(loop, "Sequence")
 { }
 
 SequenceAction::~SequenceAction() {
-  for (auto action : children_)
-    delete action;
+    for (auto action : children_)
+        delete action;
 }
 
 void SequenceAction::toJson(Json &js) const {
-  Action::toJson(js);
-  Json &js_children = js["children"];
-  for (auto action : children_) {
-    Json js_child;
-    action->toJson(js_child);
-    js_children.push_back(std::move(js_child));
-  }
-  js["index"] = index_;
+    Action::toJson(js);
+    Json &js_children = js["children"];
+    for (auto action : children_) {
+        Json js_child;
+        action->toJson(js_child);
+        js_children.push_back(std::move(js_child));
+    }
+    js["index"] = index_;
 }
 
-int SequenceAction::append(Action *action) {
-  TBOX_ASSERT(action != nullptr);
+int SequenceAction::addChild(Action *action) {
+    TBOX_ASSERT(action != nullptr);
 
-  if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
-    int index = children_.size();
-    children_.push_back(action);
-    action->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1));
-    return index;
-  } else {
-    LogWarn("can't add child twice");
-    return -1;
-  }
+    if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
+        int index = children_.size();
+        children_.push_back(action);
+        action->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1));
+        return index;
+    } else {
+        LogWarn("can't add child twice");
+        return -1;
+    }
 }
 
-bool SequenceAction::onStart() {
-  startOtheriseFinish(true);
-  return true;
+bool SequenceAction::isReady() const {
+    for (auto child : children_) {
+        if (!child->isReady())
+            return false;
+    }
+    return true;
 }
 
-bool SequenceAction::onStop() {
-  if (index_ < children_.size())
-    return children_.at(index_)->stop();
-  return false;
+void SequenceAction::onStart() {
+    startOtheriseFinish(true);
 }
 
-bool SequenceAction::onPause() {
-  if (index_ < children_.size())
-    return children_.at(index_)->pause();
-  return false;
+void SequenceAction::onStop() {
+    if (index_ < children_.size())
+        children_.at(index_)->stop();
 }
 
-bool SequenceAction::onResume() {
-  if (index_ < children_.size())
-    return children_.at(index_)->resume();
-  return false;
+void SequenceAction::onPause() {
+    if (index_ < children_.size())
+        children_.at(index_)->pause();
+}
+
+void SequenceAction::onResume() {
+    if (index_ < children_.size())
+        children_.at(index_)->resume();
 }
 
 void SequenceAction::onReset() {
-  for (auto child : children_)
-    child->reset();
-
-  index_ = 0;
+    for (auto child : children_)
+        child->reset();
+    index_ = 0;
 }
 
 void SequenceAction::startOtheriseFinish(bool is_succ) {
-  if (index_ < children_.size()) {
-    if (!children_.at(index_)->start())
-      finish(false);
-  } else {
-    finish(is_succ);
-  }
+    if (index_ < children_.size()) {
+        if (!children_.at(index_)->start())
+            finish(false);
+    } else {
+        finish(is_succ);
+    }
 }
 
 void SequenceAction::onChildFinished(bool is_succ) {
-  if (state() == State::kRunning) {
-    if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
-        (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
-      finish(is_succ);
-    } else {
-      ++index_;
-      startOtheriseFinish(is_succ);
+    if (state() == State::kRunning) {
+        if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
+                (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
+            finish(is_succ);
+        } else {
+            ++index_;
+            startOtheriseFinish(is_succ);
+        }
     }
-  }
 }
 
 }

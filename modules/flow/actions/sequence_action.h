@@ -51,8 +51,8 @@ class SequenceAction : public Action {
     virtual ~SequenceAction();
 
     virtual void toJson(Json &js) const override;
-
-    int append(Action *action);
+    virtual int addChild(Action *action) override;
+    virtual bool isReady() const override;
 
     inline void setFinishCondition(FinishCondition finish_condition) {
       finish_condition_ = finish_condition;
@@ -61,10 +61,10 @@ class SequenceAction : public Action {
     inline int index() const { return index_; }
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
   private:

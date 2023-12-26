@@ -32,17 +32,19 @@ namespace flow {
 TEST(WrapperAction, NormalSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new SuccAction(*loop));
-    action.start();
+    WrapperAction action(*loop);
 
     bool is_callback = false;
+    EXPECT_TRUE(action.setChild(new SuccAction(*loop)));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_TRUE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -53,17 +55,19 @@ TEST(WrapperAction, NormalSucc) {
 TEST(WrapperAction, NormalFail) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new FailAction(*loop));
-    action.start();
+    WrapperAction action(*loop);
 
     bool is_callback = false;
+    action.setChild(new FailAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_FALSE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -75,17 +79,19 @@ TEST(WrapperAction, NormalFail) {
 TEST(WrapperAction, InvertSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kInvert);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kInvert);
 
     bool is_callback = false;
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_FALSE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -96,17 +102,19 @@ TEST(WrapperAction, InvertSucc) {
 TEST(WrapperAction, InvertFail) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kInvert);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kInvert);
 
     bool is_callback = false;
+    action.setChild(new FailAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_TRUE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -117,17 +125,19 @@ TEST(WrapperAction, InvertFail) {
 TEST(WrapperAction, AlwaySuccSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kAlwaySucc);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kAlwaySucc);
 
     bool is_callback = false;
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_TRUE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -138,17 +148,19 @@ TEST(WrapperAction, AlwaySuccSucc) {
 TEST(WrapperAction, AlwaySuccFail) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kAlwaySucc);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kAlwaySucc);
 
     bool is_callback = false;
+    action.setChild(new FailAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_TRUE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -159,17 +171,19 @@ TEST(WrapperAction, AlwaySuccFail) {
 TEST(WrapperAction, AlwayFailSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new SuccAction(*loop), WrapperAction::Mode::kAlwayFail);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kAlwayFail);
 
     bool is_callback = false;
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_FALSE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();
@@ -180,17 +194,19 @@ TEST(WrapperAction, AlwayFailSucc) {
 TEST(WrapperAction, AlwayFailFail) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop, new FailAction(*loop), WrapperAction::Mode::kAlwayFail);
-    action.start();
+    WrapperAction action(*loop, WrapperAction::Mode::kAlwayFail);
 
     bool is_callback = false;
+    action.setChild(new FailAction(*loop));
+    EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
         [&](bool succ) {
             EXPECT_FALSE(succ);
             is_callback = true;
         }
     );
+
+    action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1));
     loop->runLoop();

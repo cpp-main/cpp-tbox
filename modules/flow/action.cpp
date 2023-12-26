@@ -59,6 +59,21 @@ void Action::toJson(Json &js) const {
   js["result"] = ToString(result_);
 }
 
+int Action::addChild(Action *child) {
+  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
+  return -1;
+}
+
+bool Action::setChild(Action *child) {
+  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
+  return false;
+}
+
+bool Action::setChildAs(Action *child, const std::string &role) {
+  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
+  return false;
+}
+
 bool Action::start() {
   if (state_ == State::kRunning)
     return true;
@@ -71,10 +86,8 @@ bool Action::start() {
   auto last_state = state_;
 
   LogDbg("start action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
-  if (!onStart()) {
-    LogWarn("start action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
-    return false;
-  }
+
+  onStart();
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -97,10 +110,8 @@ bool Action::pause() {
   auto last_state = state_;
 
   LogDbg("pause action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
-  if (!onPause()) {
-    LogWarn("pause action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
-    return false;
-  }
+
+  onPause();
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -123,10 +134,8 @@ bool Action::resume() {
   auto last_state = state_;
 
   LogDbg("resume action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
-  if (!onResume()) {
-    LogWarn("resume action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
-    return false;
-  }
+
+  onResume();
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -145,10 +154,8 @@ bool Action::stop() {
   auto last_state = state_;
 
   LogDbg("stop action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
-  if (!onStop()) {
-    LogWarn("stop action %d:%s[%s] fail", id_, type_.c_str(), label_.c_str());
-    return false;
-  }
+
+  onStop();
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -229,8 +236,6 @@ bool Action::finish(bool is_succ) {
 
     if (finish_cb_)
         finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
-    else
-        LogWarn("action %d:%s[%s] no finish_cb", id_, type_.c_str(), label_.c_str());
 
     onFinished(is_succ);
     return true;

@@ -35,26 +35,27 @@ namespace flow {
  */
 class IfElseAction : public Action {
   public:
-    explicit IfElseAction(event::Loop &loop, Action *if_action,
-                          Action *succ_action, Action *fail_action);
+    explicit IfElseAction(event::Loop &loop);
     virtual ~IfElseAction();
 
     virtual void toJson(Json &js) const override;
+    virtual bool setChildAs(Action *child, const std::string &role) override;
+    virtual bool isReady() const override;
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
   protected:
     void onCondActionFinished(bool is_succ);
 
   private:
-    Action *if_action_;
-    Action *succ_action_;
-    Action *fail_action_;
+    Action *if_action_   = nullptr;
+    Action *succ_action_ = nullptr;
+    Action *fail_action_ = nullptr;
 };
 
 }

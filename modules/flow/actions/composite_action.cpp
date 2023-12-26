@@ -31,44 +31,57 @@ CompositeAction::~CompositeAction() {
     CHECK_DELETE_RESET_OBJ(child_);
 }
 
-void CompositeAction::setChild(Action *child) {
-    TBOX_ASSERT(child != nullptr);
+bool CompositeAction::setChild(Action *child) {
+    if (child == nullptr)
+        return false;
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
     child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1));
+
+    return true;
 }
 
 void CompositeAction::toJson(Json &js) const {
+    TBOX_ASSERT(child_ != nullptr);
     Action::toJson(js);
     child_->toJson(js["child"]);
 }
 
-bool CompositeAction::onStart() {
-    if (child_ == nullptr) {
-        LogWarn("no child in %d:%s(%s)", id(), type().c_str(), label().c_str());
-        return false;
-    }
-    return child_->start();
+bool CompositeAction::isReady() const {
+    if (child_ != nullptr)
+        return child_->isReady();
+
+    LogWarn("%d:%s[%s] child not set", id(), type().c_str(), label().c_str());
+    return false;
 }
 
-bool CompositeAction::onStop() {
-    return child_->stop();
+void CompositeAction::onStart() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->start();
 }
 
-bool CompositeAction::onPause() {
-    return child_->pause();
+void CompositeAction::onStop() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->stop();
 }
 
-bool CompositeAction::onResume() {
+void CompositeAction::onPause() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->pause();
+}
+
+void CompositeAction::onResume() {
+    TBOX_ASSERT(child_ != nullptr);
     if (child_->state() == State::kFinished) {
         finish(child_->result() == Result::kSuccess);
-        return true;
+    } else {
+        child_->resume();
     }
-    return child_->resume();
 }
 
 void CompositeAction::onReset() {
+    TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 }
 

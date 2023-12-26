@@ -38,28 +38,31 @@ namespace flow {
  *  }
  */
 TEST(LoopAction, FunctionActionForever) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return true;
-    }
-  );
-  LoopAction loop_action(*loop, function_action, LoopAction::Mode::kForever);
-  bool is_finished = false;
-  loop_action.setFinishCallback([&] (bool) { is_finished = true; });
+    LoopAction loop_action(*loop, LoopAction::Mode::kForever);
 
-  loop_action.start();
-  loop->exitLoop(std::chrono::milliseconds(1000));
-  loop->runLoop();
-  loop_action.stop();
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop,
+        [&] {
+            ++loop_times;
+            return true;
+        }
+    );
+    bool is_finished = false;
 
+    EXPECT_TRUE(loop_action.setChild(function_action));
+    EXPECT_TRUE(loop_action.isReady());
+    loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 
-  EXPECT_FALSE(is_finished);
-  EXPECT_GT(loop_times, 1000);
+    loop_action.start();
+    loop->exitLoop(std::chrono::milliseconds(1000));
+    loop->runLoop();
+    loop_action.stop();
+
+    EXPECT_FALSE(is_finished);
+    EXPECT_GT(loop_times, 1000);
 }
 
 /**
@@ -70,32 +73,35 @@ TEST(LoopAction, FunctionActionForever) {
  *  };
  */
 TEST(LoopAction, SleepActionForever) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+    LoopAction loop_action(*loop, LoopAction::Mode::kForever);
 
-  int loop_times = 0;
-  auto function_action = new FunctionAction(*loop,
-    [&] {
-      ++loop_times;
-      return true;
-    }
-  );
-  auto delay_10ms_action = new SleepAction(*loop, std::chrono::milliseconds(100));
-  auto seq_action = new SequenceAction(*loop);
-  seq_action->append(delay_10ms_action);
-  seq_action->append(function_action);
+    int loop_times = 0;
+    auto function_action = new FunctionAction(*loop,
+        [&] {
+            ++loop_times;
+            return true;
+        }
+    );
+    auto delay_10ms_action = new SleepAction(*loop, std::chrono::milliseconds(100));
+    auto seq_action = new SequenceAction(*loop);
+    seq_action->addChild(delay_10ms_action);
+    seq_action->addChild(function_action);
 
-  LoopAction loop_action(*loop, seq_action, LoopAction::Mode::kForever);
-  bool is_finished = false;
-  loop_action.setFinishCallback([&] (bool) { is_finished = true; });
+    bool is_finished = false;
 
-  loop_action.start();
-  loop->exitLoop(std::chrono::milliseconds(1010));
-  loop->runLoop();
-  loop_action.stop();
+    EXPECT_TRUE(loop_action.setChild(seq_action));
+    EXPECT_TRUE(loop_action.isReady());
+    loop_action.setFinishCallback([&] (bool) { is_finished = true; });
 
-  EXPECT_FALSE(is_finished);
-  EXPECT_EQ(loop_times, 10);
+    loop_action.start();
+    loop->exitLoop(std::chrono::milliseconds(1010));
+    loop->runLoop();
+    loop_action.stop();
+
+    EXPECT_FALSE(is_finished);
+    EXPECT_EQ(loop_times, 10);
 }
 
 }

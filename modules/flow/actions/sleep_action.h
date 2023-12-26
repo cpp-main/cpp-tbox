@@ -35,11 +35,13 @@ class SleepAction : public Action {
 
     ~SleepAction();
 
+    virtual bool isReady() const { return true; }
+
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
   private:

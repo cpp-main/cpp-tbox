@@ -29,91 +29,97 @@ namespace flow {
 
 using namespace std::placeholders;
 
-ParallelAction::ParallelAction(event::Loop &loop) :
-  Action(loop, "Parallel")
+ParallelAction::ParallelAction(event::Loop &loop)
+  : Action(loop, "Parallel")
 { }
 
 ParallelAction::~ParallelAction() {
-  for (auto action : children_)
-    delete action;
+    for (auto action : children_)
+        delete action;
 }
 
 void ParallelAction::toJson(Json &js) const {
-  Action::toJson(js);
-  Json &js_children = js["children"];
-  for (auto action : children_) {
-    Json js_child;
-    action->toJson(js_child);
-    js_children.push_back(std::move(js_child));
-  }
+    Action::toJson(js);
+    Json &js_children = js["children"];
+    for (auto action : children_) {
+        Json js_child;
+        action->toJson(js_child);
+        js_children.push_back(std::move(js_child));
+    }
 }
 
-int ParallelAction::append(Action *action) {
-  TBOX_ASSERT(action != nullptr);
+int ParallelAction::addChild(Action *action) {
+    TBOX_ASSERT(action != nullptr);
 
-  if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
-    int index = children_.size();
-    children_.push_back(action);
-    action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
-    return index;
-  } else {
-    LogWarn("can't add child twice");
-    return -1;
-  }
+    if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
+        int index = children_.size();
+        children_.push_back(action);
+        action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
+        return index;
+
+    } else {
+        LogWarn("can't add child twice");
+        return -1;
+    }
 }
 
-bool ParallelAction::onStart() {
-  for (size_t index = 0; index < children_.size(); ++index) {
-    Action *action = children_.at(index);
-    if (!action->start())
-      fail_set_.insert(index);
-  }
-  return fail_set_.size() != children_.size(); //! 如果失败的个数等于总个数，则表示全部失败了
+bool ParallelAction::isReady() const {
+    for (auto child : children_) {
+        if (!child->isReady())
+            return false;
+    }
+    return true;
 }
 
-bool ParallelAction::onStop() {
-  for (Action *action : children_)
-    action->stop();
-  return true;
+void ParallelAction::onStart() {
+    for (size_t index = 0; index < children_.size(); ++index) {
+        Action *action = children_.at(index);
+        if (!action->start())
+            fail_set_.insert(index);
+    }
 }
 
-bool ParallelAction::onPause() {
-  for (Action *action : children_) {
-    if (action->state() == Action::State::kRunning)
-      action->pause();
-  }
-  return true;
+void ParallelAction::onStop() {
+    for (Action *action : children_)
+        action->stop();
 }
 
-bool ParallelAction::onResume() {
-  for (Action *action : children_) {
-    if (action->state() == Action::State::kPause)
-      action->resume();
-  }
-  return true;
+void ParallelAction::onPause() {
+    for (Action *action : children_) {
+        if (action->state() == Action::State::kRunning)
+            action->pause();
+    }
+}
+
+void ParallelAction::onResume() {
+    for (Action *action : children_) {
+        if (action->state() == Action::State::kPause)
+            action->resume();
+    }
 }
 
 void ParallelAction::onReset() {
-  for (auto child : children_)
-    child->reset();
+    for (auto child : children_)
+        child->reset();
 
-  succ_set_.clear();
-  fail_set_.clear();
+    succ_set_.clear();
+    fail_set_.clear();
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {
-  if (state() == State::kRunning) {
-    if (is_succ)
-      succ_set_.insert(index);
-    else
-      fail_set_.insert(index);
+    if (state() == State::kRunning) {
+        if (is_succ)
+            succ_set_.insert(index);
+        else
+            fail_set_.insert(index);
 
-    if (succ_set_.size() == children_.size()) {
-      finish(true);
-    } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
-      finish(false);
+        if (succ_set_.size() == children_.size()) {
+            finish(true);
+
+        } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
+            finish(false);
+        }
     }
-  }
 }
 
 }

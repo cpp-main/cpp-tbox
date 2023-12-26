@@ -34,10 +34,10 @@ class EventAction : public Action,
     virtual ~EventAction();
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
     virtual void onFinished(bool succ) override;
 

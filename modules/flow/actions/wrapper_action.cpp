@@ -27,10 +27,15 @@ namespace flow {
 
 using namespace std::placeholders;
 
-WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode) :
-    Action(loop, "Wrapper"),
-    child_(child),
-    mode_(mode)
+WrapperAction::WrapperAction(event::Loop &loop, Mode mode)
+  : Action(loop, "Wrapper")
+  , mode_(mode)
+{ }
+
+WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
+  : Action(loop, "Wrapper")
+  , child_(child)
+  , mode_(mode)
 {
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
@@ -46,27 +51,47 @@ void WrapperAction::toJson(Json &js) const {
     child_->toJson(js["child"]);
 }
 
-bool WrapperAction::onStart() {
-    return child_->start();
+bool WrapperAction::setChild(Action *child) {
+    CHECK_DELETE_RESET_OBJ(child_);
+    child_ = child;
+    if (child_ != nullptr)
+        child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
+    return true;
 }
 
-bool WrapperAction::onStop() {
-    return child_->stop();
+bool WrapperAction::isReady() const {
+    if (child_ == nullptr) {
+        LogNotice("%d:%s[%s], no child", id(), type().c_str(), label().c_str());
+        return false;
+    }
+    return child_->isReady();
 }
 
-bool WrapperAction::onPause() {
-    return child_->pause();
+void WrapperAction::onStart() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->start();
 }
 
-bool WrapperAction::onResume() {
+void WrapperAction::onStop() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->stop();
+}
+
+void WrapperAction::onPause() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->pause();
+}
+
+void WrapperAction::onResume() {
     if (child_->state() == State::kFinished) {
         onChildFinished(child_->result() == Result::kSuccess);
-        return true;
+    } else {
+        child_->resume();
     }
-    return child_->resume();
 }
 
 void WrapperAction::onReset() {
+    TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 }
 

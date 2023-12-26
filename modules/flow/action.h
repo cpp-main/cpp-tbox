@@ -23,6 +23,7 @@
 #include <string>
 #include <functional>
 #include <chrono>
+#include <memory>
 
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
@@ -69,17 +70,24 @@ class Action {
         return state_ == State::kRunning || state_ == State::kPause;
     }
 
-    inline void set_label(const std::string &label) { label_ = label; }
+    inline void setLabel(const std::string &label) { label_ = label; }
     inline const std::string& label() const { return label_; }
 
     //!< 设置结束回调
     using FinishCallback = std::function<void(bool is_succ)>;
     inline void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
 
+    //!< 设置子动作
+    virtual int  addChild(Action *child);
+    virtual bool setChild(Action *child);
+    virtual bool setChildAs(Action *child, const std::string &role);
+
     void setTimeout(std::chrono::milliseconds ms);
     void resetTimeout();
 
     virtual void toJson(Json &js) const;
+
+    virtual bool isReady() const = 0;
 
     bool start();   //!< 开始
     bool pause();   //!< 暂停
@@ -90,10 +98,10 @@ class Action {
   protected:
     bool finish(bool is_succ);
 
-    virtual bool onStart() { return true; }   //! WARN: 启动失败是一种异常，要少用
-    virtual bool onPause() { return true; }
-    virtual bool onResume() { return true; }
-    virtual bool onStop() { return true; }
+    virtual void onStart() { }   //! WARN: 启动失败是一种异常，要少用
+    virtual void onPause() { }
+    virtual void onResume() { }
+    virtual void onStop() { }
     virtual void onReset() { }
     virtual void onFinished(bool is_succ) { (void)is_succ; }
     virtual void onTimeout() { finish(false); }

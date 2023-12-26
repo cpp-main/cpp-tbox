@@ -28,10 +28,13 @@ namespace flow {
 class FunctionAction : public Action {
   public:
     using Func = std::function<bool()>;
-    explicit FunctionAction(event::Loop &loop, const Func &func);
+
+    explicit FunctionAction(event::Loop &loop, Func &&func);
+
+    virtual bool isReady() const { return true; }
 
   protected:
-    virtual bool onStart() override;
+    virtual void onStart() override;
 
   private:
     Func func_;
