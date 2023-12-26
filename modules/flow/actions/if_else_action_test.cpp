@@ -28,121 +28,143 @@ namespace tbox {
 namespace flow {
 
 TEST(IfElseAction, CondSucc) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  bool cond_action_run = false;
-  bool if_action_run = false;
-  bool else_action_run = false;
-  bool if_else_action_run = false;
+    IfElseAction if_else_action(*loop);
 
-  auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return true; });
-  auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
-  auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
+    bool cond_action_run = false;
+    bool if_action_run = false;
+    bool else_action_run = false;
+    bool if_else_action_run = false;
 
-  IfElseAction if_else_action(*loop, cond_action, if_action, else_action);
+    auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return true; });
+    auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
+    auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
 
-  if_else_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      if_else_action_run = true;
-      loop->exitLoop();
-    }
-  );
-  if_else_action.start();
+    EXPECT_TRUE(if_else_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(if_action, "succ"));
+    EXPECT_TRUE(if_else_action.setChildAs(else_action, "fail"));
+    EXPECT_TRUE(if_else_action.isReady());
 
-  loop->runLoop();
-  EXPECT_TRUE(cond_action_run);
-  EXPECT_TRUE(if_else_action_run);
-  EXPECT_TRUE(if_action_run);
-  EXPECT_FALSE(else_action_run);
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+    EXPECT_TRUE(cond_action_run);
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_TRUE(if_action_run);
+    EXPECT_FALSE(else_action_run);
 }
 
 TEST(IfElseAction, CondFail) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  bool cond_action_run = false;
-  bool if_action_run = false;
-  bool else_action_run = false;
-  bool if_else_action_run = false;
+    IfElseAction if_else_action(*loop);
 
-  auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return false; });
-  auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
-  auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
+    bool cond_action_run = false;
+    bool if_action_run = false;
+    bool else_action_run = false;
+    bool if_else_action_run = false;
 
-  IfElseAction if_else_action(*loop, cond_action, if_action, else_action);
+    auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return false; });
+    auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
+    auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
 
-  if_else_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      if_else_action_run = true;
-      loop->exitLoop();
-    }
-  );
-  if_else_action.start();
+    EXPECT_TRUE(if_else_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(if_action, "succ"));
+    EXPECT_TRUE(if_else_action.setChildAs(else_action, "fail"));
+    EXPECT_TRUE(if_else_action.isReady());
 
-  loop->runLoop();
-  EXPECT_TRUE(cond_action_run);
-  EXPECT_TRUE(if_else_action_run);
-  EXPECT_FALSE(if_action_run);
-  EXPECT_TRUE(else_action_run);
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+    if_else_action.start();
+
+    loop->runLoop();
+    EXPECT_TRUE(cond_action_run);
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_FALSE(if_action_run);
+    EXPECT_TRUE(else_action_run);
 }
 
 TEST(IfElseAction, CondSuccNoIfAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  bool cond_action_run = false;
-  bool else_action_run = false;
-  bool if_else_action_run = false;
+    IfElseAction if_else_action(*loop);
 
-  auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return true; });
-  auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
+    bool cond_action_run = false;
+    bool else_action_run = false;
+    bool if_else_action_run = false;
 
-  IfElseAction if_else_action(*loop, cond_action, nullptr, else_action);
+    auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return true; });
+    auto else_action = new FunctionAction(*loop, [&] { else_action_run = true; return true; });
 
-  if_else_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      if_else_action_run = true;
-      loop->exitLoop();
-    }
-  );
-  if_else_action.start();
+    EXPECT_TRUE(if_else_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(else_action, "fail"));
+    EXPECT_TRUE(if_else_action.isReady());
 
-  loop->runLoop();
-  EXPECT_TRUE(cond_action_run);
-  EXPECT_TRUE(if_else_action_run);
-  EXPECT_FALSE(else_action_run);
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+    EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+    EXPECT_TRUE(cond_action_run);
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_FALSE(else_action_run);
 }
 
 TEST(IfElseAction, CondFailNoElseAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  bool cond_action_run = false;
-  bool if_action_run = false;
-  bool if_else_action_run = false;
+    IfElseAction if_else_action(*loop);
 
-  auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return false; });
-  auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
+    bool cond_action_run = false;
+    bool if_action_run = false;
+    bool if_else_action_run = false;
 
-  IfElseAction if_else_action(*loop, cond_action, if_action, nullptr);
+    auto cond_action = new FunctionAction(*loop, [&] { cond_action_run = true; return false; });
+    auto if_action = new FunctionAction(*loop, [&] { if_action_run = true; return true; });
 
-  if_else_action.setFinishCallback(
-    [&] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      if_else_action_run = true;
-      loop->exitLoop();
-    }
-  );
-  if_else_action.start();
+    EXPECT_TRUE(if_else_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(if_action, "succ"));
+    EXPECT_TRUE(if_else_action.isReady());
 
-  loop->runLoop();
-  EXPECT_TRUE(cond_action_run);
-  EXPECT_TRUE(if_else_action_run);
-  EXPECT_FALSE(if_action_run);
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+    EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+    EXPECT_TRUE(cond_action_run);
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_FALSE(if_action_run);
 }
 
 }

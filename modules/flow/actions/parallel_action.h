@@ -35,16 +35,17 @@ class ParallelAction : public Action {
 
     virtual void toJson(Json &js) const override;
 
-    int append(Action *action);
+    virtual int addChild(Action *action) override;
+    virtual bool isReady() const override;
 
     std::set<int> succSet() const { return succ_set_; }
     std::set<int> failSet() const { return fail_set_; }
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
   private:

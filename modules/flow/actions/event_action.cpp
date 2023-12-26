@@ -22,43 +22,38 @@
 namespace tbox {
 namespace flow {
 
-EventAction::EventAction(event::Loop &loop, const std::string &type, EventPublisher &pub) :
-  Action(loop, type),
-  pub_(pub)
+EventAction::EventAction(event::Loop &loop, const std::string &type, EventPublisher &pub)
+  : Action(loop, type)
+  , pub_(pub)
 { }
 
 EventAction::~EventAction() {
-  if (state() == State::kRunning)
+    if (state() == State::kRunning)
+        pub_.unsubscribe(this);
+}
+
+void EventAction::onStart() {
+    pub_.subscribe(this);
+}
+
+void EventAction::onStop() {
     pub_.unsubscribe(this);
 }
 
-bool EventAction::onStart() {
-  pub_.subscribe(this);
-  return true;
+void EventAction::onPause() {
+    pub_.unsubscribe(this);
 }
 
-bool EventAction::onStop() {
-  pub_.unsubscribe(this);
-  return true;
-}
-
-bool EventAction::onPause() {
-  pub_.unsubscribe(this);
-  return true;
-}
-
-bool EventAction::onResume() {
-  pub_.subscribe(this);
-  return true;
+void EventAction::onResume() {
+    pub_.subscribe(this);
 }
 
 void EventAction::onReset() {
-  pub_.unsubscribe(this);
+    pub_.unsubscribe(this);
 }
 
-void EventAction::onFinished(bool succ) {
-  pub_.unsubscribe(this);
-  (void)succ;
+void EventAction::onFinished(bool) {
+    pub_.unsubscribe(this);
 }
 
 }

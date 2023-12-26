@@ -32,22 +32,25 @@ class LoopAction : public Action {
       kUntilFail,   //! while(action());
       kUntilSucc,   //! while(!action());
     };
+    explicit LoopAction(event::Loop &loop, Mode mode = Mode::kForever);
     explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
     virtual ~LoopAction();
 
     virtual void toJson(Json &js) const override;
+    virtual bool setChild(Action *child) override;
+    virtual bool isReady() const override;
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ);
 
   private:
-    Action *child_;
+    Action *child_ = nullptr;
     Mode mode_;
 };
 

@@ -36,24 +36,28 @@ class WrapperAction : public Action {
     };
 
   public:
+    explicit WrapperAction(event::Loop &loop, Mode mode = Mode::kNormal);
     explicit WrapperAction(event::Loop &loop, Action *child, Mode mode = Mode::kNormal);
     virtual ~WrapperAction();
 
     Mode mode() const { return mode_; }
 
+    virtual bool setChild(Action *child) override;
+    virtual bool isReady() const override;
+
   protected:
     virtual void toJson(Json &js) const override;
 
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ);
 
   private:
-    Action *child_;
+    Action *child_ = nullptr;
     Mode mode_;
 };
 

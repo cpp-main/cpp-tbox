@@ -33,23 +33,25 @@ class RepeatAction : public Action {
       kBreakSucc,   //! for (int i = 0; i < times && !action(); ++i);
     };
 
-    explicit RepeatAction(event::Loop &loop, Action *child, size_t times,
-                          Mode mode = Mode::kNoBreak);
+    explicit RepeatAction(event::Loop &loop, size_t times, Mode mode = Mode::kNoBreak);
+    explicit RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode = Mode::kNoBreak);
     virtual ~RepeatAction();
 
     virtual void toJson(Json &js) const override;
+    virtual bool setChild(Action *action) override;
+    virtual bool isReady() const override;
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ);
 
   private:
-    Action *child_;
+    Action *child_ = nullptr;
     size_t repeat_times_;
     size_t remain_times_ = 0;
     Mode mode_;

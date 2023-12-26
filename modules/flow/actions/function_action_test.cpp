@@ -27,41 +27,43 @@ namespace tbox {
 namespace flow {
 
 TEST(NonDelayAction, True) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  FunctionAction action(*loop, [] { return true; });
-  bool is_callback = false;
-  action.setFinishCallback(
-    [&is_callback, loop] (bool is_succ) {
-      EXPECT_TRUE(is_succ);
-      is_callback = true;
-      loop->exitLoop();
-    }
-  );
-  action.start();
+    FunctionAction action(*loop, [] { return true; });
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&is_callback, loop] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            is_callback = true;
+            loop->exitLoop();
+        }
+    );
+    EXPECT_TRUE(action.isReady());
+    action.start();
 
-  loop->runLoop();
-  EXPECT_TRUE(is_callback);
+    loop->runLoop();
+    EXPECT_TRUE(is_callback);
 }
 
 TEST(NonDelayAction, False) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  FunctionAction action(*loop, [] { return false; });
-  bool is_callback = false;
-  action.setFinishCallback(
-    [&is_callback, loop] (bool is_succ) {
-      EXPECT_FALSE(is_succ);
-      is_callback = true;
-      loop->exitLoop();
-    }
-  );
-  action.start();
+    FunctionAction action(*loop, [] { return false; });
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&is_callback, loop] (bool is_succ) {
+            EXPECT_FALSE(is_succ);
+            is_callback = true;
+            loop->exitLoop();
+        }
+    );
+    EXPECT_TRUE(action.isReady());
+    action.start();
 
-  loop->runLoop();
-  EXPECT_TRUE(is_callback);
+    loop->runLoop();
+    EXPECT_TRUE(is_callback);
 }
 
 }

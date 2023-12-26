@@ -51,16 +51,17 @@ class CompositeAction : public Action {
     using Action::Action;
     virtual ~CompositeAction();
 
-  protected:
-    void setChild(Action *child);
-
-  protected:
+  public:
     virtual void toJson(Json &js) const override;
 
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual bool setChild(Action *child) override;
+    virtual bool isReady() const override;
+
+  protected:
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ);

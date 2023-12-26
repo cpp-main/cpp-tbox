@@ -24,15 +24,15 @@
 namespace tbox {
 namespace flow {
 
-FunctionAction::FunctionAction(event::Loop &loop, const Func &func) :
-  Action(loop, "Function"), func_(func)
+FunctionAction::FunctionAction(event::Loop &loop, Func &&func)
+  : Action(loop, "Function")
+  , func_(std::move(func))
 {
-  TBOX_ASSERT(func != nullptr);
+    TBOX_ASSERT(func_ != nullptr);
 }
 
-bool FunctionAction::onStart() {
-  finish(func_());
-  return true;
+void FunctionAction::onStart() {
+    finish(func_());
 }
 
 }

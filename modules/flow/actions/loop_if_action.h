@@ -27,29 +27,29 @@ namespace flow {
 
 class LoopIfAction : public Action {
   public:
-    explicit LoopIfAction(event::Loop &loop,
-                          Action *if_action,
-                          Action *exec_action);
+    explicit LoopIfAction(event::Loop &loop);
     virtual ~LoopIfAction();
 
     virtual void toJson(Json &js) const override;
+    virtual bool setChildAs(Action *child, const std::string &role) override;
+    virtual bool isReady() const override;
 
     //! 默认结束结果是true，如果需要可以设定
     void setFinishResult(bool succ) { finish_result_ = succ; }
 
   protected:
-    virtual bool onStart() override;
-    virtual bool onStop() override;
-    virtual bool onPause() override;
-    virtual bool onResume() override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
     virtual void onReset() override;
 
     void onIfFinished(bool is_succ);
     void onExecFinished();
 
   private:
-    Action *if_action_;
-    Action *exec_action_;
+    Action *if_action_ = nullptr;
+    Action *exec_action_ = nullptr;
     bool finish_result_ = true;
 };
 

@@ -35,10 +35,11 @@ namespace flow {
 class TimeCountAction : public CompositeAction {
   public:
     TimeCountAction(event::Loop &loop) : CompositeAction(loop, "TimeCount") {
+        auto loop_action = new LoopAction(loop);
         auto seq_action = new SequenceAction(loop);
-        seq_action->append(new SleepAction(loop, std::chrono::milliseconds(100)));
-        seq_action->append(new FunctionAction(loop, [this] { ++count_; return true; }));
-        auto loop_action = new LoopAction(loop, seq_action);
+        seq_action->addChild(new SleepAction(loop, std::chrono::milliseconds(100)));
+        seq_action->addChild(new FunctionAction(loop, [this] { ++count_; return true; }));
+        loop_action->setChild(seq_action);
         setChild(loop_action);
     }
 
@@ -59,6 +60,7 @@ TEST(CompositeAction, Basic) {
     SetScopeExitAction([loop] { delete loop; });
 
     TimeCountAction action(*loop);
+    EXPECT_TRUE(action.isReady());
     action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1010));
@@ -67,5 +69,14 @@ TEST(CompositeAction, Basic) {
     action.stop();
     EXPECT_GE(action.count(), 10);
 }
+
+TEST(CompositeAction, NotSetChild) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    CompositeAction action(*loop, "UnSet");
+    EXPECT_FALSE(action.isReady());
+}
+
 }
 }

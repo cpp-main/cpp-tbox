@@ -28,111 +28,150 @@ namespace flow {
 
 using namespace std::placeholders;
 
-IfElseAction::IfElseAction(event::Loop &loop, Action *if_action,
-                           Action *succ_action, Action *fail_action) :
-  Action(loop, "IfElse"),
-  if_action_(if_action),
-  succ_action_(succ_action),
-  fail_action_(fail_action)
-{
-  TBOX_ASSERT(if_action != nullptr);
-
-  if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
-  if (succ_action_ != nullptr)
-    succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
-  if (fail_action_ != nullptr)
-    fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
-}
+IfElseAction::IfElseAction(event::Loop &loop)
+    : Action(loop, "IfElse")
+{ }
 
 IfElseAction::~IfElseAction() {
-  CHECK_DELETE_RESET_OBJ(if_action_);
-  CHECK_DELETE_RESET_OBJ(succ_action_);
-  CHECK_DELETE_RESET_OBJ(fail_action_);
+    CHECK_DELETE_RESET_OBJ(if_action_);
+    CHECK_DELETE_RESET_OBJ(succ_action_);
+    CHECK_DELETE_RESET_OBJ(fail_action_);
 }
 
 void IfElseAction::toJson(Json &js) const {
-  Action::toJson(js);
-  auto &js_children = js["children"];
-  if_action_->toJson(js_children["0.if"]);
-  if (succ_action_ != nullptr)
-    succ_action_->toJson(js_children["1.succ"]);
-  if (fail_action_ != nullptr)
-    fail_action_->toJson(js_children["2.fail"]);
+    Action::toJson(js);
+    auto &js_children = js["children"];
+    if_action_->toJson(js_children["0.if"]);
+    if (succ_action_ != nullptr)
+        succ_action_->toJson(js_children["1.succ"]);
+    if (fail_action_ != nullptr)
+        fail_action_->toJson(js_children["2.fail"]);
 }
 
-bool IfElseAction::onStart() {
-  return if_action_->start();
-}
-
-bool IfElseAction::onStop() {
-  if (if_action_->state() == Action::State::kFinished) {
-    if (if_action_->result() == Action::Result::kSuccess)
-      return succ_action_->stop();
-    else
-      return fail_action_->stop();
-  } else {
-    return if_action_->stop();
-  }
-}
-
-bool IfElseAction::onPause() {
-  if (if_action_->state() == Action::State::kFinished) {
-    if (if_action_->result() == Action::Result::kSuccess)
-      return succ_action_->pause();
-    else
-      return fail_action_->pause();
-  } else {
-    return if_action_->pause();
-  }
-}
-
-bool IfElseAction::onResume() {
-  if (if_action_->state() == Action::State::kFinished) {
-    if (if_action_->result() == Action::Result::kSuccess) {
-      if (succ_action_->state() == State::kFinished) {
-        finish(succ_action_->result() == Result::kSuccess);
+bool IfElseAction::setChildAs(Action *child, const std::string &role) {
+    if (role == "if") {
+        CHECK_DELETE_RESET_OBJ(if_action_);
+        if_action_ = child;
+        if (if_action_ != nullptr)
+            if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
         return true;
-      } else {
-        return succ_action_->resume();
-      }
-    } else {
-      if (fail_action_->state() == State::kFinished) {
-        finish(fail_action_->result() == Result::kSuccess);
+
+    } else if (role == "succ") {
+        CHECK_DELETE_RESET_OBJ(succ_action_);
+        succ_action_ = child;
+        if (succ_action_ != nullptr)
+            succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
         return true;
-      } else {
-        return fail_action_->resume();
-      }
+
+    } else if (role == "fail") {
+        CHECK_DELETE_RESET_OBJ(fail_action_);
+        fail_action_ = child;
+        if (fail_action_ != nullptr)
+            fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
+        return true;
     }
-  } else {
-    return if_action_->resume();
-  }
+
+    LogWarn("%d:%s[%s], unsupport role:%s", id(), type().c_str(), label().c_str(), role.c_str());
+    return false;
+}
+
+bool IfElseAction::isReady() const {
+    if (if_action_ == nullptr) {
+        LogWarn("%d:%s[%s] no cond func", id(), type().c_str(), label().c_str());
+        return false;
+    }
+
+    if (!succ_action_ && !fail_action_) {
+        LogWarn("%d:%s[%s] both succ and fail func is null", id(), type().c_str(), label().c_str());
+        return false;
+    }
+
+    if ((!if_action_->isReady()) ||
+        (succ_action_ != nullptr && !succ_action_->isReady()) ||
+        (fail_action_ != nullptr && !fail_action_->isReady()))
+        return false;
+
+    return true;
+}
+
+void IfElseAction::onStart() {
+    TBOX_ASSERT(if_action_ != nullptr);
+    if_action_->start();
+}
+
+void IfElseAction::onStop() {
+    TBOX_ASSERT(if_action_ != nullptr);
+    if (if_action_->state() == Action::State::kFinished) {
+        if (if_action_->result() == Action::Result::kSuccess) {
+            succ_action_->stop();
+        } else {
+            fail_action_->stop();
+        }
+    } else {
+        if_action_->stop();
+    }
+}
+
+void IfElseAction::onPause() {
+    TBOX_ASSERT(if_action_ != nullptr);
+    if (if_action_->state() == Action::State::kFinished) {
+        if (if_action_->result() == Action::Result::kSuccess) {
+            succ_action_->pause();
+        } else {
+            fail_action_->pause();
+        }
+    } else {
+        if_action_->pause();
+    }
+}
+
+void IfElseAction::onResume() {
+    TBOX_ASSERT(if_action_ != nullptr);
+    if (if_action_->state() == Action::State::kFinished) {
+        if (if_action_->result() == Action::Result::kSuccess) {
+            if (succ_action_->state() == State::kFinished) {
+                finish(succ_action_->result() == Result::kSuccess);
+            } else {
+                succ_action_->resume();
+            }
+        } else {
+            if (fail_action_->state() == State::kFinished) {
+                finish(fail_action_->result() == Result::kSuccess);
+            } else {
+                fail_action_->resume();
+            }
+        }
+    } else {
+        if_action_->resume();
+    }
 }
 
 void IfElseAction::onReset() {
-  if_action_->reset();
+    TBOX_ASSERT(if_action_ != nullptr);
+    if_action_->reset();
 
-  if (succ_action_ != nullptr)
-    succ_action_->reset();
+    if (succ_action_ != nullptr)
+        succ_action_->reset();
 
-  if (fail_action_ != nullptr)
-    fail_action_->reset();
+    if (fail_action_ != nullptr)
+        fail_action_->reset();
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ) {
-  if (state() == State::kRunning) {
-    if (is_succ) {
-      if (succ_action_ != nullptr) {
-        succ_action_->start();
-        return;
-      }
-    } else {
-      if (fail_action_ != nullptr) {
-        fail_action_->start();
-        return;
-      }
+    if (state() == State::kRunning) {
+        if (is_succ) {
+            if (succ_action_ != nullptr) {
+                succ_action_->start();
+                return;
+            }
+        } else {
+            if (fail_action_ != nullptr) {
+                fail_action_->start();
+                return;
+            }
+        }
+        finish(true);
     }
-    finish(true);
-  }
 }
 
 }

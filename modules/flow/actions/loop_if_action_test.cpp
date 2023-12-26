@@ -36,24 +36,28 @@ namespace flow {
  *  }
  */
 TEST(LoopIfAction, LoopRemainTimes) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int remain = 10;
-  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
-  auto exec_action = new FunctionAction(*loop, [&] { --remain; return true; });
-  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
+    LoopIfAction loop_if_action(*loop);
 
-  bool is_finished = false;
-  loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
-  loop_if_action.start();
+    int remain = 10;
+    auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
+    auto exec_action = new FunctionAction(*loop, [&] { --remain; return true; });
 
-  loop->exitLoop(std::chrono::milliseconds(10));
-  loop->runLoop();
+    bool is_finished = false;
+    EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
+    EXPECT_TRUE(loop_if_action.isReady());
+    loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_if_action.start();
 
-  EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(remain, 0);
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(remain, 0);
 }
 
 /**
@@ -64,28 +68,31 @@ TEST(LoopIfAction, LoopRemainTimes) {
  *  }
  */
 TEST(LoopIfAction, MultiAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int remain = 10;
-  auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
-  auto exec_action = new SequenceAction(*loop);
-  exec_action->append(new FunctionAction(*loop, [&] { --remain; return true; }));
-  exec_action->append(new SleepAction(*loop, std::chrono::milliseconds(10)));
-  LoopIfAction loop_if_action(*loop, cond_action, exec_action);
+    LoopIfAction loop_if_action(*loop);
 
-  bool is_finished = false;
-  loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
-  loop_if_action.start();
+    int remain = 10;
+    auto cond_action = new FunctionAction(*loop, [&] { return remain > 0; });
+    auto exec_action = new SequenceAction(*loop);
+    exec_action->addChild(new FunctionAction(*loop, [&] { --remain; return true; }));
+    exec_action->addChild(new SleepAction(*loop, std::chrono::milliseconds(10)));
 
-  loop->exitLoop(std::chrono::milliseconds(200));
-  loop->runLoop();
+    bool is_finished = false;
+    EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
+    EXPECT_TRUE(loop_if_action.isReady());
+    loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_if_action.start();
 
-  EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
-  EXPECT_TRUE(is_finished);
-  EXPECT_EQ(remain, 0);
+    loop->exitLoop(std::chrono::milliseconds(200));
+    loop->runLoop();
+
+    EXPECT_EQ(loop_if_action.state(), Action::State::kFinished);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(remain, 0);
 }
-
 
 }
 }

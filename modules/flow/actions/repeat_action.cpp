@@ -26,63 +26,90 @@ namespace flow {
 
 using namespace std::placeholders;
 
-RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode) :
-  Action(loop, "Repeat"),
-  child_(child),
-  repeat_times_(times),
-  mode_(mode)
+RepeatAction::RepeatAction(event::Loop &loop, size_t times, Mode mode)
+  : Action(loop, "Repeat")
+  , repeat_times_(times)
+  , mode_(mode)
+{ }
+
+RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode)
+  : Action(loop, "Repeat")
+  , child_(child)
+  , repeat_times_(times)
+  , mode_(mode)
 {
-  TBOX_ASSERT(child != nullptr);
-  child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
+    TBOX_ASSERT(child_ != nullptr);
+    child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
 }
 
 RepeatAction::~RepeatAction() {
-  delete child_;
+    CHECK_DELETE_RESET_OBJ(child_);
 }
 
 void RepeatAction::toJson(Json &js) const {
-  Action::toJson(js);
-  child_->toJson(js["child"]);
-  js["repeat_times"] = repeat_times_;
-  js["remain_times"] = remain_times_;
+    Action::toJson(js);
+    child_->toJson(js["child"]);
+    js["repeat_times"] = repeat_times_;
+    js["remain_times"] = remain_times_;
 }
 
-bool RepeatAction::onStart() {
-  remain_times_ = repeat_times_ - 1;
-  return child_->start();
+bool RepeatAction::setChild(Action *child) {
+    CHECK_DELETE_RESET_OBJ(child_);
+    child_ = child;
+    if (child_ != nullptr)
+        child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
+    return true;
 }
 
-bool RepeatAction::onStop() {
-  return child_->stop();
+bool RepeatAction::isReady() const {
+    if (child_ == nullptr) {
+        LogNotice("%d:%s[%s], no child", id(), type().c_str(), label().c_str());
+        return false;
+    }
+    return child_->isReady();
 }
 
-bool RepeatAction::onPause() {
-  return child_->pause();
+void RepeatAction::onStart() {
+    TBOX_ASSERT(child_ != nullptr);
+    remain_times_ = repeat_times_ - 1;
+    child_->start();
 }
 
-bool RepeatAction::onResume() {
-  return child_->resume();
+void RepeatAction::onStop() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->stop();
+}
+
+void RepeatAction::onPause() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->pause();
+}
+
+void RepeatAction::onResume() {
+    TBOX_ASSERT(child_ != nullptr);
+    child_->resume();
 }
 
 void RepeatAction::onReset() {
-  child_->reset();
+    TBOX_ASSERT(child_ != nullptr);
+    child_->reset();
 }
 
 void RepeatAction::onChildFinished(bool is_succ) {
-  if (state() == State::kRunning) {
-    if ((mode_ == Mode::kBreakSucc && is_succ) ||
-        (mode_ == Mode::kBreakFail && !is_succ)) {
-      finish(is_succ);
-    } else {
-      if (remain_times_ > 0) {
-        child_->reset();
-        child_->start();
-        --remain_times_;
-      } else {
-        finish(true);
-      }
+    if (state() == State::kRunning) {
+        if ((mode_ == Mode::kBreakSucc && is_succ) ||
+                (mode_ == Mode::kBreakFail && !is_succ)) {
+            finish(is_succ);
+        } else {
+            if (remain_times_ > 0) {
+                child_->reset();
+                child_->start();
+                --remain_times_;
+            } else {
+                finish(true);
+            }
+        }
     }
-  }
 }
 
 }

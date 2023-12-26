@@ -130,42 +130,46 @@ TEST(SleepAction, GenOneAction) {
 //  检查 ts 中相邻两个之间的时间差是否与 time_tbl 一致
 //
 TEST(SleepAction, GenLoopAction) {
-  auto loop = event::Loop::New();
-  SetScopeExitAction([loop] { delete loop; });
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
 
-  int time_tbl[] = { 50, 100, 200, 150, 10 };
-  size_t index = 0;
+    int time_tbl[] = { 50, 100, 200, 150, 10 };
+    size_t index = 0;
 
-  std::vector<std::chrono::steady_clock::time_point> ts;
-  ts.push_back(std::chrono::steady_clock::now());
+    std::vector<std::chrono::steady_clock::time_point> ts;
+    ts.push_back(std::chrono::steady_clock::now());
 
-  auto gen_time = [&] { return std::chrono::milliseconds(time_tbl[index]); };
-  auto cond_action = new FunctionAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
-  auto body_action = new SequenceAction(*loop);
+    LoopIfAction loop_if_action(*loop);
 
-  body_action->append(new SleepAction(*loop, gen_time));
-  body_action->append(
-    new FunctionAction(*loop,
-      [&] {
-        ts.push_back(std::chrono::steady_clock::now());
-        ++index;
-        return true;
-      }
-    )
-  );
-  LoopIfAction loop_if_action(*loop, cond_action, body_action);
-  loop_if_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
-  loop_if_action.start();
+    auto gen_time = [&] { return std::chrono::milliseconds(time_tbl[index]); };
+    auto cond_action = new FunctionAction(*loop, [&] { return index < NUMBER_OF_ARRAY(time_tbl); });
+    auto body_action = new SequenceAction(*loop);
 
-  loop->runLoop();
+    body_action->addChild(new SleepAction(*loop, gen_time));
+    body_action->addChild(
+        new FunctionAction(*loop,
+            [&] {
+                ts.push_back(std::chrono::steady_clock::now());
+                ++index;
+                return true;
+            }
+        )
+    );
+    EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(loop_if_action.setChildAs(body_action, "exec"));
+    EXPECT_TRUE(loop_if_action.isReady());
+    loop_if_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
+    loop_if_action.start();
 
-  ASSERT_EQ(ts.size(), NUMBER_OF_ARRAY(time_tbl) + 1);
-  for (size_t i = 0; i < NUMBER_OF_ARRAY(time_tbl); ++i) {
-    int duration = time_tbl[i];
-    int count = std::chrono::duration_cast<std::chrono::milliseconds>(ts[i+1] - ts[i]).count();
-    EXPECT_LE(count, duration + 1);
-    EXPECT_GE(count, duration - 1);
-  }
+    loop->runLoop();
+
+    ASSERT_EQ(ts.size(), NUMBER_OF_ARRAY(time_tbl) + 1);
+    for (size_t i = 0; i < NUMBER_OF_ARRAY(time_tbl); ++i) {
+        int duration = time_tbl[i];
+        int count = std::chrono::duration_cast<std::chrono::milliseconds>(ts[i+1] - ts[i]).count();
+        EXPECT_LE(count, duration + 1);
+        EXPECT_GE(count, duration - 1);
+    }
 }
 
 }

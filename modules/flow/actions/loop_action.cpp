@@ -26,54 +26,80 @@ namespace flow {
 
 using namespace std::placeholders;
 
-LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode) :
-  Action(loop, "Loop"),
-  child_(child),
-  mode_(mode)
+LoopAction::LoopAction(event::Loop &loop, Mode mode)
+  : Action(loop, "Loop")
+  , mode_(mode)
+{ }
+
+LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode)
+  : Action(loop, "Loop")
+  , child_(child)
+  , mode_(mode)
 {
-  TBOX_ASSERT(child != nullptr);
-  child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
+    TBOX_ASSERT(child_ != nullptr);
+    child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
 }
 
 LoopAction::~LoopAction() {
-  delete child_;
+    CHECK_DELETE_RESET_OBJ(child_);
 }
 
 void LoopAction::toJson(Json &js) const {
-  Action::toJson(js);
-  child_->toJson(js["child"]);
+    Action::toJson(js);
+    child_->toJson(js["child"]);
 }
 
-bool LoopAction::onStart() {
-  return child_->start();
+bool LoopAction::setChild(Action *child) {
+    CHECK_DELETE_RESET_OBJ(child_);
+    child_ = child;
+    if (child_ != nullptr)
+        child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
+    return true;
 }
 
-bool LoopAction::onStop() {
-  return child_->stop();
+bool LoopAction::isReady() const {
+    if (child_ == nullptr) {
+        LogWarn("%d:%s[%s], child not set", id(), type().c_str(), label().c_str());
+        return false;
+    }
+    return child_->isReady();
 }
 
-bool LoopAction::onPause() {
-  return child_->pause();
+void LoopAction::onStart() {
+    TBOX_ASSERT(child_ != nullptr)
+    child_->start();
 }
 
-bool LoopAction::onResume() {
-  return child_->resume();
+void LoopAction::onStop() {
+    TBOX_ASSERT(child_ != nullptr)
+    child_->stop();
+}
+
+void LoopAction::onPause() {
+    TBOX_ASSERT(child_ != nullptr)
+    child_->pause();
+}
+
+void LoopAction::onResume() {
+    TBOX_ASSERT(child_ != nullptr)
+    child_->resume();
 }
 
 void LoopAction::onReset() {
-  child_->reset();
+    TBOX_ASSERT(child_ != nullptr)
+    child_->reset();
 }
 
 void LoopAction::onChildFinished(bool is_succ) {
-  if (state() == State::kRunning) {
-    if ((mode_ == Mode::kUntilSucc && is_succ) ||
-        (mode_ == Mode::kUntilFail && !is_succ)) {
-      finish(is_succ);
-    } else if (state() == State::kRunning) {
-      child_->reset();
-      child_->start();
+    if (state() == State::kRunning) {
+        if ((mode_ == Mode::kUntilSucc && is_succ) ||
+            (mode_ == Mode::kUntilFail && !is_succ)) {
+            finish(is_succ);
+        } else if (state() == State::kRunning) {
+            child_->reset();
+            child_->start();
+        }
     }
-  }
 }
 
 }

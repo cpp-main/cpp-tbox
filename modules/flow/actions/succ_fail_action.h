@@ -30,11 +30,11 @@ class SuccAction : public Action {
   public:
     SuccAction(event::Loop &loop) : Action(loop, "Succ") { }
 
+  public:
+    virtual bool isReady() const override { return true; }
+
   protected:
-    virtual bool onStart() {
-      finish(true);
-      return true;
-    }
+    virtual void onStart() { finish(true); }
 };
 
 /// 失败动作
@@ -42,11 +42,11 @@ class FailAction : public Action {
   public:
     FailAction(event::Loop &loop) : Action(loop, "Fail") { }
 
+  public:
+    virtual bool isReady() const override { return true; }
+
   protected:
-    virtual bool onStart() {
-        finish(false);
-        return true;
-    }
+    virtual void onStart() { finish(false); }
 };
 
 }

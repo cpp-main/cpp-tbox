@@ -32,6 +32,7 @@ TEST(Action, Timeout) {
   class TestAction : public Action {
     public:
       explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+      virtual bool isReady() const override { return true; }
   };
 
   TestAction action(*loop);
