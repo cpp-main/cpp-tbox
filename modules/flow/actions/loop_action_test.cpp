@@ -26,6 +26,7 @@
 #include "function_action.h"
 #include "sleep_action.h"
 #include "sequence_action.h"
+#include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
@@ -102,6 +103,17 @@ TEST(LoopAction, SleepActionForever) {
 
     EXPECT_FALSE(is_finished);
     EXPECT_EQ(loop_times, 10);
+}
+
+TEST(LoopAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    LoopAction action(*loop);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
 }
 
 }

@@ -214,5 +214,16 @@ TEST(WrapperAction, AlwayFailFail) {
     EXPECT_TRUE(is_callback);
 }
 
+TEST(WrapperAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
+}
+
 }
 }

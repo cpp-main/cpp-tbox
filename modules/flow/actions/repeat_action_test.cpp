@@ -24,6 +24,7 @@
 
 #include "repeat_action.h"
 #include "function_action.h"
+#include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
@@ -175,6 +176,17 @@ TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
     EXPECT_TRUE(is_finished);
     EXPECT_EQ(loop_times, 3);
     EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
+}
+
+TEST(RepeatAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    RepeatAction action(*loop, 1);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
 }
 
 }
