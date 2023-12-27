@@ -31,7 +31,10 @@ class LoopIfAction : public Action {
     virtual ~LoopIfAction();
 
     virtual void toJson(Json &js) const override;
+
+    //! role: "if", "exec"
     virtual bool setChildAs(Action *child, const std::string &role) override;
+
     virtual bool isReady() const override;
 
     //! 默认结束结果是true，如果需要可以设定

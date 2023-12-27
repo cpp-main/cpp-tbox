@@ -23,6 +23,7 @@
 
 #include "if_else_action.h"
 #include "function_action.h"
+#include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
@@ -165,6 +166,23 @@ TEST(IfElseAction, CondFailNoElseAction) {
     EXPECT_TRUE(cond_action_run);
     EXPECT_TRUE(if_else_action_run);
     EXPECT_FALSE(if_action_run);
+}
+
+TEST(IfElseAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    IfElseAction if_else_action(*loop);
+    EXPECT_FALSE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "if");
+    EXPECT_FALSE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "succ");
+    EXPECT_TRUE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "fail");
+    EXPECT_TRUE(if_else_action.isReady());
 }
 
 }

@@ -39,7 +39,10 @@ class IfElseAction : public Action {
     virtual ~IfElseAction();
 
     virtual void toJson(Json &js) const override;
+
+    //! role: "if", "succ", "fail"
     virtual bool setChildAs(Action *child, const std::string &role) override;
+
     virtual bool isReady() const override;
 
   protected:
