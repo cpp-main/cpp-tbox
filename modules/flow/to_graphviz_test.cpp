@@ -40,12 +40,12 @@ TEST(ToGraphviz, ActionJson) {
     SetScopeExitAction([loop] { delete loop; });
 
     auto seq_action = new SequenceAction(*loop);
-    seq_action->setLabel("This is test");
+    seq_action->set_label("This is test");
     auto if_else_action = new IfElseAction(*loop);
     if_else_action->setChildAs(new SuccAction(*loop), "if");
     if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "succ");
     if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "fail");
-    if_else_action->setLabel("Just If-Else");
+    if_else_action->set_label("Just If-Else");
     seq_action->addChild(if_else_action);
     auto repeat_action = new RepeatAction(*loop, 5);
     repeat_action->setChild(new FunctionAction(*loop, []{return true;}));

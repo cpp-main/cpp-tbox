@@ -70,7 +70,7 @@ class Action {
         return state_ == State::kRunning || state_ == State::kPause;
     }
 
-    inline void setLabel(const std::string &label) { label_ = label; }
+    inline void set_label(const std::string &label) { label_ = label; }
     inline const std::string& label() const { return label_; }
 
     //!< 设置结束回调
