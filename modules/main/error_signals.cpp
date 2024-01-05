@@ -37,7 +37,7 @@ int main(int argc, char **argv);
 namespace tbox {
 namespace main {
 
-extern std::function<void()> error_exit_func;
+extern void AbnormalExit();
 
 namespace {
 
@@ -102,19 +102,13 @@ void OnErrorSignal(int signo)
         const std::string &stack_str = DumpBacktrace();
         LogFatal("main: <%p>\n-----call stack-----\n%s", ::main, stack_str.c_str());
 
-        LogFatal("Process abort!");
-
         _is_recursion_call = false;
 
     } else {
         LogFatal("Recursion signal %d", signo);
     }
 
-    if (error_exit_func)    //! 执行一些善后处理
-        error_exit_func();
-
-    signal(SIGABRT, SIG_DFL);
-    std::abort();
+    AbnormalExit();
 }
 
 bool InstallSignal(int signo)

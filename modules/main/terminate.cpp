@@ -18,7 +18,6 @@
  * of the source tree.
  */
 #include <cxxabi.h>
-#include <signal.h>
 
 #include <functional>
 #include <exception>
@@ -30,7 +29,7 @@ int main(int argc, char **argv);
 namespace tbox {
 namespace main {
 
-extern std::function<void()> error_exit_func;
+extern void AbnormalExit();
 
 namespace {
 
@@ -78,13 +77,7 @@ void Terminate()
     LogFatal("main: <%p>\n-----call stack-----\n%s", ::main, stack_str.c_str());
 #endif
 
-    LogFatal("Process abort!");
-
-    if (error_exit_func)    //! 执行一些善后处理
-        error_exit_func();
-
-    signal(SIGABRT, SIG_DFL);
-    std::abort();
+    AbnormalExit();
 }
 
 }

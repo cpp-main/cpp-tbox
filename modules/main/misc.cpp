@@ -17,6 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include <signal.h>
 #include <iostream>
 
 #include <tbox/base/log.h>
@@ -91,6 +92,17 @@ void SayHello()
 
     GetTboxVersion(major, minor, rev);
     LogInfo("Tbox Version: %d.%d.%d", major, minor, rev);
+}
+
+void AbnormalExit()
+{
+    LogFatal("Process abort!");
+
+    if (error_exit_func)    //! 执行一些善后处理
+        error_exit_func();
+
+    signal(SIGABRT, SIG_DFL);
+    std::abort();
 }
 
 }
