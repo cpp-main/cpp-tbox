@@ -32,6 +32,9 @@ set(TBOX_LIBRARY_NAME tbox_dbus)
 set(TBOX_DBUS_HEADERS loop.h connection.h)
 set(TBOX_DBUS_SOURCES loop.cpp connection.cpp)
 
+find_package(DBus1 REQUIRED)
+include_directories(${DBus1_INCLUDE_DIRS})
+
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_DBUS_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
 
