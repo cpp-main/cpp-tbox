@@ -149,7 +149,7 @@ class StateMachine {
     }
 
     //! 设置状态变更回调
-    void setStateChangedCallback(const StateChangedCallback &cb);
+    void setStateChangedCallback(StateChangedCallback &&cb);
 
     //! 启动状态机
     bool start();
@@ -202,6 +202,8 @@ class StateMachine {
     template <typename S>
     S nextState() const { return static_cast<S>(nextState()); }
 
+    //! 是否运行中
+    bool isRunning() const;
 
     //! 是否已终止
     bool isTerminated() const;

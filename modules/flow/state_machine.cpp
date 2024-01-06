@@ -33,6 +33,10 @@ namespace flow {
 
 using namespace std;
 
+#define NULL_STATE_ID  -1   //! 空状态
+#define TERM_STATE_ID   0   //! 终止状态
+#define ANY_EVENT_ID    0   //! 任务事件
+
 class StateMachine::Impl {
   public:
     ~Impl();
@@ -57,7 +61,10 @@ class StateMachine::Impl {
     void setInitState(StateID init_state_id) { init_state_id_ = init_state_id; }
 
     bool setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm);
-    void setStateChangedCallback(const StateChangedCallback &cb);
+
+    void setStateChangedCallback(StateChangedCallback &&cb) {
+        state_changed_cb_ = std::move(cb);
+    }
 
     bool start();
     void stop();
@@ -68,7 +75,13 @@ class StateMachine::Impl {
     StateID lastState() const;
     StateID nextState() const;
 
-    bool isTerminated() const;
+    bool isRunning() const {
+        return (curr_state_ != nullptr) && (curr_state_->id != TERM_STATE_ID);
+    }
+
+    bool isTerminated() const {
+        return (curr_state_ != nullptr) && (curr_state_->id == TERM_STATE_ID);
+    }
 
     void toJson(Json &js) const;
 
@@ -146,9 +159,9 @@ bool StateMachine::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
     return impl_->setSubStateMachine(state_id, wp_sub_sm);
 }
 
-void StateMachine::setStateChangedCallback(const StateChangedCallback &cb)
+void StateMachine::setStateChangedCallback(StateChangedCallback &&cb)
 {
-    impl_->setStateChangedCallback(cb);
+    impl_->setStateChangedCallback(std::move(cb));
 }
 
 bool StateMachine::start()
@@ -187,6 +200,11 @@ StateMachine::StateID StateMachine::nextState() const
     return impl_->nextState();
 }
 
+bool StateMachine::isRunning() const
+{
+    return impl_->isRunning();
+}
+
 bool StateMachine::isTerminated() const
 {
     return impl_->isTerminated();
@@ -204,7 +222,7 @@ void StateMachine::setName(const std::string &name)
 
 ///////////////////////
 
-StateMachine::Impl::State StateMachine::Impl::_term_state_ = { 0, nullptr, nullptr, "Term", nullptr, { } };
+StateMachine::Impl::State StateMachine::Impl::_term_state_ = { TERM_STATE_ID, nullptr, nullptr, "Term", nullptr, { } };
 
 StateMachine::Impl::~Impl()
 {
@@ -248,7 +266,7 @@ bool StateMachine::Impl::addRoute(StateID from_state_id,
     }
 
     //! 如果 to_state_id 为是终止状态，那么这个状态必须是已存在的
-    if (to_state_id != 0 && findState(to_state_id) == nullptr) {
+    if (to_state_id != TERM_STATE_ID && findState(to_state_id) == nullptr) {
         LogWarn("[%s]: to_state %d not exist", name_.c_str(), to_state_id);
         return false;
     }
@@ -271,7 +289,7 @@ bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const Even
         return false;
     }
 
-    if (event_id != 0)
+    if (event_id != ANY_EVENT_ID)
         state->events[event_id] = action;
     else
         state->default_event = action;
@@ -289,11 +307,6 @@ bool StateMachine::Impl::setSubStateMachine(StateID state_id, StateMachine *wp_s
 
     state->sub_sm = wp_sub_sm->impl_;
     return true;
-}
-
-void StateMachine::Impl::setStateChangedCallback(const StateChangedCallback &cb)
-{
-    state_changed_cb_ = cb;
 }
 
 bool StateMachine::Impl::start()
@@ -366,7 +379,7 @@ bool StateMachine::Impl::run(Event event)
         curr_state_->sub_sm->stop();
     }
 
-    StateID next_state_id = -1;
+    StateID next_state_id = NULL_STATE_ID;
     ActionFunc route_action;
 
     //! 检查事件，并执行
@@ -378,12 +391,12 @@ bool StateMachine::Impl::run(Event event)
         next_state_id = curr_state_->default_event(event);
     --cb_level_;
 
-    if (next_state_id < 0) {
+    if (next_state_id == NULL_STATE_ID) {
         //! 找出可行的路径
         ++cb_level_;
         auto route_iter = std::find_if(curr_state_->routes.begin(), curr_state_->routes.end(),
             [event] (const Route &item) -> bool {
-                if (item.event_id != 0 && item.event_id != event.id)
+                if (item.event_id != ANY_EVENT_ID && item.event_id != event.id)
                     return false;
                 if (item.guard != nullptr && !item.guard(event))
                     return false;
@@ -403,7 +416,7 @@ bool StateMachine::Impl::run(Event event)
 
     next_state_ = findState(next_state_id);
     if (next_state_ == nullptr) {
-        if (next_state_id == 0) {
+        if (next_state_id == TERM_STATE_ID) {
             next_state_ = &_term_state_;
         } else {
             LogErr("[%s]: Should not happen", name_.c_str());
@@ -444,31 +457,21 @@ StateMachine::StateID StateMachine::Impl::currentState() const
 {
     if (curr_state_ != nullptr)
         return curr_state_->id;
-    return -1;
+    return NULL_STATE_ID;
 }
 
 StateMachine::StateID StateMachine::Impl::lastState() const
 {
     if (last_state_ != nullptr)
         return last_state_->id;
-    return -1;
+    return NULL_STATE_ID;
 }
 
 StateMachine::StateID StateMachine::Impl::nextState() const
 {
     if (next_state_ != nullptr)
         return next_state_->id;
-    return -1;
-}
-
-bool StateMachine::Impl::isTerminated() const
-{
-    if (curr_state_ == nullptr) {
-        LogWarn("[%s]: need start first", name_.c_str());
-        return false;
-    }
-
-    return curr_state_->id == 0;
+    return NULL_STATE_ID;
 }
 
 StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
@@ -484,7 +487,7 @@ void StateMachine::Impl::toJson(Json &js) const
 {
     js["name"] = name_;
     js["init_state"] = init_state_id_;
-    js["term_state"] = 0;
+    js["term_state"] = TERM_STATE_ID;
     if (curr_state_ != nullptr)
         js["curr_state"] = curr_state_->id;
 
