@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2024 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -20,25 +20,28 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-set(TBOX_MQTT_VERSION_MAJOR 0)
-set(TBOX_MQTT_VERSION_MINOR 0)
-set(TBOX_MQTT_VERSION_PATCH 1)
-set(TBOX_MQTT_VERSION ${TBOX_MQTT_VERSION_MAJOR}.${TBOX_MQTT_VERSION_MINOR}.${TBOX_MQTT_VERSION_PATCH})
+set(TBOX_DBUS_VERSION_MAJOR 0)
+set(TBOX_DBUS_VERSION_MINOR 0)
+set(TBOX_DBUS_VERSION_PATCH 1)
+set(TBOX_DBUS_VERSION ${TBOX_DBUS_VERSION_MAJOR}.${TBOX_DBUS_VERSION_MINOR}.${TBOX_DBUS_VERSION_PATCH})
 
-add_definitions(-DLOG_MODULE_ID="tbox.mqtt")
+add_definitions(-DLOG_MODULE_ID="tbox.dbus")
 
-set(TBOX_LIBRARY_NAME tbox_mqtt)
+set(TBOX_LIBRARY_NAME tbox_dbus)
 
-set(TBOX_MQTT_HEADERS client.h)
-set(TBOX_MQTT_SOURCES client.cpp)
+set(TBOX_DBUS_HEADERS loop.h connection.h)
+set(TBOX_DBUS_SOURCES loop.cpp connection.cpp)
 
-add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_MQTT_SOURCES})
+find_package(DBus1 REQUIRED)
+include_directories(${DBus1_INCLUDE_DIRS})
+
+add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_DBUS_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
 
 set_target_properties(
     ${TBOX_LIBRARY_NAME} PROPERTIES
-    VERSION ${TBOX_MQTT_VERSION}
-    SOVERSION ${TBOX_MQTT_VERSION_MAJOR}
+    VERSION ${TBOX_DBUS_VERSION}
+    SOVERSION ${TBOX_DBUS_VERSION_MAJOR}
 )
 
 # install the target and create export-set
@@ -53,8 +56,8 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_MQTT_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/mqtt
+    FILES ${TBOX_DBUS_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/dbus
 )
 
 # generate and install export file
