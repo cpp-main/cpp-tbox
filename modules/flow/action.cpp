@@ -59,17 +59,17 @@ void Action::toJson(Json &js) const {
   js["result"] = ToString(result_);
 }
 
-int Action::addChild(Action *child) {
+int Action::addChild(Action *) {
   LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
   return -1;
 }
 
-bool Action::setChild(Action *child) {
+bool Action::setChild(Action *) {
   LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
   return false;
 }
 
-bool Action::setChildAs(Action *child, const std::string &role) {
+bool Action::setChildAs(Action *, const std::string &) {
   LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
   return false;
 }
