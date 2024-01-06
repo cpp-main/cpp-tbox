@@ -85,6 +85,7 @@ option(TBOX_ENABLE_FLOW "build flow" ON)
 option(TBOX_ENABLE_ALARM "build alarm" ON)
 option(TBOX_ENABLE_CRYPTO "build crypto" ON)
 option(TBOX_ENABLE_JSONRPC "build jsonrpc" ON)
+option(TBOX_ENABLE_DBUS "build dbus" ON)
 
 #
 # 3rd-party libraries
@@ -196,6 +197,10 @@ if(TBOX_ENABLE_JSONRPC)
     list(APPEND TBOX_COMPONENTS jsonrpc)
 endif()
 
+if(TBOX_ENABLE_DBUS)
+    message(STATUS "dbus module enabled")
+    list(APPEND TBOX_COMPONENTS dbus)
+endif()
 
 foreach(item IN LISTS TBOX_COMPONENTS)
     add_subdirectory(modules/${item})
