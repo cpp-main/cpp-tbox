@@ -43,6 +43,7 @@ HEAD_FILES = \
 	backtrace.h \
 	catch_throw.h \
 	object_pool.hpp \
+	func_types.h \
 
 CPP_SRC_FILES = \
 	version.cpp \
