@@ -36,12 +36,14 @@ set(TBOX_TERMINAL_HEADERS
     terminal_nodes.h
     session.h
     terminal.h
+	add_func_node.h
     service/telnetd.h
     service/tcp_rpc.h)
 
 set(TBOX_TERMINAL_SOURCES
     terminal.cpp
     session.cpp
+	add_func_node.cpp
     service/telnetd.cpp
     service/tcp_rpc.cpp
     impl/terminal.cpp

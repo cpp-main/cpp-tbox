@@ -1,14 +1,21 @@
 #include <sstream>
+#include <tbox/base/log.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/terminal/terminal.h>
 #include <tbox/terminal/service/tcp_rpc.h>
 #include <tbox/terminal/session.h>
+#include <tbox/terminal/add_func_node.h>
 
 using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::terminal;
 
 NodeToken dir3_tmpdir_token;
+
+bool bool_value = false;
+int int_value = 0;
+double double_value = 0;
+std::string str_value;
 
 void BuildNodes(TerminalNodes &term, Loop *wp_loop)
 {
@@ -129,4 +136,13 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop)
     term.mountNode(dir3_token, delete_func_token, "delete");
 
     term.mountNode(dir1_1_token, term.rootNode(), "root");  //! 循环引用
+
+    auto add_func_dir_node = term.createDirNode();
+    term.mountNode(term.rootNode(), add_func_dir_node, "add_func");
+
+    AddFuncNode(term, add_func_dir_node, "void_func", [] { LogTag(); });
+    AddFuncNode(term, add_func_dir_node, "bool_value", bool_value);
+    AddFuncNode(term, add_func_dir_node, "int_value", int_value, 0, 100);
+    AddFuncNode(term, add_func_dir_node, "double_value", double_value, 0, 1);
+    AddFuncNode(term, add_func_dir_node, "str_value", str_value);
 }
