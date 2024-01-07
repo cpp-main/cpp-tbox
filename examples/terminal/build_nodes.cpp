@@ -4,7 +4,7 @@
 #include <tbox/terminal/terminal.h>
 #include <tbox/terminal/service/tcp_rpc.h>
 #include <tbox/terminal/session.h>
-#include <tbox/terminal/add_func_node.h>
+#include <tbox/terminal/helper.h>
 
 using namespace tbox;
 using namespace tbox::event;

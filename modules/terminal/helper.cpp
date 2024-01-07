@@ -18,7 +18,8 @@
  * of the source tree.
  */
 
-#include "add_func_node.h"
+#include "helper.h"
+
 #include <sstream>
 #include <tbox/base/catch_throw.h>
 

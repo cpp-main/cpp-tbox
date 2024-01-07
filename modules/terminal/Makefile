@@ -29,7 +29,7 @@ HEAD_FILES = \
 	connection.h \
 	terminal_interact.h \
 	terminal_nodes.h \
-	add_func_node.h \
+	helper.h \
 	session.h \
 	terminal.h \
 	service/telnetd.h \
@@ -39,7 +39,7 @@ CPP_SRC_FILES = \
 	terminal.cpp \
 	session.cpp \
 	service/telnetd.cpp \
-	add_func_node.cpp \
+	helper.cpp \
 	service/tcp_rpc.cpp \
 	impl/terminal.cpp \
 	impl/terminal_key_events.cpp \

@@ -18,8 +18,8 @@
  * of the source tree.
  */
 
-#ifndef TBOX_TERNIMAL_ADD_FUNC_NODE_H_20240107
-#define TBOX_TERNIMAL_ADD_FUNC_NODE_H_20240107
+#ifndef TBOX_TERNIMAL_HELPER_H_20240107
+#define TBOX_TERNIMAL_HELPER_H_20240107
 
 #include <tbox/base/func_types.h>
 #include "terminal_nodes.h"
@@ -47,4 +47,4 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
 }
 }
 
-#endif //TBOX_TERNIMAL_ADD_FUNC_NODE_H_20240107
+#endif //TBOX_TERNIMAL_HELPER_H_20240107
