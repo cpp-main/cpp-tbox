@@ -21,6 +21,7 @@
 #ifndef TBOX_TERNIMAL_HELPER_H_20240107
 #define TBOX_TERNIMAL_HELPER_H_20240107
 
+#include <limits>
 #include <tbox/base/func_types.h>
 #include "terminal_nodes.h"
 
@@ -38,11 +39,13 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
 
 NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
                       const std::string &name, int &value,
-                      int min_value, int max_value);
+                      int min_value = std::numeric_limits<int>::min(),
+                      int max_value = std::numeric_limits<int>::max());
 
 NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
                       const std::string &name, double &value,
-                      double min_value, double max_value);
+                      double min_value = std::numeric_limits<double>::min(),
+                      double max_value = std::numeric_limits<double>::max());
 
 }
 }
