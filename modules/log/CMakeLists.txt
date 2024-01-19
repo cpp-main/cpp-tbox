@@ -31,6 +31,7 @@ set(TBOX_LIBRARY_NAME tbox_log)
 
 set(TBOX_LOG_HEADERS
     sink.h
+    sync_stdout_sink.h
     async_sink.h
     async_stdout_sink.h
     async_syslog_sink.h
@@ -38,12 +39,14 @@ set(TBOX_LOG_HEADERS
 
 set(TBOX_LOG_SOURCES
     sink.cpp
+    sync_stdout_sink.cpp
     async_sink.cpp
     async_stdout_sink.cpp
     async_syslog_sink.cpp
     async_file_sink.cpp)
 
 set(TBOX_LOG_TEST_SOURCES
+    sync_stdout_sink_test.cpp
     async_sink_test.cpp
     async_stdout_sink_test.cpp
     async_syslog_sink_test.cpp
