@@ -137,6 +137,24 @@ TEST(SplitCmdline, LongOptionWithEqual_2)
     EXPECT_EQ(str_vec[1], R"(--key="hello world"xxxx' 'yyy)");
 }
 
+TEST(SplitCmdline, LongOptionWithEqual_3)
+{
+    vector<string> str_vec;
+    ASSERT_TRUE(SplitCmdline(R"(abc --key="hello world"and'I am here'"  "yyy)", str_vec));
+    ASSERT_EQ(str_vec.size(), 2u);
+    EXPECT_EQ(str_vec[0], "abc");
+    EXPECT_EQ(str_vec[1], R"(--key="hello world"and'I am here'"  "yyy)");
+}
+
+TEST(SplitCmdline, LongOptionWithEqual_4)
+{
+    vector<string> str_vec;
+    ASSERT_TRUE(SplitCmdline(R"(abc --key="It's not mine")", str_vec));
+    ASSERT_EQ(str_vec.size(), 2u);
+    EXPECT_EQ(str_vec[0], "abc");
+    EXPECT_EQ(str_vec[1], R"(--key="It's not mine")");
+}
+
 TEST(SplitCmdline, ErrorUnfinishQuote1)
 {
     vector<string> str_vec;
@@ -147,4 +165,14 @@ TEST(SplitCmdline, ErrorUnfinishQuote2)
 {
     vector<string> str_vec;
     ASSERT_FALSE(SplitCmdline(R"( abc '1 )", str_vec));
+}
+
+TEST(SplitCmdline, ErrorEndWithQuote)
+{
+    vector<string> str_vec;
+    EXPECT_FALSE(SplitCmdline(R"(abc')", str_vec));
+    EXPECT_FALSE(SplitCmdline(R"(abc'xyz)", str_vec));
+    EXPECT_FALSE(SplitCmdline(R"(abc")", str_vec));
+    EXPECT_FALSE(SplitCmdline(R"(abc"xyz)", str_vec));
+
 }

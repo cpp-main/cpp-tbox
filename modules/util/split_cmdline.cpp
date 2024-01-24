@@ -54,6 +54,8 @@ bool SplitCmdline(const std::string &cmd, std::vector<std::string> &args)
             while (quot_start_pos != std::string::npos && (quot_start_pos < end_pos || end_pos == std::string::npos)) {
                 char quot_char = cmd.at(quot_start_pos);
                 auto quot_end_pos = cmd.find_first_of(quot_char, quot_start_pos + 1);
+                if (quot_end_pos == std::string::npos)
+                    return false;
                 end_pos = cmd.find_first_of(" \t", quot_end_pos + 1);
                 quot_start_pos = cmd.find_first_of("\'\"", quot_end_pos + 1);
             }
