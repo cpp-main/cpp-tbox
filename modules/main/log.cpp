@@ -39,17 +39,17 @@ void Log::fillDefaultConfig(Json &cfg) const
   "stdout": {
     "enable": true,
     "enable_color": true,
-    "levels": {"":6}
+    "levels": {"":7}
   },
   "file": {
     "enable": false,
     "enable_color": false,
-    "levels": {"":4},
+    "levels": {"":7},
     "max_size": 1024
   },
   "syslog": {
     "enable": false,
-    "levels": {"":4}
+    "levels": {"":7}
   }
 }
 )"_json;

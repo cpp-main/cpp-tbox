@@ -67,7 +67,7 @@ class Sink {
 
     uint32_t output_id_ = 0;
     std::map<std::string, int> modules_level_;
-    int default_level_ = LOG_LEVEL_INFO;
+    int default_level_ = LOG_LEVEL_MAX;
 
     uint32_t timestamp_sec_ = 0;
 };
