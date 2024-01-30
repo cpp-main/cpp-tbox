@@ -34,7 +34,25 @@ class Proto;
 
 class Rpc {
   public:
+    /**
+     * 收到对端回复的回调函数
+     *
+     * \param   errcode     错误码，= 0 表示没有错误
+     * \param   js_result   回复的结果
+     */
     using RequestCallback = std::function<void(int errcode, const Json &js_result)>;
+
+    /**
+     * 收到对端请求时的回调函数
+     *
+     * \param   id          请求的id（用于异步回复使用）
+     * \param   js_params   请求的参数
+     * \param   errcode     将要回复的错误码，= 0 表示没有错误（仅同步回复有效）
+     * \param   js_result   将要回复的结果，只有在 errcode == 0 时才会有效（仅同步回复有效）
+     *
+     * \return  true        同步回复：在函数返回后自动回复，根据errcode与js_result进行回复
+     * \return  false       异步回复：不在函数返回后自动回复，而是在稍候通过调respond()进行回复
+     */
     using ServiceCallback = std::function<bool(int id, const Json &js_params, int &errcode, Json &js_result)>;
 
   public:
@@ -44,14 +62,16 @@ class Rpc {
     bool initialize(Proto *proto, int timeout_sec = 30);
     void cleanup();
 
-    //! 发送请求或消息，如果cb==nullptr，则是消息
-    void request(const std::string &method, const Json &js_params, RequestCallback &&cb);
-    void request(const std::string &method, const Json &js_params);
-    void request(const std::string &method, RequestCallback &&cb);
-    void request(const std::string &method);
+    //! 添加方法被调用时的回调函数
+    void addService(const std::string &method, ServiceCallback &&cb);
 
-    //! 注册当方法被调用时回调什么
-    void registeService(const std::string &method, ServiceCallback &&cb);
+    //! 发送请求（需要回复的）
+    void request(const std::string &method, const Json &js_params, RequestCallback &&cb);
+    void request(const std::string &method, RequestCallback &&cb);
+
+    //! 发送通知（不需要回复的）
+    void notify(const std::string &method, const Json &js_params);
+    void notify(const std::string &method);
 
     //! 发送异步回复
     void respond(int id, int errcode, const Json &js_result);

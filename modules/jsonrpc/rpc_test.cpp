@@ -80,7 +80,7 @@ TEST_F(RpcTest, SendRequestNormally) {
     Json js_rsp_result = { {"r", "aabbcc"} };
 
     bool is_service_invoke = false;
-    rpc_b.registeService("A",
+    rpc_b.addService("A",
         [&] (int id, const Json &js_params, int &errcode, Json &js_result) {
             EXPECT_EQ(js_params, js_req_params);
             errcode = 0;
@@ -114,7 +114,7 @@ TEST_F(RpcTest, SendMessageNormally) {
     Json js_req_params = { {"a", 12}, {"b", "test jsonrpc"} };
 
     bool is_service_invoke = false;
-    rpc_b.registeService("B",
+    rpc_b.addService("B",
         [&] (int id, const Json &js_params, int &, Json &) {
             EXPECT_EQ(id, 0);
             EXPECT_EQ(js_params, js_req_params);
@@ -125,7 +125,7 @@ TEST_F(RpcTest, SendMessageNormally) {
 
     loop->run(
         [&] {
-            rpc_a.request("B", js_req_params);
+            rpc_a.notify("B", js_req_params);
         }
     );
     loop->exitLoop(std::chrono::milliseconds(10));
@@ -136,7 +136,7 @@ TEST_F(RpcTest, SendMessageNormally) {
 
 TEST_F(RpcTest, SendMessageNoService) {
     bool is_service_invoke = false;
-    rpc_b.registeService("B",
+    rpc_b.addService("B",
         [&] (int id, const Json &, int &, Json &) {
             is_service_invoke = true;
             UNUSED_VAR(id);
@@ -146,7 +146,7 @@ TEST_F(RpcTest, SendMessageNoService) {
 
     loop->run(
         [&] {
-            rpc_a.request("A");
+            rpc_a.notify("A");
         }
     );
     loop->exitLoop(std::chrono::milliseconds(10));

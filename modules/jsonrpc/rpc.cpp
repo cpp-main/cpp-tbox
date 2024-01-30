@@ -78,22 +78,22 @@ void Rpc::request(const std::string &method, const Json &js_params, RequestCallb
     proto_->sendRequest(id, method, js_params);
 }
 
-void Rpc::request(const std::string &method, const Json &js_params)
-{
-    request(method, js_params, nullptr);
-}
-
 void Rpc::request(const std::string &method, RequestCallback &&cb)
 {
     request(method, Json(), std::move(cb));
 }
 
-void Rpc::request(const std::string &method)
+void Rpc::notify(const std::string &method, const Json &js_params)
+{
+    request(method, js_params, nullptr);
+}
+
+void Rpc::notify(const std::string &method)
 {
     request(method, Json(), nullptr);
 }
 
-void Rpc::registeService(const std::string &method, ServiceCallback &&cb)
+void Rpc::addService(const std::string &method, ServiceCallback &&cb)
 {
     method_services_[method] = std::move(cb);
 }
