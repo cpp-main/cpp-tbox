@@ -98,11 +98,11 @@ int main(int argc, char **argv)
     tcp_server.start(); //! 启动tcp服务
 
     //! 注册ping的服务处理函数
-    rpc.registeService("ping", [&] (int id, const Json &js_params, int &, Json &) {
+    rpc.addService("ping", [&] (int id, const Json &js_params, int &, Json &) {
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
         LogDbg("got ping_count: %d", ping_count);
-        rpc.request("pong", js_params);
+        rpc.notify("pong", js_params);
         return false;    //! 表示不回复
     });
 

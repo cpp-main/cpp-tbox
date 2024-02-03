@@ -97,12 +97,12 @@ int main(int argc, char **argv)
         Json js_params = {{"count", ping_count}};   //! 组装请求参数
 
         //! 发送ping消息
-        rpc.request("ping", js_params);
+        rpc.notify("ping", js_params);
         LogDbg("send ping: %d", ping_count);
     };
 
     //! 定义收到pong的动作
-    rpc.registeService("pong", [&] (int id, const Json &js_params, int &, Json &) {
+    rpc.addService("pong", [&] (int id, const Json &js_params, int &, Json &) {
         int pong_count = 0;
         util::json::GetField(js_params, "count", pong_count);
         send_ping();
