@@ -23,7 +23,10 @@ namespace tbox {
 namespace util {
 
 bool ExecuteCmd(const std::string &cmd);
+bool ExecuteCmd(const std::string &cmd, int &ret);
+
 bool ExecuteCmd(const std::string &cmd, std::string &result);
+bool ExecuteCmd(const std::string &cmd, std::string &result, int &ret);
 
 }
 }

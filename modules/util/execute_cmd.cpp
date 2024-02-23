@@ -29,7 +29,13 @@ namespace util {
 
 bool ExecuteCmd(const std::string &cmd)
 {
-    int ret = ::system(cmd.c_str());
+    int ret = 0;
+    return ExecuteCmd(cmd, ret);
+}
+
+bool ExecuteCmd(const std::string &cmd, int &ret)
+{
+    ret = ::system(cmd.c_str());
 #if 0
     LogTrace("system(\"%s\") = %d", cmd.c_str(), ret);
 #endif
@@ -41,6 +47,12 @@ bool ExecuteCmd(const std::string &cmd)
 }
 
 bool ExecuteCmd(const std::string &cmd, std::string &result)
+{
+    int ret = 0;
+    return ExecuteCmd(cmd, result, ret);
+}
+
+bool ExecuteCmd(const std::string &cmd, std::string &result, int &ret)
 {
     auto fp = ::popen(cmd.c_str(), "r");
     if (fp == nullptr) {
@@ -57,7 +69,7 @@ bool ExecuteCmd(const std::string &cmd, std::string &result)
         result += buff;
     }
 
-    auto ret = pclose(fp);
+    ret = pclose(fp);
 #if 0
     LogTrace("popen(\"%s\") = %d, \"%s\"", cmd.c_str(), ret, buff);
 #endif
