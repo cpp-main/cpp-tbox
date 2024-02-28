@@ -26,17 +26,21 @@ namespace flow {
 
 using namespace std::placeholders;
 
+RepeatAction::RepeatAction(event::Loop &loop)
+  : Action(loop, "Repeat")
+{ }
+
 RepeatAction::RepeatAction(event::Loop &loop, size_t times, Mode mode)
   : Action(loop, "Repeat")
-  , repeat_times_(times)
   , mode_(mode)
+  , repeat_times_(times)
 { }
 
 RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode)
   : Action(loop, "Repeat")
-  , child_(child)
-  , repeat_times_(times)
   , mode_(mode)
+  , repeat_times_(times)
+  , child_(child)
 {
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));

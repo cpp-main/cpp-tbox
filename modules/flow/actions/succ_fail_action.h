@@ -28,7 +28,7 @@ namespace flow {
 /// 成功动作
 class SuccAction : public Action {
   public:
-    SuccAction(event::Loop &loop) : Action(loop, "Succ") { }
+    explicit SuccAction(event::Loop &loop) : Action(loop, "Succ") { }
 
   public:
     virtual bool isReady() const override { return true; }
@@ -40,7 +40,7 @@ class SuccAction : public Action {
 /// 失败动作
 class FailAction : public Action {
   public:
-    FailAction(event::Loop &loop) : Action(loop, "Fail") { }
+    explicit FailAction(event::Loop &loop) : Action(loop, "Fail") { }
 
   public:
     virtual bool isReady() const override { return true; }

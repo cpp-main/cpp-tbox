@@ -29,8 +29,9 @@ namespace flow {
 
 using namespace std::placeholders;
 
-SequenceAction::SequenceAction(event::Loop &loop)
-    : Action(loop, "Sequence")
+SequenceAction::SequenceAction(event::Loop &loop, Mode mode)
+  : Action(loop, "Sequence")
+  , mode_(mode)
 { }
 
 SequenceAction::~SequenceAction() {
@@ -107,8 +108,8 @@ void SequenceAction::startOtheriseFinish(bool is_succ) {
 
 void SequenceAction::onChildFinished(bool is_succ) {
     if (state() == State::kRunning) {
-        if ((finish_condition_ == FinishCondition::kAnySucc && is_succ) ||
-                (finish_condition_ == FinishCondition::kAnyFail && !is_succ)) {
+        if ((mode_ == Mode::kAnySucc && is_succ) ||
+            (mode_ == Mode::kAnyFail && !is_succ)) {
             finish(is_succ);
         } else {
             ++index_;

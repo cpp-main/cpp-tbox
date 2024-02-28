@@ -20,6 +20,7 @@
 #ifndef TBOX_FLOW_REPEAT_ACTION_H_20221017
 #define TBOX_FLOW_REPEAT_ACTION_H_20221017
 
+#include <limits>
 #include "../action.h"
 
 namespace tbox {
@@ -33,6 +34,7 @@ class RepeatAction : public Action {
       kBreakSucc,   //! for (int i = 0; i < times && !action(); ++i);
     };
 
+    explicit RepeatAction(event::Loop &loop);
     explicit RepeatAction(event::Loop &loop, size_t times, Mode mode = Mode::kNoBreak);
     explicit RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode = Mode::kNoBreak);
     virtual ~RepeatAction();
@@ -40,6 +42,9 @@ class RepeatAction : public Action {
     virtual void toJson(Json &js) const override;
     virtual bool setChild(Action *action) override;
     virtual bool isReady() const override;
+
+    inline void setMode(Mode mode) { mode_ = mode; }
+    inline void setTimes(size_t times) { repeat_times_ = times; }
 
   protected:
     virtual void onStart() override;
@@ -51,10 +56,11 @@ class RepeatAction : public Action {
     void onChildFinished(bool is_succ);
 
   private:
+    Mode mode_ = Mode::kNoBreak;
+    size_t repeat_times_ = std::numeric_limits<size_t>::max();
     Action *child_ = nullptr;
-    size_t repeat_times_;
+
     size_t remain_times_ = 0;
-    Mode mode_;
 };
 
 }

@@ -27,11 +27,11 @@ namespace flow {
 
 /**
  * 模拟实现以下流程
- * bool SequenceAction(action_vec, finish_condition == AllFinish) {
+ * bool SequenceAction(action_vec, mode == AllFinish) {
  *   for (item : action_vec) {
  *     auto is_succ = item();
- *     if ((finish_condition == AnySucc && is_succ) ||
- *         (finish_condition == AnyFail && !is_succ))
+ *     if ((mode == AnySucc && is_succ) ||
+ *         (mode == AnyFail && !is_succ))
  *       return is_succ;
  *   }
  *   return true;
@@ -39,25 +39,22 @@ namespace flow {
  */
 class SequenceAction : public Action {
   public:
-    //! 结束条件
-    enum class FinishCondition {
+    //! 模式
+    enum class Mode {
       kAllFinish, //!< 全部结束
       kAnyFail,   //!< 任一失败
       kAnySucc,   //!< 任一成功
     };
 
   public:
-    explicit SequenceAction(event::Loop &loop);
+    explicit SequenceAction(event::Loop &loop, Mode mode = Mode::kAllFinish);
     virtual ~SequenceAction();
 
     virtual void toJson(Json &js) const override;
     virtual int addChild(Action *action) override;
     virtual bool isReady() const override;
 
-    inline void setFinishCondition(FinishCondition finish_condition) {
-      finish_condition_ = finish_condition;
-    }
-
+    inline void setMode(Mode mode) { mode_ = mode; }
     inline int index() const { return index_; }
 
   protected:
@@ -72,7 +69,7 @@ class SequenceAction : public Action {
     void onChildFinished(bool is_succ);
 
   private:
-    FinishCondition finish_condition_ = FinishCondition::kAllFinish;
+    Mode mode_;
     size_t index_ = 0;
     std::vector<Action*> children_;
 };

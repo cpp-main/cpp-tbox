@@ -58,7 +58,7 @@ TEST(SequenceAction, FinishIfAnyFail_AllSucc) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
+    seq_action->setMode(SequenceAction::Mode::kAnyFail);
     seq_action->start();
 
     loop->runLoop();
@@ -95,7 +95,7 @@ TEST(SequenceAction, FinishIfAnyFail_FailHead) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
+    seq_action->setMode(SequenceAction::Mode::kAnyFail);
     seq_action->start();
 
     loop->runLoop();
@@ -135,7 +135,7 @@ TEST(SequenceAction, FinishIfAnyFail_FailTail) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnyFail);
+    seq_action->setMode(SequenceAction::Mode::kAnyFail);
     seq_action->start();
 
     loop->runLoop();
@@ -205,7 +205,7 @@ TEST(SequenceAction, FinishIfAnySucc_AllFail) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+    seq_action->setMode(SequenceAction::Mode::kAnySucc);
     seq_action->start();
 
     loop->runLoop();
@@ -242,7 +242,7 @@ TEST(SequenceAction, FinishIfAnySucc_SuccHead) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+    seq_action->setMode(SequenceAction::Mode::kAnySucc);
     seq_action->start();
 
     loop->runLoop();
@@ -281,7 +281,7 @@ TEST(SequenceAction, FinishIfAnySucc_SuccTail) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAnySucc);
+    seq_action->setMode(SequenceAction::Mode::kAnySucc);
     seq_action->start();
 
     loop->runLoop();
@@ -319,7 +319,7 @@ TEST(SequenceAction, FinishIfAllFinish_AllFail) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAllFinish);
+    seq_action->setMode(SequenceAction::Mode::kAllFinish);
     seq_action->start();
 
     loop->runLoop();
@@ -357,7 +357,7 @@ TEST(SequenceAction, FinishIfAllFinish_AllSucc) {
             loop->exitLoop();
         }
     );
-    seq_action->setFinishCondition(SequenceAction::FinishCondition::kAllFinish);
+    seq_action->setMode(SequenceAction::Mode::kAllFinish);
     seq_action->start();
 
     loop->runLoop();

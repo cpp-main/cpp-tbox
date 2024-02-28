@@ -29,9 +29,12 @@ class FunctionAction : public Action {
   public:
     using Func = std::function<bool()>;
 
+    explicit FunctionAction(event::Loop &loop);
     explicit FunctionAction(event::Loop &loop, Func &&func);
 
-    virtual bool isReady() const { return true; }
+    virtual bool isReady() const { return bool(func_); }
+
+    inline void setFunc(Func &&func) { func_ = std::move(func); }
 
   protected:
     virtual void onStart() override;

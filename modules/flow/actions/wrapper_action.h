@@ -45,6 +45,8 @@ class WrapperAction : public Action {
     virtual bool setChild(Action *child) override;
     virtual bool isReady() const override;
 
+    inline void setMode(Mode mode) { mode_ = mode; }
+
   protected:
     virtual void toJson(Json &js) const override;
 

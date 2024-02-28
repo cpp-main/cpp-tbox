@@ -40,6 +40,8 @@ class LoopAction : public Action {
     virtual bool setChild(Action *child) override;
     virtual bool isReady() const override;
 
+    inline void setMode(Mode mode) { mode_ = mode; }
+
   protected:
     virtual void onStart() override;
     virtual void onStop() override;

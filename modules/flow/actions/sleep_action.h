@@ -33,7 +33,7 @@ class SleepAction : public Action {
     SleepAction(event::Loop &loop, const std::chrono::milliseconds &time_span);
     SleepAction(event::Loop &loop, const Generator &gen);
 
-    ~SleepAction();
+    virtual ~SleepAction();
 
     virtual bool isReady() const { return true; }
 

@@ -24,6 +24,10 @@
 namespace tbox {
 namespace flow {
 
+FunctionAction::FunctionAction(event::Loop &loop)
+  : Action(loop, "Function")
+{ }
+
 FunctionAction::FunctionAction(event::Loop &loop, Func &&func)
   : Action(loop, "Function")
   , func_(std::move(func))
