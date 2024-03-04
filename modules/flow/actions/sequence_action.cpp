@@ -73,20 +73,28 @@ bool SequenceAction::isReady() const {
 }
 
 void SequenceAction::onStart() {
+    Action::onStart();
+
     startOtheriseFinish(true);
 }
 
 void SequenceAction::onStop() {
     if (index_ < children_.size())
         children_.at(index_)->stop();
+
+    Action::onStop();
 }
 
 void SequenceAction::onPause() {
     if (index_ < children_.size())
         children_.at(index_)->pause();
+
+    Action::onPause();
 }
 
 void SequenceAction::onResume() {
+    Action::onResume();
+
     if (index_ < children_.size())
         children_.at(index_)->resume();
 }
@@ -95,6 +103,8 @@ void SequenceAction::onReset() {
     for (auto child : children_)
         child->reset();
     index_ = 0;
+
+    Action::onReset();
 }
 
 void SequenceAction::startOtheriseFinish(bool is_succ) {

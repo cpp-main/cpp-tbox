@@ -74,6 +74,8 @@ bool RepeatAction::isReady() const {
 }
 
 void RepeatAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(child_ != nullptr);
     remain_times_ = repeat_times_ - 1;
     child_->start();
@@ -82,14 +84,20 @@ void RepeatAction::onStart() {
 void RepeatAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
+
+    Action::onStop();
 }
 
 void RepeatAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
+
+    Action::onPause();
 }
 
 void RepeatAction::onResume() {
+    Action::onResume();
+
     TBOX_ASSERT(child_ != nullptr);
     child_->resume();
 }
@@ -97,12 +105,14 @@ void RepeatAction::onResume() {
 void RepeatAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
+
+    Action::onReset();
 }
 
 void RepeatAction::onChildFinished(bool is_succ) {
     if (state() == State::kRunning) {
         if ((mode_ == Mode::kBreakSucc && is_succ) ||
-                (mode_ == Mode::kBreakFail && !is_succ)) {
+            (mode_ == Mode::kBreakFail && !is_succ)) {
             finish(is_succ);
         } else {
             if (remain_times_ > 0) {

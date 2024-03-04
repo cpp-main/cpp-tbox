@@ -95,6 +95,8 @@ bool IfElseAction::isReady() const {
 }
 
 void IfElseAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(if_action_ != nullptr);
     if_action_->start();
 }
@@ -110,6 +112,8 @@ void IfElseAction::onStop() {
     } else {
         if_action_->stop();
     }
+
+    Action::onStop();
 }
 
 void IfElseAction::onPause() {
@@ -123,9 +127,13 @@ void IfElseAction::onPause() {
     } else {
         if_action_->pause();
     }
+
+    Action::onPause();
 }
 
 void IfElseAction::onResume() {
+    Action::onResume();
+
     TBOX_ASSERT(if_action_ != nullptr);
     if (if_action_->state() == Action::State::kFinished) {
         if (if_action_->result() == Action::Result::kSuccess) {
@@ -155,6 +163,8 @@ void IfElseAction::onReset() {
 
     if (fail_action_ != nullptr)
         fail_action_->reset();
+
+    Action::onReset();
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ) {

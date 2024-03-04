@@ -98,12 +98,12 @@ class Action {
   protected:
     bool finish(bool is_succ);
 
-    virtual void onStart() { }   //! WARN: 启动失败是一种异常，要少用
-    virtual void onPause() { }
-    virtual void onResume() { }
-    virtual void onStop() { }
-    virtual void onReset() { }
-    virtual void onFinished(bool is_succ) { (void)is_succ; }
+    virtual void onStart();
+    virtual void onPause();
+    virtual void onResume();
+    virtual void onStop();
+    virtual void onReset();
+    virtual void onFinished(bool is_succ);
     virtual void onTimeout() { finish(false); }
 
   protected:
@@ -122,6 +122,10 @@ class Action {
 
     event::TimerEvent *timer_ev_ = nullptr;
     event::Loop::RunId finish_cb_run_id_ = 0; //!< runNext()的任务号，用于撤消
+
+    bool is_base_func_invoked_ = false; //! 是否已调用基类函数
+    //! 检查使用者在重写的 onStart(),onPause(),onResume(),onStop(),onFinished() 中是否调用了基类的函数
+    //! 如果没有调用，则打警告提示
 };
 
 //! 枚举转字串

@@ -68,6 +68,8 @@ bool WrapperAction::isReady() const {
 }
 
 void WrapperAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
 }
@@ -75,14 +77,20 @@ void WrapperAction::onStart() {
 void WrapperAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
+
+    Action::onStop();
 }
 
 void WrapperAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
+
+    Action::onPause();
 }
 
 void WrapperAction::onResume() {
+    Action::onResume();
+
     if (child_->state() == State::kFinished) {
         onChildFinished(child_->result() == Result::kSuccess);
     } else {
@@ -93,6 +101,8 @@ void WrapperAction::onResume() {
 void WrapperAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
+
+    Action::onReset();
 }
 
 void WrapperAction::onChildFinished(bool is_succ) {

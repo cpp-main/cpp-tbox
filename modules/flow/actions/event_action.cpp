@@ -33,27 +33,33 @@ EventAction::~EventAction() {
 }
 
 void EventAction::onStart() {
+    Action::onStart();
     pub_.subscribe(this);
 }
 
 void EventAction::onStop() {
     pub_.unsubscribe(this);
+    Action::onStop();
 }
 
 void EventAction::onPause() {
     pub_.unsubscribe(this);
+    Action::onPause();
 }
 
 void EventAction::onResume() {
+    Action::onResume();
     pub_.subscribe(this);
 }
 
 void EventAction::onReset() {
     pub_.unsubscribe(this);
+    Action::onReset();
 }
 
-void EventAction::onFinished(bool) {
+void EventAction::onFinished(bool is_succ) {
     pub_.unsubscribe(this);
+    Action::onFinished(is_succ);
 }
 
 }

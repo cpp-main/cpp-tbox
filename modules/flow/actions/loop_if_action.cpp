@@ -80,6 +80,8 @@ bool LoopIfAction::isReady() const {
 }
 
 void LoopIfAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(if_action_ != nullptr);
     if_action_->start();
 }
@@ -88,15 +90,21 @@ void LoopIfAction::onStop() {
     auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
     TBOX_ASSERT(curr_action != nullptr);
     curr_action->stop();
+
+    Action::onStop();
 }
 
 void LoopIfAction::onPause() {
     auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
     TBOX_ASSERT(curr_action != nullptr);
     curr_action->pause();
+
+    Action::onPause();
 }
 
 void LoopIfAction::onResume() {
+    Action::onResume();
+
     auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
     TBOX_ASSERT(curr_action != nullptr);
     curr_action->resume();
@@ -106,6 +114,8 @@ void LoopIfAction::onReset() {
     TBOX_ASSERT(if_action_ != nullptr && exec_action_ != nullptr);
     if_action_->reset();
     exec_action_->reset();
+
+    Action::onReset();
 }
 
 void LoopIfAction::onIfFinished(bool is_succ) {

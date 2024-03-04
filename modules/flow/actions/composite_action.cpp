@@ -57,6 +57,8 @@ bool CompositeAction::isReady() const {
 }
 
 void CompositeAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
 }
@@ -64,14 +66,20 @@ void CompositeAction::onStart() {
 void CompositeAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
+
+    Action::onStop();
 }
 
 void CompositeAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
+
+    Action::onPause();
 }
 
 void CompositeAction::onResume() {
+    Action::onResume();
+
     TBOX_ASSERT(child_ != nullptr);
     if (child_->state() == State::kFinished) {
         finish(child_->result() == Result::kSuccess);
@@ -83,6 +91,8 @@ void CompositeAction::onResume() {
 void CompositeAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
+
+    Action::onReset();
 }
 
 void CompositeAction::onChildFinished(bool is_succ) {

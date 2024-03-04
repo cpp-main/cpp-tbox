@@ -34,7 +34,10 @@ class SuccAction : public Action {
     virtual bool isReady() const override { return true; }
 
   protected:
-    virtual void onStart() { finish(true); }
+    virtual void onStart() {
+        Action::onStart();
+        finish(true);
+    }
 };
 
 /// 失败动作
@@ -46,7 +49,10 @@ class FailAction : public Action {
     virtual bool isReady() const override { return true; }
 
   protected:
-    virtual void onStart() { finish(false); }
+    virtual void onStart() {
+        Action::onStart();
+        finish(false);
+    }
 };
 
 }

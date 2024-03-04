@@ -29,10 +29,10 @@ namespace flow {
 
 int Action::_id_alloc_counter_ = 0;
 
-Action::Action(event::Loop &loop, const std::string &type) :
-  loop_(loop),
-  id_(++_id_alloc_counter_),
-  type_(type)
+Action::Action(event::Loop &loop, const std::string &type)
+  : loop_(loop)
+  , id_(++_id_alloc_counter_)
+  , type_(type)
 {}
 
 Action::~Action() {
@@ -87,7 +87,12 @@ bool Action::start() {
 
   LogDbg("start action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
 
+  is_base_func_invoked_ = false;
+
   onStart();
+
+  if (!is_base_func_invoked_)
+    LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -111,7 +116,12 @@ bool Action::pause() {
 
   LogDbg("pause action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
 
+  is_base_func_invoked_ = false;
+
   onPause();
+
+  if (!is_base_func_invoked_)
+    LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -135,7 +145,12 @@ bool Action::resume() {
 
   LogDbg("resume action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
 
+  is_base_func_invoked_ = false;
+
   onResume();
+
+  if (!is_base_func_invoked_)
+    LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -155,7 +170,12 @@ bool Action::stop() {
 
   LogDbg("stop action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
 
+  is_base_func_invoked_ = false;
+
   onStop();
+
+  if (!is_base_func_invoked_)
+    LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
   if (last_state == state_) {
     if (timer_ev_ != nullptr)
@@ -177,7 +197,12 @@ void Action::reset() {
             id_, type_.c_str(), label_.c_str(), ToString(state_).c_str());
   }
 
+  is_base_func_invoked_ = false;
+
   onReset();
+
+  if (!is_base_func_invoked_)
+    LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
   if (timer_ev_ != nullptr)
     timer_ev_->disable();
@@ -232,18 +257,38 @@ bool Action::finish(bool is_succ) {
     if (timer_ev_ != nullptr)
       timer_ev_->disable();
 
-    result_ = is_succ ? Result::kSuccess : Result::kFail;
-
-    if (finish_cb_)
-        finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
+    is_base_func_invoked_ = false;
 
     onFinished(is_succ);
+
+    if (!is_base_func_invoked_)
+      LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
+
     return true;
 
   } else {
     LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
     return false;
   }
+}
+
+void Action::onStart() { is_base_func_invoked_ = true; }
+
+void Action::onPause() { is_base_func_invoked_ = true; }
+
+void Action::onResume() { is_base_func_invoked_ = true; }
+
+void Action::onStop() { is_base_func_invoked_ = true; }
+
+void Action::onReset() { is_base_func_invoked_ = true; }
+
+void Action::onFinished(bool is_succ) {
+  result_ = is_succ ? Result::kSuccess : Result::kFail;
+
+  if (finish_cb_)
+    finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
+
+  is_base_func_invoked_ = true;
 }
 
 std::string ToString(Action::State state) {

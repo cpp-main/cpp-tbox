@@ -66,6 +66,8 @@ bool LoopAction::isReady() const {
 }
 
 void LoopAction::onStart() {
+    Action::onStart();
+
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
 }
@@ -73,14 +75,20 @@ void LoopAction::onStart() {
 void LoopAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
+
+    Action::onStop();
 }
 
 void LoopAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
+
+    Action::onPause();
 }
 
 void LoopAction::onResume() {
+    Action::onResume();
+
     TBOX_ASSERT(child_ != nullptr);
     child_->resume();
 }
@@ -88,6 +96,8 @@ void LoopAction::onResume() {
 void LoopAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
+
+    Action::onReset();
 }
 
 void LoopAction::onChildFinished(bool is_succ) {

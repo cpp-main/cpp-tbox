@@ -72,6 +72,8 @@ bool ParallelAction::isReady() const {
 }
 
 void ParallelAction::onStart() {
+    Action::onStart();
+
     for (size_t index = 0; index < children_.size(); ++index) {
         Action *action = children_.at(index);
         if (!action->start())
@@ -82,6 +84,8 @@ void ParallelAction::onStart() {
 void ParallelAction::onStop() {
     for (Action *action : children_)
         action->stop();
+
+    Action::onStop();
 }
 
 void ParallelAction::onPause() {
@@ -89,9 +93,13 @@ void ParallelAction::onPause() {
         if (action->state() == Action::State::kRunning)
             action->pause();
     }
+
+    Action::onPause();
 }
 
 void ParallelAction::onResume() {
+    Action::onResume();
+
     for (Action *action : children_) {
         if (action->state() == Action::State::kPause)
             action->resume();
@@ -104,6 +112,8 @@ void ParallelAction::onReset() {
 
     succ_set_.clear();
     fail_set_.clear();
+
+    Action::onReset();
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {

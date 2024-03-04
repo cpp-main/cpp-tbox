@@ -36,6 +36,7 @@ FunctionAction::FunctionAction(event::Loop &loop, Func &&func)
 }
 
 void FunctionAction::onStart() {
+    Action::onStart();
     finish(func_());
 }
 

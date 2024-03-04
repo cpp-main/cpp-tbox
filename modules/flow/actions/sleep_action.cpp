@@ -49,6 +49,8 @@ SleepAction::~SleepAction() {
 }
 
 void SleepAction::onStart() {
+    Action::onStart();
+
     auto time_span = gen_ ? gen_() : time_span_;
 
     //! 计算出到期时间点并保存到 finish_time_
@@ -61,6 +63,7 @@ void SleepAction::onStart() {
 
 void SleepAction::onStop() {
     timer_->disable();
+    Action::onStop();
 }
 
 void SleepAction::onPause() {
@@ -69,9 +72,11 @@ void SleepAction::onPause() {
     remain_time_span_ = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time_ - now);
 
     timer_->disable();
+    Action::onPause();
 }
 
 void SleepAction::onResume() {
+    Action::onResume();
     //! 恢复 remain_time_span_
     timer_->initialize(remain_time_span_, event::Event::Mode::kOneshot);
     timer_->enable();
@@ -79,6 +84,7 @@ void SleepAction::onResume() {
 
 void SleepAction::onReset() {
     timer_->disable();
+    Action::onReset();
 }
 
 }
