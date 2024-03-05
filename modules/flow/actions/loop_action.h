@@ -20,12 +20,12 @@
 #ifndef TBOX_FLOW_LOOP_ACTION_H_20221017
 #define TBOX_FLOW_LOOP_ACTION_H_20221017
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
 
-class LoopAction : public Action {
+class LoopAction : public AssembleAction {
   public:
     enum class Mode {
       kForever,     //! while(true) { action() };

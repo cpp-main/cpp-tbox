@@ -27,8 +27,8 @@ namespace flow {
 
 using namespace std::placeholders;
 
-LoopIfAction::LoopIfAction(event::Loop &loop) :
-  Action(loop, "LoopIf")
+LoopIfAction::LoopIfAction(event::Loop &loop)
+  : AssembleAction(loop, "LoopIf")
 { }
 
 LoopIfAction::~LoopIfAction() {
@@ -37,7 +37,7 @@ LoopIfAction::~LoopIfAction() {
 }
 
 void LoopIfAction::toJson(Json &js) const {
-  Action::toJson(js);
+  AssembleAction::toJson(js);
   if_action_->toJson(js["0.if"]);
   exec_action_->toJson(js["1.exec"]);
 }
@@ -80,7 +80,7 @@ bool LoopIfAction::isReady() const {
 }
 
 void LoopIfAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(if_action_ != nullptr);
     if_action_->start();
@@ -91,7 +91,7 @@ void LoopIfAction::onStop() {
     TBOX_ASSERT(curr_action != nullptr);
     curr_action->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void LoopIfAction::onPause() {
@@ -99,11 +99,11 @@ void LoopIfAction::onPause() {
     TBOX_ASSERT(curr_action != nullptr);
     curr_action->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void LoopIfAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
     TBOX_ASSERT(curr_action != nullptr);
@@ -115,7 +115,7 @@ void LoopIfAction::onReset() {
     if_action_->reset();
     exec_action_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void LoopIfAction::onIfFinished(bool is_succ) {

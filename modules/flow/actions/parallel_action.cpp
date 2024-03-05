@@ -30,7 +30,7 @@ namespace flow {
 using namespace std::placeholders;
 
 ParallelAction::ParallelAction(event::Loop &loop)
-  : Action(loop, "Parallel")
+  : AssembleAction(loop, "Parallel")
 { }
 
 ParallelAction::~ParallelAction() {
@@ -39,7 +39,7 @@ ParallelAction::~ParallelAction() {
 }
 
 void ParallelAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     Json &js_children = js["children"];
     for (auto action : children_) {
         Json js_child;
@@ -72,7 +72,7 @@ bool ParallelAction::isReady() const {
 }
 
 void ParallelAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     for (size_t index = 0; index < children_.size(); ++index) {
         Action *action = children_.at(index);
@@ -85,23 +85,23 @@ void ParallelAction::onStop() {
     for (Action *action : children_)
         action->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void ParallelAction::onPause() {
     for (Action *action : children_) {
-        if (action->state() == Action::State::kRunning)
+        if (action->state() == State::kRunning)
             action->pause();
     }
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void ParallelAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     for (Action *action : children_) {
-        if (action->state() == Action::State::kPause)
+        if (action->state() == State::kPause)
             action->resume();
     }
 }
@@ -113,7 +113,7 @@ void ParallelAction::onReset() {
     succ_set_.clear();
     fail_set_.clear();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {

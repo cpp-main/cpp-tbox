@@ -21,12 +21,12 @@
 #define TBOX_FLOW_REPEAT_ACTION_H_20221017
 
 #include <limits>
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
 
-class RepeatAction : public Action {
+class RepeatAction : public AssembleAction {
   public:
     enum class Mode {
       kNoBreak,     //! for (int i = 0; i < times; ++i) { action() };

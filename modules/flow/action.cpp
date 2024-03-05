@@ -59,21 +59,6 @@ void Action::toJson(Json &js) const {
   js["result"] = ToString(result_);
 }
 
-int Action::addChild(Action *) {
-  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
-  return -1;
-}
-
-bool Action::setChild(Action *) {
-  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
-  return false;
-}
-
-bool Action::setChildAs(Action *, const std::string &) {
-  LogWarn("%d:%s[%s] not implement this function", id_, type_.c_str(), label_.c_str());
-  return false;
-}
-
 bool Action::start() {
   if (state_ == State::kRunning)
     return true;
@@ -182,6 +167,8 @@ bool Action::stop() {
       timer_ev_->disable();
 
     state_ = State::kStoped;
+
+    onFinal();
   }
   return true;
 }
@@ -264,6 +251,7 @@ bool Action::finish(bool is_succ) {
     if (!is_base_func_invoked_)
       LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
+    onFinal();
     return true;
 
   } else {

@@ -20,13 +20,13 @@
 #ifndef TBOX_FLOW_WRAPPER_ACTION_H_20221105
 #define TBOX_FLOW_WRAPPER_ACTION_H_20221105
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
 
 /// 包装动作类，对子Action的结果进行处理
-class WrapperAction : public Action {
+class WrapperAction : public AssembleAction {
   public:
     enum class Mode {
         kNormal,    //!< 正常，child

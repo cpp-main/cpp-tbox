@@ -20,7 +20,7 @@
 #ifndef TBOX_FLOW_PARALLEL_ACTION_H_20221005
 #define TBOX_FLOW_PARALLEL_ACTION_H_20221005
 
-#include "../action.h"
+#include "assemble_action.h"
 
 #include <chrono>
 #include <set>
@@ -28,7 +28,7 @@
 namespace tbox {
 namespace flow {
 
-class ParallelAction : public Action {
+class ParallelAction : public AssembleAction {
   public:
     explicit ParallelAction(event::Loop &loop);
     virtual ~ParallelAction();

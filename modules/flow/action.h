@@ -64,11 +64,10 @@ class Action {
     inline State state() const { return state_; }
     inline Result result() const { return result_; }
 
-    /// 是否正在进行中
+    /// 是否正在运行
+    inline bool isRunning() const { return state_ == State::kRunning; }
     /// 表示已启动，但还没有结束或终止的状态
-    inline bool isUnderway() const {
-        return state_ == State::kRunning || state_ == State::kPause;
-    }
+    inline bool isUnderway() const { return state_ == State::kRunning || state_ == State::kPause; }
 
     inline void set_label(const std::string &label) { label_ = label; }
     inline const std::string& label() const { return label_; }
@@ -76,11 +75,6 @@ class Action {
     //!< 设置结束回调
     using FinishCallback = std::function<void(bool is_succ)>;
     inline void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
-
-    //!< 设置子动作
-    virtual int  addChild(Action *child);
-    virtual bool setChild(Action *child);
-    virtual bool setChildAs(Action *child, const std::string &role);
 
     void setTimeout(std::chrono::milliseconds ms);
     void resetTimeout();
@@ -104,6 +98,7 @@ class Action {
     virtual void onStop();
     virtual void onReset();
     virtual void onFinished(bool is_succ);
+    virtual void onFinal() { }
     virtual void onTimeout() { finish(false); }
 
   protected:

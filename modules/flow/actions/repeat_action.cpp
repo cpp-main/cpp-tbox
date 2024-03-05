@@ -27,17 +27,17 @@ namespace flow {
 using namespace std::placeholders;
 
 RepeatAction::RepeatAction(event::Loop &loop)
-  : Action(loop, "Repeat")
+  : AssembleAction(loop, "Repeat")
 { }
 
 RepeatAction::RepeatAction(event::Loop &loop, size_t times, Mode mode)
-  : Action(loop, "Repeat")
+  : AssembleAction(loop, "Repeat")
   , mode_(mode)
   , repeat_times_(times)
 { }
 
 RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode mode)
-  : Action(loop, "Repeat")
+  : AssembleAction(loop, "Repeat")
   , mode_(mode)
   , repeat_times_(times)
   , child_(child)
@@ -51,7 +51,7 @@ RepeatAction::~RepeatAction() {
 }
 
 void RepeatAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     child_->toJson(js["child"]);
     js["repeat_times"] = repeat_times_;
     js["remain_times"] = remain_times_;
@@ -74,7 +74,7 @@ bool RepeatAction::isReady() const {
 }
 
 void RepeatAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(child_ != nullptr);
     remain_times_ = repeat_times_ - 1;
@@ -85,18 +85,18 @@ void RepeatAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void RepeatAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void RepeatAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     TBOX_ASSERT(child_ != nullptr);
     child_->resume();
@@ -106,7 +106,7 @@ void RepeatAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void RepeatAction::onChildFinished(bool is_succ) {

@@ -29,7 +29,7 @@ namespace flow {
 using namespace std::placeholders;
 
 IfElseAction::IfElseAction(event::Loop &loop)
-    : Action(loop, "IfElse")
+    : AssembleAction(loop, "IfElse")
 { }
 
 IfElseAction::~IfElseAction() {
@@ -39,7 +39,7 @@ IfElseAction::~IfElseAction() {
 }
 
 void IfElseAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     auto &js_children = js["children"];
     if_action_->toJson(js_children["0.if"]);
     if (succ_action_ != nullptr)
@@ -95,7 +95,7 @@ bool IfElseAction::isReady() const {
 }
 
 void IfElseAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(if_action_ != nullptr);
     if_action_->start();
@@ -103,8 +103,8 @@ void IfElseAction::onStart() {
 
 void IfElseAction::onStop() {
     TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == Action::State::kFinished) {
-        if (if_action_->result() == Action::Result::kSuccess) {
+    if (if_action_->state() == State::kFinished) {
+        if (if_action_->result() == Result::kSuccess) {
             succ_action_->stop();
         } else {
             fail_action_->stop();
@@ -113,13 +113,13 @@ void IfElseAction::onStop() {
         if_action_->stop();
     }
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void IfElseAction::onPause() {
     TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == Action::State::kFinished) {
-        if (if_action_->result() == Action::Result::kSuccess) {
+    if (if_action_->state() == State::kFinished) {
+        if (if_action_->result() == Result::kSuccess) {
             succ_action_->pause();
         } else {
             fail_action_->pause();
@@ -128,15 +128,15 @@ void IfElseAction::onPause() {
         if_action_->pause();
     }
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void IfElseAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == Action::State::kFinished) {
-        if (if_action_->result() == Action::Result::kSuccess) {
+    if (if_action_->state() == State::kFinished) {
+        if (if_action_->result() == Result::kSuccess) {
             if (succ_action_->state() == State::kFinished) {
                 finish(succ_action_->result() == Result::kSuccess);
             } else {
@@ -164,7 +164,7 @@ void IfElseAction::onReset() {
     if (fail_action_ != nullptr)
         fail_action_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ) {

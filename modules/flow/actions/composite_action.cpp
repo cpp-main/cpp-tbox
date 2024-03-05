@@ -44,7 +44,7 @@ bool CompositeAction::setChild(Action *child) {
 
 void CompositeAction::toJson(Json &js) const {
     TBOX_ASSERT(child_ != nullptr);
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     child_->toJson(js["child"]);
 }
 
@@ -57,7 +57,7 @@ bool CompositeAction::isReady() const {
 }
 
 void CompositeAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
@@ -67,18 +67,18 @@ void CompositeAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void CompositeAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void CompositeAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     TBOX_ASSERT(child_ != nullptr);
     if (child_->state() == State::kFinished) {
@@ -92,7 +92,7 @@ void CompositeAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void CompositeAction::onChildFinished(bool is_succ) {

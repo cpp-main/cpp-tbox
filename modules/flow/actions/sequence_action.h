@@ -20,7 +20,7 @@
 #ifndef TBOX_FLOW_SEQUENCE_ACTION_H_20221002
 #define TBOX_FLOW_SEQUENCE_ACTION_H_20221002
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
@@ -37,7 +37,7 @@ namespace flow {
  *   return true;
  * }
  */
-class SequenceAction : public Action {
+class SequenceAction : public AssembleAction {
   public:
     //! 模式
     enum class Mode {

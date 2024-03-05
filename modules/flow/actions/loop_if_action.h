@@ -20,12 +20,12 @@
 #ifndef TBOX_FLOW_LOOP_IF_ACTION_H_20221108
 #define TBOX_FLOW_LOOP_IF_ACTION_H_20221108
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
 
-class LoopIfAction : public Action {
+class LoopIfAction : public AssembleAction {
   public:
     explicit LoopIfAction(event::Loop &loop);
     virtual ~LoopIfAction();

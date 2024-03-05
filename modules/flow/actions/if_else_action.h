@@ -20,7 +20,7 @@
 #ifndef TBOX_FLOW_IF_ELSE_H_20221022
 #define TBOX_FLOW_IF_ELSE_H_20221022
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
@@ -33,7 +33,7 @@ namespace flow {
  *     return fail_acton();
  * }
  */
-class IfElseAction : public Action {
+class IfElseAction : public AssembleAction {
   public:
     explicit IfElseAction(event::Loop &loop);
     virtual ~IfElseAction();

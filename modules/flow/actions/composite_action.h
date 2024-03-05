@@ -20,7 +20,7 @@
 #ifndef TBOX_FLOW_COMPOSITE_ACTION_H_20221105
 #define TBOX_FLOW_COMPOSITE_ACTION_H_20221105
 
-#include "../action.h"
+#include "assemble_action.h"
 
 namespace tbox {
 namespace flow {
@@ -46,9 +46,9 @@ namespace flow {
  *
  * 不用重写`Action`中其它虚函数。
  */
-class CompositeAction : public Action {
+class CompositeAction : public AssembleAction {
   public:
-    using Action::Action;
+    using AssembleAction::AssembleAction;
     virtual ~CompositeAction();
 
   public:

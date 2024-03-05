@@ -27,12 +27,12 @@ namespace flow {
 using namespace std::placeholders;
 
 LoopAction::LoopAction(event::Loop &loop, Mode mode)
-  : Action(loop, "Loop")
+  : AssembleAction(loop, "Loop")
   , mode_(mode)
 { }
 
 LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode)
-  : Action(loop, "Loop")
+  : AssembleAction(loop, "Loop")
   , child_(child)
   , mode_(mode)
 {
@@ -45,7 +45,7 @@ LoopAction::~LoopAction() {
 }
 
 void LoopAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     child_->toJson(js["child"]);
 }
 
@@ -66,7 +66,7 @@ bool LoopAction::isReady() const {
 }
 
 void LoopAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
@@ -76,18 +76,18 @@ void LoopAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void LoopAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void LoopAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     TBOX_ASSERT(child_ != nullptr);
     child_->resume();
@@ -97,7 +97,7 @@ void LoopAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void LoopAction::onChildFinished(bool is_succ) {

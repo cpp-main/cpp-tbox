@@ -30,7 +30,7 @@ namespace flow {
 using namespace std::placeholders;
 
 SequenceAction::SequenceAction(event::Loop &loop, Mode mode)
-  : Action(loop, "Sequence")
+  : AssembleAction(loop, "Sequence")
   , mode_(mode)
 { }
 
@@ -40,7 +40,7 @@ SequenceAction::~SequenceAction() {
 }
 
 void SequenceAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     Json &js_children = js["children"];
     for (auto action : children_) {
         Json js_child;
@@ -73,7 +73,7 @@ bool SequenceAction::isReady() const {
 }
 
 void SequenceAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     startOtheriseFinish(true);
 }
@@ -82,18 +82,18 @@ void SequenceAction::onStop() {
     if (index_ < children_.size())
         children_.at(index_)->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void SequenceAction::onPause() {
     if (index_ < children_.size())
         children_.at(index_)->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void SequenceAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     if (index_ < children_.size())
         children_.at(index_)->resume();
@@ -104,7 +104,7 @@ void SequenceAction::onReset() {
         child->reset();
     index_ = 0;
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void SequenceAction::startOtheriseFinish(bool is_succ) {

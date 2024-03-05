@@ -28,12 +28,12 @@ namespace flow {
 using namespace std::placeholders;
 
 WrapperAction::WrapperAction(event::Loop &loop, Mode mode)
-  : Action(loop, "Wrapper")
+  : AssembleAction(loop, "Wrapper")
   , mode_(mode)
 { }
 
 WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
-  : Action(loop, "Wrapper")
+  : AssembleAction(loop, "Wrapper")
   , child_(child)
   , mode_(mode)
 {
@@ -46,7 +46,7 @@ WrapperAction::~WrapperAction() {
 }
 
 void WrapperAction::toJson(Json &js) const {
-    Action::toJson(js);
+    AssembleAction::toJson(js);
     js["mode"] = ToString(mode_);
     child_->toJson(js["child"]);
 }
@@ -68,7 +68,7 @@ bool WrapperAction::isReady() const {
 }
 
 void WrapperAction::onStart() {
-    Action::onStart();
+    AssembleAction::onStart();
 
     TBOX_ASSERT(child_ != nullptr);
     child_->start();
@@ -78,18 +78,18 @@ void WrapperAction::onStop() {
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
 
-    Action::onStop();
+    AssembleAction::onStop();
 }
 
 void WrapperAction::onPause() {
     TBOX_ASSERT(child_ != nullptr);
     child_->pause();
 
-    Action::onPause();
+    AssembleAction::onPause();
 }
 
 void WrapperAction::onResume() {
-    Action::onResume();
+    AssembleAction::onResume();
 
     if (child_->state() == State::kFinished) {
         onChildFinished(child_->result() == Result::kSuccess);
@@ -102,7 +102,7 @@ void WrapperAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 
-    Action::onReset();
+    AssembleAction::onReset();
 }
 
 void WrapperAction::onChildFinished(bool is_succ) {
