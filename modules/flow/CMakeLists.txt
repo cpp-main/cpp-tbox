@@ -37,6 +37,7 @@ set(TBOX_FLOW_HEADERS
     event_subscriber.h
     event_publisher.h
     event_publisher_impl.h
+    actions/assemble_action.h
     actions/function_action.h
     actions/sleep_action.h
     actions/sequence_action.h
@@ -56,6 +57,7 @@ set(TBOX_FLOW_SOURCES
     action.cpp
     action_executor.cpp
     event_publisher_impl.cpp
+    actions/assemble_action.cpp
     actions/function_action.cpp
     actions/sleep_action.cpp
     actions/sequence_action.cpp
@@ -74,6 +76,7 @@ set(TBOX_FLOW_TEST_SOURCES
     action_test.cpp
     event_publisher_impl_test.cpp
     action_executor_test.cpp
+    actions/assemble_action_test.cpp
     actions/sleep_action_test.cpp
     actions/function_action_test.cpp
     actions/sequence_action_test.cpp
