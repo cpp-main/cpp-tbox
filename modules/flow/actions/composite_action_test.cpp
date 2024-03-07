@@ -32,34 +32,33 @@
 namespace tbox {
 namespace flow {
 
-class TimeCountAction : public CompositeAction {
-  public:
-    TimeCountAction(event::Loop &loop) : CompositeAction(loop, "TimeCount") {
-        auto loop_action = new LoopAction(loop);
-        auto seq_action = new SequenceAction(loop);
-        seq_action->addChild(new SleepAction(loop, std::chrono::milliseconds(100)));
-        seq_action->addChild(new FunctionAction(loop, [this] { ++count_; return true; }));
-        loop_action->setChild(seq_action);
-        setChild(loop_action);
-    }
-
-    virtual void onReset() {
-        count_ = 0;
-        CompositeAction::onReset();
-    }
-
-    int count() const { return count_; }
-
-  private:
-    int count_ = 0;
-};
-
-
 TEST(CompositeAction, Basic) {
+    class TimeCountTestAction : public CompositeAction {
+      public:
+        TimeCountTestAction(event::Loop &loop) : CompositeAction(loop, "TimeCount") {
+            auto loop_action = new LoopAction(loop);
+            auto seq_action = new SequenceAction(loop);
+            seq_action->addChild(new SleepAction(loop, std::chrono::milliseconds(100)));
+            seq_action->addChild(new FunctionAction(loop, [this] { ++count_; return true; }));
+            loop_action->setChild(seq_action);
+            setChild(loop_action);
+        }
+
+        virtual void onReset() {
+            count_ = 0;
+            CompositeAction::onReset();
+        }
+
+        int count() const { return count_; }
+
+      private:
+        int count_ = 0;
+    };
+
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
-    TimeCountAction action(*loop);
+    TimeCountTestAction action(*loop);
     EXPECT_TRUE(action.isReady());
     action.start();
 
@@ -68,6 +67,32 @@ TEST(CompositeAction, Basic) {
 
     action.stop();
     EXPECT_GE(action.count(), 10);
+}
+
+//! 测试父动作提前结束动作的情况，观察有没有stop子动作
+TEST(CompositeAction, ParentFinishBeforeChild) {
+
+    class TimeoutTestAction : public CompositeAction {
+      public:
+        TimeoutTestAction(event::Loop &loop, Action *child)
+          : CompositeAction(loop, "Timeout") {
+          setChild(child);
+          setTimeout(std::chrono::milliseconds(10));
+        }
+    };
+
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    auto sleep_action = new SleepAction(*loop, std::chrono::seconds(1));
+    TimeoutTestAction action(*loop, sleep_action);
+    action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(100));
+    loop->runLoop();
+
+    EXPECT_EQ(action.state(), Action::State::kFinished);
+    EXPECT_EQ(sleep_action->state(), Action::State::kStoped);
 }
 
 TEST(CompositeAction, NotSetChild) {

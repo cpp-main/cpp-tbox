@@ -95,6 +95,14 @@ void CompositeAction::onReset() {
     AssembleAction::onReset();
 }
 
+void CompositeAction::onFinished(bool is_succ) {
+    //! 有可能不是child_自然结束产生的finish
+    TBOX_ASSERT(child_ != nullptr);
+    child_->stop();
+
+    AssembleAction::onFinished(is_succ);
+}
+
 void CompositeAction::onChildFinished(bool is_succ) {
     if (state() == State::kRunning)
         finish(is_succ);

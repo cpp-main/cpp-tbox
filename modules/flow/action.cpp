@@ -151,9 +151,12 @@ bool Action::stop() {
       state_ != State::kPause)
     return true;
 
-  auto last_state = state_;
-
   LogDbg("stop action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
+
+  state_ = State::kStoped;
+
+  if (timer_ev_ != nullptr)
+    timer_ev_->disable();
 
   is_base_func_invoked_ = false;
 
@@ -162,15 +165,35 @@ bool Action::stop() {
   if (!is_base_func_invoked_)
     LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
-  if (last_state == state_) {
+  onFinal();
+
+  return true;
+}
+
+bool Action::finish(bool is_succ) {
+  if (state_ != State::kFinished && state_ != State::kStoped) {
+    LogDbg("action %d:%s[%s] finished, is_succ: %s", id_, type_.c_str(), label_.c_str(),
+           (is_succ? "succ" : "fail"));
+
+    state_ = State::kFinished;
+
     if (timer_ev_ != nullptr)
       timer_ev_->disable();
 
-    state_ = State::kStoped;
+    is_base_func_invoked_ = false;
+
+    onFinished(is_succ);
+
+    if (!is_base_func_invoked_)
+      LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
 
     onFinal();
+    return true;
+
+  } else {
+    LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
+    return false;
   }
-  return true;
 }
 
 void Action::reset() {
@@ -232,31 +255,6 @@ void Action::resetTimeout() {
 
     tobe_delete->disable();
     loop_.runNext([tobe_delete] { delete tobe_delete; }, "Action::resetTimeout, delete");
-  }
-}
-
-bool Action::finish(bool is_succ) {
-  if (state_ != State::kFinished && state_ != State::kStoped) {
-    LogDbg("action %d:%s[%s] finished, is_succ: %s", id_, type_.c_str(), label_.c_str(),
-           (is_succ? "succ" : "fail"));
-    state_ = State::kFinished;
-
-    if (timer_ev_ != nullptr)
-      timer_ev_->disable();
-
-    is_base_func_invoked_ = false;
-
-    onFinished(is_succ);
-
-    if (!is_base_func_invoked_)
-      LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
-
-    onFinal();
-    return true;
-
-  } else {
-    LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
-    return false;
   }
 }
 

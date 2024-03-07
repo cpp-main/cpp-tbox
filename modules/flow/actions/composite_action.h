@@ -63,6 +63,7 @@ class CompositeAction : public AssembleAction {
     virtual void onPause() override;
     virtual void onResume() override;
     virtual void onReset() override;
+    virtual void onFinished(bool is_succ) override;
 
     void onChildFinished(bool is_succ);
 
