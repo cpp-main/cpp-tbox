@@ -32,6 +32,7 @@ class LoopAction : public AssembleAction {
       kUntilFail,   //! while(action());
       kUntilSucc,   //! while(!action());
     };
+
     explicit LoopAction(event::Loop &loop, Mode mode = Mode::kForever);
     explicit LoopAction(event::Loop &loop, Action *child, Mode mode = Mode::kForever);
     virtual ~LoopAction();

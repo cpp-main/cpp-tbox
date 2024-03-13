@@ -55,6 +55,7 @@ int ParallelAction::addChild(Action *action) {
         int index = children_.size();
         children_.push_back(action);
         action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
+        action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1));
         return index;
 
     } else {
@@ -77,8 +78,10 @@ void ParallelAction::onStart() {
     for (size_t index = 0; index < children_.size(); ++index) {
         Action *action = children_.at(index);
         if (!action->start())
-            fail_set_.insert(index);
+            finished_children_[index] = false;
     }
+
+    tryFinish();
 }
 
 void ParallelAction::onStop() {
@@ -110,25 +113,28 @@ void ParallelAction::onReset() {
     for (auto child : children_)
         child->reset();
 
-    succ_set_.clear();
-    fail_set_.clear();
+    finished_children_.clear();
+    blocked_children_.clear();
 
     AssembleAction::onReset();
 }
 
+void ParallelAction::tryFinish() {
+    if ((finished_children_.size() + blocked_children_.size()) == children_.size())
+        finish(true);
+}
+
 void ParallelAction::onChildFinished(int index, bool is_succ) {
     if (state() == State::kRunning) {
-        if (is_succ)
-            succ_set_.insert(index);
-        else
-            fail_set_.insert(index);
+        finished_children_[index] = is_succ;
+        tryFinish();
+    }
+}
 
-        if (succ_set_.size() == children_.size()) {
-            finish(true);
-
-        } else if ((succ_set_.size() + fail_set_.size()) == children_.size()) {
-            finish(false);
-        }
+void ParallelAction::onChildBlocked(int index, int why) {
+    if (state() == State::kRunning) {
+        blocked_children_[index] = why;
+        tryFinish();
     }
 }
 

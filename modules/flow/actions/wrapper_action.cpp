@@ -39,6 +39,7 @@ WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
 {
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
+    child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1));
 }
 
 WrapperAction::~WrapperAction() {
@@ -54,8 +55,10 @@ void WrapperAction::toJson(Json &js) const {
 bool WrapperAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    if (child_ != nullptr)
+    if (child_ != nullptr) {
         child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
+        child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1));
+    }
     return true;
 }
 

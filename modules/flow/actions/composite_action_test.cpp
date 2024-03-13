@@ -95,6 +95,57 @@ TEST(CompositeAction, ParentFinishBeforeChild) {
     EXPECT_EQ(sleep_action->state(), Action::State::kStoped);
 }
 
+TEST(CompositeAction, ChildBlock) {
+    //! 该子动作，第一次启动的时候，会block，后面恢复的时候会finish
+    class CanBlockAction : public Action {
+      public:
+        explicit CanBlockAction(event::Loop &loop) : Action(loop, "CanBlock") { }
+
+        virtual bool isReady() const { return true; }
+        virtual void onStart() override { block(1); }
+        virtual void onResume() override { finish(true); }
+    }; 
+
+    class ParentAction : public CompositeAction {
+      public:
+        explicit ParentAction(event::Loop &loop)
+          : CompositeAction(loop, "Parent") {
+          setChild(new CanBlockAction(loop));
+        }
+    };
+
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    bool is_finished = false;
+    bool is_blocked = false;
+
+    ParentAction action(*loop);
+
+    action.setBlockCallback([&] (int why) {
+        is_blocked = true;
+        EXPECT_EQ(why, 1);
+        EXPECT_FALSE(is_finished);
+        EXPECT_EQ(action.state(), Action::State::kPause);
+        action.resume();
+    });
+    action.setFinishCallback([&] (bool succ) {
+        is_finished = true;
+        EXPECT_TRUE(succ);
+        EXPECT_TRUE(is_blocked);
+        EXPECT_EQ(action.state(), Action::State::kFinished);
+    });
+
+    action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_blocked);
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(action.state(), Action::State::kFinished);
+}
+
 TEST(CompositeAction, NotSetChild) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });

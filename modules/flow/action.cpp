@@ -42,10 +42,7 @@ Action::~Action() {
             ToString(state_).c_str());
   }
 
-  if (finish_cb_run_id_ != 0) {
-    loop_.cancel(finish_cb_run_id_);
-    finish_cb_run_id_ = 0;
-  }
+  cancelDispatchedCallback();
 
   CHECK_DELETE_RESET_OBJ(timer_ev_);
 }
@@ -147,8 +144,7 @@ bool Action::resume() {
 }
 
 bool Action::stop() {
-  if (state_ != State::kRunning &&
-      state_ != State::kPause)
+  if (!isUnderway())
     return true;
 
   LogDbg("stop action %d:%s[%s]", id_, type_.c_str(), label_.c_str());
@@ -196,6 +192,27 @@ bool Action::finish(bool is_succ) {
   }
 }
 
+bool Action::block(int why) {
+  if (state_ != State::kFinished && state_ != State::kStoped) {
+    LogDbg("action %d:%s[%s] blocked", id_, type_.c_str(), label_.c_str());
+
+    state_ = State::kPause;
+
+    is_base_func_invoked_ = false;
+
+    onBlock(why);
+
+    if (!is_base_func_invoked_)
+      LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
+
+    return true;
+
+  } else {
+    LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
+    return false;
+  }
+}
+
 void Action::reset() {
   if (state_ == State::kIdle)
     return;
@@ -217,10 +234,7 @@ void Action::reset() {
   if (timer_ev_ != nullptr)
     timer_ev_->disable();
 
-  if (finish_cb_run_id_ != 0) {
-    loop_.cancel(finish_cb_run_id_);
-    finish_cb_run_id_ = 0;
-  }
+  cancelDispatchedCallback();
 
   state_ = State::kIdle;
   result_ = Result::kUnsure;
@@ -268,6 +282,13 @@ void Action::onStop() { is_base_func_invoked_ = true; }
 
 void Action::onReset() { is_base_func_invoked_ = true; }
 
+void Action::onBlock(int why) {
+  if (block_cb_)
+    block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why), "Action::block");
+
+  is_base_func_invoked_ = true;
+}
+
 void Action::onFinished(bool is_succ) {
   result_ = is_succ ? Result::kSuccess : Result::kFail;
 
@@ -275,6 +296,18 @@ void Action::onFinished(bool is_succ) {
     finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
 
   is_base_func_invoked_ = true;
+}
+
+void Action::cancelDispatchedCallback() {
+  if (finish_cb_run_id_ != 0) {
+    loop_.cancel(finish_cb_run_id_);
+    finish_cb_run_id_ = 0;
+  }
+
+  if (block_cb_run_id_ != 0) {
+    loop_.cancel(block_cb_run_id_);
+    block_cb_run_id_ = 0;
+  }
 }
 
 std::string ToString(Action::State state) {

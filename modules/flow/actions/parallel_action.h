@@ -38,8 +38,11 @@ class ParallelAction : public AssembleAction {
     virtual int addChild(Action *action) override;
     virtual bool isReady() const override;
 
-    std::set<int> succSet() const { return succ_set_; }
-    std::set<int> failSet() const { return fail_set_; }
+    using FinishedChildren = std::map<int, bool>;
+    using BlockedChildren = std::map<int, int>;
+
+    FinishedChildren getFinishedChildren() const { return finished_children_; }
+    BlockedChildren  getBlockedChildren()  const { return blocked_children_; }
 
   protected:
     virtual void onStart() override;
@@ -49,12 +52,15 @@ class ParallelAction : public AssembleAction {
     virtual void onReset() override;
 
   private:
+    void tryFinish();
     void onChildFinished(int index, bool is_succ);
+    void onChildBlocked(int index, int why);
 
   private:
     std::vector<Action*> children_;
-    std::set<int> succ_set_;
-    std::set<int> fail_set_;
+
+    FinishedChildren finished_children_;
+    BlockedChildren  blocked_children_;
 };
 
 }

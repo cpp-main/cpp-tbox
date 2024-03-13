@@ -32,6 +32,8 @@ class Action;
 
 /**
  * 动作执行器
+ *
+ * FIXME: 没有做对Action::block()功能的支持
  */
 class ActionExecutor {
   public:

@@ -38,6 +38,7 @@ bool CompositeAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
     child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1));
+    child_->setBlockCallback(std::bind(&CompositeAction::onChildBlocked, this, _1));
 
     return true;
 }
@@ -106,6 +107,11 @@ void CompositeAction::onFinished(bool is_succ) {
 void CompositeAction::onChildFinished(bool is_succ) {
     if (state() == State::kRunning)
         finish(is_succ);
+}
+
+void CompositeAction::onChildBlocked(int why) {
+    if (state() == State::kRunning)
+        block(why);
 }
 
 }

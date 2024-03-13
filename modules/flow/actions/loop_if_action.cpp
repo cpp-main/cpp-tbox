@@ -46,15 +46,19 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
     if (role == "if") {
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
-        if (if_action_ != nullptr)
+        if (if_action_ != nullptr) {
             if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1));
+            if_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1));
+        }
         return true;
 
     } else if (role == "exec") {
         CHECK_DELETE_RESET_OBJ(exec_action_);
         exec_action_ = child;
-        if (exec_action_ != nullptr)
+        if (exec_action_ != nullptr) {
             exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this));
+            exec_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1));
+        }
         return true;
     }
 

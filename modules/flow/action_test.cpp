@@ -25,6 +25,61 @@
 namespace tbox {
 namespace flow {
 
+TEST(Action, StartFinish) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  class TestAction : public Action {
+    public:
+      explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+      virtual bool isReady() const override { return true; }
+      virtual void onStart() override { finish(true); }
+  };
+
+  TestAction action(*loop);
+
+  bool is_callback = false;
+  action.setFinishCallback(
+    [&, loop] (bool is_succ) {
+      EXPECT_TRUE(is_succ);
+      is_callback = true;
+    }
+  );
+  action.start();
+
+  loop->exitLoop(std::chrono::milliseconds(10));
+  loop->runLoop();
+
+  EXPECT_TRUE(is_callback);
+}
+
+TEST(Action, StartBlock) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  class TestAction : public Action {
+    public:
+      explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+      virtual bool isReady() const override { return true; }
+      virtual void onStart() override { Action::onStart(); block(0); }
+  };
+
+  bool is_block = false;
+
+  TestAction action(*loop);
+  action.setBlockCallback([&](int why) { is_block = true; });
+  action.start();
+
+  loop->exitLoop(std::chrono::milliseconds(10));
+  loop->runLoop();
+
+  EXPECT_TRUE(is_block);
+  EXPECT_EQ(action.state(), Action::State::kPause);
+
+  action.stop();
+  EXPECT_EQ(action.state(), Action::State::kStoped);
+}
+
 TEST(Action, Timeout) {
   auto loop = event::Loop::New();
   SetScopeExitAction([loop] { delete loop; });

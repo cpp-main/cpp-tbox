@@ -44,6 +44,7 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
 {
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
+    child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1));
 }
 
 RepeatAction::~RepeatAction() {
@@ -60,8 +61,10 @@ void RepeatAction::toJson(Json &js) const {
 bool RepeatAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    if (child_ != nullptr)
+    if (child_ != nullptr) {
         child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
+        child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1));
+    }
     return true;
 }
 

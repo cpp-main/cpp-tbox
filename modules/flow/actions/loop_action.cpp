@@ -38,6 +38,7 @@ LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode)
 {
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
+    child_->setBlockCallback(std::bind(&LoopAction::block, this, _1));
 }
 
 LoopAction::~LoopAction() {
@@ -52,8 +53,10 @@ void LoopAction::toJson(Json &js) const {
 bool LoopAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    if (child_ != nullptr)
+    if (child_ != nullptr) {
         child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1));
+        child_->setBlockCallback(std::bind(&LoopAction::block, this, _1));
+    }
     return true;
 }
 

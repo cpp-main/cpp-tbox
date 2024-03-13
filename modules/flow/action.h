@@ -66,6 +66,7 @@ class Action {
 
     /// 是否正在运行
     inline bool isRunning() const { return state_ == State::kRunning; }
+
     /// 表示已启动，但还没有结束或终止的状态
     inline bool isUnderway() const { return state_ == State::kRunning || state_ == State::kPause; }
 
@@ -74,7 +75,11 @@ class Action {
 
     //!< 设置结束回调
     using FinishCallback = std::function<void(bool is_succ)>;
-    inline void setFinishCallback(const FinishCallback &cb) { finish_cb_ = cb; }
+    inline void setFinishCallback(FinishCallback &&cb) { finish_cb_ = std::move(cb); }
+
+    //!< 设置阻塞回调
+    using BlockCallback = std::function<void(int)>;
+    inline void setBlockCallback(BlockCallback &&cb) { block_cb_ = std::move(cb); }
 
     void setTimeout(std::chrono::milliseconds ms);
     void resetTimeout();
@@ -90,16 +95,20 @@ class Action {
     void reset();   //!< 重置，将所有的状态恢复到刚构建状态
 
   protected:
-    bool finish(bool is_succ);
+    bool block(int why = 0);    //!< 主动暂停动作
+    bool finish(bool is_succ);  //!< 主动结束动作
 
     virtual void onStart();
     virtual void onPause();
+    virtual void onBlock(int why);
     virtual void onResume();
     virtual void onStop();
     virtual void onReset();
     virtual void onFinished(bool is_succ);
     virtual void onFinal() { }
     virtual void onTimeout() { finish(false); }
+
+    void cancelDispatchedCallback();
 
   protected:
     event::Loop &loop_;
@@ -110,13 +119,17 @@ class Action {
     int id_;
     std::string type_;
     std::string label_;
-    FinishCallback finish_cb_;
+    FinishCallback  finish_cb_;
+    BlockCallback   block_cb_;
 
     State state_ = State::kIdle;      //!< 状态
     Result result_ = Result::kUnsure; //!< 运行结果
 
     event::TimerEvent *timer_ev_ = nullptr;
-    event::Loop::RunId finish_cb_run_id_ = 0; //!< runNext()的任务号，用于撤消
+
+    //! runNext()的任务号，用于撤消
+    event::Loop::RunId finish_cb_run_id_ = 0;
+    event::Loop::RunId block_cb_run_id_ = 0;
 
     bool is_base_func_invoked_ = false; //! 是否已调用基类函数
     //! 检查使用者在重写的 onStart(),onPause(),onResume(),onStop(),onFinished() 中是否调用了基类的函数

@@ -168,6 +168,61 @@ TEST(IfElseAction, CondFailNoElseAction) {
     EXPECT_FALSE(if_action_run);
 }
 
+TEST(IfElseAction, BlockOnIf) {
+    //! 该子动作，第一次启动的时候，会block，后面恢复的时候会finish
+    class CanBlockAction : public Action {
+      public:
+        explicit CanBlockAction(event::Loop &loop) : Action(loop, "CanBlock") { }
+
+        virtual bool isReady() const { return true; }
+        virtual void onStart() override { block(1); }
+        virtual void onResume() override { finish(true); }
+    }; 
+
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    IfElseAction if_else_action(*loop);
+
+    bool is_blocked = false;
+    bool succ_action_run = false;
+    bool if_else_action_run = false;
+
+    auto cond_action = new CanBlockAction(*loop);
+    auto succ_action = new FunctionAction(*loop, [&] {
+        succ_action_run = true;
+        return true;
+    });
+
+    EXPECT_TRUE(if_else_action.setChildAs(cond_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(succ_action, "succ"));
+    EXPECT_TRUE(if_else_action.isReady());
+
+    if_else_action.setBlockCallback([&] (int why) {
+        is_blocked = true;
+        EXPECT_EQ(why, 1);
+        EXPECT_EQ(if_else_action.state(), Action::State::kPause);
+        if_else_action.resume();
+    });
+
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(is_blocked);
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_TRUE(succ_action_run);
+}
+
 TEST(IfElseAction, IsReady) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });

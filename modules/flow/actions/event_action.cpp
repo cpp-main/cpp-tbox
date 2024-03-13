@@ -47,6 +47,11 @@ void EventAction::onPause() {
     Action::onPause();
 }
 
+void EventAction::onBlock(int why) {
+    pub_.unsubscribe(this);
+    Action::onBlock(why);
+}
+
 void EventAction::onResume() {
     Action::onResume();
     pub_.subscribe(this);
