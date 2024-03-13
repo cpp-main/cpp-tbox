@@ -126,6 +126,13 @@ std::string GetAppBuildTime();
  */
 void GetAppVersion(int &major, int &minor, int &rev, int &build);
 
+/**
+ * 异常退出处理
+ *
+ * 当程序出现异常，即将退出前会被框架自动调用
+ */
+void OnAbnormalExit();
+
 }
 }
 

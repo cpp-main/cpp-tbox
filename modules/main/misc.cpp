@@ -81,6 +81,8 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     major = minor = rev = build = 0;
 }
 
+__attribute__((weak)) void OnAbnormalExit() { }
+
 void SayHello()
 {
     LogInfo("=== TBOX MAIN STARTUP ===");
@@ -96,6 +98,8 @@ void SayHello()
 
 void AbnormalExit()
 {
+    OnAbnormalExit();
+
     LogFatal("Process abort!");
 
     if (error_exit_func)    //! 执行一些善后处理
