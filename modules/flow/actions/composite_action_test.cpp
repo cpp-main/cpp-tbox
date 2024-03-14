@@ -122,9 +122,9 @@ TEST(CompositeAction, ChildBlock) {
 
     ParentAction action(*loop);
 
-    action.setBlockCallback([&] (int why) {
+    action.setBlockCallback([&] (const Action::Reason &why) {
         is_blocked = true;
-        EXPECT_EQ(why, 1);
+        EXPECT_EQ(why.code, 1);
         EXPECT_FALSE(is_finished);
         EXPECT_EQ(action.state(), Action::State::kPause);
         action.resume();

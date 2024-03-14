@@ -109,7 +109,7 @@ void CompositeAction::onChildFinished(bool is_succ) {
         finish(is_succ);
 }
 
-void CompositeAction::onChildBlocked(int why) {
+void CompositeAction::onChildBlocked(const Reason &why) {
     if (state() == State::kRunning)
         block(why);
 }

@@ -192,7 +192,7 @@ bool Action::finish(bool is_succ) {
   }
 }
 
-bool Action::block(int why) {
+bool Action::block(const Reason &why) {
   if (state_ != State::kFinished && state_ != State::kStoped) {
     LogDbg("action %d:%s[%s] blocked", id_, type_.c_str(), label_.c_str());
 
@@ -282,7 +282,7 @@ void Action::onStop() { is_base_func_invoked_ = true; }
 
 void Action::onReset() { is_base_func_invoked_ = true; }
 
-void Action::onBlock(int why) {
+void Action::onBlock(const Reason &why) {
   if (block_cb_)
     block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why), "Action::block");
 
@@ -308,6 +308,19 @@ void Action::cancelDispatchedCallback() {
     loop_.cancel(block_cb_run_id_);
     block_cb_run_id_ = 0;
   }
+}
+
+Action::Reason::Reason(const Reason &other)
+  : code(other.code)
+  , message(other.message)
+{ }
+
+Action::Reason& Action::Reason::operator = (const Reason &other) {
+  if (this != &other) {
+    code = other.code;
+    message = other.message;
+  }
+  return *this;
 }
 
 std::string ToString(Action::State state) {

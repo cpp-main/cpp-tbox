@@ -58,6 +58,19 @@ class Action {
       kFail,      //!< 失败
     };
 
+    //! 失败或阻塞原因
+    struct Reason {
+      int code;             //!< 错误码
+      std::string message;  //!< 错误说明
+
+      Reason() : code(0) { }
+      Reason(int c) : code(c) { }
+      Reason(int c, std::string m) : code(c), message(m) { }
+
+      Reason(const Reason &other);
+      Reason& operator = (const Reason &other);
+    };
+
     inline int id() const { return id_; }
     inline const std::string& type() const { return type_; }
 
@@ -78,7 +91,7 @@ class Action {
     inline void setFinishCallback(FinishCallback &&cb) { finish_cb_ = std::move(cb); }
 
     //!< 设置阻塞回调
-    using BlockCallback = std::function<void(int)>;
+    using BlockCallback = std::function<void(const Reason &)>;
     inline void setBlockCallback(BlockCallback &&cb) { block_cb_ = std::move(cb); }
 
     void setTimeout(std::chrono::milliseconds ms);
@@ -95,12 +108,12 @@ class Action {
     void reset();   //!< 重置，将所有的状态恢复到刚构建状态
 
   protected:
-    bool block(int why = 0);    //!< 主动暂停动作
-    bool finish(bool is_succ);  //!< 主动结束动作
+    bool block(const Reason &why);  //!< 主动暂停动作
+    bool finish(bool is_succ);      //!< 主动结束动作
 
     virtual void onStart();
     virtual void onPause();
-    virtual void onBlock(int why);
+    virtual void onBlock(const Reason &why);
     virtual void onResume();
     virtual void onStop();
     virtual void onReset();

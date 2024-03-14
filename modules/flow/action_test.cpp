@@ -67,7 +67,7 @@ TEST(Action, StartBlock) {
   bool is_block = false;
 
   TestAction action(*loop);
-  action.setBlockCallback([&](int why) { is_block = true; });
+  action.setBlockCallback([&](const Action::Reason &) { is_block = true; });
   action.start();
 
   loop->exitLoop(std::chrono::milliseconds(10));

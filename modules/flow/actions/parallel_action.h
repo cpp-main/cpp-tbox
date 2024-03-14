@@ -42,7 +42,7 @@ class ParallelAction : public AssembleAction {
     virtual bool isReady() const override;
 
     using FinishedChildren = std::map<int, bool>;
-    using BlockedChildren = std::map<int, int>;
+    using BlockedChildren = std::map<int, Reason>;
 
     FinishedChildren getFinishedChildren() const { return finished_children_; }
     BlockedChildren  getBlockedChildren()  const { return blocked_children_; }
@@ -57,7 +57,7 @@ class ParallelAction : public AssembleAction {
   private:
     void tryFinish();
     void onChildFinished(int index, bool is_succ);
-    void onChildBlocked(int index, int why);
+    void onChildBlocked(int index, const Reason &why);
 
   private:
     std::vector<Action*> children_;

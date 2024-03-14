@@ -47,7 +47,7 @@ void EventAction::onPause() {
     Action::onPause();
 }
 
-void EventAction::onBlock(int why) {
+void EventAction::onBlock(const Reason &why) {
     pub_.unsubscribe(this);
     Action::onBlock(why);
 }

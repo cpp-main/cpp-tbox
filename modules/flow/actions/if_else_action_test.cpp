@@ -198,9 +198,9 @@ TEST(IfElseAction, BlockOnIf) {
     EXPECT_TRUE(if_else_action.setChildAs(succ_action, "succ"));
     EXPECT_TRUE(if_else_action.isReady());
 
-    if_else_action.setBlockCallback([&] (int why) {
+    if_else_action.setBlockCallback([&] (const Action::Reason &why) {
         is_blocked = true;
-        EXPECT_EQ(why, 1);
+        EXPECT_EQ(why.code, 1);
         EXPECT_EQ(if_else_action.state(), Action::State::kPause);
         if_else_action.resume();
     });

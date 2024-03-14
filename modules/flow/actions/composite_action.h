@@ -66,7 +66,7 @@ class CompositeAction : public AssembleAction {
     virtual void onFinished(bool is_succ) override;
 
     void onChildFinished(bool is_succ);
-    void onChildBlocked(int why);
+    void onChildBlocked(const Reason &why);
 
   private:
     Action *child_ = nullptr;
