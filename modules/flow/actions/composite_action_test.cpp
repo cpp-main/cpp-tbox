@@ -104,7 +104,7 @@ TEST(CompositeAction, ChildBlock) {
         virtual bool isReady() const { return true; }
         virtual void onStart() override { block(1); }
         virtual void onResume() override { finish(true); }
-    }; 
+    };
 
     class ParentAction : public CompositeAction {
       public:

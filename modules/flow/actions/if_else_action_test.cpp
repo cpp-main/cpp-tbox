@@ -177,7 +177,7 @@ TEST(IfElseAction, BlockOnIf) {
         virtual bool isReady() const { return true; }
         virtual void onStart() override { block(1); }
         virtual void onResume() override { finish(true); }
-    }; 
+    };
 
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
