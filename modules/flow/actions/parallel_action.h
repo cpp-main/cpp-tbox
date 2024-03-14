@@ -28,6 +28,9 @@
 namespace tbox {
 namespace flow {
 
+/**
+ * 并行动作
+ */
 class ParallelAction : public AssembleAction {
   public:
     explicit ParallelAction(event::Loop &loop);

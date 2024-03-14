@@ -26,6 +26,8 @@ namespace tbox {
 namespace flow {
 
 /**
+ * 顺序动作
+ *
  * 模拟实现以下流程
  * bool SequenceAction(action_vec, mode == AllFinish) {
  *   for (item : action_vec) {

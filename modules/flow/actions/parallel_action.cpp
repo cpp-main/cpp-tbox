@@ -134,6 +134,8 @@ void ParallelAction::onChildFinished(int index, bool is_succ) {
 void ParallelAction::onChildBlocked(int index, int why) {
     if (state() == State::kRunning) {
         blocked_children_[index] = why;
+        //!FIXME:目前遇到block的动作，仅停止它。将来需要更精细化的处理
+        children_.at(index)->stop();
         tryFinish();
     }
 }
