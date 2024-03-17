@@ -63,10 +63,10 @@ class CompositeAction : public AssembleAction {
     virtual void onPause() override;
     virtual void onResume() override;
     virtual void onReset() override;
-    virtual void onFinished(bool is_succ) override;
+    virtual void onFinished(bool is_succ, const Reason &why, const Trace &trace) override;
 
-    void onChildFinished(bool is_succ);
-    void onChildBlocked(const Reason &why);
+    void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);
+    void onChildBlocked(const Reason &why, const Trace &trace);
 
   private:
     Action *child_ = nullptr;

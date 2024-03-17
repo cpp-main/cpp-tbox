@@ -47,8 +47,8 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
         if (if_action_ != nullptr) {
-            if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1));
-            if_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1));
+            if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1, _2, _3));
+            if_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
         }
         return true;
 
@@ -56,8 +56,8 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
         CHECK_DELETE_RESET_OBJ(exec_action_);
         exec_action_ = child;
         if (exec_action_ != nullptr) {
-            exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this));
-            exec_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1));
+            exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _2, _3));
+            exec_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
         }
         return true;
     }
@@ -122,23 +122,23 @@ void LoopIfAction::onReset() {
     AssembleAction::onReset();
 }
 
-void LoopIfAction::onIfFinished(bool is_succ) {
+void LoopIfAction::onIfFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if (is_succ) {
             exec_action_->start();
         } else {
-            finish(finish_result_);
+            finish(finish_result_, why, trace);
         }
     }
 }
 
-void LoopIfAction::onExecFinished() {
+void LoopIfAction::onExecFinished(const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if_action_->reset();
         exec_action_->reset();
 
         if (!if_action_->start())
-            finish(finish_result_);
+            finish(finish_result_, why, trace);
     }
 }
 

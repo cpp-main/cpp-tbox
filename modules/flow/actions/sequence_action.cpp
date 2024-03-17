@@ -57,7 +57,7 @@ int SequenceAction::addChild(Action *action) {
         int index = children_.size();
         children_.push_back(action);
         action->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1));
-        action->setBlockCallback(std::bind(&SequenceAction::block, this, _1));
+        action->setBlockCallback(std::bind(&SequenceAction::block, this, _1, _2));
         return index;
     } else {
         LogWarn("can't add child twice");

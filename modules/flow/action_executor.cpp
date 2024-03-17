@@ -46,7 +46,7 @@ ActionExecutor::ActionId ActionExecutor::append(Action *action, int prio) {
     .action = action
   };
   action_deque_array_.at(prio).push_back(item);
-  action->setFinishCallback([this](bool) { schedule(); });
+  action->setFinishCallback([this](bool, const Action::Reason &, const Action::Trace &) { schedule(); });
   schedule();
   return item.id;
 }

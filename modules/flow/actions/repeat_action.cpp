@@ -43,8 +43,8 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
   , child_(child)
 {
     TBOX_ASSERT(child_ != nullptr);
-    child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
-    child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1));
+    child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
+    child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
 }
 
 RepeatAction::~RepeatAction() {
@@ -62,8 +62,8 @@ bool RepeatAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
     if (child_ != nullptr) {
-        child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1));
-        child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1));
+        child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
+        child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
     }
     return true;
 }
@@ -112,18 +112,18 @@ void RepeatAction::onReset() {
     AssembleAction::onReset();
 }
 
-void RepeatAction::onChildFinished(bool is_succ) {
+void RepeatAction::onChildFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if ((mode_ == Mode::kBreakSucc && is_succ) ||
             (mode_ == Mode::kBreakFail && !is_succ)) {
-            finish(is_succ);
+            finish(is_succ, why, trace);
         } else {
             if (remain_times_ > 0) {
                 child_->reset();
                 child_->start();
                 --remain_times_;
             } else {
-                finish(true);
+                finish(true, why, trace);
             }
         }
     }

@@ -166,7 +166,7 @@ bool Action::stop() {
   return true;
 }
 
-bool Action::finish(bool is_succ) {
+bool Action::finish(bool is_succ, const Reason &why, const Trace &trace) {
   if (state_ != State::kFinished && state_ != State::kStoped) {
     LogDbg("action %d:%s[%s] finished, is_succ: %s", id_, type_.c_str(), label_.c_str(),
            (is_succ? "succ" : "fail"));
@@ -178,7 +178,7 @@ bool Action::finish(bool is_succ) {
 
     is_base_func_invoked_ = false;
 
-    onFinished(is_succ);
+    onFinished(is_succ, why, trace);
 
     if (!is_base_func_invoked_)
       LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
@@ -192,7 +192,7 @@ bool Action::finish(bool is_succ) {
   }
 }
 
-bool Action::block(const Reason &why) {
+bool Action::block(const Reason &why, const Trace &trace) {
   if (state_ != State::kFinished && state_ != State::kStoped) {
     LogDbg("action %d:%s[%s] blocked", id_, type_.c_str(), label_.c_str());
 
@@ -200,7 +200,7 @@ bool Action::block(const Reason &why) {
 
     is_base_func_invoked_ = false;
 
-    onBlock(why);
+    onBlock(why, trace);
 
     if (!is_base_func_invoked_)
       LogWarn("%d:%s[%s] didn't invoke base func", id_, type_.c_str(), label_.c_str());
@@ -282,18 +282,24 @@ void Action::onStop() { is_base_func_invoked_ = true; }
 
 void Action::onReset() { is_base_func_invoked_ = true; }
 
-void Action::onBlock(const Reason &why) {
-  if (block_cb_)
-    block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why), "Action::block");
+void Action::onBlock(const Reason &why, const Trace &trace) {
+  if (block_cb_) {
+    Trace new_trace(trace);
+    new_trace.emplace_back(Who(id_, type_));
+    block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why, new_trace), "Action::block");
+  }
 
   is_base_func_invoked_ = true;
 }
 
-void Action::onFinished(bool is_succ) {
+void Action::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
   result_ = is_succ ? Result::kSuccess : Result::kFail;
 
-  if (finish_cb_)
-    finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ), "Action::finish");
+  if (finish_cb_) {
+    Trace new_trace(trace);
+    new_trace.emplace_back(Who(id_, type_));
+    finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ, why, new_trace), "Action::finish");
+  }
 
   is_base_func_invoked_ = true;
 }
@@ -319,6 +325,19 @@ Action::Reason& Action::Reason::operator = (const Reason &other) {
   if (this != &other) {
     code = other.code;
     message = other.message;
+  }
+  return *this;
+}
+
+Action::Who::Who(const Who &other)
+  : id(other.id)
+  , type(other.type)
+{ }
+
+Action::Who& Action::Who::operator = (const Who &other) {
+  if (this != &other) {
+    id = other.id;
+    type = other.type;
   }
   return *this;
 }

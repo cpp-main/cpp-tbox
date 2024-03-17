@@ -47,9 +47,9 @@ void EventAction::onPause() {
     Action::onPause();
 }
 
-void EventAction::onBlock(const Reason &why) {
+void EventAction::onBlock(const Reason &why, const Trace &trace) {
     pub_.unsubscribe(this);
-    Action::onBlock(why);
+    Action::onBlock(why, trace);
 }
 
 void EventAction::onResume() {
@@ -62,9 +62,9 @@ void EventAction::onReset() {
     Action::onReset();
 }
 
-void EventAction::onFinished(bool is_succ) {
+void EventAction::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
     pub_.unsubscribe(this);
-    Action::onFinished(is_succ);
+    Action::onFinished(is_succ, why, trace);
 }
 
 }

@@ -65,11 +65,26 @@ class Action {
 
       Reason() : code(0) { }
       Reason(int c) : code(c) { }
-      Reason(int c, std::string m) : code(c), message(m) { }
+      Reason(const std::string &m) : message(m) { }
+      Reason(int c, const std::string &m) : code(c), message(m) { }
 
       Reason(const Reason &other);
       Reason& operator = (const Reason &other);
     };
+
+    struct Who {
+      int id;
+      std::string type;
+
+      Who() : id(0) { }
+      Who(int i) : id(i) { }
+      Who(const std::string &t) : type(t) { }
+      Who(int i, const std::string &t) : id(i), type(t) { }
+
+      Who(const Who &other);
+      Who& operator = (const Who &other);
+    };
+    using Trace = std::vector<Who>;
 
     inline int id() const { return id_; }
     inline const std::string& type() const { return type_; }
@@ -87,13 +102,14 @@ class Action {
     inline const std::string& label() const { return label_; }
 
     //!< 设置结束回调
-    using FinishCallback = std::function<void(bool is_succ)>;
+    using FinishCallback = std::function<void(bool is_succ, const Reason &why, const Trace &trace)>;
     inline void setFinishCallback(FinishCallback &&cb) { finish_cb_ = std::move(cb); }
 
     //!< 设置阻塞回调
-    using BlockCallback = std::function<void(const Reason &)>;
+    using BlockCallback = std::function<void(const Reason &, const Trace &trace)>;
     inline void setBlockCallback(BlockCallback &&cb) { block_cb_ = std::move(cb); }
 
+    //!< 设置与取消超时
     void setTimeout(std::chrono::milliseconds ms);
     void resetTimeout();
 
@@ -108,16 +124,22 @@ class Action {
     void reset();   //!< 重置，将所有的状态恢复到刚构建状态
 
   protected:
-    bool block(const Reason &why);  //!< 主动暂停动作
-    bool finish(bool is_succ);      //!< 主动结束动作
+    //! 主动暂停动作
+    bool block(const Reason &why = Reason(),    //!< 阻塞原因
+               const Trace &trace = Trace());   //!< 谁结束的
+
+    //! 主动结束动作
+    bool finish(bool is_succ,                   //!< 是否成功
+                const Reason &why = Reason(),   //!< 结束原因
+                const Trace &trace = Trace());  //!< 谁结束的
 
     virtual void onStart();
     virtual void onPause();
-    virtual void onBlock(const Reason &why);
+    virtual void onBlock(const Reason &why, const Trace &trace);
     virtual void onResume();
     virtual void onStop();
     virtual void onReset();
-    virtual void onFinished(bool is_succ);
+    virtual void onFinished(bool is_succ, const Reason &why, const Trace &trace);
     virtual void onFinal() { }
     virtual void onTimeout() { finish(false); }
 

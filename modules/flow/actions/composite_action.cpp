@@ -37,8 +37,8 @@ bool CompositeAction::setChild(Action *child) {
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1));
-    child_->setBlockCallback(std::bind(&CompositeAction::onChildBlocked, this, _1));
+    child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1, _2, _3));
+    child_->setBlockCallback(std::bind(&CompositeAction::onChildBlocked, this, _1, _2));
 
     return true;
 }
@@ -96,22 +96,22 @@ void CompositeAction::onReset() {
     AssembleAction::onReset();
 }
 
-void CompositeAction::onFinished(bool is_succ) {
+void CompositeAction::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
     //! 有可能不是child_自然结束产生的finish
     TBOX_ASSERT(child_ != nullptr);
     child_->stop();
 
-    AssembleAction::onFinished(is_succ);
+    AssembleAction::onFinished(is_succ, why, trace);
 }
 
-void CompositeAction::onChildFinished(bool is_succ) {
+void CompositeAction::onChildFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning)
-        finish(is_succ);
+        finish(is_succ, why, trace);
 }
 
-void CompositeAction::onChildBlocked(const Reason &why) {
+void CompositeAction::onChildBlocked(const Reason &why, const Trace &trace) {
     if (state() == State::kRunning)
-        block(why);
+        block(why, trace);
 }
 
 }

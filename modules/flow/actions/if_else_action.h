@@ -53,7 +53,7 @@ class IfElseAction : public AssembleAction {
     virtual void onReset() override;
 
   protected:
-    void onCondActionFinished(bool is_succ);
+    void onCondActionFinished(bool is_succ, const Reason &why, const Trace &trace);
 
   private:
     Action *if_action_   = nullptr;

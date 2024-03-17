@@ -47,8 +47,8 @@ class LoopIfAction : public AssembleAction {
     virtual void onResume() override;
     virtual void onReset() override;
 
-    void onIfFinished(bool is_succ);
-    void onExecFinished();
+    void onIfFinished(bool is_succ, const Reason &why, const Trace &trace);
+    void onExecFinished(const Reason &why, const Trace &trace);
 
   private:
     Action *if_action_ = nullptr;

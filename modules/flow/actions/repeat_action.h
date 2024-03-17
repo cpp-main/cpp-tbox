@@ -53,7 +53,7 @@ class RepeatAction : public AssembleAction {
     virtual void onResume() override;
     virtual void onReset() override;
 
-    void onChildFinished(bool is_succ);
+    void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);
 
   private:
     Mode mode_ = Mode::kNoBreak;

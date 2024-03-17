@@ -50,7 +50,7 @@ class LoopAction : public AssembleAction {
     virtual void onResume() override;
     virtual void onReset() override;
 
-    void onChildFinished(bool is_succ);
+    void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);
 
   private:
     Action *child_ = nullptr;

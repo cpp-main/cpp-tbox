@@ -53,8 +53,8 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
         if (if_action_ != nullptr) {
-            if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1));
-            if_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1));
+            if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1, _2, _3));
+            if_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         }
         return true;
 
@@ -62,8 +62,8 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         CHECK_DELETE_RESET_OBJ(succ_action_);
         succ_action_ = child;
         if (succ_action_ != nullptr) {
-            succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
-            succ_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1));
+            succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
+            succ_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         }
         return true;
 
@@ -71,8 +71,8 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         CHECK_DELETE_RESET_OBJ(fail_action_);
         fail_action_ = child;
         if (fail_action_ != nullptr) {
-            fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1));
-            fail_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1));
+            fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
+            fail_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         }
         return true;
     }
@@ -173,7 +173,7 @@ void IfElseAction::onReset() {
     AssembleAction::onReset();
 }
 
-void IfElseAction::onCondActionFinished(bool is_succ) {
+void IfElseAction::onCondActionFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if (is_succ) {
             if (succ_action_ != nullptr) {
@@ -186,7 +186,7 @@ void IfElseAction::onCondActionFinished(bool is_succ) {
                 return;
             }
         }
-        finish(true);
+        finish(true, why, trace);
     }
 }
 

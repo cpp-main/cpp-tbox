@@ -38,8 +38,8 @@ WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
   , mode_(mode)
 {
     TBOX_ASSERT(child_ != nullptr);
-    child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
-    child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1));
+    child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
+    child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
 }
 
 WrapperAction::~WrapperAction() {
@@ -56,8 +56,8 @@ bool WrapperAction::setChild(Action *child) {
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
     if (child_ != nullptr) {
-        child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1));
-        child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1));
+        child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
+        child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
     }
     return true;
 }
@@ -95,7 +95,7 @@ void WrapperAction::onResume() {
     AssembleAction::onResume();
 
     if (child_->state() == State::kFinished) {
-        onChildFinished(child_->result() == Result::kSuccess);
+        onChildFinished(child_->result() == Result::kSuccess, Reason(), Trace());
     } else {
         child_->resume();
     }
@@ -108,16 +108,16 @@ void WrapperAction::onReset() {
     AssembleAction::onReset();
 }
 
-void WrapperAction::onChildFinished(bool is_succ) {
+void WrapperAction::onChildFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if (mode_ == Mode::kNormal)
-            finish(is_succ);
+            finish(is_succ, why, trace);
         else if (mode_ == Mode::kInvert)
-            finish(!is_succ);
+            finish(!is_succ, why, trace);
         else if (mode_ == Mode::kAlwaySucc)
-            finish(true);
+            finish(true, why, trace);
         else if (mode_ == Mode::kAlwayFail)
-            finish(false);
+            finish(false, why, trace);
         else
             TBOX_ASSERT(false);
     }

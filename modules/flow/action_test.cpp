@@ -40,7 +40,7 @@ TEST(Action, StartFinish) {
 
   bool is_callback = false;
   action.setFinishCallback(
-    [&, loop] (bool is_succ) {
+    [&, loop] (bool is_succ, const Action::Reason &, const Action::Trace &) {
       EXPECT_TRUE(is_succ);
       is_callback = true;
     }
@@ -67,7 +67,7 @@ TEST(Action, StartBlock) {
   bool is_block = false;
 
   TestAction action(*loop);
-  action.setBlockCallback([&](const Action::Reason &) { is_block = true; });
+  action.setBlockCallback([&](const Action::Reason &, const Action::Trace &) { is_block = true; });
   action.start();
 
   loop->exitLoop(std::chrono::milliseconds(10));
@@ -98,7 +98,7 @@ TEST(Action, Timeout) {
   std::chrono::steady_clock::time_point ts_timeout;
 
   action.setFinishCallback(
-    [&, loop] (bool is_succ) {
+    [&, loop] (bool is_succ, const Action::Reason &, const Action::Trace &) {
       EXPECT_FALSE(is_succ);
       is_callback = true;
       ts_timeout = std::chrono::steady_clock::now();

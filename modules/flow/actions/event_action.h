@@ -37,10 +37,10 @@ class EventAction : public Action,
     virtual void onStart() override;
     virtual void onStop() override;
     virtual void onPause() override;
-    virtual void onBlock(const Reason &why) override;
+    virtual void onBlock(const Reason &why, const Trace &trace) override;
     virtual void onResume() override;
     virtual void onReset() override;
-    virtual void onFinished(bool succ) override;
+    virtual void onFinished(bool succ, const Reason &why, const Trace &trace) override;
 
   private:
     EventPublisher &pub_;
