@@ -75,6 +75,7 @@ TEST_CPP_SRC_FILES = \
 	checksum_test.cpp \
 	crc_test.cpp \
 	execute_cmd_test.cpp \
+	timestamp_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

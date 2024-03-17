@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2024 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -17,28 +17,17 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_UTIL_TIMESTAMP_H
-#define TBOX_UTIL_TIMESTAMP_H
+#include <gtest/gtest.h>
 
-#include <cstdint>
-#include <string>
+#include "timestamp.h"
 
 namespace tbox {
 namespace util {
 
-//! 获取当前的时间戳，精确到秒
-uint32_t GetCurrentSecondsFrom1970();
-
-//! 获取当前的时间戳，精确到毫秒
-uint64_t GetCurrentMillisecondsFrom1970();
-
-//! 获取指定时间戳的0时区时间字串
-std::string GetUtcTimeString(uint32_t utc_sec);
-
-//! 获取指定时间戳的本地时间字串
-std::string GetLocalTimeString(uint32_t utc_sec);
+TEST(Timestamp, GetUtcTimeString)
+{
+    EXPECT_EQ(GetUtcTimeString(0), "1970-01-01 00:00:00");
+}
 
 }
 }
-
-#endif //TBOX_UTIL_TIMESTAMP_H
