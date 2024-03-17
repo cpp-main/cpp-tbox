@@ -33,15 +33,19 @@ TEST(Action, StartFinish) {
     public:
       explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
       virtual bool isReady() const override { return true; }
-      virtual void onStart() override { finish(true); }
+      virtual void onStart() override { finish(true, 100); }
   };
 
   TestAction action(*loop);
 
   bool is_callback = false;
   action.setFinishCallback(
-    [&, loop] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+    [&, loop] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
       EXPECT_TRUE(is_succ);
+
+      EXPECT_EQ(r.code, 100);
+      ASSERT_EQ(t.size(), 1);
+      EXPECT_EQ(t[0].type, "Test");
       is_callback = true;
     }
   );
@@ -61,13 +65,24 @@ TEST(Action, StartBlock) {
     public:
       explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
       virtual bool isReady() const override { return true; }
-      virtual void onStart() override { Action::onStart(); block(0); }
+      virtual void onStart() override {
+        Action::onStart();
+        block(Action::Reason(100, "block_on_start"));
+      }
   };
 
   bool is_block = false;
 
   TestAction action(*loop);
-  action.setBlockCallback([&](const Action::Reason &, const Action::Trace &) { is_block = true; });
+  action.setBlockCallback(
+    [&](const Action::Reason &r, const Action::Trace &t) {
+      EXPECT_EQ(r.code, 100);
+      EXPECT_EQ(r.message, "block_on_start");
+      ASSERT_EQ(t.size(), 1);
+      EXPECT_EQ(t[0].type, "Test");
+      is_block = true;
+    }
+  );
   action.start();
 
   loop->exitLoop(std::chrono::milliseconds(10));
@@ -98,8 +113,13 @@ TEST(Action, Timeout) {
   std::chrono::steady_clock::time_point ts_timeout;
 
   action.setFinishCallback(
-    [&, loop] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+    [&, loop] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
       EXPECT_FALSE(is_succ);
+      EXPECT_EQ(r.code, ACTION_REASON_ACTION_TIMEOUT);
+      EXPECT_EQ(r.message, "ActionTimeout");
+      ASSERT_EQ(t.size(), 1);
+      EXPECT_EQ(t[0].type, "Test");
+
       is_callback = true;
       ts_timeout = std::chrono::steady_clock::now();
       loop->exitLoop();

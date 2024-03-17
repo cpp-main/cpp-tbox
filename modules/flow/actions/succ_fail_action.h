@@ -36,7 +36,7 @@ class SuccAction : public Action {
   protected:
     virtual void onStart() {
         Action::onStart();
-        finish(true);
+        finish(true, Reason(ACTION_REASON_SUCC_ACTION, "SuccAction"));
     }
 };
 
@@ -51,7 +51,7 @@ class FailAction : public Action {
   protected:
     virtual void onStart() {
         Action::onStart();
-        finish(false);
+        finish(false, Reason(ACTION_REASON_FAIL_ACTION, "FailAction"));
     }
 };
 

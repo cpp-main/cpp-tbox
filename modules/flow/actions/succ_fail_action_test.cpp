@@ -36,7 +36,7 @@ TEST(SuccAction, base) {
 
     bool is_callback = false;
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason&, const Action::Trace&) {
             EXPECT_TRUE(succ);
             is_callback = true;
         }
@@ -57,7 +57,7 @@ TEST(FailAction, base) {
 
     bool is_callback = false;
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason&, const Action::Trace&) {
             EXPECT_FALSE(succ);
             is_callback = true;
         }

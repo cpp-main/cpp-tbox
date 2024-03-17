@@ -67,8 +67,8 @@ class SequenceAction : public AssembleAction {
     virtual void onReset() override;
 
   private:
-    void startOtheriseFinish(bool is_succ);
-    void onChildFinished(bool is_succ);
+    void startOtheriseFinish(bool is_succ, const Reason &reason, const Trace &trace);
+    void onChildFinished(bool is_succ, const Reason &reason, const Trace &trace);
 
   private:
     Mode mode_;

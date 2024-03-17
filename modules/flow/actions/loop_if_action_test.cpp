@@ -50,7 +50,7 @@ TEST(LoopIfAction, LoopRemainTimes) {
     EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
     EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
     EXPECT_TRUE(loop_if_action.isReady());
-    loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_if_action.setFinishCallback([&] (bool, const Action::Reason&, const Action::Trace&) { is_finished = true; });
     loop_if_action.start();
 
     loop->exitLoop(std::chrono::milliseconds(10));
@@ -84,7 +84,7 @@ TEST(LoopIfAction, MultiAction) {
     EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
     EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
     EXPECT_TRUE(loop_if_action.isReady());
-    loop_if_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_if_action.setFinishCallback([&] (bool, const Action::Reason&, const Action::Trace&) { is_finished = true; });
     loop_if_action.start();
 
     loop->exitLoop(std::chrono::milliseconds(200));

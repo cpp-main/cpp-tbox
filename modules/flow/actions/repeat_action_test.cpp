@@ -49,7 +49,15 @@ TEST(RepeatAction, FunctionActionRepeat3NoBreak) {
         }
     );
     bool is_finished = false;
-    repeat_action.setFinishCallback([&] (bool) { is_finished = true; });
+    repeat_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+            EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_REPEAT_NO_TIMES);
+            EXPECT_EQ(r.message, "RepeatNoTimes");
+            EXPECT_EQ(t.size(), 1);
+            is_finished = true;
+        }
+    );
     EXPECT_TRUE(repeat_action.setChild(function_action));
     EXPECT_TRUE(repeat_action.isReady());
 
@@ -82,7 +90,11 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
         }
     );
     bool is_finished = false;
-    repeat_action.setFinishCallback([&] (bool) { is_finished = true; });
+    repeat_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+            is_finished = true;
+        }
+    );
     EXPECT_TRUE(repeat_action.setChild(function_action));
     EXPECT_TRUE(repeat_action.isReady());
 
@@ -101,7 +113,7 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
  *  int loop_times = 0;
  *  for (int i = 0; i < 5; ++i) {
  *    ++loop_times;
- *    if (loop_times >= 3)
+ *    if (!(loop_times < 3))
  *      return true;
  *  }
  */
@@ -122,8 +134,12 @@ TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
     EXPECT_TRUE(repeat_action.setChild(function_action));
     EXPECT_TRUE(repeat_action.isReady());
     repeat_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            ASSERT_EQ(t.size(), 2);
+            ASSERT_EQ(t[0].type, "Function");
+            ASSERT_EQ(t[1].type, "Repeat");
             is_finished = true;
         }
     );
@@ -141,7 +157,7 @@ TEST(RepeatAction, FunctionActionRepeat5BreakFail) {
  *  int loop_times = 0;
  *  for (int i = 0; i < 5; ++i) {
  *    ++loop_times;
- *    if (loop_times < 3)
+ *    if (loop_times >= 3)
  *      return true;
  *  }
  */
@@ -163,8 +179,12 @@ TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
     EXPECT_TRUE(repeat_action.isReady());
     bool is_finished = false;
     repeat_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            ASSERT_EQ(t.size(), 2);
+            ASSERT_EQ(t[0].type, "Function");
+            ASSERT_EQ(t[1].type, "Repeat");
             is_finished = true;
         }
     );

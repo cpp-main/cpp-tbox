@@ -43,7 +43,7 @@ TEST(ParallelAction, TwoSleepAction) {
     EXPECT_TRUE(para_action->isReady());
 
     para_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason&, const Action::Trace&) {
             EXPECT_TRUE(is_succ);
             loop->exitLoop();
         }
@@ -79,7 +79,7 @@ TEST(ParallelAction, SleepFunctionAction) {
     EXPECT_TRUE(para_action->isReady());
 
     para_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason&, const Action::Trace&) {
             EXPECT_TRUE(is_succ);
             loop->exitLoop();
         }

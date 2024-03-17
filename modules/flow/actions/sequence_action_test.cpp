@@ -53,8 +53,12 @@ TEST(SequenceAction, FinishIfAnyFail_AllSucc) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -90,8 +94,12 @@ TEST(SequenceAction, FinishIfAnyFail_FailHead) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -130,8 +138,12 @@ TEST(SequenceAction, FinishIfAnyFail_FailTail) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -158,8 +170,12 @@ TEST(SequenceAction, TwoSleepAction) {
     EXPECT_TRUE(seq_action->isReady());
 
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_SLEEP_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Sleep");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -200,8 +216,12 @@ TEST(SequenceAction, FinishIfAnySucc_AllFail) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -237,8 +257,12 @@ TEST(SequenceAction, FinishIfAnySucc_SuccHead) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -276,8 +300,12 @@ TEST(SequenceAction, FinishIfAnySucc_SuccTail) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -314,8 +342,12 @@ TEST(SequenceAction, FinishIfAllFinish_AllFail) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );
@@ -352,8 +384,12 @@ TEST(SequenceAction, FinishIfAllFinish_AllSucc) {
     ));
     EXPECT_TRUE(seq_action->isReady());
     seq_action->setFinishCallback(
-        [loop](bool is_succ) {
+        [loop](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Function");
+            EXPECT_EQ(t[1].type, "Sequence");
             loop->exitLoop();
         }
     );

@@ -33,8 +33,13 @@ TEST(NonDelayAction, True) {
     FunctionAction action(*loop, [] { return true; });
     bool is_callback = false;
     action.setFinishCallback(
-        [&is_callback, loop] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(r.message, "FunctionAction");
+            ASSERT_EQ(t.size(), 1);
+            EXPECT_EQ(t[0].id, action.id());
+
             is_callback = true;
             loop->exitLoop();
         }
@@ -53,8 +58,13 @@ TEST(NonDelayAction, False) {
     FunctionAction action(*loop, [] { return false; });
     bool is_callback = false;
     action.setFinishCallback(
-        [&is_callback, loop] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FUNCTION_ACTION);
+            EXPECT_EQ(r.message, "FunctionAction");
+            ASSERT_EQ(t.size(), 1);
+            EXPECT_EQ(t[0].id, action.id());
+
             is_callback = true;
             loop->exitLoop();
         }

@@ -28,6 +28,7 @@
 #include "loop_action.h"
 #include "function_action.h"
 #include "sequence_action.h"
+#include "succ_fail_action.h"
 
 namespace tbox {
 namespace flow {
@@ -60,6 +61,7 @@ TEST(CompositeAction, Basic) {
 
     TimeCountTestAction action(*loop);
     EXPECT_TRUE(action.isReady());
+
     action.start();
 
     loop->exitLoop(std::chrono::milliseconds(1010));
@@ -122,19 +124,23 @@ TEST(CompositeAction, ChildBlock) {
 
     ParentAction action(*loop);
 
-    action.setBlockCallback([&] (const Action::Reason &why) {
-        is_blocked = true;
-        EXPECT_EQ(why.code, 1);
-        EXPECT_FALSE(is_finished);
-        EXPECT_EQ(action.state(), Action::State::kPause);
-        action.resume();
-    });
-    action.setFinishCallback([&] (bool succ) {
-        is_finished = true;
-        EXPECT_TRUE(succ);
-        EXPECT_TRUE(is_blocked);
-        EXPECT_EQ(action.state(), Action::State::kFinished);
-    });
+    action.setBlockCallback(
+        [&] (const Action::Reason &why, const Action::Trace &) {
+            is_blocked = true;
+            EXPECT_EQ(why.code, 1);
+            EXPECT_FALSE(is_finished);
+            EXPECT_EQ(action.state(), Action::State::kPause);
+            action.resume();
+        }
+    );
+    action.setFinishCallback(
+        [&] (bool succ, const Action::Reason &, const Action::Trace &) {
+            is_finished = true;
+            EXPECT_TRUE(succ);
+            EXPECT_TRUE(is_blocked);
+            EXPECT_EQ(action.state(), Action::State::kFinished);
+        }
+    );
 
     action.start();
 
@@ -152,6 +158,43 @@ TEST(CompositeAction, NotSetChild) {
 
     CompositeAction action(*loop, "UnSet");
     EXPECT_FALSE(action.isReady());
+}
+
+TEST(CompositeAction, ReasonAndTrace) {
+    class TestAction : public CompositeAction {
+      public:
+        explicit TestAction(event::Loop &loop)
+          : CompositeAction(loop, "Test") {
+          setChild(new FailAction(loop));
+        }
+    };
+
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    TestAction action(*loop);
+
+    bool is_finished = false;
+    action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+            EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FAIL_ACTION);
+            EXPECT_EQ(r.message, "FailAction");
+
+            ASSERT_EQ(t.size(), 2);
+            EXPECT_EQ(t[0].type, "Fail");
+            EXPECT_EQ(t[1].type, "Test");
+
+            is_finished = true;
+        }
+    );
+
+    action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_finished);
 }
 
 }

@@ -39,7 +39,7 @@ TEST(SleepAction, Basic) {
   SleepAction action(*loop, std::chrono::milliseconds(10));
   bool is_finished = false;
   action.setFinishCallback(
-    [loop, &is_finished] (bool is_succ) {
+    [loop, &is_finished] (bool is_succ, const Action::Reason&, const Action::Trace&) {
       loop->exitLoop();
       is_finished = true;
       (void)is_succ;
@@ -66,9 +66,12 @@ TEST(SleepAction, Accuracy) {
   SleepAction action_100ms(*loop, std::chrono::milliseconds(100));
   SleepAction action_200ms(*loop, std::chrono::milliseconds(200));
 
-  action_50ms.setFinishCallback( [&] (bool is_succ) { ts_50ms = std::chrono::steady_clock::now(); (void)is_succ; });
-  action_100ms.setFinishCallback( [&] (bool is_succ) { ts_100ms = std::chrono::steady_clock::now(); (void)is_succ; });
-  action_200ms.setFinishCallback( [&] (bool is_succ) { ts_200ms = std::chrono::steady_clock::now(); (void)is_succ; });
+  action_50ms.setFinishCallback( [&] (bool is_succ, const Action::Reason&, const Action::Trace&)
+    { ts_50ms = std::chrono::steady_clock::now(); (void)is_succ; });
+  action_100ms.setFinishCallback( [&] (bool is_succ, const Action::Reason&, const Action::Trace&)
+    { ts_100ms = std::chrono::steady_clock::now(); (void)is_succ; });
+  action_200ms.setFinishCallback( [&] (bool is_succ, const Action::Reason&, const Action::Trace&)
+    { ts_200ms = std::chrono::steady_clock::now(); (void)is_succ; });
 
   action_50ms.start();
   action_100ms.start();
@@ -99,7 +102,7 @@ TEST(SleepAction, GenOneAction) {
   auto gen_time = [] { return std::chrono::milliseconds(50); };
   SleepAction action(*loop, gen_time);
   action.setFinishCallback(
-    [&] (bool succ) {
+    [&] (bool succ, const Action::Reason&, const Action::Trace&) {
       EXPECT_TRUE(succ);
       end_ts = std::chrono::steady_clock::now();
       loop->exitLoop();
@@ -158,7 +161,7 @@ TEST(SleepAction, GenLoopAction) {
     EXPECT_TRUE(loop_if_action.setChildAs(cond_action, "if"));
     EXPECT_TRUE(loop_if_action.setChildAs(body_action, "exec"));
     EXPECT_TRUE(loop_if_action.isReady());
-    loop_if_action.setFinishCallback([=] (bool) { loop->exitLoop(); });
+    loop_if_action.setFinishCallback([=] (bool, const Action::Reason&, const Action::Trace&) { loop->exitLoop(); });
     loop_if_action.start();
 
     loop->runLoop();

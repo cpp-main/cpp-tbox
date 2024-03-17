@@ -38,8 +38,12 @@ TEST(WrapperAction, NormalSucc) {
     EXPECT_TRUE(action.setChild(new SuccAction(*loop)));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_SUCC_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Succ");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -61,8 +65,12 @@ TEST(WrapperAction, NormalFail) {
     action.setChild(new FailAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FAIL_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Fail");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -85,8 +93,12 @@ TEST(WrapperAction, InvertSucc) {
     action.setChild(new SuccAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_SUCC_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Succ");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -108,8 +120,12 @@ TEST(WrapperAction, InvertFail) {
     action.setChild(new FailAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FAIL_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Fail");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -131,8 +147,12 @@ TEST(WrapperAction, AlwaySuccSucc) {
     action.setChild(new SuccAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_SUCC_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Succ");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -154,8 +174,12 @@ TEST(WrapperAction, AlwaySuccFail) {
     action.setChild(new FailAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_TRUE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FAIL_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Fail");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -177,8 +201,12 @@ TEST(WrapperAction, AlwayFailSucc) {
     action.setChild(new SuccAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_SUCC_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Succ");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );
@@ -200,8 +228,12 @@ TEST(WrapperAction, AlwayFailFail) {
     action.setChild(new FailAction(*loop));
     EXPECT_TRUE(action.isReady());
     action.setFinishCallback(
-        [&](bool succ) {
+        [&](bool succ, const Action::Reason &r, const Action::Trace &t) {
             EXPECT_FALSE(succ);
+            EXPECT_EQ(r.code, ACTION_REASON_FAIL_ACTION);
+            EXPECT_EQ(t.size(), 2u);
+            EXPECT_EQ(t[0].type, "Fail");
+            EXPECT_EQ(t[1].type, "Wrapper");
             is_callback = true;
         }
     );

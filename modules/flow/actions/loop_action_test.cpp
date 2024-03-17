@@ -55,7 +55,7 @@ TEST(LoopAction, FunctionActionForever) {
 
     EXPECT_TRUE(loop_action.setChild(function_action));
     EXPECT_TRUE(loop_action.isReady());
-    loop_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_action.setFinishCallback([&] (bool, const Action::Reason&, const Action::Trace&) { is_finished = true; });
 
     loop_action.start();
     loop->exitLoop(std::chrono::milliseconds(1000));
@@ -94,7 +94,7 @@ TEST(LoopAction, SleepActionForever) {
 
     EXPECT_TRUE(loop_action.setChild(seq_action));
     EXPECT_TRUE(loop_action.isReady());
-    loop_action.setFinishCallback([&] (bool) { is_finished = true; });
+    loop_action.setFinishCallback([&] (bool, const Action::Reason&, const Action::Trace&) { is_finished = true; });
 
     loop_action.start();
     loop->exitLoop(std::chrono::milliseconds(1010));

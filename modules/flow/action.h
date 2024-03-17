@@ -29,6 +29,8 @@
 #include <tbox/base/json_fwd.h>
 #include <tbox/event/loop.h>
 
+#include "action_reason.h"
+
 namespace tbox {
 namespace flow {
 
@@ -141,7 +143,7 @@ class Action {
     virtual void onReset();
     virtual void onFinished(bool is_succ, const Reason &why, const Trace &trace);
     virtual void onFinal() { }
-    virtual void onTimeout() { finish(false); }
+    virtual void onTimeout();
 
     void cancelDispatchedCallback();
 

@@ -27,6 +27,7 @@ LIB_VERSION_Z = 3
 HEAD_FILES = \
 	state_machine.h \
 	action.h \
+	action_reason.h \
 	event.h \
 	action_executor.h \
 	event_subscriber.h \

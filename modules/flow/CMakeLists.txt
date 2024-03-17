@@ -32,6 +32,7 @@ set(TBOX_LIBRARY_NAME tbox_flow)
 set(TBOX_FLOW_HEADERS
     state_machine.h
     action.h
+    action_reason.h
     event.h
     action_executor.h
     event_subscriber.h

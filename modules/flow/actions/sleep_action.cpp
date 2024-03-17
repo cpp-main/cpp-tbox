@@ -32,7 +32,9 @@ SleepAction::SleepAction(event::Loop &loop, const std::chrono::milliseconds &tim
   , time_span_(time_span)
 {
     TBOX_ASSERT(timer_ != nullptr);
-    timer_->setCallback([this] { finish(true); });
+    timer_->setCallback([this] {
+        finish(true, Reason(ACTION_REASON_SLEEP_ACTION, "SleepAction"));
+    });
 }
 
 SleepAction::SleepAction(event::Loop &loop, const Generator &gen)
@@ -41,7 +43,9 @@ SleepAction::SleepAction(event::Loop &loop, const Generator &gen)
   , gen_(gen)
 {
     TBOX_ASSERT(timer_ != nullptr);
-    timer_->setCallback([this] { finish(true); });
+    timer_->setCallback([this] {
+        finish(true, Reason(ACTION_REASON_SLEEP_ACTION, "SleepAction"));
+    });
 }
 
 SleepAction::~SleepAction() {

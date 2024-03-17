@@ -123,7 +123,7 @@ void RepeatAction::onChildFinished(bool is_succ, const Reason &why, const Trace 
                 child_->start();
                 --remain_times_;
             } else {
-                finish(true, why, trace);
+                finish(true, Reason(ACTION_REASON_REPEAT_NO_TIMES, "RepeatNoTimes"));
             }
         }
     }

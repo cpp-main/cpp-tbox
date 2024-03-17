@@ -304,6 +304,10 @@ void Action::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
   is_base_func_invoked_ = true;
 }
 
+void Action::onTimeout() {
+  finish(false, Reason(ACTION_REASON_ACTION_TIMEOUT, "ActionTimeout"));
+}
+
 void Action::cancelDispatchedCallback() {
   if (finish_cb_run_id_ != 0) {
     loop_.cancel(finish_cb_run_id_);

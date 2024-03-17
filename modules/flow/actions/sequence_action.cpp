@@ -56,7 +56,7 @@ int SequenceAction::addChild(Action *action) {
     if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
         int index = children_.size();
         children_.push_back(action);
-        action->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1));
+        action->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1, _2, _3));
         action->setBlockCallback(std::bind(&SequenceAction::block, this, _1, _2));
         return index;
     } else {
@@ -76,7 +76,7 @@ bool SequenceAction::isReady() const {
 void SequenceAction::onStart() {
     AssembleAction::onStart();
 
-    startOtheriseFinish(true);
+    startOtheriseFinish(true, Reason(), Trace());
 }
 
 void SequenceAction::onStop() {
@@ -108,23 +108,23 @@ void SequenceAction::onReset() {
     AssembleAction::onReset();
 }
 
-void SequenceAction::startOtheriseFinish(bool is_succ) {
+void SequenceAction::startOtheriseFinish(bool is_succ, const Reason &reason, const Trace &trace) {
     if (index_ < children_.size()) {
         if (!children_.at(index_)->start())
-            finish(false);
+            finish(false, Reason(ACTION_REASON_START_CHILD_FAIL, "StartChildFail"));
     } else {
-        finish(is_succ);
+        finish(is_succ, reason, trace);
     }
 }
 
-void SequenceAction::onChildFinished(bool is_succ) {
+void SequenceAction::onChildFinished(bool is_succ, const Reason &reason, const Trace &trace) {
     if (state() == State::kRunning) {
         if ((mode_ == Mode::kAnySucc && is_succ) ||
             (mode_ == Mode::kAnyFail && !is_succ)) {
-            finish(is_succ);
+            finish(is_succ, reason, trace);
         } else {
             ++index_;
-            startOtheriseFinish(is_succ);
+            startOtheriseFinish(is_succ, reason, trace);
         }
     }
 }

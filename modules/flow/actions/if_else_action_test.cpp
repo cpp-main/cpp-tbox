@@ -49,7 +49,7 @@ TEST(IfElseAction, CondSucc) {
     EXPECT_TRUE(if_else_action.isReady());
 
     if_else_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             if_else_action_run = true;
             loop->exitLoop();
@@ -87,7 +87,7 @@ TEST(IfElseAction, CondFail) {
     EXPECT_TRUE(if_else_action.isReady());
 
     if_else_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             if_else_action_run = true;
             loop->exitLoop();
@@ -120,7 +120,7 @@ TEST(IfElseAction, CondSuccNoIfAction) {
     EXPECT_TRUE(if_else_action.isReady());
 
     if_else_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             if_else_action_run = true;
             loop->exitLoop();
@@ -153,7 +153,7 @@ TEST(IfElseAction, CondFailNoElseAction) {
     EXPECT_TRUE(if_else_action.isReady());
 
     if_else_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             if_else_action_run = true;
             loop->exitLoop();
@@ -198,7 +198,7 @@ TEST(IfElseAction, BlockOnIf) {
     EXPECT_TRUE(if_else_action.setChildAs(succ_action, "succ"));
     EXPECT_TRUE(if_else_action.isReady());
 
-    if_else_action.setBlockCallback([&] (const Action::Reason &why) {
+    if_else_action.setBlockCallback([&] (const Action::Reason &why, const Action::Trace &) {
         is_blocked = true;
         EXPECT_EQ(why.code, 1);
         EXPECT_EQ(if_else_action.state(), Action::State::kPause);
@@ -206,7 +206,7 @@ TEST(IfElseAction, BlockOnIf) {
     });
 
     if_else_action.setFinishCallback(
-        [&] (bool is_succ) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             if_else_action_run = true;
             loop->exitLoop();
