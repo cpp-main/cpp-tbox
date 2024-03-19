@@ -17,6 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
+#include <iostream>
+
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
@@ -173,6 +175,7 @@ TEST(CompositeAction, ReasonAndTrace) {
     SetScopeExitAction([loop] { delete loop; });
 
     TestAction action(*loop);
+    action.set_label("hello");
 
     bool is_finished = false;
     action.setFinishCallback(
@@ -184,6 +187,7 @@ TEST(CompositeAction, ReasonAndTrace) {
             ASSERT_EQ(t.size(), 2);
             EXPECT_EQ(t[0].type, "Fail");
             EXPECT_EQ(t[1].type, "Test");
+            std::cout << ToString(r) << " -- " << ToString(t) << std::endl;
 
             is_finished = true;
         }

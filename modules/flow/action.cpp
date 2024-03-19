@@ -285,7 +285,7 @@ void Action::onReset() { is_base_func_invoked_ = true; }
 void Action::onBlock(const Reason &why, const Trace &trace) {
   if (block_cb_) {
     Trace new_trace(trace);
-    new_trace.emplace_back(Who(id_, type_));
+    new_trace.emplace_back(Who(id_, type_, label_));
     block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why, new_trace), "Action::block");
   }
 
@@ -297,7 +297,7 @@ void Action::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
 
   if (finish_cb_) {
     Trace new_trace(trace);
-    new_trace.emplace_back(Who(id_, type_));
+    new_trace.emplace_back(Who(id_, type_, label_));
     finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ, why, new_trace), "Action::finish");
   }
 
@@ -336,12 +336,14 @@ Action::Reason& Action::Reason::operator = (const Reason &other) {
 Action::Who::Who(const Who &other)
   : id(other.id)
   , type(other.type)
+  , label(other.label)
 { }
 
 Action::Who& Action::Who::operator = (const Who &other) {
   if (this != &other) {
     id = other.id;
     type = other.type;
+    label = other.label;
   }
   return *this;
 }
@@ -360,6 +362,30 @@ std::string ToString(Action::Result result) {
   if (index < NUMBER_OF_ARRAY(tbl))
     return tbl[index];
   return "unknown";
+}
+
+std::string ToString(const Action::Reason &reason) {
+  std::stringstream oss;
+  oss << '(' << reason.code << ':' << reason.message << ')';
+  return oss.str();
+}
+
+std::string ToString(const Action::Trace &trace) {
+  std::stringstream oss;
+  bool is_first = true;
+
+  for (const auto &who: trace) {
+    if (!is_first)
+      oss << "->";
+
+    is_first = false;
+    oss << '(' << who.id << ':' << who.type;
+    if (!who.label.empty())
+      oss << ',' << who.label;
+    oss << ')';
+  }
+
+  return oss.str();
 }
 
 }

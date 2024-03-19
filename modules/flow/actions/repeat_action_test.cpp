@@ -91,7 +91,7 @@ TEST(RepeatAction, FunctionActionForeverNoBreak) {
     );
     bool is_finished = false;
     repeat_action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+        [&] (bool, const Action::Reason &, const Action::Trace &) {
             is_finished = true;
         }
     );

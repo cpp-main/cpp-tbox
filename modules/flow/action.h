@@ -77,12 +77,10 @@ class Action {
     struct Who {
       int id;
       std::string type;
+      std::string label;
 
       Who() : id(0) { }
-      Who(int i) : id(i) { }
-      Who(const std::string &t) : type(t) { }
-      Who(int i, const std::string &t) : id(i), type(t) { }
-
+      Who(int i, const std::string &t, const std::string &l) : id(i), type(t), label(l) { }
       Who(const Who &other);
       Who& operator = (const Who &other);
     };
@@ -176,6 +174,8 @@ class Action {
 //! 枚举转字串
 std::string ToString(Action::State state);
 std::string ToString(Action::Result result);
+std::string ToString(const Action::Reason &reason);
+std::string ToString(const Action::Trace &trace);
 
 }
 }
