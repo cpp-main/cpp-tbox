@@ -268,10 +268,7 @@ bool Scheduler::makeRoutineReady(Routine *routine)
 
     routine->state = Routine::State::kReady;
     d_->ready_routines.push(routine->token);
-    d_->wp_loop->runNext(
-        std::bind(&Scheduler::schedule, this),
-        "Scheduler::makeRoutineReady"
-    );
+    d_->wp_loop->runNext(std::bind(&Scheduler::schedule, this), "Scheduler::makeRoutineReady");
     return true;
 }
 

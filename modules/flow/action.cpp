@@ -285,8 +285,9 @@ void Action::onReset() { is_base_func_invoked_ = true; }
 void Action::onBlock(const Reason &why, const Trace &trace) {
   if (block_cb_) {
     Trace new_trace(trace);
-    new_trace.emplace_back(Who(id_, type_, label_));
-    block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why, new_trace), "Action::block");
+    new_trace.emplace_back(id_, type_, label_);
+    block_cb_run_id_ = loop_.runNext(std::bind(block_cb_, why, new_trace),
+                                     std::string("Action::block") + ToString(new_trace));
   }
 
   is_base_func_invoked_ = true;
@@ -297,8 +298,9 @@ void Action::onFinished(bool is_succ, const Reason &why, const Trace &trace) {
 
   if (finish_cb_) {
     Trace new_trace(trace);
-    new_trace.emplace_back(Who(id_, type_, label_));
-    finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ, why, new_trace), "Action::finish");
+    new_trace.emplace_back(id_, type_, label_);
+    finish_cb_run_id_ = loop_.runNext(std::bind(finish_cb_, is_succ, why, new_trace),
+                                      std::string("Action::finish") + ToString(new_trace));
   }
 
   is_base_func_invoked_ = true;
