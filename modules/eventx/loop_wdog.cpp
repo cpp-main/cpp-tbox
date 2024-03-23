@@ -98,6 +98,7 @@ void CheckLoopTag() {
 
 //! 监控线程函数
 void ThreadProc() {
+    LogDbg("LoopWDog started");
     while (_keep_running) {
         SendLoopFunc();
 
@@ -107,6 +108,7 @@ void ThreadProc() {
         if (_keep_running)
             CheckLoopTag();
     }
+    LogDbg("LoopWDog stoped");
 }
 
 //! 默认线程超时执行函数
