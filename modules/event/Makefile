@@ -55,7 +55,7 @@ TEST_CPP_SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 

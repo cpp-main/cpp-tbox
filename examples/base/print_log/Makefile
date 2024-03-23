@@ -27,6 +27,6 @@ C_SRC_FILES := other.c
 CXXFLAGS += -DLOG_MODULE_ID='"demo"'
 CFLAGS += -DLOG_MODULE_ID='"demo"'
 
-LDFLAGS += -ltbox_base
+LDFLAGS += -ltbox_base -ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

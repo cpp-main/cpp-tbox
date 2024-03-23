@@ -47,7 +47,7 @@ TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
 	workday_calendar_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include $(TOP_DIR)/tools/lib_tbox_common.mk

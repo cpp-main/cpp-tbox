@@ -52,7 +52,7 @@ TEST_LDFLAGS := $(LDFLAGS) \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
-	-ldl \
+	-lpthread -ldl
 
 ENABLE_SHARED_LIB = no
 

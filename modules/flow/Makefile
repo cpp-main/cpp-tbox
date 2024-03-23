@@ -89,7 +89,7 @@ TEST_CPP_SRC_FILES = \
 	actions/succ_fail_action_test.cpp \
 	to_graphviz_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include $(TOP_DIR)/tools/lib_tbox_common.mk

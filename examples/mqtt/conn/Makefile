@@ -30,5 +30,6 @@ LDFLAGS += \
 	-ltbox_base \
 	-lmosquitto \
 	-lpthread \
+	-ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

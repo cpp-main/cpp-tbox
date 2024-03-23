@@ -30,5 +30,6 @@ LDFLAGS += \
 	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
+	-ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

@@ -46,7 +46,7 @@ TEST_CPP_SRC_FILES = \
 	broadcast_test.cpp \
 	condition_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 

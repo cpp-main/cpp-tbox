@@ -28,5 +28,6 @@ LDFLAGS += \
 	-ltbox_alarm \
 	-ltbox_event \
 	-ltbox_base \
+	-ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

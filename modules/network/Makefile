@@ -76,7 +76,7 @@ TEST_CPP_SRC_FILES = \
 	net_if_test.cpp \
 	dns_request_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 

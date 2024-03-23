@@ -76,5 +76,5 @@ LDFLAGS += -L.. \
 	-ltbox_event \
 	-ltbox_util \
 	-ltbox_base \
-	-lpthread
+	-lpthread -ldl
 ```

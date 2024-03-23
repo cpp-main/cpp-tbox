@@ -50,7 +50,7 @@ TEST_CPP_SRC_FILES = \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include $(TOP_DIR)/tools/lib_tbox_common.mk

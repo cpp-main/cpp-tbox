@@ -57,7 +57,7 @@ TEST_CPP_SRC_FILES = \
 	impl/key_event_scanner.cpp \
 	impl/key_event_scanner_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_event -ltbox_util -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include $(TOP_DIR)/tools/lib_tbox_common.mk

@@ -28,5 +28,6 @@ LDFLAGS += \
 	-ltbox_event \
 	-ltbox_base \
 	-lpthread \
+	-ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

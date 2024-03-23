@@ -39,7 +39,7 @@ TEST_CPP_SRC_FILES = \
 	md5_test.cpp \
 	aes_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 
