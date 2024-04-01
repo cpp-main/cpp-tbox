@@ -197,11 +197,16 @@ TEST(fs, RemoveDirectory) {
     ret = ::system("rm -rf /tmp/fs_test_dir");
     ret = ::system("mkdir -p /tmp/fs_test_dir/first_dir");
     (void)ret;
+
     WriteStringToTextFile("/tmp/fs_test_dir/fs_test_0_1.txt", "hello, this is a test file");
     WriteStringToTextFile("/tmp/fs_test_dir/fs_test_0_2.txt", "hello, this is a test file");
     WriteStringToTextFile("/tmp/fs_test_dir/first_dir/fs_test_1_1.txt", "hello, this is a test file");
     WriteStringToTextFile("/tmp/fs_test_dir/first_dir/fs_test_1_2.txt", "hello, this is a test file");
-    EXPECT_TRUE(RemoveDirectory("/tmp/fs_test_dir"));
+
+    EXPECT_TRUE(RemoveDirectory("/tmp/fs_test_dir", true));     //! 仅删文件，不删目录
+    EXPECT_TRUE(IsDirectoryExist("/tmp/fs_test_dir/first_dir/"));
+
+    EXPECT_TRUE(RemoveDirectory("/tmp/fs_test_dir", false));    //! 全部删除
     EXPECT_FALSE(IsDirectoryExist("/tmp/fs_test_dir"));
 
     //! 相对路径测试，一层目录

@@ -255,18 +255,15 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
     return true;
 }
 
-
-bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_print)
+bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
 {
-    DIR *dp = opendir(dir.c_str());
+    DIR *dp = ::opendir(dir.c_str());
     if (dp == nullptr) {
         // 无法打开目录，直接结束
-        if (errno == ENOENT && allow_log_print) {
+        if (errno == ENOENT) {
             LogWarn("directory %s does not exist", dir.c_str());
         } else {
-           if (allow_log_print) {
-               LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
-           }
+            LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
         }
         return false;
     }
@@ -289,33 +286,27 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
         if (::stat(full_path.c_str(), &statbuf) == 0) {
             if (S_ISDIR(statbuf.st_mode)) {
                 // 属性为目录，递归删除目录的内容
-                if (!RemoveDirectory(full_path, is_keep_dir, allow_log_print)) {
+                if (!RemoveDirectory(full_path, is_remove_file_only)) {
                     is_all_removed = false;
                 }
             } else {
                 // 属性为文件，直接删除文件
                 if (::remove(full_path.c_str())) {
-                    if (allow_log_print) {
-                        LogWarn("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
-                    }
+                    LogWarn("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
                     is_all_removed = false;
                 }
             }
         } else {
             // 无法获取属性，直接结束
-            if (allow_log_print) {
-                LogWarn("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
-            }
+            LogWarn("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
             is_all_removed = false;
         }
     }
 
-    if (!is_keep_dir) {
+    if (!is_remove_file_only) {
        // 最后删除目录
        if (::rmdir(dir.c_str())) {
-            if (allow_log_print) {
-               LogWarn("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
-            }
+            LogWarn("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
             is_all_removed = false;
         }
     }
