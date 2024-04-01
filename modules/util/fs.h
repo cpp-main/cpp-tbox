@@ -195,14 +195,15 @@ bool IsDirectoryExist(const std::string &dir);
 bool MakeDirectory(const std::string &dir, bool allow_log_print = true);
 
 /**
- * 删除目录
- *
- * \param dir               目录
- *
- * \return true     目录删除成功
- * \return false    目录删除失败
- */
-bool RemoveDirectory(const std::string &dir);
+ * @brief 删除目录
+ * @param[in] const std::string & dir 需要删除的目录路径，路径需要全路径，如 /data/test
+ * @param[in] bool is_reserve_dir, 是否要保留目录，默认 false。如果为 true, 则保留整个目录树结构，只删除文件；
+ * 如果为 false，则删除整个目录
+ * @param[in] bool allow_log_print，是否允许打印，默认 true。如果为 true，则允许打印内部出错信息；
+ * 如果为 false，则无日志输出
+ * @return 目录删除成功返回 true，失败返回 false
+*/
+bool RemoveDirectory(const std::string &dir, bool is_reserve_dir = false, bool allow_log_print = true);
 
 ////////////////////////////////////////////////////////////////////
 // 其它
