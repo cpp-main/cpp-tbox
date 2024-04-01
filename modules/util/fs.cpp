@@ -272,7 +272,10 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
     }
 
     SetScopeExitAction([dp] { closedir(dp); });
-    struct dirent *entry;
+
+    bool is_all_removed = true;
+    struct dirent *entry = nullptr;
+
     while ((entry = readdir(dp)) != nullptr) {
         std::string entry_name = entry->d_name;
         if (entry_name == "." || entry_name == "..") {
@@ -283,11 +286,11 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
         // 依次查看每一个文件或者目录的属性
         std::string full_path = dir + '/' + entry_name;
         struct stat statbuf;
-        if (!stat(full_path.c_str(), &statbuf)) {
+        if (::stat(full_path.c_str(), &statbuf) == 0) {
             if (S_ISDIR(statbuf.st_mode)) {
                 // 属性为目录，递归删除目录的内容
                 if (!RemoveDirectory(full_path, is_keep_dir, allow_log_print)) {
-                    return false;
+                    is_all_removed = false;
                 }
             } else {
                 // 属性为文件，直接删除文件
@@ -295,7 +298,7 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
                     if (allow_log_print) {
                         LogWarn("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
                     }
-                    return false;
+                    is_all_removed = false;
                 }
             }
         } else {
@@ -303,7 +306,7 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
             if (allow_log_print) {
                 LogWarn("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
             }
-            return false;
+            is_all_removed = false;
         }
     }
 
@@ -313,11 +316,11 @@ bool RemoveDirectory(const std::string &dir, bool is_keep_dir, bool allow_log_pr
             if (allow_log_print) {
                LogWarn("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
             }
-            return false;
+            is_all_removed = false;
         }
     }
 
-    return true;
+    return is_all_removed;
 }
 
 std::string Basename(const std::string &full_path)
