@@ -24,6 +24,7 @@
 #include <fstream>
 #include <errno.h>
 #include <cstring>
+#include <dirent.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -254,11 +255,63 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
     return true;
 }
 
-bool RemoveDirectory(const std::string &dir)
+bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
 {
-    LogUndo();
-    (void)dir;
-    return false;
+    DIR *dp = ::opendir(dir.c_str());
+    if (dp == nullptr) {
+        // 无法打开目录，直接结束
+        if (errno == ENOENT) {
+            LogWarn("directory %s does not exist", dir.c_str());
+        } else {
+            LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+        }
+        return false;
+    }
+
+    SetScopeExitAction([dp] { closedir(dp); });
+
+    bool is_all_removed = true;
+    struct dirent *entry = nullptr;
+
+    while ((entry = readdir(dp)) != nullptr) {
+        std::string entry_name = entry->d_name;
+        if (entry_name == "." || entry_name == "..") {
+            // 目录系统的 . 和 .. 内容，直接略过
+            continue;
+        }
+
+        // 依次查看每一个文件或者目录的属性
+        std::string full_path = dir + '/' + entry_name;
+        struct stat statbuf;
+        if (::stat(full_path.c_str(), &statbuf) == 0) {
+            if (S_ISDIR(statbuf.st_mode)) {
+                // 属性为目录，递归删除目录的内容
+                if (!RemoveDirectory(full_path, is_remove_file_only)) {
+                    is_all_removed = false;
+                }
+            } else {
+                // 属性为文件，直接删除文件
+                if (::remove(full_path.c_str())) {
+                    LogWarn("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
+                    is_all_removed = false;
+                }
+            }
+        } else {
+            // 无法获取属性，直接结束
+            LogWarn("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
+            is_all_removed = false;
+        }
+    }
+
+    if (!is_remove_file_only) {
+       // 最后删除目录
+       if (::rmdir(dir.c_str())) {
+            LogWarn("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+            is_all_removed = false;
+        }
+    }
+
+    return is_all_removed;
 }
 
 std::string Basename(const std::string &full_path)

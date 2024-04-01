@@ -167,6 +167,7 @@ TEST(fs, MakeDirectory) {
     EXPECT_TRUE(MakeDirectory("a/b/c"));
     EXPECT_TRUE(IsFileExist("a/b/c"));
     ret = system("rm -rf a b");
+
     (void)ret;
 }
 
@@ -189,3 +190,67 @@ TEST(fs, Basename) {
     EXPECT_EQ(Basename(""), "");
 }
 
+
+TEST(fs, RemoveDirectory) {
+    //! 绝对路径测试
+    int ret = 0;
+    ret = ::system("rm -rf /tmp/fs_test_dir");
+    ret = ::system("mkdir -p /tmp/fs_test_dir/first_dir");
+    (void)ret;
+
+    WriteStringToTextFile("/tmp/fs_test_dir/fs_test_0_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("/tmp/fs_test_dir/fs_test_0_2.txt", "hello, this is a test file");
+    WriteStringToTextFile("/tmp/fs_test_dir/first_dir/fs_test_1_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("/tmp/fs_test_dir/first_dir/fs_test_1_2.txt", "hello, this is a test file");
+
+    EXPECT_TRUE(RemoveDirectory("/tmp/fs_test_dir", true));     //! 仅删文件，不删目录
+    EXPECT_TRUE(IsDirectoryExist("/tmp/fs_test_dir/first_dir/"));
+
+    EXPECT_TRUE(RemoveDirectory("/tmp/fs_test_dir", false));    //! 全部删除
+    EXPECT_FALSE(IsDirectoryExist("/tmp/fs_test_dir"));
+
+    //! 相对路径测试，一层目录
+    MakeDirectory("./a");
+    WriteStringToTextFile("./a/fs_test_a_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/fs_test_a_2.txt", "hello, this is a test file");
+    EXPECT_TRUE(RemoveDirectory("./a"));
+    EXPECT_FALSE(IsDirectoryExist("./a"));
+
+    //! 相对路径测试，多层目录
+    MakeDirectory("./a/b/c");
+    WriteStringToTextFile("./a/fs_test_a_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/fs_test_a_2.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_2.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/c/fs_test_c_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/c/fs_test_c_2.txt", "hello, this is a test file");
+    EXPECT_TRUE(RemoveDirectory("./a"));
+    EXPECT_FALSE(IsDirectoryExist("./a"));
+
+    //! 重复的'/' 测试
+    MakeDirectory("./a/b");
+    WriteStringToTextFile("./a/fs_test_a_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/fs_test_a_2.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_2.txt", "hello, this is a test file");
+    EXPECT_TRUE(RemoveDirectory("./a//b"));
+    EXPECT_FALSE(IsDirectoryExist("./a/b"));
+    EXPECT_TRUE(RemoveDirectory("./a/"));
+    EXPECT_FALSE(IsDirectoryExist("./a"));
+
+    //! 目录尾部多加一个 '/' 测试
+    MakeDirectory("./a/b");
+    WriteStringToTextFile("./a/fs_test_a_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/fs_test_a_2.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_1.txt", "hello, this is a test file");
+    WriteStringToTextFile("./a/b/fs_test_b_2.txt", "hello, this is a test file");
+    EXPECT_TRUE(RemoveDirectory("./a/"));
+    EXPECT_FALSE(IsDirectoryExist("./a"));
+
+    // 只有目录，没有文件的删除测试
+    MakeDirectory("./a/b1/c");
+    MakeDirectory("./a/b2/c");
+    MakeDirectory("./a/b3/c");
+    EXPECT_TRUE(RemoveDirectory("./a"));
+    EXPECT_FALSE(IsDirectoryExist("./a"));
+}
