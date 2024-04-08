@@ -19,6 +19,7 @@
 See projects:
 
 - [cpp-socks5](https://github.com/cpp-main/cpp-socks5);
+- [uart-to-mqtt](https://github.com/cpp-main/uart-to-mqtt);
 
 # Features
 

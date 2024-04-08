@@ -19,6 +19,7 @@
 参考项目:  
 
 - [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
+- [uart-to-mqtt](https://gitee.com/cpp-master/uart-to-mqtt)；
 
 # 特点
 
