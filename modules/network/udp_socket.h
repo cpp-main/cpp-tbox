@@ -42,6 +42,9 @@ class UdpSocket {
   public:
     bool bind(const SockAddr &addr);    //! 绑定地址与端口
     bool connect(const SockAddr &addr); //! 连接目标地址与端口
+    //!NOTE:
+    //!  bind() 与 connect() 不能一起使用，否则 bind() 会失效
+    //!  为规避该问题，可以在 send() 函数中直接传入要发送的目标地址
 
     //! 设置接收回调
     using RecvCallback = std::function<void (const void *, size_t, const SockAddr &)>;
