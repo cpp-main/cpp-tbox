@@ -102,8 +102,61 @@ TEST(BufferedFd, pipe_test)
 
     EXPECT_EQ(recv_count, 200000);  //! 检查是否共收到20万的数据包
 
+    CHECK_CLOSE_RESET_FD(fds[0]);
+    CHECK_CLOSE_RESET_FD(fds[1]);
+
     delete sp_timer_send;
     delete write_buff_fd;
     delete read_buff_fd;
+    delete sp_loop;
+}
+
+TEST(BufferedFd, sendHugeData)
+{
+    Loop* sp_loop = Loop::New();
+    ASSERT_TRUE(sp_loop);
+
+    int fds[2] = { 0 };
+    ASSERT_EQ(pipe(fds), 0);
+
+    int recv_count = 0;
+
+    //! 创建接收的BufferedFd
+    BufferedFd *read_buff_fd = new BufferedFd(sp_loop);
+    read_buff_fd->initialize(fds[0]);
+    read_buff_fd->setReceiveCallback(
+        [&] (Buffer &buff) {
+            recv_count += buff.readableSize();
+            buff.hasReadAll();
+        }, 0
+    );
+    read_buff_fd->enable();
+
+    bool is_send_completed = false;
+    //! 创建发送的BufferedFd
+    BufferedFd *write_buff_fd = new BufferedFd(sp_loop);
+    write_buff_fd->initialize(fds[1]);
+    write_buff_fd->setSendCompleteCallback(
+        [&] {
+            write_buff_fd->disable();
+            CHECK_CLOSE_RESET_FD(fds[1]);
+            is_send_completed = true;
+        }
+    );
+    write_buff_fd->enable();
+
+    //! 一次性发送128M数据
+    std::vector<uint8_t> send_data(128ul << 20, 0);
+    write_buff_fd->send(send_data.data(), send_data.size());
+
+    sp_loop->exitLoop(std::chrono::seconds(2));
+    sp_loop->runLoop();
+
+    EXPECT_EQ(recv_count, send_data.size());
+    EXPECT_TRUE(is_send_completed);
+
+    CHECK_CLOSE_RESET_FD(fds[0]);
+    delete read_buff_fd;
+    delete write_buff_fd;
     delete sp_loop;
 }
