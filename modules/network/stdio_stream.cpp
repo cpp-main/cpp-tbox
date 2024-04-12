@@ -35,6 +35,11 @@ bool StdinStream::enable()
     return buff_fd_.enable();
 }
 
+void StdinStream::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
+{
+    buff_fd_.setReceiveCallback(cb, threshold);
+}
+
 bool StdinStream::disable()
 {
     return buff_fd_.disable();

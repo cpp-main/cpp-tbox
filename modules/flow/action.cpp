@@ -19,6 +19,8 @@
  */
 #include "action.h"
 
+#include <sstream>
+
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 #include <tbox/event/loop.h>
