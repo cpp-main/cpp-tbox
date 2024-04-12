@@ -23,10 +23,10 @@
 #include <cstddef>
 #include <functional>
 
+#include "buffer.h"
+
 namespace tbox {
 namespace network {
-
-class Buffer;
 
 //! 字节流接口
 class ByteStream {
