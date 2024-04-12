@@ -33,9 +33,11 @@ class ByteStream {
   public:
     //! 函数类型定义
     using ReceiveCallback = std::function<void(Buffer&)>;
+    using SendCompleteCallback = std::function<void()>;
 
     //! 设置接收到数据时的回调函数，threshold 为阈值
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold = 0) = 0;
+    virtual void setSendCompleteCallback(const SendCompleteCallback &func) = 0;
 
     //! 发送数据
     virtual bool send(const void *data_ptr, size_t data_size) = 0;

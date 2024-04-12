@@ -43,6 +43,7 @@ struct TcpServer::Data {
     DisconnectedCallback    disconnected_cb;
     ReceiveCallback         receive_cb;
     size_t                  receive_threshold = 0;
+    SendCompleteCallback    send_complete_cb;
 
     TcpAcceptor *sp_acceptor = nullptr;
     TcpConns conns;     //!< TcpConnection 容器
@@ -100,6 +101,11 @@ void TcpServer::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
     d_->receive_threshold = threshold;
 }
 
+void TcpServer::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    d_->send_complete_cb = cb;
+}
+
 bool TcpServer::start()
 {
     if (d_->state != State::kInited)
@@ -142,6 +148,7 @@ void TcpServer::cleanup()
     d_->disconnected_cb = nullptr;
     d_->receive_cb = nullptr;
     d_->receive_threshold = 0;
+    d_->send_complete_cb = nullptr;
 
     d_->state = State::kNone;
 }
@@ -238,6 +245,14 @@ void TcpServer::onTcpReceived(const ConnToken &client, Buffer &buff)
     ++d_->cb_level;
     if (d_->receive_cb)
         d_->receive_cb(client, buff);
+    --d_->cb_level;
+}
+
+void TcpServer::onTcpSendCompleted(const ConnToken &client)
+{
+    ++d_->cb_level;
+    if (d_->send_complete_cb)
+        d_->send_complete_cb(client);
     --d_->cb_level;
 }
 

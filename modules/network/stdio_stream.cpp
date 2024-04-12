@@ -30,11 +30,6 @@ StdinStream::StdinStream(event::Loop *wp_loop) :
     buff_fd_.initialize(STDIN_FILENO, BufferedFd::kReadOnly);
 }
 
-void StdinStream::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
-{
-    buff_fd_.setReceiveCallback(cb, threshold);
-}
-
 bool StdinStream::enable()
 {
     return buff_fd_.enable();
@@ -49,6 +44,11 @@ StdoutStream::StdoutStream(event::Loop *wp_loop) :
     buff_fd_(wp_loop)
 {
     buff_fd_.initialize(STDOUT_FILENO, BufferedFd::kWriteOnly);
+}
+
+void StdoutStream::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    buff_fd_.setSendCompleteCallback(cb);
 }
 
 bool StdoutStream::send(const void *data_ptr, size_t data_size)
@@ -76,7 +76,12 @@ StdioStream::StdioStream(event::Loop *wp_loop) :
 
 void StdioStream::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
-    in_buff_fd_.setReceiveCallback(cb, threshold);
+    out_buff_fd_.setReceiveCallback(cb, threshold);
+}
+
+void StdioStream::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    in_buff_fd_.setSendCompleteCallback(cb);
 }
 
 bool StdioStream::send(const void *data_ptr, size_t data_size)

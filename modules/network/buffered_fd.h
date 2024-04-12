@@ -40,7 +40,7 @@ class BufferedFd : public ByteStream {
     IMMOVABLE(BufferedFd);
 
   public:
-    using WriteCompleteCallback = std::function<void()>;
+    using SendCompleteCallback  = std::function<void()>;
     using ReadZeroCallback      = std::function<void()>;
     using ErrorCallback         = std::function<void(int)>;
 
@@ -60,7 +60,7 @@ class BufferedFd : public ByteStream {
     bool initialize(Fd fd, short events = kReadWrite);
 
     //! 设置完成了当前数据发送时的回调函数
-    void setSendCompleteCallback(const WriteCompleteCallback &func) { send_complete_cb_ = func; }
+    void setSendCompleteCallback(const SendCompleteCallback &func) { send_complete_cb_ = func; }
     //! 设置当读到0字节数据时回调函数
     void setReadZeroCallback(const ReadZeroCallback &func) { read_zero_cb_ = func; }
     //! 设置当遇到错误时的回调函数
@@ -100,7 +100,7 @@ class BufferedFd : public ByteStream {
     Buffer recv_buff_;
 
     ReceiveCallback         receive_cb_;
-    WriteCompleteCallback   send_complete_cb_;
+    SendCompleteCallback    send_complete_cb_;
     ReadZeroCallback        read_zero_cb_;
     ErrorCallback           error_cb_;
 

@@ -41,6 +41,7 @@ class StdinStream : public ByteStream {
 
   public:
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual void setSendCompleteCallback(const SendCompleteCallback &) override { }
     virtual bool send(const void *data_ptr, size_t data_size) override { return false; (void)data_ptr; (void)data_size; }
     virtual void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
     virtual void unbind() override { buff_fd_.unbind(); }
@@ -61,6 +62,7 @@ class StdoutStream : public ByteStream {
 
   public:
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override { (void)cb; (void)threshold; }
+    virtual void setSendCompleteCallback(const SendCompleteCallback &cb) override;
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override { (void)receiver; }
     virtual void unbind() override { }
@@ -81,6 +83,7 @@ class StdioStream : public ByteStream {
 
   public:
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
+    virtual void setSendCompleteCallback(const SendCompleteCallback &cb) override;
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
     virtual void unbind() override { in_buff_fd_.unbind(); }

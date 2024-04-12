@@ -104,6 +104,12 @@ void TcpConnection::setReceiveCallback(const ReceiveCallback &cb, size_t thresho
         sp_buffered_fd_->setReceiveCallback(cb, threshold);
 }
 
+void TcpConnection::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    if (sp_buffered_fd_ != nullptr)
+        sp_buffered_fd_->setSendCompleteCallback(cb);
+}
+
 void TcpConnection::bind(ByteStream *receiver)
 {
     if (sp_buffered_fd_ != nullptr)

@@ -275,6 +275,11 @@ void Uart::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
     buff_fd_.setReceiveCallback(cb, threshold);
 }
 
+void Uart::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    buff_fd_.setSendCompleteCallback(cb);
+}
+
 bool Uart::send(const void *data_ptr, size_t data_size)
 {
     return buff_fd_.send(data_ptr, data_size);

@@ -56,6 +56,7 @@ class TcpServer {
     using ConnectedCallback     = std::function<void(const ConnToken &)>;
     using DisconnectedCallback  = std::function<void(const ConnToken &)>;
     using ReceiveCallback       = std::function<void(const ConnToken &, Buffer &)>;
+    using SendCompleteCallback  = std::function<void(const ConnToken &)>;
 
     //! 设置有新客户端连接时的回调
     void setConnectedCallback(const ConnectedCallback &cb);
@@ -63,6 +64,8 @@ class TcpServer {
     void setDisconnectedCallback(const DisconnectedCallback &cb);
     //! 设置接收到客户端消息时的回调
     void setReceiveCallback(const ReceiveCallback &cb, size_t threshold);
+    //! 设置数据发送完成回调
+    void setSendCompleteCallback(const SendCompleteCallback &cb);
 
     bool start();   //!< 启动服务
     void stop();    //!< 停止服务，断开所有连接
@@ -91,6 +94,7 @@ class TcpServer {
     void onTcpConnected(TcpConnection *new_conn);
     void onTcpDisconnected(const ConnToken &client);
     void onTcpReceived(const ConnToken &client, Buffer &buff);
+    void onTcpSendCompleted(const ConnToken &client);
 
   private:
     struct Data;

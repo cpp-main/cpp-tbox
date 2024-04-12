@@ -37,6 +37,7 @@ struct TcpClient::Data {
     DisconnectedCallback disconnected_cb;
     ReceiveCallback      received_cb;
     size_t               received_threshold = 0;
+    SendCompleteCallback send_complete_cb;
     ByteStream          *wp_receiver = nullptr;
     bool reconnect_enabled = true;
 
@@ -148,6 +149,7 @@ void TcpClient::cleanup()
     d_->disconnected_cb = nullptr;
     d_->received_cb = nullptr;
     d_->received_threshold = 0;
+    d_->send_complete_cb = nullptr;
     d_->wp_receiver = nullptr;
     d_->reconnect_enabled = true;
 
@@ -166,6 +168,14 @@ void TcpClient::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 
     d_->received_cb = cb;
     d_->received_threshold = threshold;
+}
+
+void TcpClient::setSendCompleteCallback(const SendCompleteCallback &cb)
+{
+    if (d_->sp_connection != nullptr)
+        d_->sp_connection->setSendCompleteCallback(cb);
+
+    d_->send_complete_cb = cb;
 }
 
 bool TcpClient::send(const void *data_ptr, size_t data_size)
@@ -196,6 +206,7 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
 {
     new_conn->setDisconnectedCallback(std::bind(&TcpClient::onTcpDisconnected, this));
     new_conn->setReceiveCallback(d_->received_cb, d_->received_threshold);
+    new_conn->setSendCompleteCallback(d_->send_complete_cb);
     if (d_->wp_receiver != nullptr)
         new_conn->bind(d_->wp_receiver);
 
