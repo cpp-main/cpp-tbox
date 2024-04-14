@@ -44,7 +44,7 @@ class EpollFdEvent : public FdEvent {
     virtual Loop* getLoop() const override;
 
   public:
-    static void OnEventCallback(int fd, uint32_t events, void *obj);
+    static void OnEventCallback(uint32_t events, void *obj);
 
   protected:
     void reloadEpoll();

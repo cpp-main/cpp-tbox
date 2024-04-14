@@ -30,11 +30,15 @@ class EpollFdEvent;
 
 //! 同一个fd共享的数据
 struct EpollFdSharedData {
-    int ref = 0;    //! 引用计数
+    int fd = 0;     //!< 文件描述符
+    int ref = 0;    //!< 引用计数
     struct epoll_event ev;
-    std::vector<EpollFdEvent*> read_events;
-    std::vector<EpollFdEvent*> write_events;
-    std::vector<EpollFdEvent*> exception_events;
+
+    int read_event_num = 0;     //!< 监听可读事件的FdEvent个数
+    int write_event_num = 0;    //!< 监听可写事件的FdEvent个数
+    int except_event_num = 0;   //!< 监听异常事件的FdEvent个数
+
+    std::vector<EpollFdEvent*> fd_events;
 };
 
 }

@@ -76,7 +76,7 @@ void EpollLoop::runLoop(Mode mode)
 
         for (int i = 0; i < fds; ++i) {
             epoll_event &ev = events.at(i);
-            EpollFdEvent::OnEventCallback(ev.data.fd, ev.events, ev.data.ptr);
+            EpollFdEvent::OnEventCallback(ev.events, ev.data.ptr);
         }
 
         //handleRunInLoopFunc();
@@ -108,6 +108,7 @@ EpollFdSharedData* EpollLoop::refFdSharedData(int fd)
         TBOX_ASSERT(fd_shared_data != nullptr);
 
         ::memset(&fd_shared_data->ev, 0, sizeof(fd_shared_data->ev));
+        fd_shared_data->fd = fd;
         fd_shared_data->ev.data.ptr = static_cast<void *>(fd_shared_data);
 
         fd_data_map_.insert(std::make_pair(fd, fd_shared_data));
