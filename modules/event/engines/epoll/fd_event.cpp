@@ -78,6 +78,9 @@ bool EpollFdEvent::enable()
     if (events_ & kExceptEvent)
         ++d_->except_event_num;
 
+    if (events_ & kHupEvent)
+        ++d_->hup_event_num;
+
     d_->fd_events.push_back(this);
 
     reloadEpoll();
@@ -99,6 +102,9 @@ bool EpollFdEvent::disable()
 
     if (events_ & kExceptEvent)
         --d_->except_event_num;
+
+    if (events_ & kHupEvent)
+        --d_->hup_event_num;
 
     auto iter = std::find(d_->fd_events.begin(), d_->fd_events.end(), this);
     d_->fd_events.erase(iter);
@@ -128,6 +134,9 @@ void EpollFdEvent::reloadEpoll()
 
     if (d_->except_event_num > 0)
         new_events |= EPOLLERR;
+
+    if (d_->hup_event_num > 0)
+        new_events |= EPOLLHUP;
 
     d_->ev.events = new_events;
 
