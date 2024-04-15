@@ -70,13 +70,15 @@ bool EpollFdEvent::enable()
         return true;
 
     if (events_ & kReadEvent)
-        d_->read_events.push_back(this);
+        ++d_->read_event_num;
 
     if (events_ & kWriteEvent)
-        d_->write_events.push_back(this);
+        ++d_->write_event_num;
 
     if (events_ & kExceptEvent)
-        d_->exception_events.push_back(this);
+        ++d_->except_event_num;
+
+    d_->fd_events.push_back(this);
 
     reloadEpoll();
 
@@ -89,20 +91,17 @@ bool EpollFdEvent::disable()
     if (d_ == nullptr || !is_enabled_)
         return true;
 
-    if (events_ & kReadEvent) {
-        auto iter = std::find(d_->read_events.begin(), d_->read_events.end(), this);
-        d_->read_events.erase(iter);
-    }
+    if (events_ & kReadEvent)
+        --d_->read_event_num;
 
-    if (events_ & kWriteEvent) {
-        auto iter = std::find(d_->write_events.begin(), d_->write_events.end(), this);
-        d_->write_events.erase(iter);
-    }
+    if (events_ & kWriteEvent)
+        --d_->write_event_num;
 
-    if (events_ & kExceptEvent) {
-        auto iter = std::find(d_->exception_events.begin(), d_->exception_events.end(), this);
-        d_->exception_events.erase(iter);
-    }
+    if (events_ & kExceptEvent)
+        --d_->except_event_num;
+
+    auto iter = std::find(d_->fd_events.begin(), d_->fd_events.end(), this);
+    d_->fd_events.erase(iter);
 
     reloadEpoll();
 
@@ -121,12 +120,14 @@ void EpollFdEvent::reloadEpoll()
     uint32_t old_events = d_->ev.events;
     uint32_t new_events = 0;
 
-    if (!d_->write_events.empty())
+    if (d_->write_event_num > 0)
         new_events |= EPOLLOUT;
-    if (!d_->read_events.empty())
+
+    if (d_->read_event_num > 0)
         new_events |= EPOLLIN;
-    if (!d_->exception_events.empty())
-        new_events |= (EPOLLHUP | EPOLLERR);
+
+    if (d_->except_event_num > 0)
+        new_events |= EPOLLERR;
 
     d_->ev.events = new_events;
 
@@ -141,45 +142,61 @@ void EpollFdEvent::reloadEpoll()
     }
 }
 
-void EpollFdEvent::OnEventCallback(int fd, uint32_t events, void *obj)
+void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
 {
     EpollFdSharedData *d = static_cast<EpollFdSharedData*>(obj);
 
+    short tbox_events = 0;
     if (events & EPOLLIN) {
         events &= ~EPOLLIN;
-        for (EpollFdEvent *event : d->read_events)
-            event->onEvent(kReadEvent);
+        tbox_events |= kReadEvent;
     }
 
     if (events & EPOLLOUT) {
         events &= ~EPOLLOUT;
-        for (EpollFdEvent *event : d->write_events)
-            event->onEvent(kWriteEvent);
+        tbox_events |= kWriteEvent;
     }
 
-    if (events & (EPOLLHUP | EPOLLERR)) {
-        events &= ~(EPOLLHUP | EPOLLERR);
-        for (EpollFdEvent *event : d->exception_events)
-            event->onEvent(kExceptEvent);
+    if (events & EPOLLERR) {
+        events &= ~EPOLLERR;
+        tbox_events |= kExceptEvent;
     }
 
-    if (events) {
-        LogNotice("unhandle events:%08X, fd:%d", events, fd);
+    if (events & EPOLLHUP) {
+        events &= ~EPOLLHUP;
+        tbox_events |= kHupEvent;
     }
+
+    //! 要先复制一份，因为在for中很可能会改动到d->fd_events，引起迭代器失效问题
+    auto tmp = d->fd_events;
+    for (auto event : tmp)
+        event->onEvent(tbox_events);
+
+    if (events)
+        LogWarn("unhandle events:%08X, fd:%d", events, d->fd);
 }
 
 void EpollFdEvent::onEvent(short events)
 {
-    if (is_stop_after_trigger_)
+    /**
+     * 由于EPOLLHUP会一直触发，所以无论事件有没有监听HupEvent，只要发生了EPOLLHUB事件，
+     * 对应fd所有的事件都要强制disable()。否则会导致Loop空跑问题。
+     */
+    if (events & kHupEvent)
         disable();
 
-    wp_loop_->beginEventProcess();
-    if (cb_) {
-        ++cb_level_;
-        cb_(events);
-        --cb_level_;
+    if (events_ & events) {
+        if (is_stop_after_trigger_)
+            disable();
+
+        wp_loop_->beginEventProcess();
+        if (cb_) {
+            ++cb_level_;
+            cb_(events);
+            --cb_level_;
+        }
+        wp_loop_->endEventProcess(this);
     }
-    wp_loop_->endEventProcess(this);
 }
 
 }

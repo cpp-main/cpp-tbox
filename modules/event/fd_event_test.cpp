@@ -361,7 +361,7 @@ TEST(FdEvent, Exception)
 
     int run_time = 0;
 
-    EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist));
     read_fd_event->setCallback([&](short events){
         if (events & FdEvent::kReadEvent) {
             char data[100] = { 0};
@@ -369,7 +369,7 @@ TEST(FdEvent, Exception)
             EXPECT_EQ(len, sizeof(int));
         }
 
-        if (events & FdEvent::kExceptEvent) {
+        if (events & FdEvent::kHupEvent) {
             ++run_time;
             loop->exitLoop();
         }
@@ -377,7 +377,7 @@ TEST(FdEvent, Exception)
 
     read_fd_event->enable();
 
-    EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent | FdEvent::kExceptEvent, Event::Mode::kPersist));
+    EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kPersist));
     write_fd_event->setCallback([&](short events){
         if (events & FdEvent::kWriteEvent) {
             int data = 0;
