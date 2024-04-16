@@ -75,9 +75,7 @@ class StateMachine::Impl {
     StateID lastState() const;
     StateID nextState() const;
 
-    bool isRunning() const {
-        return (curr_state_ != nullptr) && (curr_state_->id != TERM_STATE_ID);
-    }
+    bool isRunning() const { return is_running_; }
 
     bool isTerminated() const {
         return (curr_state_ != nullptr) && (curr_state_->id == TERM_STATE_ID);
@@ -110,6 +108,8 @@ class StateMachine::Impl {
     State* findState(StateID state_id) const;
 
     StateID init_state_id_ = 1;     //! 初始状态
+
+    bool is_running_ = false;       //! 是否正在运行
 
     State *last_state_ = nullptr;   //! 上一个状态指针
     State *curr_state_ = nullptr;   //! 当前状态指针
@@ -239,6 +239,11 @@ bool StateMachine::Impl::newState(StateID state_id,
                                   const ActionFunc &exit_action,
                                   const std::string &label)
 {
+    if (is_running_) {
+        LogWarn("[%s]: it's already started", name_.c_str());
+        return false;
+    }
+
     //! 已存在的状态不能再创建了
     if (states_.find(state_id) != states_.end()) {
         LogWarn("[%s]: state %d exist", name_.c_str(), state_id);
@@ -258,6 +263,11 @@ bool StateMachine::Impl::addRoute(StateID from_state_id,
                                   const ActionFunc &action,
                                   const std::string &label)
 {
+    if (is_running_) {
+        LogWarn("[%s]: it's already started", name_.c_str());
+        return false;
+    }
+
     //! 要求 from_state_id 必须是已存在的状态
     auto from_state = findState(from_state_id);
     if (from_state == nullptr) {
@@ -277,6 +287,11 @@ bool StateMachine::Impl::addRoute(StateID from_state_id,
 
 bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const EventFunc &action)
 {
+    if (is_running_) {
+        LogWarn("[%s]: it's already started", name_.c_str());
+        return false;
+    }
+
     if (action == nullptr) {
         LogWarn("[%s]: state %d, event:%d, action is nullptr", name_.c_str(), state_id, event_id);
         return false;
@@ -299,6 +314,11 @@ bool StateMachine::Impl::addEvent(StateID state_id, EventID event_id, const Even
 
 bool StateMachine::Impl::setSubStateMachine(StateID state_id, StateMachine *wp_sub_sm)
 {
+    if (is_running_) {
+        LogWarn("[%s]: it's already started", name_.c_str());
+        return false;
+    }
+
     auto state = findState(state_id);
     if (state == nullptr) {
         LogWarn("[%s]: state:%d not exist", name_.c_str(), state_id);
@@ -311,7 +331,7 @@ bool StateMachine::Impl::setSubStateMachine(StateID state_id, StateMachine *wp_s
 
 bool StateMachine::Impl::start()
 {
-    if (curr_state_ != nullptr) {
+    if (is_running_) {
         LogWarn("[%s]: it's already started", name_.c_str());
         return false;
     }
@@ -327,6 +347,7 @@ bool StateMachine::Impl::start()
         return false;
     }
 
+    is_running_ = true;
     curr_state_ = init_state;
 
     ++cb_level_;
@@ -343,7 +364,7 @@ bool StateMachine::Impl::start()
 
 void StateMachine::Impl::stop()
 {
-    if (curr_state_ == nullptr)
+    if (!is_running_)
         return;
 
     if (cb_level_ != 0) {
@@ -357,11 +378,12 @@ void StateMachine::Impl::stop()
     --cb_level_;
 
     curr_state_ = nullptr;
+    is_running_ = false;
 }
 
 bool StateMachine::Impl::run(Event event)
 {
-    if (curr_state_ == nullptr) {
+    if (!is_running_) {
         LogWarn("[%s]: need start first", name_.c_str());
         return false;
     }
@@ -476,16 +498,16 @@ StateMachine::StateID StateMachine::Impl::nextState() const
 
 StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
 {
-    try {
-        return states_.at(state_id);
-    } catch (const out_of_range &e) {
-        return nullptr;
-    }
+    auto iter = states_.find(state_id);
+    if (iter != states_.end())
+        return iter->second;
+    return nullptr;
 }
 
 void StateMachine::Impl::toJson(Json &js) const
 {
     js["name"] = name_;
+    js["is_running"] = is_running_;
     js["init_state"] = init_state_id_;
     js["term_state"] = TERM_STATE_ID;
     if (curr_state_ != nullptr)
