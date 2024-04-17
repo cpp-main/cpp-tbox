@@ -218,6 +218,7 @@ void TcpServer::onTcpConnected(TcpConnection *new_conn)
     ConnToken client = d_->conns.alloc(new_conn);
     new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), d_->receive_threshold);
     new_conn->setDisconnectedCallback(std::bind(&TcpServer::onTcpDisconnected, this, client));
+    new_conn->setSendCompleteCallback(std::bind(&TcpServer::onTcpSendCompleted, this, client));
 
     ++d_->cb_level;
     if (d_->connected_cb)

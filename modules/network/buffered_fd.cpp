@@ -151,8 +151,9 @@ bool BufferedFd::send(const void *data_ptr, size_t data_size)
                 //! 则将剩余的数据放入到缓冲区
                 const uint8_t* p_remain = static_cast<const uint8_t*>(data_ptr) + wsize;
                 send_buff_.append(p_remain, (data_size - wsize));
-                sp_write_event_->enable();  //! 等待可写事件
             }
+            sp_write_event_->enable();  //! 等待可写事件
+
         } else {    //! 否则就是出了错
             if (errno == EAGAIN) {  //! 文件操作繁忙
                 send_buff_.append(data_ptr, data_size);

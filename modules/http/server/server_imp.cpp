@@ -53,6 +53,7 @@ bool Server::Impl::initialize(const network::SockAddr &bind_addr, int listen_bac
     tcp_server_.setConnectedCallback(bind(&Impl::onTcpConnected, this, _1));
     tcp_server_.setDisconnectedCallback(bind(&Impl::onTcpDisconnected, this, _1));
     tcp_server_.setReceiveCallback(bind(&Impl::onTcpReceived, this, _1, _2), 0);
+    tcp_server_.setSendCompleteCallback(bind(&Impl::onTcpSendCompleted, this, _1));
 
     state_ = State::kInited;
     return true;
@@ -111,6 +112,8 @@ void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 void Server::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    TBOX_ASSERT(conn != nullptr);
+
     conns_.erase(conn);
     delete conn;
 }
@@ -140,6 +143,7 @@ bool IsLastRequest(const Request *req)
 void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    TBOX_ASSERT(conn != nullptr);
 
     //! 如果已被标记为最后的请求，就不应该再有请求来
     if (conn->close_index != numeric_limits<int>::max()) {
@@ -182,6 +186,23 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
     }
 }
 
+void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
+{
+    if (!tcp_server_.isClientValid(ct))
+        return;
+
+    Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    TBOX_ASSERT(conn != nullptr);
+
+    //! 如果最后一个已完成发送，则断开连接
+    if (conn->res_index > conn->close_index) {
+        LogTag();
+        tcp_server_.disconnect(ct);
+        conns_.erase(conn);
+        delete conn;
+    }
+}
+
 /**
  * 为了保证管道化连接中Respond与Request的顺序一致性，要做特殊处理。
  * 如果所提交的index不是当前需要回复的res_index，那么就先暂存起来，等前面的发送完成后再发送；
@@ -195,6 +216,8 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
     }
 
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
+    TBOX_ASSERT(conn != nullptr);
+
     if (index == conn->res_index) {
         //! 将当前的数据直接发送出去
         {
@@ -205,15 +228,11 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
                 LogDbg("RES: [%s]", content.c_str());
         }
 
-        //! 如果当前这个回复是最后一个，则需要断开连接
-        if (index == conn->close_index) {
-            tcp_server_.disconnect(ct);
-            conns_.erase(conn);
-            delete conn;
-            return;
-        }
-
         ++conn->res_index;
+
+        //! 如果当前这个回复是最后一个，则不需要发送缓存中的数据
+        if (conn->res_index > conn->close_index)
+            return;
 
         //! 尝试发送 conn->res_buff 缓冲中的数据
         auto &res_buff = conn->res_buff;
@@ -229,17 +248,13 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
                     LogDbg("RES: [%s]", content.c_str());
             }
 
-            //! 如果当前这个回复是最后一个，则需要断开连接
-            if (index == conn->close_index) {
-                tcp_server_.disconnect(ct);
-                conns_.erase(conn);
-                delete conn;
-                return;
-            }
-
             res_buff.erase(iter);
-
             ++conn->res_index;
+
+            //! 如果当前这个回复是最后一个，则不需要再发送缓存中的数据
+            if (conn->res_index > conn->close_index)
+                return;
+
             iter = res_buff.find(conn->res_index);
         }
     } else {

@@ -18,8 +18,8 @@
  * of the source tree.
  */
 #include <tbox/base/log.h>
+#include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
-#include <tbox/log/async_stdout_sink.h>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
 
@@ -36,10 +36,7 @@ int main(int argc, char **argv)
         bind_addr = argv[1];
     }
 
-    log::AsyncStdoutSink log;
-    log.enable();
-    log.enableColor(true);
-    log.setLevel(LOG_LEVEL_TRACE);
+    LogOutput_Enable();
 
     LogInfo("enter");
 

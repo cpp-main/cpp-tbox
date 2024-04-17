@@ -65,6 +65,7 @@ class Server::Impl {
     void onTcpConnected(const TcpServer::ConnToken &ct);
     void onTcpDisconnected(const TcpServer::ConnToken &ct);
     void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
+    void onTcpSendCompleted(const TcpServer::ConnToken &ct);
 
     //! 连接信息
     struct Connection {

@@ -111,7 +111,59 @@ TEST(BufferedFd, pipe_test)
     delete sp_loop;
 }
 
-TEST(BufferedFd, sendHugeData)
+//! 测试在发送小数据完成之后，有没有回调setSendCompleteCallback()对应的函数
+TEST(BufferedFd, sendComplete_LittleData)
+{
+    Loop* sp_loop = Loop::New();
+    ASSERT_TRUE(sp_loop);
+
+    int fds[2] = { 0 };
+    ASSERT_EQ(pipe(fds), 0);
+
+    int recv_count = 0;
+
+    //! 创建接收的BufferedFd
+    BufferedFd *read_buff_fd = new BufferedFd(sp_loop);
+    read_buff_fd->initialize(fds[0]);
+    read_buff_fd->setReceiveCallback(
+        [&] (Buffer &buff) {
+            recv_count += buff.readableSize();
+            buff.hasReadAll();
+        }, 0
+    );
+    read_buff_fd->enable();
+
+    bool is_send_completed = false;
+    //! 创建发送的BufferedFd
+    BufferedFd *write_buff_fd = new BufferedFd(sp_loop);
+    write_buff_fd->initialize(fds[1]);
+    write_buff_fd->setSendCompleteCallback(
+        [&] {
+            write_buff_fd->disable();
+            CHECK_CLOSE_RESET_FD(fds[1]);
+            is_send_completed = true;
+        }
+    );
+    write_buff_fd->enable();
+
+    //! 发送10B数据
+    std::vector<uint8_t> send_data(10, 0);
+    write_buff_fd->send(send_data.data(), send_data.size());
+
+    sp_loop->exitLoop(std::chrono::milliseconds(10));
+    sp_loop->runLoop();
+
+    EXPECT_EQ(recv_count, send_data.size());
+    EXPECT_TRUE(is_send_completed);
+
+    CHECK_CLOSE_RESET_FD(fds[0]);
+    delete read_buff_fd;
+    delete write_buff_fd;
+    delete sp_loop;
+}
+
+//! 测试在发送大数据完成之后，有没有回调setSendCompleteCallback()对应的函数
+TEST(BufferedFd, sendComplete_HugeData)
 {
     Loop* sp_loop = Loop::New();
     ASSERT_TRUE(sp_loop);
