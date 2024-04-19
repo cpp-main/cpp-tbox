@@ -196,7 +196,6 @@ void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
 
     //! 如果最后一个已完成发送，则断开连接
     if (conn->res_index > conn->close_index) {
-        LogTag();
         tcp_server_.disconnect(ct);
         conns_.erase(conn);
         delete conn;

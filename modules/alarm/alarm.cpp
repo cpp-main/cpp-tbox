@@ -164,7 +164,16 @@ bool Alarm::activeTimer() {
     return false;
 
   //! 提升精度，计算中需要等待的毫秒数
-  auto wait_milliseconds = wait_seconds * 1000 - utc_tv.tv_usec / 1000;
+  auto wait_milliseconds = (wait_seconds * 1000) - (utc_tv.tv_usec / 1000);
+
+  ++wait_milliseconds;  //! 多加1ms
+  /**
+   * Q: 为什么要多加1ms？
+   * A: 因为在实践中发现由于系统时钟与相对时钟不同步问题，导致 tbox::event::TimerEvent 有极小概率出现
+   *    相对于系统时钟提前 1ms 触发定时的情况，最终导致Alarm重复触发的bug。
+   *    为规避该问题，统一将等待时长多加1ms处理。
+   */
+
   //! 启动定时器
   sp_timer_ev_->initialize(std::chrono::milliseconds(wait_milliseconds), event::Event::Mode::kOneshot);
   sp_timer_ev_->enable();
