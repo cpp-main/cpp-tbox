@@ -28,19 +28,23 @@ namespace flow {
 class FunctionAction : public Action {
   public:
     using Func = std::function<bool()>;
+    using FuncWithReason = std::function<bool(Reason &)>;
 
     explicit FunctionAction(event::Loop &loop);
     explicit FunctionAction(event::Loop &loop, Func &&func);
+    explicit FunctionAction(event::Loop &loop, FuncWithReason &&func);
 
-    virtual bool isReady() const { return bool(func_); }
+    virtual bool isReady() const { return bool(func_) || bool(func_with_reason_); }
 
     inline void setFunc(Func &&func) { func_ = std::move(func); }
+    inline void setFunc(FuncWithReason &&func) { func_with_reason_ = std::move(func); }
 
   protected:
     virtual void onStart() override;
 
   private:
     Func func_;
+    FuncWithReason func_with_reason_;
 };
 
 }

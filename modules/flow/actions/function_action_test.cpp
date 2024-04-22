@@ -26,7 +26,7 @@
 namespace tbox {
 namespace flow {
 
-TEST(NonDelayAction, True) {
+TEST(FunctionAction, True) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -51,7 +51,7 @@ TEST(NonDelayAction, True) {
     EXPECT_TRUE(is_callback);
 }
 
-TEST(NonDelayAction, False) {
+TEST(FunctionAction, False) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
 
@@ -65,6 +65,35 @@ TEST(NonDelayAction, False) {
             ASSERT_EQ(t.size(), 1);
             EXPECT_EQ(t[0].id, action.id());
 
+            is_callback = true;
+            loop->exitLoop();
+        }
+    );
+    EXPECT_TRUE(action.isReady());
+    action.start();
+
+    loop->runLoop();
+    EXPECT_TRUE(is_callback);
+}
+
+TEST(FunctionAction, WithReason) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    FunctionAction action(*loop,
+      [] (Action::Reason &r) {
+        r.code = 1001;
+        r.message = "test";
+        return false;
+      }
+    );
+
+    bool is_callback = false;
+    action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+            EXPECT_FALSE(is_succ);
+            EXPECT_EQ(r.code, 1001);
+            EXPECT_EQ(r.message, "test");
             is_callback = true;
             loop->exitLoop();
         }
