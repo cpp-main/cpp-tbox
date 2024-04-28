@@ -29,8 +29,11 @@
 namespace tbox {
 namespace jsonrpc {
 
-const uint16_t kHeadMagic = 0xCAFE;
-const uint16_t kHeadSize = 6;   //! HeadMagic(2) + ContentLength(4)
+const uint16_t kHeadSize = 6;   //! HeadCode(2) + ContentLength(4)
+
+HeaderStreamProto::HeaderStreamProto(uint16_t head_code)
+  : header_code_(head_code)
+{ }
 
 void HeaderStreamProto::sendJson(const Json &js)
 {
@@ -39,7 +42,7 @@ void HeaderStreamProto::sendJson(const Json &js)
     std::vector<uint8_t> buff;
     util::Serializer pack(buff);
 
-    pack << kHeadMagic << static_cast<uint32_t>(json_text.size());
+    pack << header_code_ << static_cast<uint32_t>(json_text.size());
     pack.append(json_text.data(), json_text.size());
 
     if (send_data_cb_)
@@ -59,8 +62,8 @@ ssize_t HeaderStreamProto::onRecvData(const void *data_ptr, size_t data_size)
     uint32_t content_size = 0;
     unpack >> header_magic >> content_size; 
 
-    if (header_magic != kHeadMagic) {
-        LogNotice("head magic mismatch");
+    if (header_magic != header_code_) {
+        LogNotice("head code mismatch");
         return -2;
     }
 

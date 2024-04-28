@@ -30,7 +30,7 @@ namespace jsonrpc {
 TEST(HeaderStreamProto, sendRequest) {
     LogOutput_Enable();
 
-    HeaderStreamProto proto;
+    HeaderStreamProto proto(0x3e5a);
 
     int count = 0;
     proto.setRecvCallback(
@@ -61,7 +61,7 @@ TEST(HeaderStreamProto, sendRequestWithParams) {
     };
     LogOutput_Enable();
 
-    HeaderStreamProto proto;
+    HeaderStreamProto proto(0x35ae);
 
     int count = 0;
     proto.setRecvCallback(
@@ -92,7 +92,7 @@ TEST(HeaderStreamProto, sendResult) {
     };
     LogOutput_Enable();
 
-    HeaderStreamProto proto;
+    HeaderStreamProto proto(0x35ae);
 
     int count = 0;
     proto.setRecvCallback(
@@ -119,7 +119,7 @@ TEST(HeaderStreamProto, sendResult) {
 TEST(HeaderStreamProto, sendError) {
     LogOutput_Enable();
 
-    HeaderStreamProto proto;
+    HeaderStreamProto proto(0x53ea);
 
     int count = 0;
     proto.setRecvCallback(
@@ -145,7 +145,7 @@ TEST(HeaderStreamProto, sendError) {
 TEST(HeaderStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
-    HeaderStreamProto proto;
+    HeaderStreamProto proto(0xea53);
 
     int count = 0;
     proto.setRecvCallback(
@@ -158,8 +158,8 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
         nullptr
     );
 
-    const char *str_1 = "\xCA\xFE\x00\x00\x00\x28{\"id\":1,\"meth";
-    const char *str_2 = "\xCA\xFE\x00\x00\x00\x28{\"id\":1,\"method\":\"test\",\"jsonrpc\":\"2.0\"})";
+    const char *str_1 = "\xEA\x53\x00\x00\x00\x28{\"id\":1,\"meth";
+    const char *str_2 = "\xEA\x53\x00\x00\x00\x28{\"id\":1,\"method\":\"test\",\"jsonrpc\":\"2.0\"})";
     EXPECT_EQ(proto.onRecvData(str_1, 19), 0);
     EXPECT_EQ(proto.onRecvData(str_2, 46), 46);
 

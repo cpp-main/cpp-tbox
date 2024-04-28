@@ -29,7 +29,7 @@ namespace jsonrpc {
  * 含头部信息的流协议
  *
  * +--------+--------+---------------+
- * | 0xCAFE | Length |     JSON      |
+ * |  Head  | Length |     JSON      |
  * +--------+--------+---------------+
  * |   2B   |   4B   |     Length    |
  * +--------+--------+---------------+
@@ -40,10 +40,14 @@ namespace jsonrpc {
  */
 class HeaderStreamProto : public Proto {
   public:
+    explicit HeaderStreamProto(uint16_t head_code);
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) override;
 
   protected:
     virtual void sendJson(const Json &js) override;
+
+  private:
+    uint16_t header_code_;
 };
 
 }
