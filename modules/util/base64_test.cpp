@@ -67,6 +67,40 @@ TEST(Base64, Decode) {
     EXPECT_STREQ(out, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 }
 
+TEST(Base64, DecodeText) {
+    const char* in = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=";
+    char out[27] = {0};
+    EXPECT_EQ(Decode(in, out, 26), 26);
+    EXPECT_STREQ(out, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+}
+
+TEST(Base64, DecodeStringToVector) {
+    const std::string in = "aGVsbG8h";
+    std::vector<uint8_t> out;
+    EXPECT_EQ(Decode(in, out), 6);
+    EXPECT_EQ(out, std::vector<uint8_t>({'h', 'e', 'l', 'l', 'o', '!'}));
+}
+
+TEST(Base64, DecodeStringToVector_Pad1) {
+    const std::string in = "aGVsbG8hIQ==";
+    std::vector<uint8_t> out;
+    EXPECT_EQ(Decode(in, out), 7);
+    EXPECT_EQ(out, std::vector<uint8_t>({'h', 'e', 'l', 'l', 'o', '!', '!'}));
+}
+
+TEST(Base64, DecodeStringToVector_Pad2) {
+    const std::string in = "aGVsbG8hISE=";
+    std::vector<uint8_t> out;
+    EXPECT_EQ(Decode(in, out), 8);
+    EXPECT_EQ(out, std::vector<uint8_t>({'h', 'e', 'l', 'l', 'o', '!', '!', '!'}));
+}
+
+TEST(Base64, DecodeStringToVectorFail) {
+    const std::string in = "";
+    std::vector<uint8_t> out;
+    EXPECT_FALSE(Decode(in, out));
+}
+
 TEST(Base64, Decode_LenthNotEnough) {
     const char* in = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=";
     char out[27] = {0};

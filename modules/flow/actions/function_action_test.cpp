@@ -90,7 +90,7 @@ TEST(FunctionAction, WithReason) {
 
     bool is_callback = false;
     action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &) {
             EXPECT_FALSE(is_succ);
             EXPECT_EQ(r.code, 1001);
             EXPECT_EQ(r.message, "test");

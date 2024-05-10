@@ -94,18 +94,29 @@ void Terminal::Impl::setOptions(const SessionToken &st, uint32_t options)
 
 bool Terminal::Impl::onBegin(const SessionToken &st)
 {
+    const char *welcome_str = \
+        "\r\n"
+        R"(      .============.      )""\r\n"
+        R"(     //  M A K E  / \     )""\r\n"
+        R"(    //  C++ DEV  /   \    )""\r\n"
+        R"(   //  E A S Y  /  \/ \   )""\r\n"
+        R"(  ++ ----------.  \/\  .  )""\r\n"
+        R"(   \\     \     \ /\  /   )""\r\n"
+        R"(    \\     \     \   /    )""\r\n"
+        R"(     \\     \     \ /     )""\r\n"
+        R"(      -============'      )""\r\n"
+        "\r\n"
+        "Welcome to cpp-tbox terminal.\r\n"
+        "Type 'help' for more information.\r\n"
+        "\r\n";
+
     auto s = sessions_.at(st);
     if (s == nullptr)
         return false;
 
-    if (!(s->options & kQuietMode)) {
-        s->wp_conn->send(st,
-            "\r\n"
-            "Welcome to CppTBox Terminal.\r\n"
-            "Type 'help' for more information.\r\n"
-            "\r\n"
-        );
-    }
+    if (!(s->options & kQuietMode))
+        s->wp_conn->send(st, welcome_str);
+
     printPrompt(s);
 
     return true;
@@ -208,7 +219,8 @@ void Terminal::Impl::printPrompt(SessionContext *s)
 void Terminal::Impl::printHelp(SessionContext *s)
 {
     const char *help_str = \
-        "This terminal is designed by Hevake Lee <hevake@126.com>, integrated in CppTBox.\r\n"
+        "This terminal is designed by Hevake Lee <hevake@126.com>, integrated in cpp-tbox.\r\n"
+        "Repository: https://github.com/cpp-main/cpp-tbox\r\n"
         "It provides a way to interact with the program in the form of shell.\r\n"
         "\r\n"
         "There are some buildin commands:\r\n"

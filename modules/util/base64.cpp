@@ -95,35 +95,61 @@ const uint8_t base64de[] = {
 };
 }
 
-size_t Encode(const void *in, size_t inlen, char *out, size_t outlen)
+size_t DecodeLength(const char *base64_ptr, size_t base64_size)
 {
-    TBOX_ASSERT(in != nullptr);
-    TBOX_ASSERT(out != nullptr);
+    if (base64_size == 0 || (base64_size & 0x3) != 0)
+        return 0;
 
-    if (EncodeLength(inlen) > outlen)
+    size_t len = base64_size / 4 * 3;
+    //! 检查字串尾部的=符号
+    if (base64_ptr[base64_size - 1] == BASE64_PAD)
+        --len;
+    if (base64_ptr[base64_size - 2] == BASE64_PAD)
+        --len;
+    return len;
+}
+
+size_t DecodeLength(const char *base64_str)
+{
+    return DecodeLength(base64_str, ::strlen(base64_str));
+}
+
+size_t DecodeLength(const std::string &base64_str)
+{
+    return DecodeLength(base64_str.data(), base64_str.length());
+}
+
+size_t Encode(const void *raw_data_ptr, size_t raw_data_len, char *base64_ptr, size_t base64_size)
+{
+    TBOX_ASSERT(raw_data_ptr != nullptr);
+    TBOX_ASSERT(raw_data_len > 0);
+    TBOX_ASSERT(base64_ptr != nullptr);
+    TBOX_ASSERT(base64_size > 0);
+
+    if (EncodeLength(raw_data_len) > base64_size)
         return 0;
 
     int s = 0;
     uint8_t l = 0;
     size_t w_pos = 0;
-    const uint8_t *in_bytes = static_cast<const uint8_t*>(in);
+    const uint8_t *in_bytes = static_cast<const uint8_t*>(raw_data_ptr);
 
-    for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
+    for (size_t r_pos = 0; r_pos < raw_data_len; r_pos++) {
         uint8_t c = in_bytes[r_pos];
 
         switch (s) {
             case 0:
                 s = 1;
-                out[w_pos++] = base64en[(c >> 2) & 0x3F];
+                base64_ptr[w_pos++] = base64en[(c >> 2) & 0x3F];
                 break;
             case 1:
                 s = 2;
-                out[w_pos++] = base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
+                base64_ptr[w_pos++] = base64en[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
                 break;
             case 2:
                 s = 0;
-                out[w_pos++] = base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
-                out[w_pos++] = base64en[c & 0x3F];
+                base64_ptr[w_pos++] = base64en[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
+                base64_ptr[w_pos++] = base64en[c & 0x3F];
                 break;
         }
         l = c;
@@ -131,32 +157,33 @@ size_t Encode(const void *in, size_t inlen, char *out, size_t outlen)
 
     switch (s) {
         case 1:
-            out[w_pos++] = base64en[(l & 0x3) << 4];
-            out[w_pos++] = BASE64_PAD;
-            out[w_pos++] = BASE64_PAD;
+            base64_ptr[w_pos++] = base64en[(l & 0x3) << 4];
+            base64_ptr[w_pos++] = BASE64_PAD;
+            base64_ptr[w_pos++] = BASE64_PAD;
             break;
         case 2:
-            out[w_pos++] = base64en[(l & 0xF) << 2];
-            out[w_pos++] = BASE64_PAD;
+            base64_ptr[w_pos++] = base64en[(l & 0xF) << 2];
+            base64_ptr[w_pos++] = BASE64_PAD;
             break;
     }
 
     return w_pos;
 }
 
-std::string Encode(const void *in, size_t inlen)
+std::string Encode(const void *raw_data_ptr, size_t raw_data_len)
 {
-    TBOX_ASSERT(in != nullptr);
+    TBOX_ASSERT(raw_data_ptr != nullptr);
+    TBOX_ASSERT(raw_data_len > 0);
 
     std::string base64_str;
-    auto base64_len = EncodeLength(inlen);
+    auto base64_len = EncodeLength(raw_data_len);
     base64_str.reserve(base64_len);
 
     uint8_t l = 0;
     uint8_t s = 0;
-    const uint8_t *in_bytes = static_cast<const uint8_t*>(in);
+    const uint8_t *in_bytes = static_cast<const uint8_t*>(raw_data_ptr);
 
-    for (size_t r_pos = 0; r_pos < inlen; ++r_pos) {
+    for (size_t r_pos = 0; r_pos < raw_data_len; ++r_pos) {
         uint8_t c = in_bytes[r_pos];
 
         switch (s) {
@@ -192,43 +219,48 @@ std::string Encode(const void *in, size_t inlen)
     return base64_str;
 }
 
-size_t Decode(const char *in, size_t inlen, void *out, size_t outlen)
+std::string Encode(const std::vector<uint8_t> &raw_data)
 {
-    TBOX_ASSERT(in != nullptr);
-    TBOX_ASSERT(out != nullptr);
+    return Encode(raw_data.data(), raw_data.size());
+}
 
-    if (inlen & 0x3)
+size_t Decode(const char *base64_ptr, size_t base64_len, void *raw_data_ptr, size_t raw_data_size)
+{
+    TBOX_ASSERT(base64_ptr != nullptr);
+    TBOX_ASSERT(raw_data_ptr != nullptr);
+
+    if (base64_len & 0x3)
         return 0;
 
-    if (DecodeLength(in, inlen) > outlen)
+    if (DecodeLength(base64_ptr, base64_len) > raw_data_size)
         return 0;
 
     size_t w_pos = 0;
-    uint8_t *out_bytes = static_cast<uint8_t*>(out);
+    uint8_t *out_bytes = static_cast<uint8_t*>(raw_data_ptr);
 
-    for (size_t r_pos = 0; r_pos < inlen; r_pos++) {
-        char in_c = in[r_pos];
-        if (in_c == BASE64_PAD)
+    for (size_t r_pos = 0; r_pos < base64_len; r_pos++) {
+        char c = base64_ptr[r_pos];
+        if (c == BASE64_PAD)
             break;
 
-        uint8_t c = base64de[int(in_c)];
-        if (c == 255)
+        uint8_t v = base64de[int(c)];
+        if (v == 255)
             return 0;
 
         switch (r_pos & 0x3) {
             case 0:
-                out_bytes[w_pos] = (c << 2) & 0xFF;
+                out_bytes[w_pos] = v << 2;
                 break;
             case 1:
-                out_bytes[w_pos++] |= (c >> 4) & 0x3;
-                out_bytes[w_pos] = (c & 0xF) << 4;
+                out_bytes[w_pos++] |= v >> 4;
+                out_bytes[w_pos] = v << 4;
                 break;
             case 2:
-                out_bytes[w_pos++] |= (c >> 2) & 0xF;
-                out_bytes[w_pos] = (c & 0x3) << 6;
+                out_bytes[w_pos++] |= v >> 2;
+                out_bytes[w_pos] = v << 6;
                 break;
             case 3:
-                out_bytes[w_pos++] |= c;
+                out_bytes[w_pos++] |= v;
                 break;
         }
     }
@@ -236,28 +268,55 @@ size_t Decode(const char *in, size_t inlen, void *out, size_t outlen)
     return w_pos;
 }
 
-size_t DecodeLength(const char *encode_str, size_t encode_str_len)
+size_t Decode(const char *base64_str, void *raw_data_ptr, size_t raw_data_size)
 {
-    if (encode_str_len == 0 || (encode_str_len & 0x3) != 0)
+    return Decode(base64_str, ::strlen(base64_str), raw_data_ptr, raw_data_size);
+}
+
+size_t Decode(const std::string &base64_str, std::vector<uint8_t> &raw_data)
+{
+    size_t out_len = DecodeLength(base64_str);
+    if (out_len == 0)
         return 0;
 
-    size_t len = encode_str_len / 4 * 3;
-    //! 检查字串尾部的=符号
-    if (encode_str[encode_str_len - 1] == BASE64_PAD)
-        --len;
-    if (encode_str[encode_str_len - 2] == BASE64_PAD)
-        --len;
-    return len;
-}
+    raw_data.reserve(raw_data.size() + out_len);
 
-size_t DecodeLength(const char *encode_str)
-{
-    return DecodeLength(encode_str, ::strlen(encode_str));
-}
+    uint8_t tmp = 0;
+    uint8_t s = 0;
 
-size_t DecodeLength(const std::string &encode_str)
-{
-    return DecodeLength(encode_str.data(), encode_str.length());
+    for (char c : base64_str) {
+        if (c == BASE64_PAD)
+            break;
+
+        uint8_t v = base64de[int(c)];
+        if (v == 255)
+            return 0;
+
+        switch (s) {
+            case 0:
+                tmp = v << 2;
+                break;
+            case 1:
+                tmp |= v >> 4;
+                raw_data.push_back(tmp);
+                tmp = v << 4;
+                break;
+            case 2:
+                tmp |= v >> 2;
+                raw_data.push_back(tmp);
+                tmp = v << 6;
+                break;
+            case 3:
+                tmp |= v;
+                raw_data.push_back(tmp);
+                break;
+        }
+
+        ++s;
+        s &= 0x03;
+    }
+
+    return out_len;
 }
 
 }
