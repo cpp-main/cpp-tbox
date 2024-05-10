@@ -95,6 +95,13 @@ TEST(Base64, DecodeStringToVector_Pad2) {
     EXPECT_EQ(out, std::vector<uint8_t>({'h', 'e', 'l', 'l', 'o', '!', '!', '!'}));
 }
 
+TEST(Base64, DecodeStringToVector_Pad3) {
+    const std::string in = "aGVsbG8=";
+    std::vector<uint8_t> out;
+    EXPECT_EQ(Decode(in, out), 5);
+    EXPECT_EQ(out, std::vector<uint8_t>({'h', 'e', 'l', 'l', 'o'}));
+}
+
 TEST(Base64, DecodeStringToVectorFail) {
     const std::string in = "";
     std::vector<uint8_t> out;
