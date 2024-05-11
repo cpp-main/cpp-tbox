@@ -26,7 +26,8 @@
 namespace tbox {
 namespace util {
 
-uint16_t CalcCrc16(const void *data_ptr, size_t data_size);
+uint16_t CalcCrc16(const void *data_ptr, size_t data_size, uint16_t init_seed = 0xffff);
+uint32_t CalcCrc32(const void *data_ptr, size_t data_size, uint32_t init_seed = 0xffffffff);
 
 }
 }

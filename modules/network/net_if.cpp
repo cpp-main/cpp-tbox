@@ -34,7 +34,7 @@ namespace {
 bool LoadFrom(NetIF &net_if, const struct ifaddrs *ifa)
 {
     if (ifa->ifa_addr->sa_family != AF_INET) {
-        LogWarn("unsupport IPv6");
+        LogWarn("%s is not IPv4", ifa->ifa_name);
         return false;
     }
 

@@ -29,5 +29,11 @@ TEST(Crc, CalcCrc16) {
     EXPECT_EQ(crc, 0xD7DD);
 }
 
+TEST(Crc, CalcCrc32) {
+    uint8_t tmp_data[] = {'h', 'e', 'l', 'l', 'o', ' ', 'c', 'r', 'c', ' ', '!'};
+    uint32_t crc = CalcCrc32(tmp_data, sizeof(tmp_data));
+    EXPECT_EQ(crc, 0x7DC7D3D4);
+}
+
 }
 }
