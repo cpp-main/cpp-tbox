@@ -107,7 +107,7 @@ class StateMachine::Impl {
 
     State* findState(StateID state_id) const;
 
-    StateID init_state_id_ = 1;     //! 初始状态
+    StateID init_state_id_ = NULL_STATE_ID; //! 初始状态
 
     bool is_running_ = false;       //! 是否正在运行
 
@@ -252,6 +252,9 @@ bool StateMachine::Impl::newState(StateID state_id,
 
     auto new_state = new State { state_id, enter_action, exit_action, label, nullptr, { } };
     states_[state_id] = new_state;
+
+    if (init_state_id_ == NULL_STATE_ID)
+        init_state_id_ = state_id;
 
     return true;
 }
@@ -498,9 +501,11 @@ StateMachine::StateID StateMachine::Impl::nextState() const
 
 StateMachine::Impl::State* StateMachine::Impl::findState(StateID state_id) const
 {
-    auto iter = states_.find(state_id);
-    if (iter != states_.end())
-        return iter->second;
+    if (state_id != NULL_STATE_ID) {
+        auto iter = states_.find(state_id);
+        if (iter != states_.end())
+            return iter->second;
+    }
     return nullptr;
 }
 

@@ -32,10 +32,9 @@ namespace flow {
 //! HFSM，多层级有限状态机
 class StateMachine {
   public:
-    using StateID = int;   //! StateID 为 0 与 1 的两个状态为特定状态
-                           //! StateID = 0 的状态为终止状态，用户可以不用定义
-                           //! StateID = 1 的状态为默认的初始状态。也可以通过 setInitState() 重新指定
-                           //! StateID < 0 表示无效状态
+    using StateID = int;   //! StateID =  0 的状态为终止状态，用户可以不用定义
+                           //! StateID = -1 的表示无效状态
+
     using EventID = int;   //! EventID = 0 表示任意事件，仅在 addRoute(), addEvent() 时使用
 
     //! 动作执行函数
@@ -55,11 +54,13 @@ class StateMachine {
     /**
      * \brief   创建一个状态
      *
-     * \param   state_id        状态ID号，StateID = 1 的状态默认为初始状态
+     * \param   state_id        状态ID号
      * \param   enter_action    进入该状态时的动作，nullptr表示无动作
      * \param   exit_action     退出该状态时的动作，nullptr表示无动作
      *
      * \return  bool    成功与否，重复创建会失败
+     *
+     * \note  newState() 的第一个状态，默认为起始状态
      */
     bool newState(StateID state_id,
                   const ActionFunc &enter_action,
@@ -132,6 +133,8 @@ class StateMachine {
      * \brief   设置起始与终止状态
      *
      * \param   init_state_id   起始状态
+     *
+     * \note  如果不指定，那么第一个newState()的状态为起始状态
      */
     void setInitState(StateID init_state_id);
 
