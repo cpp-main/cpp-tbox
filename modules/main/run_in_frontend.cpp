@@ -65,7 +65,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     stop_signal->initialize({SIGINT, SIGTERM, SIGQUIT, SIGTSTP, SIGPWR}, event::Event::Mode::kOneshot);
     stop_signal->setCallback(
         [&] (int signo) {
-            LogInfo("Got signal %d", signo);
+            LogImportant("Got signal %d, stop", signo);
             apps.stop();
             ctx.stop();
             ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
@@ -74,7 +74,7 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
     );
 
     warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
-    warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
+    warn_signal->setCallback([](int signo) { LogNotice("Got signal %d, ignore", signo); });
 
     //! 启动前准备
     eventx::LoopWDog::Start();

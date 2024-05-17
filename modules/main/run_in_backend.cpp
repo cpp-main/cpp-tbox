@@ -74,7 +74,7 @@ void RunInBackend()
     SetScopeExitAction([=] { delete warn_signal; });
 
     warn_signal->initialize({SIGPIPE, SIGHUP}, event::Event::Mode::kPersist);
-    warn_signal->setCallback([](int signo) { LogWarn("Got signal %d", signo); });
+    warn_signal->setCallback([](int signo) { LogNotice("Got signal %d, ingore", signo); });
 
     //! 启动前准备
     eventx::LoopWDog::Start();
@@ -184,7 +184,7 @@ bool Start(int argc, char **argv)
 
 void Stop()
 {
-    LogInfo("stop main");
+    LogImportant("stop main");
 
     if (_runtime == nullptr) {
         std::cerr << "Err: process not start" << std::endl;
