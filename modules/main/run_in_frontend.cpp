@@ -44,7 +44,9 @@ extern void UninstallErrorSignals();
 extern void InstallTerminate();
 
 extern void RegisterApps(Module &root, Context &ctx);
-extern void SayHello();
+
+extern void SayHi();
+extern void SayBye();
 
 extern std::function<void()> error_exit_func;
 
@@ -135,7 +137,7 @@ int Main(int argc, char **argv)
     log.initialize(argv[0], ctx, js_conf);
     LogOutput_Disable();
 
-    SayHello();
+    SayHi();
 
     //! 注册异常退出时的动作，在异常信号触发时调用
     error_exit_func = [&] {
@@ -162,7 +164,7 @@ int Main(int argc, char **argv)
         LogErr("Context init fail");
     }
 
-    LogInfo("Bye!");
+    SayBye();
 
     LogOutput_Enable();
     log.cleanup();

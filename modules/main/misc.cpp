@@ -83,9 +83,9 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
 
 __attribute__((weak)) void OnAbnormalExit() { }
 
-void SayHello()
+void SayHi()
 {
-    LogInfo("=== CPP-TBOX MAIN STARTUP ===");
+    LogImportant("=== CPP-TBOX MAIN STARTUP ===");
     LogInfo("App Describe: %s", GetAppDescribe().c_str());
 
     int major, minor, rev, build;
@@ -94,6 +94,11 @@ void SayHello()
 
     GetTboxVersion(major, minor, rev);
     LogInfo("Tbox Version: %d.%d.%d", major, minor, rev);
+}
+
+void SayBye()
+{
+    LogImportant("=== CPP-TBOX MAIN END ===");
 }
 
 void AbnormalExit()

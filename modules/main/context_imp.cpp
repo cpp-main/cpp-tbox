@@ -30,6 +30,7 @@
 #include <tbox/base/catch_throw.h>
 #include <tbox/util/string.h>
 #include <tbox/util/json.h>
+#include <tbox/util/fs.h>
 #include <tbox/terminal/session.h>
 
 #include "main.h"
@@ -124,7 +125,7 @@ bool ContextImp::initialize(const char* proc_name, const Json &cfg)
         std::ostringstream oss;
         oss <<
             "\r\n"
-            "Welcome to '" << proc_name << "' main terminal!\r\n"
+            "Welcome to " << util::fs::Basename(proc_name) << " main terminal!\r\n"
             "\r\n"
             "This program is based on cpp-tbox which designed by Hevake Lee.\r\n"
             "Repository: https://github.com/cpp-main/cpp-tbox\r\n"

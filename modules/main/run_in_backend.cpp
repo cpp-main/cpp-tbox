@@ -44,7 +44,9 @@ extern void UninstallErrorSignals();
 extern void InstallTerminate();
 
 extern void RegisterApps(Module &root, Context &ctx);
-extern void SayHello();
+
+extern void SayHi();
+extern void SayBye();
 
 extern std::function<void()> error_exit_func;
 
@@ -92,7 +94,7 @@ void RunInBackend()
 
 void End()
 {
-    LogInfo("Bye!");
+    SayBye();
 
     LogOutput_Enable();
     _runtime->log.cleanup();
@@ -147,7 +149,7 @@ bool Start(int argc, char **argv)
     log.initialize(argv[0], ctx, js_conf);
     LogOutput_Disable();
 
-    SayHello();
+    SayHi();
 
     error_exit_func = [&] {
         log.cleanup();
