@@ -38,7 +38,7 @@ class ContextImp : public Context {
 
     void fillDefaultConfig(Json &cfg) const;
 
-    bool initialize(const Json &cfg);
+    bool initialize(const char *proc_name, const Json &cfg);
     bool start();
     void stop();
     void cleanup();

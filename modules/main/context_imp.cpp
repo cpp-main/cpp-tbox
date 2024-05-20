@@ -104,7 +104,7 @@ void ContextImp::fillDefaultConfig(Json &cfg) const
     cfg["thread_pool"] = R"({"min":0, "max":1})"_json;
 }
 
-bool ContextImp::initialize(const Json &cfg)
+bool ContextImp::initialize(const char* proc_name, const Json &cfg)
 {
     if (util::json::HasObjectField(cfg, "loop")) {
         auto &js_loop = cfg["loop"];
@@ -119,6 +119,29 @@ bool ContextImp::initialize(const Json &cfg)
     auto &js_thread_pool = cfg["thread_pool"];
     if (!initThreadPool(js_thread_pool))
         return false;
+
+    {
+        std::ostringstream oss;
+        oss <<
+            "\r\n"
+            "Welcome to '" << proc_name << "' main terminal!\r\n"
+            "\r\n"
+            "This program is based on cpp-tbox which designed by Hevake Lee.\r\n"
+            "Repository: https://github.com/cpp-main/cpp-tbox\r\n"
+            "\r\n"
+            R"(      .============.      )""\r\n"
+            R"(     //  M A K E  / \     )""\r\n"
+            R"(    //  C++ DEV  /   \    )""\r\n"
+            R"(   //  E A S Y  /  \/ \   )""\r\n"
+            R"(  ++ ----------.  \/\  .  )""\r\n"
+            R"(   \\     \     \ /\  /   )""\r\n"
+            R"(    \\     \     \   /    )""\r\n"
+            R"(     \\     \     \ /     )""\r\n"
+            R"(      -============'      )""\r\n"
+            "\r\n";
+
+        sp_terminal_->setWelcomeText(oss.str());
+    }
 
     if (util::json::HasObjectField(cfg, "telnetd")) {
         auto &js_telnetd = cfg["telnetd"];

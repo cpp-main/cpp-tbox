@@ -51,6 +51,7 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Terminal term;
+    term.setWelcomeText("Welcome to Terminal TcpRPC demo! \r\n");
     TcpRpc rpc(sp_loop, &term);
     if (!rpc.initialize(bind_addr)) {
         std::cout << "Error: rpc init fail" << std::endl;

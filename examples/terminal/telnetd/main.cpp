@@ -51,6 +51,7 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     Terminal term;
+    term.setWelcomeText("Welcome to Terminal Telnet demo! \r\n");
     Telnetd telnetd(sp_loop, &term);
     if (!telnetd.initialize(bind_addr)) {
         std::cout << "Error: telnetd init fail" << std::endl;

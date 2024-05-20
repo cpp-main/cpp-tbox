@@ -54,11 +54,6 @@ bool Terminal::Impl::deleteNode(NodeToken node_token)
     }
 }
 
-NodeToken Terminal::Impl::rootNode() const
-{
-    return root_token_;
-}
-
 NodeToken Terminal::Impl::findNode(const string &path_str) const
 {
     Path node_path;

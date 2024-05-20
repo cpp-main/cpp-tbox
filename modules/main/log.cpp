@@ -241,9 +241,10 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
                        << " 1: Error\r\n"
                        << " 2: Warn\r\n"
                        << " 3: Notice\r\n"
-                       << " 4: Info\r\n"
-                       << " 5: Debug\r\n"
-                       << " 6: Trace\r\n"
+                       << " 4: Important\r\n"
+                       << " 5: Info\r\n"
+                       << " 6: Debug\r\n"
+                       << " 7: Trace\r\n"
                        ;
 
                 s.send(oss.str());

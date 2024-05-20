@@ -85,7 +85,7 @@ __attribute__((weak)) void OnAbnormalExit() { }
 
 void SayHello()
 {
-    LogInfo("=== TBOX MAIN STARTUP ===");
+    LogInfo("=== CPP-TBOX MAIN STARTUP ===");
     LogInfo("App Describe: %s", GetAppDescribe().c_str());
 
     int major, minor, rev, build;

@@ -53,6 +53,9 @@ class Terminal : public TerminalInteract,
     virtual bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) override;
     virtual bool umountNode(const NodeToken &parent, const std::string &name) override;
 
+  public:
+    void setWelcomeText(const std::string &text);
+
   private:
     class Impl;
     Impl *impl_ = nullptr;

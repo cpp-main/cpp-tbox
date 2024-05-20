@@ -52,10 +52,13 @@ class Terminal::Impl {
     NodeToken createFuncNode(const Func &func, const std::string &help);
     NodeToken createDirNode(const std::string &help);
     bool deleteNode(NodeToken node_token);
-    NodeToken rootNode() const;
+    NodeToken rootNode() const { return root_token_; }
     NodeToken findNode(const std::string &path) const;
     bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name);
     bool umountNode(const NodeToken &parent, const std::string &name);
+
+  public:
+    void setWelcomeText(const std::string &text) { welcome_text_ = text; }
 
   protected:
     void onChar(SessionContext *s, char ch);
@@ -92,6 +95,8 @@ class Terminal::Impl {
     cabinet::Cabinet<SessionContext> sessions_;
     cabinet::Cabinet<Node> nodes_;
     NodeToken root_token_;
+
+    std::string welcome_text_;
 };
 
 }

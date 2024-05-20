@@ -36,6 +36,11 @@ Terminal::~Terminal()
     delete impl_;
 }
 
+void Terminal::setWelcomeText(const std::string &welcome_text)
+{
+    impl_->setWelcomeText(welcome_text);
+}
+
 SessionToken Terminal::newSession(Connection *wp_conn)
 {
     return impl_->newSession(wp_conn);

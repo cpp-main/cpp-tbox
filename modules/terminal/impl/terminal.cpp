@@ -35,6 +35,20 @@ using namespace std;
 
 Terminal::Impl::Impl()
 {
+    welcome_text_ = \
+        "\r\n"
+        R"(      .============.      )""\r\n"
+        R"(     //  M A K E  / \     )""\r\n"
+        R"(    //  C++ DEV  /   \    )""\r\n"
+        R"(   //  E A S Y  /  \/ \   )""\r\n"
+        R"(  ++ ----------.  \/\  .  )""\r\n"
+        R"(   \\     \     \ /\  /   )""\r\n"
+        R"(    \\     \     \   /    )""\r\n"
+        R"(     \\     \     \ /     )""\r\n"
+        R"(      -============'      )""\r\n"
+        "\r\n"
+        "Welcome to cpp-tbox terminal.\r\n";
+
     root_token_ = nodes_.alloc(new DirNode("this is root node"));
 }
 
@@ -94,28 +108,14 @@ void Terminal::Impl::setOptions(const SessionToken &st, uint32_t options)
 
 bool Terminal::Impl::onBegin(const SessionToken &st)
 {
-    const char *welcome_str = \
-        "\r\n"
-        R"(      .============.      )""\r\n"
-        R"(     //  M A K E  / \     )""\r\n"
-        R"(    //  C++ DEV  /   \    )""\r\n"
-        R"(   //  E A S Y  /  \/ \   )""\r\n"
-        R"(  ++ ----------.  \/\  .  )""\r\n"
-        R"(   \\     \     \ /\  /   )""\r\n"
-        R"(    \\     \     \   /    )""\r\n"
-        R"(     \\     \     \ /     )""\r\n"
-        R"(      -============'      )""\r\n"
-        "\r\n"
-        "Welcome to cpp-tbox terminal.\r\n"
-        "Type 'help' for more information.\r\n"
-        "\r\n";
-
     auto s = sessions_.at(st);
     if (s == nullptr)
         return false;
 
-    if (!(s->options & kQuietMode))
-        s->wp_conn->send(st, welcome_str);
+    if (!(s->options & kQuietMode)) {
+        s->wp_conn->send(st, welcome_text_);
+        s->wp_conn->send(st, "Type 'help' for more information.\r\n\r\n");
+    }
 
     printPrompt(s);
 
