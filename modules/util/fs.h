@@ -214,6 +214,7 @@ bool RemoveDirectory(const std::string &dir, bool is_remove_file_only = false);
  * 根据路径获取文件名
  */
 std::string Basename(const std::string &full_path);
+const char* Basename(const char *full_path);
 
 /**
  * 根据路径获取目录名

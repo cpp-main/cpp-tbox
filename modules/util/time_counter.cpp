@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "time_counter.h"
+#include "fs.h"
 
 #define USE_PRINTF 1
 
@@ -34,20 +35,6 @@ namespace util {
 
 using namespace std;
 using namespace std::chrono;
-
-namespace {
-const char* Basename(const char *full_path)
-{
-    const char *p_last = full_path;
-    if (p_last != nullptr) {
-        for (const char *p = full_path; *p; ++p) {
-            if (*p == '/')
-                p_last = p + 1;
-        }
-    }
-    return p_last;
-}
-}
 
 TimeCounter::TimeCounter()
     : start_time_point_(steady_clock::now())
@@ -151,12 +138,12 @@ void FixedTimeCounter::stop()
 #if USE_PRINTF
     printf("TIME_COST: %8" PRIu64 ".%03" PRIu64 " us at %s() in %s:%u\n",
            ns_count / 1000, ns_count % 1000,
-           func_name_, Basename(file_name_), line_);
+           func_name_, fs::Basename(file_name_), line_);
 #else
     cout << "TIME_COST: " << setw(8) << ns_count / 1000
          << '.' << setw(3) << setfill('0') << ns_count % 1000 << setfill(' ')
          << " us at " << func_name_ << "() in "
-         << Basename(file_name_) << ':' << line_ << endl;
+         << fs::Basename(file_name_) << ':' << line_ << endl;
 #endif
 
 }

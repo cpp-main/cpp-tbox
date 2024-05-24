@@ -320,6 +320,18 @@ std::string Basename(const std::string &full_path)
     return full_path.substr(pos + 1);
 }
 
+const char* Basename(const char *full_path)
+{
+    const char *p_last = full_path;
+    if (p_last != nullptr) {
+        for (const char *p = full_path; *p; ++p) {
+            if (*p == '/')
+                p_last = p + 1;
+        }
+    }
+    return p_last;
+}
+
 /**
  * 目标:
  * "a" -> "."
