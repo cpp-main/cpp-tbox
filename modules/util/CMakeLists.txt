@@ -44,7 +44,9 @@ set(TBOX_UTIL_HEADERS
     checksum.h
     crc.h
     json_deep_loader.h
-    execute_cmd.h)
+    execute_cmd.h
+    buffer.h
+)
 
 set(TBOX_UTIL_SOURCES
     pid_file.cpp
@@ -61,7 +63,9 @@ set(TBOX_UTIL_SOURCES
     checksum.cpp
     crc.cpp
     json_deep_loader.cpp
-    execute_cmd.cpp)
+    execute_cmd.cpp
+    buffer.cpp
+)
 
 set(TBOX_UTIL_TEST_SOURCES
     pid_file_test.cpp
@@ -76,7 +80,9 @@ set(TBOX_UTIL_TEST_SOURCES
     base64_test.cpp
     checksum_test.cpp
     crc_test.cpp
-    execute_cmd_test.cpp)
+    execute_cmd_test.cpp
+    buffer_test.cpp
+)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})

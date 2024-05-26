@@ -17,13 +17,13 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_NETWORK_BUFFER_H_20171028
-#define TBOX_NETWORK_BUFFER_H_20171028
+#ifndef TBOX_UTIL_BUFFER_H_20171028
+#define TBOX_UTIL_BUFFER_H_20171028
 
 #include <stdint.h>
 
 namespace tbox {
-namespace network {
+namespace util {
 
 /**
  * 缓冲区类
@@ -129,4 +129,4 @@ class Buffer {
 }
 }
 
-#endif //TBOX_NETWORK_BUFFER_H_20171028
+#endif //TBOX_UTIL_BUFFER_H_20171028

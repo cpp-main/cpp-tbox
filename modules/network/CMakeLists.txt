@@ -30,7 +30,6 @@ add_definitions(-DLOG_MODULE_ID="tbox.network")
 set(TBOX_LIBRARY_NAME tbox_network)
 
 set(TBOX_NETWORK_HEADERS
-    buffer.h
     fd.h
     buffered_fd.h
     byte_stream.h
@@ -50,7 +49,6 @@ set(TBOX_NETWORK_HEADERS
     dns_request.h)
 
 set(TBOX_NETWORK_SOURCES
-    buffer.cpp
     fd.cpp
     buffered_fd.cpp
     stdio_stream.cpp
@@ -69,7 +67,6 @@ set(TBOX_NETWORK_SOURCES
 
 set(TBOX_NETWORK_TEST_SOURCES
     fd_test.cpp
-    buffer_test.cpp
     buffered_fd_test.cpp
     uart_test.cpp
     ip_address_test.cpp

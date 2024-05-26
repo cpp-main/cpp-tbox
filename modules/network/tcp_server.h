@@ -23,12 +23,14 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/cabinet_token.h>
 #include <tbox/event/loop.h>
+#include <tbox/util/buffer.h>
 
 #include "sockaddr.h"
-#include "buffer.h"
 
 namespace tbox {
 namespace network {
+
+using Buffer = util::Buffer;
 
 class TcpAcceptor;
 class TcpConnection;

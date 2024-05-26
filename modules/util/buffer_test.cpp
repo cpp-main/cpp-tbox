@@ -24,7 +24,9 @@
 #define private public
 
 #include "buffer.h"
-using namespace tbox::network;
+
+namespace tbox {
+namespace util {
 
 TEST(Buffer, constuct) {
     Buffer b1;
@@ -235,4 +237,7 @@ TEST(Buffer, read_all_except_index_reset) {
 
     EXPECT_EQ(b.read_index_, 0u);
     EXPECT_EQ(b.write_index_, 0u);
+}
+
+}
 }

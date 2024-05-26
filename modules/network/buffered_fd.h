@@ -26,7 +26,6 @@
 
 #include "byte_stream.h"
 #include "fd.h"
-#include "buffer.h"
 
 namespace tbox {
 namespace network {

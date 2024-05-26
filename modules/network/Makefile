@@ -25,7 +25,6 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	buffer.h \
 	fd.h \
 	buffered_fd.h \
 	byte_stream.h \
@@ -45,7 +44,6 @@ HEAD_FILES = \
 	dns_request.h \
 
 CPP_SRC_FILES = \
-	buffer.cpp \
 	fd.cpp \
 	buffered_fd.cpp \
 	stdio_stream.cpp \
@@ -67,7 +65,6 @@ CXXFLAGS := -DLOG_MODULE_ID='"tbox.network"' $(CXXFLAGS)
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
 	fd_test.cpp \
-	buffer_test.cpp \
 	buffered_fd_test.cpp \
 	uart_test.cpp \
 	ip_address_test.cpp \

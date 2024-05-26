@@ -21,7 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
-#include <tbox/network/buffer.h>
+#include <tbox/util/buffer.h>
 
 #include "middleware.h"
 

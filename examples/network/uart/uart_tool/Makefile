@@ -27,6 +27,7 @@ CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_network \
 	-ltbox_event \
+	-ltbox_util \
 	-ltbox_base \
 	-ldl
 

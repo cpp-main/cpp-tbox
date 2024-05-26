@@ -26,7 +26,7 @@
 #include "buffer.h"
 
 namespace tbox {
-namespace network {
+namespace util {
 
 Buffer::Buffer(size_t reverse_size)
 {
