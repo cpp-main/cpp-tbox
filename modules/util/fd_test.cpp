@@ -20,7 +20,9 @@
 #include "fd.h"
 
 #include <gtest/gtest.h>
-using namespace tbox::network;
+
+namespace tbox {
+namespace util {
 
 TEST(Fd, close_func)
 {
@@ -223,3 +225,5 @@ TEST(Fd, move_assign_4)
     EXPECT_EQ(close_times, 1);
 }
 
+}
+}

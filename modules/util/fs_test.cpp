@@ -185,11 +185,14 @@ TEST(fs, Dirname) {
 }
 
 TEST(fs, Basename) {
-    EXPECT_EQ(Basename("./a/b/c"), "c");
-    EXPECT_EQ(Basename("abcdef"), "abcdef");
-    EXPECT_EQ(Basename(""), "");
-}
+    EXPECT_STREQ(Basename("./a/b/c"), "c");
+    EXPECT_STREQ(Basename("abcdef"), "abcdef");
+    EXPECT_STREQ(Basename(""), "");
 
+    EXPECT_EQ(Basename(std::string("./a/b/c")), "c");
+    EXPECT_EQ(Basename(std::string("abcdef")), "abcdef");
+    EXPECT_EQ(Basename(std::string()), "");
+}
 
 TEST(fs, RemoveDirectory) {
     //! 绝对路径测试

@@ -41,6 +41,8 @@ HEAD_FILES = \
 	json_deep_loader.h \
 	execute_cmd.h \
 	buffer.h \
+	fd.h \
+	scalable_integer.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -59,6 +61,8 @@ CPP_SRC_FILES = \
 	json_deep_loader.cpp \
 	execute_cmd.cpp \
 	buffer.cpp \
+	fd.cpp \
+	scalable_integer.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
 
@@ -79,6 +83,8 @@ TEST_CPP_SRC_FILES = \
 	execute_cmd_test.cpp \
 	timestamp_test.cpp \
 	buffer_test.cpp \
+	fd_test.cpp \
+	scalable_integer_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

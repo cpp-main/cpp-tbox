@@ -46,6 +46,7 @@ set(TBOX_UTIL_HEADERS
     json_deep_loader.h
     execute_cmd.h
     buffer.h
+    fd.h
 )
 
 set(TBOX_UTIL_SOURCES
@@ -65,6 +66,7 @@ set(TBOX_UTIL_SOURCES
     json_deep_loader.cpp
     execute_cmd.cpp
     buffer.cpp
+    fd.cpp
 )
 
 set(TBOX_UTIL_TEST_SOURCES
@@ -82,6 +84,7 @@ set(TBOX_UTIL_TEST_SOURCES
     crc_test.cpp
     execute_cmd_test.cpp
     buffer_test.cpp
+    fd_test.cpp
 )
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})

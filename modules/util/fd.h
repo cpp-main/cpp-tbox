@@ -17,16 +17,15 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_NETWORK_FD_H_20171030
-#define TBOX_NETWORK_FD_H_20171030
+#ifndef TBOX_UTIL_FD_H_20171030
+#define TBOX_UTIL_FD_H_20171030
 
 #include <unistd.h>
 #include <functional>
 #include <sys/uio.h>
 
 namespace tbox {
-namespace network {
-
+namespace util {
 
 //! 文件描述符类，封装了对fd的基础操作
 class Fd {
@@ -85,4 +84,4 @@ class Fd {
 }
 }
 
-#endif //TBOX_NETWORK_FD_H_20171030
+#endif //TBOX_UTIL_FD_H_20171030

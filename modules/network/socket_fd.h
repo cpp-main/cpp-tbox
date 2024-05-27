@@ -22,13 +22,13 @@
 
 #include <sys/socket.h>
 
-#include "fd.h"
+#include <tbox/util/fd.h>
 
 namespace tbox {
 namespace network {
 
 //! socket 文件描述符
-class SocketFd : public Fd {
+class SocketFd : public util::Fd {
   public:
     SocketFd();
     SocketFd(int fd);

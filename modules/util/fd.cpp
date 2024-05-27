@@ -28,7 +28,7 @@
 #include <tbox/base/assert.h>
 
 namespace tbox {
-namespace network {
+namespace util {
 
 Fd::Fd() { }
 

@@ -23,12 +23,14 @@
 #include <functional>
 #include <tbox/event/forward.h>
 #include <tbox/base/defines.h>
+#include <tbox/util/fd.h>
 
 #include "byte_stream.h"
-#include "fd.h"
 
 namespace tbox {
 namespace network {
+
+using Fd = util::Fd;
 
 class BufferedFd : public ByteStream {
   public:
