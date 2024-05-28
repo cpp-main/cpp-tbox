@@ -18,27 +18,27 @@
 # of the source tree.
 #
 
-# 核心模块
-MODULES += base
-MODULES += util
-MODULES += event
-MODULES += eventx
-MODULES += log
-MODULES += network
-MODULES += terminal
-MODULES += main
-MODULES += run
+PROJECT = trace
+LIB_NAME = trace
+LIB_VERSION_X = 0
+LIB_VERSION_Y = 1
+LIB_VERSION_Z = 0
 
-## 非核心模块，请根据需要选择
-MODULES += trace
-MODULES += coroutine
-MODULES += http
-MODULES += mqtt
-MODULES += flow
-MODULES += alarm
-MODULES += crypto
-MODULES += dbus
-MODULES += jsonrpc
+HEAD_FILES = \
+	trace.h \
+	trace_sink.h \
 
-## 第三方库依赖
-THIRDPARTY += nlohmann
+CPP_SRC_FILES = \
+	trace_sink.cpp \
+
+CXXFLAGS := -DLOG_MODULE_ID='"tbox.trace"' $(CXXFLAGS)
+
+TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
+	trace_sink_test.cpp \
+
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl
+
+ENABLE_SHARED_LIB = no
+
+include $(TOP_DIR)/tools/lib_tbox_common.mk
