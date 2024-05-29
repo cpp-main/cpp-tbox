@@ -48,6 +48,9 @@ class Sink {
      */
     void setPathPrefix(const std::string &path_prefix);
 
+    std::string getDirPath() const { return dir_path_; }
+    std::string getCurrRecordFilename() const { return curr_record_filename_; }
+
     //! 设置记录文件的大小的上限
     void setRecordFileMaxSize(size_t max_size) { record_file_max_size_ = max_size; }
 
@@ -87,7 +90,7 @@ class Sink {
     Index allocThreadIndex(long thread_id);
 
   private:
-    std::string path_;
+    std::string dir_path_;
     size_t record_file_max_size_ = std::numeric_limits<size_t>::max();
     std::string name_list_filename_;
     std::string thread_list_filename_;

@@ -38,6 +38,18 @@ namespace trace {
 
 #define ENDLINE "\r\n"
 
+namespace {
+std::string GetLocalDateTimeStr()
+{
+    char timestamp[16]; //! 固定长度16B，"20220414_071023"
+    time_t ts_sec = time(nullptr);
+    struct tm tm;
+    localtime_r(&ts_sec, &tm);
+    strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm);
+    return timestamp;
+}
+}
+
 Sink& Sink::GetInstance()
 {
     static Sink instance;
@@ -57,9 +69,9 @@ Sink::~Sink()
 
 void Sink::setPathPrefix(const std::string &path_prefix)
 {
-    path_ = path_prefix + '.' + std::to_string(::getpid());
-    name_list_filename_ = path_ + "/name_list.txt";
-    thread_list_filename_ = path_ + "/thread_list.txt";
+    dir_path_ = path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
+    name_list_filename_ = dir_path_ + "/name_list.txt";
+    thread_list_filename_ = dir_path_ + "/thread_list.txt";
 }
 
 bool Sink::enable()
@@ -67,7 +79,7 @@ bool Sink::enable()
     if (is_enabled_)
         return true;
 
-    if (path_.empty()) {
+    if (dir_path_.empty()) {
         std::cerr << "Warn: no path_prefix" << std::endl;
         return false;
     }
@@ -167,7 +179,7 @@ bool Sink::checkAndCreateRecordFile()
         CHECK_CLOSE_RESET_FD(curr_record_fd_);
     }
 
-    std::string records_path = path_ + "/records";
+    std::string records_path = dir_path_ + "/records";
 
     //!检查并创建路径
     if (!util::fs::MakeDirectory(records_path, false)) {
@@ -175,18 +187,11 @@ bool Sink::checkAndCreateRecordFile()
         return false;
     }
 
-    char timestamp[16]; //! 固定长度16B，"20220414_071023"
-    {
-        time_t ts_sec = time(nullptr);
-        struct tm tm;
-        localtime_r(&ts_sec, &tm);
-        strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm);
-    }
-
+    std::string datatime_str = GetLocalDateTimeStr();
     std::string new_record_filename;
     int postfix = 0;
     do {
-        new_record_filename = records_path + '/' + timestamp + ".bin";
+        new_record_filename = records_path + '/' + datatime_str + ".bin";
         if (postfix != 0) {
             new_record_filename += '.';
             new_record_filename += std::to_string(postfix);
