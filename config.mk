@@ -30,7 +30,6 @@ MODULES += main
 MODULES += run
 
 ## 非核心模块，请根据需要选择
-MODULES += trace
 MODULES += coroutine
 MODULES += http
 MODULES += mqtt
@@ -39,6 +38,7 @@ MODULES += alarm
 MODULES += crypto
 MODULES += dbus
 MODULES += jsonrpc
+MODULES += trace
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
