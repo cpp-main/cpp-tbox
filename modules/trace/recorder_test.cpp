@@ -25,7 +25,6 @@
 #include <tbox/util/fs.h>
 
 #include "recorder.h"
-#include "sink.h"
 
 namespace tbox {
 namespace trace {
@@ -46,19 +45,9 @@ void ScopeFoo() {
 }
 
 TEST(Recorder, Base) {
-  std::string path_prefix = "/tmp/cpp-tbox-test/trace";
-  //std::string pid_str = std::to_string(::getpid());
-  //std::string time_str = GetTimeStr();
-
-  auto &ts = Sink::GetInstance();
-  ts.setPathPrefix(path_prefix);
-  ts.enable();
   auto t = std::thread(ScopeFoo);
   ScopeFoo();
   t.join();
-  ts.disable();
-
-  util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
 }
 
 }

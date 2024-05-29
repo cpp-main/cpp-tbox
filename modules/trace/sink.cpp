@@ -99,8 +99,11 @@ void Sink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t du
         .duration_us = duration_us,
         .name_size = ::strlen(name) + 1
     };
-    async_pipe_.append(&header, sizeof(header));
-    async_pipe_.append(name, header.name_size);
+
+    async_pipe_.appendLock();
+    async_pipe_.appendLockless(&header, sizeof(header));
+    async_pipe_.appendLockless(name, header.name_size);
+    async_pipe_.appendUnlock();
 }
 
 void Sink::onBackendRecvData(const void *data, size_t size)

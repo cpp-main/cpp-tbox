@@ -69,6 +69,9 @@ class AsyncPipe::Impl {
     void setCallback(const Callback &cb) { cb_ = cb; }
     void cleanup();
     void append(const void *data_ptr, size_t data_size);
+    void appendLock();
+    void appendUnlock();
+    void appendLockless(const void *data_ptr, size_t data_size);
 
   protected:
     void threadFunc();
@@ -146,6 +149,21 @@ void AsyncPipe::append(const void *data_ptr, size_t data_size)
     impl_->append(data_ptr, data_size);
 }
 
+void AsyncPipe::appendLock()
+{
+    impl_->appendLock();
+}
+
+void AsyncPipe::appendUnlock()
+{
+    impl_->appendUnlock();
+}
+
+void AsyncPipe::appendLockless(const void *data_ptr, size_t data_size)
+{
+    impl_->appendLockless(data_ptr, data_size);
+}
+
 AsyncPipe::Impl::Impl()
 { }
 
@@ -211,10 +229,25 @@ void AsyncPipe::Impl::cleanup()
 
 void AsyncPipe::Impl::append(const void *data_ptr, size_t data_size)
 {
+    std::lock_guard<std::mutex> lg(curr_buffer_mutex_);
+    appendLockless(data_ptr, data_size);
+}
+
+void AsyncPipe::Impl::appendLock()
+{
+    curr_buffer_mutex_.lock();
+}
+
+void AsyncPipe::Impl::appendUnlock()
+{
+    curr_buffer_mutex_.unlock();
+}
+
+void AsyncPipe::Impl::appendLockless(const void *data_ptr, size_t data_size)
+{
     const uint8_t *ptr = static_cast<const uint8_t*>(data_ptr);
     size_t  remain_size = data_size;
 
-    std::lock_guard<std::mutex> lg(curr_buffer_mutex_);
     while (remain_size > 0) {
         if (curr_buffer_ == nullptr) {
             //! 如果 curr_buffer_ 没有分配，则应该从 free_buffers_ 中取一个出来

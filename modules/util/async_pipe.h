@@ -67,7 +67,20 @@ class AsyncPipe {
     bool initialize(const Config &cfg);     //! 初始化
     void setCallback(const Callback &cb);   //! 设置回调
 
-    void append(const void *data_ptr, size_t data_size); //! 异步写入
+    /**
+     * \brief 有锁异步写入
+     */
+    void append(const void *data_ptr, size_t data_size); //! 有锁异步写入
+
+    void appendLock();    //! 开始无锁追加
+    void appendUnlock();  //! 结束无锁追加
+    /**
+     * \brief 无锁异步写入
+     *        区别于 append()，必须配合 appendLock() 与 appendUnlock() 一同使用
+     *        常用于需要连续追加多条数据的场景
+     */
+    void appendLockless(const void *data_ptr, size_t data_size);
+
     void cleanup(); //! 清理
 
   private:

@@ -20,9 +20,11 @@
 #include <gtest/gtest.h>
 
 #include <sys/syscall.h>
+#include <thread>
 
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
+#include <tbox/util/timestamp.h>
 
 #include "sink.h"
 
@@ -85,6 +87,30 @@ TEST(Sink, Base) {
     std::string target_content = "64 0a 00 00 01 01 00 01 63 0a 00 00";
     EXPECT_EQ(first_record_content_hex, target_content);
   }
+
+  util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
+}
+
+TEST(Sink, MultiThread) {
+  std::string path_prefix = "/tmp/cpp-tbox-test/trace-sink";
+  std::string pid_str = std::to_string(::getpid());
+  std::string time_str = GetTimeStr();
+
+  auto &ts = Sink::GetInstance();
+  ts.setPathPrefix(path_prefix);
+  ts.enable();
+
+  auto test_func = [&ts] (const std::string name) {
+    for (int i = 0; i < 1000; ++i) {
+      ts.commitRecord(name.c_str(), util::GetCurrentMicrosecondsFrom1970(), 10);
+    }
+  };
+
+  auto t = std::thread(std::bind(test_func, "sub_thread()"));
+  test_func("main_thread()");
+
+  t.join();
+  ts.disable();
 
   util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
 }
