@@ -32,6 +32,9 @@ uint32_t GetCurrentSecondsFrom1970();
 //! 获取当前的时间戳，精确到毫秒
 uint64_t GetCurrentMillisecondsFrom1970();
 
+//! 获取当前的时间戳，精确到微秒
+uint64_t GetCurrentMicrosecondsFrom1970();
+
 //! 获取指定时间戳的0时区时间字串
 std::string GetUtcTimeString(uint32_t utc_sec);
 

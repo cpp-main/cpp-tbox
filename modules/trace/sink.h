@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_TRACE_TRACE_SINK_H_20240525
-#define TBOX_TRACE_TRACE_SINK_H_20240525
+#ifndef TBOX_TRACE_SINK_H_20240525
+#define TBOX_TRACE_SINK_H_20240525
 
 #include <atomic>
 #include <string>
@@ -31,10 +31,10 @@
 namespace tbox {
 namespace trace {
 
-class TrackSink {
+class Sink {
 
   public:
-    static TrackSink& GetInstance();
+    static Sink& GetInstance();
 
     /**
      * 设置路径前缀
@@ -54,6 +54,8 @@ class TrackSink {
     bool enable();  //! 使能
     void disable(); //! 停止
 
+    bool isEnabled() const { return is_enabled_; }
+
     /**
      * \brief 提交记录
      *
@@ -64,8 +66,8 @@ class TrackSink {
     void commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t duration_us);
 
   protected:
-    TrackSink();
-    ~TrackSink();
+    Sink();
+    ~Sink();
 
     struct RecordHeader {
         long thread_id;
@@ -112,4 +114,4 @@ class TrackSink {
 }
 }
 
-#endif //TBOX_TRACE_TRACE_SINK_H_20240525
+#endif //TBOX_TRACE_SINK_H_20240525

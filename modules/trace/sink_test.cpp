@@ -18,9 +18,13 @@
  * of the source tree.
  */
 #include <gtest/gtest.h>
-#include <tbox/util/fs.h>
 
-#include "trace_sink.h"
+#include <sys/syscall.h>
+
+#include <tbox/util/fs.h>
+#include <tbox/util/string.h>
+
+#include "sink.h"
 
 namespace tbox {
 namespace trace {
@@ -37,12 +41,12 @@ std::string GetTimeStr()
 }
 }
 
-TEST(TrackSink, Base) {
-  std::string path_prefix = "/tmp/test/cpp-tbox/trace";
+TEST(Sink, Base) {
+  std::string path_prefix = "/tmp/cpp-tbox-test/trace-sink";
   std::string pid_str = std::to_string(::getpid());
   std::string time_str = GetTimeStr();
 
-  auto &ts = TrackSink::GetInstance();
+  auto &ts = Sink::GetInstance();
   ts.setPathPrefix(path_prefix);
   ts.setRecordFileMaxSize(10);
   ts.enable();
@@ -56,12 +60,33 @@ TEST(TrackSink, Base) {
   std::string name_list_filename = path + "/name_list.txt";
   std::string thread_list_filename = path + "/thread_list.txt";
   std::string record_filename = path + "/records/" + time_str + ".bin";
-  EXPECT_TRUE(util::fs::IsFileExist(name_list_filename));
-  EXPECT_TRUE(util::fs::IsFileExist(thread_list_filename));
-  EXPECT_TRUE(util::fs::IsFileExist(record_filename));
-  EXPECT_TRUE(util::fs::IsFileExist(record_filename + ".1"));
+  ASSERT_TRUE(util::fs::IsFileExist(name_list_filename));
+  ASSERT_TRUE(util::fs::IsFileExist(thread_list_filename));
+  ASSERT_TRUE(util::fs::IsFileExist(record_filename));
 
-  util::fs::RemoveDirectory("/tmp/test/cpp-tbox");
+  {
+    std::string name_list_content;
+    ASSERT_TRUE(util::fs::ReadStringFromTextFile(name_list_filename, name_list_content));
+    std::string target_content = "void hello()\r\nint world(int, std::string)\r\nbool bye(double)\r\n";
+    EXPECT_EQ(name_list_content, target_content);
+  }
+
+  {
+    std::string thread_list_content;
+    ASSERT_TRUE(util::fs::ReadStringFromTextFile(thread_list_filename, thread_list_content));
+    std::string target_content = std::to_string(::syscall(SYS_gettid)) + "\r\n";
+    EXPECT_EQ(thread_list_content, target_content);
+  }
+
+  {
+    std::string first_record_content;
+    ASSERT_TRUE(util::fs::ReadBinaryFromFile(record_filename, first_record_content));
+    auto first_record_content_hex = util::string::RawDataToHexStr(first_record_content.data(), first_record_content.size());
+    std::string target_content = "64 0a 00 00 01 01 00 01 63 0a 00 00";
+    EXPECT_EQ(first_record_content_hex, target_content);
+  }
+
+  util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
 }
 
 }

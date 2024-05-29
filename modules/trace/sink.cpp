@@ -1,4 +1,23 @@
-#include "trace_sink.h"
+/*
+ *     .============.
+ *    //  M A K E  / \
+ *   //  C++ DEV  /   \
+ *  //  E A S Y  /  \/ \
+ * ++ ----------.  \/\  .
+ *  \\     \     \ /\  /
+ *   \\     \     \   /
+ *    \\     \     \ /
+ *     -============'
+ *
+ * Copyright (c) 2024 Hevake and contributors, all rights reserved.
+ *
+ * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
+ * Use of this source code is governed by MIT license that can be found
+ * in the LICENSE file in the root of the source tree. All contributing
+ * project authors may be found in the CONTRIBUTORS.md file in the root
+ * of the source tree.
+ */
+#include "sink.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -19,31 +38,31 @@ namespace trace {
 
 #define ENDLINE "\r\n"
 
-TrackSink& TrackSink::GetInstance()
+Sink& Sink::GetInstance()
 {
-    static TrackSink instance;
+    static Sink instance;
     return instance;
 }
 
-TrackSink::TrackSink()
+Sink::Sink()
 {
     using namespace std::placeholders;
-    async_pipe_.setCallback(std::bind(&TrackSink::onBackendRecvData, this, _1, _2));
+    async_pipe_.setCallback(std::bind(&Sink::onBackendRecvData, this, _1, _2));
 }
 
-TrackSink::~TrackSink()
+Sink::~Sink()
 {
     disable();
 }
 
-void TrackSink::setPathPrefix(const std::string &path_prefix)
+void Sink::setPathPrefix(const std::string &path_prefix)
 {
     path_ = path_prefix + '.' + std::to_string(::getpid());
     name_list_filename_ = path_ + "/name_list.txt";
     thread_list_filename_ = path_ + "/thread_list.txt";
 }
 
-bool TrackSink::enable()
+bool Sink::enable()
 {
     if (is_enabled_)
         return true;
@@ -60,7 +79,7 @@ bool TrackSink::enable()
     return true;
 }
 
-void TrackSink::disable()
+void Sink::disable()
 {
     if (is_enabled_) {
         is_enabled_ = false;
@@ -69,13 +88,13 @@ void TrackSink::disable()
     }
 }
 
-void TrackSink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t duration_us)
+void Sink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t duration_us)
 {
     if (!is_enabled_)
         return;
 
     RecordHeader header = {
-        .thread_id = syscall(SYS_gettid),
+        .thread_id = ::syscall(SYS_gettid),
         .end_ts_us = end_timepoint_us,
         .duration_us = duration_us,
         .name_size = ::strlen(name) + 1
@@ -84,7 +103,7 @@ void TrackSink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64
     async_pipe_.append(name, header.name_size);
 }
 
-void TrackSink::onBackendRecvData(const void *data, size_t size)
+void Sink::onBackendRecvData(const void *data, size_t size)
 {
     buffer_.append(data, size);
 
@@ -106,7 +125,7 @@ void TrackSink::onBackendRecvData(const void *data, size_t size)
     }
 }
 
-void TrackSink::onBackendRecvRecord(const RecordHeader &record, const char *name)
+void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name)
 {
     if (!checkAndCreateRecordFile())
         return;
@@ -137,7 +156,7 @@ void TrackSink::onBackendRecvRecord(const RecordHeader &record, const char *name
         CHECK_CLOSE_RESET_FD(curr_record_fd_);
 }
 
-bool TrackSink::checkAndCreateRecordFile()
+bool Sink::checkAndCreateRecordFile()
 {
     if (curr_record_fd_ >= 0) {
         if (util::fs::IsFileExist(curr_record_filename_))
@@ -186,7 +205,7 @@ bool TrackSink::checkAndCreateRecordFile()
     return true;
 }
 
-TrackSink::Index TrackSink::allocNameIndex(const std::string &name)
+Sink::Index Sink::allocNameIndex(const std::string &name)
 {
     auto iter = name_to_index_map_.find(name);
     if (iter != name_to_index_map_.end())
@@ -215,7 +234,7 @@ TrackSink::Index TrackSink::allocNameIndex(const std::string &name)
     return new_index;
 }
 
-TrackSink::Index TrackSink::allocThreadIndex(long thread_id)
+Sink::Index Sink::allocThreadIndex(long thread_id)
 {
     auto iter = thread_to_index_map_.find(thread_id);
     if (iter != thread_to_index_map_.end())
