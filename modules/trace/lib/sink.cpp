@@ -72,6 +72,13 @@ void Sink::setPathPrefix(const std::string &path_prefix)
     dir_path_ = path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
     name_list_filename_ = dir_path_ + "/name_list.txt";
     thread_list_filename_ = dir_path_ + "/thread_list.txt";
+    CHECK_CLOSE_RESET_FD(curr_record_fd_);
+}
+
+void Sink::setFileSyncEnable(bool is_enable)
+{
+    is_file_sync_enabled_ = is_enable;
+    CHECK_CLOSE_RESET_FD(curr_record_fd_);
 }
 
 bool Sink::enable()
@@ -201,7 +208,9 @@ bool Sink::checkAndCreateRecordFile()
     } while (util::fs::IsFileExist(new_record_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
     curr_record_filename_ = std::move(new_record_filename);
 
-    int flags = O_CREAT | O_WRONLY | O_APPEND | O_DSYNC;
+    int flags = O_CREAT | O_WRONLY | O_APPEND;
+    if (is_file_sync_enabled_)
+        flags |= O_DSYNC;
 
     curr_record_fd_ = ::open(curr_record_filename_.c_str(), flags, S_IRUSR | S_IWUSR);
     if (curr_record_fd_ < 0) {
@@ -216,19 +225,8 @@ bool Sink::checkAndCreateRecordFile()
 
 Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
 {
-    std::string content = name + " at L" + std::to_string(line);
-    auto iter = name_to_index_map_.find(content);
-    if (iter != name_to_index_map_.end())
-        return iter->second;
-
-    auto new_index = next_name_index_++;
-    name_to_index_map_[content] = new_index;
-
-    if (util::fs::IsFileExist(name_list_filename_)) {
-        util::fs::AppendStringToTextFile(name_list_filename_, content + ENDLINE);
-
-    } else {
-        //! 文件不存在了，则重写所有的名称列表
+    //! 如果文件不存在了，则重写所有的名称列表
+    if (!util::fs::IsFileExist(name_list_filename_)) {
         std::vector<std::string> name_vec;
         name_vec.resize(name_to_index_map_.size());
         for (auto &item : name_to_index_map_)
@@ -238,26 +236,25 @@ Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
         for (auto &content: name_vec)
             oss << content << ENDLINE;
 
-        util::fs::WriteStringToTextFile(name_list_filename_, oss.str());
+        util::fs::WriteStringToTextFile(name_list_filename_, oss.str(), is_file_sync_enabled_);
     }
 
+    std::string content = name + " at L" + std::to_string(line);
+    auto iter = name_to_index_map_.find(content);
+    if (iter != name_to_index_map_.end())
+        return iter->second;
+
+    auto new_index = next_name_index_++;
+    name_to_index_map_[content] = new_index;
+
+    util::fs::AppendStringToTextFile(name_list_filename_, content + ENDLINE, is_file_sync_enabled_);
     return new_index;
 }
 
 Sink::Index Sink::allocThreadIndex(long thread_id)
 {
-    auto iter = thread_to_index_map_.find(thread_id);
-    if (iter != thread_to_index_map_.end())
-        return iter->second;
-
-    auto new_index = next_thread_index_++;
-    thread_to_index_map_[thread_id] = new_index;
-
-    if (util::fs::IsFileExist(thread_list_filename_)) {
-        util::fs::AppendStringToTextFile(thread_list_filename_, std::to_string(thread_id) + ENDLINE);
-
-    } else {
-        //! 文件不存在了，则重写所有的线程列表
+    //! 如果文件不存在了，则重写所有的线程列表
+    if (!util::fs::IsFileExist(thread_list_filename_)) {
         std::vector<int> thread_vec;
         thread_vec.resize(thread_to_index_map_.size());
         for (auto &item : thread_to_index_map_)
@@ -267,9 +264,17 @@ Sink::Index Sink::allocThreadIndex(long thread_id)
         for (auto thread_id : thread_vec)
             oss << thread_id << ENDLINE;
 
-        util::fs::WriteStringToTextFile(thread_list_filename_, oss.str());
+        util::fs::WriteStringToTextFile(thread_list_filename_, oss.str(), is_file_sync_enabled_);
     }
 
+    auto iter = thread_to_index_map_.find(thread_id);
+    if (iter != thread_to_index_map_.end())
+        return iter->second;
+
+    auto new_index = next_thread_index_++;
+    thread_to_index_map_[thread_id] = new_index;
+
+    util::fs::AppendStringToTextFile(thread_list_filename_, std::to_string(thread_id) + ENDLINE, is_file_sync_enabled_);
     return new_index;
 }
 

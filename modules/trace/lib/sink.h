@@ -39,16 +39,24 @@ class Sink {
     /**
      * 设置路径前缀
      *
-     * 比如：/data/my_proc，模块会自动创建目录 /some/where/my_proc.<pid>/ 目录，并在该目录下
-     *       创建对应的文件:
-     *       - name_list.txt
-     *       - thread_list.txt
-     *       - record_20240525_123300.bin
-     *       - record_20240525_151133.bin
+     * 比如：/data/my_proc，模块会自动创建目录 /data/my_proc.20240525_123300.7723/ 目录
+     *       其名称中 "20240525_123300" 为时间戳，"7723" 为进程号。
+     *       目录结构:
+     *       .
+     *       |-- name_list.txt    # 函数名列表
+     *       |-- thread_list.txt  # 线程名列表
+     *       `-- records          # 记录文件目录，其下存在一个或多个记录文件
+     *           `-- 20240530_041046.bin
      */
     void setPathPrefix(const std::string &path_prefix);
 
+    //! 设置是否开启实时落盘
+    void setFileSyncEnable(bool is_enable);
+
+    //! 获取目录路径
     std::string getDirPath() const { return dir_path_; }
+
+    //! 获取当前记录文件名
     std::string getCurrRecordFilename() const { return curr_record_filename_; }
 
     //! 设置记录文件的大小的上限
@@ -96,6 +104,7 @@ class Sink {
     size_t record_file_max_size_ = std::numeric_limits<size_t>::max();
     std::string name_list_filename_;
     std::string thread_list_filename_;
+    bool is_file_sync_enabled_ = false;
 
     std::atomic_bool is_enabled_{false};
 
