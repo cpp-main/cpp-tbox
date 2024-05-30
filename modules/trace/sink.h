@@ -63,10 +63,11 @@ class Sink {
      * \brief 提交记录
      *
      * \param name          名称，通常指函数名或事件名，或函数名+文件名+行号
+     * \param line          行号
      * \param end_ts        记录结束的时间点，单位: us
      * \param duration_us   记录持续时长，单位:us
      */
-    void commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t duration_us);
+    void commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us);
 
   protected:
     Sink();
@@ -76,6 +77,7 @@ class Sink {
         long thread_id;
         uint64_t end_ts_us;
         uint64_t duration_us;
+        uint32_t line;
         size_t name_size;
     };
 
@@ -86,7 +88,7 @@ class Sink {
 
     bool checkAndCreateRecordFile();
 
-    Index allocNameIndex(const std::string &name);
+    Index allocNameIndex(const std::string &name, uint32_t line);
     Index allocThreadIndex(long thread_id);
 
   private:

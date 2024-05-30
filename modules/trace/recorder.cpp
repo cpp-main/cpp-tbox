@@ -25,8 +25,9 @@
 namespace tbox {
 namespace trace {
 
-Recorder::Recorder(const char *name)
+Recorder::Recorder(const char *name, uint32_t line)
   : name_(name)
+  , line_(line)
 {
     if (Sink::GetInstance().isEnabled())
         start_ts_us_ = util::GetCurrentMicrosecondsFrom1970();
@@ -45,8 +46,14 @@ void Recorder::stop()
     auto end_ts_us = util::GetCurrentMicrosecondsFrom1970();
     auto duration_us = end_ts_us - start_ts_us_;
 
-    Sink::GetInstance().commitRecord(name_, end_ts_us, duration_us);
+    Sink::GetInstance().commitRecord(name_, line_, end_ts_us, duration_us);
     start_ts_us_ = 0;
+}
+
+void RecordEvent(const char *name, uint32_t line)
+{
+    auto ts_us = util::GetCurrentMicrosecondsFrom1970();
+    Sink::GetInstance().commitRecord(name, line, ts_us, 0);
 }
 
 }

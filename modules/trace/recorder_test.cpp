@@ -18,36 +18,28 @@
  * of the source tree.
  */
 #include <gtest/gtest.h>
-
-#include <sys/syscall.h>
-#include <thread>
-
-#include <tbox/util/fs.h>
-
 #include "recorder.h"
 
 namespace tbox {
 namespace trace {
 
-void ScopeBoo() {
+TEST(Recorder, Scope) {
   RECORD_SCOPE();
-  for (int i = 0; i < 10; ++i) {
+  if (true) {
     RECORD_SCOPE();
-    std::this_thread::sleep_for(std::chrono::microseconds(5));
   }
 }
 
-void ScopeFoo() {
-  RECORD_SCOPE();
-  std::this_thread::sleep_for(std::chrono::microseconds(64));
-  ScopeBoo();
-  std::this_thread::sleep_for(std::chrono::microseconds(10));
+TEST(Recorder, Event) {
+  RECORD_EVENT();
+  RECORD_EVENT();
 }
 
-TEST(Recorder, Base) {
-  auto t = std::thread(ScopeFoo);
-  ScopeFoo();
-  t.join();
+TEST(Recorder, Named) {
+  RECORD_START(a);
+  RECORD_START(b);
+  RECORD_STOP(a);
+  RECORD_STOP(b);
 }
 
 }

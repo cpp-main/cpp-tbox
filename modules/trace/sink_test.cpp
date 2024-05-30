@@ -38,10 +38,10 @@ TEST(Sink, Base) {
   ts.setPathPrefix(path_prefix);
 
   ts.enable();
-  ts.commitRecord("void hello()", 100, 10);
-  ts.commitRecord("int world(int, std::string)", 101, 1);
-  ts.commitRecord("void hello()", 200, 10);
-  ts.commitRecord("bool bye(double)", 201, 100);
+  ts.commitRecord("void hello()", 1, 100, 10);
+  ts.commitRecord("int world(int, std::string)", 2, 101, 1);
+  ts.commitRecord("void hello()", 1, 200, 10);
+  ts.commitRecord("bool bye(double)", 3, 201, 100);
   ts.disable();
 
   std::string path = ts.getDirPath();
@@ -56,7 +56,7 @@ TEST(Sink, Base) {
   {
     std::string name_list_content;
     ASSERT_TRUE(util::fs::ReadStringFromTextFile(name_list_filename, name_list_content));
-    std::string target_content = "void hello()\r\nint world(int, std::string)\r\nbool bye(double)\r\n";
+    std::string target_content = "void hello() at L1\r\nint world(int, std::string) at L2\r\nbool bye(double) at L3\r\n";
     EXPECT_EQ(name_list_content, target_content);
   }
 
@@ -75,7 +75,7 @@ TEST(Sink, Base) {
     EXPECT_EQ(first_record_content_hex, target_content);
   }
 
-  util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
+  //util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
 }
 
 TEST(Sink, MultiThread) {
@@ -87,7 +87,7 @@ TEST(Sink, MultiThread) {
 
   auto test_func = [&ts] (const std::string name) {
     for (int i = 0; i < 1000; ++i) {
-      ts.commitRecord(name.c_str(), util::GetCurrentMicrosecondsFrom1970(), 10);
+      ts.commitRecord(name.c_str(), 100, util::GetCurrentMicrosecondsFrom1970(), 10);
     }
   };
 
@@ -98,7 +98,7 @@ TEST(Sink, MultiThread) {
   ts.disable();
 
   //!TODO: 检查记录和条数是否有2000条
-  util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
+  //util::fs::RemoveDirectory("/tmp/cpp-tbox-test");
 }
 
 }

@@ -100,7 +100,7 @@ void Sink::disable()
     }
 }
 
-void Sink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t duration_us)
+void Sink::commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us)
 {
     if (!is_enabled_)
         return;
@@ -109,6 +109,7 @@ void Sink::commitRecord(const char *name, uint64_t end_timepoint_us, uint64_t du
         .thread_id = ::syscall(SYS_gettid),
         .end_ts_us = end_timepoint_us,
         .duration_us = duration_us,
+        .line = line,
         .name_size = ::strlen(name) + 1
     };
 
@@ -146,7 +147,7 @@ void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name)
         return;
 
     auto thread_index = allocThreadIndex(record.thread_id);
-    auto name_index = allocNameIndex(name);
+    auto name_index = allocNameIndex(name, record.line);
     auto time_diff = record.end_ts_us - last_timepoint_us_;
 
     constexpr size_t kBufferSize = 40;
@@ -213,17 +214,18 @@ bool Sink::checkAndCreateRecordFile()
     return true;
 }
 
-Sink::Index Sink::allocNameIndex(const std::string &name)
+Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
 {
-    auto iter = name_to_index_map_.find(name);
+    std::string content = name + " at L" + std::to_string(line);
+    auto iter = name_to_index_map_.find(content);
     if (iter != name_to_index_map_.end())
         return iter->second;
 
     auto new_index = next_name_index_++;
-    name_to_index_map_[name] = new_index;
+    name_to_index_map_[content] = new_index;
 
     if (util::fs::IsFileExist(name_list_filename_)) {
-        util::fs::AppendStringToTextFile(name_list_filename_, name + ENDLINE);
+        util::fs::AppendStringToTextFile(name_list_filename_, content + ENDLINE);
 
     } else {
         //! 文件不存在了，则重写所有的名称列表
@@ -233,8 +235,8 @@ Sink::Index Sink::allocNameIndex(const std::string &name)
             name_vec[item.second] = item.first;
 
         std::ostringstream oss;
-        for (auto &name : name_vec)
-            oss << name << ENDLINE;
+        for (auto &content: name_vec)
+            oss << content << ENDLINE;
 
         util::fs::WriteStringToTextFile(name_list_filename_, oss.str());
     }
