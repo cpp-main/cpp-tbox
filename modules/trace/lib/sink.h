@@ -43,9 +43,9 @@ class Sink {
      *       其名称中 "20240525_123300" 为时间戳，"7723" 为进程号。
      *       目录结构:
      *       .
-     *       |-- name_list.txt    # 函数名列表
-     *       |-- thread_list.txt  # 线程名列表
-     *       `-- records          # 记录文件目录，其下存在一个或多个记录文件
+     *       |-- names.txt    # 函数名列表
+     *       |-- threads.txt  # 线程名列表
+     *       `-- records      # 记录文件目录，其下存在一个或多个记录文件
      *           `-- 20240530_041046.bin
      */
     void setPathPrefix(const std::string &path_prefix);

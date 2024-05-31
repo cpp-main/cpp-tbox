@@ -28,7 +28,6 @@
 #include <sstream>
 
 #include <sys/syscall.h>
-#include <tbox/base/log.h>
 #include <tbox/base/defines.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/scalable_integer.h>
@@ -70,8 +69,8 @@ Sink::~Sink()
 void Sink::setPathPrefix(const std::string &path_prefix)
 {
     dir_path_ = path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
-    name_list_filename_ = dir_path_ + "/name_list.txt";
-    thread_list_filename_ = dir_path_ + "/thread_list.txt";
+    name_list_filename_ = dir_path_ + "/names.txt";
+    thread_list_filename_ = dir_path_ + "/threads.txt";
     CHECK_CLOSE_RESET_FD(curr_record_fd_);
 }
 

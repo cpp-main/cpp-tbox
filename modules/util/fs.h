@@ -21,6 +21,7 @@
 #define TBOX_UTIL_FS_H_20220103
 
 #include <string>
+#include <vector>
 #include <functional>
 
 namespace tbox {
@@ -52,7 +53,7 @@ bool IsFileExist(const std::string &filename);
  */
 bool ReadStringFromTextFile(const std::string &filename, std::string &content);
 
-/// 便利文本中的每一行
+/// 遍历文本中的每一行
 /**
  * \param filename          文件名
  * \param line_handle_func  行字串处理函数
@@ -61,6 +62,17 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content);
  * \return false    文件打开失败
  */
 bool ReadEachLineFromTextFile(const std::string &filename, const std::function<void(const std::string&)> &line_handle_func);
+
+/**
+ * 一次性读取文件中所有行
+ *
+ * \param filename          文件名
+ * \param lines             行文本数组
+ *
+ * \return true     文件打开成功
+ * \return false    文件打开失败
+ */
+bool ReadAllLinesFromTextFile(const std::string &filename, std::vector<std::string> &lines);
 
 /**
  * 将字串写入到文件

@@ -23,7 +23,7 @@ EXE_NAME := parser
 
 CPP_SRC_FILES := \
 	main.cpp \
-	json_writer.cpp \
+	writer.cpp \
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
