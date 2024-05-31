@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include <tbox/util/fs.h>
+#include <tbox/util/string.h>
 #include <tbox/util/buffer.h>
 #include <tbox/util/scalable_integer.h>
 
@@ -51,17 +52,17 @@ bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_
         return false;
     data_size += parse_size;
 
-    parse_size += util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), duration_us);
+    parse_size = util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), duration_us);
     if (parse_size == 0)
         return false;
     data_size += parse_size;
 
-    parse_size += util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), thread_index);
+    parse_size = util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), thread_index);
     if (parse_size == 0)
         return false;
     data_size += parse_size;
 
-    parse_size += util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), name_index);
+    parse_size = util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), name_index);
     if (parse_size == 0)
         return false;
     data_size += parse_size;
@@ -99,9 +100,9 @@ void ParseRecordFile(const std::string &filename, const StringVec &names, const 
           last_end_ts_us = end_ts_us;
 
           std::string name = "unknown-name", thread = "unknown-thread";
-          if (!names.empty() && name_index < names.size())
+          if (name_index < names.size())
               name = names[name_index];
-          if (!threads.empty() && thread_index < threads.size())
+          if (thread_index < threads.size())
               thread = threads[thread_index];
 
           writer.writeRecorder(name, thread, start_ts_us, duration_us);
@@ -141,11 +142,22 @@ int main(int argc, char **argv)
     if (!util::fs::ReadAllLinesFromTextFile(threads_filename, thread_vec))
         std::cerr << "Warn: load threads.txt fail!" << std::endl;
 
+    std::string records_dir = dir_path + "/records";
+    StringVec record_file_name_vec;
+    if (!util::fs::ListDirectory(records_dir, record_file_name_vec)) {
+      std::cerr << "Err: list '" << records_dir << "' fail!" << std::endl;
+      return 0;
+    }
+
     writer.writeHeader();
 
-    writer.writeRecorder("hello()", "12", 1000, 15);
-    writer.writeRecorder("event()", "12", 1005, 0);
-    writer.writeRecorder("world()", "13", 1010, 3);
+    for (auto record_file_name : record_file_name_vec) {
+      ParseRecordFile(
+        records_dir + '/' + record_file_name,
+        name_vec, thread_vec,
+        writer
+      );
+    }
 
     writer.writeFooter();
     return 0;

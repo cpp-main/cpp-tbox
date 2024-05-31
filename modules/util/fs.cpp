@@ -332,6 +332,32 @@ bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
     return is_all_removed;
 }
 
+bool ListDirectory(const std::string &dir, std::vector<std::string> &names)
+{
+    DIR *dp = ::opendir(dir.c_str());
+    if (dp == nullptr) {
+        // 无法打开目录，直接结束
+        if (errno == ENOENT) {
+            LogWarn("directory %s does not exist", dir.c_str());
+        } else {
+            LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+        }
+        return false;
+    }
+
+    SetScopeExitAction([dp] { closedir(dp); });
+
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dp)) != nullptr) {
+        std::string entry_name = entry->d_name;
+        if (entry_name != "." && entry_name != "..") {
+            names.emplace_back(entry_name);
+        }
+    }
+
+    return true;
+}
+
 std::string Basename(const std::string &full_path)
 {
     auto const pos = full_path.find_last_of('/');

@@ -35,7 +35,7 @@
 namespace tbox {
 namespace trace {
 
-#define ENDLINE "\r\n"
+#define ENDLINE "\n"
 
 namespace {
 std::string GetLocalDateTimeStr()

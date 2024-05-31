@@ -18,7 +18,9 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 9
-TBOX_VERSION_REVISION := 3
+all test clean distclean:
+       @for i in $(shell ls) ; do \
+               if [ -d $$i ]; then  \
+                       $(MAKE) -C $$i $@ || exit $$? ; \
+               fi \
+       done

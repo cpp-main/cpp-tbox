@@ -54,6 +54,6 @@ void RecordEvent(const char *name, uint32_t line);
 #define RECORD_STOP(name)   _trace_recorder_##name.stop()
 
 //! 记录事件
-#define RECORD_EVENT()  RecordEvent(__PRETTY_FUNCTION__, __LINE__)
+#define RECORD_EVENT()  tbox::trace::RecordEvent(__PRETTY_FUNCTION__, __LINE__)
 
 #endif //TBOX_TRACE_RECORDER_H_20240525

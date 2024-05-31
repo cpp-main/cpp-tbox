@@ -218,6 +218,17 @@ bool MakeDirectory(const std::string &dir, bool allow_log_print = true);
 */
 bool RemoveDirectory(const std::string &dir, bool is_remove_file_only = false);
 
+/**
+ * 列出指定目录下的子文件与目录
+ * 等价于shell命令："ls"
+ *
+ * \param dir       需要删除的目录路径，路径需要全路径，如 /data/test
+ *
+ * \return true     成功
+ * \return false    失改
+*/
+bool ListDirectory(const std::string &dir, std::vector<std::string> &names);
+
 ////////////////////////////////////////////////////////////////////
 // 其它
 ////////////////////////////////////////////////////////////////////
