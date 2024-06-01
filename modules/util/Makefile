@@ -31,7 +31,6 @@ HEAD_FILES = \
 	argument_parser.h \
 	split_cmdline.h \
 	serializer.h \
-	time_counter.h \
 	async_pipe.h \
 	timestamp.h \
 	json.h \
@@ -51,7 +50,6 @@ CPP_SRC_FILES = \
 	argument_parser.cpp \
 	split_cmdline.cpp \
 	serializer.cpp \
-	time_counter.cpp \
 	async_pipe.cpp \
 	timestamp.cpp \
 	json.cpp \
@@ -74,7 +72,6 @@ TEST_CPP_SRC_FILES = \
 	argument_parser_test.cpp \
 	split_cmdline_test.cpp \
 	serializer_test.cpp \
-	time_counter_test.cpp \
 	async_pipe_test.cpp \
 	json_test.cpp \
 	base64_test.cpp \
