@@ -30,6 +30,7 @@
 #include <sys/syscall.h>
 #include <tbox/base/defines.h>
 #include <tbox/util/fs.h>
+#include <tbox/util/string.h>
 #include <tbox/util/scalable_integer.h>
 
 namespace tbox {
@@ -55,23 +56,26 @@ Sink& Sink::GetInstance()
     return instance;
 }
 
-Sink::Sink()
-{
-    using namespace std::placeholders;
-    async_pipe_.setCallback(std::bind(&Sink::onBackendRecvData, this, _1, _2));
-}
-
 Sink::~Sink()
 {
     disable();
 }
 
-void Sink::setPathPrefix(const std::string &path_prefix)
+bool Sink::setPathPrefix(const std::string &path_prefix)
 {
-    dir_path_ = path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
+    auto striped_path_prefix = util::string::Strip(path_prefix);
+
+    if (striped_path_prefix.empty() || striped_path_prefix.back() == '/') {
+        std::cerr << "Err: path_prefix '"  << path_prefix << "' is invalid." << std::endl;
+        return false;
+    }
+
+    dir_path_ = striped_path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
     name_list_filename_ = dir_path_ + "/names.txt";
     thread_list_filename_ = dir_path_ + "/threads.txt";
     CHECK_CLOSE_RESET_FD(curr_record_fd_);
+
+    return true;
 }
 
 void Sink::setFileSyncEnable(bool is_enable)
@@ -90,8 +94,11 @@ bool Sink::enable()
         return false;
     }
 
+    using namespace std::placeholders;
+
     util::AsyncPipe::Config config;
     async_pipe_.initialize(config);
+    async_pipe_.setCallback(std::bind(&Sink::onBackendRecvData, this, _1, _2));
     is_enabled_ = true;
 
     return true;

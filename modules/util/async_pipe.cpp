@@ -252,14 +252,14 @@ void AsyncPipe::Impl::appendLockless(const void *data_ptr, size_t data_size)
         if (curr_buffer_ == nullptr) {
             //! 如果 curr_buffer_ 没有分配，则应该从 free_buffers_ 中取一个出来
             std::unique_lock<std::mutex> lk(free_buffers_mutex_);
-            if (free_buffers_.empty()) {    //! 如里 free_buffers_ 为空，则要等
+            if (free_buffers_.empty()) {    //! 如里 free_buffers_ 为空
                 buff_num_mutex_.lock();
+                //! 如果缓冲块数还没有达到最大限值，则可以继续申请
                 if (buff_num_ < cfg_.buff_max_num) {
                     ++buff_num_;
                     buff_num_mutex_.unlock();
-                    //! 如果缓冲数还没有达到最大限值，则可以继续申请
                     free_buffers_.push_back(new Buffer(cfg_.buff_size));
-                } else {
+                } else {  //! 否则只能等待后端释放
                     buff_num_mutex_.unlock();
                     free_buffers_cv_.wait(lk, [this] { return !free_buffers_.empty(); });
                 }
@@ -356,8 +356,8 @@ void AsyncPipe::Impl::threadFunc()
             }
         }
     } while (!stop_signal_);  //! 如果是停止信号，则直接跳出循环，结束线程
-    //! stop_signal_ 信号为什么不在被唤醒时就break呢？
-    //! 因为我们期望就算是退出了，Buff中的数据都应该先被处理掉
+    //! Q: stop_signal_ 信号为什么不在被唤醒时就break呢？
+    //! A: 因为我们期望就算是退出了，Buff中的数据都应该先被处理掉
 }
 
 }

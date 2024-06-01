@@ -57,9 +57,10 @@ void AsyncFileSink::setFilePath(const std::string &file_path)
     file_path_ = util::string::Strip(file_path);
 
     //! 确保最后没有'/'字符。如果最后一个字符是/，就弹出
-    if (file_path_.length() > 1 &&
-        file_path_.at(file_path_.length() - 1) == '/')
+    while (file_path_.length() >= 2 && file_path_.back() == '/')
         file_path_.pop_back();
+    //! Q: 为什么这里是 file_path_.length() >= 2 而不是 !file_path_.empty()
+    //! A: 为了防止 "/" 这样的情况。如果这种情况也去除了，那就变成空字串了
 
     updateInnerValues();
 }

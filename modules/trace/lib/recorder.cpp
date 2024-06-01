@@ -28,10 +28,8 @@ namespace trace {
 Recorder::Recorder(const char *name, uint32_t line)
   : name_(name)
   , line_(line)
-{
-    if (Sink::GetInstance().isEnabled())
-        start_ts_us_ = util::GetCurrentMicrosecondsFrom1970();
-}
+  , start_ts_us_(util::GetCurrentMicrosecondsFrom1970())
+{ }
 
 Recorder::~Recorder()
 {
@@ -52,8 +50,7 @@ void Recorder::stop()
 
 void RecordEvent(const char *name, uint32_t line)
 {
-    auto ts_us = util::GetCurrentMicrosecondsFrom1970();
-    Sink::GetInstance().commitRecord(name, line, ts_us, 0);
+    Sink::GetInstance().commitRecord(name, line, util::GetCurrentMicrosecondsFrom1970(), 0);
 }
 
 }

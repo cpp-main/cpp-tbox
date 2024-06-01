@@ -30,15 +30,16 @@ add_definitions(-DLOG_MODULE_ID="tbox.trace")
 set(TBOX_LIBRARY_NAME tbox_trace)
 
 set(TBOX_LOG_HEADERS
-    trace.h
-    trace_sink.h)
+    recorder.h
+    sink.h)
 
 set(TBOX_LOG_SOURCES
-    trace.cpp
-    trace_sink.cpp)
+    recorder.cpp
+    sink.cpp)
 
 set(TBOX_LOG_TEST_SOURCES
-    trace_sink_test.cpp)
+    recorder_test.cpp
+    sink_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_LOG_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})

@@ -48,7 +48,7 @@ class Sink {
      *       `-- records      # 记录文件目录，其下存在一个或多个记录文件
      *           `-- 20240530_041046.bin
      */
-    void setPathPrefix(const std::string &path_prefix);
+    bool setPathPrefix(const std::string &path_prefix);
 
     //! 设置是否开启实时落盘
     void setFileSyncEnable(bool is_enable);
@@ -78,7 +78,6 @@ class Sink {
     void commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us);
 
   protected:
-    Sink();
     ~Sink();
 
     struct RecordHeader {

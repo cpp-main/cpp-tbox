@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := tools/trace/parser
-EXE_NAME := parser
+PROJECT := trace/tools/trace_to_json
+EXE_NAME := trace/tools/trace_to_json
 
 CPP_SRC_FILES := \
 	main.cpp \

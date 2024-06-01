@@ -25,9 +25,9 @@ CPP_SRC_FILES := main.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
-       -ltbox_trace\
-       -ltbox_util \
-       -ltbox_base \
-       -lpthread -ldl
+	-ltbox_trace \
+	-ltbox_util \
+	-ltbox_base \
+	-lpthread -ldl
 
 include ${TOP_DIR}/tools/exe_common.mk

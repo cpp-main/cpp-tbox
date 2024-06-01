@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2024 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT = trace
+PROJECT = trace/lib
 LIB_NAME = trace
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 1

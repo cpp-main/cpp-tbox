@@ -36,7 +36,7 @@ void PrintUsage(const char *proc_name)
     std::cout
       << "Usage: " << proc_name << " <dir_path> [output_filename]" << std::endl
       << "Exp  : " << proc_name << " /some/where/my_proc.20240531_032237.114" << std::endl
-      << "       " << proc_name << " /some/where/my_proc.20240531_032237.114 records.json" << std::endl;
+      << "       " << proc_name << " /some/where/my_proc.20240531_032237.114 output.json" << std::endl;
 }
 
 bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_us, uint64_t &thread_index, uint64_t &name_index)
