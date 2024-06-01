@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/stdio_stream/01_stdin_out
-EXE_NAME := 01_stdin_out
+PROJECT := examples/network/stdio_stream/01_stdin_out
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

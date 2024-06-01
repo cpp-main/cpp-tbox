@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/base/assert
-EXE_NAME := assert
+PROJECT := examples/base/assert
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

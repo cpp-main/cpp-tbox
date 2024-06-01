@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/00_empty
-EXE_NAME := 00_empty
+PROJECT := examples/main/00_empty
+EXE_NAME := ${PROJECT}
 
 CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \

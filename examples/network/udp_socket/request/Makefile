@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/udp_socket/request
-EXE_NAME := request
+PROJECT := examples/network/udp_socket/request
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := request.cpp
 

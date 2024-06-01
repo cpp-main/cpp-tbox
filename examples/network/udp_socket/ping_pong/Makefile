@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/udp_socket/ping_pong
-EXE_NAME := ping_pong
+PROJECT := examples/network/udp_socket/ping_pong
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := ping_pong.cpp
 

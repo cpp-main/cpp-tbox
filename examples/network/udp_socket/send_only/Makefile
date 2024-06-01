@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/udp_socket/send_only
-EXE_NAME := send_only
+PROJECT := examples/network/udp_socket/send_only
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := send_only.cpp
 

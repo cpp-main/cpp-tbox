@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/mqtt/conn
-EXE_NAME := conn
+PROJECT := examples/mqtt/conn
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := conn.cpp
 

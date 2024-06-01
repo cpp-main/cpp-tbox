@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/alarm/oneshot_alarm
-EXE_NAME := oneshot_alarm
+PROJECT := examples/alarm/oneshot_alarm
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

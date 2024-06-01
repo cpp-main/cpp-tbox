@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/alarm/weekly_alarm
-EXE_NAME := weekly_alarm
+PROJECT := examples/alarm/weekly_alarm
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

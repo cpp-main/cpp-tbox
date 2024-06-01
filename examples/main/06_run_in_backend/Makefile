@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/06_run_in_backend
-EXE_NAME := 06_run_in_backend
+PROJECT := examples/main/06_run_in_backend
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES = \
 	app.cpp \

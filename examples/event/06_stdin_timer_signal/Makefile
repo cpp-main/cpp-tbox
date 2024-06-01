@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/event/06_stdin_timer_signal
-EXE_NAME := 06_stdin_timer_signal
+PROJECT := examples/event/06_stdin_timer_signal
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

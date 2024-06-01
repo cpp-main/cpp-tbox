@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/uart/uart_tool
-EXE_NAME := uart_tool
+PROJECT := examples/network/uart/uart_tool
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := uart_tool.cpp
 

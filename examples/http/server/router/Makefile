@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/http/server/router
-EXE_NAME := router
+PROJECT := examples/http/server/router
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := router.cpp
 

@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/base/print_log
-EXE_NAME := $(PROJECT)
+PROJECT := examples/base/print_log
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 C_SRC_FILES := other.c

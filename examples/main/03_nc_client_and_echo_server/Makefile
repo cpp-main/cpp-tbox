@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/03_nc_client_and_echo_server
-EXE_NAME := 03_nc_client_and_echo_server
+PROJECT := examples/main/03_nc_client_and_echo_server
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES = \
 	main.cpp \

@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/04_runtime_error
-EXE_NAME := 04_runtime_error
+PROJECT := examples/main/04_runtime_error
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES = \
 	main.cpp \

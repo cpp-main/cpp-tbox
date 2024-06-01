@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/eventx/thread_pool
-EXE_NAME := thread_pool
+PROJECT := examples/eventx/thread_pool
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

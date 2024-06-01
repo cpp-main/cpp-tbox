@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT = example/run/timer_event
+PROJECT = examples/run/timer_event
 
 LIB_NAME = timer_event
 LIB_VERSION_X = 0

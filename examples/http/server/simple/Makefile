@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/http/server/simple
-EXE_NAME := simple
+PROJECT := examples/http/server/simple
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := simple.cpp
 

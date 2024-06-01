@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/dbus/00-loop
-EXE_NAME := dbus/00-loop
+PROJECT := examples/dbus/00-loop
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

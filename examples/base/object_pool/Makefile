@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/base/object_pool
-EXE_NAME := object_pool
+PROJECT := examples/base/object_pool
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

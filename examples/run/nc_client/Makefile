@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT = example/run/nc_client
+PROJECT = examples/run/nc_client
 
 LIB_NAME = nc_client
 LIB_VERSION_X = 0

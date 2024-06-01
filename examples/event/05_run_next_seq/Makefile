@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/event/05_run_next_seq
-EXE_NAME := 05_run_next_seq
+PROJECT := examples/event/05_run_next_seq
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

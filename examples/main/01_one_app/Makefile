@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/01_one_app
-EXE_NAME := 01_one_app
+PROJECT := examples/main/01_one_app
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES = \
 	app.cpp \

@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/tcp_connector/tcp_nc_client
-EXE_NAME := tcp_nc_client
+PROJECT := examples/network/tcp_connector/tcp_nc_client
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := tcp_nc_client.cpp
 

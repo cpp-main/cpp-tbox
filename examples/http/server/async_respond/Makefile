@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/http/server/async_respond
-EXE_NAME := async_respond
+PROJECT := examples/http/server/async_respond
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := async_respond.cpp
 

@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/eventx/timer_fd
-EXE_NAME := timer_fd
+PROJECT := examples/eventx/timer_fd
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

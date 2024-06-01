@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT = example/run/echo_server
+PROJECT = examples/run/echo_server
 
 LIB_NAME = echo_server
 LIB_VERSION_X = 0

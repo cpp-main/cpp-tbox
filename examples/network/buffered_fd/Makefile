@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/buffered_fd/01-io-echo
-EXE_NAME := 01-io-echo
+PROJECT := examples/network/buffered_fd/01-io-echo
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := io_echo.cpp
 

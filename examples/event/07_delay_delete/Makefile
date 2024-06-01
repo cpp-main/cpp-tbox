@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/event/07_delay_delete
-EXE_NAME := 07_delay_delete
+PROJECT := examples/event/07_delay_delete
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

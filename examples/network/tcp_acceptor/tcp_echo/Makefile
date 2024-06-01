@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/tcp_acceptor/tcp_echo
-EXE_NAME := tcp_echo
+PROJECT := examples/network/tcp_acceptor/tcp_echo
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := tcp_echo.cpp
 

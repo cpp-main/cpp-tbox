@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/util/json_deep_loader
-EXE_NAME := json_deep_loader
+PROJECT := examples/util/json_deep_loader
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

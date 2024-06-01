@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/mqtt/pub
-EXE_NAME := pub
+PROJECT := examples/mqtt/pub
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := pub.cpp
 

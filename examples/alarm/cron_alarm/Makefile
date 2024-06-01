@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/alarm/cron_alarm
-EXE_NAME := cron_alarm
+PROJECT := examples/alarm/cron_alarm
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
 

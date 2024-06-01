@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/terminal/telnetd
-EXE_NAME := telnetd
+PROJECT := examples/terminal/telnetd
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp ../build_nodes.cpp
 

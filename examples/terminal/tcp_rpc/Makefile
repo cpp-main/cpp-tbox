@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/terminal/tcp_rpc
-EXE_NAME := tcp_rpc
+PROJECT := examples/terminal/tcp_rpc
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp ../build_nodes.cpp
 

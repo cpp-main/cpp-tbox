@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/udp_socket/recv_only
-EXE_NAME := recv_only
+PROJECT := examples/network/udp_socket/recv_only
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := recv_only.cpp
 

@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/main/sample
-EXE_NAME := sample
+PROJECT := examples/main/sample
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := app_main.cpp build_time.cpp
 TEST_CPP_SRC_FILES :=

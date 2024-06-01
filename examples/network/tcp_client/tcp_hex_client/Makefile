@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := example/network/tcp_client/tcp_hex_client
-EXE_NAME := tcp_hex_client
+PROJECT := examples/network/tcp_client/tcp_hex_client
+EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := tcp_hex_client.cpp
 
