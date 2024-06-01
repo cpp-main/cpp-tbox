@@ -49,7 +49,7 @@ bool Writer::writeRecorder(const std::string &name, const std::string &tid, uint
         ofs_ << ',' << std::endl;
     is_first_record_ = false;
 
-    ofs_  << R"({"name":")" << name << R"(","cat":"function","pid":"","tid":")"
+    ofs_  << R"({"name":")" << name << R"(","pid":"","tid":")"
           << tid << R"(","ts":)" << start_ts_us << ',';
 
     if (duration_us != 0)

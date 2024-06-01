@@ -19,45 +19,61 @@
  */
 
 #include <thread>
+#include <mutex>
 #include <tbox/trace/recorder.h>
 #include <tbox/trace/sink.h>
 
 using namespace tbox;
 
+std::mutex g_lock;
+
 void Bar()
 {
+    std::lock_guard<std::mutex> lg(g_lock);
     RECORD_SCOPE();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    RECORD_SCOPE();
 }
 void Foo()
 {
     RECORD_SCOPE();
     Bar();
-    RECORD_START(abc);
+    RECORD_SCOPE();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    RECORD_STOP(abc);
 }
 
 void Do() {
-    for (int i = 0; i < 100; ++i)
+    RECORD_SCOPE();
+    for (int i = 0; i < 3; ++i)
         Foo();
 }
 
 int main(int argc, char **argv)
 {
+    //! 配置Track导出方式
     auto &ts = trace::Sink::GetInstance();
-    ts.setRecordFileMaxSize(1<<20);
     ts.setPathPrefix("/tmp/test/trace-demo");
-    ts.enable();
+    ts.setRecordFileMaxSize(1<<20);
+    ts.enable();  //! 开始记录
 
     RECORD_EVENT();
 
-    auto t = std::thread(Do);
-    Do();
+    RECORD_START(c);
+    RECORD_START(a);
+    auto t1 = std::thread(Do);
+    auto t2 = std::thread(Do);
+    auto t3 = std::thread(Do);
+    RECORD_STOP(a);
 
-    t.join();
+    RECORD_START(b);
+    t1.join();
+    t2.join();
+    t3.join();
+    RECORD_STOP(b);
+    RECORD_STOP(c);
 
     RECORD_EVENT();
-    ts.disable();
+
+    ts.disable(); //! 停止记录
     return 0;
 }
