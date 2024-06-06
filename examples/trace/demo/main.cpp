@@ -20,7 +20,7 @@
 
 #include <thread>
 #include <mutex>
-#include <tbox/trace/recorder.h>
+#include <tbox/base/recorder.h>
 #include <tbox/trace/sink.h>
 
 using namespace tbox;
@@ -57,6 +57,10 @@ int main(int argc, char **argv)
     ts.enable();  //! 开始记录
 
     RECORD_EVENT();
+
+    RECORD_DEFINE(a);
+    RECORD_DEFINE(b);
+    RECORD_DEFINE(c);
 
     RECORD_START(c);
     RECORD_START(a);
