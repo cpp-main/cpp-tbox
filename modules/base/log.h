@@ -34,8 +34,12 @@
 
 //! Module ID
 #ifndef LOG_MODULE_ID
-#warning "Please define LOG_MODULE_ID as your module name, otherwise it will be ???"
-#define LOG_MODULE_ID   "???"
+    #ifdef MODULE_ID
+        #define LOG_MODULE_ID MODULE_ID
+    #else
+        #warning "Please define LOG_MODULE_ID as your module name, otherwise it will be ???"
+        #define LOG_MODULE_ID   "???"
+    #endif
 #endif //LOG_MODULE_ID
 
 //! Define commonly macros

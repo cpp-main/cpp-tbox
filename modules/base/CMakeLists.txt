@@ -44,14 +44,16 @@ set(TBOX_BASE_HEADERS
     backtrace.h
     catch_throw.h
     func_types.h
-    object_pool.hpp)
+    object_pool.hpp
+    recorder.h)
 
 set(TBOX_BASE_SOURCES
     version.cpp
     log_imp.cpp
     log_output.cpp
     backtrace.cpp
-    catch_throw.cpp)
+    catch_throw.cpp
+    recorder.cpp)
 
 set(TBOX_BASE_TEST_SOURCES
     log_output_test.cpp
@@ -62,7 +64,8 @@ set(TBOX_BASE_TEST_SOURCES
     lifetime_tag_test.cpp
     backtrace_test.cpp
     catch_throw_test.cpp
-    object_pool_test.cpp)
+    object_pool_test.cpp
+    recorder_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_BASE_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})

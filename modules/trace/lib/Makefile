@@ -24,19 +24,14 @@ LIB_VERSION_X = 0
 LIB_VERSION_Y = 1
 LIB_VERSION_Z = 0
 
-HEAD_FILES = \
-	recorder.h \
-	sink.h \
+HEAD_FILES = sink.h
 
-CPP_SRC_FILES = \
-	recorder.cpp \
-	sink.cpp \
+CPP_SRC_FILES = sink.cpp
 
 CXXFLAGS := -DLOG_MODULE_ID='"tbox.trace"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
-	recorder_test.cpp \
 	sink_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl

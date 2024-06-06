@@ -36,8 +36,12 @@ TEST(Recorder, Event) {
 }
 
 TEST(Recorder, Named) {
+  RECORD_DEFINE(a);
+  RECORD_DEFINE(b);
+
   RECORD_START(a);
   RECORD_START(b);
+
   RECORD_STOP(a);
   RECORD_STOP(b);
 }

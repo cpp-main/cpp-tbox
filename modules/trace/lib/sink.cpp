@@ -36,6 +36,12 @@
 namespace tbox {
 namespace trace {
 
+void CommitRecordFunc(const char *name, const char *module, uint32_t line,
+                      uint64_t end_timepoint_us, uint64_t duration_us)
+{
+    Sink::GetInstance().commitRecord(name, line, end_timepoint_us, duration_us);
+}
+
 #define ENDLINE "\n"
 
 namespace {

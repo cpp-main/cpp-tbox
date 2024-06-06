@@ -44,6 +44,7 @@ HEAD_FILES = \
 	catch_throw.h \
 	object_pool.hpp \
 	func_types.h \
+	recorder.h \
 
 CPP_SRC_FILES = \
 	version.cpp \
@@ -51,11 +52,12 @@ CPP_SRC_FILES = \
 	log_output.cpp \
 	backtrace.cpp \
 	catch_throw.cpp \
+	recorder.cpp \
 
 pre_build:
 	touch version.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.base"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.base"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
@@ -68,7 +70,7 @@ TEST_CPP_SRC_FILES = \
 	backtrace_test.cpp \
 	catch_throw_test.cpp \
 	object_pool_test.cpp \
-
+	recorder_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ldl
 
