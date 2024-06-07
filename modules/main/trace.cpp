@@ -109,7 +109,7 @@ void Trace::initShell(TerminalNodes &term)
                 s.send(oss.str());
             }
         , "enable or disable");
-        term.mountNode(trace_node, func_node, "enable");
+        term.mountNode(trace_node, func_node, "set_enable");
     }
 
     {
@@ -138,7 +138,7 @@ void Trace::initShell(TerminalNodes &term)
                 s.send(oss.str());
             }
         , "enable or disable file sync");
-        term.mountNode(trace_node, func_node, "enable_sync");
+        term.mountNode(trace_node, func_node, "set_enable_sync");
     }
 
     {
