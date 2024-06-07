@@ -37,7 +37,6 @@ void Trace::fillDefaultConfig(Json &cfg) const
     cfg["trace"] = R"(
 {
   "enable": false,
-  "path_prefix": "/tmp/trace/unknown",
   "max_size": 1024,
   "enable_sync": false
 }
@@ -63,24 +62,21 @@ bool Trace::initialize(Context &ctx, const Json &cfg)
 
         auto &sink = trace::Sink::GetInstance();
 
-        if (!path_prefix.empty()) {
-            sink.setPathPrefix(path_prefix);
-            if (is_enable)
-                sink.enable();
-        }
-
         if (max_size > 0)
             sink.setRecordFileMaxSize(1024 * max_size);
 
         if (is_enable_sync)
             sink.setFileSyncEnable(true);
+
+        if (sink.setPathPrefix(path_prefix) && is_enable)
+            sink.enable();
     }
     return true;
 }
 
 void Trace::initShell(TerminalNodes &term)
 {
-    auto trace_node = term.createDirNode("This is log directory");
+    auto trace_node = term.createDirNode("This is trace directory");
     term.mountNode(term.rootNode(), trace_node, "trace");
 
     {
