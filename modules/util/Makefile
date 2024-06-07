@@ -62,7 +62,7 @@ CPP_SRC_FILES = \
 	fd.cpp \
 	scalable_integer.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.util"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.util"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

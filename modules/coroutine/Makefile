@@ -35,7 +35,7 @@ HEAD_FILES = \
 CPP_SRC_FILES = \
 	scheduler.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.coroutine"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.coroutine"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

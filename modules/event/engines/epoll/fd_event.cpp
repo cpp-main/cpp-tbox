@@ -25,6 +25,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/recorder.h>
 
 namespace tbox {
 namespace event {
@@ -153,6 +154,7 @@ void EpollFdEvent::reloadEpoll()
 
 void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
 {
+    RECORD_SCOPE();
     EpollFdSharedData *d = static_cast<EpollFdSharedData*>(obj);
 
     short tbox_events = 0;
@@ -200,6 +202,7 @@ void EpollFdEvent::onEvent(short events)
 
         wp_loop_->beginEventProcess();
         if (cb_) {
+            RECORD_SCOPE();
             ++cb_level_;
             cb_(events);
             --cb_level_;

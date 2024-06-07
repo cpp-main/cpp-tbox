@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/recorder.h>
 
 namespace tbox {
 namespace event {
@@ -54,6 +55,7 @@ Loop::RunId CommonLoop::allocRunNextId()
 
 Loop::RunId CommonLoop::runInLoop(Func &&func, const std::string &what)
 {
+    RECORD_SCOPE();
     std::lock_guard<std::recursive_mutex> g(lock_);
 
     RunId run_id = allocRunInLoopId();
@@ -80,6 +82,7 @@ Loop::RunId CommonLoop::runInLoop(const Func &func, const std::string &what)
 
 Loop::RunId CommonLoop::runNext(Func &&func, const std::string &what)
 {
+    RECORD_SCOPE();
     RunId run_id = allocRunNextId();
     run_next_func_queue_.emplace_back(RunFuncItem(run_id, std::move(func), what));
 
@@ -101,6 +104,7 @@ Loop::RunId CommonLoop::runNext(const Func &func, const std::string &what)
 
 Loop::RunId CommonLoop::run(Func &&func, const std::string &what)
 {
+    RECORD_SCOPE();
     bool can_run_next = true;
     {
         std::lock_guard<std::recursive_mutex> g(lock_);
@@ -153,6 +157,7 @@ bool CommonLoop::cancel(RunId run_id)
 
 void CommonLoop::handleNextFunc()
 {
+    RECORD_SCOPE();
     /**
      * 这里使用 tmp_func_queue_ 将 run_next_func_queue_ 中的内容交换出去。然后再从
      * tmp_func_queue_ 逐一取任务出来执行。其目的在于腾空 run_next_func_queue_，让
@@ -177,6 +182,7 @@ void CommonLoop::handleNextFunc()
                       delay.count()/1000, item.what.c_str());
 
         if (item.func) {
+            RECORD_SCOPE();
             ++cb_level_;
             item.func();
             --cb_level_;
@@ -196,6 +202,7 @@ bool CommonLoop::hasNextFunc() const
 
 void CommonLoop::handleRunInLoopFunc()
 {
+    RECORD_SCOPE();
     {
         //! 同handleNextFunc()的说明
         std::lock_guard<std::recursive_mutex> g(lock_);
@@ -214,6 +221,7 @@ void CommonLoop::handleRunInLoopFunc()
                       delay.count()/1000, item.what.c_str());
 
         if (item.func) {
+            RECORD_SCOPE();
             ++cb_level_;
             item.func();
             --cb_level_;
@@ -238,6 +246,7 @@ void CommonLoop::cleanupDeferredTasks()
         while (!run_next_tasks.empty()) {
             RunFuncItem &item = run_next_tasks.front();
             if (item.func) {
+                RECORD_SCOPE();
                 ++cb_level_;
                 item.func();
                 --cb_level_;
@@ -248,6 +257,7 @@ void CommonLoop::cleanupDeferredTasks()
         while (!run_in_loop_tasks.empty()) {
             RunFuncItem &item = run_in_loop_tasks.front();
             if (item.func) {
+                RECORD_SCOPE();
                 ++cb_level_;
                 item.func();
                 --cb_level_;
@@ -262,6 +272,7 @@ void CommonLoop::cleanupDeferredTasks()
 
 void CommonLoop::commitRunRequest()
 {
+    RECORD_SCOPE();
     if (!has_commit_run_req_) {
         uint64_t one = 1;
         ssize_t wsize = write(run_event_fd_, &one, sizeof(one));

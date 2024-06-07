@@ -35,6 +35,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/catch_throw.h>
 #include <tbox/base/object_pool.hpp>
+#include <tbox/base/recorder.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {
@@ -137,6 +138,7 @@ ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int
 
 ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
 {
+    RECORD_SCOPE();
     TaskToken token;
 
     if (!d_->is_ready) {
@@ -206,6 +208,7 @@ ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
  */
 int ThreadPool::cancel(TaskToken token)
 {
+    RECORD_SCOPE();
     std::lock_guard<std::mutex> lg(d_->lock);
 
     //! 如果正在执行
@@ -230,6 +233,7 @@ int ThreadPool::cancel(TaskToken token)
 
 void ThreadPool::cleanup()
 {
+    RECORD_SCOPE();
     if (!d_->is_ready)
         return;
 
@@ -285,6 +289,7 @@ ThreadPool::Snapshot ThreadPool::snapshot() const
 
 void ThreadPool::threadProc(ThreadToken thread_token)
 {
+    RECORD_SCOPE();
     LogDbg("thread %u start", thread_token.id());
 
     while (true) {
@@ -329,6 +334,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
         //! 后面就是去执行任务，不需要再加锁了
         if (item != nullptr) {
+            RECORD_SCOPE();
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.insert(item->token);
@@ -339,7 +345,10 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             auto exec_time_point = Clock::now();
             auto wait_time_cost = exec_time_point - item->create_time_point;
 
-            CatchThrow(item->backend_task, true);
+            {
+                RECORD_SCOPE();
+                CatchThrow(item->backend_task, true);
+            }
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 
@@ -348,8 +357,10 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
 
-            if (item->main_cb)
+            if (item->main_cb) {
+                RECORD_SCOPE();
                 d_->wp_loop->runInLoop(item->main_cb, "ThreadPool::threadProc, invoke main_cb");
+            }
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
@@ -364,6 +375,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
 bool ThreadPool::createWorker()
 {
+    RECORD_SCOPE();
     ThreadToken thread_token = d_->threads_cabinet.alloc();
     auto *new_thread = new std::thread(std::bind(&ThreadPool::threadProc, this, thread_token));
     if (new_thread != nullptr) {

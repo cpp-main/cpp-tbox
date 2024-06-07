@@ -23,7 +23,7 @@ EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp ../build_nodes.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_terminal \
 	-ltbox_network \

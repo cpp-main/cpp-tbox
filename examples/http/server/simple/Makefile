@@ -23,7 +23,7 @@ EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := simple.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_http \
 	-ltbox_network \

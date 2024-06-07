@@ -26,6 +26,7 @@ MODULES += eventx
 MODULES += log
 MODULES += network
 MODULES += terminal
+MODULES += trace
 MODULES += main
 MODULES += run
 
@@ -38,7 +39,6 @@ MODULES += alarm
 MODULES += crypto
 MODULES += dbus
 MODULES += jsonrpc
-MODULES += trace
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann

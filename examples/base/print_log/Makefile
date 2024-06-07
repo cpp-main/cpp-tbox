@@ -24,8 +24,8 @@ EXE_NAME := ${PROJECT}
 CPP_SRC_FILES := main.cpp
 C_SRC_FILES := other.c
 
-CXXFLAGS += -DLOG_MODULE_ID='"demo"'
-CFLAGS += -DLOG_MODULE_ID='"demo"'
+CXXFLAGS += -DMODULE_ID='"demo"'
+CFLAGS += -DMODULE_ID='"demo"'
 
 LDFLAGS += -ltbox_base -ldl
 

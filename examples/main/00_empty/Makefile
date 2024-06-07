@@ -21,9 +21,10 @@
 PROJECT := examples/main/00_empty
 EXE_NAME := ${PROJECT}
 
-CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_main \
+	-ltbox_trace \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \

@@ -39,8 +39,9 @@ CPP_SRC_FILES = \
 	args.cpp \
 	module.cpp \
 	log.cpp \
+	trace.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.main"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.main"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 

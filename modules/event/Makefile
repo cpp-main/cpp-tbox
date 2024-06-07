@@ -53,7 +53,7 @@ TEST_CPP_SRC_FILES = \
 	timer_event_test.cpp \
 	signal_event_test.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.event"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.event"' $(CXXFLAGS)
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

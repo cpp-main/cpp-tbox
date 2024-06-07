@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <tbox/base/defines.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/recorder.h>
 
 #include "timer_event_impl.h"
 
@@ -54,6 +55,8 @@ int64_t CommonLoop::getWaitTime() const
 
 void CommonLoop::handleExpiredTimers()
 {
+    RECORD_SCOPE();
+
     auto now = GetCurrentSteadyClockMilliseconds();
 
     while (!timer_min_heap_.empty()) {
@@ -86,8 +89,12 @@ void CommonLoop::handleExpiredTimers()
 
         //! Q: 为什么不在L68执行？
         //! A: 因为要尽可能地将回调放到最后执行。否则不满足测试 TEST(TimerEvent, DisableSelfInCallback)
-        if (LIKELY(tobe_run))
+        if (LIKELY(tobe_run)) {
+            RECORD_SCOPE();
+            ++cb_level_;
             tobe_run();
+            --cb_level_;
+        }
     }
 }
 

@@ -25,7 +25,7 @@ CPP_SRC_FILES := \
 	main.cpp \
 	writer.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_trace \
 	-ltbox_util \

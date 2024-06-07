@@ -34,6 +34,7 @@
 #include <tbox/base/catch_throw.h>
 #include <tbox/base/object_pool.hpp>
 #include <tbox/base/assert.h>
+#include <tbox/base/recorder.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {
@@ -101,6 +102,7 @@ WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
 
 WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
 {
+    RECORD_SCOPE();
     TaskToken token;
 
     if (d_ == nullptr) {
@@ -160,6 +162,7 @@ WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
  */
 int WorkThread::cancel(TaskToken token)
 {
+    RECORD_SCOPE();
     if (d_ == nullptr) {
         LogWarn("WorkThread has been cleanup");
         return 3;
@@ -186,6 +189,7 @@ int WorkThread::cancel(TaskToken token)
 
 void WorkThread::threadProc()
 {
+    RECORD_SCOPE();
     while (true) {
         Task* item = nullptr;
         {
@@ -211,6 +215,7 @@ void WorkThread::threadProc()
 
         //! 后面就是去执行任务，不需要再加锁了
         if (item != nullptr) {
+            RECORD_SCOPE();
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.insert(item->token);
@@ -221,7 +226,10 @@ void WorkThread::threadProc()
             auto exec_time_point = Clock::now();
             auto wait_time_cost = exec_time_point - item->create_time_point;
 
-            CatchThrow(item->backend_task, true);
+            {
+                RECORD_SCOPE();
+                CatchThrow(item->backend_task, true);
+            }
 
             auto exec_time_cost = Clock::now() - exec_time_point;
 
@@ -230,8 +238,10 @@ void WorkThread::threadProc()
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
 
-            if (item->main_cb && item->main_loop != nullptr)
+            if (item->main_cb && item->main_loop != nullptr) {
+                RECORD_SCOPE();
                 item->main_loop->runInLoop(item->main_cb, "WorkThread::threadProc, invoke main_cb");
+            }
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);

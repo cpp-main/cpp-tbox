@@ -26,9 +26,10 @@ CPP_SRC_FILES = \
 	app_main.cpp \
 	main.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_main \
+	-ltbox_trace \
 	-ltbox_terminal \
 	-ltbox_network \
 	-ltbox_eventx \

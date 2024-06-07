@@ -32,6 +32,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/recorder.h>
 
 namespace tbox {
 namespace event {
@@ -51,6 +52,8 @@ EpollLoop::~EpollLoop()
 
 void EpollLoop::runLoop(Mode mode)
 {
+    RECORD_EVENT();
+
     if (epoll_fd_ < 0)
         return;
 
@@ -70,6 +73,7 @@ void EpollLoop::runLoop(Mode mode)
     do {
         int fds = epoll_wait(epoll_fd_, events.data(), events.size(), getWaitTime());
 
+        RECORD_SCOPE();
         beginLoopProcess();
 
         handleExpiredTimers();
@@ -93,6 +97,8 @@ void EpollLoop::runLoop(Mode mode)
     } while (keep_running_);
 
     runThisAfterLoop();
+
+    RECORD_EVENT();
 }
 
 EpollFdSharedData* EpollLoop::refFdSharedData(int fd)

@@ -43,7 +43,8 @@ set(TBOX_MAIN_SOURCES
     misc.cpp
     args.cpp
     module.cpp
-    log.cpp)
+    log.cpp
+    trace.cpp)
 
 #set(TBOX_MAIN_TEST_SOURCES )
 

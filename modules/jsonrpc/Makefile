@@ -38,7 +38,7 @@ CPP_SRC_FILES = \
 	protos/packet_proto.cpp \
 	rpc.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.jsonrpc"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.jsonrpc"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

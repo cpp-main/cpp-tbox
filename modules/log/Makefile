@@ -48,7 +48,7 @@ TEST_CPP_SRC_FILES = \
 	async_file_sink_test.cpp \
 	sync_stdout_sink_test.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.log"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.log"' $(CXXFLAGS)
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_event -ltbox_base -ldl
 ENABLE_SHARED_LIB = no

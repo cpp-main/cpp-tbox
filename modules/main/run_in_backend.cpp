@@ -34,6 +34,7 @@
 #include "context_imp.h"
 #include "args.h"
 #include "log.h"
+#include "trace.h"
 
 namespace tbox {
 namespace main {
@@ -126,9 +127,11 @@ bool Start(int argc, char **argv)
 
     Json js_conf;
     Args args(js_conf);
+    Trace trace;
 
     log.fillDefaultConfig(js_conf);
     ctx.fillDefaultConfig(js_conf);
+    trace.fillDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
     if (!args.parse(argc, argv))
@@ -146,6 +149,7 @@ bool Start(int argc, char **argv)
     util::json::GetField(js_conf, "loop_exit_wait", _runtime->loop_exit_wait);
     util::json::GetField(js_conf, "error_exit_wait", _runtime->error_exit_wait);
 
+    trace.initialize(ctx, js_conf);
     log.initialize(argv[0], ctx, js_conf);
     LogOutput_Disable();
 

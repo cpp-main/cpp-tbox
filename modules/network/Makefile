@@ -58,7 +58,7 @@ CPP_SRC_FILES = \
 	net_if.cpp \
 	dns_request.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.network"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.network"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

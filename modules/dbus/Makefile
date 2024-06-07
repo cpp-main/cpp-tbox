@@ -33,7 +33,7 @@ CPP_SRC_FILES = \
 	loop.cpp \
 	connection.cpp
 
-CXXFLAGS += -DLOG_MODULE_ID='"tbox.dbus"'
+CXXFLAGS += -DMODULE_ID='"tbox.dbus"'
 CXXFLAGS += $(shell pkg-config --cflags dbus-1) 
 LDFLAGS += $(shell pkg-config --libs dbus-1)
 

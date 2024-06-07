@@ -28,7 +28,7 @@ HEAD_FILES = sink.h
 
 CPP_SRC_FILES = sink.cpp
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.trace"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.trace"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

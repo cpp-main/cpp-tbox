@@ -67,7 +67,7 @@ CPP_SRC_FILES = \
 	actions/wrapper_action.cpp \
 	to_graphviz.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.flow"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.flow"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

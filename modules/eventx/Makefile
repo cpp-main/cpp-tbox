@@ -45,7 +45,7 @@ CPP_SRC_FILES = \
 	timer_fd.cpp \
 	async.cpp \
 
-CXXFLAGS := -DLOG_MODULE_ID='"tbox.eventx"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.eventx"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

@@ -21,6 +21,7 @@
 #include "common_loop.h"
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/recorder.h>
 
 namespace tbox {
 namespace event {
@@ -103,6 +104,7 @@ void SignalEventImpl::onSignal(int signo)
 
     wp_loop_->beginEventProcess();
     if (cb_) {
+        RECORD_SCOPE();
         ++cb_level_;
         cb_(signo);
         --cb_level_;
