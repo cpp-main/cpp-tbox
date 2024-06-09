@@ -39,7 +39,7 @@ void Trace::fillDefaultConfig(Json &cfg) const
 {
   "enable": false,
   "max_size": 1024,
-  "enable_sync": false
+  "sync_enable": false
 }
 )"_json;
 }
@@ -52,24 +52,27 @@ bool Trace::initialize(Context &ctx, const Json &cfg)
         auto &js_trace = cfg.at("trace");
 
         bool is_enable = false;
-        bool is_enable_sync = false;
+        bool is_sync_enable = false;
         std::string path_prefix;
         int max_size = 0;
 
         util::json::GetField(js_trace, "path_prefix", path_prefix);
         util::json::GetField(js_trace, "enable", is_enable);
         util::json::GetField(js_trace, "max_size", max_size);
-        util::json::GetField(js_trace, "enable_sync", is_enable_sync);
+        util::json::GetField(js_trace, "sync_enable", is_sync_enable);
 
         auto &sink = trace::Sink::GetInstance();
 
         if (max_size > 0)
             sink.setRecordFileMaxSize(1024 * max_size);
 
-        if (is_enable_sync)
+        if (is_sync_enable)
             sink.setFileSyncEnable(true);
 
-        if (sink.setPathPrefix(path_prefix) && is_enable)
+        if (!path_prefix.empty())
+            sink.setPathPrefix(path_prefix);
+
+        if (is_enable)
             sink.enable();
     }
     return true;
