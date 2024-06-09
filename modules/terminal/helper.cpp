@@ -314,7 +314,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std:
                 CatchThrowQuietly([&] { new_value = std::stoi(str); is_ok = true; });
                 if (is_ok) {
                     if (new_value < profile.min_value || new_value > profile.max_value) {
-                      oss << "fail, out of range\r\n";
+                      oss << "fail, out of range.\r\n";
                       is_ok = false;
                     }
                 }
@@ -379,7 +379,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std:
                 CatchThrowQuietly([&] { new_value = std::stod(str); is_ok = true; });
                 if (is_ok) {
                     if (new_value < profile.min_value || new_value > profile.max_value) {
-                      oss << "fail, out of range\r\n";
+                      oss << "fail, out of range.\r\n";
                       is_ok = false;
                     }
                 }
