@@ -39,7 +39,8 @@ void PrintUsage(const char *proc_name)
       << "       " << proc_name << " /some/where/my_proc.20240531_032237.114 output.json" << std::endl;
 }
 
-bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_us, uint64_t &thread_index, uint64_t &name_index)
+bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_us,
+                uint64_t &thread_index, uint64_t &name_index, uint64_t &module_index)
 {
     uint8_t *buffer_begin = buffer.readableBegin();
     size_t   buffer_size  = buffer.readableSize();
@@ -67,11 +68,16 @@ bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_
         return false;
     data_size += parse_size;
 
+    parse_size = util::ParseScalableInteger((buffer_begin + data_size), (buffer_size - data_size), module_index);
+    if (parse_size == 0)
+        return false;
+    data_size += parse_size;
+
     buffer.hasRead(data_size);
     return true;
 }
 
-void ParseRecordFile(const std::string &filename, const StringVec &names, const StringVec &threads, trace::Writer &writer)
+void ParseRecordFile(const std::string &filename, const StringVec &names, const StringVec &modules, const StringVec &threads, trace::Writer &writer)
 {
     std::ifstream ifs(filename, std::ifstream::binary);
     if (!ifs) {
@@ -91,21 +97,26 @@ void ParseRecordFile(const std::string &filename, const StringVec &names, const 
       buffer.append(tmp, rsize);
 
       while (buffer.readableSize() >= 4) {
-          uint64_t end_diff_us, duration_us, thread_index, name_index;
-          if (!PickRecord(buffer, end_diff_us, duration_us, thread_index, name_index))
+          uint64_t end_diff_us, duration_us, thread_index, name_index, module_index;
+          if (!PickRecord(buffer, end_diff_us, duration_us, thread_index, name_index, module_index))
               break;
 
           uint64_t end_ts_us = last_end_ts_us + end_diff_us;
           uint64_t start_ts_us = end_ts_us - duration_us;
           last_end_ts_us = end_ts_us;
 
-          std::string name = "unknown-name", thread = "unknown-thread";
+          std::string name = "unknown-name", thread = "unknown-thread", module = "unknown-module";
+
           if (name_index < names.size())
               name = names[name_index];
+
           if (thread_index < threads.size())
               thread = threads[thread_index];
 
-          writer.writeRecorder(name, thread, start_ts_us, duration_us);
+          if (module_index < modules.size())
+              module = modules[module_index];
+
+          writer.writeRecorder(name, module, thread, start_ts_us, duration_us);
       }
     }
 }
@@ -133,12 +144,15 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    //! 从 threads.txt 与 names.txt 导入数据
+    //! 从 threads.txt, names.txt, modules.txt 文件中导入数据
     std::string names_filename = dir_path + "/names.txt";
+    std::string modules_filename = dir_path + "/modules.txt";
     std::string threads_filename = dir_path + "/threads.txt";
-    StringVec name_vec, thread_vec;
+    StringVec name_vec, module_vec, thread_vec;
     if (!util::fs::ReadAllLinesFromTextFile(names_filename, name_vec))
         std::cerr << "Warn: load names.txt fail!" << std::endl;
+    if (!util::fs::ReadAllLinesFromTextFile(modules_filename, module_vec))
+        std::cerr << "Warn: load modules.txt fail!" << std::endl;
     if (!util::fs::ReadAllLinesFromTextFile(threads_filename, thread_vec))
         std::cerr << "Warn: load threads.txt fail!" << std::endl;
 
@@ -154,7 +168,7 @@ int main(int argc, char **argv)
     for (auto record_file_name : record_file_name_vec) {
       ParseRecordFile(
         records_dir + '/' + record_file_name,
-        name_vec, thread_vec,
+        name_vec, module_vec, thread_vec,
         writer
       );
     }

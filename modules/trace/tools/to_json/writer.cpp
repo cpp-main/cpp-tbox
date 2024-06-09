@@ -40,7 +40,8 @@ bool Writer::writeHeader()
     return true;
 }
 
-bool Writer::writeRecorder(const std::string &name, const std::string &tid, uint64_t start_ts_us, uint64_t duration_us)
+bool Writer::writeRecorder(const std::string &name, const std::string &module,
+                           const std::string &tid, uint64_t start_ts_us, uint64_t duration_us)
 {
     if (!ofs_.is_open())
         return false;
@@ -49,7 +50,9 @@ bool Writer::writeRecorder(const std::string &name, const std::string &tid, uint
         ofs_ << ',' << std::endl;
     is_first_record_ = false;
 
-    ofs_  << R"({"name":")" << name << R"(","pid":"","tid":")"
+    ofs_  << R"({"name":")" << name
+          << R"(","cat":")" << module
+          << R"(","pid":"","tid":")"
           << tid << R"(","ts":)" << start_ts_us << ',';
 
     if (duration_us != 0)

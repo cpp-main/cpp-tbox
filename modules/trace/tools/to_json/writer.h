@@ -32,7 +32,8 @@ class Writer {
   bool open(const std::string &filename);
 
   bool writeHeader();
-  bool writeRecorder(const std::string &name, const std::string &tid, uint64_t start_ts_us, uint64_t duration_us);
+  bool writeRecorder(const std::string &name, const std::string &module,
+                     const std::string &tid, uint64_t start_ts_us, uint64_t duration_us);
   bool writeFooter();
 
  private:

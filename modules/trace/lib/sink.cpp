@@ -23,12 +23,12 @@
 #include <fcntl.h>
 
 #include <cstring>
-#include <iostream>
 #include <vector>
 #include <sstream>
 
 #include <sys/syscall.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
 #include <tbox/util/scalable_integer.h>
@@ -39,7 +39,7 @@ namespace trace {
 void CommitRecordFunc(const char *name, const char *module, uint32_t line,
                       uint64_t end_timepoint_us, uint64_t duration_us)
 {
-    Sink::GetInstance().commitRecord(name, line, end_timepoint_us, duration_us);
+    Sink::GetInstance().commitRecord(name, module, line, end_timepoint_us, duration_us);
 }
 
 #define ENDLINE "\n"
@@ -72,12 +72,13 @@ bool Sink::setPathPrefix(const std::string &path_prefix)
     auto striped_path_prefix = util::string::Strip(path_prefix);
 
     if (striped_path_prefix.empty() || striped_path_prefix.back() == '/') {
-        std::cerr << "Err: path_prefix '"  << path_prefix << "' is invalid." << std::endl;
+        LogWarn("path_prefix '%s' is invalid.", path_prefix.c_str());
         return false;
     }
 
     dir_path_ = striped_path_prefix + '.' + GetLocalDateTimeStr() + '.' + std::to_string(::getpid());
     name_list_filename_ = dir_path_ + "/names.txt";
+    module_list_filename_ = dir_path_ + "/modules.txt";
     thread_list_filename_ = dir_path_ + "/threads.txt";
     CHECK_CLOSE_RESET_FD(curr_record_fd_);
 
@@ -96,7 +97,7 @@ bool Sink::enable()
         return true;
 
     if (dir_path_.empty()) {
-        std::cerr << "Warn: no path_prefix" << std::endl;
+        LogWarn("path_prefix is empty, can't enable.");
         return false;
     }
 
@@ -117,11 +118,10 @@ void Sink::disable()
         async_pipe_.cleanup();
         CHECK_CLOSE_RESET_FD(curr_record_fd_);
         buffer_.hasReadAll();
-        curr_record_filename_.clear();
     }
 }
 
-void Sink::commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us)
+void Sink::commitRecord(const char *name, const char *module, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us)
 {
     if (!is_enabled_)
         return;
@@ -131,12 +131,14 @@ void Sink::commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_
         .end_ts_us = end_timepoint_us,
         .duration_us = duration_us,
         .line = line,
-        .name_size = ::strlen(name) + 1
+        .name_size = ::strlen(name) + 1,
+        .module_size = ::strlen(module) + 1
     };
 
     async_pipe_.appendLock();
     async_pipe_.appendLockless(&header, sizeof(header));
     async_pipe_.appendLockless(name, header.name_size);
+    async_pipe_.appendLockless(module, header.module_size);
     async_pipe_.appendUnlock();
 }
 
@@ -152,23 +154,27 @@ void Sink::onBackendRecvData(const void *data, size_t size)
         //! A: 因为直接指针引用会有对齐的问题。
 
         //! 如果长度不够，就跳过，等下一次
-        if ((header.name_size + sizeof(header)) > buffer_.readableSize())
+        if ((header.name_size + header.module_size + sizeof(header)) > buffer_.readableSize())
             break;
 
         buffer_.hasRead(sizeof(header));
 
-        onBackendRecvRecord(header, reinterpret_cast<const char*>(buffer_.readableBegin()));
-        buffer_.hasRead(header.name_size);
+        const char *name = reinterpret_cast<const char*>(buffer_.readableBegin());
+        const char *module = name + header.name_size;
+        onBackendRecvRecord(header, name, module);
+
+        buffer_.hasRead(header.name_size + header.module_size);
     }
 }
 
-void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name)
+void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module)
 {
     if (!checkAndCreateRecordFile())
         return;
 
     auto thread_index = allocThreadIndex(record.thread_id);
     auto name_index = allocNameIndex(name, record.line);
+    auto module_index = allocModuleIndex(module);
     auto time_diff = record.end_ts_us - last_timepoint_us_;
 
     constexpr size_t kBufferSize = 40;
@@ -179,10 +185,11 @@ void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name)
     data_size += util::DumpScalableInteger(record.duration_us, (buffer + data_size), (kBufferSize - data_size));
     data_size += util::DumpScalableInteger(thread_index, (buffer + data_size), (kBufferSize - data_size));
     data_size += util::DumpScalableInteger(name_index, (buffer + data_size), (kBufferSize - data_size));
+    data_size += util::DumpScalableInteger(module_index, (buffer + data_size), (kBufferSize - data_size));
 
     auto wsize = ::write(curr_record_fd_, buffer, data_size);
     if (wsize != static_cast<ssize_t>(data_size)) {
-        std::cerr << "Err: write file error" << std::endl;
+        LogErrno(errno, "write record file '%s' fail", curr_record_filename_.c_str());
         return;
     }
 
@@ -205,7 +212,7 @@ bool Sink::checkAndCreateRecordFile()
 
     //!检查并创建路径
     if (!util::fs::MakeDirectory(records_path, false)) {
-        std::cerr << "Err: create director " << records_path << " fail. error:" << errno << ',' << strerror(errno) << std::endl;
+        LogErrno(errno, "create directory '%s' fail", records_path);
         return false;
     }
 
@@ -228,7 +235,7 @@ bool Sink::checkAndCreateRecordFile()
 
     curr_record_fd_ = ::open(curr_record_filename_.c_str(), flags, S_IRUSR | S_IWUSR);
     if (curr_record_fd_ < 0) {
-        std::cerr << "Err: open file " << curr_record_filename_ << " fail. error:" << errno << ',' << strerror(errno) << std::endl;
+        LogErrno(errno, "open record file '%s' fail", curr_record_filename_.c_str());
         return false;
     }
 
@@ -262,6 +269,33 @@ Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
     name_to_index_map_[content] = new_index;
 
     util::fs::AppendStringToTextFile(name_list_filename_, content + ENDLINE, is_file_sync_enabled_);
+    return new_index;
+}
+
+Sink::Index Sink::allocModuleIndex(const std::string &module)
+{
+    //! 如果文件不存在了，则重写所有的名称列表
+    if (!util::fs::IsFileExist(module_list_filename_)) {
+        std::vector<std::string> module_vec;
+        module_vec.resize(module_to_index_map_.size());
+        for (auto &item : module_to_index_map_)
+            module_vec[item.second] = item.first;
+
+        std::ostringstream oss;
+        for (auto &module : module_vec)
+            oss << module << ENDLINE;
+
+        util::fs::WriteStringToTextFile(module_list_filename_, oss.str(), is_file_sync_enabled_);
+    }
+
+    auto iter = module_to_index_map_.find(module);
+    if (iter != module_to_index_map_.end())
+        return iter->second;
+
+    auto new_index = next_module_index_++;
+    module_to_index_map_[module] = new_index;
+
+    util::fs::AppendStringToTextFile(module_list_filename_, module + ENDLINE, is_file_sync_enabled_);
     return new_index;
 }
 

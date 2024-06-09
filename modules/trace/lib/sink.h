@@ -44,6 +44,7 @@ class Sink {
      *       目录结构:
      *       .
      *       |-- names.txt    # 函数名列表
+     *       |-- modules.txt  # 模块名列表
      *       |-- threads.txt  # 线程名列表
      *       `-- records      # 记录文件目录，其下存在一个或多个记录文件
      *           `-- 20240530_041046.bin
@@ -76,7 +77,7 @@ class Sink {
      * \param end_ts        记录结束的时间点，单位: us
      * \param duration_us   记录持续时长，单位:us
      */
-    void commitRecord(const char *name, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us);
+    void commitRecord(const char *name, const char *module, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us);
 
   protected:
     ~Sink();
@@ -87,22 +88,25 @@ class Sink {
         uint64_t duration_us;
         uint32_t line;
         size_t name_size;
+        size_t module_size;
     };
 
     using Index = uint64_t;
 
     void onBackendRecvData(const void *data, size_t size);
-    void onBackendRecvRecord(const RecordHeader &record, const char *name);
+    void onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module);
 
     bool checkAndCreateRecordFile();
 
     Index allocNameIndex(const std::string &name, uint32_t line);
+    Index allocModuleIndex(const std::string &module);
     Index allocThreadIndex(long thread_id);
 
   private:
     std::string dir_path_;
     size_t record_file_max_size_ = std::numeric_limits<size_t>::max();
     std::string name_list_filename_;
+    std::string module_list_filename_;
     std::string thread_list_filename_;
     bool is_file_sync_enabled_ = false;
 
@@ -120,6 +124,9 @@ class Sink {
     //! 名称编码
     std::map<std::string, Index> name_to_index_map_;
     uint32_t next_name_index_ = 0;
+    //! 模块编码
+    std::map<std::string, Index> module_to_index_map_;
+    uint32_t next_module_index_ = 0;
     //! 线程号编码
     std::map<long, Index> thread_to_index_map_;
     int next_thread_index_ = 0;
