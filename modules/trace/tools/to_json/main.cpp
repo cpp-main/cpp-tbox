@@ -31,6 +31,9 @@ using namespace tbox;
 
 using StringVec = std::vector<std::string>;
 
+//! start_time_us, duration_us, name_index, module_index, thread_index
+using RecordHandleFunc = std::function<void(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t)>;
+
 void PrintUsage(const char *proc_name)
 {
     std::cout
@@ -77,7 +80,7 @@ bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_
     return true;
 }
 
-void ParseRecordFile(const std::string &filename, const StringVec &names, const StringVec &modules, const StringVec &threads, trace::Writer &writer)
+void ReadRecordFile(const std::string &filename, const RecordHandleFunc &func)
 {
     std::ifstream ifs(filename, std::ifstream::binary);
     if (!ifs) {
@@ -89,36 +92,31 @@ void ParseRecordFile(const std::string &filename, const StringVec &names, const 
     util::Buffer buffer;
 
     while (true) {
-      char tmp[1024];
-      auto rsize = ifs.readsome(tmp, sizeof(tmp));
-      if (rsize == 0)
-          break;
+        char tmp[1024];
+        auto rsize = ifs.readsome(tmp, sizeof(tmp));
+        if (rsize == 0)
+            break;
 
-      buffer.append(tmp, rsize);
+        buffer.append(tmp, rsize);
 
-      while (buffer.readableSize() >= 4) {
-          uint64_t end_diff_us, duration_us, thread_index, name_index, module_index;
-          if (!PickRecord(buffer, end_diff_us, duration_us, thread_index, name_index, module_index))
-              break;
+        while (buffer.readableSize() >= 4) {
+            uint64_t end_diff_us, duration_us, thread_index, name_index, module_index;
+            if (!PickRecord(buffer, end_diff_us, duration_us, thread_index, name_index, module_index))
+                break;
 
-          uint64_t end_ts_us = last_end_ts_us + end_diff_us;
-          uint64_t start_ts_us = end_ts_us - duration_us;
-          last_end_ts_us = end_ts_us;
+            uint64_t end_ts_us = last_end_ts_us + end_diff_us;
+            uint64_t start_ts_us = end_ts_us - duration_us;
+            last_end_ts_us = end_ts_us;
 
-          std::string name = "unknown-name", thread = "unknown-thread", module = "unknown-module";
-
-          if (name_index < names.size())
-              name = names[name_index];
-
-          if (thread_index < threads.size())
-              thread = threads[thread_index];
-
-          if (module_index < modules.size())
-              module = modules[module_index];
-
-          writer.writeRecorder(name, module, thread, start_ts_us, duration_us);
-      }
+            func(start_ts_us, duration_us, name_index, module_index, thread_index);
+        }
     }
+}
+
+void ReadAllRecordFiles(const std::string &records_dir, const StringVec &record_file_vec, const RecordHandleFunc &func)
+{
+    for (auto record_file : record_file_vec)
+        ReadRecordFile(records_dir + '/' + record_file, func);
 }
 
 int main(int argc, char **argv)
@@ -165,13 +163,22 @@ int main(int argc, char **argv)
 
     writer.writeHeader();
 
-    for (auto record_file_name : record_file_name_vec) {
-      ParseRecordFile(
-        records_dir + '/' + record_file_name,
-        name_vec, module_vec, thread_vec,
-        writer
-      );
-    }
+    ReadAllRecordFiles(records_dir, record_file_name_vec,
+        [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t thread_index) {
+            std::string name = "unknown-name", thread = "unknown-thread", module = "unknown-module";
+
+            if (name_index < name_vec.size())
+                name = name_vec[name_index];
+
+            if (thread_index < thread_vec.size())
+                thread = thread_vec[thread_index];
+
+            if (module_index < module_vec.size())
+                module = module_vec[module_index];
+
+            writer.writeRecorder(name, module, thread, start_ts_us, duration_us);
+        }
+    );
 
     writer.writeFooter();
     return 0;
