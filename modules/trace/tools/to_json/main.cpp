@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <iostream>
+#include <limits>
 
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
@@ -29,7 +30,22 @@
 using namespace std;
 using namespace tbox;
 
+//! 统计
+struct Stat {
+    size_t    times = 0;            //! 次数
+    uint64_t  dur_acc_us = 0;       //! 累积时长
+    uint64_t  dur_min_us = std::numeric_limits<uint64_t>::max(); //! 最小时长
+    uint64_t  dur_max_us = 0;       //! 最大时长
+    uint64_t  dur_max_ts_us = 0;    //! 最大时长的时间点
+
+    uint64_t  dur_avg_us = 0;       //! 平均时长
+    uint64_t  dur_warn_line_us = 0; //! 警告水位线
+
+    uint64_t  dur_warn_count = 0;   //! 超过警告水位线次数
+};
+
 using StringVec = std::vector<std::string>;
+using StatVec = std::vector<Stat>;
 
 //! start_time_us, duration_us, name_index, module_index, thread_index
 using RecordHandleFunc = std::function<void(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t)>;
@@ -119,6 +135,33 @@ void ReadAllRecordFiles(const std::string &records_dir, const StringVec &record_
         ReadRecordFile(records_dir + '/' + record_file, func);
 }
 
+void DumpStatToFile(const StringVec &name_vec, const StatVec &stat_vec, const std::string &stat_filename)
+{
+    std::ofstream ofs(stat_filename);
+    if (!ofs) {
+        std::cout << "Error: open stat file '" << stat_filename << "' fail!" << std::endl;
+        return;
+    }
+
+    auto size = name_vec.size();
+    for (size_t i = 0; i < size; ++i) {
+        auto &name = name_vec.at(i);
+        auto &stat = stat_vec.at(i);
+
+        ofs << std::string(name.size(), '=') << std::endl
+            << name << std::endl
+            << std::string(name.size(), '-') << std::endl
+            << "times            : " << stat.times << std::endl
+            << "dur_min_us       : " << stat.dur_min_us << " us" << std::endl
+            << "dur_avg_us       : " << stat.dur_avg_us << " us" << std::endl
+            << "dur_max_us       : " << stat.dur_max_us << " us" << std::endl
+            << "dur_max_at_us    : " << stat.dur_max_ts_us << " us" << std::endl
+            << "dur_warn_line_us : " << stat.dur_warn_line_us << " us" << std::endl
+            << "dur_warn_count   : " << stat.dur_warn_count << std::endl
+            << std::endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) {
@@ -146,6 +189,7 @@ int main(int argc, char **argv)
     std::string names_filename = dir_path + "/names.txt";
     std::string modules_filename = dir_path + "/modules.txt";
     std::string threads_filename = dir_path + "/threads.txt";
+
     StringVec name_vec, module_vec, thread_vec;
     if (!util::fs::ReadAllLinesFromTextFile(names_filename, name_vec))
         std::cerr << "Warn: load names.txt fail!" << std::endl;
@@ -161,8 +205,11 @@ int main(int argc, char **argv)
       return 0;
     }
 
+    std::vector<Stat> stat_vec(name_vec.size());
+
     writer.writeHeader();
 
+    //! 第一次遍历记录文件
     ReadAllRecordFiles(records_dir, record_file_name_vec,
         [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t thread_index) {
             std::string name = "unknown-name", thread = "unknown-thread", module = "unknown-module";
@@ -177,10 +224,60 @@ int main(int argc, char **argv)
                 module = module_vec[module_index];
 
             writer.writeRecorder(name, module, thread, start_ts_us, duration_us);
+
+            auto &stat = stat_vec.at(name_index);
+            ++stat.times;
+            stat.dur_acc_us += duration_us;
+            if (stat.dur_max_us < duration_us) {
+                stat.dur_max_us = duration_us;
+                stat.dur_max_ts_us = start_ts_us;
+            }
+
+            if (stat.dur_min_us > duration_us) {
+                stat.dur_min_us = duration_us;
+            }
         }
     );
 
+    //! 处理统计数据
+    for (auto &stat : stat_vec) {
+        stat.dur_avg_us = stat.dur_acc_us / stat.times;
+        stat.dur_warn_line_us = (stat.dur_avg_us + stat.dur_max_us) / 2;
+    }
+
+    //! 第二次遍历记录文件，标出超出警告线的
+    ReadAllRecordFiles(records_dir, record_file_name_vec,
+        [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t) {
+            auto &stat = stat_vec.at(name_index);
+            if (duration_us < stat.dur_warn_line_us)
+                return;
+
+            std::string name = "unknown-name", module = "unknown-module";
+
+            if (name_index < name_vec.size())
+                name = name_vec[name_index];
+
+            if (module_index < module_vec.size())
+                module = module_vec[module_index];
+
+            ++stat.dur_warn_count;
+            writer.writeRecorder(name, module, "WARN", start_ts_us, duration_us);
+        }
+    );
+
+    //! 标记出最大时间点
+    auto size = name_vec.size();
+    for (size_t i = 0; i < size; ++i) {
+        auto &name = name_vec.at(i);
+        auto &stat = stat_vec.at(i);
+        writer.writeRecorder(name, "", "MAX", stat.dur_max_ts_us, stat.dur_max_us);
+    }
+
     writer.writeFooter();
+
+    //! 输出统计到 stat.txt
+    std::string stat_filename = dir_path + "/stat.txt";
+    DumpStatToFile(name_vec, stat_vec, stat_filename);
     return 0;
 }
 

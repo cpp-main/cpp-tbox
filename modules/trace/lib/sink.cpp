@@ -248,8 +248,7 @@ Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
 {
     //! 如果文件不存在了，则重写所有的名称列表
     if (!util::fs::IsFileExist(name_list_filename_)) {
-        std::vector<std::string> name_vec;
-        name_vec.resize(name_to_index_map_.size());
+        std::vector<std::string> name_vec(name_to_index_map_.size());
         for (auto &item : name_to_index_map_)
             name_vec[item.second] = item.first;
 
@@ -276,8 +275,7 @@ Sink::Index Sink::allocModuleIndex(const std::string &module)
 {
     //! 如果文件不存在了，则重写所有的名称列表
     if (!util::fs::IsFileExist(module_list_filename_)) {
-        std::vector<std::string> module_vec;
-        module_vec.resize(module_to_index_map_.size());
+        std::vector<std::string> module_vec(module_to_index_map_.size());
         for (auto &item : module_to_index_map_)
             module_vec[item.second] = item.first;
 
@@ -303,8 +301,7 @@ Sink::Index Sink::allocThreadIndex(long thread_id)
 {
     //! 如果文件不存在了，则重写所有的线程列表
     if (!util::fs::IsFileExist(thread_list_filename_)) {
-        std::vector<int> thread_vec;
-        thread_vec.resize(thread_to_index_map_.size());
+        std::vector<int> thread_vec(thread_to_index_map_.size());
         for (auto &item : thread_to_index_map_)
             thread_vec[item.second] = item.first;
 
