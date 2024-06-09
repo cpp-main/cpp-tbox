@@ -32,6 +32,9 @@ using namespace tbox;
 
 //! 统计
 struct Stat {
+    uint64_t  name_index = 0;
+    uint64_t  module_index = 0;
+
     size_t    times = 0;            //! 次数
     uint64_t  dur_acc_us = 0;       //! 累积时长
     uint64_t  dur_min_us = std::numeric_limits<uint64_t>::max(); //! 最小时长
@@ -212,20 +215,15 @@ int main(int argc, char **argv)
     //! 第一次遍历记录文件
     ReadAllRecordFiles(records_dir, record_file_name_vec,
         [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t thread_index) {
-            std::string name = "unknown-name", thread = "unknown-thread", module = "unknown-module";
-
-            if (name_index < name_vec.size())
-                name = name_vec[name_index];
-
-            if (thread_index < thread_vec.size())
-                thread = thread_vec[thread_index];
-
-            if (module_index < module_vec.size())
-                module = module_vec[module_index];
+            auto &name = name_vec.at(name_index);
+            auto &module = module_vec.at(module_index);
+            auto &thread = thread_vec.at(thread_index);
 
             writer.writeRecorder(name, module, thread, start_ts_us, duration_us);
 
             auto &stat = stat_vec.at(name_index);
+            stat.name_index = name_index;
+            stat.module_index = module_index;
             ++stat.times;
             stat.dur_acc_us += duration_us;
             if (stat.dur_max_us < duration_us) {
@@ -252,13 +250,8 @@ int main(int argc, char **argv)
             if (duration_us < stat.dur_warn_line_us)
                 return;
 
-            std::string name = "unknown-name", module = "unknown-module";
-
-            if (name_index < name_vec.size())
-                name = name_vec[name_index];
-
-            if (module_index < module_vec.size())
-                module = module_vec[module_index];
+            auto &name = name_vec.at(name_index);
+            auto &module = module_vec.at(module_index);
 
             ++stat.dur_warn_count;
             writer.writeRecorder(name, module, "WARN", start_ts_us, duration_us);
@@ -266,11 +259,10 @@ int main(int argc, char **argv)
     );
 
     //! 标记出最大时间点
-    auto size = name_vec.size();
-    for (size_t i = 0; i < size; ++i) {
-        auto &name = name_vec.at(i);
-        auto &stat = stat_vec.at(i);
-        writer.writeRecorder(name, "", "MAX", stat.dur_max_ts_us, stat.dur_max_us);
+    for (auto &stat : stat_vec) {
+        auto &name = name_vec.at(stat.name_index);
+        auto &module = module_vec.at(stat.module_index);
+        writer.writeRecorder(name, module, "MAX", stat.dur_max_ts_us, stat.dur_max_us);
     }
 
     writer.writeFooter();
