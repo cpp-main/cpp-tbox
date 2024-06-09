@@ -52,15 +52,16 @@ class Sink {
 
     //! 设置是否开启实时落盘
     void setFileSyncEnable(bool is_enable);
+    bool isFileSyncEnabled() const { return is_file_sync_enabled_; }
 
     //! 获取目录路径
     std::string getDirPath() const { return dir_path_; }
-
     //! 获取当前记录文件名
     std::string getCurrRecordFilename() const { return curr_record_filename_; }
 
     //! 设置记录文件的大小的上限
     void setRecordFileMaxSize(size_t max_size) { record_file_max_size_ = max_size; }
+    size_t getRecordFileMaxSize() const { return record_file_max_size_; }
 
     bool enable();  //! 使能
     void disable(); //! 停止

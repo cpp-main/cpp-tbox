@@ -84,7 +84,8 @@ When various program exceptions occur in the program, such as: segment fault, as
 | util | Accessibility module |
 | event | Realized IO, Timer, Signal three kinds of event-driven, which is the heart of the whole framework |
 | eventx | Including ThreadPool thread pool, WorkThread worker thread, TimerPool timer pool and other modules |
-| log | Realize efficient and reliable terminal, syslog, and log output in the form of files |
+| log | Realized efficient and reliable terminal, syslog, and log output in the form of files |
+| trace | Realized outputting traces to files in real time |
 | network | Realized serial port, terminal, UDP, TCP communication module |
 | terminal | A shell-like command terminal that enables command interaction with programs during runtime |
 | **main** | Realized a complete program startup process and framework, so that developers only need to care about business code |
@@ -94,6 +95,8 @@ When various program exceptions occur in the program, such as: segment fault, as
 | http | Implemented HTTP Server and Client modules on the basis of network |
 | alarm | Realized 4 commonly used alarm clocks: CRON alarm clock, single alarm clock, weekly cycle alarm clock, weekday alarm clock |
 | flow | Contains multi-level state machine and behavior tree to solve the problem of action flow in asynchronous mode |
+| crypto | Implemented the commonly used AES and MD5 encryption and decryption calculations |
+| dbus | Implemented the function of integrating dbus into event to process transactions in a non-blocking manner |
 
 # Environment
 

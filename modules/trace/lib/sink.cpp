@@ -116,6 +116,8 @@ void Sink::disable()
         is_enabled_ = false;
         async_pipe_.cleanup();
         CHECK_CLOSE_RESET_FD(curr_record_fd_);
+        buffer_.hasReadAll();
+        curr_record_filename_.clear();
     }
 }
 

@@ -32,6 +32,7 @@
 #include <tbox/util/json.h>
 #include <tbox/util/fs.h>
 #include <tbox/terminal/session.h>
+#include <tbox/terminal/helper.h>
 
 #include "main.h"
 
@@ -290,257 +291,35 @@ void ContextImp::initShell()
         {
             auto water_line_node = wp_nodes->createDirNode("This is water line directory");
             wp_nodes->mountNode(loop_node, water_line_node, "wl");
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().run_in_loop_queue_size = value;
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().run_in_loop_queue_size  << "\r\n";
-                        }
 
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_queue_size");
+            #define ADD_WATERLINE_SIZE_FUNC_NODE(field) \
+            {\
+                terminal::IntegerFuncNodeProfile profile; \
+                profile.get_func = [this] { return sp_loop_->water_line().field; }; \
+                profile.set_func = [this] (int value) { sp_loop_->water_line().field = value; return true; }; \
+                profile.min_value = 0; \
+                terminal::AddFuncNode(*wp_nodes, water_line_node, #field, profile); \
             }
 
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().run_next_queue_size = value;
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().run_next_queue_size  << "\r\n";
-                        }
+            ADD_WATERLINE_SIZE_FUNC_NODE(run_in_loop_queue_size);
+            ADD_WATERLINE_SIZE_FUNC_NODE(run_next_queue_size);
 
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "run_next_queue_size");
+            #define ADD_WATERLINE_TIME_FUNC_NODE(field) \
+            {\
+                terminal::IntegerFuncNodeProfile profile; \
+                profile.get_func = [this] { return sp_loop_->water_line().field.count()/1000; }; \
+                profile.set_func = [this] (int value) { sp_loop_->water_line().field= std::chrono::microseconds(value); return true; }; \
+                profile.min_value = 0; \
+                terminal::AddFuncNode(*wp_nodes, water_line_node, #field, profile); \
             }
 
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().run_in_loop_delay = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().run_in_loop_delay.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "run_in_loop_delay");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().run_next_delay = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().run_next_delay.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "run_next_delay");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().loop_cost = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().loop_cost.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "loop_cost");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().event_cb_cost = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().event_cb_cost.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "event_cb_cost");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().run_cb_cost = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().run_cb_cost.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "run_cb_cost");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().wake_delay = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().wake_delay.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "wake_delay");
-            }
-
-            {
-                auto func_node = wp_nodes->createFuncNode(
-                    [this] (const Session &s, const Args &args) {
-                        bool print_usage = false;
-                        std::ostringstream oss;
-                        if (args.size() >= 2) {
-                            int value = 0;
-                            auto may_throw_func = [&] { value = std::stoi(args[1]); };
-                            if (CatchThrowQuietly(may_throw_func)) {
-                                oss << "must be number\r\n";
-                                print_usage = true;
-                            } else {
-                                sp_loop_->water_line().timer_delay = std::chrono::microseconds(value);
-                                oss << "done\r\n";
-                            }
-                        } else {
-                            oss << sp_loop_->water_line().timer_delay.count()/1000 << " us\r\n";
-                        }
-
-                        if (print_usage)
-                            oss << "Usage: " << args[0] << " <num>\r\n";
-
-                        s.send(oss.str());
-                    }
-                );
-                wp_nodes->mountNode(water_line_node, func_node, "timer_delay");
-            }
+            ADD_WATERLINE_TIME_FUNC_NODE(run_in_loop_delay);
+            ADD_WATERLINE_TIME_FUNC_NODE(run_next_delay);
+            ADD_WATERLINE_TIME_FUNC_NODE(loop_cost);
+            ADD_WATERLINE_TIME_FUNC_NODE(event_cb_cost);
+            ADD_WATERLINE_TIME_FUNC_NODE(run_cb_cost);
+            ADD_WATERLINE_TIME_FUNC_NODE(wake_delay);
+            ADD_WATERLINE_TIME_FUNC_NODE(timer_delay);
         }
 
         {

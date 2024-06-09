@@ -194,5 +194,239 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
     return func_node;
 }
 
+NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std::string &name, const StringFuncNodeProfile &profile)
+{
+    auto func_node = terminal.createFuncNode(
+        [profile] (const Session &s, const Args &a) {
+            std::ostringstream oss;
+            bool is_ok = false;
+
+            if (a.size() == 1u && profile.get_func) {
+                oss << '"' << profile.get_func() << "\"\r\n";
+                is_ok = true;
+
+            } else if (a.size() == 2u && profile.set_func) {
+                auto &str = a[1];
+                if (profile.set_func(str)) {
+                    oss << "done.\r\n";
+                    is_ok = true;
+                } else {
+                    oss << "fail.\r\n";
+                }
+            }
+
+            if (!is_ok) {
+                if (profile.usage.empty()) {
+                    oss << "Usage:\r\n";
+
+                    if (profile.get_func)
+                        oss << "  " << a[0] << "               # print string\r\n";
+
+                    if (profile.set_func)
+                        oss << "  " << a[0] << " 'new string'  # set string\r\n";
+
+                } else {
+                    oss << profile.usage;
+                }
+            }
+
+            s.send(oss.str());
+        },
+        profile.help.empty() ? "print or set string" : profile.help
+    );
+
+    terminal.mountNode(parent_node, func_node, name);
+    return func_node;
+}
+
+NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std::string &name, const BooleanFuncNodeProfile &profile)
+{
+    auto func_node = terminal.createFuncNode(
+        [profile] (const Session &s, const Args &a) {
+            std::ostringstream oss;
+            bool is_ok = false;
+
+            if (a.size() == 1u && profile.get_func) {
+                oss << (profile.get_func() ? "true" : "false") << "\r\n";
+                is_ok = true;
+
+            } else if (a.size() == 2u && profile.set_func) {
+                auto &str = a[1];
+                bool new_value = false;
+                if (str == "true" || str == "True" || str == "TRUE" ||
+                    str == "on" || str == "On" || str == "ON") {
+                    new_value = true;
+                    is_ok = true;
+
+                } else if (str == "false" || str == "False" || str == "FALSE" ||
+                    str == "off" || str == "Off" || str == "OFF") {
+                    new_value = false;
+                    is_ok = true;
+                }
+
+                if (is_ok) {
+                    if (profile.set_func(new_value)) {
+                        oss << "done.\r\n";
+                    } else {
+                        oss << "fail.\r\n";
+                        is_ok = false;
+                    }
+                }
+            }
+
+            if (!is_ok) {
+                if (profile.usage.empty()) {
+                    oss << "Usage:\r\n";
+
+                    if (profile.get_func)
+                        oss << "  " << a[0] << "         # print boolean\r\n";
+
+                    if (profile.set_func)
+                        oss << "  " << a[0] << " on|off  # set boolean\r\n";
+
+                } else {
+                    oss << profile.usage;
+                }
+            }
+
+            s.send(oss.str());
+        },
+        profile.help.empty() ? "print and set bool value" : profile.help
+    );
+
+    terminal.mountNode(parent_node, func_node, name);
+    return func_node;
+}
+
+NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std::string &name, const IntegerFuncNodeProfile &profile) {
+    auto func_node = terminal.createFuncNode(
+        [profile] (const Session &s, const Args &a) {
+            std::ostringstream oss;
+            bool is_ok = false;
+
+            if (a.size() == 1u && profile.get_func) {
+                oss << profile.get_func() << "\r\n";
+                is_ok = true;
+
+            } else if (a.size() == 2u && profile.set_func) {
+                auto &str = a[1];
+                int new_value = 0;
+                CatchThrowQuietly([&] { new_value = std::stoi(str); is_ok = true; });
+                if (is_ok) {
+                    if (new_value < profile.min_value || new_value > profile.max_value) {
+                      oss << "fail, out of range\r\n";
+                      is_ok = false;
+                    }
+                }
+
+                if (is_ok) {
+                    if (profile.set_func(new_value)) {
+                        oss << "done.\r\n";
+                    } else {
+                        oss << "fail.\r\n";
+                        is_ok = false;
+                    }
+                }
+            }
+
+            if (!is_ok) {
+                if (profile.usage.empty()) {
+                    oss << "Usage:\r\n";
+
+                    if (profile.get_func)
+                        oss << "  " << a[0] << "           # print integer\r\n";
+
+                    if (profile.set_func) {
+                        oss << "  " << a[0] << " <number>  # set integer";
+                        if (profile.min_value != std::numeric_limits<int>::min() &&
+                            profile.min_value != std::numeric_limits<int>::max()) {
+                            oss << ", range: [" << profile.min_value << ',' << profile.max_value << ']';
+                        } else if (profile.min_value != std::numeric_limits<int>::min()) {
+                            oss << ", range: >=" << profile.min_value;
+                        } else if (profile.max_value != std::numeric_limits<int>::max()) {
+                            oss << ", range: <=" << profile.max_value;
+                        }
+                        oss << "\r\n";
+                    }
+
+                } else {
+                    oss << profile.usage;
+                }
+            }
+
+            s.send(oss.str());
+        },
+        profile.help.empty() ? "print and set integer value" : profile.help
+    );
+
+    terminal.mountNode(parent_node, func_node, name);
+    return func_node;
+}
+
+NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std::string &name, const DoubleFuncNodeProfile &profile) {
+    auto func_node = terminal.createFuncNode(
+        [profile] (const Session &s, const Args &a) {
+            std::ostringstream oss;
+            bool is_ok = false;
+
+            if (a.size() == 1u && profile.get_func) {
+                oss << profile.get_func() << "\r\n";
+                is_ok = true;
+
+            } else if (a.size() == 2u && profile.set_func) {
+                auto &str = a[1];
+                double new_value = 0;
+                CatchThrowQuietly([&] { new_value = std::stod(str); is_ok = true; });
+                if (is_ok) {
+                    if (new_value < profile.min_value || new_value > profile.max_value) {
+                      oss << "fail, out of range\r\n";
+                      is_ok = false;
+                    }
+                }
+
+                if (is_ok) {
+                    if (profile.set_func(new_value)) {
+                        oss << "done.\r\n";
+                    } else {
+                        oss << "fail.\r\n";
+                        is_ok = false;
+                    }
+                }
+            }
+
+            if (!is_ok) {
+                if (profile.usage.empty()) {
+                    oss << "Usage:\r\n";
+
+                    if (profile.get_func)
+                        oss << "  " << a[0] << "           # print double\r\n";
+
+                    if (profile.set_func) {
+                        oss << "  " << a[0] << " <double>  # set double";
+                        if (profile.min_value != std::numeric_limits<int>::min() &&
+                            profile.min_value != std::numeric_limits<int>::max()) {
+                            oss << ", range: [" << profile.min_value << ',' << profile.max_value << ']';
+                        } else if (profile.min_value != std::numeric_limits<int>::min()) {
+                            oss << ", range: >=" << profile.min_value;
+                        } else if (profile.max_value != std::numeric_limits<int>::max()) {
+                            oss << ", range: <=" << profile.max_value;
+                        }
+                        oss << "\r\n";
+                    }
+
+                } else {
+                    oss << profile.usage;
+                }
+            }
+
+            s.send(oss.str());
+        },
+        profile.help.empty() ? "print and set double value" : profile.help
+    );
+
+    terminal.mountNode(parent_node, func_node, name);
+    return func_node;
+}
+
 }
 }

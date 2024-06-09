@@ -23,6 +23,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/catch_throw.h>
 #include <tbox/terminal/session.h>
+#include <tbox/terminal/helper.h>
 #include <tbox/util/json.h>
 #include <tbox/trace/sink.h>
 
@@ -80,111 +81,76 @@ void Trace::initShell(TerminalNodes &term)
     term.mountNode(term.rootNode(), trace_node, "trace");
 
     {
-        auto func_node = term.createFuncNode(
-            [] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    auto &sink = trace::Sink::GetInstance();
-                    if (opt == "on") {
-                        sink.enable();
-                        oss << "on\r\n";
-                        print_usage = false;
+        terminal::BooleanFuncNodeProfile profile;
+        profile.get_func = [] { return trace::Sink::GetInstance().isEnabled(); };
+        profile.set_func = \
+            [] (bool is_enable) {
+                if (is_enable)
+                    return trace::Sink::GetInstance().enable();
+                else
+                    trace::Sink::GetInstance().disable();
+                return true;
+            };
+        profile.usage = \
+            "Usage: enable         # print current trace enable status\r\n"
+            "       enable on|off  # enable or disable trace\r\n";
+        profile.help = "Enable or disable trace, or check trace is enabled";
 
-                    } else if (opt == "off") {
-                        sink.disable();
-                        oss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(oss.str());
-            }
-        , "enable or disable");
-        term.mountNode(trace_node, func_node, "set_enable");
+        terminal::AddFuncNode(term, trace_node, "set_enable", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    auto &sink = trace::Sink::GetInstance();
-                    if (opt == "on") {
-                        sink.setFileSyncEnable(true);
-                        oss << "on\r\n";
-                        print_usage = false;
-
-                    } else if (opt == "off") {
-                        sink.setFileSyncEnable(false);
-                        oss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(oss.str());
-            }
-        , "enable or disable file sync");
-        term.mountNode(trace_node, func_node, "set_enable_sync");
+        terminal::BooleanFuncNodeProfile profile;
+        profile.get_func = [] { return trace::Sink::GetInstance().isFileSyncEnabled(); };
+        profile.set_func = \
+            [] (bool is_enable) {
+                trace::Sink::GetInstance().setFileSyncEnable(is_enable);
+                return true;
+            };
+        profile.usage = \
+            "Usage: file_sync_enable         # print file sync enable status\r\n"
+            "       file_sync_enable on|off  # enable or disable file sync\r\n";
+        profile.help = "Enable or disable file sync, or check file sync is enabled";
+        terminal::AddFuncNode(term, trace_node, "set_file_sync_enable", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    trace::Sink::GetInstance().setPathPrefix(args.at(1));
-                    print_usage = false;
-                    oss << "done\r\n";
-                }
-
-                if (print_usage) {
-                    oss << "Usage: " << args[0] << " <path>\r\n"
-                        << "Exp  : " << args[0] << " /some/where/any_name\r\n";
-                }
-
-                s.send(oss.str());
-            }
-        , "set trace path prefix");
-        term.mountNode(trace_node, func_node, "set_path_prefix");
+        terminal::StringFuncNodeProfile profile;
+        profile.set_func = [] (const std::string &text) { return trace::Sink::GetInstance().setPathPrefix(text); };
+        profile.usage = \
+            "Usage: set_path_prefix <path>\r\n"
+            "Exp  : set_path_prefix /some/where/any_name\r\n";
+        profile.help = "set trace path prefix";
+        terminal::AddFuncNode(term, trace_node, "set_path_prefix", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    size_t max_size;
-                    bool is_throw = CatchThrowQuietly([&] { max_size = std::stoul(args.at(1)); });
-                    if (!is_throw) {
-                        trace::Sink::GetInstance().setRecordFileMaxSize(max_size * 1024);
-                        print_usage = false;
-                        oss << "done, max_size: " << max_size << " KB\r\n";
-                    } else {
-                        oss << "size must be number\r\n";
-                    }
-                }
+        terminal::IntegerFuncNodeProfile profile;
+        profile.set_func = \
+            [] (int max_size) {
+                trace::Sink::GetInstance().setRecordFileMaxSize(max_size * 1024);
+                return true;
+            };
+        profile.min_value = 1;
+        profile.usage = \
+            "Usage: set_max_size <size>  # Unit: KB, >=1\r\n"
+            "Exp  : set_max_size 1024\r\n";
+        profile.help = "set record file max size";
+        terminal::AddFuncNode(term, trace_node, "set_record_max_size", profile);
+    }
 
-                if (print_usage) {
-                    oss << "Usage: " << args[0] << " <size>\r\n"
-                        << "Exp  : " << args[0] << " 1024\r\n";
-                }
+    {
+        terminal::StringFuncNodeProfile profile;
+        profile.get_func = [] () { return trace::Sink::GetInstance().getCurrRecordFilename(); };
+        profile.help = "get current record file fullname";
+        terminal::AddFuncNode(term, trace_node, "get_record_file", profile);
+    }
 
-                s.send(oss.str());
-            }
-        , "set record file max size");
-        term.mountNode(trace_node, func_node, "set_max_size");
+    {
+        terminal::StringFuncNodeProfile profile;
+        profile.get_func = [] () { return trace::Sink::GetInstance().getDirPath(); };
+        profile.help = "get current directory";
+        terminal::AddFuncNode(term, trace_node, "get_dir_path", profile);
     }
 }
 

@@ -23,6 +23,7 @@
 #include <tbox/base/json.hpp>
 #include <tbox/base/catch_throw.h>
 #include <tbox/terminal/session.h>
+#include <tbox/terminal/helper.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/json.h>
 
@@ -156,57 +157,30 @@ void Log::initShell(TerminalNodes &term)
 void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node)
 {
     {
-        auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        log_ch.enable();
-                        oss << "on\r\n";
-                        print_usage = false;
-                    } else if (opt == "off") {
-                        log_ch.disable();
-                        oss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(oss.str());
-            }
-        , "enable or disable");
-        term.mountNode(dir_node, func_node, "enable");
+        terminal::BooleanFuncNodeProfile profile;
+        profile.set_func = \
+            [&log_ch] (bool is_enable) {
+                if (is_enable)
+                    log_ch.enable();
+                else
+                    log_ch.disable();
+                return true;
+            };
+        profile.usage = "Usage: set_enable on|off\r\n";
+        profile.help = "Enable or disable log sink";
+        terminal::AddFuncNode(term, dir_node, "set_enable", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        log_ch.enableColor(true);
-                        oss << "on\r\n";
-                        print_usage = false;
-                    } else if (opt == "off") {
-                        log_ch.enableColor(false);
-                        oss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(oss.str());
-            }
-        , "enable or disable color");
-        term.mountNode(dir_node, func_node, "enable_color");
+        terminal::BooleanFuncNodeProfile profile;
+        profile.set_func = \
+            [&log_ch] (bool is_enable) {
+                log_ch.enableColor(is_enable);
+                return true;
+            };
+        profile.usage = "Usage: set_color_enable on|off\r\n";
+        profile.help = "Enable or disable log color";
+        terminal::AddFuncNode(term, dir_node, "set_color_enable", profile);
     }
 
     {
@@ -235,7 +209,7 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
                 }
 
                 if (print_usage)
-                    oss << "Usage: " << args[0] << " <module_id:string> <level:0-6>\r\n"
+                    oss << "Usage: " << args[0] << " <module> <level:0-7>\r\n"
                        << "LEVEL\r\n"
                        << " 0: Fatal\r\n"
                        << " 1: Error\r\n"
@@ -254,125 +228,72 @@ void Log::initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, ter
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [&log_ch] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    log_ch.unsetLevel(args.at(1));
-                    print_usage = false;
-                    oss << "done\r\n";
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " <module>\r\n";
-
-                s.send(oss.str());
-            }
-        , "unset log level");
-        term.mountNode(dir_node, func_node, "unset_level");
+        terminal::StringFuncNodeProfile profile;
+        profile.set_func = \
+            [&log_ch] (const std::string &module) {
+                log_ch.unsetLevel(module);
+                return true;
+            };
+        profile.usage = "Usage: unset_level <module>\r\n";
+        profile.help = "Unset log level";
+        terminal::AddFuncNode(term, dir_node, "unset_level", profile);
     }
 }
 
 void Log::initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::NodeToken dir_node)
 {
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    async_file_sink_.setFilePath(args.at(1));
-                    print_usage = false;
-                    oss << "done\r\n";
-                }
-
-                if (print_usage) {
-                    oss << "Usage: " << args[0] << " <path>\r\n"
-                        << "Exp  : " << args[0] << " /var/log/\r\n";
-                }
-
-                s.send(oss.str());
-            }
-        , "set log file path");
-        term.mountNode(dir_node, func_node, "set_path");
+        terminal::StringFuncNodeProfile profile;
+        profile.set_func = \
+            [this] (const std::string &path) {
+                async_file_sink_.setFilePath(path);
+                return true;
+            };
+        profile.usage = \
+            "Usage: set_path <path>\r\n"
+            "Exp  : set_path /var/log/\r\n";
+        profile.help = "Set log file path";
+        terminal::AddFuncNode(term, dir_node, "set_path", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    async_file_sink_.setFilePrefix(args.at(1));
-                    print_usage = false;
-                    oss << "done\r\n";
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " <prefix>\r\n";
-
-                s.send(oss.str());
-            }
-        , "set log file prefix");
-        term.mountNode(dir_node, func_node, "set_prefix");
+        terminal::StringFuncNodeProfile profile;
+        profile.set_func = \
+            [this] (const std::string &prefix) {
+                async_file_sink_.setFilePrefix(prefix);
+                return true;
+            };
+        profile.usage = "Usage: set_prefix <prefix>\r\n";
+        profile.help = "Set log file prefix";
+        terminal::AddFuncNode(term, dir_node, "set_prefix", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    const auto &opt = args[1];
-                    if (opt == "on") {
-                        async_file_sink_.setFileSyncEnable(true);
-                        oss << "on\r\n";
-                        print_usage = false;
-                    } else if (opt == "off") {
-                        async_file_sink_.setFileSyncEnable(false);
-                        oss << "off\r\n";
-                        print_usage = false;
-                    }
-                }
-
-                if (print_usage)
-                    oss << "Usage: " << args[0] << " on|off\r\n";
-
-                s.send(oss.str());
-            }
-        , "enable or disable file sync");
-        term.mountNode(dir_node, func_node, "enable_sync");
+        terminal::BooleanFuncNodeProfile profile;
+        profile.set_func = \
+            [this] (bool is_enable) {
+                async_file_sink_.setFileSyncEnable(is_enable);
+                return true;
+            };
+        profile.usage = "Usage: set_sync_enable on|off\r\n";
+        profile.help = "Enable or disable file sync";
+        terminal::AddFuncNode(term, dir_node, "set_sync_enable", profile);
     }
 
     {
-        auto func_node = term.createFuncNode(
-            [this] (const Session &s, const Args &args) {
-                std::ostringstream oss;
-                bool print_usage = true;
-                if (args.size() >= 2) {
-                    size_t max_size;
-                    bool is_throw = CatchThrowQuietly([&] { max_size = std::stoul(args.at(1)); });
-                    if (!is_throw) {
-                        async_file_sink_.setFileMaxSize(max_size * 1024);
-                        print_usage = false;
-                        oss << "done, max_size: " << max_size << " KB\r\n";
-                    } else {
-                        oss << "size must be number\r\n";
-                    }
-                }
-
-                if (print_usage) {
-                    oss << "Usage: " << args[0] << " <size>\r\n"
-                        << "Exp  : " << args[0] << " 1024\r\n";
-                }
-
-                s.send(oss.str());
-            }
-        , "set log file max size");
-        term.mountNode(dir_node, func_node, "set_max_size");
+        terminal::IntegerFuncNodeProfile profile;
+        profile.set_func = \
+            [this] (int max_size) {
+                async_file_sink_.setFileMaxSize(max_size * 1024);
+                return true;
+            };
+        profile.min_value = 1;
+        profile.usage = \
+            "Usage: set_max_size <size>  # Unit KB, >=1\r\n"
+            "Exp  : set_max_size 1024\r\n";
+        profile.help = "Set log file max size";
+        terminal::AddFuncNode(term, dir_node, "set_max_size", profile);
     }
-
 }
 
 }
