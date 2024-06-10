@@ -193,6 +193,7 @@ int main(int argc, char **argv)
     std::string view_filename = dir_path + "/view.json";
     std::string stat_filename = dir_path + "/stat.txt";
 
+    std::cout << "Info: Generating " << view_filename << std::endl;
     trace::Writer writer;
     if (!writer.open(view_filename)) {
         std::cerr << "Err: Create '" << view_filename << "' fail!" << std::endl;
@@ -273,6 +274,7 @@ int main(int argc, char **argv)
     writer.writeFooter();
 
     //! 输出统计到 stat.txt
+    std::cout << "Info: Generating " << stat_filename << std::endl;
     DumpStatToFile(name_vec, stat_vec, stat_filename);
 
     std::cout << "Info: Success." << std::endl;
