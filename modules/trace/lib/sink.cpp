@@ -121,6 +121,29 @@ void Sink::disable()
     }
 }
 
+void Sink::setFilterExemptSet(const ExemptSet &exempt_set)
+{
+    std::unique_lock<std::mutex> lk(lock_);
+    filter_exempt_set_ = exempt_set;
+}
+
+Sink::ExemptSet Sink::getFilterExemptSet() const
+{
+    std::unique_lock<std::mutex> lk(lock_);
+    return filter_exempt_set_;
+}
+
+bool Sink::isFilterPassed(const std::string &module) const
+{
+    std::unique_lock<std::mutex> lk(lock_);
+    bool is_in_exempt_set = filter_exempt_set_.find(module) != filter_exempt_set_.end();
+
+    if (filter_strategy_ == FilterStrategy::kPermit)
+        return !is_in_exempt_set;
+    else
+        return is_in_exempt_set;
+}
+
 void Sink::commitRecord(const char *name, const char *module, uint32_t line, uint64_t end_timepoint_us, uint64_t duration_us)
 {
     if (!is_enabled_)
@@ -169,6 +192,9 @@ void Sink::onBackendRecvData(const void *data, size_t size)
 
 void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module)
 {
+    if (!isFilterPassed(module))
+        return;
+
     if (!checkAndCreateRecordFile())
         return;
 

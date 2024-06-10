@@ -50,14 +50,14 @@ LDFLAGS += -pg
 endif
 endif
 
-CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
-CFLAGS := $(CCFLAGS) $(CFLAGS)
-APPS_DIR := $(PWD)
-
 export CC CXX CFLAGS CXXFLAGS LDFLAGS APPS_DIR
 export MODULES THIRDPARTY
 
 include config.mk
+
+CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
+CFLAGS := $(CCFLAGS) $(CFLAGS)
+APPS_DIR := $(PWD)
 
 all: 3rd-party modules test examples
 

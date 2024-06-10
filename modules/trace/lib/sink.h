@@ -24,6 +24,8 @@
 #include <string>
 #include <map>
 #include <limits>
+#include <mutex>
+#include <set>
 
 #include <tbox/util/async_pipe.h>
 #include <tbox/util/buffer.h>
@@ -69,6 +71,19 @@ class Sink {
 
     bool isEnabled() const { return is_enabled_; }
 
+    //! 过滤策略
+    enum class FilterStrategy {
+        kPermit,  //! 允许
+        kReject,  //! 拒绝
+    };
+    using ExemptSet = std::set<std::string>;
+    //! 设置与获取过滤策略，默认允许或是拒绝
+    void setFilterStrategy(FilterStrategy strategy) { filter_strategy_ = strategy; }
+    FilterStrategy getFilterStrategy() const { return filter_strategy_; }
+    //! 设置与获取豁免集合
+    void setFilterExemptSet(const ExemptSet &exempt_set);
+    ExemptSet getFilterExemptSet() const;
+
     /**
      * \brief 提交记录
      *
@@ -97,6 +112,8 @@ class Sink {
     void onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module);
 
     bool checkAndCreateRecordFile();
+
+    bool isFilterPassed(const std::string &module) const;
 
     Index allocNameIndex(const std::string &name, uint32_t line);
     Index allocModuleIndex(const std::string &module);
@@ -130,6 +147,11 @@ class Sink {
     //! 线程号编码
     std::map<long, Index> thread_to_index_map_;
     int next_thread_index_ = 0;
+
+    //! 过滤相关变量
+    mutable std::mutex lock_;
+    FilterStrategy filter_strategy_ = FilterStrategy::kPermit;  //! 默认允许
+    ExemptSet filter_exempt_set_;
 };
 
 }
