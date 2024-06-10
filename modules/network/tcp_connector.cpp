@@ -23,6 +23,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 
 #include "tcp_connection.h"
 
@@ -269,6 +270,7 @@ void TcpConnector::onConnectFail()
 
 void TcpConnector::onSocketWritable()
 {
+    RECORD_SCOPE();
     //! 读取Socket错误码
     int sock_errno = 0;
     socklen_t optlen = sizeof(sock_errno);

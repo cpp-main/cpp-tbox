@@ -24,6 +24,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/lifetime_tag.hpp>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/event/fd_event.h>
 
@@ -209,6 +210,7 @@ bool Client::start()
         return false;
     }
 
+    RECORD_SCOPE();
     //! 基础设置
     const char *client_id = nullptr;
     if (!d_->config.base.client_id.empty())
@@ -289,6 +291,7 @@ bool Client::start()
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
     d_->sp_thread = new thread(
         [this, is_alive] {
+            RECORD_SCOPE();
             int ret = mosquitto_connect_async(d_->sp_mosq,
                                               d_->config.base.broker.domain.c_str(),
                                               d_->config.base.broker.port,
@@ -312,6 +315,7 @@ void Client::stop()
     if (d_->state <= State::kInited)
         return;
 
+    RECORD_SCOPE();
     if (d_->state == State::kTcpConnected ||
         d_->state == State::kMqttConnected) {
         //! 如果已成功连接，则立即断开
@@ -337,6 +341,7 @@ int Client::subscribe(const std::string &topic, int *p_mid, int qos)
         return false;
     }
 
+    RECORD_SCOPE();
     int mid = 0;
     int ret = mosquitto_subscribe(d_->sp_mosq, &mid, topic.c_str(), qos);
     if (p_mid != nullptr)
@@ -353,6 +358,7 @@ int Client::unsubscribe(const std::string &topic, int *p_mid)
         return false;
     }
 
+    RECORD_SCOPE();
     int mid = 0;
     int ret = mosquitto_unsubscribe(d_->sp_mosq, &mid, topic.c_str());
     if (p_mid != nullptr)
@@ -370,6 +376,7 @@ int Client::publish(const std::string &topic, const void *payload_ptr, size_t pa
         return false;
     }
 
+    RECORD_SCOPE();
     int mid = 0;
     int ret = mosquitto_publish(d_->sp_mosq, &mid, topic.c_str(),
                                 payload_size, payload_ptr,
@@ -405,6 +412,7 @@ void Client::onTimerTick()
             auto is_alive = d_->alive_tag.get();  //! 原理见Q1
             d_->sp_thread = new thread(
                 [this, is_alive] {
+                    RECORD_SCOPE();
                     int ret = mosquitto_reconnect_async(d_->sp_mosq);
                     d_->wp_loop->runInLoop(
                         [this, is_alive, ret] {
@@ -483,6 +491,7 @@ void Client::onConnected(int rc)
 
     LogInfo("connected");
 
+    RECORD_SCOPE();
     if (d_->state != State::kMqttConnected) {
         d_->state = State::kMqttConnected;
         ++d_->cb_level;
@@ -494,6 +503,7 @@ void Client::onConnected(int rc)
 
 void Client::onDisconnected(int rc)
 {
+    RECORD_SCOPE();
     disableSocketRead();
     disableSocketWrite();
 
@@ -515,6 +525,7 @@ void Client::onPublish(int mid)
 {
     LogInfo("mid:%d", mid);
 
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->callbacks.message_pub)
         d_->callbacks.message_pub(mid);
@@ -525,6 +536,7 @@ void Client::onSubscribe(int mid, int qos, const int *granted_qos)
 {
     LogInfo("mid:%d, qos:%d", mid, qos);
 
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->callbacks.subscribed)
         d_->callbacks.subscribed(mid, qos, granted_qos);
@@ -535,6 +547,7 @@ void Client::onUnsubscribe(int mid)
 {
     LogInfo("mid:%d", mid);
 
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->callbacks.unsubscribed)
         d_->callbacks.unsubscribed(mid);
@@ -548,6 +561,7 @@ void Client::onMessage(const struct mosquitto_message *msg)
 
     LogInfo("mid:%d, topic:%s", msg->mid, msg->topic);
 
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->callbacks.message_recv)
         d_->callbacks.message_recv(msg->mid,
@@ -582,6 +596,7 @@ void Client::onTcpConnectDone(int ret, bool first_connect)
     if (d_->sp_thread == nullptr)
         return;
 
+    RECORD_SCOPE();
     d_->sp_thread->join();
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 

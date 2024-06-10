@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/util/buffer.h>
 
 #include "middleware.h"
@@ -104,6 +105,7 @@ void Server::Impl::use(Middleware *wp_middleware)
 
 void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
+    RECORD_SCOPE();
     auto conn = new Connection;
     tcp_server_.setContext(ct, conn);
     conns_.insert(conn);
@@ -111,6 +113,7 @@ void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 
 void Server::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
 {
+    RECORD_SCOPE();
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     TBOX_ASSERT(conn != nullptr);
 
@@ -142,6 +145,7 @@ bool IsLastRequest(const Request *req)
 
 void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 {
+    RECORD_SCOPE();
     Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
     TBOX_ASSERT(conn != nullptr);
 
@@ -188,6 +192,7 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
 
 void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
 {
+    RECORD_SCOPE();
     if (!tcp_server_.isClientValid(ct))
         return;
 
@@ -209,6 +214,7 @@ void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
  */
 void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res)
 {
+    RECORD_SCOPE();
     if (!tcp_server_.isClientValid(ct)) {
         delete res;
         return;
@@ -264,6 +270,7 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
 
 void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
 {
+    RECORD_SCOPE();
     if (cb_index >= req_cb_.size())
         return;
 

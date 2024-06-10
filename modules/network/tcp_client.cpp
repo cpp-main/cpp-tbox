@@ -22,6 +22,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/wrapped_recorder.h>
 
 #include "tcp_connector.h"
 #include "tcp_connection.h"
@@ -204,6 +205,7 @@ void TcpClient::unbind()
 
 void TcpClient::onTcpConnected(TcpConnection *new_conn)
 {
+    RECORD_SCOPE();
     new_conn->setDisconnectedCallback(std::bind(&TcpClient::onTcpDisconnected, this));
     new_conn->setReceiveCallback(d_->received_cb, d_->received_threshold);
     new_conn->setSendCompleteCallback(d_->send_complete_cb);
@@ -217,6 +219,7 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
     d_->state = State::kConnected;
 
     if (d_->connected_cb) {
+        RECORD_SCOPE();
         ++d_->cb_level;
         d_->connected_cb();
         --d_->cb_level;
@@ -225,6 +228,7 @@ void TcpClient::onTcpConnected(TcpConnection *new_conn)
 
 void TcpClient::onTcpDisconnected()
 {
+    RECORD_SCOPE();
     TcpConnection *tobe_delete = nullptr;
     std::swap(tobe_delete, d_->sp_connection);
 
@@ -240,6 +244,7 @@ void TcpClient::onTcpDisconnected()
         start();
 
     if (d_->disconnected_cb) {
+        RECORD_SCOPE();
         ++d_->cb_level;
         d_->disconnected_cb();
         --d_->cb_level;

@@ -25,6 +25,7 @@
 #include <memory>
 
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/util/serializer.h>
 #include <tbox/util/string.h>
 #include <tbox/util/fs.h>
@@ -210,6 +211,7 @@ void DnsRequest::onUdpRecv(const void *data_ptr, size_t data_size, const SockAdd
     if (requests_.empty())
         return;
 
+    RECORD_SCOPE();
     util::Deserializer parser(data_ptr, data_size);
 
     uint16_t req_id, flags;

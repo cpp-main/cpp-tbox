@@ -22,6 +22,7 @@
 #include <cstring>
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
@@ -180,6 +181,7 @@ void BufferedFd::shrinkSendBuffer()
 
 void BufferedFd::onReadCallback(short)
 {
+    RECORD_SCOPE();
     struct iovec rbuf[2];
     char extbuf[1024];  //! 扩展存储空间
 
@@ -246,6 +248,7 @@ void BufferedFd::onReadCallback(short)
 
 void BufferedFd::onWriteCallback(short)
 {
+    RECORD_SCOPE();
     //! 如果发送缓冲中已无数据要发送了，那就关闭可写事件
     if (send_buff_.readableSize() == 0) {
         sp_write_event_->disable();

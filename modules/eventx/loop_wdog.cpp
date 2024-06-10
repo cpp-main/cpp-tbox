@@ -29,6 +29,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/wrapped_recorder.h>
 
 namespace tbox {
 namespace eventx {
@@ -92,6 +93,7 @@ void CheckLoopTag() {
         if (loop_info_sptr->state == State::kTobeCheck) {
             loop_info_sptr->state = State::kTimeout;
             _loop_die_cb(loop_info_sptr->name);
+            RECORD_EVENT();
         }
     }
 }

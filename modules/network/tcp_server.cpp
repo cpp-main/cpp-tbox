@@ -24,6 +24,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/cabinet.hpp>
+#include <tbox/base/wrapped_recorder.h>
 
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"
@@ -215,6 +216,7 @@ TcpServer::State TcpServer::state() const
 
 void TcpServer::onTcpConnected(TcpConnection *new_conn)
 {
+    RECORD_SCOPE();
     ConnToken client = d_->conns.alloc(new_conn);
     new_conn->setReceiveCallback(std::bind(&TcpServer::onTcpReceived, this, client, _1), d_->receive_threshold);
     new_conn->setDisconnectedCallback(std::bind(&TcpServer::onTcpDisconnected, this, client));
@@ -228,6 +230,7 @@ void TcpServer::onTcpConnected(TcpConnection *new_conn)
 
 void TcpServer::onTcpDisconnected(const ConnToken &client)
 {
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->disconnected_cb)
         d_->disconnected_cb(client);
@@ -243,6 +246,7 @@ void TcpServer::onTcpDisconnected(const ConnToken &client)
 
 void TcpServer::onTcpReceived(const ConnToken &client, Buffer &buff)
 {
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->receive_cb)
         d_->receive_cb(client, buff);
@@ -251,6 +255,7 @@ void TcpServer::onTcpReceived(const ConnToken &client, Buffer &buff)
 
 void TcpServer::onTcpSendCompleted(const ConnToken &client)
 {
+    RECORD_SCOPE();
     ++d_->cb_level;
     if (d_->send_complete_cb)
         d_->send_complete_cb(client);

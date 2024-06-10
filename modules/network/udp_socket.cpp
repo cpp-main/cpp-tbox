@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <errno.h>
 
 #define RECV_BUFF_SIZE  4096
@@ -110,6 +111,7 @@ void UdpSocket::onSocketEvent(short events)
     if ((events & event::FdEvent::kReadEvent) == 0)
         return;
 
+    RECORD_SCOPE();
     uint8_t read_buff[RECV_BUFF_SIZE];
     struct sockaddr_in peer_addr;
     socklen_t addr_size = sizeof(peer_addr);

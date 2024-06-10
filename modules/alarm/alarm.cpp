@@ -23,6 +23,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/timer_event.h>
 
@@ -187,6 +188,7 @@ void Alarm::onTimeExpired() {
   state_ = State::kInited;
   activeTimer();
 
+  RECORD_SCOPE();
   ++cb_level_;
   if (cb_)
     cb_();

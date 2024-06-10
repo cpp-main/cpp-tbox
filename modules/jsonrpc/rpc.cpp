@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
+#include <tbox/base/wrapped_recorder.h>
 #include "proto.h"
 #include "inner_types.h"
 
@@ -69,6 +70,7 @@ void Rpc::cleanup()
 
 void Rpc::request(const std::string &method, const Json &js_params, RequestCallback &&cb)
 {
+    RECORD_SCOPE();
     int id = 0;
     if (cb) {
         id = ++id_alloc_;
@@ -100,6 +102,7 @@ void Rpc::addService(const std::string &method, ServiceCallback &&cb)
 
 void Rpc::respond(int id, int errcode, const Json &js_result)
 {
+    RECORD_SCOPE();
     if (id == 0) {
         LogWarn("send id == 0 respond");
         return;
@@ -116,6 +119,7 @@ void Rpc::respond(int id, int errcode, const Json &js_result)
 
 void Rpc::respond(int id, const Json &js_result)
 {
+    RECORD_SCOPE();
     if (id == 0) {
         LogWarn("send id == 0 respond");
         return;
@@ -127,6 +131,7 @@ void Rpc::respond(int id, const Json &js_result)
 
 void Rpc::respond(int id, int errcode)
 {
+    RECORD_SCOPE();
     if (id == 0) {
         LogWarn("send id == 0 respond");
         return;
@@ -138,6 +143,7 @@ void Rpc::respond(int id, int errcode)
 
 void Rpc::onRecvRequest(int id, const std::string &method, const Json &js_params)
 {
+    RECORD_SCOPE();
     auto iter = method_services_.find(method);
     if (iter != method_services_.end() && iter->second) {
         int errcode = 0;
@@ -159,6 +165,7 @@ void Rpc::onRecvRequest(int id, const std::string &method, const Json &js_params
 
 void Rpc::onRecvRespond(int id, int errcode, const Json &js_result)
 {
+    RECORD_SCOPE();
     auto iter = request_callback_.find(id);
     if (iter != request_callback_.end()) {
         if (iter->second)

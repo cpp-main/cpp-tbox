@@ -26,6 +26,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/wrapped_recorder.h>
 
 #include "tcp_connection.h"
 
@@ -147,6 +148,7 @@ void TcpAcceptor::onSocketRead(short events)
 
 void TcpAcceptor::onClientConnected()
 {
+    RECORD_SCOPE();
     struct sockaddr addr;
     socklen_t addr_len = sizeof(addr);
     SocketFd peer_sock = sock_fd_.accept(&addr, &addr_len);

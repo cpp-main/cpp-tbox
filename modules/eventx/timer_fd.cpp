@@ -26,6 +26,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
@@ -183,6 +184,7 @@ void TimerFd::onEvent(short events)
             disable();
 
         if (d_->cb) {
+            RECORD_SCOPE();
             ++d_->cb_level;
             d_->cb();
             --d_->cb_level;
