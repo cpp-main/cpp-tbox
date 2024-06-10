@@ -30,7 +30,7 @@
 using namespace std;
 using namespace tbox;
 
-//! 统计
+//! 统计数据
 struct Stat {
     uint64_t  name_index = 0;
     uint64_t  module_index = 0;
@@ -56,11 +56,14 @@ using RecordHandleFunc = std::function<void(uint64_t, uint64_t, uint64_t, uint64
 void PrintUsage(const char *proc_name)
 {
     std::cout
-      << "Usage: " << proc_name << " <dir_path> [output_filename]" << std::endl
-      << "Exp  : " << proc_name << " /some/where/my_proc.20240531_032237.114" << std::endl
-      << "       " << proc_name << " /some/where/my_proc.20240531_032237.114 output.json" << std::endl;
+      << "This is cpp-tbox trace analyze tool." << std::endl
+      << "It reads record files from the specified directory, and generates view.json and stat.txt in this directory." << std::endl
+      << std::endl
+      << "Usage: " << proc_name << " <dir_path>" << std::endl
+      << "Exp  : " << proc_name << " /some/where/my_proc.20240531_032237.114" << std::endl;
 }
 
+//! 从Buffer中提取5个uint64_t的数值
 bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_us,
                 uint64_t &thread_index, uint64_t &name_index, uint64_t &module_index)
 {
@@ -99,11 +102,12 @@ bool PickRecord(util::Buffer &buffer, uint64_t &end_diff_us, uint64_t &duration_
     return true;
 }
 
+//! 读取指定的记录文件
 void ReadRecordFile(const std::string &filename, const RecordHandleFunc &func)
 {
     std::ifstream ifs(filename, std::ifstream::binary);
     if (!ifs) {
-        std::cerr << "read '" << filename << "' fail!" << std::endl;
+        std::cerr << "Err: Read '" << filename << "' fail!" << std::endl;
         return;
     }
 
@@ -132,17 +136,25 @@ void ReadRecordFile(const std::string &filename, const RecordHandleFunc &func)
     }
 }
 
-void ReadAllRecordFiles(const std::string &records_dir, const StringVec &record_file_vec, const RecordHandleFunc &func)
+//! 读取目录下所有的记录文件
+void ReadAllRecordFiles(const std::string &records_dir, const RecordHandleFunc &func)
 {
+    StringVec record_file_vec;
+    if (!util::fs::ListDirectory(records_dir, record_file_vec)) {
+      std::cerr << "Err: List '" << records_dir << "' fail!" << std::endl;
+      return;
+    }
+
     for (auto record_file : record_file_vec)
         ReadRecordFile(records_dir + '/' + record_file, func);
 }
 
+//! 导出统计数据到文件
 void DumpStatToFile(const StringVec &name_vec, const StatVec &stat_vec, const std::string &stat_filename)
 {
     std::ofstream ofs(stat_filename);
     if (!ofs) {
-        std::cout << "Error: open stat file '" << stat_filename << "' fail!" << std::endl;
+        std::cerr << "Err: Create stat file '" << stat_filename << "' fail!" << std::endl;
         return;
     }
 
@@ -167,24 +179,23 @@ void DumpStatToFile(const StringVec &name_vec, const StatVec &stat_vec, const st
 
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
+    if (argc <= 1) {
         PrintUsage(argv[0]);
         return 0;
     }
 
     std::string dir_path = argv[1];
     if (!util::fs::IsDirectoryExist(dir_path)) {
-        std::cout << "Error: dir_path '" << dir_path << "' not exist!" << std::endl;
+        std::cerr << "Err: dir_path '" << dir_path << "' not exist!" << std::endl;
         return 0;
     }
 
-    std::string output_filename = dir_path + "/output.json";
-    if (argc > 2)
-      output_filename = argv[2];
+    std::string view_filename = dir_path + "/view.json";
+    std::string stat_filename = dir_path + "/stat.txt";
 
     trace::Writer writer;
-    if (!writer.open(output_filename)) {
-        std::cout << "Error: output_filename '" << output_filename << "' can't be create!" << std::endl;
+    if (!writer.open(view_filename)) {
+        std::cerr << "Err: Create '" << view_filename << "' fail!" << std::endl;
         return 0;
     }
 
@@ -195,25 +206,19 @@ int main(int argc, char **argv)
 
     StringVec name_vec, module_vec, thread_vec;
     if (!util::fs::ReadAllLinesFromTextFile(names_filename, name_vec))
-        std::cerr << "Warn: load names.txt fail!" << std::endl;
+        std::cerr << "Warn: Load names.txt fail!" << std::endl;
     if (!util::fs::ReadAllLinesFromTextFile(modules_filename, module_vec))
-        std::cerr << "Warn: load modules.txt fail!" << std::endl;
+        std::cerr << "Warn: Load modules.txt fail!" << std::endl;
     if (!util::fs::ReadAllLinesFromTextFile(threads_filename, thread_vec))
-        std::cerr << "Warn: load threads.txt fail!" << std::endl;
-
-    std::string records_dir = dir_path + "/records";
-    StringVec record_file_name_vec;
-    if (!util::fs::ListDirectory(records_dir, record_file_name_vec)) {
-      std::cerr << "Err: list '" << records_dir << "' fail!" << std::endl;
-      return 0;
-    }
+        std::cerr << "Warn: Load threads.txt fail!" << std::endl;
 
     std::vector<Stat> stat_vec(name_vec.size());
+    std::string records_dir = dir_path + "/records";
 
     writer.writeHeader();
 
     //! 第一次遍历记录文件
-    ReadAllRecordFiles(records_dir, record_file_name_vec,
+    ReadAllRecordFiles(records_dir,
         [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t thread_index) {
             auto &name = name_vec.at(name_index);
             auto &module = module_vec.at(module_index);
@@ -244,7 +249,7 @@ int main(int argc, char **argv)
     }
 
     //! 第二次遍历记录文件，标出超出警告线的
-    ReadAllRecordFiles(records_dir, record_file_name_vec,
+    ReadAllRecordFiles(records_dir,
         [&] (uint64_t start_ts_us, uint64_t duration_us, uint64_t name_index, uint64_t module_index, uint64_t) {
             auto &stat = stat_vec.at(name_index);
             if (duration_us < stat.dur_warn_line_us)
@@ -268,8 +273,9 @@ int main(int argc, char **argv)
     writer.writeFooter();
 
     //! 输出统计到 stat.txt
-    std::string stat_filename = dir_path + "/stat.txt";
     DumpStatToFile(name_vec, stat_vec, stat_filename);
+
+    std::cout << "Info: Success." << std::endl;
     return 0;
 }
 
