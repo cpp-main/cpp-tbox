@@ -71,7 +71,7 @@ TEST(fs, TextFileReadAppend_Ok) {
 
 TEST(fs, TextFileReadEachLine) {
     ::unlink(test_filename);  //! 先删一次
-    const std::string text_tobe_write = "first line\nsecond line\nthird line";
+    const std::string text_tobe_write = "first line\r\nsecond line\nthird line";
     EXPECT_TRUE(WriteStringToTextFile(test_filename, text_tobe_write)); //! 写入数据
     std::vector<std::string> str_vec;
     bool ret = ReadEachLineFromTextFile(test_filename,
@@ -82,6 +82,19 @@ TEST(fs, TextFileReadEachLine) {
     EXPECT_EQ(str_vec[0], "first line");
     EXPECT_EQ(str_vec[1], "second line");
     EXPECT_EQ(str_vec[2], "third line");
+}
+
+TEST(fs, TextFileReadFirstLine) {
+    ::unlink(test_filename);  //! 先删一次
+    EXPECT_TRUE(WriteStringToTextFile(test_filename, "first line\r\n")); //! 写入数据
+    std::string text;
+    EXPECT_TRUE(ReadFirstLineFromTextFile(test_filename, text));
+    ASSERT_EQ(text, "first line");
+
+    ::unlink(test_filename);  //! 先删一次
+    EXPECT_TRUE(WriteStringToTextFile(test_filename, "one line")); //! 写入数据
+    EXPECT_TRUE(ReadFirstLineFromTextFile(test_filename, text));
+    ASSERT_EQ(text, "one line");
 }
 
 TEST(fs, FileFail) {

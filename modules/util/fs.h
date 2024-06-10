@@ -75,6 +75,17 @@ bool ReadEachLineFromTextFile(const std::string &filename, const std::function<v
 bool ReadAllLinesFromTextFile(const std::string &filename, std::vector<std::string> &lines);
 
 /**
+ * 从文件中读取第一行文本
+ *
+ * \param filename          文件名
+ * \param text              读出的行内容
+ *
+ * \return true     文件打开成功
+ * \return false    文件打开失败
+ */
+bool ReadFirstLineFromTextFile(const std::string &filename, std::string &text);
+
+/**
  * 将字串写入到文件
  *
  * \param filename      文件名

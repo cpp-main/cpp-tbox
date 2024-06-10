@@ -73,9 +73,12 @@ bool ReadEachLineFromTextFile(const std::string &filename, const std::function<v
     try {
         ifstream f(filename);
         if (f) {
-            std::string line;
-            while (std::getline(f, line))
-                line_handle_func(line);
+            std::string text;
+            while (std::getline(f, text)) {
+                while (!text.empty() && (text.back() == '\r' || text.back() == '\n'))
+                    text.pop_back();
+                line_handle_func(text);
+            }
             return true;
         } else {
             LogWarn("open failed, %s", filename.c_str());
@@ -86,14 +89,35 @@ bool ReadEachLineFromTextFile(const std::string &filename, const std::function<v
     return false;
 }
 
-bool ReadAllLinesFromTextFile(const std::string &filename, std::vector<std::string> &lines)
+bool ReadAllLinesFromTextFile(const std::string &filename, std::vector<std::string> &text_vec)
 {
     try {
         ifstream f(filename);
         if (f) {
-            std::string line;
-            while (std::getline(f, line))
-                lines.emplace_back(std::move(line));
+            std::string text;
+            while (std::getline(f, text)) {
+                while (!text.empty() && (text.back() == '\r' || text.back() == '\n'))
+                    text.pop_back();
+                text_vec.emplace_back(std::move(text));
+            }
+            return true;
+        } else {
+            LogWarn("open failed, %s", filename.c_str());
+        }
+    } catch (const exception &e) {
+        LogWarn("catch exception: %s", e.what());
+    }
+    return false;
+}
+
+bool ReadFirstLineFromTextFile(const std::string &filename, std::string &text)
+{
+    try {
+        ifstream f(filename);
+        if (f) {
+            std::getline(f, text);
+            while (!text.empty() && (text.back() == '\r' || text.back() == '\n'))
+                text.pop_back();
             return true;
         } else {
             LogWarn("open failed, %s", filename.c_str());
