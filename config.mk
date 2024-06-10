@@ -42,3 +42,6 @@ MODULES += jsonrpc
 
 ## 第三方库依赖
 THIRDPARTY += nlohmann
+
+## 编译配置
+CCFLAGS += -DENABLE_TRACE_RECORDER=1

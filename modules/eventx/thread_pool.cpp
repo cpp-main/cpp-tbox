@@ -35,7 +35,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/catch_throw.h>
 #include <tbox/base/object_pool.hpp>
-#include <tbox/base/recorder.h>
+#include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/loop.h>
 
 namespace tbox {

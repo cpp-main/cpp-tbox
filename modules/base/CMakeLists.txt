@@ -45,7 +45,8 @@ set(TBOX_BASE_HEADERS
     catch_throw.h
     func_types.h
     object_pool.hpp
-    recorder.h)
+    recorder.h
+    wrapped_recorder.h)
 
 set(TBOX_BASE_SOURCES
     version.cpp

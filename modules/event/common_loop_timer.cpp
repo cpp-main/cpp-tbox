@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <tbox/base/defines.h>
 #include <tbox/base/assert.h>
-#include <tbox/base/recorder.h>
+#include <tbox/base/wrapped_recorder.h>
 
 #include "timer_event_impl.h"
 

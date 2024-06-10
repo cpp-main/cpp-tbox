@@ -21,7 +21,7 @@
 #include "common_loop.h"
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
-#include <tbox/base/recorder.h>
+#include <tbox/base/wrapped_recorder.h>
 
 namespace tbox {
 namespace event {

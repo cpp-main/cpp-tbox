@@ -45,6 +45,7 @@ HEAD_FILES = \
 	object_pool.hpp \
 	func_types.h \
 	recorder.h \
+	wrapped_recorder.h \
 
 CPP_SRC_FILES = \
 	version.cpp \
