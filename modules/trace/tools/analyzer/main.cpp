@@ -245,8 +245,10 @@ int main(int argc, char **argv)
 
     //! 处理统计数据
     for (auto &stat : stat_vec) {
-        stat.dur_avg_us = stat.dur_acc_us / stat.times;
-        stat.dur_warn_line_us = (stat.dur_avg_us + stat.dur_max_us) / 2;
+        if (stat.times > 0) {
+            stat.dur_avg_us = stat.dur_acc_us / stat.times;
+            stat.dur_warn_line_us = (stat.dur_avg_us + stat.dur_max_us) / 2;
+        }
     }
 
     //! 第二次遍历记录文件，标出超出警告线的
