@@ -189,7 +189,6 @@ int WorkThread::cancel(TaskToken token)
 
 void WorkThread::threadProc()
 {
-    RECORD_SCOPE();
     while (true) {
         Task* item = nullptr;
         {

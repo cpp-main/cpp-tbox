@@ -23,7 +23,7 @@ set(TBOX_BASE_VERSION_MINOR 0)
 set(TBOX_BASE_VERSION_PATCH 1)
 set(TBOX_BASE_VERSION ${TBOX_BASE_VERSION_MAJOR}.${TBOX_BASE_VERSION_MINOR}.${TBOX_BASE_VERSION_PATCH})
 
-add_definitions(-DLOG_MODULE_ID="tbox.base")
+add_definitions(-DMODULE_ID="tbox.base")
 
 set(TBOX_LIBRARY_NAME tbox_base)
 
@@ -99,7 +99,6 @@ install(
     FILES ${TBOX_BASE_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/base
 )
-
 
 # generate and install export file
 install(

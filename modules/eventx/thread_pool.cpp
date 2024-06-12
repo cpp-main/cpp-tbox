@@ -289,7 +289,6 @@ ThreadPool::Snapshot ThreadPool::snapshot() const
 
 void ThreadPool::threadProc(ThreadToken thread_token)
 {
-    RECORD_SCOPE();
     LogDbg("thread %u start", thread_token.id());
 
     while (true) {

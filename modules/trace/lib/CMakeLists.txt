@@ -25,20 +25,17 @@ set(TBOX_LOG_VERSION_MINOR 0)
 set(TBOX_LOG_VERSION_PATCH 1)
 set(TBOX_LOG_VERSION ${TBOX_LOG_VERSION_MAJOR}.${TBOX_LOG_VERSION_MINOR}.${TBOX_LOG_VERSION_PATCH})
 
-add_definitions(-DLOG_MODULE_ID="tbox.trace")
+add_definitions(-DMODULE_ID="tbox.trace")
 
 set(TBOX_LIBRARY_NAME tbox_trace)
 
 set(TBOX_LOG_HEADERS
-    recorder.h
     sink.h)
 
 set(TBOX_LOG_SOURCES
-    recorder.cpp
     sink.cpp)
 
 set(TBOX_LOG_TEST_SOURCES
-    recorder_test.cpp
     sink_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_LOG_SOURCES})

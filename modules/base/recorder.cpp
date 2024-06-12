@@ -19,7 +19,7 @@
 */
 #include"recorder.h"
 
-#include<sys/time.h>
+#include <sys/time.h>
 
 namespace tbox {
 namespace trace {
