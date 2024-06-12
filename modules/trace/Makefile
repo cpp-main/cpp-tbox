@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2024 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -18,9 +18,24 @@
 # of the source tree.
 #
 
-all test clean distclean:
-	@for i in $(shell ls) ; do \
-		if [ -d $$i ]; then  \
-			$(MAKE) -C $$i $@ || exit $$? ; \
-		fi \
-	done
+PROJECT = trace/lib
+LIB_NAME = trace
+LIB_VERSION_X = 0
+LIB_VERSION_Y = 1
+LIB_VERSION_Z = 0
+
+HEAD_FILES = sink.h
+
+CPP_SRC_FILES = sink.cpp
+
+CXXFLAGS := -DMODULE_ID='"tbox.trace"' $(CXXFLAGS)
+
+TEST_CPP_SRC_FILES = \
+	$(CPP_SRC_FILES) \
+	sink_test.cpp \
+
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl
+
+ENABLE_SHARED_LIB = no
+
+include $(TOP_DIR)/mk/lib_tbox_common.mk

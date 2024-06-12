@@ -43,4 +43,4 @@ LDFLAGS += \
 include echo_server/app.mk
 include nc_client/app.mk
 
-include ${TOP_DIR}/tools/exe_common.mk
+include $(TOP_DIR)/mk/exe_common.mk

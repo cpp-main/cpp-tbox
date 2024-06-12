@@ -160,7 +160,7 @@ endif()
 
 if(TBOX_ENABLE_TRACE)
     message(STATUS "trace module enabled")
-    add_subdirectory(modules/trace/lib)
+    list(APPEND TBOX_COMPONENTS trace)
 endif()
 
 if(TBOX_ENABLE_MAIN)

@@ -44,4 +44,4 @@ include app1/app.mk
 include app2/app.mk
 include app3/app.mk
 
-include ${TOP_DIR}/tools/exe_common.mk
+include $(TOP_DIR)/mk/exe_common.mk

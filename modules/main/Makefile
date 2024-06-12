@@ -57,4 +57,4 @@ TEST_LDFLAGS := $(LDFLAGS) \
 
 ENABLE_SHARED_LIB = no
 
-include $(TOP_DIR)/tools/lib_tbox_common.mk
+include $(TOP_DIR)/mk/lib_tbox_common.mk

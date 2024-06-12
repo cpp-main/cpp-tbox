@@ -26,4 +26,4 @@ CPP_SRC_FILES := main.cpp
 CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += -ltbox_base -ldl
 
-include ${TOP_DIR}/tools/exe_common.mk
+include $(TOP_DIR)/mk/exe_common.mk

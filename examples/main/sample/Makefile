@@ -51,4 +51,4 @@ TEST_LDFLAGS += $(LDFLAGS)
 #pre_build :
 #	touch build_time.cpp
 
-include $(TOP_DIR)/tools/exe_common.mk
+include $(TOP_DIR)/mk/exe_common.mk

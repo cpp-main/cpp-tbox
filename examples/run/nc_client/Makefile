@@ -33,4 +33,4 @@ LDFLAGS += -ltbox_network
 ENABLE_STATIC_LIB = no
 ENABLE_SHARED_LIB = yes
 
-include ${TOP_DIR}/tools/lib_common.mk
+include $(TOP_DIR)/mk/lib_common.mk

@@ -23,7 +23,7 @@ export TOP_DIR:=$(PWD)
 include build_env.mk
 include version.mk
 
-.PHONY: all 3rd-party modules examples test clean distclean print
+.PHONY: all 3rd-party modules tools examples test clean distclean print
 
 CCFLAGS := -Wall
 
@@ -59,7 +59,7 @@ CXXFLAGS := $(CCFLAGS) $(CXXFLAGS)
 CFLAGS := $(CCFLAGS) $(CFLAGS)
 APPS_DIR := $(PWD)
 
-all: 3rd-party modules test examples
+all: 3rd-party modules test tools examples
 
 print:
 	@echo "CXXFLAGS = $(CXXFLAGS)"
@@ -71,7 +71,7 @@ modules 3rd-party:
 test: modules
 	$(MAKE) -C modules test
 
-examples: modules
+tools examples: modules
 	$(MAKE) -C $@
 
 clean:

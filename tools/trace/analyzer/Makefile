@@ -18,8 +18,8 @@
 # of the source tree.
 #
 
-PROJECT := trace/tools/analyzer
-EXE_NAME := tools/trace/analyzer
+PROJECT := tools/trace/analyzer
+EXE_NAME := $(PROJECT)
 
 CPP_SRC_FILES := \
 	main.cpp \
@@ -32,4 +32,4 @@ LDFLAGS += \
 	-ltbox_base \
 	-ldl
 
-include ${TOP_DIR}/tools/exe_common.mk
+include $(TOP_DIR)/mk/exe_common.mk
