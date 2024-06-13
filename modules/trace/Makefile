@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT = trace/lib
+PROJECT = trace
 LIB_NAME = trace
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 1
