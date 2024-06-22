@@ -21,9 +21,13 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <thread>
+#include "buffer.h"
 
 using namespace tbox::util;
 using namespace std;
+
+namespace tbox {
+namespace util {
 
 void TestByConfig(AsyncPipe::Config cfg)
 {
@@ -204,4 +208,57 @@ TEST(AsyncPipe, ForgetCleanup)
     ASSERT_EQ(out_data.size(), 1);
     EXPECT_EQ(out_data[0], 12);
     ap.cleanup();
+}
+
+TEST(AsyncPipe, MultiThreadAppend)
+{
+    AsyncPipe::Config cfg;
+    cfg.buff_size = 50;
+    AsyncPipe ap;
+    ASSERT_TRUE(ap.initialize(cfg));
+
+    const std::string s1("abcdefghijklmnopqrstuvwzyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    const auto len = s1.size();
+
+    const int thread_num = 100;
+    const int each_thread_send_num = 1000;
+
+    std::vector<char> recv_data;
+    recv_data.reserve(thread_num * each_thread_send_num * len);
+
+    ap.setCallback(
+        [&] (const void *ptr, size_t size) {
+            const char *str = static_cast<const char *>(ptr);
+            for (size_t i = 0; i < size; ++i)
+                recv_data.push_back(str[i]);
+        }
+    );
+
+    auto func = [&] {
+        for (int i = 0; i < each_thread_send_num; ++i) {
+            std::this_thread::sleep_for(std::chrono::microseconds(rand() % 5));
+            ap.append(s1.data(), len);
+        }
+    };
+
+    std::vector<std::thread> thread_vec;
+    for (int i = 0; i < thread_num; ++i)
+        thread_vec.emplace_back(func);
+
+    for (auto &t : thread_vec)
+        t.join();
+
+    ap.cleanup();
+
+    //! 检查接收的数据量是否正确
+    ASSERT_EQ(recv_data.size(), thread_num * each_thread_send_num * len);
+
+    //! 逐一检查接收到的数据顺序是否正确
+    for (size_t i = 0; i < thread_num * each_thread_send_num; ++i) {
+        std::string str(recv_data.data() + i * len, len);
+        EXPECT_EQ(str, s1) << "i:" << i;
+    }
+}
+
+}
 }

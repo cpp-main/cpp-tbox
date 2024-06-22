@@ -92,7 +92,7 @@ class AsyncPipe::Impl {
     mutex   curr_buffer_mutex_;     //!< 锁 curr_buffer_ 的
     mutex   full_buffers_mutex_;    //!< 锁 full_buffers_ 的
     mutex   free_buffers_mutex_;    //!< 锁 free_buffers_ 的
-    mutex   buff_num_mutex_;        //!< 锁 free_buffers_ 的
+    mutex   buff_num_mutex_;        //!< 锁 buff_num_ 的
     condition_variable full_buffers_cv_;    //!< full_buffers_ 不为空条件变量
     condition_variable free_buffers_cv_;    //!< free_buffers_ 不为空条件变量
 };
@@ -288,15 +288,24 @@ void AsyncPipe::Impl::appendLockless(const void *data_ptr, size_t data_size)
 void AsyncPipe::Impl::threadFunc()
 {
     do {
+        bool is_wake_for_timeup = true; //! 是否因超时而唤醒
         {
             //! 等待唤醒信号
             std::unique_lock<std::mutex> lk(full_buffers_mutex_);
-            //! 等待三种情况: 1.超时，2.停止，3.full_buffers_不为空
-            full_buffers_cv_.wait_for(lk, std::chrono::milliseconds(cfg_.interval),
-                [=] {
-                    return stop_signal_ || !full_buffers_.empty();
-                }
-            );
+            if (full_buffers_.empty()) {
+                //! 等待三种情况: 1.超时，2.停止，3.full_buffers_不为空
+                full_buffers_cv_.wait_for(lk, std::chrono::milliseconds(cfg_.interval),
+                    [&is_wake_for_timeup, this] {
+                        if (stop_signal_ || !full_buffers_.empty()) {
+                            is_wake_for_timeup = false;
+                            return true;
+                        }
+                        return false;
+                    }
+                );
+            } else {
+                is_wake_for_timeup = false;
+            }
         }
         //! 先处理 full_buffers_ 中的数据
         for (;;) {
@@ -332,8 +341,8 @@ void AsyncPipe::Impl::threadFunc()
             }
         }
 
-        //! 最后检查 curr_buffer_ 中的数据
-        {
+        //! 如果是超时或是收到停止信号，则检查并处理 curr_buffer_ 中的数据
+        if (is_wake_for_timeup || stop_signal_) {
             Buffer *buff = nullptr;
             if (curr_buffer_mutex_.try_lock()) {
                 //! 注意：这里一定要用 try_lock()，否则会死锁
