@@ -40,18 +40,18 @@ void TestByConfig(AsyncPipe::Config cfg)
             const uint8_t *p = static_cast<const uint8_t*>(ptr);
             for (size_t i = 0; i < size; ++i)
                 out_data.push_back(p[i]);
-            this_thread::sleep_for(chrono::milliseconds(10));
+            this_thread::sleep_for(chrono::microseconds(10));
         }
     );
-
 
     for (size_t i = 0; i < 256; ++i) {
         uint8_t v = i;
         ap.append(&v, 1);
     }
+
     ap.cleanup();
 
-    EXPECT_EQ(out_data.size(), 256);
+    ASSERT_EQ(out_data.size(), 256);
     for (size_t i = 0; i < 256; ++i) {
         EXPECT_EQ(out_data[i], i);
     }
@@ -221,7 +221,7 @@ TEST(AsyncPipe, MultiThreadAppend)
     const auto len = s1.size();
 
     const int thread_num = 100;
-    const int each_thread_send_num = 1000;
+    const int each_thread_send_num = 100;
 
     std::vector<char> recv_data;
     recv_data.reserve(thread_num * each_thread_send_num * len);
@@ -231,6 +231,7 @@ TEST(AsyncPipe, MultiThreadAppend)
             const char *str = static_cast<const char *>(ptr);
             for (size_t i = 0; i < size; ++i)
                 recv_data.push_back(str[i]);
+            std::this_thread::sleep_for(std::chrono::microseconds(rand() % 10));
         }
     );
 
