@@ -29,6 +29,7 @@
 #include <sys/syscall.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/string.h>
 #include <tbox/util/scalable_integer.h>
@@ -168,6 +169,7 @@ void Sink::commitRecord(const char *name, const char *module, uint32_t line, uin
 void Sink::onBackendRecvData(const void *data, size_t size)
 {
     buffer_.append(data, size);
+    std::vector<uint8_t> write_cache;
 
     while (buffer_.readableSize() > sizeof(RecordHeader)) {
         RecordHeader header;
@@ -176,21 +178,36 @@ void Sink::onBackendRecvData(const void *data, size_t size)
         //     而是要先copy到header再使用？
         //! A: 因为直接指针引用会有对齐的问题。
 
+        auto packet_size = header.name_size + header.module_size + sizeof(header);
         //! 如果长度不够，就跳过，等下一次
-        if ((header.name_size + header.module_size + sizeof(header)) > buffer_.readableSize())
+        if (packet_size > buffer_.readableSize()) {
+            TBOX_ASSERT(packet_size < 1024); //! 正常不应该超过1K的，如果真超过了就是Bug
             break;
+        }
 
         buffer_.hasRead(sizeof(header));
 
         const char *name = reinterpret_cast<const char*>(buffer_.readableBegin());
         const char *module = name + header.name_size;
-        onBackendRecvRecord(header, name, module);
+        onBackendRecvRecord(header, name, module, write_cache);
 
         buffer_.hasRead(header.name_size + header.module_size);
     }
+
+    if (!write_cache.empty()) {
+        auto wsize = ::write(curr_record_fd_, write_cache.data(), write_cache.size());
+        if (wsize != static_cast<ssize_t>(write_cache.size())) {
+            LogErrno(errno, "write record file '%s' fail", curr_record_filename_.c_str());
+            return;
+        }
+
+        total_write_size_ += wsize;
+        if (total_write_size_ >= record_file_max_size_)
+            CHECK_CLOSE_RESET_FD(curr_record_fd_);
+    }
 }
 
-void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module)
+void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module, std::vector<uint8_t> &write_cache)
 {
     if (!isFilterPassed(module))
         return;
@@ -213,17 +230,10 @@ void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, con
     data_size += util::DumpScalableInteger(name_index, (buffer + data_size), (kBufferSize - data_size));
     data_size += util::DumpScalableInteger(module_index, (buffer + data_size), (kBufferSize - data_size));
 
-    auto wsize = ::write(curr_record_fd_, buffer, data_size);
-    if (wsize != static_cast<ssize_t>(data_size)) {
-        LogErrno(errno, "write record file '%s' fail", curr_record_filename_.c_str());
-        return;
-    }
-
     last_timepoint_us_ = record.end_ts_us;
-    total_write_size_ += wsize;
 
-    if (total_write_size_ >= record_file_max_size_)
-        CHECK_CLOSE_RESET_FD(curr_record_fd_);
+    std::back_insert_iterator<std::vector<uint8_t>>  back_insert_iter(write_cache);
+    std::copy(buffer, buffer + data_size, back_insert_iter);
 }
 
 bool Sink::checkAndCreateRecordFile()

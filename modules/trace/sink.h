@@ -26,6 +26,7 @@
 #include <limits>
 #include <mutex>
 #include <set>
+#include <vector>
 
 #include <tbox/util/async_pipe.h>
 #include <tbox/util/buffer.h>
@@ -109,7 +110,8 @@ class Sink {
     using Index = uint64_t;
 
     void onBackendRecvData(const void *data, size_t size);
-    void onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module);
+    void onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module,
+                             std::vector<uint8_t> &write_cache);
 
     bool checkAndCreateRecordFile();
 
