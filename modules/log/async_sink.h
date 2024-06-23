@@ -22,8 +22,8 @@
 
 #include "sink.h"
 
-#include <vector>
 #include <tbox/util/async_pipe.h>
+#include <tbox/util/buffer.h>
 
 namespace tbox {
 namespace log {
@@ -50,7 +50,7 @@ class AsyncSink : public Sink {
     util::AsyncPipe async_pipe_;
     bool is_pipe_inited_ = false;
 
-    std::vector<char> buffer_;
+    util::Buffer buffer_;
 };
 
 }

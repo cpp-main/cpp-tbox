@@ -59,30 +59,22 @@ void AsyncSink::onLogFrontEnd(const LogContent *content)
 
 void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 {
-    constexpr auto LogContentSize = sizeof(LogContent);
-    const char *p = reinterpret_cast<const char*>(data_ptr);
-
-    buffer_.reserve(buffer_.size() + data_size);
-    std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
-    std::copy(p, p + data_size, back_insert_iter);
+    buffer_.append(data_ptr, data_size);
 
     bool is_need_flush = false;
-    while (buffer_.size() >= LogContentSize) {
-        auto content = reinterpret_cast<LogContent*>(buffer_.data());
-        auto frame_size = LogContentSize + content->text_len;
-        if (frame_size > buffer_.size())    //! 总结长度不够
+    while (buffer_.readableSize() >= sizeof(LogContent)) {
+        auto content = reinterpret_cast<LogContent*>(buffer_.readableBegin());
+        auto frame_size = sizeof(LogContent) + content->text_len;
+        if (frame_size > buffer_.readableSize())  //! 总结长度不够
             break;
         content->text_ptr = reinterpret_cast<const char *>(content + 1);
         onLogBackEnd(content);
         is_need_flush = true;
-        buffer_.erase(buffer_.begin(), (buffer_.begin() + frame_size));
+        buffer_.hasRead(frame_size);
     }
 
-    if (is_need_flush) {
+    if (is_need_flush)
         flushLog();
-        if (buffer_.capacity() > 1024)
-            buffer_.shrink_to_fit();
-    }
 }
 
 void AsyncSink::onLogBackEnd(const LogContent *content)
