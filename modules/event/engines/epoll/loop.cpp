@@ -45,8 +45,6 @@ EpollLoop::EpollLoop() :
 
 EpollLoop::~EpollLoop()
 {
-    cleanupDeferredTasks();
-
     CHECK_CLOSE_RESET_FD(epoll_fd_);
 }
 
