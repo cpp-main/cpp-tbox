@@ -41,7 +41,7 @@ class AsyncSink : public Sink {
 
     virtual void onLogFrontEnd(const LogContent *content) override;
     void onLogBackEndReadPipe(const void *data_ptr, size_t data_size);
-    void onLogBackEnd(const LogContent *content);
+    void onLogBackEnd(const LogContent &content);
     virtual void appendLog(const char *str, size_t len) = 0;
     virtual void flushLog() { }
 

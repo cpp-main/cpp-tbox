@@ -63,25 +63,31 @@ void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 
     bool is_need_flush = false;
     while (buffer_.readableSize() >= sizeof(LogContent)) {
-        auto content = reinterpret_cast<LogContent*>(buffer_.readableBegin());
-        auto frame_size = sizeof(LogContent) + content->text_len;
+        LogContent content;
+        ::memcpy(&content, buffer_.readableBegin(), sizeof(content));
+
+        auto frame_size = sizeof(LogContent) + content.text_len;
         if (frame_size > buffer_.readableSize())  //! 总结长度不够
             break;
-        content->text_ptr = reinterpret_cast<const char *>(content + 1);
+
+        buffer_.hasRead(sizeof(content));
+
+        content.text_ptr = reinterpret_cast<const char*>(buffer_.readableBegin());
         onLogBackEnd(content);
+
         is_need_flush = true;
-        buffer_.hasRead(frame_size);
+        buffer_.hasRead(content.text_len);
     }
 
     if (is_need_flush)
         flushLog();
 }
 
-void AsyncSink::onLogBackEnd(const LogContent *content)
+void AsyncSink::onLogBackEnd(const LogContent &content)
 {
     size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
 
-    udpateTimestampStr(content->timestamp.sec);
+    udpateTimestampStr(content.timestamp.sec);
 
     //! 加循环为了应对缓冲不够的情况
     for (;;) {
@@ -95,34 +101,34 @@ void AsyncSink::onLogBackEnd(const LogContent *content)
 
         //! 开启色彩，显示日志等级
         if (enable_color_) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%sm", LOG_LEVEL_COLOR_CODE[content->level]);
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%sm", LOG_LEVEL_COLOR_CODE[content.level]);
             pos += len;
         }
 
         //! 打印等级、时间戳、线程号、模块名
         len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
-                       LOG_LEVEL_LEVEL_CODE[content->level],
-                       timestamp_str_, content->timestamp.usec,
-                       content->thread_id, content->module_id);
+                       LOG_LEVEL_LEVEL_CODE[content.level],
+                       timestamp_str_, content.timestamp.usec,
+                       content.thread_id, content.module_id);
         pos += len;
 
-        if (content->func_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content->func_name);
+        if (content.func_name != nullptr) {
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content.func_name);
             pos += len;
         }
 
-        if (content->text_len > 0) {
-            if (REMAIN_SIZE >= content->text_len)
-                memcpy(WRITE_PTR, content->text_ptr, content->text_len);
-            pos += content->text_len;
+        if (content.text_len > 0) {
+            if (REMAIN_SIZE >= content.text_len)
+                memcpy(WRITE_PTR, content.text_ptr, content.text_len);
+            pos += content.text_len;
 
             if (REMAIN_SIZE >= 1)    //! 追加一个空格
                 *WRITE_PTR = ' ';
             ++pos;
         }
 
-        if (content->file_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content->file_name, content->line);
+        if (content.file_name != nullptr) {
+            len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content.file_name, content.line);
             pos += len;
         }
 
