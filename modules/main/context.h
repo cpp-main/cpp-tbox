@@ -27,6 +27,7 @@
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/eventx/async.h>
 #include <tbox/terminal/terminal_nodes.h>
+#include <tbox/coroutine/scheduler.h>
 
 namespace tbox {
 namespace main {
@@ -39,6 +40,7 @@ class Context {
     virtual eventx::TimerPool* timer_pool() const = 0;
     virtual eventx::Async* async() const = 0;
     virtual terminal::TerminalNodes* terminal() const = 0;
+    virtual coroutine::Scheduler* coroutine() const = 0;
 
     virtual std::chrono::milliseconds running_time() const = 0;
     virtual std::chrono::system_clock::time_point start_time_point() const = 0;

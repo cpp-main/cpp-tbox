@@ -80,18 +80,22 @@ ContextImp::ContextImp() :
     sp_terminal_(new terminal::Terminal),
     sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
     sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_)),
+    sp_coroutine_(new coroutine::Scheduler(sp_loop_)),
     start_time_point_(std::chrono::steady_clock::now())
 {
     TBOX_ASSERT(sp_loop_ != nullptr);
     TBOX_ASSERT(sp_thread_pool_ != nullptr);
     TBOX_ASSERT(sp_timer_pool_ != nullptr);
+    TBOX_ASSERT(sp_async_ != nullptr);
     TBOX_ASSERT(sp_terminal_ != nullptr);
     TBOX_ASSERT(sp_telnetd_ != nullptr);
     TBOX_ASSERT(sp_tcp_rpc_ != nullptr);
+    TBOX_ASSERT(sp_coroutine_ != nullptr);
 }
 
 ContextImp::~ContextImp()
 {
+    delete sp_coroutine_;
     delete sp_tcp_rpc_;
     delete sp_telnetd_;
     delete sp_terminal_;
@@ -255,6 +259,7 @@ void ContextImp::stop()
 
 void ContextImp::cleanup()
 {
+    sp_coroutine_->cleanup();
     sp_tcp_rpc_->cleanup();
     sp_telnetd_->cleanup();
     sp_timer_pool_->cleanup();

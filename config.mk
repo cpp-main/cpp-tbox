@@ -27,11 +27,11 @@ MODULES += log
 MODULES += network
 MODULES += terminal
 MODULES += trace
+MODULES += coroutine
 MODULES += main
 MODULES += run
 
 ## 非核心模块，请根据需要选择
-MODULES += coroutine
 MODULES += http
 MODULES += mqtt
 MODULES += flow

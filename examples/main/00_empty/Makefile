@@ -24,6 +24,7 @@ EXE_NAME := ${PROJECT}
 CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_main \
+	-ltbox_coroutine \
 	-ltbox_trace \
 	-ltbox_terminal \
 	-ltbox_network \
