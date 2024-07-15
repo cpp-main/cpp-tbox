@@ -211,6 +211,7 @@ bool RemoveFile(const std::string &filename, bool allow_log_print)
 
     if (errno != ENOENT && allow_log_print)
         LogWarn("errno:%d (%s)", errno, strerror(errno));
+
     return false;
 }
 
@@ -427,6 +428,18 @@ std::string Dirname(const std::string &full_path)
         return "/";
 
     return full_path.substr(start_pos, end_pos - start_pos);
+}
+
+bool Rename(const std::string &old_name, const std::string &new_name)
+{
+    int ret = ::rename(old_name.c_str(), new_name.c_str());
+    if (ret == 0)
+        return true;
+
+    if (errno != ENOENT)
+        LogWarn("errno:%d (%s)", errno, strerror(errno));
+
+    return false;
 }
 
 }

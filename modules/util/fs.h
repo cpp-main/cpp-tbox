@@ -255,6 +255,17 @@ const char* Basename(const char *full_path);
  */
 std::string Dirname(const std::string &full_path);
 
+/**
+ * 重命名
+ *
+ * \param old_name  旧文件名
+ * \param new_name  新文件名
+ *
+ * \return true 成功
+ * \return false 失败
+ */
+bool Rename(const std::string &old_name, const std::string &new_name);
+
 }
 }
 }

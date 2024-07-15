@@ -132,6 +132,27 @@ TEST(fs, BinaryFileReadWrite_Ok) {
     EXPECT_FALSE(IsFileExist(test_filename));
 }
 
+TEST(fs, RenameFile) {
+  auto old_name = "old_file";
+  auto new_name = "new_file";
+  EXPECT_TRUE(WriteStringToTextFile(old_name, ""));
+  EXPECT_TRUE(Rename(old_name, new_name));
+  EXPECT_TRUE(IsFileExist(new_name));
+  EXPECT_FALSE(IsFileExist(old_name));
+  RemoveFile(new_name);
+}
+
+TEST(fs, RenameDirectory) {
+  auto old_name = "old_dir";
+  auto new_name = "new_dir";
+  EXPECT_TRUE(MakeDirectory(old_name));
+  EXPECT_TRUE(Rename(old_name, new_name));
+  EXPECT_TRUE(IsDirectoryExist(new_name));
+  EXPECT_FALSE(IsFileExist(old_name));
+  RemoveDirectory(old_name);
+}
+
+
 TEST(fs, IsDirectoryExist) {
     EXPECT_FALSE(IsDirectoryExist("should/not/exist/directory"));
     EXPECT_TRUE(IsDirectoryExist("/etc/"));
