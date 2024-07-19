@@ -58,12 +58,12 @@ TimerPool::TimerToken TimerPool::Impl::doEvery(const Milliseconds &m_sec, Callba
         return TimerToken();
     }
 
-    auto this_timer = wp_loop_->newTimerEvent("TimerPool::doEvery");
-    auto new_token = timers_.alloc(this_timer);
-    this_timer->initialize(m_sec, event::Event::Mode::kPersist);
-    this_timer->setCallback(std::move(cb));
-    this_timer->enable();
-    return new_token;
+    auto timer = wp_loop_->newTimerEvent("TimerPool::doEvery");
+    auto token = timers_.alloc(timer);
+    timer->initialize(m_sec, event::Event::Mode::kPersist);
+    timer->setCallback(std::move(cb));
+    timer->enable();
+    return token;
 }
 
 TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, Callback &&cb)
@@ -73,25 +73,26 @@ TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, Callba
         return TimerToken();
     }
 
-    auto this_timer = wp_loop_->newTimerEvent("TimerPool::doAfter");
-    auto new_token = timers_.alloc(this_timer);
-    this_timer->initialize(m_sec, event::Event::Mode::kOneshot);
+    auto timer = wp_loop_->newTimerEvent("TimerPool::doAfter");
+    auto token = timers_.alloc(timer);
+    timer->initialize(m_sec, event::Event::Mode::kOneshot);
 
 #if __cplusplus >= 201402L
-    this_timer->setCallback([loop = wp_loop_, moved_cb = std::move(cb), this_timer] {
-        moved_cb();
-        loop->runNext([this_timer] { delete this_timer; });
+    timer->setCallback([this, cb = std::move(cb), token] {
+        cb();
+        auto timer = timers_.free(token);
+        wp_loop_->runNext([timer] { delete timer; });
     });
 #elif __cplusplus >= 201103L
-    auto loop = wp_loop_;
-    this_timer->setCallback([loop, cb, this_timer] {
+    timer->setCallback([this, cb, token] {
         cb();
-        loop->runNext([this_timer] { delete this_timer; });
+        auto timer = timers_.free(token);
+        wp_loop_->runNext([timer] { delete timer; });
     });
 #endif
 
-    this_timer->enable();
-    return new_token;
+    timer->enable();
+    return token;
 }
 
 TimerPool::TimerToken TimerPool::Impl::doAt(const TimePoint &time_point, Callback &&cb)
