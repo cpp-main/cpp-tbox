@@ -58,11 +58,11 @@ TimerPool::TimerToken TimerPool::Impl::doEvery(const Milliseconds &m_sec, Callba
         return TimerToken();
     }
 
-    auto new_timer = wp_loop_->newTimerEvent("TimerPool::doEvery");
-    auto new_token = timers_.alloc(new_timer);
-    new_timer->initialize(m_sec, event::Event::Mode::kPersist);
-    new_timer->setCallback(std::move(cb));
-    new_timer->enable();
+    auto this_timer = wp_loop_->newTimerEvent("TimerPool::doEvery");
+    auto new_token = timers_.alloc(this_timer);
+    this_timer->initialize(m_sec, event::Event::Mode::kPersist);
+    this_timer->setCallback(std::move(cb));
+    this_timer->enable();
     return new_token;
 }
 
@@ -73,11 +73,24 @@ TimerPool::TimerToken TimerPool::Impl::doAfter(const Milliseconds &m_sec, Callba
         return TimerToken();
     }
 
-    auto new_timer = wp_loop_->newTimerEvent("TimerPool::doAfter");
-    auto new_token = timers_.alloc(new_timer);
-    new_timer->initialize(m_sec, event::Event::Mode::kOneshot);
-    new_timer->setCallback(std::move(cb));
-    new_timer->enable();
+    auto this_timer = wp_loop_->newTimerEvent("TimerPool::doAfter");
+    auto new_token = timers_.alloc(this_timer);
+    this_timer->initialize(m_sec, event::Event::Mode::kOneshot);
+
+#if __cplusplus >= 201402L
+    this_timer->setCallback([loop = wp_loop_, moved_cb = std::move(cb), this_timer] {
+        moved_cb();
+        loop->runNext([this_timer] { delete this_timer; });
+    });
+#elif __cplusplus >= 201103L
+    auto loop = wp_loop_;
+    this_timer->setCallback([loop, cb, this_timer] {
+        cb();
+        loop->runNext([this_timer] { delete this_timer; });
+    });
+#endif
+
+    this_timer->enable();
     return new_token;
 }
 
