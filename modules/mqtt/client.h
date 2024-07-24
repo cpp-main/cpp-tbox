@@ -74,7 +74,7 @@ class Client {
         Will will;
         TLS  tls;
 
-        bool auto_reconnect_enabled = true;  //! 是否自动重连
+        bool auto_reconnect_enable = true;   //! 是否自动重连
         int  auto_reconnect_wait_sec = 0;    //! 自动重连等待时长，秒
 
         bool isValid() const;
@@ -122,8 +122,8 @@ class Client {
         kConnecting,    //!< 正在连接
         kTcpConnected,  //!< TCP已连接
         kMqttConnected, //!< MQTT已连接
-        kDisconnected,  //!< 已断连
         kReconnWaiting, //!< 断连等待中
+        kEnd,           //!< 终止，断连后又不需要重连的情况
     };
 
     State getState() const;
@@ -149,7 +149,7 @@ class Client {
     void onMessage(const struct mosquitto_message *msg);
     void onLog(int level, const char *str);
 
-    void onTcpConnectDone(int ret, bool first_connect);
+    void onTcpConnectDone(int ret);
 
     void enableSocketRead();
     void enableSocketWrite();
@@ -160,6 +160,7 @@ class Client {
     void disableSocketWrite();
     void disableTimer();
 
+    void tryReconnect();
     void handleDisconnectEvent();
 
   private:

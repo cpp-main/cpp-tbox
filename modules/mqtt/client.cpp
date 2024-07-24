@@ -207,8 +207,8 @@ void Client::cleanup()
 bool Client::start()
 {
     if (d_->state != State::kInited &&
-        d_->state != State::kDisconnected) {
-        LogWarn("state is not kInited or kDisconnected");
+        d_->state != State::kEnd) {
+        LogWarn("state is not kInited or kEnd");
         return false;
     }
 
@@ -302,7 +302,9 @@ bool Client::start()
                 [this, is_alive, ret] {
                     if (!is_alive)  //!< 判定this指针是否有效
                         return;
-                    onTcpConnectDone(ret, true);
+
+                    onTcpConnectDone(ret);
+                    enableTimer();
                 },
                 "mqtt::Client::start, connect done"
             );
@@ -315,7 +317,7 @@ bool Client::start()
 void Client::stop()
 {
     if (d_->state <= State::kInited ||
-        d_->state == State::kDisconnected)
+        d_->state == State::kEnd)
         return;
 
     RECORD_SCOPE();
@@ -421,7 +423,7 @@ void Client::onTimerTick()
                         [this, is_alive, ret] {
                             if (!is_alive)  //!< 判定this指针是否有效
                                 return;
-                            onTcpConnectDone(ret, false);
+                            onTcpConnectDone(ret);
                         },
                         "mqtt::Client::onTimerTick, reconnect done"
                     );
@@ -438,6 +440,9 @@ void Client::onTimerTick()
                 LogDbg("wait timeout, reconnect now");
             }
         }
+
+    } else if (d_->state == State::kEnd) {
+        disableTimer();
     }
 }
 
@@ -591,7 +596,7 @@ void Client::onLog(int level, const char *str)
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, 0, str);
 }
 
-void Client::onTcpConnectDone(int ret, bool first_connect)
+void Client::onTcpConnectDone(int ret)
 {
     if (d_->sp_thread == nullptr)
         return;
@@ -604,13 +609,10 @@ void Client::onTcpConnectDone(int ret, bool first_connect)
         enableSocketRead();
         enableSocketWriteIfNeed();
         d_->state = State::kTcpConnected;
-    } else {
-        LogWarn("connect fail, ret:%d", ret);
-    }
 
-    //! 如果是首次连接要启动定时器，重连的不需要
-    if (first_connect)
-        enableTimer();
+    } else {
+        tryReconnect();
+    }
 }
 
 void Client::enableSocketRead()
@@ -663,6 +665,27 @@ void Client::disableTimer()
     d_->sp_timer_ev->disable();
 }
 
+void Client::tryReconnect()
+{
+    //! 如果开启了自动重连
+    if (d_->config.auto_reconnect_enable) {
+        if (d_->config.auto_reconnect_wait_sec > 0) {
+            LogDbg("reconnect after %d sec", d_->config.auto_reconnect_wait_sec);
+            d_->reconnect_wait_remain_sec = d_->config.auto_reconnect_wait_sec;
+            d_->state = State::kReconnWaiting;
+
+        } else {
+            LogDbg("reconnect now");
+            d_->reconnect_wait_remain_sec = 0;
+            d_->state = State::kConnecting;
+        }
+
+    } else {  //! 如果不需要自动重连
+        LogDbg("no need reconnect, end");
+        d_->state = State::kEnd;
+    }
+}
+
 void Client::handleDisconnectEvent()
 {
     disableSocketRead();
@@ -676,24 +699,7 @@ void Client::handleDisconnectEvent()
             --d_->cb_level;
         }
 
-        //! 如果开启了自动重连
-        if (d_->config.auto_reconnect_enabled) {
-            if (d_->config.auto_reconnect_wait_sec > 0) {
-                LogDbg("reconnect after %d sec", d_->reconnect_wait_remain_sec);
-                d_->reconnect_wait_remain_sec = d_->config.auto_reconnect_wait_sec;
-                d_->state = State::kReconnWaiting;
-
-            } else {
-                LogDbg("reconnect now");
-                d_->reconnect_wait_remain_sec = 0;
-                d_->state = State::kConnecting;
-            }
-
-        } else {  //! 如果不需要自动重连
-            LogDbg("no need reconnect");
-            d_->state = State::kDisconnected;
-            disableTimer();
-        }
+        tryReconnect();
     }
 }
 

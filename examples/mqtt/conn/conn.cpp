@@ -41,6 +41,8 @@ int main(int argc, char **argv)
     mqtt::Client mqtt(sp_loop);
 
     mqtt::Client::Config conf;
+    conf.auto_reconnect_enable = true;
+    conf.auto_reconnect_wait_sec = 5;
 #if 0
     conf.base.broker.domain = "cppmain.cpp";
     conf.base.broker.port = 1883;
