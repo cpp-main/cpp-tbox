@@ -74,6 +74,8 @@ TEST(Channel, TwoRoutines_ProduceAndConsumer)
 
     //! 检查发送的数据与接收到数据是否对应
     EXPECT_EQ(send_vec, recv_vec);
+
+    sp_loop->cleanup();
 }
 
 /**
@@ -187,5 +189,6 @@ TEST(Channel, TimerProduceAndConsumer)
     EXPECT_EQ(send_vec, recv_vec);
 
     sch.cleanup();
+    sp_loop->cleanup();
 }
 

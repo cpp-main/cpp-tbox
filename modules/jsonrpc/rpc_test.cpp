@@ -72,6 +72,7 @@ class RpcTest : public testing::Test {
     void TearDown() override {
         rpc_a.cleanup();
         rpc_b.cleanup();
+        loop->cleanup();
     }
 };
 

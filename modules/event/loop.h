@@ -113,6 +113,8 @@ class Loop {
     };
     virtual WaterLine& water_line() = 0;
 
+    virtual void cleanup() = 0;
+
   public:
     virtual ~Loop() { }
 };

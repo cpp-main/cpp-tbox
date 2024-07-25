@@ -71,6 +71,7 @@ TEST(CompositeAction, Basic) {
 
     action.stop();
     EXPECT_GE(action.count(), 10);
+    loop->cleanup();
 }
 
 //! 测试父动作提前结束动作的情况，观察有没有stop子动作

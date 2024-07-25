@@ -103,6 +103,7 @@ TEST(LoopAction, SleepActionForever) {
 
     EXPECT_FALSE(is_finished);
     EXPECT_EQ(loop_times, 10);
+    loop->cleanup();
 }
 
 TEST(LoopAction, IsReady) {

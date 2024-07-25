@@ -264,6 +264,7 @@ void ContextImp::cleanup()
     sp_telnetd_->cleanup();
     sp_timer_pool_->cleanup();
     sp_thread_pool_->cleanup();
+    sp_loop_->cleanup();
 
     LogInfo("running_time: %s", ToString(running_time()).c_str());
 }

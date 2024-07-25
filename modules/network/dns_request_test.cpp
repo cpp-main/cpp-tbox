@@ -63,6 +63,7 @@ TEST(DnsRequest, request_baidu)
 
     EXPECT_TRUE(tag);
     LogOutput_Disable();
+    sp_loop->cleanup();
 }
 
 TEST(DnsRequest, request_baidu_and_bing)
@@ -110,6 +111,7 @@ TEST(DnsRequest, request_baidu_and_bing)
     EXPECT_TRUE(baidu_tag);
     EXPECT_TRUE(bing_tag);
     LogOutput_Disable();
+    sp_loop->cleanup();
 }
 
 TEST(DnsRequest, request_baidu_and_bing_cancel_baidu)
@@ -143,6 +145,7 @@ TEST(DnsRequest, request_baidu_and_bing_cancel_baidu)
     EXPECT_FALSE(baidu_tag);
     EXPECT_TRUE(bing_tag);
     LogOutput_Disable();
+    sp_loop->cleanup();
 }
 
 
@@ -166,6 +169,7 @@ TEST(DnsRequest, request_not_exist_domain)
 
     EXPECT_TRUE(tag);
     LogOutput_Disable();
+    sp_loop->cleanup();
 }
 
 TEST(DnsRequest, timeout)
@@ -192,5 +196,6 @@ TEST(DnsRequest, timeout)
 
     EXPECT_TRUE(tag);
     LogOutput_Disable();
+    sp_loop->cleanup();
 }
 

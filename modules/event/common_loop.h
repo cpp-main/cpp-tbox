@@ -60,6 +60,8 @@ class CommonLoop : public Loop {
 
     WaterLine& water_line() override { return water_line_; }
 
+    virtual void cleanup() override;
+
   public:
     void beginLoopProcess();
     void endLoopProcess();

@@ -162,5 +162,10 @@ void CommonLoop::resetStat()
     run_next_peak_num_ = 0;
 }
 
+void CommonLoop::cleanup()
+{
+    cleanupDeferredTasks();
+}
+
 }
 }

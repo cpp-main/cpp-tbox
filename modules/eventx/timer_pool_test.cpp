@@ -57,6 +57,7 @@ TEST(TimerPool, doEvery)
     sp_loop->runLoop();
 
     timer_pool.cleanup();
+    sp_loop->cleanup();
 
     EXPECT_EQ(count, 10);
 }

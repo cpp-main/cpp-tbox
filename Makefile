@@ -74,6 +74,9 @@ test: modules
 tools examples: modules
 	$(MAKE) -C $@
 
+run_test : test
+	@for m in ${MODULES}; do $(BUILD_DIR)/$$m/test; done
+
 clean:
 	-rm -rf $(BUILD_DIR)
 
