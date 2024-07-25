@@ -74,6 +74,9 @@ class Client {
         Will will;
         TLS  tls;
 
+        bool auto_reconnect_enabled = true;  //! 是否自动重连
+        int  auto_reconnect_wait_sec = 0;    //! 自动重连等待时长，秒
+
         bool isValid() const;
     };
 
@@ -119,6 +122,8 @@ class Client {
         kConnecting,    //!< 正在连接
         kTcpConnected,  //!< TCP已连接
         kMqttConnected, //!< MQTT已连接
+        kDisconnected,  //!< 已断连
+        kReconnWaiting, //!< 断连等待中
     };
 
     State getState() const;
@@ -154,6 +159,8 @@ class Client {
     void disableSocketRead();
     void disableSocketWrite();
     void disableTimer();
+
+    void handleDisconnectEvent();
 
   private:
     struct Data;
