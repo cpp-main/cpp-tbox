@@ -436,9 +436,8 @@ bool Rename(const std::string &old_name, const std::string &new_name)
     if (ret == 0)
         return true;
 
-    if (errno != ENOENT)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
-
+    LogWarn("rename '%s' to '%s' fail, errno:%d (%s)",
+            old_name.c_str(), new_name.c_str(), errno, strerror(errno));
     return false;
 }
 
