@@ -57,7 +57,8 @@ class OneshotAlarm : public Alarm
     bool initialize(int seconds_of_day);
 
   protected:
-    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
+    virtual bool calculateNextLocalTimeSec(uint32_t curr_local_sec, uint32_t &next_local_sec) override;
+
     virtual void onTimeExpired() override;
 
   private:

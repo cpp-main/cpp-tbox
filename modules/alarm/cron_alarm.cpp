@@ -64,9 +64,9 @@ bool CronAlarm::initialize(const std::string &cron_expr_str)
   return true;
 }
 
-int CronAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
-  auto next_local_ts = cron_next(static_cast<cron_expr *>(sp_cron_expr_), curr_local_ts);
-  return next_local_ts - curr_local_ts;
+bool CronAlarm::calculateNextLocalTimeSec(uint32_t curr_local_ts, uint32_t &next_local_ts) {
+  next_local_ts = cron_next(static_cast<cron_expr *>(sp_cron_expr_), curr_local_ts);
+  return true;
 }
 
 }

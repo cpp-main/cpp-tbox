@@ -51,7 +51,8 @@ class WorkdayAlarm : public Alarm
     bool initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday);
 
   protected:
-    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
+    virtual bool calculateNextLocalTimeSec(uint32_t curr_local_sec, uint32_t &next_local_sec) override;
+
     virtual bool onEnable() override;
     virtual bool onDisable() override;
 

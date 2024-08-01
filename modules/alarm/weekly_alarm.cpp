@@ -59,22 +59,28 @@ bool WeeklyAlarm::initialize(int seconds_of_day, const std::string &week_mask) {
   return true;
 }
 
-int WeeklyAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
-  int curr_week = (((curr_local_ts % kSecondsOfWeek) / kSecondsOfDay) + 4) % 7;
-  int curr_seconds = curr_local_ts % kSecondsOfDay;
+bool WeeklyAlarm::calculateNextLocalTimeSec(uint32_t curr_local_ts, uint32_t &next_local_ts) {
+  auto seconds_from_0000 = curr_local_ts % kSecondsOfDay;
+  auto seconds_at_0000 = curr_local_ts - seconds_from_0000; //! 当地00:00的时间戳
+  auto curr_week = (((curr_local_ts % kSecondsOfWeek) / kSecondsOfDay) + 4) % 7;
 
 #if 1
-  LogTrace("curr_week:%d, curr_seconds:%d", curr_week, curr_seconds);
+  LogTrace("seconds_from_0000:%d, curr_week:%d", seconds_from_0000, curr_week);
 #endif
 
-  int wait_seconds = seconds_of_day_ - curr_seconds;
+  next_local_ts = seconds_at_0000 + seconds_of_day_;
+
   for (int i = 0; i < 8; ++i) {
     int week = (i + curr_week) % 7;
-    if (wait_seconds > 0 && (week_mask_ & (1 << week)))
-      return wait_seconds;
-    wait_seconds += kSecondsOfDay;
+
+    if ((curr_local_ts < next_local_ts) &&  //! 如果今天过了时间点，也不能算
+        (week_mask_ & (1 << week)))
+      return true;
+
+    next_local_ts += kSecondsOfDay;
   }
-  return -1;
+
+  return false;
 }
 
 }

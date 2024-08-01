@@ -62,7 +62,7 @@ class WeeklyAlarm : public Alarm
     bool initialize(int seconds_of_day, const std::string &week_mask);
 
   protected:
-    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
+    virtual bool calculateNextLocalTimeSec(uint32_t curr_local_sec, uint32_t &next_local_sec) override;
 
   private:
     int seconds_of_day_ = 0;

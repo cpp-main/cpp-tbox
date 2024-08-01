@@ -57,22 +57,26 @@ bool WorkdayAlarm::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, 
   return true;
 }
 
-int WorkdayAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
-  int curr_days = curr_local_ts / kSecondsOfDay;
-  int curr_seconds = curr_local_ts % kSecondsOfDay;
+bool WorkdayAlarm::calculateNextLocalTimeSec(uint32_t curr_local_ts, uint32_t &next_local_ts) {
+  auto seconds_from_0000 = curr_local_ts % kSecondsOfDay;
+  auto seconds_at_0000 = curr_local_ts - seconds_from_0000; //! 当地00:00的时间戳
+  auto curr_days = curr_local_ts / kSecondsOfDay;
 
 #if 1
-  LogTrace("curr_days:%d, curr_seconds:%d", curr_days, curr_seconds);
+  LogTrace("seconds_from_0000:%d, curr_days:%d", seconds_from_0000, curr_days);
 #endif
 
-  int wait_seconds = seconds_of_day_ - curr_seconds;
-  for (int i = 0; i < 366; ++i) {
-    if ((wait_seconds > 0) &&
+  next_local_ts = seconds_at_0000 + seconds_of_day_;
+
+  for (int i = 0; i < 367; ++i) {
+    if ((curr_local_ts < next_local_ts) &&  //! 如果今天过了时间点，也不能算
         (workday_ == wp_calendar_->isWorkay(curr_days + i)))
-      return wait_seconds;
-    wait_seconds += kSecondsOfDay;
+      return true;
+
+    next_local_ts += kSecondsOfDay;
   }
-  return -1;
+
+  return false;
 }
 
 bool WorkdayAlarm::onEnable() {

@@ -63,7 +63,7 @@ class CronAlarm : public Alarm
     bool initialize(const std::string &cron_expr_str);
 
   protected:
-    virtual int calculateWaitSeconds(uint32_t curr_local_ts) override;
+    virtual bool calculateNextLocalTimeSec(uint32_t curr_local_sec, uint32_t &next_local_sec) override;
 
   private:
     void *sp_cron_expr_;

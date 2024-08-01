@@ -20,6 +20,7 @@
 #include "alarm.h"
 
 #include <sys/time.h>
+#include <cstring>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
@@ -29,6 +30,31 @@
 
 namespace tbox {
 namespace alarm {
+
+bool Alarm::GetCurrentUtcTime(uint32_t &utc_sec)
+{
+  struct timeval utc_tv;
+  if (gettimeofday(&utc_tv, nullptr) == 0) {
+    utc_sec = utc_tv.tv_sec;
+    return true;
+  }
+
+  LogErrno(errno, "gettimeofday fail");
+  return false;
+}
+
+bool Alarm::GetCurrentUtcTime(uint32_t &utc_sec, uint32_t &utc_usec)
+{
+  struct timeval utc_tv;
+  if (gettimeofday(&utc_tv, nullptr) == 0) {
+    utc_sec = utc_tv.tv_sec;
+    utc_usec = utc_tv.tv_usec;
+    return true;
+  }
+
+  LogErrno(errno, "gettimeofday fail");
+  return false;
+}
 
 Alarm::Alarm(event::Loop *wp_loop) :
   wp_loop_(wp_loop),
@@ -83,7 +109,7 @@ void Alarm::cleanup() {
   using_independ_timezone_ = false;
   timezone_offset_seconds_ = 0;
   state_ = State::kNone;
-  target_utc_ts_ = 0;
+  next_utc_sec_ = 0;
 }
 
 void Alarm::refresh() {
@@ -95,11 +121,9 @@ void Alarm::refresh() {
 }
 
 uint32_t Alarm::remainSeconds() const {
-  if (state_ == State::kRunning) {
-    struct timeval utc_tv;
-    int ret = gettimeofday(&utc_tv, nullptr);
-    if (ret == 0)
-      return target_utc_ts_ - utc_tv.tv_sec;
+  uint32_t curr_utc_sec = 0;
+  if (state_ == State::kRunning && GetCurrentUtcTime(curr_utc_sec)) {
+    return next_utc_sec_ - curr_utc_sec;
   }
   return 0;
 }
@@ -146,41 +170,41 @@ int GetSystemTimezoneOffsetSeconds() {
 }
 
 bool Alarm::activeTimer() {
-  //! 使用 gettimeofday() 获取当前0时区的时间戳，精确到微秒
-  struct timeval utc_tv;
-  int ret = gettimeofday(&utc_tv, nullptr);
-  if (ret != 0) {
-    LogWarn("gettimeofday() fail, ret:%d", ret);
+  uint32_t curr_utc_sec, curr_utc_usec;
+  if (!GetCurrentUtcTime(curr_utc_sec, curr_utc_usec))
     return false;
-  }
 
   int timezone_offset_seconds = using_independ_timezone_ ? \
                                 timezone_offset_seconds_ : GetSystemTimezoneOffsetSeconds();
-  //! 计算需要等待的秒数
-  auto wait_seconds = calculateWaitSeconds(utc_tv.tv_sec + timezone_offset_seconds);
-#if 1
-  LogTrace("wait_seconds:%d", wait_seconds);
-#endif
-  if (wait_seconds < 0)
+
+  auto curr_local_sec = curr_utc_sec + timezone_offset_seconds;
+  uint32_t next_local_sec = next_utc_sec_ + timezone_offset_seconds;
+
+  auto next_local_start_sec = std::max(curr_local_sec, next_local_sec);
+  //! Q: 为什么要用curr_local_sec与next_utc_sec_中最大值来算下一轮的时间点？
+  //! A: 因为在实践中存在steady_clock比system_clock快的现象，会导致重复触发定时任务的问题。
+  //!    比如：定的时间为每天10:00:00.000触发，结果定时任务在09:59:59.995就触发了。如果下
+  //!    一轮的时间计算是从09:59:59:995计算，它会发现下一次的触发时间点在5ms之后。于是5ms
+  //!    之后就再次触发一次。
+  //!    解决办法就是：除了第一次按当前的时间算外，后面的如果出现提前触发的，按期望的算。
+  //!    就如上面的例子，就算是提前触发了，后面的按10:00:00.000计算。从而避免重复触发问题
+  if (!calculateNextLocalTimeSec(next_local_start_sec, next_local_sec))
     return false;
 
+  auto remain_sec = next_local_sec - curr_local_sec;
   //! 提升精度，计算中需要等待的毫秒数
-  auto wait_milliseconds = (wait_seconds * 1000) - (utc_tv.tv_usec / 1000);
+  auto remain_usec = (remain_sec * 1000) - (curr_utc_usec / 1000);
 
-  ++wait_milliseconds;  //! 多加1ms
-  /**
-   * Q: 为什么要多加1ms？
-   * A: 因为在实践中发现由于系统时钟与相对时钟不同步问题，导致 tbox::event::TimerEvent 有极小概率出现
-   *    相对于系统时钟提前 1ms 触发定时的情况，最终导致Alarm重复触发的bug。
-   *    为规避该问题，统一将等待时长多加1ms处理。
-   */
+#if 1
+  LogTrace("next_local_sec:%u, remain_sec:%u, remain_usec:%u", next_local_sec, remain_sec, remain_usec);
+#endif
 
   //! 启动定时器
-  sp_timer_ev_->initialize(std::chrono::milliseconds(wait_milliseconds), event::Event::Mode::kOneshot);
+  sp_timer_ev_->initialize(std::chrono::milliseconds(remain_usec), event::Event::Mode::kOneshot);
   sp_timer_ev_->enable();
 
   state_ = State::kRunning;
-  target_utc_ts_ = utc_tv.tv_sec + wait_seconds;
+  next_utc_sec_ = next_local_sec - timezone_offset_seconds;
   return true;
 }
 

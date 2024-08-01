@@ -47,17 +47,19 @@ bool OneshotAlarm::initialize(int seconds_of_day) {
   return true;
 }
 
-int OneshotAlarm::calculateWaitSeconds(uint32_t curr_local_ts) {
-  int curr_seconds = curr_local_ts % kSecondsOfDay;
+bool OneshotAlarm::calculateNextLocalTimeSec(uint32_t curr_local_ts, uint32_t &next_local_ts) {
+  auto seconds_from_0000 = curr_local_ts % kSecondsOfDay;
+  auto seconds_at_0000 = curr_local_ts - seconds_from_0000; //! 当地00:00的时间戳
 
 #if 1
-  LogTrace("curr_seconds:%d", curr_seconds);
+  LogTrace("seconds_from_0000:%d", seconds_from_0000);
 #endif
 
-  int wait_seconds = seconds_of_day_ - curr_seconds;
-  if (wait_seconds <= 0)
-    wait_seconds += kSecondsOfDay;
-  return wait_seconds;
+  next_local_ts = seconds_at_0000 + seconds_of_day_;
+  if (curr_local_ts >= next_local_ts) //! 如果今天的时间已经过期了，则要延到明天
+    next_local_ts += kSecondsOfDay;
+
+  return true;
 }
 
 void OneshotAlarm::onTimeExpired() {
