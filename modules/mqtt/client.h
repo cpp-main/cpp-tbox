@@ -39,6 +39,17 @@ class Client {
     IMMOVABLE(Client);
 
   public:
+    //! 状态
+    enum class State {
+        kNone = 0,      //!< 未初始化
+        kInited,        //!< 已初始化
+        kConnecting,    //!< 正在连接
+        kTcpConnected,  //!< TCP已连接
+        kMqttConnected, //!< MQTT已连接
+        kReconnWaiting, //!< 断连等待中
+        kEnd,           //!< 终止，断连后又不需要重连的情况
+    };
+
     //! 配置项
     struct Config {
         //! 基础配置
@@ -82,6 +93,7 @@ class Client {
 
     //! 回调函数类型定义
     using ConnectedCallback         = std::function<void()>;
+    using ConnectFailCallback       = std::function<void()>;
     using DisconnectedCallback      = std::function<void()>;
     using MessageReceivedCallback   = std::function<void(int /*mid*/, const std::string &/*topic*/,
                                                          const void* /*payload_ptr*/, int/*payload_size*/,
@@ -89,15 +101,18 @@ class Client {
     using MessagePublishedCallback  = std::function<void(int /*mid*/)>;
     using TopicSubscribedCallback   = std::function<void(int /*mid*/, int /*qos*/, const int* /*granted_qos*/)>;
     using TopicUnsubscribedCallback = std::function<void(int /*mid*/)>;
+    using StateChangedCallback      = std::function<void(State)>;
 
     //! 回调函数
     struct Callbacks {
         ConnectedCallback           connected;
+        ConnectFailCallback         connect_fail;
         DisconnectedCallback        disconnected;
         MessageReceivedCallback     message_recv;
         MessagePublishedCallback    message_pub;
         TopicSubscribedCallback     subscribed;
         TopicUnsubscribedCallback   unsubscribed;
+        StateChangedCallback        state_changed;
     };
 
     bool initialize(const Config &config, const Callbacks &callbacks);
@@ -114,17 +129,6 @@ class Client {
     int publish(const std::string &topic,
                 const void *payload_ptr = nullptr, size_t payload_size = 0,
                 int qos = 0, bool retain = false, int *mid = nullptr);
-
-    //! 状态
-    enum class State {
-        kNone = 0,      //!< 未初始化
-        kInited,        //!< 已初始化
-        kConnecting,    //!< 正在连接
-        kTcpConnected,  //!< TCP已连接
-        kMqttConnected, //!< MQTT已连接
-        kReconnWaiting, //!< 断连等待中
-        kEnd,           //!< 终止，断连后又不需要重连的情况
-    };
 
     State getState() const;
 
@@ -162,6 +166,7 @@ class Client {
 
     void tryReconnect();
     void handleDisconnectEvent();
+    void updateStateTo(State new_state);
 
   private:
     struct Data;

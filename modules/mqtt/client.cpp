@@ -188,7 +188,7 @@ bool Client::initialize(const Config &config, const Callbacks &callbacks)
     d_->config = config;
     d_->callbacks = callbacks;
 
-    d_->state = State::kInited;
+    updateStateTo(State::kInited);
     return true;
 }
 
@@ -201,7 +201,7 @@ void Client::cleanup()
 
     d_->config = Config();
     d_->callbacks = Callbacks();
-    d_->state = State::kNone;
+    updateStateTo(State::kNone);
 }
 
 bool Client::start()
@@ -285,7 +285,7 @@ bool Client::start()
     if (username != nullptr)
         mosquitto_username_pw_set(d_->sp_mosq, username, passwd);
 
-    d_->state = State::kConnecting;
+    updateStateTo(State::kConnecting);
 
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
     auto is_alive = d_->alive_tag.get();  //! 原理见Q1
@@ -335,7 +335,7 @@ void Client::stop()
 
     disableTimer();
 
-    d_->state = State::kInited;
+    updateStateTo(State::kInited);
     return;
 }
 
@@ -436,7 +436,7 @@ void Client::onTimerTick()
         if (remain_sec > 0) {
             --remain_sec;
             if (remain_sec == 0) {
-                d_->state = State::kConnecting;
+                updateStateTo(State::kConnecting);
                 LogDbg("wait timeout, reconnect now");
             }
         }
@@ -511,7 +511,7 @@ void Client::onConnected(int rc)
 
     RECORD_SCOPE();
     if (d_->state != State::kMqttConnected) {
-        d_->state = State::kMqttConnected;
+        updateStateTo(State::kMqttConnected);
         ++d_->cb_level;
         if (d_->callbacks.connected)
             d_->callbacks.connected();
@@ -608,9 +608,14 @@ void Client::onTcpConnectDone(int ret)
     if (ret == MOSQ_ERR_SUCCESS) {
         enableSocketRead();
         enableSocketWriteIfNeed();
-        d_->state = State::kTcpConnected;
+        updateStateTo(State::kTcpConnected);
 
     } else {
+        ++d_->cb_level;
+        if (d_->callbacks.connect_fail)
+            d_->callbacks.connect_fail();
+        --d_->cb_level;
+
         tryReconnect();
     }
 }
@@ -672,17 +677,17 @@ void Client::tryReconnect()
         if (d_->config.auto_reconnect_wait_sec > 0) {
             LogDbg("reconnect after %d sec", d_->config.auto_reconnect_wait_sec);
             d_->reconnect_wait_remain_sec = d_->config.auto_reconnect_wait_sec;
-            d_->state = State::kReconnWaiting;
+            updateStateTo(State::kReconnWaiting);
 
         } else {
             LogDbg("reconnect now");
             d_->reconnect_wait_remain_sec = 0;
-            d_->state = State::kConnecting;
+            updateStateTo(State::kConnecting);
         }
 
     } else {  //! 如果不需要自动重连
         LogDbg("no need reconnect, end");
-        d_->state = State::kEnd;
+        updateStateTo(State::kEnd);
     }
 }
 
@@ -701,6 +706,16 @@ void Client::handleDisconnectEvent()
 
         tryReconnect();
     }
+}
+
+void Client::updateStateTo(State new_state)
+{
+    d_->state = new_state;
+
+    ++d_->cb_level;
+    if (d_->callbacks.state_changed)
+        d_->callbacks.state_changed(new_state);
+    --d_->cb_level;
 }
 
 }
