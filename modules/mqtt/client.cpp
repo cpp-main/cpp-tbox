@@ -300,8 +300,11 @@ bool Client::start()
                                               d_->config.base.keepalive);
             d_->wp_loop->runInLoop(
                 [this, is_alive, ret] {
-                    if (!is_alive)  //!< 判定this指针是否有效
+                    RECORD_SCOPE();
+                    if (!is_alive) { //!< 判定this指针是否有效
+                        LogWarn("object not alive");
                         return;
+                    }
 
                     onTcpConnectDone(ret);
                     enableTimer();
@@ -421,8 +424,11 @@ void Client::onTimerTick()
                     int ret = mosquitto_reconnect_async(d_->sp_mosq);
                     d_->wp_loop->runInLoop(
                         [this, is_alive, ret] {
-                            if (!is_alive)  //!< 判定this指针是否有效
+                            RECORD_SCOPE();
+                            if (!is_alive) {  //!< 判定this指针是否有效
+                                LogWarn("object not alive");
                                 return;
+                            }
                             onTcpConnectDone(ret);
                         },
                         "mqtt::Client::onTimerTick, reconnect done"
@@ -598,10 +604,12 @@ void Client::onLog(int level, const char *str)
 
 void Client::onTcpConnectDone(int ret)
 {
-    if (d_->sp_thread == nullptr)
-        return;
-
     RECORD_SCOPE();
+    if (d_->sp_thread == nullptr) {
+        LogWarn("sp_thread == nullptr");
+        return;
+    }
+
     d_->sp_thread->join();
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 
@@ -611,12 +619,12 @@ void Client::onTcpConnectDone(int ret)
         updateStateTo(State::kTcpConnected);
 
     } else {
+        tryReconnect();
+
         ++d_->cb_level;
         if (d_->callbacks.connect_fail)
             d_->callbacks.connect_fail();
         --d_->cb_level;
-
-        tryReconnect();
     }
 }
 
