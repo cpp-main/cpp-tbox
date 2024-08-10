@@ -614,11 +614,13 @@ void Client::onTcpConnectDone(int ret)
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 
     if (ret == MOSQ_ERR_SUCCESS) {
+        LogDbg("connect success");
         enableSocketRead();
         enableSocketWriteIfNeed();
         updateStateTo(State::kTcpConnected);
 
     } else {
+        LogNotice("connect fail, rc:%d", ret);
         tryReconnect();
 
         ++d_->cb_level;
