@@ -706,15 +706,19 @@ void Client::handleDisconnectEvent()
     disableSocketRead();
     disableSocketWrite();
 
-    if (d_->state >= State::kTcpConnected) {
-        if (d_->state == State::kMqttConnected) {
-            ++d_->cb_level;
+    if (d_->state == State::kTcpConnected ||
+        d_->state == State::kMqttConnected) {
+        tryReconnect();
+
+        ++d_->cb_level;
+        if (d_->state == State::kTcpConnected) {
+            if (d_->callbacks.connect_fail)
+                d_->callbacks.connect_fail();
+        } else {
             if (d_->callbacks.disconnected)
                 d_->callbacks.disconnected();
-            --d_->cb_level;
         }
-
-        tryReconnect();
+        --d_->cb_level;
     }
 }
 
