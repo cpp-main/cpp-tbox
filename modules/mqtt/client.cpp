@@ -407,13 +407,8 @@ void Client::onTimerTick()
         d_->state == State::kMqttConnected) {
         mosquitto_loop_misc(d_->sp_mosq);
 
-        if (mosquitto_socket(d_->sp_mosq) < 0) {
-            LogNotice("mosquitto_socket() < 0");
-            handleDisconnectEvent();
-
-        } else {
+        if (mosquitto_socket(d_->sp_mosq) > 0)
             enableSocketWriteIfNeed();
-        }
 
     } else if (d_->state == State::kConnecting) {
         if (d_->sp_thread == nullptr) {
@@ -708,15 +703,18 @@ void Client::handleDisconnectEvent()
 
     if (d_->state == State::kTcpConnected ||
         d_->state == State::kMqttConnected) {
+        auto is_mqtt_disconnected = d_->state == State::kMqttConnected;
+        //! 一定要先判定，因为 tryReconnect() 会改 d_->state
+
         tryReconnect();
 
         ++d_->cb_level;
-        if (d_->state == State::kTcpConnected) {
-            if (d_->callbacks.connect_fail)
-                d_->callbacks.connect_fail();
-        } else {
+        if (is_mqtt_disconnected) {
             if (d_->callbacks.disconnected)
                 d_->callbacks.disconnected();
+        } else {
+            if (d_->callbacks.connect_fail)
+                d_->callbacks.connect_fail();
         }
         --d_->cb_level;
     }
@@ -725,6 +723,7 @@ void Client::handleDisconnectEvent()
 void Client::updateStateTo(State new_state)
 {
     d_->state = new_state;
+    LogDbg("new_state: %d", d_->state);
 
     ++d_->cb_level;
     if (d_->callbacks.state_changed)
