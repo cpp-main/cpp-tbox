@@ -31,6 +31,7 @@ TEST(HeaderStreamProto, sendRequest) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x3e5a);
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -62,6 +63,7 @@ TEST(HeaderStreamProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x35ae);
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -93,6 +95,7 @@ TEST(HeaderStreamProto, sendResult) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x35ae);
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -120,6 +123,7 @@ TEST(HeaderStreamProto, sendError) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x53ea);
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -146,6 +150,7 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0xea53);
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(

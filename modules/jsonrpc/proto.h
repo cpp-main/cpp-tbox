@@ -35,6 +35,9 @@ class Proto {
     void setRecvCallback(RecvRequestCallback &&req_cb, RecvRespondCallback &&rsp_cb);
     void setSendCallback(SendDataCallback &&cb);
 
+    void setLogEnable(bool is_enable) { is_log_enabled_ = is_enable; }
+    void setLogLabel(const std::string &log_label) { log_label_ = log_label; }
+
   public:
     void sendRequest(int id, const std::string &method);
     void sendRequest(int id, const std::string &method, const Json &js_params);
@@ -56,6 +59,9 @@ class Proto {
     RecvRequestCallback recv_request_cb_;
     RecvRespondCallback recv_respond_cb_;
     SendDataCallback    send_data_cb_;
+
+    bool is_log_enabled_ = false;
+    std::string log_label_;
 };
 
 }

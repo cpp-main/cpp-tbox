@@ -31,6 +31,7 @@ TEST(RawStreamProto, sendRequest) {
     LogOutput_Enable();
 
     RawStreamProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -62,6 +63,7 @@ TEST(RawStreamProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     RawStreamProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -93,6 +95,7 @@ TEST(RawStreamProto, sendResult) {
     LogOutput_Enable();
 
     RawStreamProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -120,6 +123,7 @@ TEST(RawStreamProto, sendError) {
     LogOutput_Enable();
 
     RawStreamProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -146,6 +150,7 @@ TEST(RawStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     RawStreamProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(

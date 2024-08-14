@@ -39,6 +39,9 @@ void HeaderStreamProto::sendJson(const Json &js)
 {
     const auto &json_text = js.dump();
 
+    if (is_log_enabled_)
+        LogTrace("%s send: %s", log_label_.c_str(), json_text.c_str());
+
     std::vector<uint8_t> buff;
     util::Serializer pack(buff);
 
@@ -71,8 +74,13 @@ ssize_t HeaderStreamProto::onRecvData(const void *data_ptr, size_t data_size)
         return 0;
 
     const char *str_ptr = static_cast<const char*>(unpack.fetchNoCopy(content_size));
+    std::string json_text(str_ptr, content_size);
+
+    if (is_log_enabled_)
+        LogTrace("%s recv: %s", log_label_.c_str(), json_text.c_str());
+
     Json js;
-    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(str_ptr, str_ptr + content_size); });
+    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); });
     if (is_throw) {
         LogNotice("parse json fail");
         return -1;

@@ -31,6 +31,7 @@ TEST(PacketProto, sendRequest) {
     LogOutput_Enable();
 
     PacketProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -62,6 +63,7 @@ TEST(PacketProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     PacketProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -93,6 +95,7 @@ TEST(PacketProto, sendResult) {
     LogOutput_Enable();
 
     PacketProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -120,6 +123,7 @@ TEST(PacketProto, sendError) {
     LogOutput_Enable();
 
     PacketProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -146,6 +150,7 @@ TEST(PacketProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     PacketProto proto;
+    proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(

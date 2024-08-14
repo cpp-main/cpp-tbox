@@ -31,6 +31,10 @@ void PacketProto::sendJson(const Json &js)
 {
     if (send_data_cb_) {
         const auto &json_text = js.dump();
+
+        if (is_log_enabled_)
+            LogTrace("%s send: %s", log_label_.c_str(), json_text.c_str());
+
         send_data_cb_(json_text.data(), json_text.size());
     }
 }
@@ -48,8 +52,13 @@ ssize_t PacketProto::onRecvData(const void *data_ptr, size_t data_size)
     const char *str_ptr = static_cast<const char*>(data_ptr);
     const size_t str_len = data_size;
 
+    std::string json_text(str_ptr, str_len);
+
+    if (is_log_enabled_)
+        LogTrace("%s recv: %s", log_label_.c_str(), json_text.c_str());
+
     Json js;
-    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(str_ptr, str_ptr + str_len); });
+    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); });
     if (is_throw) {
         LogNotice("parse json fail");
         return -1;
