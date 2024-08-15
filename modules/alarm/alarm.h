@@ -27,6 +27,9 @@
 namespace tbox {
 namespace alarm {
 
+constexpr auto kSecondsOfDay = 60 * 60 * 24;
+constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
+
 /**
  * 定时器基类
  */
@@ -113,7 +116,7 @@ class Alarm
     };
     State state_ = State::kNone;  //!< 当前状态
 
-    uint32_t next_utc_sec_ = 0;
+    uint32_t target_utc_sec_ = 0;
 };
 
 }

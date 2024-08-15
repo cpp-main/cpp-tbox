@@ -27,11 +27,6 @@
 namespace tbox {
 namespace alarm {
 
-namespace {
-constexpr auto kSecondsOfDay = 60 * 60 * 24;
-constexpr auto kSecondsOfWeek = kSecondsOfDay * 7;
-}
-
 bool WeeklyAlarm::initialize(int seconds_of_day, const std::string &week_mask) {
   if (state_ == State::kRunning) {
     LogWarn("alarm is running state, disable first");

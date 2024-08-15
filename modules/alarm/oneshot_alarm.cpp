@@ -27,10 +27,6 @@
 namespace tbox {
 namespace alarm {
 
-namespace {
-constexpr auto kSecondsOfDay = 60 * 60 * 24;
-}
-
 bool OneshotAlarm::initialize(int seconds_of_day) {
   if (state_ == State::kRunning) {
     LogWarn("alarm is running state, disable first");

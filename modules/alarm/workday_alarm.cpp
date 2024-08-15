@@ -29,10 +29,6 @@
 namespace tbox {
 namespace alarm {
 
-namespace {
-constexpr auto kSecondsOfDay = 60 * 60 * 24;
-}
-
 bool WorkdayAlarm::initialize(int seconds_of_day, WorkdayCalendar *wp_calendar, bool workday) {
   if (state_ == State::kRunning) {
     LogWarn("alarm is running state, disable first");
