@@ -150,11 +150,8 @@ void TcpConnection::onSocketClosed()
 
 void TcpConnection::onError(int errnum)
 {
-    if (errnum == ECONNRESET) {
-        onSocketClosed();
-    } else {
-        LogWarn("errno:%d, %s", errnum, strerror(errnum));
-    }
+    LogNotice("errno:%d, %s", errnum, strerror(errnum));
+    onSocketClosed();
 }
 
 }

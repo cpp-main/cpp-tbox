@@ -27,6 +27,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
+#include <tbox/util/fs.h>
 
 #include "tcp_connection.h"
 
@@ -134,9 +135,7 @@ void TcpAcceptor::cleanup()
     //! 对于Unix Domain的Socket在退出的时候要删除对应的socket文件
     if (bind_addr_.type() == SockAddr::Type::kLocal) {
         auto socket_file = bind_addr_.toString();
-        int ret = ::unlink(socket_file.c_str());
-        if (ret != 0)
-            LogWarn("remove file %s fail. errno:%d, %s", socket_file.c_str(), errno, strerror(errno));
+        util::fs::RemoveFile(socket_file);
     }
 }
 
@@ -153,7 +152,7 @@ void TcpAcceptor::onClientConnected()
     socklen_t addr_len = sizeof(addr);
     SocketFd peer_sock = sock_fd_.accept(&addr, &addr_len);
     if (peer_sock.isNull()) {
-        LogWarn("accept fail");
+        LogNotice("accept fail");
         return;
     }
 

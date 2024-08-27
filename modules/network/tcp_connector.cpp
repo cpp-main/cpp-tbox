@@ -185,7 +185,7 @@ void TcpConnector::enterConnectingState()
         || (conn_errno == EADDRINUSE) || (conn_errno == EADDRNOTAVAIL)
         || (conn_errno == ECONNREFUSED) || (conn_errno == ENETUNREACH)
         || (conn_errno == ENOENT)) {
-        LogWarn("connent fail, errno:%d, %s", conn_errno, strerror(conn_errno));
+        LogNotice("connent fail, errno:%d, %s", conn_errno, strerror(conn_errno));
         //! 条件暂时不具备
         onConnectFail();
 
@@ -261,7 +261,7 @@ void TcpConnector::onConnectFail()
             connect_fail_cb_();
             --cb_level_;
         } else
-            LogWarn("connector stoped");
+            LogNotice("connector stoped");
 
         state_ = State::kInited;
     } else
