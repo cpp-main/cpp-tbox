@@ -105,6 +105,11 @@ bool Sink::enable()
     using namespace std::placeholders;
 
     util::AsyncPipe::Config config;
+    config.buff_size = 2048;
+    config.buff_min_num = 2;
+    config.buff_max_num = 50;
+    config.interval = 1000;
+
     async_pipe_.initialize(config);
     async_pipe_.setCallback(std::bind(&Sink::onBackendRecvData, this, _1, _2));
     is_enabled_ = true;
