@@ -43,6 +43,13 @@ size_t Split(const std::string &src_str, const std::string sep, std::vector<std:
 size_t SplitBySpace(const std::string &src_str, std::vector<std::string> &str_vec);
 
 /**
+ * \brief       合并字符串
+ * \param str_vec   字串数组
+ * \param delimiter 分隔符
+ */
+std::string Join(const std::vector<std::string> &str_vec, const std::string &delimiter = "");
+
+/**
  * \brief       消除字串左边的空格符
  * \param orig_str  原始字串
  * \return      处理后的字串

@@ -59,6 +59,26 @@ TEST(string, SplitBySpace) {
 
 }
 
+TEST(string, JoinStrVecNormal) {
+    std::vector<std::string> str_vec = {"aa", "bb", "cc"};
+    EXPECT_EQ(Join(str_vec, ":"), "aa:bb:cc");
+}
+
+TEST(string, JoinStrVecNoDelimeter) {
+    std::vector<std::string> str_vec = {"aa", "bb"};
+    EXPECT_EQ(Join(str_vec), "aabb");
+}
+
+TEST(string, JoinEmptyStrVec_1) {
+    std::vector<std::string> str_vec;
+    EXPECT_EQ(Join(str_vec, ":"), "");
+}
+
+TEST(string, JoinEmptyStrVec_2) {
+    std::vector<std::string> str_vec = {"", "", ""};
+    EXPECT_EQ(Join(str_vec, ":"), "::");
+}
+
 TEST(string, StripLeft) {
     EXPECT_EQ(StripLeft(" A "), "A ");
 }

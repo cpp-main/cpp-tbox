@@ -31,6 +31,7 @@ size_t Split(const std::string &src_str, const std::string sep, std::vector<std:
     size_t start_pos = 0;
     size_t end_pos = 0;
     str_vec.clear();
+
     while (true) {
         end_pos = src_str.find(sep, start_pos);
         const std::string &str_chip = src_str.substr(start_pos, end_pos - start_pos);
@@ -39,6 +40,7 @@ size_t Split(const std::string &src_str, const std::string sep, std::vector<std:
             break;
         start_pos = end_pos + sep.size();
     }
+
     return str_vec.size();
 }
 
@@ -47,6 +49,7 @@ size_t SplitBySpace(const std::string &src_str, std::vector<std::string> &str_ve
     size_t start_pos = 0;
     size_t end_pos = 0;
     str_vec.clear();
+
     while (true) {
         start_pos = src_str.find_first_not_of(" \t", end_pos);
         if (start_pos == std::string::npos)
@@ -57,7 +60,33 @@ size_t SplitBySpace(const std::string &src_str, std::vector<std::string> &str_ve
         if (end_pos == std::string::npos)
             break;
     }
+
     return str_vec.size();
+}
+
+std::string Join(const std::vector<std::string> &str_vec, const std::string &delimiter)
+{
+    std::string tmp;
+
+    if (!str_vec.empty()) {
+        //! 计算预留空间
+        size_t reserve_length = delimiter.length() * (str_vec.size() - 1);
+        for (const auto &str : str_vec)
+            reserve_length += str.length();
+
+        tmp.reserve(reserve_length);    //! 预留空间
+
+        bool is_need_insert_delimiter = false;
+        for (const auto &str : str_vec) {
+            if (is_need_insert_delimiter)
+                tmp += delimiter;
+
+            tmp += str;
+            is_need_insert_delimiter = true;
+        }
+    }
+
+    return tmp;
 }
 
 std::string StripLeft(const std::string &orig_str)
@@ -65,6 +94,7 @@ std::string StripLeft(const std::string &orig_str)
     size_t start_pos = orig_str.find_first_not_of(' ', 0);
     if (start_pos == std::string::npos)
         return std::string();
+
     return orig_str.substr(start_pos);
 }
 
@@ -73,6 +103,7 @@ std::string StripRight(const std::string &orig_str)
     size_t end_pos = orig_str.find_last_not_of(' ', orig_str.size() - 1);
     if (end_pos == std::string::npos)
         return std::string();
+
     return orig_str.substr(0, end_pos + 1);
 }
 
@@ -93,6 +124,7 @@ std::string StripQuot(const std::string &orig_str)
 {
     auto first_char = orig_str.front();
     auto last_char = orig_str.back();
+
     if (first_char == last_char && (first_char == '\'' || first_char == '\"')) {
         return orig_str.substr(1, orig_str.length() - 2);
     } else {
@@ -117,6 +149,7 @@ std::string RawDataToHexStr(const void *data_ptr, uint16_t data_len, bool upperc
         if (i < (data_len - 1))
             oss << delimiter;
     }
+
     return oss.str();
 }
 
@@ -148,6 +181,7 @@ size_t HexStrToRawData(const std::string &hex_str, void *out_ptr, uint16_t out_l
         p_data[i] = (hexCharToValue(h_char) << 4) | (hexCharToValue(l_char) & 0x0f);
         ++data_len;
     }
+
     return data_len;
 }
 
