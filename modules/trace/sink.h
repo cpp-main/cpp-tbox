@@ -113,6 +113,9 @@ class Sink {
     void onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module,
                              std::vector<uint8_t> &write_cache);
 
+    bool checkAndWriteNames();
+    bool checkAndWriteModules();
+    bool checkAndWriteThreads();
     bool checkAndCreateRecordFile();
 
     bool isFilterPassed(const std::string &module) const;

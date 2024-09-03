@@ -25,6 +25,7 @@
 #include <cstring>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 #include <sys/syscall.h>
 #include <tbox/base/defines.h>
@@ -173,6 +174,14 @@ void Sink::commitRecord(const char *name, const char *module, uint32_t line, uin
 
 void Sink::onBackendRecvData(const void *data, size_t size)
 {
+    auto start_ts = std::chrono::steady_clock::now();
+
+    if (!checkAndCreateRecordFile() ||
+        !checkAndWriteNames() ||
+        !checkAndWriteModules() ||
+        !checkAndWriteThreads())
+        return;
+
     buffer_.append(data, size);
     std::vector<uint8_t> write_cache;
 
@@ -200,6 +209,7 @@ void Sink::onBackendRecvData(const void *data, size_t size)
     }
 
     if (!write_cache.empty()) {
+
         auto wsize = ::write(curr_record_fd_, write_cache.data(), write_cache.size());
         if (wsize != static_cast<ssize_t>(write_cache.size())) {
             LogErrno(errno, "write record file '%s' fail", curr_record_filename_.c_str());
@@ -210,14 +220,15 @@ void Sink::onBackendRecvData(const void *data, size_t size)
         if (total_write_size_ >= record_file_max_size_)
             CHECK_CLOSE_RESET_FD(curr_record_fd_);
     }
+
+    auto time_cost = std::chrono::steady_clock::now() - start_ts;
+    if (time_cost > std::chrono::milliseconds(100))
+        LogNotice("trace sink cost > 100 ms, %lu us", time_cost.count() / 1000);
 }
 
 void Sink::onBackendRecvRecord(const RecordHeader &record, const char *name, const char *module, std::vector<uint8_t> &write_cache)
 {
     if (!isFilterPassed(module))
-        return;
-
-    if (!checkAndCreateRecordFile())
         return;
 
     auto thread_index = allocThreadIndex(record.thread_id);
@@ -285,7 +296,7 @@ bool Sink::checkAndCreateRecordFile()
     return true;
 }
 
-Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
+bool Sink::checkAndWriteNames()
 {
     //! 如果文件不存在了，则重写所有的名称列表
     if (!util::fs::IsFileExist(name_list_filename_)) {
@@ -297,9 +308,50 @@ Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
         for (auto &content: name_vec)
             oss << content << ENDLINE;
 
-        util::fs::WriteStringToTextFile(name_list_filename_, oss.str(), is_file_sync_enabled_);
+        return util::fs::WriteStringToTextFile(name_list_filename_, oss.str(), is_file_sync_enabled_);
     }
 
+    return true;
+}
+
+bool Sink::checkAndWriteModules()
+{
+    //! 如果文件不存在了，则重写所有的模块列表
+    if (!util::fs::IsFileExist(module_list_filename_)) {
+        std::vector<std::string> module_vec(module_to_index_map_.size());
+        for (auto &item : module_to_index_map_)
+            module_vec[item.second] = item.first;
+
+        std::ostringstream oss;
+        for (auto &module : module_vec)
+            oss << module << ENDLINE;
+
+        return util::fs::WriteStringToTextFile(module_list_filename_, oss.str(), is_file_sync_enabled_);
+    }
+
+    return true;
+}
+
+bool Sink::checkAndWriteThreads()
+{
+    //! 如果文件不存在了，则重写所有的线程列表
+    if (!util::fs::IsFileExist(thread_list_filename_)) {
+        std::vector<int> thread_vec(thread_to_index_map_.size());
+        for (auto &item : thread_to_index_map_)
+            thread_vec[item.second] = item.first;
+
+        std::ostringstream oss;
+        for (auto thread_id : thread_vec)
+            oss << thread_id << ENDLINE;
+
+        return util::fs::WriteStringToTextFile(thread_list_filename_, oss.str(), is_file_sync_enabled_);
+    }
+
+    return true;
+}
+
+Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
+{
     std::string content = name + " at L" + std::to_string(line);
     auto iter = name_to_index_map_.find(content);
     if (iter != name_to_index_map_.end())
@@ -314,19 +366,6 @@ Sink::Index Sink::allocNameIndex(const std::string &name, uint32_t line)
 
 Sink::Index Sink::allocModuleIndex(const std::string &module)
 {
-    //! 如果文件不存在了，则重写所有的名称列表
-    if (!util::fs::IsFileExist(module_list_filename_)) {
-        std::vector<std::string> module_vec(module_to_index_map_.size());
-        for (auto &item : module_to_index_map_)
-            module_vec[item.second] = item.first;
-
-        std::ostringstream oss;
-        for (auto &module : module_vec)
-            oss << module << ENDLINE;
-
-        util::fs::WriteStringToTextFile(module_list_filename_, oss.str(), is_file_sync_enabled_);
-    }
-
     auto iter = module_to_index_map_.find(module);
     if (iter != module_to_index_map_.end())
         return iter->second;
@@ -340,19 +379,6 @@ Sink::Index Sink::allocModuleIndex(const std::string &module)
 
 Sink::Index Sink::allocThreadIndex(long thread_id)
 {
-    //! 如果文件不存在了，则重写所有的线程列表
-    if (!util::fs::IsFileExist(thread_list_filename_)) {
-        std::vector<int> thread_vec(thread_to_index_map_.size());
-        for (auto &item : thread_to_index_map_)
-            thread_vec[item.second] = item.first;
-
-        std::ostringstream oss;
-        for (auto thread_id : thread_vec)
-            oss << thread_id << ENDLINE;
-
-        util::fs::WriteStringToTextFile(thread_list_filename_, oss.str(), is_file_sync_enabled_);
-    }
-
     auto iter = thread_to_index_map_.find(thread_id);
     if (iter != thread_to_index_map_.end())
         return iter->second;

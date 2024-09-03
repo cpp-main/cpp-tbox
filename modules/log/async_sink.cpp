@@ -22,6 +22,7 @@
 #include <cstring>
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 
 constexpr uint32_t LOG_MAX_LEN = (100 << 10);   //! 限定单条日志最大长度
 
@@ -59,6 +60,8 @@ void AsyncSink::onLogFrontEnd(const LogContent *content)
 
 void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 {
+    auto start_ts = std::chrono::steady_clock::now();
+
     buffer_.append(data_ptr, data_size);
 
     bool is_need_flush = false;
@@ -81,6 +84,10 @@ void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 
     if (is_need_flush)
         flushLog();
+
+    auto time_cost = std::chrono::steady_clock::now() - start_ts;
+    if (time_cost > std::chrono::milliseconds(500))
+        std::cerr << timestamp_str_ << " NOTICE: log sink cost > 500 ms, " << time_cost.count() / 1000 << " us" << std::endl;
 }
 
 void AsyncSink::onLogBackEnd(const LogContent &content)
