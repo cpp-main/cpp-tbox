@@ -69,11 +69,15 @@ LoopWDog::LoopBlockCallback _loop_die_cb = OnLoopBlock;  //! 回调函数
 LoopWDog::LoopBlockCallback _loop_recover_cb = OnLoopRecover;  //! 回调函数
 
 void SendLoopFunc() {
+    RECORD_SCOPE();
     std::lock_guard<std::mutex> lg(_mutex_lock);
     for (auto loop_info_sptr : _loop_info_vec) {
         if (loop_info_sptr->loop->isRunning()) {
             if (loop_info_sptr->state == State::kChecked) {
                 loop_info_sptr->state = State::kTobeCheck;
+
+                auto start_ts = std::chrono::steady_clock::now();
+
                 loop_info_sptr->loop->runInLoop(
                     [loop_info_sptr] {
                         if (loop_info_sptr->state == State::kTimeout)
@@ -82,6 +86,11 @@ void SendLoopFunc() {
                     },
                     "LoopWdog"
                 );
+
+                auto time_cost = std::chrono::steady_clock::now() - start_ts;
+                if (time_cost > std::chrono::milliseconds(100)) {
+                    LogWarn("loop \"%s\" runInLoop() cost > 100 ms, %lu us", loop_info_sptr->name.c_str(), time_cost.count() / 1000);
+                }
             }
         }
     }
