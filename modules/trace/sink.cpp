@@ -106,9 +106,9 @@ bool Sink::enable()
     using namespace std::placeholders;
 
     util::AsyncPipe::Config config;
-    config.buff_size = 2048;
+    config.buff_size = 10240;
     config.buff_min_num = 2;
-    config.buff_max_num = 50;
+    config.buff_max_num = 20;
     config.interval = 1000;
 
     async_pipe_.initialize(config);
