@@ -504,7 +504,7 @@ void Client::OnLogWrapper(struct mosquitto *, void *userdata, int level, const c
 void Client::onConnected(int rc)
 {
     if (rc != 0) {
-        LogWarn("connect fail, rc:%d", rc);
+        LogWarn("connect fail, rc:%d, %s", rc, mosquitto_strerror(rc));
         return;
     }
 
@@ -523,7 +523,7 @@ void Client::onConnected(int rc)
 void Client::onDisconnected(int rc)
 {
     RECORD_SCOPE();
-    LogNotice("disconnected, rc:%d", rc);
+    LogNotice("disconnected, rc:%d, %s", rc, mosquitto_strerror(rc));
     handleDisconnectEvent();
 }
 
@@ -615,7 +615,7 @@ void Client::onTcpConnectDone(int ret)
         updateStateTo(State::kTcpConnected);
 
     } else {
-        LogNotice("connect fail, rc:%d", ret);
+        LogNotice("connect fail, rc:%d, %s", ret, mosquitto_strerror(ret));
         tryReconnect();
 
         ++d_->cb_level;
