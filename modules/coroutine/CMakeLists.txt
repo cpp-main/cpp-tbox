@@ -72,7 +72,7 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_BASE_HEADERS}
+    FILES ${TBOX_COROUTINE_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/coroutine
 )
 
