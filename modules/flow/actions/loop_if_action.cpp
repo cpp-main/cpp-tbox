@@ -38,8 +38,9 @@ LoopIfAction::~LoopIfAction() {
 
 void LoopIfAction::toJson(Json &js) const {
   AssembleAction::toJson(js);
-  if_action_->toJson(js["0.if"]);
-  exec_action_->toJson(js["1.exec"]);
+  auto &js_children = js["children"];
+  if_action_->toJson(js_children["0.if"]);
+  exec_action_->toJson(js_children["1.exec"]);
 }
 
 bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
