@@ -189,6 +189,8 @@ int WorkThread::cancel(TaskToken token)
 
 void WorkThread::threadProc()
 {
+    LogDbg("thread start");
+
     while (true) {
         Task* item = nullptr;
         {

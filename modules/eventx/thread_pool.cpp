@@ -289,6 +289,8 @@ ThreadPool::Snapshot ThreadPool::snapshot() const
 
 void ThreadPool::threadProc(ThreadToken thread_token)
 {
+    bool let_main_loop_join_me = false;
+
     LogDbg("thread %u start", thread_token.id());
 
     while (true) {
@@ -301,13 +303,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
              */
             if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) && (d_->threads_cabinet.size() > d_->min_thread_num)) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
-                //! 则将线程取出来，交给main_loop去join()，然后delete
-                auto t = d_->threads_cabinet.free(thread_token);
-                if (t != nullptr)   //! 如果取得到，说明还没有被cleanup()
-                    d_->wp_loop->runInLoop(
-                        [t]{ t->join(); delete t; },
-                        "ThreadPool::threadProc, join and delete t"
-                    );
+                let_main_loop_join_me = true;
                 break;
             }
 
@@ -370,6 +366,17 @@ void ThreadPool::threadProc(ThreadToken thread_token)
     }
 
     LogDbg("thread %u exit", thread_token.id());
+
+    if (let_main_loop_join_me) {
+        //! 则将线程取出来，交给main_loop去join()，然后delete
+        auto t = d_->threads_cabinet.free(thread_token);
+        TBOX_ASSERT(t != nullptr);
+        d_->wp_loop->runInLoop(
+            [t]{ t->join(); delete t; },
+            "ThreadPool::threadProc, join and delete it"
+        );
+        //! 这个操作放到最后来做是为了减少主线程join()的等待时长
+    }
 }
 
 bool ThreadPool::createWorker()

@@ -58,8 +58,8 @@ struct Runtime {
     Module apps;
 
     util::PidFile pid_file;
-    int loop_exit_wait = 1;
-    bool error_exit_wait = false;
+    int exit_wait_sec = 1;
+    bool is_fault_hup = false;
     std::thread thread;
 
     Runtime() : apps("", ctx) {
@@ -146,8 +146,8 @@ bool Start(int argc, char **argv)
         }
     }
 
-    util::json::GetField(js_conf, "loop_exit_wait", _runtime->loop_exit_wait);
-    util::json::GetField(js_conf, "error_exit_wait", _runtime->error_exit_wait);
+    util::json::GetField(js_conf, "exit_wait_sec", _runtime->exit_wait_sec);
+    util::json::GetField(js_conf, "is_fault_hup", _runtime->is_fault_hup);  //! 出现错误的时候是否需要挂起
 
     trace.initialize(ctx, js_conf);
     log.initialize(argv[0], ctx, js_conf);
@@ -155,10 +155,15 @@ bool Start(int argc, char **argv)
 
     SayHi();
 
+    //! 注册异常退出时的动作，在异常信号触发时调用
     error_exit_func = [&] {
+        if (_runtime->is_fault_hup)
+            LogNotice("process is hup.");
+
+        //! 主要是保存日志
         log.cleanup();
 
-        while (_runtime->error_exit_wait)
+        while (_runtime->is_fault_hup)
             std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
@@ -201,8 +206,8 @@ void Stop()
         [] {
             _runtime->apps.stop();
             _runtime->ctx.stop();
-            _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->loop_exit_wait));
-            LogDbg("Loop will exit after %d sec", _runtime->loop_exit_wait);
+            _runtime->ctx.loop()->exitLoop(std::chrono::seconds(_runtime->exit_wait_sec));
+            LogDbg("Loop will exit after %d sec", _runtime->exit_wait_sec);
         },
         "main::Stop"
     );

@@ -52,7 +52,7 @@ extern void SayBye();
 extern std::function<void()> error_exit_func;
 
 namespace {
-void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
+void RunInFrontend(ContextImp &ctx, Module &apps, int exit_wait_sec)
 {
     auto stop_signal = ctx.loop()->newSignalEvent("main::RunInFrontend::stop_signal");
     auto warn_signal = ctx.loop()->newSignalEvent("main::RunInFrontend::warn_signal");
@@ -71,8 +71,8 @@ void RunInFrontend(ContextImp &ctx, Module &apps, int loop_exit_wait)
             LogImportant("Got signal %d, stop", signo);
             apps.stop();
             ctx.stop();
-            ctx.loop()->exitLoop(std::chrono::seconds(loop_exit_wait));
-            LogDbg("Loop will exit after %d sec", loop_exit_wait);
+            ctx.loop()->exitLoop(std::chrono::seconds(exit_wait_sec));
+            LogDbg("Loop will exit after %d sec", exit_wait_sec);
         }
     );
 
@@ -131,11 +131,11 @@ int Main(int argc, char **argv)
         }
     }
 
-    int loop_exit_wait = 1;
-    util::json::GetField(js_conf, "loop_exit_wait", loop_exit_wait);
+    int exit_wait_sec = 1;
+    util::json::GetField(js_conf, "exit_wait_sec", exit_wait_sec);
 
-    bool error_exit_wait = false;
-    util::json::GetField(js_conf, "error_exit_wait", error_exit_wait);
+    bool is_fault_hup = false;
+    util::json::GetField(js_conf, "is_fault_hup", is_fault_hup);  //! 出现错误的时候是否需要挂起
 
     trace.initialize(ctx, js_conf);
     log.initialize(argv[0], ctx, js_conf);
@@ -145,17 +145,20 @@ int Main(int argc, char **argv)
 
     //! 注册异常退出时的动作，在异常信号触发时调用
     error_exit_func = [&] {
+        if (is_fault_hup)
+            LogNotice("process is hup.");
+
         //! 主要是保存日志
         log.cleanup();
 
-        while (error_exit_wait)
+        while (is_fault_hup)
             std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
     if (ctx.initialize(argv[0], js_conf)) {
         if (apps.initialize(js_conf)) {
             if (ctx.start() && apps.start()) {  //! 启动所有应用
-                RunInFrontend(ctx, apps, loop_exit_wait);
+                RunInFrontend(ctx, apps, exit_wait_sec);
             } else {
                 LogErr("Apps start fail");
             }
