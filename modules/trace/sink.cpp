@@ -264,7 +264,7 @@ bool Sink::checkAndCreateRecordFile()
 
     //!检查并创建路径
     if (!util::fs::MakeDirectory(records_path, false)) {
-        LogErrno(errno, "create directory '%s' fail", records_path);
+        LogErrno(errno, "create directory '%s' fail", records_path.c_str());
         return false;
     }
 
