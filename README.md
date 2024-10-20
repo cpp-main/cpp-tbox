@@ -76,7 +76,20 @@ When receiving signals: SIGINT, SIGTERM, SIGQUIT, SIGPWR, it will execute the ex
 When various program exceptions occur in the program, such as: segment fault, assertion, bus error, exception not caught, etc., the framework will capture and print the complete call stack in the log system. Facing program crashes, no longer look blank. The effect is as follows:  
 ![stack print](documents/images/0006-error-dump.png)  
 
-## 9. Rich components
+## 9. Visualized trace module
+The trace module can record the time and duration of each execution of the marked function, and can export the flame graph for display:  
+![trace fire graph](documents/images/0011-trace-view.png)  
+It is a great tool for performance analysis and event blocking problem troubleshooting. 
+
+## 10. Simple and visualized state machine
+It abandons the cumbersome inheritance and derivation of the traditional state mode, and uses it directly in a combined way, which is simple and convenient. It can also export the state machine diagram to achieve what you see is what you get:  
+![visualized state machine](documents/images/0010-state-machine-graph.png)  
+
+## 11. Visualized behavior tree
+It contains an event-driven behavior tree that can realize sequential, branching, and cyclic action processes in an asynchronous environment, and can export a visual tree diagram in real time:  
+![visualized behavior tree](documents/images/0010-action-tree-graph.jpg)  
+
+## 12. Rich components
 
 | Name | What |
 |:----:|:----|
