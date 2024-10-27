@@ -273,3 +273,14 @@ TEST(string, Replace) {
         EXPECT_STREQ(t.c_str(), "aa bbaa aab aaaa aab");
     }
 }
+
+TEST(string, ToUpper) {
+  EXPECT_EQ(ToUpper("Abc:?x#Y$z "), "ABC:?X#Y$Z ");
+  EXPECT_EQ(ToUpper(""), "");
+}
+
+TEST(string, ToLower) {
+  EXPECT_EQ(ToLower("Abc:?x#Y$z "), "abc:?x#y$z ");
+  EXPECT_EQ(ToLower(""), "");
+}
+

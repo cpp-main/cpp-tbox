@@ -138,6 +138,24 @@ size_t HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, co
 void Replace(std::string &target_str, const std::string &pattern_str, const std::string &replace_str,
              std::string::size_type start = 0, std::string::size_type count = 0);
 
+/**
+ * \brief       将字串中所有小写字母替换成大写
+ *
+ * \param origin_str    原始字串
+ *
+ * \return std::string  修改后的字串
+ */
+std::string ToUpper(const std::string &origin_str);
+
+/**
+ * \brief       将字串中所有大写字母替换成小写
+ *
+ * \param origin_str    原始字串
+ *
+ * \return std::string  修改后的字串
+ */
+std::string ToLower(const std::string &origin_str);
+
 }
 }
 }

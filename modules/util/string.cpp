@@ -21,6 +21,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
 
 namespace tbox {
 namespace util {
@@ -249,6 +250,24 @@ void Replace(std::string &target_str, const std::string &pattern_str, const std:
         pos += replace_str_len;
         --count;
     }
+}
+
+std::string ToUpper(const std::string &origin_str)
+{
+  std::string target_str;
+  target_str.reserve(origin_str.size());
+  std::back_insert_iterator<std::string>  back_insert_iter(target_str);
+  std::transform(origin_str.begin(), origin_str.end(), back_insert_iter, ::toupper);
+  return target_str;
+}
+
+std::string ToLower(const std::string &origin_str)
+{
+  std::string target_str;
+  target_str.reserve(origin_str.size());
+  std::back_insert_iterator<std::string>  back_insert_iter(target_str);
+  std::transform(origin_str.begin(), origin_str.end(), back_insert_iter, ::tolower);
+  return target_str;
 }
 
 }
