@@ -17,25 +17,42 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include <unistd.h>
-#include <execinfo.h>
-#include <cxxabi.h>
-#include <dlfcn.h>
-
-#include <iostream>
-#include <iomanip>
-#include <sstream>
 
 #include "backtrace.h"
+
+/**
+ * 目前只有glibc支持execinfo.h，其它库如uclibc是没有支持。为避免编译出错，在此区别处理
+ * 如果外面没有指定HAVE_EXECINFO_H，则根据是否采用glibc库自动处理
+ */
+#ifndef HAVE_EXECINFO_H
+# ifdef __GLIBC__
+#  define HAVE_EXECINFO_H 1
+# else
+#  define HAVE_EXECINFO_H 0
+# endif //__GLIBC__
+#endif //HAVE_EXECINFO_H
+
+#if HAVE_EXECINFO_H
+# include <execinfo.h>
+# include <cxxabi.h>
+# include <dlfcn.h>
+# include <unistd.h>
+# include <iostream>
+# include <iomanip>
+#endif //HAVE_EXECINFO_H
+
+#include <sstream>
 
 namespace tbox {
 
 std::string DumpBacktrace(const unsigned int max_frames)
 {
+    std::ostringstream oss;
+
+#if HAVE_EXECINFO_H
     Dl_info info;
 
     void *callstack[max_frames];
-    std::ostringstream oss;
 
     unsigned int number_frames = ::backtrace(callstack, max_frames);
     char **symbols = ::backtrace_symbols(callstack, number_frames);
@@ -67,6 +84,10 @@ std::string DumpBacktrace(const unsigned int max_frames)
 
     if (number_frames >= max_frames)
         oss << "[truncated]" << std::endl;
+
+#else
+    oss << "not support backtrace" << std::endl;
+#endif //HAVE_EXECINFO_H
 
     return oss.str();
 }
