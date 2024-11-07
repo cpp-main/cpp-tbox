@@ -51,6 +51,7 @@ set(TBOX_FLOW_HEADERS
     actions/composite_action.h
     actions/wrapper_action.h
     actions/succ_fail_action.h
+    actions/dummy_action.h
     to_graphviz.h)
 
 set(TBOX_FLOW_SOURCES

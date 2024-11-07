@@ -33,7 +33,14 @@ namespace flow {
  */
 class ParallelAction : public AssembleAction {
   public:
-    explicit ParallelAction(event::Loop &loop);
+    //! 模式
+    enum class Mode {
+      kAllFinish, //!< 全部结束
+      kAnyFail,   //!< 任一失败
+      kAnySucc,   //!< 任一成功
+    };
+
+    explicit ParallelAction(event::Loop &loop, Mode mode = Mode::kAllFinish);
     virtual ~ParallelAction();
 
     virtual void toJson(Json &js) const override;
@@ -41,11 +48,13 @@ class ParallelAction : public AssembleAction {
     virtual int addChild(Action *action) override;
     virtual bool isReady() const override;
 
+    inline void setMode(Mode mode) { mode_ = mode; }
+
     using FinishedChildren = std::map<int, bool>;
-    using BlockedChildren = std::map<int, Reason>;
 
     FinishedChildren getFinishedChildren() const { return finished_children_; }
-    BlockedChildren  getBlockedChildren()  const { return blocked_children_; }
+
+    static std::string ToString(Mode mode);
 
   protected:
     virtual void onStart() override;
@@ -55,15 +64,17 @@ class ParallelAction : public AssembleAction {
     virtual void onReset() override;
 
   private:
-    void tryFinish();
+    void stopAllActions();
+    void pauseAllActions();
+
     void onChildFinished(int index, bool is_succ);
-    void onChildBlocked(int index, const Reason &why);
+    void onChildBlocked(int index, const Reason &why, const Trace &trace);
 
   private:
+    Mode mode_;
     std::vector<Action*> children_;
 
     FinishedChildren finished_children_;
-    BlockedChildren  blocked_children_;
 };
 
 }

@@ -29,8 +29,9 @@ namespace flow {
 
 using namespace std::placeholders;
 
-ParallelAction::ParallelAction(event::Loop &loop)
+ParallelAction::ParallelAction(event::Loop &loop, Mode mode)
   : AssembleAction(loop, "Parallel")
+  , mode_(mode)
 { }
 
 ParallelAction::~ParallelAction() {
@@ -46,6 +47,7 @@ void ParallelAction::toJson(Json &js) const {
         action->toJson(js_child);
         js_children.push_back(std::move(js_child));
     }
+    js["mode"] = ToString(mode_);
 }
 
 int ParallelAction::addChild(Action *action) {
@@ -55,7 +57,7 @@ int ParallelAction::addChild(Action *action) {
         int index = children_.size();
         children_.push_back(action);
         action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
-        action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1));
+        action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1, _2));
         return index;
 
     } else {
@@ -77,26 +79,29 @@ void ParallelAction::onStart() {
 
     for (size_t index = 0; index < children_.size(); ++index) {
         Action *action = children_.at(index);
-        if (!action->start())
+        if (!action->start()) {
             finished_children_[index] = false;
+            //! 如果是任一失败都退出，那么要直接结束
+            if (mode_ == Mode::kAnyFail) {
+                finish(true);
+                stopAllActions();
+                return;
+            }
+        }
     }
 
-    tryFinish();
+    //! 如果全部都启动失败了，那么就直接结束
+    if (finished_children_.size() == children_.size())
+        finish(true);
 }
 
 void ParallelAction::onStop() {
-    for (Action *action : children_)
-        action->stop();
-
+    stopAllActions();
     AssembleAction::onStop();
 }
 
 void ParallelAction::onPause() {
-    for (Action *action : children_) {
-        if (action->state() == State::kRunning)
-            action->pause();
-    }
-
+    pauseAllActions();
     AssembleAction::onPause();
 }
 
@@ -114,30 +119,51 @@ void ParallelAction::onReset() {
         child->reset();
 
     finished_children_.clear();
-    blocked_children_.clear();
-
     AssembleAction::onReset();
 }
 
-void ParallelAction::tryFinish() {
-    if ((finished_children_.size() + blocked_children_.size()) == children_.size())
-        finish(true);
+void ParallelAction::stopAllActions() {
+    for (Action *action : children_) {
+        action->stop();
+    }
+}
+
+void ParallelAction::pauseAllActions() {
+    for (Action *action : children_) {
+        action->pause();
+    }
 }
 
 void ParallelAction::onChildFinished(int index, bool is_succ) {
     if (state() == State::kRunning) {
         finished_children_[index] = is_succ;
-        tryFinish();
+
+        if ((mode_ == Mode::kAnySucc && is_succ) ||
+            (mode_ == Mode::kAnyFail && !is_succ)) {
+            stopAllActions();
+            finish(true);
+
+        } else if (finished_children_.size() == children_.size()) {
+            finish(true);
+        }
     }
 }
 
-void ParallelAction::onChildBlocked(int index, const Reason &why) {
+void ParallelAction::onChildBlocked(int index, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
-        blocked_children_[index] = why;
-        //!FIXME:目前遇到block的动作，仅停止它。将来需要更精细化的处理
-        children_.at(index)->stop();
-        tryFinish();
+        pauseAllActions();
+        block(why, trace);
     }
+}
+
+std::string ParallelAction::ToString(Mode mode) {
+    const char *tbl[] = { "AllFinish", "AnyFail", "AnySucc" };
+
+    auto index = static_cast<size_t>(mode);
+    if (0 <= index && index < NUMBER_OF_ARRAY(tbl))
+        return tbl[index];
+
+    return std::to_string(index);
 }
 
 }

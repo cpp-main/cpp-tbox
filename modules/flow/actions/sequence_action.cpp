@@ -47,6 +47,7 @@ void SequenceAction::toJson(Json &js) const {
         action->toJson(js_child);
         js_children.push_back(std::move(js_child));
     }
+    js["mode"] = ToString(mode_);
     js["index"] = index_;
 }
 
@@ -127,6 +128,16 @@ void SequenceAction::onChildFinished(bool is_succ, const Reason &reason, const T
             startOtheriseFinish(is_succ, reason, trace);
         }
     }
+}
+
+std::string SequenceAction::ToString(Mode mode) {
+    const char *tbl[] = { "AllFinish", "AnyFail", "AnySucc" };
+
+    auto index = static_cast<size_t>(mode);
+    if (0 <= index && index < NUMBER_OF_ARRAY(tbl))
+        return tbl[index];
+
+    return std::to_string(index);
 }
 
 }

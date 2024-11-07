@@ -59,6 +59,8 @@ class SequenceAction : public AssembleAction {
     inline void setMode(Mode mode) { mode_ = mode; }
     inline int index() const { return index_; }
 
+    static std::string ToString(Mode mode);
+
   protected:
     virtual void onStart() override;
     virtual void onStop() override;

@@ -46,6 +46,7 @@ HEAD_FILES = \
 	actions/composite_action.h \
 	actions/wrapper_action.h \
 	actions/succ_fail_action.h \
+	actions/dummy_action.h \
 	to_graphviz.h \
 
 CPP_SRC_FILES = \
