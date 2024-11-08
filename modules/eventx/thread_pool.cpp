@@ -369,6 +369,8 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
     if (let_main_loop_join_me) {
         //! 则将线程取出来，交给main_loop去join()，然后delete
+        std::unique_lock<std::mutex> lk(d_->lock);
+
         auto t = d_->threads_cabinet.free(thread_token);
         TBOX_ASSERT(t != nullptr);
         d_->wp_loop->runInLoop(
