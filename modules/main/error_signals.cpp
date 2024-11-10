@@ -18,7 +18,6 @@
  * of the source tree.
  */
 #include <signal.h>
-#include <execinfo.h>
 
 #include <cstring>
 #include <iostream>

@@ -21,15 +21,11 @@
 #include "backtrace.h"
 
 /**
- * 目前只有glibc支持execinfo.h，其它库如uclibc是没有支持。为避免编译出错，在此区别处理
- * 如果外面没有指定HAVE_EXECINFO_H，则根据是否采用glibc库自动处理
+ * 目前只有glibc支持execinfo.h，其它库如uclibc是没有支持。
+ * 为避免编译出错，可以在外部将 HAVE_EXECINFO_H 指定为0
  */
 #ifndef HAVE_EXECINFO_H
-# ifdef __GLIBC__
-#  define HAVE_EXECINFO_H 1
-# else
-#  define HAVE_EXECINFO_H 0
-# endif //__GLIBC__
+# define HAVE_EXECINFO_H 1  //! 如果是uclibc，请改成0
 #endif //HAVE_EXECINFO_H
 
 #if HAVE_EXECINFO_H
