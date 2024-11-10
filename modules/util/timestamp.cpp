@@ -19,6 +19,7 @@
  */
 #include "timestamp.h"
 #include <sys/time.h>
+#include <time.h>
 
 namespace tbox {
 namespace util {
@@ -76,5 +77,3 @@ std::string GetLocalTimeString(uint32_t sec)
 
 }
 }
-
-

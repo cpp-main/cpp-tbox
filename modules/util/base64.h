@@ -20,6 +20,7 @@
 #ifndef TBOX_UTIL_BASE64_H_20221229
 #define TBOX_UTIL_BASE64_H_20221229
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
