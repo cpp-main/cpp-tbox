@@ -38,6 +38,7 @@
 #endif //HAVE_EXECINFO_H
 
 #include <sstream>
+#include "defines.h"
 
 namespace tbox {
 
@@ -82,6 +83,7 @@ std::string DumpBacktrace(const unsigned int max_frames)
         oss << "[truncated]" << std::endl;
 
 #else
+    UNUSED_VAR(max_frames);
     oss << "not support backtrace" << std::endl;
 #endif //HAVE_EXECINFO_H
 
