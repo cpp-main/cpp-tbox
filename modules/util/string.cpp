@@ -238,6 +238,9 @@ size_t HexStrToRawData(const std::string &hex_str, std::vector<uint8_t> &out, co
 void Replace(std::string &target_str, const std::string &pattern_str, const std::string &replace_str,
              std::string::size_type start, std::string::size_type count)
 {
+    if (target_str.empty() || start > target_str.size())
+        return;
+
     if (count == 0)
         count = UINT32_MAX;
 
