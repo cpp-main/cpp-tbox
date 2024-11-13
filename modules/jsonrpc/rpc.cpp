@@ -63,7 +63,12 @@ void Rpc::cleanup()
 {
     respond_timeout_.cleanup();
     request_timeout_.cleanup();
+
+    tobe_respond_.clear();
+    request_callback_.clear();
+
     method_services_.clear();
+
     proto_->setRecvCallback(nullptr, nullptr);
     proto_ = nullptr;
 }
