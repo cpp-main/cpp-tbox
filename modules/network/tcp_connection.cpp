@@ -129,6 +129,13 @@ bool TcpConnection::send(const void *data_ptr, size_t data_size)
     return false;
 }
 
+Buffer* TcpConnection::getReceiveBuffer()
+{
+    if (sp_buffered_fd_ != nullptr)
+        return sp_buffered_fd_->getReceiveBuffer();
+    return nullptr;
+}
+
 void TcpConnection::onSocketClosed()
 {
     LogInfo("%s", peer_addr_.toString().c_str());

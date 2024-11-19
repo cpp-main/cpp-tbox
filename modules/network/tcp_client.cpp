@@ -203,6 +203,13 @@ void TcpClient::unbind()
     d_->wp_receiver = nullptr;
 }
 
+Buffer* TcpClient::getReceiveBuffer()
+{
+    if (d_->sp_connection != nullptr)
+        return d_->sp_connection->getReceiveBuffer();
+    return nullptr;
+}
+
 void TcpClient::onTcpConnected(TcpConnection *new_conn)
 {
     RECORD_SCOPE();

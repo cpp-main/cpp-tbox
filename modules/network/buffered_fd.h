@@ -72,6 +72,7 @@ class BufferedFd : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override { wp_receiver_ = receiver; }
     virtual void unbind() override { wp_receiver_ = nullptr; }
+    virtual Buffer* getReceiveBuffer() { return &recv_buff_; }
 
     //! 启动与关闭内部事件驱动机制
     bool enable();

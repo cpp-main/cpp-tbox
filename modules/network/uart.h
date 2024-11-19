@@ -61,6 +61,7 @@ class Uart : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override;
     virtual void unbind() override;
+    virtual Buffer* getReceiveBuffer() override;
 
   public:
     bool enable();

@@ -63,6 +63,7 @@ class TcpConnection : public ByteStream {
     virtual void bind(ByteStream *receiver) override;
     virtual void unbind() override;
     virtual bool send(const void *data_ptr, size_t data_size) override;
+    virtual Buffer* getReceiveBuffer() override;
 
   protected:
     void onSocketClosed();

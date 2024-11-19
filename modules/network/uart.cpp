@@ -295,6 +295,11 @@ void Uart::unbind()
     buff_fd_.unbind();
 }
 
+Buffer* Uart::getReceiveBuffer()
+{
+    return buff_fd_.getReceiveBuffer();
+}
+
 bool Uart::enable()
 {
     if (fd_.isNull()) {

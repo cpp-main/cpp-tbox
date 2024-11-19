@@ -76,6 +76,7 @@ class TcpClient : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override;
     virtual void unbind() override;
+    virtual Buffer* getReceiveBuffer() override;
 
   protected:
     void onTcpConnected(TcpConnection *new_conn);

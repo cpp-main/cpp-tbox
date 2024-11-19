@@ -209,6 +209,14 @@ void* TcpServer::getContext(const ConnToken &client) const
     return nullptr;
 }
 
+Buffer* TcpServer::getClientReceiveBuffer(const ConnToken &client)
+{
+    auto conn = d_->conns.at(client);
+    if (conn != nullptr)
+        return conn->getReceiveBuffer();
+    return nullptr;
+}
+
 TcpServer::State TcpServer::state() const
 {
     return d_->state;
