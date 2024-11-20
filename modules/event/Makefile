@@ -21,8 +21,8 @@
 PROJECT = event
 LIB_NAME = event
 LIB_VERSION_X = 1
-LIB_VERSION_Y = 1
-LIB_VERSION_Z = 2
+LIB_VERSION_Y = 2
+LIB_VERSION_Z = 0
 
 HEAD_FILES = \
 	forward.h \
@@ -45,6 +45,8 @@ CPP_SRC_FILES = \
 	stat.cpp \
 	engines/epoll/loop.cpp \
 	engines/epoll/fd_event.cpp \
+	engines/select/loop.cpp \
+	engines/select/fd_event.cpp \
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
