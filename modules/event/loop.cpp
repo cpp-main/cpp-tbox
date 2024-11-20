@@ -21,6 +21,7 @@
 #include <tbox/base/log.h>
 
 #include "engines/epoll/loop.h"
+#include "engines/select/loop.h"
 
 namespace tbox {
 namespace event {
@@ -34,6 +35,8 @@ Loop* Loop::New(const std::string &engine_type)
 {
     if (engine_type == "epoll")
         return new EpollLoop;
+    else if (engine_type == "select")
+        return new SelectLoop;
 
     return nullptr;
 }
@@ -43,6 +46,7 @@ std::vector<std::string> Loop::Engines()
     std::vector<std::string> types;
 
     types.push_back("epoll");
+    types.push_back("select");
     return types;
 }
 
