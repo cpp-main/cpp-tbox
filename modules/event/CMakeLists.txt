@@ -49,7 +49,9 @@ set(TBOX_EVENT_SOURCES
             misc.cpp
             stat.cpp
             engines/epoll/loop.cpp
-            engines/epoll/fd_event.cpp)
+            engines/epoll/fd_event.cpp
+            engines/select/loop.cpp
+            engines/select/fd_event.cpp)
 
 set(TBOX_EVENT_TEST_SOURCES
             common_loop_test.cpp

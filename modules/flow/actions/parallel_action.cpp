@@ -149,7 +149,7 @@ void ParallelAction::onChildFinished(int index, bool is_succ) {
     }
 }
 
-void ParallelAction::onChildBlocked(int index, const Reason &why, const Trace &trace) {
+void ParallelAction::onChildBlocked(int, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         pauseAllActions();
         block(why, trace);
@@ -160,7 +160,7 @@ std::string ParallelAction::ToString(Mode mode) {
     const char *tbl[] = { "AllFinish", "AnyFail", "AnySucc" };
 
     auto index = static_cast<size_t>(mode);
-    if (0 <= index && index < NUMBER_OF_ARRAY(tbl))
+    if (index < NUMBER_OF_ARRAY(tbl))
         return tbl[index];
 
     return std::to_string(index);
