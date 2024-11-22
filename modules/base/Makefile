@@ -58,7 +58,11 @@ CPP_SRC_FILES = \
 pre_build:
 	touch version.cpp
 
-CXXFLAGS := -DMODULE_ID='"tbox.base"' $(CXXFLAGS)
+CXXFLAGS += -DMODULE_ID='"tbox.base"'
+
+ifeq ($(HAVE_EXECINFO_H),yes)
+CXXFLAGS += -DHAVE_EXECINFO_H=1
+endif
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \

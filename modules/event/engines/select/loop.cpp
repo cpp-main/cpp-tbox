@@ -19,8 +19,10 @@
  */
 #include <sys/select.h>
 
+#include <cstring>
 #include <algorithm>
 
+#include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
 
@@ -72,6 +74,9 @@ void SelectLoop::runLoop(Mode mode)
                     SelectFdEvent::OnEventCallback(is_readable, is_writable, is_except, data);
                 }
             }
+        } else if (select_ret == -1) {
+            LogErrno(errno, "select error");
+            break;
         }
 
         //handleRunInLoopFunc();

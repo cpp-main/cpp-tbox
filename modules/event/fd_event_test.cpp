@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <cstring>
+#include <tbox/base/log_output.h>
 
 #include "loop.h"
 #include "fd_event.h"
@@ -348,57 +349,64 @@ TEST(FdEvent, Reinitialize)
 /// Test exception events
 TEST(FdEvent, Exception)
 {
-    int read_fd, write_fd;
-    bool ok = tbox::event::CreateFdPair(read_fd, write_fd);
-    ASSERT_TRUE(ok);
+    LogOutput_Enable();
 
-    auto loop = Loop::New();
-    auto read_fd_event = loop->newFdEvent();
-    auto write_fd_event = loop->newFdEvent();
+    auto engines = Loop::Engines();
+    for (auto e : engines) {
+        cout << "engine: " << e << endl;
 
-    ASSERT_TRUE(read_fd_event != nullptr);
-    ASSERT_TRUE(write_fd_event != nullptr);
+        int read_fd, write_fd;
+        bool ok = tbox::event::CreateFdPair(read_fd, write_fd);
+        ASSERT_TRUE(ok);
 
-    int run_time = 0;
+        auto loop = Loop::New(e);
+        auto read_fd_event = loop->newFdEvent();
+        auto write_fd_event = loop->newFdEvent();
 
-    EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist));
-    read_fd_event->setCallback([&](short events){
-        if (events & FdEvent::kReadEvent) {
-            char data[100] = { 0};
-            ssize_t len = read(read_fd, data, sizeof(data));
-            EXPECT_EQ(len, sizeof(int));
-        }
+        ASSERT_TRUE(read_fd_event != nullptr);
+        ASSERT_TRUE(write_fd_event != nullptr);
 
-        if (events & FdEvent::kHupEvent) {
-            ++run_time;
-            loop->exitLoop();
-        }
-    });
+        int run_time = 0;
 
-    read_fd_event->enable();
+        EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist));
+        read_fd_event->setCallback([&](short events){
+            if (events & FdEvent::kReadEvent) {
+                char data[100] = { 0};
+                ssize_t len = read(read_fd, data, sizeof(data));
+                EXPECT_EQ(len, sizeof(int));
+            }
 
-    EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kPersist));
-    write_fd_event->setCallback([&](short events){
-        if (events & FdEvent::kWriteEvent) {
-            int data = 0;
-            ssize_t ret = write(write_fd, &data, sizeof(data));
-            EXPECT_EQ(ret, sizeof(data));
-            close(write_fd);
-        }
-    });
+            if (events & FdEvent::kHupEvent) {
+                ++run_time;
+                loop->exitLoop();
+            }
+        });
 
-    write_fd_event->enable();
+        read_fd_event->enable();
 
-    loop->runLoop();
+        EXPECT_TRUE(write_fd_event->initialize(write_fd, FdEvent::kWriteEvent, Event::Mode::kPersist));
+        write_fd_event->setCallback([&](short events){
+            if (events & FdEvent::kWriteEvent) {
+                int data = 0;
+                ssize_t ret = write(write_fd, &data, sizeof(data));
+                EXPECT_EQ(ret, sizeof(data));
+                close(write_fd);
+            }
+        });
 
-    EXPECT_EQ(run_time, 1);
+        write_fd_event->enable();
 
-    read_fd_event->disable();
-    write_fd_event->disable();
+        loop->runLoop();
 
-    delete read_fd_event;
-    delete write_fd_event;
-    delete loop;
+        EXPECT_EQ(run_time, 1);
+
+        read_fd_event->disable();
+        write_fd_event->disable();
+
+        delete read_fd_event;
+        delete write_fd_event;
+        delete loop;
+    }
 }
 
 }

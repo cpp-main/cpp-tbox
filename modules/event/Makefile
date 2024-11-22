@@ -24,6 +24,10 @@ LIB_VERSION_X = 1
 LIB_VERSION_Y = 2
 LIB_VERSION_Z = 0
 
+HAVE_EPOLL ?= yes	# 默认支持epoll
+
+CXXFLAGS += -DMODULE_ID='"tbox.event"'
+
 HEAD_FILES = \
 	forward.h \
 	loop.h \
@@ -43,10 +47,16 @@ CPP_SRC_FILES = \
 	signal_event_impl.cpp \
 	misc.cpp \
 	stat.cpp \
-	engines/epoll/loop.cpp \
-	engines/epoll/fd_event.cpp \
 	engines/select/loop.cpp \
 	engines/select/fd_event.cpp \
+
+ifeq ($(HAVE_EPOLL),yes)
+CXXFLAGS += -DHAVE_EPOLL=1
+
+CPP_SRC_FILES += \
+	engines/epoll/loop.cpp \
+	engines/epoll/fd_event.cpp
+endif
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
@@ -55,7 +65,6 @@ TEST_CPP_SRC_FILES = \
 	timer_event_test.cpp \
 	signal_event_test.cpp \
 
-CXXFLAGS := -DMODULE_ID='"tbox.event"' $(CXXFLAGS)
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
