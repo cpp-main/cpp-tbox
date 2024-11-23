@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <sys/select.h>
+#include <fcntl.h>
 
 #include <cstring>
 #include <algorithm>
@@ -75,8 +76,16 @@ void SelectLoop::runLoop(Mode mode)
                 }
             }
         } else if (select_ret == -1) {
-            LogErrno(errno, "select error");
-            break;
+            if (errno == EBADF) {
+                removeInvalidFds();
+
+            } else if (errno != EINTR) {
+                LogErrno(errno, "select error");
+                break;
+
+            } else {
+                LogNotice("select errno:%d(%s)", errno, strerror(errno));
+            }
         }
 
         //handleRunInLoopFunc();
@@ -124,6 +133,28 @@ int SelectLoop::fillFdSets(fd_set &read_set, fd_set &write_set, fd_set &except_s
     }
 
     return max_fd + 1;
+}
+
+bool IsFdValid(int fd)
+{
+    if (fd < 0)
+        return false;
+
+    return ::fcntl(fd, F_GETFD) != -1 || errno != EBADF;
+}
+
+void SelectLoop::removeInvalidFds()
+{
+    for (auto item : fd_data_map_) {
+        auto fd = item.first;
+        if (!IsFdValid(fd)) {
+            LogWarn("fd:%d is invalid", fd);
+            SelectFdSharedData *data = item.second;
+            for (auto event : data->fd_events) {
+                event->disable();
+            }
+        }
+    }
 }
 
 SelectFdSharedData* SelectLoop::refFdSharedData(int fd)

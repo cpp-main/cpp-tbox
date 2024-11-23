@@ -46,6 +46,7 @@ class SelectLoop : public CommonLoop {
   protected:
     virtual void stopLoop() override { keep_running_ = false; }
     int fillFdSets(fd_set &read_set, fd_set &write_set, fd_set &except_set);
+    void removeInvalidFds();  //! 清除失效了的fd
 
   private:
     bool keep_running_ = true;

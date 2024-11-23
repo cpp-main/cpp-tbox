@@ -371,7 +371,7 @@ TEST(FdEvent, Exception)
         EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist));
         read_fd_event->setCallback([&](short events){
             if (events & FdEvent::kReadEvent) {
-                char data[100] = { 0};
+                char data[100] = { 0 };
                 ssize_t len = read(read_fd, data, sizeof(data));
                 EXPECT_EQ(len, sizeof(int));
             }
@@ -396,6 +396,7 @@ TEST(FdEvent, Exception)
 
         write_fd_event->enable();
 
+        loop->exitLoop(std::chrono::milliseconds(10));
         loop->runLoop();
 
         EXPECT_EQ(run_time, 1);
