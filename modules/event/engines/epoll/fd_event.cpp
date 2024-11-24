@@ -79,9 +79,6 @@ bool EpollFdEvent::enable()
     if (events_ & kExceptEvent)
         ++d_->except_event_num;
 
-    if (events_ & kHupEvent)
-        ++d_->hup_event_num;
-
     d_->fd_events.push_back(this);
 
     reloadEpoll();
@@ -103,9 +100,6 @@ bool EpollFdEvent::disable()
 
     if (events_ & kExceptEvent)
         --d_->except_event_num;
-
-    if (events_ & kHupEvent)
-        --d_->hup_event_num;
 
     auto iter = std::find(d_->fd_events.begin(), d_->fd_events.end(), this);
     d_->fd_events.erase(iter);
@@ -135,9 +129,6 @@ void EpollFdEvent::reloadEpoll()
 
     if (d_->except_event_num > 0)
         new_events |= EPOLLERR;
-
-    if (d_->hup_event_num > 0)
-        new_events |= EPOLLHUP;
 
     d_->ev.events = new_events;
 
@@ -173,15 +164,27 @@ void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
         tbox_events |= kExceptEvent;
     }
 
+    bool is_got_hup = false;
+
     if (events & EPOLLHUP) {
         events &= ~EPOLLHUP;
-        tbox_events |= kHupEvent;
+        is_got_hup = true;
     }
 
     //! 要先复制一份，因为在for中很可能会改动到d->fd_events，引起迭代器失效问题
     auto tmp = d->fd_events;
-    for (auto event : tmp)
+    for (auto event : tmp) {
         event->onEvent(tbox_events);
+
+        //! 在epoll中，无论有没有监听EPOLLHUP，在对端close了fd时都会触发本端EPOLLHUP事件
+        //! 只要发生了EPOLLHUB事件，就无法停止它，得强制disable()所有fd关联FdEvent
+        //! 否则它会一直触发事件，导致Loop空跑，CPU占满问题
+        if (is_got_hup) {
+            //! 将HUP事件当成可读事件，上层读到0字节则表示对端已关闭
+            event->onEvent(kReadEvent);
+            event->disable();   //! 强制关闭事件
+        }
+    }
 
     if (events)
         LogWarn("unhandle events:%08X, fd:%d", events, d->fd);
@@ -189,13 +192,6 @@ void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
 
 void EpollFdEvent::onEvent(short events)
 {
-    /**
-     * 由于EPOLLHUP会一直触发，所以无论事件有没有监听HupEvent，只要发生了EPOLLHUB事件，
-     * 对应fd所有的事件都要强制disable()。否则会导致Loop空跑问题。
-     */
-    if (events & kHupEvent)
-        disable();
-
     if (events_ & events) {
         if (is_stop_after_trigger_)
             disable();

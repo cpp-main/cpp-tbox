@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <cstring>
+#include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 
 #include "loop.h"
@@ -367,18 +368,18 @@ TEST(FdEvent, Exception)
         ASSERT_TRUE(write_fd_event != nullptr);
 
         int run_time = 0;
+        size_t recv_bytes = 0;
 
-        EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist));
+        EXPECT_TRUE(read_fd_event->initialize(read_fd, FdEvent::kReadEvent, Event::Mode::kPersist));
         read_fd_event->setCallback([&](short events){
             if (events & FdEvent::kReadEvent) {
                 char data[100] = { 0 };
                 ssize_t len = read(read_fd, data, sizeof(data));
-                EXPECT_EQ(len, sizeof(int));
-            }
-
-            if (events & FdEvent::kHupEvent) {
-                ++run_time;
-                loop->exitLoop();
+                recv_bytes += len;
+                if (len == 0) {
+                    ++run_time;
+                    loop->exitLoop();
+                }
             }
         });
 
@@ -396,10 +397,10 @@ TEST(FdEvent, Exception)
 
         write_fd_event->enable();
 
-        loop->exitLoop(std::chrono::milliseconds(10));
         loop->runLoop();
 
         EXPECT_EQ(run_time, 1);
+        EXPECT_EQ(recv_bytes, sizeof(int));
 
         read_fd_event->disable();
         write_fd_event->disable();
