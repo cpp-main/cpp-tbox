@@ -77,9 +77,6 @@ bool SelectFdEvent::enable()
     if (events_ & kExceptEvent)
         ++d_->except_event_num;
 
-    if (events_ & kHupEvent)
-        ++d_->hup_event_num;
-
     d_->fd_events.push_back(this);
 
     is_enabled_ = true;
@@ -99,9 +96,6 @@ bool SelectFdEvent::disable()
 
     if (events_ & kExceptEvent)
         --d_->except_event_num;
-
-    if (events_ & kHupEvent)
-        --d_->hup_event_num;
 
     auto iter = std::find(d_->fd_events.begin(), d_->fd_events.end(), this);
     d_->fd_events.erase(iter);
@@ -137,13 +131,6 @@ void SelectFdEvent::OnEventCallback(bool is_readable, bool is_writable, bool is_
 
 void SelectFdEvent::onEvent(short events)
 {
-    /**
-     * 由于EPOLLHUP会一直触发，所以无论事件有没有监听HupEvent，只要发生了EPOLLHUB事件，
-     * 对应fd所有的事件都要强制disable()。否则会导致Loop空跑问题。
-     */
-    if (events & kHupEvent)
-        disable();
-
     if (events_ & events) {
         if (is_stop_after_trigger_)
             disable();

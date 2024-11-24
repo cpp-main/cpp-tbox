@@ -35,7 +35,6 @@ struct SelectFdSharedData {
     int read_event_num = 0;     //!< 监听可读事件的FdEvent个数
     int write_event_num = 0;    //!< 监听可写事件的FdEvent个数
     int except_event_num = 0;   //!< 监听异常事件的FdEvent个数
-    int hup_event_num = 0;      //!< 监听挂起事件的FdEvent个数
 
     std::vector<SelectFdEvent*> fd_events;
 };

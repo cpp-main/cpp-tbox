@@ -123,7 +123,7 @@ int SelectLoop::fillFdSets(fd_set &read_set, fd_set &write_set, fd_set &except_s
             is_this_fd_used = true;
         }
 
-        if (data->except_event_num > 0 || data->hup_event_num > 0) {
+        if (data->except_event_num > 0) {
             FD_SET(fd, &except_set);
             is_this_fd_used = true;
         }
