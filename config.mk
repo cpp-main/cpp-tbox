@@ -45,7 +45,3 @@ THIRDPARTY += nlohmann
 
 ## 编译配置
 CCFLAGS += -DENABLE_TRACE_RECORDER=1
-
-## 其它配置
-export HAVE_EXECINFO_H = yes
-export HAVE_EPOLL = yes

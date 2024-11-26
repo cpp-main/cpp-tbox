@@ -109,8 +109,12 @@ int SelectLoop::fillFdSets(fd_set &read_set, fd_set &write_set, fd_set &except_s
     FD_ZERO(&except_set);
 
     for (auto item : fd_data_map_) {
-        bool is_this_fd_used = false;
         auto fd = item.first;
+
+        if (fd < 0)
+            continue;
+
+        bool is_this_fd_used = false;
         auto data = item.second;
 
         if (data->read_event_num > 0) {

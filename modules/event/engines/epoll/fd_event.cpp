@@ -149,6 +149,7 @@ void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
     EpollFdSharedData *d = static_cast<EpollFdSharedData*>(obj);
 
     short tbox_events = 0;
+
     if (events & EPOLLIN) {
         events &= ~EPOLLIN;
         tbox_events |= kReadEvent;
@@ -177,12 +178,11 @@ void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
         event->onEvent(tbox_events);
 
         //! 在epoll中，无论有没有监听EPOLLHUP，在对端close了fd时都会触发本端EPOLLHUP事件
-        //! 只要发生了EPOLLHUB事件，就无法停止它，得强制disable()所有fd关联FdEvent
+        //! 只要发生了EPOLLHUB事件，只有让上层关闭该事件所有的事件才能停止EPOLLHUP的触发
         //! 否则它会一直触发事件，导致Loop空跑，CPU占满问题
         if (is_got_hup) {
             //! 将HUP事件当成可读事件，上层读到0字节则表示对端已关闭
             event->onEvent(kReadEvent);
-            event->disable();   //! 强制关闭事件
         }
     }
 

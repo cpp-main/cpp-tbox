@@ -26,6 +26,8 @@ LIB_VERSION_X = 1
 LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
+HAVE_EXECINFO_H ?= yes	# 默认支持execinfo.h
+
 HEAD_FILES = \
 	version.h \
 	log.h \
