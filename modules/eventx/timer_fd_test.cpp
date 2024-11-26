@@ -37,7 +37,7 @@ const int kAcceptableError = 1;
 
 TEST(TimerFd, Oneshot)
 {
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, "10");
     SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
 
@@ -58,7 +58,7 @@ TEST(TimerFd, Oneshot)
 
 TEST(TimerFd, Persist)
 {
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, "10");
     SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
 
@@ -68,7 +68,7 @@ TEST(TimerFd, Persist)
     int run_time = 0;
     timer_event->setCallback([&run_time]() { ++run_time; });
 
-    sp_loop->exitLoop(std::chrono::milliseconds(100));
+    sp_loop->exitLoop(std::chrono::milliseconds(101));  //! 多等1ms
     sp_loop->runLoop();
 
     EXPECT_EQ(run_time, 10);
@@ -77,7 +77,7 @@ TEST(TimerFd, Persist)
 
 TEST(TimerFd, DisableSelfInCallback)
 {
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, "10");
     SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
 
@@ -100,7 +100,7 @@ TEST(TimerFd, DisableSelfInCallback)
 
 TEST(TimerFd, Precision)
 {
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, "100");
     SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
 
@@ -137,7 +137,7 @@ TEST(TimerFd, NanoSeconds)
     auto min_interval_ns = ns - prev_ns;
     printf("Elapsed nanoseconds since last second: %ld\n", min_interval_ns);
 
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, std::to_string(min_interval_ns));
     SetScopeExitAction([=] { delete timer_event; delete sp_loop; });
 
@@ -166,7 +166,7 @@ TEST(TimerFd, NanoSeconds)
 //! 检查单次触发后，状态是否自动变成disable
 TEST(TimerFd, OneshotCheckIsEnabled)
 {
-    auto sp_loop = Loop::New("epoll");
+    auto sp_loop = Loop::New();
     auto timer_event = new TimerFd(sp_loop, "101");
     auto check_before_timer = sp_loop->newTimerEvent();
     auto check_after_timer = sp_loop->newTimerEvent();

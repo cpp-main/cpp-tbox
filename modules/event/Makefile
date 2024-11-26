@@ -24,7 +24,7 @@ LIB_VERSION_X = 1
 LIB_VERSION_Y = 2
 LIB_VERSION_Z = 0
 
-HAVE_EPOLL ?= yes	# 默认支持epoll
+HAVE_EPOLL ?= yes
 
 CXXFLAGS += -DMODULE_ID='"tbox.event"'
 
