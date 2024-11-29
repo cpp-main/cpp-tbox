@@ -23,13 +23,15 @@
 #include "terminal_interact.h"
 #include "terminal_nodes.h"
 
+#include <tbox/event/forward.h>
+
 namespace tbox {
 namespace terminal {
 
 class Terminal : public TerminalInteract,
                  public TerminalNodes {
   public:
-    Terminal();
+    Terminal(event::Loop *wp_loop);
     virtual ~Terminal() override;
 
   public:

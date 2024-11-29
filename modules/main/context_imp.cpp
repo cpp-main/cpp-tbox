@@ -77,7 +77,7 @@ ContextImp::ContextImp() :
     sp_thread_pool_(new eventx::ThreadPool(sp_loop_)),
     sp_timer_pool_(new eventx::TimerPool(sp_loop_)),
     sp_async_(new eventx::Async(sp_thread_pool_)),
-    sp_terminal_(new terminal::Terminal),
+    sp_terminal_(new terminal::Terminal(sp_loop_)),
     sp_telnetd_(new terminal::Telnetd(sp_loop_, sp_terminal_)),
     sp_tcp_rpc_(new terminal::TcpRpc(sp_loop_, sp_terminal_)),
     sp_coroutine_(new coroutine::Scheduler(sp_loop_)),

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     auto sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
-    Terminal term;
+    Terminal term(sp_loop);
     term.setWelcomeText("Welcome to Terminal Telnet demo! \r\n");
     Telnetd telnetd(sp_loop, &term);
     if (!telnetd.initialize(bind_addr)) {
