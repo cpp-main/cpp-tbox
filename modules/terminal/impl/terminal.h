@@ -21,18 +21,19 @@
 #define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
 #include <tbox/base/cabinet.hpp>
+#include <tbox/base/object_pool.hpp>
+#include <tbox/event/forward.h>
 
 #include "../terminal.h"
 #include "node.h"
+#include "session_context.h"
 
 namespace tbox {
 namespace terminal {
 
-struct SessionContext;
-
 class Terminal::Impl {
   public:
-    Impl();
+    Impl(event::Loop *wp_loop);
     ~Impl();
 
   public:
@@ -92,6 +93,9 @@ class Terminal::Impl {
     bool findNode(const std::string &path, Path &node_path) const;
 
   private:
+    event::Loop *wp_loop_ = nullptr;
+
+    ObjectPool<SessionContext> session_ctx_pool_{1};
     cabinet::Cabinet<SessionContext> sessions_;
     cabinet::Cabinet<Node> nodes_;
     NodeToken root_token_;

@@ -25,6 +25,7 @@
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
 #include <tbox/util/string.h>
+#include <tbox/event/loop.h>
 
 #include "session_context.h"
 #include "dir_node.h"
@@ -180,7 +181,7 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
     s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
+void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &)
 {
     stringstream ss;
     for (size_t i = 0; i < s->history.size(); ++i) {
@@ -188,15 +189,20 @@ void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &args)
         ss << setw(2) << i << "  " << cmd << "\r\n";
     }
     s->wp_conn->send(s->token, ss.str());
-    (void)args;
 }
 
-void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &args)
+void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &)
 {
     if (!(s->options & kQuietMode))
         s->wp_conn->send(s->token, "Bye!\r\n");
-    s->wp_conn->endSession(s->token);
-    (void)args;
+
+    wp_loop_->runNext(
+        [this, s] {
+            s->wp_conn->endSession(s->token);
+            deleteSession(s->token);
+        },
+        __func__
+    );
 }
 
 void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
@@ -309,7 +315,7 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
     s->wp_conn->send(s->token, ss.str());
 }
 
-void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &args)
+void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &)
 {
     stringstream ss;
     ss << '/';
@@ -320,7 +326,6 @@ void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &args)
     }
     ss << "\r\n";
     s->wp_conn->send(s->token, ss.str());
-    (void)args;
 }
 
 bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)

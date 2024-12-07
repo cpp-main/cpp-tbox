@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     auto sp_loop = Loop::New();
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
-    Terminal term;
+    Terminal term(sp_loop);
     term.setWelcomeText("Welcome to Terminal TcpRPC demo! \r\n");
     TcpRpc rpc(sp_loop, &term);
     if (!rpc.initialize(bind_addr)) {

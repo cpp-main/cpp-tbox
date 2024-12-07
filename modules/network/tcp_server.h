@@ -90,6 +90,8 @@ class TcpServer {
     void  setContext(const ConnToken &client, void *context, ContextDeleter &&deleter = nullptr);
     void* getContext(const ConnToken &client) const;
 
+    Buffer* getClientReceiveBuffer(const ConnToken &client);
+
     State state() const;
 
   protected:

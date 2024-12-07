@@ -33,7 +33,6 @@ class FdEvent : public Event {
         kReadEvent   = 0x01,    //!< 可读事件
         kWriteEvent  = 0x02,    //!< 可写事件
         kExceptEvent = 0x04,    //!< 异常事件
-        kHupEvent    = 0x08,    //!< 断开事件
     };
 
     using Event::Event;

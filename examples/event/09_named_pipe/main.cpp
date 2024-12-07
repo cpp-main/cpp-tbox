@@ -41,28 +41,31 @@ using namespace tbox::event;
 
 void PrintUsage(const char *process_name)
 {
-    cout << "Usage:" << process_name << " your_pipefile" << endl;
+    cout << "Usage:" << process_name << " epoll|select your_pipefile" << endl;
 }
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2) {
+    if (argc < 3) {
         PrintUsage(argv[0]);
         return 0;
     }
 
     LogOutput_Enable();
-    Loop* sp_loop = Loop::New();
+    Loop* sp_loop = Loop::New(argv[1]);
 
-    const char* pipe_file = argv[1];
+    const char* pipe_file = argv[2];
+    ::unlink(pipe_file);
+
     int ret = mkfifo(pipe_file, 0666);
     if (ret != 0) {
         LogWarn("mkfifo() ret:%d, errno:%d", ret, errno);
     }
     int fd = open(pipe_file, O_RDONLY|O_NDELAY);
+    LogDbg("fd:%d", fd);
 
     FdEvent* sp_fd_read  = sp_loop->newFdEvent();
-    sp_fd_read->initialize(fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist);    //! 可读与挂起事件一直有效
+    sp_fd_read->initialize(fd, FdEvent::kReadEvent, Event::Mode::kPersist);    //! 可读与挂起事件一直有效
     sp_fd_read->enable();
 
     sp_fd_read->setCallback(
@@ -75,16 +78,15 @@ int main(int argc, char *argv[])
                     input_buff[rsize - 1] = '\0';
                     LogInfo("read[%d]:%s", rsize, input_buff);
                 } else {
-                    LogInfo("read 0");
-                }
-            }
+                    LogNotice("read 0");
+                    sp_fd_read->disable();
+                    close(fd);
 
-            //! 当管道断开的时候
-            if (event & FdEvent::kHupEvent) {
-                LogNotice("hup");
-                fd = open(pipe_file, O_RDONLY|O_NDELAY);
-                sp_fd_read->initialize(fd, FdEvent::kReadEvent | FdEvent::kHupEvent, Event::Mode::kPersist);
-                sp_fd_read->enable();
+                    fd = open(pipe_file, O_RDONLY|O_NDELAY);
+                    LogDbg("fd:%d", fd);
+                    sp_fd_read->initialize(fd, FdEvent::kReadEvent, Event::Mode::kPersist);
+                    sp_fd_read->enable();
+                }
             }
         }
     );

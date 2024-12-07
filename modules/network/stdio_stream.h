@@ -45,6 +45,7 @@ class StdinStream : public ByteStream {
     virtual bool send(const void *, size_t) override { return false; }
     virtual void bind(ByteStream *receiver) override { buff_fd_.bind(receiver); }
     virtual void unbind() override { buff_fd_.unbind(); }
+    virtual Buffer* getReceiveBuffer() override { return buff_fd_.getReceiveBuffer(); }
 
     bool enable();
     bool disable();
@@ -66,6 +67,7 @@ class StdoutStream : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *) override { }
     virtual void unbind() override { }
+    virtual Buffer* getReceiveBuffer() override { return nullptr; }
 
     bool enable();
     bool disable();
@@ -87,6 +89,7 @@ class StdioStream : public ByteStream {
     virtual bool send(const void *data_ptr, size_t data_size) override;
     virtual void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
     virtual void unbind() override { in_buff_fd_.unbind(); }
+    virtual Buffer* getReceiveBuffer() override { return in_buff_fd_.getReceiveBuffer(); }
 
     bool enable();
     bool disable();

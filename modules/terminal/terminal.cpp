@@ -25,8 +25,8 @@
 namespace tbox {
 namespace terminal {
 
-Terminal::Terminal() :
-    impl_(new Impl)
+Terminal::Terminal(event::Loop *wp_loop) :
+    impl_(new Impl(wp_loop))
 {
     TBOX_ASSERT(impl_ != nullptr);
 }

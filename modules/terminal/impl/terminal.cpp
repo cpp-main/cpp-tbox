@@ -24,7 +24,6 @@
 #include <tbox/base/log.h>
 
 #include "../connection.h"
-#include "session_context.h"
 #include "dir_node.h"
 #include "func_node.h"
 
@@ -33,7 +32,8 @@ namespace terminal {
 
 using namespace std;
 
-Terminal::Impl::Impl()
+Terminal::Impl::Impl(event::Loop *wp_loop)
+    : wp_loop_(wp_loop)
 {
     welcome_text_ = \
         "\r\n"
@@ -71,7 +71,7 @@ Terminal::Impl::~Impl()
 
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)
 {
-    auto s = new SessionContext;
+    auto s = session_ctx_pool_.alloc();
     auto t = sessions_.alloc(s);
     s->wp_conn = wp_conn;
     s->token = t;
@@ -82,7 +82,7 @@ bool Terminal::Impl::deleteSession(const SessionToken &st)
 {
     auto s = sessions_.free(st);
     if (s != nullptr) {
-        delete s;
+        session_ctx_pool_.free(s);
         return true;
     }
     return false;

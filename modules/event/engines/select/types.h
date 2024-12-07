@@ -17,49 +17,29 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "loop.h"
-#include <tbox/base/log.h>
+#ifndef TBOX_EVENT_SELECT_TYPES_H_20240619
+#define TBOX_EVENT_SELECT_TYPES_H_20240619
 
-#include "engines/select/loop.h"
-
-#if HAVE_EPOLL
-#include "engines/epoll/loop.h"
-#endif
+#include <vector>
 
 namespace tbox {
 namespace event {
 
-Loop* Loop::New()
-{
-#if HAVE_EPOLL
-    return new EpollLoop;
-#else
-    return new SelectLoop;
-#endif
-}
+class SelectFdEvent;
 
-Loop* Loop::New(const std::string &engine_type)
-{
-    if (engine_type == "select")
-        return new SelectLoop;
-#if HAVE_EPOLL
-    else if (engine_type == "epoll")
-        return new EpollLoop;
-#endif
+//! 同一个fd共享的数据
+struct SelectFdSharedData {
+    int fd = 0;     //!< 文件描述符
+    int ref = 0;    //!< 引用计数
 
-    return nullptr;
-}
+    int read_event_num = 0;     //!< 监听可读事件的FdEvent个数
+    int write_event_num = 0;    //!< 监听可写事件的FdEvent个数
+    int except_event_num = 0;   //!< 监听异常事件的FdEvent个数
 
-std::vector<std::string> Loop::Engines()
-{
-    std::vector<std::string> types;
-
-#if HAVE_EPOLL
-    types.push_back("epoll");
-#endif
-    types.push_back("select");
-    return types;
-}
+    std::vector<SelectFdEvent*> fd_events;
+};
 
 }
 }
+
+#endif //TBOX_EVENT_SELECT_TYPES_H_20240619

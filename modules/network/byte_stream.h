@@ -51,6 +51,10 @@ class ByteStream {
     //! 解除绑定
     virtual void unbind() = 0;
 
+    //! 获取接收缓冲
+    //! WARN: 仅限当场使用，切勿将指针存起来
+    virtual Buffer* getReceiveBuffer() = 0;
+
   protected:
     virtual ~ByteStream() { }
 };
