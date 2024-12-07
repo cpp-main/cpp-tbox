@@ -20,6 +20,7 @@
 
 #include <thread>
 #include <mutex>
+#include <iostream>
 #include <tbox/base/recorder.h>
 #include <tbox/trace/sink.h>
 
@@ -31,7 +32,7 @@ void Bar()
 {
     std::lock_guard<std::mutex> lg(g_lock);
     RECORD_SCOPE();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
     RECORD_SCOPE();
 }
 void Foo()
@@ -39,7 +40,7 @@ void Foo()
     RECORD_SCOPE();
     Bar();
     RECORD_SCOPE();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::microseconds(5));
 }
 
 void Do() {
@@ -50,10 +51,11 @@ void Do() {
 
 int main(int argc, char **argv)
 {
-    //! 配置Track导出方式
-    auto &ts = trace::Sink::GetInstance();
-    ts.setPathPrefix("/tmp/test/trace-demo");
-    ts.setRecordFileMaxSize(1<<20);
+    std::cout << "this is trace multi-threads demo" << std::endl;
+
+    auto &ts = tbox::trace::Sink::GetInstance();
+    ts.setPathPrefix("/tmp/trace/02_multi_threads"); //! 设置记录文件目录前缀
+    ts.setRecordFileMaxSize(1<<20); //! 设置记录文件大小为1MB
     ts.enable();  //! 开始记录
 
     RECORD_EVENT();

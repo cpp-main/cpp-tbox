@@ -18,7 +18,7 @@
 # of the source tree.
 #
 
-PROJECT := examples/trace/demo
+PROJECT := examples/trace/02_multi_threads
 EXE_NAME := ${PROJECT}
 
 CPP_SRC_FILES := main.cpp
