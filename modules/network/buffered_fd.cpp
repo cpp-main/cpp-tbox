@@ -236,6 +236,7 @@ void BufferedFd::onReadCallback(short)
         }
     } else {    //! 读出错了
         if (errno != EAGAIN) {
+            sp_read_event_->disable();
             if (error_cb_) {
                 ++cb_level_;
                 error_cb_(errno);
