@@ -64,8 +64,10 @@ class BufferedFd : public ByteStream {
     void setSendCompleteCallback(const SendCompleteCallback &func) { send_complete_cb_ = func; }
     //! 设置当读到0字节数据时回调函数
     void setReadZeroCallback(const ReadZeroCallback &func) { read_zero_cb_ = func; }
-    //! 设置当遇到错误时的回调函数
-    void setErrorCallback(const ErrorCallback &func) { error_cb_ = func; }
+    //! 设置当读时遇到错误时的回调函数
+    void setReadErrorCallback(const ErrorCallback &func) { read_error_cb_ = func; }
+    //! 设置当写时遇到错误时的回调函数
+    void setWriteErrorCallback(const ErrorCallback &func) { write_error_cb_ = func; }
 
     //! 实现 ByteStream 的接口
     virtual void setReceiveCallback(const ReceiveCallback &func, size_t threshold) override;
@@ -104,7 +106,8 @@ class BufferedFd : public ByteStream {
     ReceiveCallback         receive_cb_;
     SendCompleteCallback    send_complete_cb_;
     ReadZeroCallback        read_zero_cb_;
-    ErrorCallback           error_cb_;
+    ErrorCallback           read_error_cb_;
+    ErrorCallback           write_error_cb_;
 
     ByteStream  *wp_receiver_ = nullptr;
 

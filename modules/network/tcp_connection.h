@@ -67,7 +67,7 @@ class TcpConnection : public ByteStream {
 
   protected:
     void onSocketClosed();
-    void onError(int errnum);
+    void onReadError(int errnum);
 
   private:
     explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
