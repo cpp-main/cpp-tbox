@@ -228,7 +228,6 @@ void BufferedFd::onReadCallback(short)
         }
 
     } else if (rsize == 0) {    //! 读到0字节数据，说明fd_已不可读了
-        sp_read_event_->disable();
         if (read_zero_cb_) {
             ++cb_level_;
             read_zero_cb_();
