@@ -140,6 +140,8 @@ void TcpConnection::onSocketClosed()
 {
     LogInfo("%s", peer_addr_.toString().c_str());
 
+    sp_buffered_fd_->disable();
+
     BufferedFd *tmp = nullptr;
     std::swap(tmp, sp_buffered_fd_);
 
@@ -157,9 +159,6 @@ void TcpConnection::onSocketClosed()
 
 void TcpConnection::onReadError(int errnum)
 {
-    if (errnum == ECONNRESET)
-        return;
-
     LogNotice("errno:%d, %s", errnum, strerror(errnum));
     onSocketClosed();
 }

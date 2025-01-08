@@ -165,26 +165,19 @@ void EpollFdEvent::OnEventCallback(uint32_t events, void *obj)
         tbox_events |= kExceptEvent;
     }
 
-    bool is_got_hup = false;
-
     if (events & EPOLLHUP) {
         events &= ~EPOLLHUP;
-        is_got_hup = true;
+        //! 在epoll中，无论有没有监听EPOLLHUP，在对端close了fd时都会触发本端EPOLLHUP事件
+        //! 只要发生了EPOLLHUB事件，只有让上层关闭该事件所有的事件才能停止EPOLLHUP的触发
+        //! 否则它会一直触发事件，导致Loop空跑，CPU占满问题
+        //! 为此，将HUP事件当成可读事件，上层读到0字节则表示对端已关闭
+        tbox_events |= kReadEvent;
     }
 
     //! 要先复制一份，因为在for中很可能会改动到d->fd_events，引起迭代器失效问题
     auto tmp = d->fd_events;
-    for (auto event : tmp) {
+    for (auto event : tmp)
         event->onEvent(tbox_events);
-
-        //! 在epoll中，无论有没有监听EPOLLHUP，在对端close了fd时都会触发本端EPOLLHUP事件
-        //! 只要发生了EPOLLHUB事件，只有让上层关闭该事件所有的事件才能停止EPOLLHUP的触发
-        //! 否则它会一直触发事件，导致Loop空跑，CPU占满问题
-        if (is_got_hup) {
-            //! 将HUP事件当成可读事件，上层读到0字节则表示对端已关闭
-            event->onEvent(kReadEvent);
-        }
-    }
 
     if (events)
         LogWarn("unhandle events:%08X, fd:%d", events, d->fd);
