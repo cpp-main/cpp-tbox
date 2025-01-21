@@ -116,6 +116,7 @@ void Alarm::refresh() {
   if (state_ == State::kRunning) {
     state_ = State::kInited;
     sp_timer_ev_->disable();
+    target_utc_sec_ = 0;    //! 如果不清0，那么每refresh()一次都会往后延一天
     activeTimer();
   }
 }
