@@ -40,6 +40,7 @@ WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
+    child_->setParent(this);
 }
 
 WrapperAction::~WrapperAction() {
@@ -58,6 +59,7 @@ bool WrapperAction::setChild(Action *child) {
     if (child_ != nullptr) {
         child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
         child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
+        child_->setParent(this);
     }
     return true;
 }

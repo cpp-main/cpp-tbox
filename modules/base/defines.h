@@ -43,8 +43,31 @@
     class_name(class_name &&) = delete; \
     class_name& operator = (class_name &&) = delete
 
+#define DECLARE_COPY_FUNC(class_name) \
+    class_name(const class_name& other); \
+    class_name& operator = (const class_name& other)
+
+#define DECLARE_MOVE_RESET_FUNC(class_name) \
+    class_name(class_name&& other); \
+    class_name& operator = (class_name&& other); \
+    void reset()
+
+//! 基于copy()，实现复构造与赋值函数
+#define IMPL_COPY_FUNC(class_name) \
+    class_name::class_name(const class_name& other) \
+    { \
+        copy(other); \
+    } \
+    class_name& class_name::operator = (const class_name& other) \
+    { \
+        if (this != &other) { \
+            copy(other); \
+        } \
+        return *this; \
+    }
+
 //! 基于无参构造、析构、swap，实现reset与移动函数
-#define IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(class_name) \
+#define IMPL_MOVE_RESET_FUNC(class_name) \
     class_name::class_name(class_name&& other) \
     { \
         swap(other); \

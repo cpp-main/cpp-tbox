@@ -29,22 +29,35 @@ class FunctionAction : public Action {
   public:
     using Func = std::function<bool()>;
     using FuncWithReason = std::function<bool(Reason &)>;
+    using FuncWithVars = std::function<bool(util::Variables &)>;
+    using FuncWithReasonVars = std::function<bool(Reason &, util::Variables &)>;
 
     explicit FunctionAction(event::Loop &loop);
     explicit FunctionAction(event::Loop &loop, Func &&func);
     explicit FunctionAction(event::Loop &loop, FuncWithReason &&func);
+    explicit FunctionAction(event::Loop &loop, FuncWithVars &&func);
+    explicit FunctionAction(event::Loop &loop, FuncWithReasonVars &&func);
 
-    virtual bool isReady() const { return bool(func_) || bool(func_with_reason_); }
+    virtual bool isReady() const {
+        return bool(func_) ||
+               bool(func_with_reason_) ||
+               bool(func_with_vars_) ||
+               bool(func_with_reason_vars_);
+    }
 
     inline void setFunc(Func &&func) { func_ = std::move(func); }
     inline void setFunc(FuncWithReason &&func) { func_with_reason_ = std::move(func); }
+    inline void setFunc(FuncWithVars &&func) { func_with_vars_ = std::move(func); }
+    inline void setFunc(FuncWithReasonVars &&func) { func_with_reason_vars_ = std::move(func); }
 
   protected:
     virtual void onStart() override;
 
   private:
     Func func_;
+    FuncWithVars   func_with_vars_;
     FuncWithReason func_with_reason_;
+    FuncWithReasonVars   func_with_reason_vars_;
 };
 
 }

@@ -28,6 +28,7 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
 #include <tbox/event/loop.h>
+#include <tbox/util/variables.h>
 
 #include "action_reason.h"
 
@@ -123,6 +124,10 @@ class Action {
     bool stop();    //!< 停止
     void reset();   //!< 重置，将所有的状态恢复到刚构建状态
 
+    void setParent(Action *parent);
+
+    util::Variables& vars() { return vars_; }
+
   protected:
     //! 主动暂停动作
     bool block(const Reason &why = Reason(),    //!< 阻塞原因
@@ -169,6 +174,8 @@ class Action {
     bool is_base_func_invoked_ = false; //! 是否已调用基类函数
     //! 检查使用者在重写的 onStart(),onPause(),onResume(),onStop(),onFinished() 中是否调用了基类的函数
     //! 如果没有调用，则打警告提示
+
+    util::Variables vars_;
 };
 
 //! 枚举转字串

@@ -50,6 +50,7 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
         if (if_action_ != nullptr) {
             if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1, _2, _3));
             if_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
+            if_action_->setParent(this);
         }
         return true;
 
@@ -59,6 +60,7 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
         if (exec_action_ != nullptr) {
             exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _2, _3));
             exec_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
+            exec_action_->setParent(this);
         }
         return true;
     }

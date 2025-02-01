@@ -56,6 +56,8 @@ void Action::toJson(Json &js) const {
     js["label"] = label_;
   js["state"] = ToString(state_);
   js["result"] = ToString(result_);
+
+  vars_.toJson(js["vars"]);
 }
 
 bool Action::start() {
@@ -322,6 +324,10 @@ void Action::cancelDispatchedCallback() {
     loop_.cancel(block_cb_run_id_);
     block_cb_run_id_ = 0;
   }
+}
+
+void Action::setParent(Action *parent) {
+  vars_.setParent(&(parent->vars_));
 }
 
 Action::Reason::Reason(const Reason &other)

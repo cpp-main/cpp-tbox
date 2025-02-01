@@ -45,6 +45,7 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
     TBOX_ASSERT(child_ != nullptr);
     child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
+    child_->setParent(this);
 }
 
 RepeatAction::~RepeatAction() {
@@ -64,6 +65,7 @@ bool RepeatAction::setChild(Action *child) {
     if (child_ != nullptr) {
         child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
         child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
+        child_->setParent(this);
     }
     return true;
 }

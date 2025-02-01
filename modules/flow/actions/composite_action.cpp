@@ -39,6 +39,7 @@ bool CompositeAction::setChild(Action *child) {
     child_ = child;
     child_->setFinishCallback(std::bind(&CompositeAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&CompositeAction::onChildBlocked, this, _1, _2));
+    child_->setParent(this);
 
     return true;
 }

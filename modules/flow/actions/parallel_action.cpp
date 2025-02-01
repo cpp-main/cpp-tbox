@@ -58,6 +58,7 @@ int ParallelAction::addChild(Action *action) {
         children_.push_back(action);
         action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
         action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1, _2));
+        action->setParent(this);
         return index;
 
     } else {

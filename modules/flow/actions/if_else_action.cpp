@@ -55,6 +55,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         if (if_action_ != nullptr) {
             if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1, _2, _3));
             if_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+            if_action_->setParent(this);
         }
         return true;
 
@@ -64,6 +65,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         if (succ_action_ != nullptr) {
             succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
             succ_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+            succ_action_->setParent(this);
         }
         return true;
 
@@ -73,6 +75,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         if (fail_action_ != nullptr) {
             fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
             fail_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+            fail_action_->setParent(this);
         }
         return true;
     }
