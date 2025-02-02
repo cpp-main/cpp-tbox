@@ -273,6 +273,22 @@ std::string ToLower(const std::string &origin_str)
   return target_str;
 }
 
+bool IsStartWith(const std::string &origin_str, const std::string &text)
+{
+    if (origin_str.length() < text.length())
+        return false;
+
+    return origin_str.find(text) == 0;
+}
+
+bool IsEndWith(const std::string &origin_str, const std::string &text)
+{
+    if (origin_str.length() < text.length())
+        return false;
+
+    return origin_str.find(text, (origin_str.length() - text.length())) != std::string::npos;
+}
+
 }
 }
 }

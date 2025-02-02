@@ -284,3 +284,15 @@ TEST(string, ToLower) {
   EXPECT_EQ(ToLower(""), "");
 }
 
+TEST(string, IsStartWith) {
+  EXPECT_TRUE(IsStartWith("abc.123", "abc"));
+  EXPECT_FALSE(IsStartWith("abc.123", "12"));
+  EXPECT_FALSE(IsStartWith("abc", "abcd"));
+}
+
+TEST(string, IsEndWith) {
+  EXPECT_TRUE(IsEndWith("abc.123", "123"));
+  EXPECT_FALSE(IsEndWith("abc.123", "bc"));
+  EXPECT_FALSE(IsEndWith("abc", "abcd"));
+}
+
