@@ -23,6 +23,7 @@
 #include <map>
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
+#include <tbox/util/json.h>
 
 namespace tbox {
 namespace util {
@@ -77,6 +78,15 @@ class Variables {
      * \return false    失败，变量不存在
      */
     bool get(const std::string &name, Json &js_out_value, bool local_only = false) const;
+
+    //! 获取变量的模板
+    template <typename T>
+    bool get(const std::string &name, T &out_value, bool local_only = false) const {
+        Json js;
+        if (get(name, js, local_only))
+            return json::Get(js, out_value);
+        return false;
+    }
 
     /**
      * 更新变量

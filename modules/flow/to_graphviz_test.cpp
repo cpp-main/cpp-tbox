@@ -41,7 +41,10 @@ TEST(ToGraphviz, ActionJson) {
 
     auto seq_action = new SequenceAction(*loop);
     seq_action->set_label("This is test");
+    seq_action->vars().define("seq.value", 12);
     auto if_else_action = new IfElseAction(*loop);
+    if_else_action->vars().define("if_else.name", "hello");
+    if_else_action->vars().define("if_else.value", 100);
     if_else_action->setChildAs(new SuccAction(*loop), "if");
     if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "succ");
     if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "fail");

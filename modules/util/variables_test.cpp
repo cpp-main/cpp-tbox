@@ -42,6 +42,31 @@ TEST(Variables, Base) {
     EXPECT_FALSE(vars.has("a"));
 }
 
+TEST(Variables, GetTemplate) {
+    Variables vars;
+
+    EXPECT_TRUE(vars.define("b", true));
+    EXPECT_TRUE(vars.define("i", 12));
+    EXPECT_TRUE(vars.define("s", "hello"));
+    EXPECT_TRUE(vars.define("d", 12.345));
+
+    bool b = false;
+    int  i = 0;
+    std::string s;
+    double d = 0;
+
+    EXPECT_TRUE(vars.get("b", b));
+    EXPECT_TRUE(vars.get("i", i));
+    EXPECT_TRUE(vars.get("s", s));
+    EXPECT_TRUE(vars.get("d", d));
+    EXPECT_FALSE(vars.get("s", d));
+
+    EXPECT_TRUE(b);
+    EXPECT_EQ(i, 12);
+    EXPECT_EQ(s, "hello");
+    EXPECT_DOUBLE_EQ(d, 12.345);
+}
+
 TEST(Variables, RepeatDefine) {
     Variables vars;
     EXPECT_TRUE(vars.define("a", 12));
