@@ -321,7 +321,7 @@ TEST(SwitchAction, StopOnSwitch) {
     });
 
     action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+        [&] (bool, const Action::Reason &, const Action::Trace &) {
             all_done = true;
         }
     );
@@ -369,7 +369,7 @@ TEST(SwitchAction, StopOnDefault) {
     });
 
     action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+        [&] (bool, const Action::Reason &, const Action::Trace &) {
             all_done = true;
         }
     );

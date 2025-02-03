@@ -167,7 +167,7 @@ void SwitchAction::onReset() {
     AssembleAction::onReset();
 }
 
-void SwitchAction::onSwitchActionFinished(bool is_succ, const Reason &why, const Trace &trace) {
+void SwitchAction::onSwitchActionFinished(bool is_succ, const Reason &why, const Trace &) {
     if (state() == State::kRunning) {
         if (is_succ) {
             running_action_ = default_action_;

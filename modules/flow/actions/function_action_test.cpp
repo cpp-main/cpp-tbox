@@ -137,6 +137,7 @@ TEST(FunctionAction, WithVars) {
     bool is_callback = false;
     seq.setFinishCallback(
         [&] (bool is_succ, const Action::Reason &r, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
             is_callback = true;
             EXPECT_EQ(r.code, 1001);
             EXPECT_EQ(r.message, "test");
