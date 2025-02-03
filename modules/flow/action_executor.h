@@ -24,6 +24,7 @@
 #include <array>
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
+#include <tbox/util/variables.h>
 
 namespace tbox {
 namespace flow {
@@ -81,6 +82,8 @@ class ActionExecutor {
     void setActionFinishedCallback(const ActionCallback &cb) { action_finished_cb_ = cb; }
     void setAllFinishedCallback(const Callback &cb) { all_finished_cb_ = cb; }
 
+    inline util::Variables& vars() { return vars_; }
+
   private:
     ActionId allocActionId();
     void schedule();
@@ -100,6 +103,8 @@ class ActionExecutor {
     Callback        all_finished_cb_;
 
     int cb_level_ = 0;
+
+    util::Variables vars_;
 };
 
 }
