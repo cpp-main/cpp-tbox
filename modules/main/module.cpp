@@ -18,7 +18,9 @@
  * of the source tree.
  */
 #include "module.h"
+
 #include <algorithm>
+
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 
@@ -40,11 +42,15 @@ Module::~Module()
 
 bool Module::add(Module *child, bool required)
 {
-    if (state_ != State::kNone)
+    if (state_ != State::kNone) {
+        LogWarn("module %s's state is not State::kNone", name_.c_str());
         return false;
+    }
 
-    if (child == nullptr)
+    if (child == nullptr) {
+        LogWarn("child == nullptr");
         return false;
+    }
 
     auto iter = std::find_if(children_.begin(), children_.end(),
         [child] (const ModuleItem &item) {
@@ -55,6 +61,8 @@ bool Module::add(Module *child, bool required)
         return false;
 
     children_.emplace_back(ModuleItem{ child, required });
+    child->vars_.setParent(&vars_);
+
     return true;
 }
 

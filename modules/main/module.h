@@ -21,7 +21,10 @@
 #define TBOX_MAIN_MODULE_H_20220326
 
 #include <vector>
+
 #include <tbox/base/json_fwd.h>
+#include <tbox/util/variables.h>
+
 #include "context.h"
 
 namespace tbox {
@@ -105,6 +108,7 @@ class Module {
     inline std::string name() const { return name_; }
     inline Context& ctx() const { return ctx_; }
     inline State state() const { return state_; }
+    inline util::Variables& vars() { return vars_; }
 
   protected:
     //! 下面的5个虚函数，可由使用者根据需要重写。如果没有操作，就不用重写
@@ -130,6 +134,8 @@ class Module {
     };
     std::vector<ModuleItem> children_;
     State state_ = State::kNone;
+
+    util::Variables vars_;
 };
 
 }
