@@ -57,7 +57,8 @@ void Action::toJson(Json &js) const {
   js["state"] = ToString(state_);
   js["result"] = ToString(result_);
 
-  vars_.toJson(js["vars"]);
+  if (!vars_.empty())
+    vars_.toJson(js["vars"]);
 }
 
 bool Action::start() {

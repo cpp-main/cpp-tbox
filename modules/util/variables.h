@@ -21,9 +21,11 @@
 #define TBOX_VARIABLES_H_20250201
 
 #include <map>
+
 #include <tbox/base/defines.h>
 #include <tbox/base/json_fwd.h>
-#include <tbox/util/json.h>
+
+#include "json.h"
 
 namespace tbox {
 namespace util {
@@ -99,6 +101,9 @@ class Variables {
      * \return false    失败，变量不存在
      */
     bool set(const std::string &name, const Json &js_new_value, bool local_only = false);
+
+    //! 检查是否没有变量
+    inline bool empty() const { return var_map_ == nullptr; }
 
   public:
     void toJson(Json &js) const;        //! 导出为Json对象

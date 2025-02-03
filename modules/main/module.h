@@ -98,6 +98,9 @@ class Module {
      */
     bool add(Module *child, bool required = true);
 
+    //! 同上，但会对child进行重新命名
+    bool addAs(Module *child, const std::string &name, bool required = true);
+
     //! 下面5个函数，由父Module自动调用。使用者不需要关心
     void fillDefaultConfig(Json &js_parent);
     bool initialize(const Json &js_parent);
@@ -109,6 +112,9 @@ class Module {
     inline Context& ctx() const { return ctx_; }
     inline State state() const { return state_; }
     inline util::Variables& vars() { return vars_; }
+
+    //! 导出为JSON对象
+    virtual void toJson(Json &js) const;
 
   protected:
     //! 下面的5个虚函数，可由使用者根据需要重写。如果没有操作，就不用重写

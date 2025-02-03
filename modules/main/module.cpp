@@ -54,14 +54,31 @@ bool Module::add(Module *child, bool required)
 
     auto iter = std::find_if(children_.begin(), children_.end(),
         [child] (const ModuleItem &item) {
-            return item.module_ptr == child;
+            return item.module_ptr == child ||
+                   item.module_ptr->name() == child->name();
         }
     );
-    if (iter != children_.end())
+    if (iter != children_.end()) {
+        LogWarn("module %s is already exist or name duplicated.", child->name().c_str());
         return false;
+    }
 
     children_.emplace_back(ModuleItem{ child, required });
     child->vars_.setParent(&vars_);
+
+    return true;
+}
+
+bool Module::addAs(Module *child, const std::string &name, bool required)
+{
+    auto tmp = child->name_;
+    child->name_ = name;
+
+    if (!add(child, required)) {
+        //! 如果失败了，还原之前的名称
+        child->name_ = tmp;
+        return false;
+    }
 
     return true;
 }
@@ -155,6 +172,21 @@ void Module::cleanup()
     onCleanup();
 
     state_ = State::kNone;
+}
+
+void Module::toJson(Json &js) const
+{
+    if (!vars_.empty())
+        vars_.toJson(js["vars"]);
+
+    if (!children_.empty()) {
+        Json &js_children = js["children"];
+        for (auto &item : children_) {
+            Json &js_child = js_children[item.module_ptr->name()];
+            js_child["required"] = item.required;
+            item.module_ptr->toJson(js_child);
+        }
+    }
 }
 
 }

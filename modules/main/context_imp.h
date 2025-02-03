@@ -30,6 +30,8 @@
 namespace tbox {
 namespace main {
 
+class Module;
+
 //! 进程上下文
 class ContextImp : public Context {
   public:
@@ -38,7 +40,7 @@ class ContextImp : public Context {
 
     void fillDefaultConfig(Json &cfg) const;
 
-    bool initialize(const char *proc_name, const Json &cfg);
+    bool initialize(const char *proc_name, const Json &cfg, Module *module);
     bool start();
     void stop();
     void cleanup();
@@ -76,6 +78,8 @@ class ContextImp : public Context {
     coroutine::Scheduler *sp_coroutine_ = nullptr;
 
     std::chrono::steady_clock::time_point start_time_point_;
+
+    Module *module_ = nullptr;
 };
 
 }
