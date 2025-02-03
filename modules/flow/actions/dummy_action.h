@@ -33,8 +33,30 @@ class DummyAction : public Action {
 
     virtual bool isReady() const { return true; }
 
+    using Callback = std::function<void()>;
+
+    inline void setStartCallback(Callback &&cb) { start_cb_ = std::move(cb); }
+    inline void setStopCallback(Callback &&cb) { stop_cb_ = std::move(cb); }
+    inline void setPauseCallback(Callback &&cb) { pause_cb_ = std::move(cb); }
+    inline void setResumeCallback(Callback &&cb) { resume_cb_ = std::move(cb); }
+    inline void setResetCallback(Callback &&cb) { reset_cb_ = std::move(cb); }
+
     inline void emitFinish(bool is_succ, const Reason &reason = Reason()) { finish(is_succ, reason); }
     inline void emitBlock(const Reason &reason) { block(reason); }
+
+  protected:
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onPause() override;
+    virtual void onResume() override;
+    virtual void onReset() override;
+
+  private:
+    Callback start_cb_;
+    Callback stop_cb_;
+    Callback pause_cb_;
+    Callback resume_cb_;
+    Callback reset_cb_;
 };
 
 }

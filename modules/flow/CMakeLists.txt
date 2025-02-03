@@ -52,6 +52,7 @@ set(TBOX_FLOW_HEADERS
     actions/wrapper_action.h
     actions/succ_fail_action.h
     actions/dummy_action.h
+    actions/switch_action.h
     to_graphviz.h)
 
 set(TBOX_FLOW_SOURCES
@@ -71,6 +72,8 @@ set(TBOX_FLOW_SOURCES
     actions/repeat_action.cpp
     actions/composite_action.cpp
     actions/wrapper_action.cpp
+    actions/dummy_action.cpp
+    actions/switch_action.cpp
     to_graphviz.cpp)
 
 set(TBOX_FLOW_TEST_SOURCES
@@ -90,6 +93,7 @@ set(TBOX_FLOW_TEST_SOURCES
     actions/composite_action_test.cpp
     actions/wrapper_action_test.cpp
     actions/succ_fail_action_test.cpp
+    actions/switch_action_test.cpp
     to_graphviz_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_FLOW_SOURCES})

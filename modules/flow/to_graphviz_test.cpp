@@ -29,6 +29,9 @@
 #include "actions/if_else_action.h"
 #include "actions/repeat_action.h"
 #include "actions/succ_fail_action.h"
+#include "actions/switch_action.h"
+#include "actions/sleep_action.h"
+#include "actions/dummy_action.h"
 
 #include "state_machine.h"
 
@@ -42,17 +45,35 @@ TEST(ToGraphviz, ActionJson) {
     auto seq_action = new SequenceAction(*loop);
     seq_action->set_label("This is test");
     seq_action->vars().define("seq.value", 12);
-    auto if_else_action = new IfElseAction(*loop);
-    if_else_action->vars().define("if_else.name", "hello");
-    if_else_action->vars().define("if_else.value", 100);
-    if_else_action->setChildAs(new SuccAction(*loop), "if");
-    if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "succ");
-    if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "fail");
-    if_else_action->set_label("Just If-Else");
-    seq_action->addChild(if_else_action);
-    auto repeat_action = new RepeatAction(*loop, 5);
-    repeat_action->setChild(new FunctionAction(*loop, []{return true;}));
-    seq_action->addChild(repeat_action);
+    {
+        auto if_else_action = new IfElseAction(*loop);
+        if_else_action->vars().define("if_else.name", "hello");
+        if_else_action->vars().define("if_else.value", 100);
+        if_else_action->setChildAs(new SuccAction(*loop), "if");
+        if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "succ");
+        if_else_action->setChildAs(new FunctionAction(*loop, []{return true;}), "fail");
+        if_else_action->set_label("Just If-Else");
+        seq_action->addChild(if_else_action);
+    }
+    {
+        auto repeat_action = new RepeatAction(*loop, 5);
+        repeat_action->setChild(new FunctionAction(*loop, []{return true;}));
+        seq_action->addChild(repeat_action);
+    }
+    {
+        auto action = new SwitchAction(*loop);
+        seq_action->addChild(action);
+        auto switch_action = new FunctionAction(*loop, [] { return true; });
+        auto case_a_action = new SleepAction(*loop, std::chrono::seconds(1));
+        auto case_b_action = new DummyAction(*loop);
+        auto default_action = new SuccAction(*loop);
+
+        action->setChildAs(switch_action, "switch");
+        action->setChildAs(case_a_action, "case:a");
+        action->setChildAs(case_b_action, "case:b");
+        action->setChildAs(default_action, "default");
+    }
+
     seq_action->start();
 
     std::cout << ToGraphviz(seq_action);
