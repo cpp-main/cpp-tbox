@@ -27,19 +27,29 @@ namespace tbox {
 namespace util {
 
 //! 获取当前的时间戳，精确到秒
+uint32_t GetUtcSeconds();
 uint32_t GetCurrentSecondsFrom1970();
 
 //! 获取当前的时间戳，精确到毫秒
+uint64_t GetUtcMilliseconds();
 uint64_t GetCurrentMillisecondsFrom1970();
 
 //! 获取当前的时间戳，精确到微秒
+uint64_t GetUtcMicroseconds();
 uint64_t GetCurrentMicrosecondsFrom1970();
+
+//! 获取当前的时间戳，秒 + 微秒
+bool GetUtc(uint32_t &sec, uint64_t &usec);
 
 //! 获取指定时间戳的0时区时间字串
 std::string GetUtcTimeString(uint32_t utc_sec);
+//! 获取当前时间戳的0时区时间字串
+std::string GetUtcTimeString();
 
 //! 获取指定时间戳的本地时间字串
 std::string GetLocalTimeString(uint32_t utc_sec);
+//! 获取当前时间戳的本地时间字串
+std::string GetLocalTimeString();
 
 }
 }

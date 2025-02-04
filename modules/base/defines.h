@@ -100,4 +100,8 @@
 #define UNUSED_VAR(x) (void)(x)
 #endif
 
+#ifndef DEPRECATED
+#define DEPRECATED  __attribute__((deprecated))
+#endif
+
 #endif //TBOX_BASE_DEFINES_H_20171030

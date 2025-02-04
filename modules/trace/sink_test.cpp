@@ -98,7 +98,7 @@ TEST(Sink, MultiThread) {
 
   auto test_func = [&ts] (const std::string name) {
     for (int i = 0; i < 1000; ++i) {
-      ts.commitRecord(name.c_str(), "A", 100, util::GetCurrentMicrosecondsFrom1970(), 10);
+      ts.commitRecord(name.c_str(), "A", 100, util::GetUtcMicroseconds(), 10);
     }
   };
 
