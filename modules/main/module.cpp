@@ -52,19 +52,26 @@ bool Module::add(Module *child, bool required)
         return false;
     }
 
+    //! 防止child被重复添加到多个Module上
+    if (child->parent_ != nullptr) {
+        LogWarn("module %s can't add %s, it has parent", name_.c_str(), child->name_.c_str());
+        return false;
+    }
+
+    //! 检查名称有没有重复的
     auto iter = std::find_if(children_.begin(), children_.end(),
         [child] (const ModuleItem &item) {
-            return item.module_ptr == child ||
-                   item.module_ptr->name() == child->name();
+            return item.module_ptr->name() == child->name();
         }
     );
     if (iter != children_.end()) {
-        LogWarn("module %s is already exist or name duplicated.", child->name().c_str());
+        LogWarn("module %s can't add %s, name dupicated.", name_.c_str(), child->name().c_str());
         return false;
     }
 
     children_.emplace_back(ModuleItem{ child, required });
     child->vars_.setParent(&vars_);
+    child->parent_ = this;
 
     return true;
 }

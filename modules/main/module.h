@@ -141,6 +141,7 @@ class Module {
     std::vector<ModuleItem> children_;
     State state_ = State::kNone;
 
+    Module *parent_ = nullptr;
     util::Variables vars_;
 };
 
