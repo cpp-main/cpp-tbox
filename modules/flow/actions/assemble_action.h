@@ -33,6 +33,7 @@ class AssembleAction : public Action {
   public:
     //!< 设置子动作
     virtual int  addChild(Action *child);
+    virtual int  addChildAs(Action *child, const std::string &role);
     virtual bool setChild(Action *child);
     virtual bool setChildAs(Action *child, const std::string &role);
 

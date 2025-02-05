@@ -39,6 +39,7 @@ HEAD_FILES = \
 	actions/sequence_action.h \
 	actions/parallel_action.h \
 	actions/if_else_action.h \
+	actions/if_then_action.h \
 	actions/loop_action.h \
 	actions/loop_if_action.h \
 	actions/event_action.h \
@@ -61,6 +62,7 @@ CPP_SRC_FILES = \
 	actions/sequence_action.cpp \
 	actions/parallel_action.cpp \
 	actions/if_else_action.cpp \
+	actions/if_then_action.cpp \
 	actions/loop_action.cpp \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
@@ -85,6 +87,7 @@ TEST_CPP_SRC_FILES = \
 	actions/sequence_action_test.cpp \
 	actions/parallel_action_test.cpp \
 	actions/if_else_action_test.cpp \
+	actions/if_then_action_test.cpp \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
 	actions/repeat_action_test.cpp \

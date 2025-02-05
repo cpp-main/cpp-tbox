@@ -31,6 +31,7 @@
 #define ACTION_REASON_REPEAT_NO_TIMES   7   //!< "RepeatNoTimes"
 #define ACTION_REASON_SWITCH_FAIL       8   //!< "SwitchFail"
 #define ACTION_REASON_SWITCH_SKIP       9   //!< "SwitchSkip"
+#define ACTION_REASON_IF_THEN_SKIP     10   //!< "IfThenSkip"
 
 //! 保存 1000 以内供 Action 自用，使用者自定义的 Reason 需 >= 1000
 

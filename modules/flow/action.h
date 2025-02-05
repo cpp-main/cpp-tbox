@@ -124,7 +124,7 @@ class Action {
     bool stop();    //!< 停止
     void reset();   //!< 重置，将所有的状态恢复到刚构建状态
 
-    void setParent(Action *parent);
+    bool setParent(Action *parent);
 
     util::Variables& vars() { return vars_; }
 
@@ -175,6 +175,7 @@ class Action {
     //! 检查使用者在重写的 onStart(),onPause(),onResume(),onStop(),onFinished() 中是否调用了基类的函数
     //! 如果没有调用，则打警告提示
 
+    Action *parent_ = nullptr;
     util::Variables vars_;
 };
 

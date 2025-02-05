@@ -34,18 +34,18 @@ IfElseAction::IfElseAction(event::Loop &loop)
 
 IfElseAction::~IfElseAction() {
     CHECK_DELETE_RESET_OBJ(if_action_);
-    CHECK_DELETE_RESET_OBJ(succ_action_);
-    CHECK_DELETE_RESET_OBJ(fail_action_);
+    CHECK_DELETE_RESET_OBJ(then_action_);
+    CHECK_DELETE_RESET_OBJ(else_action_);
 }
 
 void IfElseAction::toJson(Json &js) const {
     AssembleAction::toJson(js);
     auto &js_children = js["children"];
     if_action_->toJson(js_children["0.if"]);
-    if (succ_action_ != nullptr)
-        succ_action_->toJson(js_children["1.succ"]);
-    if (fail_action_ != nullptr)
-        fail_action_->toJson(js_children["2.fail"]);
+    if (then_action_ != nullptr)
+        then_action_->toJson(js_children["1.succ"]);
+    if (else_action_ != nullptr)
+        else_action_->toJson(js_children["2.fail"]);
 }
 
 bool IfElseAction::setChildAs(Action *child, const std::string &role) {
@@ -59,23 +59,23 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
         }
         return true;
 
-    } else if (role == "succ") {
-        CHECK_DELETE_RESET_OBJ(succ_action_);
-        succ_action_ = child;
-        if (succ_action_ != nullptr) {
-            succ_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
-            succ_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
-            succ_action_->setParent(this);
+    } else if (role == "succ" || role == "then") {
+        CHECK_DELETE_RESET_OBJ(then_action_);
+        then_action_ = child;
+        if (then_action_ != nullptr) {
+            then_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
+            then_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+            then_action_->setParent(this);
         }
         return true;
 
-    } else if (role == "fail") {
-        CHECK_DELETE_RESET_OBJ(fail_action_);
-        fail_action_ = child;
-        if (fail_action_ != nullptr) {
-            fail_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
-            fail_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
-            fail_action_->setParent(this);
+    } else if (role == "fail" || role == "else") {
+        CHECK_DELETE_RESET_OBJ(else_action_);
+        else_action_ = child;
+        if (else_action_ != nullptr) {
+            else_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
+            else_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+            else_action_->setParent(this);
         }
         return true;
     }
@@ -90,14 +90,14 @@ bool IfElseAction::isReady() const {
         return false;
     }
 
-    if (!succ_action_ && !fail_action_) {
+    if (!then_action_ && !else_action_) {
         LogWarn("%d:%s[%s] both succ and fail func is null", id(), type().c_str(), label().c_str());
         return false;
     }
 
     if ((!if_action_->isReady()) ||
-        (succ_action_ != nullptr && !succ_action_->isReady()) ||
-        (fail_action_ != nullptr && !fail_action_->isReady()))
+        (then_action_ != nullptr && !then_action_->isReady()) ||
+        (else_action_ != nullptr && !else_action_->isReady()))
         return false;
 
     return true;
@@ -114,9 +114,9 @@ void IfElseAction::onStop() {
     TBOX_ASSERT(if_action_ != nullptr);
     if (if_action_->state() == State::kFinished) {
         if (if_action_->result() == Result::kSuccess) {
-            succ_action_->stop();
+            then_action_->stop();
         } else {
-            fail_action_->stop();
+            else_action_->stop();
         }
     } else {
         if_action_->stop();
@@ -129,9 +129,9 @@ void IfElseAction::onPause() {
     TBOX_ASSERT(if_action_ != nullptr);
     if (if_action_->state() == State::kFinished) {
         if (if_action_->result() == Result::kSuccess) {
-            succ_action_->pause();
+            then_action_->pause();
         } else {
-            fail_action_->pause();
+            else_action_->pause();
         }
     } else {
         if_action_->pause();
@@ -146,16 +146,16 @@ void IfElseAction::onResume() {
     TBOX_ASSERT(if_action_ != nullptr);
     if (if_action_->state() == State::kFinished) {
         if (if_action_->result() == Result::kSuccess) {
-            if (succ_action_->state() == State::kFinished) {
-                finish(succ_action_->result() == Result::kSuccess);
+            if (then_action_->state() == State::kFinished) {
+                finish(then_action_->result() == Result::kSuccess);
             } else {
-                succ_action_->resume();
+                then_action_->resume();
             }
         } else {
-            if (fail_action_->state() == State::kFinished) {
-                finish(fail_action_->result() == Result::kSuccess);
+            if (else_action_->state() == State::kFinished) {
+                finish(else_action_->result() == Result::kSuccess);
             } else {
-                fail_action_->resume();
+                else_action_->resume();
             }
         }
     } else {
@@ -167,11 +167,11 @@ void IfElseAction::onReset() {
     TBOX_ASSERT(if_action_ != nullptr);
     if_action_->reset();
 
-    if (succ_action_ != nullptr)
-        succ_action_->reset();
+    if (then_action_ != nullptr)
+        then_action_->reset();
 
-    if (fail_action_ != nullptr)
-        fail_action_->reset();
+    if (else_action_ != nullptr)
+        else_action_->reset();
 
     AssembleAction::onReset();
 }
@@ -179,13 +179,13 @@ void IfElseAction::onReset() {
 void IfElseAction::onCondActionFinished(bool is_succ, const Reason &why, const Trace &trace) {
     if (state() == State::kRunning) {
         if (is_succ) {
-            if (succ_action_ != nullptr) {
-                succ_action_->start();
+            if (then_action_ != nullptr) {
+                then_action_->start();
                 return;
             }
         } else {
-            if (fail_action_ != nullptr) {
-                fail_action_->start();
+            if (else_action_ != nullptr) {
+                else_action_->start();
                 return;
             }
         }

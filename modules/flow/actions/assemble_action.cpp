@@ -30,6 +30,12 @@ int AssembleAction::addChild(Action *)
   return -1;
 }
 
+int AssembleAction::addChildAs(Action *, const std::string &)
+{
+  LogWarn("%d:%s[%s] not implement this function", id(), type().c_str(), label().c_str());
+  return -1;
+}
+
 bool AssembleAction::setChild(Action *)
 {
   LogWarn("%d:%s[%s] not implement this function", id(), type().c_str(), label().c_str());
