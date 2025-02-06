@@ -46,9 +46,9 @@ namespace flow {
  *
  * 不用重写`Action`中其它虚函数。
  */
-class CompositeAction : public AssembleAction {
+class CompositeAction : public SerialAssembleAction {
   public:
-    using AssembleAction::AssembleAction;
+    using SerialAssembleAction::SerialAssembleAction;
     virtual ~CompositeAction();
 
   public:
@@ -59,14 +59,8 @@ class CompositeAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
     virtual void onFinished(bool is_succ, const Reason &why, const Trace &trace) override;
-
-    void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);
-    void onChildBlocked(const Reason &why, const Trace &trace);
 
   private:
     Action *child_ = nullptr;

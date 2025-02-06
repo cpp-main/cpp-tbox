@@ -19,6 +19,7 @@
  */
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
 
 #include "loop_if_action.h"
@@ -26,9 +27,24 @@
 #include "sleep_action.h"
 #include "sequence_action.h"
 #include "succ_fail_action.h"
+#include "dummy_action.h"
 
 namespace tbox {
 namespace flow {
+
+TEST(LoopIfAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    LoopIfAction action(*loop);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChildAs(new SuccAction(*loop), "if");
+    EXPECT_FALSE(action.isReady());
+
+    action.setChildAs(new SuccAction(*loop), "exec");
+    EXPECT_TRUE(action.isReady());
+}
 
 /**
  *  int remain = 10;
@@ -95,18 +111,62 @@ TEST(LoopIfAction, MultiAction) {
     EXPECT_EQ(remain, 0);
 }
 
-TEST(LoopIfAction, IsReady) {
+//! 当if动作同时出现finish与pause时，再恢复
+//! 观察是否正常恢复
+TEST(LoopIfAction, FinishPauseOnIf) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
 
-    LoopIfAction action(*loop);
-    EXPECT_FALSE(action.isReady());
+    LoopIfAction loop_if_action(*loop);
 
-    action.setChildAs(new SuccAction(*loop), "if");
-    EXPECT_FALSE(action.isReady());
+    int exec_action_count = 0;
+    bool loop_if_action_run = false;
+    bool do_resume = false;
 
-    action.setChildAs(new SuccAction(*loop), "exec");
-    EXPECT_TRUE(action.isReady());
+    auto if_action = new DummyAction(*loop);
+    auto exec_action = new FunctionAction(*loop, [&] {
+        ++exec_action_count;
+        return true;
+    });
+
+    EXPECT_TRUE(loop_if_action.setChildAs(if_action, "if"));
+    EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
+    EXPECT_TRUE(loop_if_action.isReady());
+
+    if_action->setStartCallback([&] {
+        if (exec_action_count == 0) {
+            timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+                //! 同时发生动作结束与动作暂停的事件
+                if_action->emitFinish(true);
+                loop_if_action.pause();
+            });
+            timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+                do_resume = true;
+                loop_if_action.resume();
+            });
+
+        } else {
+            if_action->emitFinish(false);
+        }
+    });
+
+    loop_if_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            loop_if_action_run = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(loop_if_action.isReady());
+    loop_if_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(loop_if_action_run);
+    EXPECT_EQ(exec_action_count, 1);
+    EXPECT_TRUE(do_resume);
 }
 
 }

@@ -30,7 +30,7 @@ namespace flow {
 using namespace std::placeholders;
 
 SwitchAction::SwitchAction(event::Loop &loop)
-    : AssembleAction(loop, "Switch")
+    : SerialAssembleAction(loop, "Switch")
 { }
 
 SwitchAction::~SwitchAction() {
@@ -42,7 +42,7 @@ SwitchAction::~SwitchAction() {
 }
 
 void SwitchAction::toJson(Json &js) const {
-    AssembleAction::toJson(js);
+    SerialAssembleAction::toJson(js);
 
     auto &js_children = js["children"];
     switch_action_->toJson(js_children["00.switch"]);
@@ -65,18 +65,19 @@ bool SwitchAction::setChildAs(Action *child, const std::string &role) {
         return false;
     }
 
+    if (!child->setParent(this))
+        return false;
+
     if (role == "switch") {
-        child->setFinishCallback(std::bind(&SwitchAction::onSwitchActionFinished, this, _1, _2, _3));
+        child->setFinishCallback(std::bind(&SwitchAction::onSwitchActionFinished, this, _1, _2));
         child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
-        child->setParent(this);
         CHECK_DELETE_RESET_OBJ(switch_action_);
         switch_action_ = child;
         return true;
 
     } else if (role == "default") {
-        child->setFinishCallback(std::bind(&SwitchAction::finish, this, _1, _2, _3));
+        child->setFinishCallback(std::bind(&SwitchAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
-        child->setParent(this);
         CHECK_DELETE_RESET_OBJ(default_action_);
         default_action_ = child;
         return true;
@@ -84,13 +85,13 @@ bool SwitchAction::setChildAs(Action *child, const std::string &role) {
     } else if (util::string::IsStartWith(role, "case:")) {
         auto result = case_actions_.emplace(role, child);
         if (result.second) {
-            child->setFinishCallback(std::bind(&SwitchAction::finish, this, _1, _2, _3));
+            child->setFinishCallback(std::bind(&SwitchAction::onLastChildFinished, this, _1, _2, _3));
             child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
-            child->setParent(this);
             return true;
         }
     }
 
+    child->setParent(nullptr);
     LogWarn("%d:%s[%s], unsupport role:%s", id(), type().c_str(), label().c_str(), role.c_str());
     return false;
 }
@@ -124,32 +125,10 @@ bool SwitchAction::isReady() const {
 }
 
 void SwitchAction::onStart() {
-    AssembleAction::onStart();
+    SerialAssembleAction::onStart();
 
     TBOX_ASSERT(switch_action_ != nullptr);
-    running_action_ = switch_action_;
-    running_action_->start();
-}
-
-void SwitchAction::onStop() {
-    if (running_action_ != nullptr)
-        running_action_->stop();
-
-    AssembleAction::onStop();
-}
-
-void SwitchAction::onPause() {
-    if (running_action_ != nullptr)
-        running_action_->pause();
-
-    AssembleAction::onPause();
-}
-
-void SwitchAction::onResume() {
-    AssembleAction::onResume();
-
-    if (running_action_ != nullptr)
-        running_action_->resume();
+    startThisAction(switch_action_);
 }
 
 void SwitchAction::onReset() {
@@ -162,29 +141,27 @@ void SwitchAction::onReset() {
     for (auto &item : case_actions_)
         item.second->reset();
 
-    running_action_ = nullptr;
-
-    AssembleAction::onReset();
+    SerialAssembleAction::onReset();
 }
 
-void SwitchAction::onSwitchActionFinished(bool is_succ, const Reason &why, const Trace &) {
-    if (state() == State::kRunning) {
-        if (is_succ) {
-            running_action_ = default_action_;
+void SwitchAction::onSwitchActionFinished(bool is_succ, const Reason &why) {
+    if (handleChildFinishEvent([this, is_succ, why] { onSwitchActionFinished(is_succ, why); }))
+        return;
 
-            auto iter = case_actions_.find(why.message);
-            if (iter != case_actions_.end())
-                running_action_ = iter->second;
+    if (is_succ) {
+        auto action = default_action_;
 
-            if (running_action_ != nullptr) {
-                running_action_->start();
-            } else {
-                finish(false, Reason(ACTION_REASON_SWITCH_SKIP, "SwitchSkip"));
-            }
+        auto iter = case_actions_.find(why.message);
+        if (iter != case_actions_.end())
+            action = iter->second;
 
-        } else {
-            finish(false, Reason(ACTION_REASON_SWITCH_FAIL, "SwitchFail"));
-        }
+        if (action != nullptr)
+            startThisAction(action);
+        else
+            finish(false, Reason(ACTION_REASON_SWITCH_SKIP, "SwitchSkip"));
+
+    } else {
+        finish(false, Reason(ACTION_REASON_SWITCH_FAIL, "SwitchFail"));
     }
 }
 

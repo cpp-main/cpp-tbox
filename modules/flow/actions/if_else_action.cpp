@@ -29,7 +29,7 @@ namespace flow {
 using namespace std::placeholders;
 
 IfElseAction::IfElseAction(event::Loop &loop)
-    : AssembleAction(loop, "IfElse")
+    : SerialAssembleAction(loop, "IfElse")
 { }
 
 IfElseAction::~IfElseAction() {
@@ -39,47 +39,48 @@ IfElseAction::~IfElseAction() {
 }
 
 void IfElseAction::toJson(Json &js) const {
-    AssembleAction::toJson(js);
+    SerialAssembleAction::toJson(js);
     auto &js_children = js["children"];
     if_action_->toJson(js_children["0.if"]);
     if (then_action_ != nullptr)
-        then_action_->toJson(js_children["1.succ"]);
+        then_action_->toJson(js_children["1.then"]);
     if (else_action_ != nullptr)
-        else_action_->toJson(js_children["2.fail"]);
+        else_action_->toJson(js_children["2.else"]);
 }
 
 bool IfElseAction::setChildAs(Action *child, const std::string &role) {
+    if (child == nullptr) {
+        LogWarn("%d:%s[%s], add child %d:%s[%s] fail, child == nullptr",
+                id(), type().c_str(), label().c_str());
+        return false;
+    }
+
+    if (!child->setParent(this))
+        return false;
+
     if (role == "if") {
+        child->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1, _2, _3));
+        child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
-        if (if_action_ != nullptr) {
-            if_action_->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1, _2, _3));
-            if_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
-            if_action_->setParent(this);
-        }
         return true;
 
     } else if (role == "succ" || role == "then") {
+        child->setFinishCallback(std::bind(&IfElseAction::onLastChildFinished, this, _1, _2, _3));
+        child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(then_action_);
         then_action_ = child;
-        if (then_action_ != nullptr) {
-            then_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
-            then_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
-            then_action_->setParent(this);
-        }
         return true;
 
     } else if (role == "fail" || role == "else") {
+        child->setFinishCallback(std::bind(&IfElseAction::onLastChildFinished, this, _1, _2, _3));
+        child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(else_action_);
         else_action_ = child;
-        if (else_action_ != nullptr) {
-            else_action_->setFinishCallback(std::bind(&IfElseAction::finish, this, _1, _2, _3));
-            else_action_->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
-            else_action_->setParent(this);
-        }
         return true;
     }
 
+    child->setParent(nullptr);
     LogWarn("%d:%s[%s], unsupport role:%s", id(), type().c_str(), label().c_str(), role.c_str());
     return false;
 }
@@ -104,63 +105,9 @@ bool IfElseAction::isReady() const {
 }
 
 void IfElseAction::onStart() {
-    AssembleAction::onStart();
+    SerialAssembleAction::onStart();
 
-    TBOX_ASSERT(if_action_ != nullptr);
-    if_action_->start();
-}
-
-void IfElseAction::onStop() {
-    TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == State::kFinished) {
-        if (if_action_->result() == Result::kSuccess) {
-            then_action_->stop();
-        } else {
-            else_action_->stop();
-        }
-    } else {
-        if_action_->stop();
-    }
-
-    AssembleAction::onStop();
-}
-
-void IfElseAction::onPause() {
-    TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == State::kFinished) {
-        if (if_action_->result() == Result::kSuccess) {
-            then_action_->pause();
-        } else {
-            else_action_->pause();
-        }
-    } else {
-        if_action_->pause();
-    }
-
-    AssembleAction::onPause();
-}
-
-void IfElseAction::onResume() {
-    AssembleAction::onResume();
-
-    TBOX_ASSERT(if_action_ != nullptr);
-    if (if_action_->state() == State::kFinished) {
-        if (if_action_->result() == Result::kSuccess) {
-            if (then_action_->state() == State::kFinished) {
-                finish(then_action_->result() == Result::kSuccess);
-            } else {
-                then_action_->resume();
-            }
-        } else {
-            if (else_action_->state() == State::kFinished) {
-                finish(else_action_->result() == Result::kSuccess);
-            } else {
-                else_action_->resume();
-            }
-        }
-    } else {
-        if_action_->resume();
-    }
+    startThisAction(if_action_);
 }
 
 void IfElseAction::onReset() {
@@ -173,24 +120,25 @@ void IfElseAction::onReset() {
     if (else_action_ != nullptr)
         else_action_->reset();
 
-    AssembleAction::onReset();
+    SerialAssembleAction::onReset();
 }
 
 void IfElseAction::onCondActionFinished(bool is_succ, const Reason &why, const Trace &trace) {
-    if (state() == State::kRunning) {
-        if (is_succ) {
-            if (then_action_ != nullptr) {
-                then_action_->start();
-                return;
-            }
-        } else {
-            if (else_action_ != nullptr) {
-                else_action_->start();
-                return;
-            }
+    if (handleChildFinishEvent([this, is_succ, why, trace] { onCondActionFinished(is_succ, why, trace); }))
+        return;
+
+    if (is_succ) {
+        if (then_action_ != nullptr) {
+            startThisAction(then_action_);
+            return;
         }
-        finish(true, why, trace);
+    } else {
+        if (else_action_ != nullptr) {
+            startThisAction(else_action_);
+            return;
+        }
     }
+    finish(true, why, trace);
 }
 
 }

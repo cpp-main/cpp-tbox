@@ -33,7 +33,7 @@ namespace flow {
  *     return else_action();
  * }
  */
-class IfElseAction : public AssembleAction {
+class IfElseAction : public SerialAssembleAction {
   public:
     explicit IfElseAction(event::Loop &loop);
     virtual ~IfElseAction();
@@ -47,9 +47,6 @@ class IfElseAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
   protected:

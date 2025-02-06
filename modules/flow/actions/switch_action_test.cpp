@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/eventx/timer_pool.h>
 
 #include "switch_action.h"
 #include "function_action.h"
@@ -239,7 +240,7 @@ TEST(SwitchAction, PauseResume) {
     //! 当switch被暂停时，则恢复
     switch_action->setPauseCallback([&] {
         switch_action_pause = true;
-        loop->runNext([&] {action.resume();});
+        loop->runNext([&] { action.resume();});
     });
     //! 当switch被恢复时，则完成，并选择case:A
     switch_action->setResumeCallback([&] {
@@ -259,7 +260,7 @@ TEST(SwitchAction, PauseResume) {
     //! 当case被暂停时，则恢复
     case_action->setPauseCallback([&] {
         case_action_pause = true;
-        loop->runNext([&] {action.resume();});
+        loop->runNext([&] { action.resume(); });
     });
     //! 当case被恢复时，则完成
     case_action->setResumeCallback([&] {
@@ -383,6 +384,62 @@ TEST(SwitchAction, StopOnDefault) {
     EXPECT_TRUE(default_action_start);
     EXPECT_TRUE(default_action_stop);
     EXPECT_FALSE(all_done);
+}
+
+/**
+ * 在switch动作开始后，pause一次，再resume；
+ * 在case动作开始后，pause一次，再resume；
+ */
+TEST(SwitchAction, FinishPauseOnSwitch) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
+
+    SwitchAction action(*loop);
+
+    bool switch_action_start = false;
+    bool default_action_run = false;
+    bool all_done = false;
+    bool do_resume = false;
+
+    auto switch_action = new DummyAction(*loop);
+    auto default_action = new FunctionAction(*loop, [&] { default_action_run = true; return true; });
+
+    EXPECT_TRUE(action.setChildAs(switch_action, "switch"));
+    EXPECT_TRUE(action.setChildAs(default_action, "default"));
+
+    //! 当switch被启动后1ms，同时触发finish与pause
+    //! 之后1ms，又恢复action
+    switch_action->setStartCallback([&] {
+        switch_action_start = true;
+        timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+            //! 同时发生动作结束与动作暂停的事件
+            switch_action->emitFinish(true, Action::Reason("case:A"));
+            action.pause();
+        });
+        timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+            do_resume = true;
+            action.resume();
+        });
+    });
+
+    action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            all_done = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(action.isReady());
+    action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(switch_action_start);
+    EXPECT_TRUE(default_action_run);
+    EXPECT_TRUE(all_done);
+    EXPECT_TRUE(do_resume);
 }
 
 }

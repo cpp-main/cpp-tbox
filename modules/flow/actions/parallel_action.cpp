@@ -51,14 +51,17 @@ void ParallelAction::toJson(Json &js) const {
 }
 
 int ParallelAction::addChild(Action *action) {
-    TBOX_ASSERT(action != nullptr);
+    if (action == nullptr) {
+        LogWarn("%d:%s[%s], add child %d:%s[%s] fail, child == nullptr",
+                id(), type().c_str(), label().c_str());
+        return -1;
+    }
 
-    if (std::find(children_.begin(), children_.end(), action) == children_.end()) {
+    if (action->setParent(this)) {
         int index = children_.size();
-        children_.push_back(action);
         action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
         action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1, _2));
-        action->setParent(this);
+        children_.push_back(action);
         return index;
 
     } else {

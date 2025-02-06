@@ -28,7 +28,7 @@ namespace flow {
 using namespace std::placeholders;
 
 LoopIfAction::LoopIfAction(event::Loop &loop)
-  : AssembleAction(loop, "LoopIf")
+  : SerialAssembleAction(loop, "LoopIf")
 { }
 
 LoopIfAction::~LoopIfAction() {
@@ -37,35 +37,40 @@ LoopIfAction::~LoopIfAction() {
 }
 
 void LoopIfAction::toJson(Json &js) const {
-  AssembleAction::toJson(js);
+  SerialAssembleAction::toJson(js);
   auto &js_children = js["children"];
   if_action_->toJson(js_children["0.if"]);
   exec_action_->toJson(js_children["1.exec"]);
 }
 
 bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
+    if (child == nullptr) {
+        LogWarn("%d:%s[%s], add child %d:%s[%s] fail, child == nullptr",
+                id(), type().c_str(), label().c_str());
+        return false;
+    }
+
+    if (!child->setParent(this))
+        return false;
+
     if (role == "if") {
+        child->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1, _2, _3));
+        child->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
-        if (if_action_ != nullptr) {
-            if_action_->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1, _2, _3));
-            if_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
-            if_action_->setParent(this);
-        }
         return true;
 
     } else if (role == "exec") {
+        child->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _2, _3));
+        child->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(exec_action_);
         exec_action_ = child;
-        if (exec_action_ != nullptr) {
-            exec_action_->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _2, _3));
-            exec_action_->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
-            exec_action_->setParent(this);
-        }
         return true;
     }
 
+    child->setParent(nullptr);
     LogWarn("%d:%s[%s], unsupport role:%s", id(), type().c_str(), label().c_str(), role.c_str());
+
     return false;
 }
 
@@ -87,34 +92,10 @@ bool LoopIfAction::isReady() const {
 }
 
 void LoopIfAction::onStart() {
-    AssembleAction::onStart();
+    SerialAssembleAction::onStart();
 
     TBOX_ASSERT(if_action_ != nullptr);
-    if_action_->start();
-}
-
-void LoopIfAction::onStop() {
-    auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
-    TBOX_ASSERT(curr_action != nullptr);
-    curr_action->stop();
-
-    AssembleAction::onStop();
-}
-
-void LoopIfAction::onPause() {
-    auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
-    TBOX_ASSERT(curr_action != nullptr);
-    curr_action->pause();
-
-    AssembleAction::onPause();
-}
-
-void LoopIfAction::onResume() {
-    AssembleAction::onResume();
-
-    auto curr_action = if_action_->state() == State::kFinished ? exec_action_ : if_action_;
-    TBOX_ASSERT(curr_action != nullptr);
-    curr_action->resume();
+    startThisAction(if_action_);
 }
 
 void LoopIfAction::onReset() {
@@ -122,27 +103,29 @@ void LoopIfAction::onReset() {
     if_action_->reset();
     exec_action_->reset();
 
-    AssembleAction::onReset();
+    SerialAssembleAction::onReset();
 }
 
 void LoopIfAction::onIfFinished(bool is_succ, const Reason &why, const Trace &trace) {
-    if (state() == State::kRunning) {
-        if (is_succ) {
-            exec_action_->start();
-        } else {
-            finish(finish_result_, why, trace);
-        }
+    if (handleChildFinishEvent([this, is_succ, why, trace] { onIfFinished(is_succ, why, trace); }))
+        return;
+
+    if (is_succ) {
+        startThisAction(exec_action_);
+    } else {
+        finish(finish_result_, why, trace);
     }
 }
 
 void LoopIfAction::onExecFinished(const Reason &why, const Trace &trace) {
-    if (state() == State::kRunning) {
-        if_action_->reset();
-        exec_action_->reset();
+    if (handleChildFinishEvent([this, why, trace] { onExecFinished(why, trace); }))
+        return;
 
-        if (!if_action_->start())
-            finish(finish_result_, why, trace);
-    }
+    if_action_->reset();
+    exec_action_->reset();
+
+    if (!startThisAction(if_action_))
+        finish(finish_result_, why, trace);
 }
 
 }

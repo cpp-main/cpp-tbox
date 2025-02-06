@@ -72,7 +72,7 @@ namespace flow {
  * if_then_action->addChildAs(new SuccAction(*loop), "if");
  * if_then_action->addChildAs(else_action, "then");
  */
-class IfThenAction : public AssembleAction {
+class IfThenAction : public SerialAssembleAction {
   public:
     explicit IfThenAction(event::Loop &loop);
     virtual ~IfThenAction();
@@ -85,9 +85,6 @@ class IfThenAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
   protected:
@@ -101,7 +98,6 @@ class IfThenAction : public AssembleAction {
     std::vector<IfThenActionPair> if_then_actions_;
 
     size_t index_ = 0;
-    Action *running_action_ = nullptr;
 };
 
 }

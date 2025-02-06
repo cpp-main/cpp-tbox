@@ -20,14 +20,27 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
 
 #include "repeat_action.h"
 #include "function_action.h"
 #include "succ_fail_action.h"
+#include "dummy_action.h"
 
 namespace tbox {
 namespace flow {
+
+TEST(RepeatAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    RepeatAction action(*loop, 1);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
+}
 
 /**
  *  int loop_times = 0;
@@ -198,15 +211,51 @@ TEST(RepeatAction, FunctionActionRepeat5BreakSucc) {
     EXPECT_EQ(repeat_action.state(), Action::State::kFinished);
 }
 
-TEST(RepeatAction, IsReady) {
+TEST(RepeatAction, FinishPause) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
 
-    RepeatAction action(*loop, 1);
-    EXPECT_FALSE(action.isReady());
+    RepeatAction repeat_action(*loop, 5);
 
-    action.setChild(new SuccAction(*loop));
-    EXPECT_TRUE(action.isReady());
+    int loop_times = 0;
+    bool do_resume = false;
+
+    auto dummy_action = new DummyAction(*loop);
+    dummy_action->setStartCallback([&] {
+        ++loop_times;
+
+        timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+            //! 同时发生动作结束与动作暂停的事件
+            dummy_action->emitFinish(true);
+            repeat_action.pause();
+        });
+        timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+            do_resume = true;
+            repeat_action.resume();
+        });
+    });
+
+    EXPECT_TRUE(repeat_action.setChild(dummy_action));
+    EXPECT_TRUE(repeat_action.isReady());
+
+    bool is_finished = false;
+    repeat_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+            EXPECT_TRUE(is_succ);
+            EXPECT_EQ(r.code, ACTION_REASON_REPEAT_NO_TIMES);
+            EXPECT_EQ(r.message, "RepeatNoTimes");
+            is_finished = true;
+        }
+    );
+
+    repeat_action.start();
+    loop->exitLoop(std::chrono::milliseconds(60));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_finished);
+    EXPECT_EQ(loop_times, 5);
+    EXPECT_TRUE(do_resume);
 }
 
 }

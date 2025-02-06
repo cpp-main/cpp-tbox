@@ -25,7 +25,7 @@
 namespace tbox {
 namespace flow {
 
-class LoopAction : public AssembleAction {
+class LoopAction : public SerialAssembleAction {
   public:
     enum class Mode {
       kForever,     //! while(true) { action() };
@@ -45,9 +45,6 @@ class LoopAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);

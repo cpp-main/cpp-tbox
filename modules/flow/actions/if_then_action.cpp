@@ -32,7 +32,7 @@ namespace flow {
 using namespace std::placeholders;
 
 IfThenAction::IfThenAction(event::Loop &loop)
-    : AssembleAction(loop, "IfThen")
+    : SerialAssembleAction(loop, "IfThen")
 { }
 
 IfThenAction::~IfThenAction() {
@@ -47,7 +47,7 @@ IfThenAction::~IfThenAction() {
 }
 
 void IfThenAction::toJson(Json &js) const {
-    AssembleAction::toJson(js);
+    SerialAssembleAction::toJson(js);
 
     auto &js_children = js["children"];
 
@@ -103,7 +103,7 @@ int IfThenAction::addChildAs(Action *child, const std::string &role) {
         if (!child->setParent(this))
             return -1;
 
-        child->setFinishCallback(std::bind(&IfThenAction::finish, this, _1, _2, _3));
+        child->setFinishCallback(std::bind(&IfThenAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&IfThenAction::block, this, _1, _2));
         tmp_.second = child;
 
@@ -129,41 +129,21 @@ bool IfThenAction::isReady() const {
 }
 
 void IfThenAction::onStart() {
-    AssembleAction::onStart();
+    SerialAssembleAction::onStart();
 
     index_ = 0;
     doStart();
 }
 
-void IfThenAction::onStop() {
-    if (running_action_ != nullptr)
-        running_action_->stop();
-
-    AssembleAction::onStop();
-}
-
-void IfThenAction::onPause() {
-    if (running_action_ != nullptr)
-        running_action_->pause();
-
-    AssembleAction::onPause();
-}
-
-void IfThenAction::onResume() {
-    AssembleAction::onResume();
-
-    if (running_action_ != nullptr)
-        running_action_->resume();
-}
-
 void IfThenAction::onReset() {
     index_ = 0;
-    running_action_ = nullptr;
 
     for (auto &item : if_then_actions_) {
         item.first->reset();
         item.second->reset();
     }
+
+    SerialAssembleAction::onReset();
 }
 
 void IfThenAction::doStart() {
@@ -172,15 +152,16 @@ void IfThenAction::doStart() {
         return;
     }
 
-    running_action_ = if_then_actions_.at(index_).first;
-    running_action_->start();
+    startThisAction(if_then_actions_.at(index_).first);
 }
 
 void IfThenAction::onIfActionFinished(bool is_succ) {
+    if (handleChildFinishEvent([this, is_succ] { onIfActionFinished(is_succ); }))
+        return;
+
     if (is_succ) {
         //! 执行then动作
-        running_action_ = if_then_actions_.at(index_).second;
-        running_action_->start();
+        startThisAction(if_then_actions_.at(index_).second);
 
     } else {
         //! 跳至下一个分支

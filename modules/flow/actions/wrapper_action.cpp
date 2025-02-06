@@ -28,19 +28,20 @@ namespace flow {
 using namespace std::placeholders;
 
 WrapperAction::WrapperAction(event::Loop &loop, Mode mode)
-  : AssembleAction(loop, "Wrapper")
+  : SerialAssembleAction(loop, "Wrapper")
   , mode_(mode)
 { }
 
 WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
-  : AssembleAction(loop, "Wrapper")
+  : SerialAssembleAction(loop, "Wrapper")
   , child_(child)
   , mode_(mode)
 {
     TBOX_ASSERT(child_ != nullptr);
+    bool is_set_parent_ok = child_->setParent(this);
+    TBOX_ASSERT(is_set_parent_ok);
     child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
-    child_->setParent(this);
 }
 
 WrapperAction::~WrapperAction() {
@@ -48,19 +49,28 @@ WrapperAction::~WrapperAction() {
 }
 
 void WrapperAction::toJson(Json &js) const {
-    AssembleAction::toJson(js);
+    SerialAssembleAction::toJson(js);
+
     js["mode"] = ToString(mode_);
     child_->toJson(js["child"]);
 }
 
 bool WrapperAction::setChild(Action *child) {
+    if (child == nullptr) {
+        LogWarn("%d:%s[%s], add child %d:%s[%s] fail, child == nullptr",
+                id(), type().c_str(), label().c_str());
+        return false;
+    }
+
+    if (!child->setParent(this))
+        return false;
+
+    child->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
+    child->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
+
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;
-    if (child_ != nullptr) {
-        child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
-        child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
-        child_->setParent(this);
-    }
+
     return true;
 }
 
@@ -73,56 +83,33 @@ bool WrapperAction::isReady() const {
 }
 
 void WrapperAction::onStart() {
-    AssembleAction::onStart();
+    SerialAssembleAction::onStart();
 
     TBOX_ASSERT(child_ != nullptr);
-    child_->start();
-}
-
-void WrapperAction::onStop() {
-    TBOX_ASSERT(child_ != nullptr);
-    child_->stop();
-
-    AssembleAction::onStop();
-}
-
-void WrapperAction::onPause() {
-    TBOX_ASSERT(child_ != nullptr);
-    child_->pause();
-
-    AssembleAction::onPause();
-}
-
-void WrapperAction::onResume() {
-    AssembleAction::onResume();
-
-    if (child_->state() == State::kFinished) {
-        onChildFinished(child_->result() == Result::kSuccess, Reason(), Trace());
-    } else {
-        child_->resume();
-    }
+    startThisAction(child_);
 }
 
 void WrapperAction::onReset() {
     TBOX_ASSERT(child_ != nullptr);
     child_->reset();
 
-    AssembleAction::onReset();
+    SerialAssembleAction::onReset();
 }
 
 void WrapperAction::onChildFinished(bool is_succ, const Reason &why, const Trace &trace) {
-    if (state() == State::kRunning) {
-        if (mode_ == Mode::kNormal)
-            finish(is_succ, why, trace);
-        else if (mode_ == Mode::kInvert)
-            finish(!is_succ, why, trace);
-        else if (mode_ == Mode::kAlwaySucc)
-            finish(true, why, trace);
-        else if (mode_ == Mode::kAlwayFail)
-            finish(false, why, trace);
-        else
-            TBOX_ASSERT(false);
-    }
+    if (handleChildFinishEvent([this, is_succ, why, trace] { onChildFinished(is_succ, why, trace); }))
+        return;
+
+    if (mode_ == Mode::kNormal)
+        finish(is_succ, why, trace);
+    else if (mode_ == Mode::kInvert)
+        finish(!is_succ, why, trace);
+    else if (mode_ == Mode::kAlwaySucc)
+        finish(true, why, trace);
+    else if (mode_ == Mode::kAlwayFail)
+        finish(false, why, trace);
+    else
+        TBOX_ASSERT(false);
 }
 
 std::string ToString(WrapperAction::Mode mode) {

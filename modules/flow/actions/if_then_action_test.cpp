@@ -19,6 +19,7 @@
  */
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
 
 #include "if_then_action.h"
@@ -226,6 +227,57 @@ TEST(IfThenAction, IfFalse) {
    EXPECT_TRUE(if_action_run);
    EXPECT_FALSE(then_action_run);
    EXPECT_TRUE(all_finish_run);
+}
+
+TEST(IfThenAction, FinishPauseOnIf) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
+
+    IfThenAction if_then_action(*loop);
+
+    bool then_action_run = false;
+    bool if_then_action_run = false;
+    bool do_resume = false;
+
+    auto if_action = new DummyAction(*loop);
+    auto then_action = new FunctionAction(*loop, [&] {
+        then_action_run = true;
+        return true;
+    });
+
+    EXPECT_EQ(if_then_action.addChildAs(if_action, "if"), 0);
+    EXPECT_EQ(if_then_action.addChildAs(then_action, "then"), 0);
+    EXPECT_TRUE(if_then_action.isReady());
+
+    if_action->setStartCallback([&] {
+        timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+            //! 同时发生动作结束与动作暂停的事件
+            if_action->emitFinish(true);
+            if_then_action.pause();
+        });
+        timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+            do_resume = true;
+            if_then_action.resume();
+        });
+    });
+
+    if_then_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            if_then_action_run = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(if_then_action.isReady());
+    if_then_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(if_then_action_run);
+    EXPECT_TRUE(then_action_run);
+    EXPECT_TRUE(do_resume);
 }
 
 }

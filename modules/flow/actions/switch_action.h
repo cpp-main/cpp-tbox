@@ -34,7 +34,7 @@ namespace flow {
  *   }
  * }
  */
-class SwitchAction : public AssembleAction {
+class SwitchAction : public SerialAssembleAction {
   public:
     explicit SwitchAction(event::Loop &loop);
     virtual ~SwitchAction();
@@ -48,20 +48,15 @@ class SwitchAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
   protected:
-    void onSwitchActionFinished(bool is_succ, const Reason &why, const Trace &trace);
+    void onSwitchActionFinished(bool is_succ, const Reason &why);
 
   private:
     Action *switch_action_   = nullptr;
     std::map<std::string, Action*> case_actions_;
     Action *default_action_ = nullptr;
-
-    Action *running_action_ = nullptr;  //! 当前正在运行的Action
 };
 
 }
