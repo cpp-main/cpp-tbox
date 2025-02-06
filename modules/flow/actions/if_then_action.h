@@ -91,7 +91,7 @@ class IfThenAction : public AssembleAction {
     virtual void onReset() override;
 
   protected:
-    void tryNext();
+    void doStart();
     void onIfActionFinished(bool is_succ);
 
   private:

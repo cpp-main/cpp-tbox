@@ -51,16 +51,18 @@ void IfThenAction::toJson(Json &js) const {
 
     auto &js_children = js["children"];
 
-    int index = 0;
+    int prefix_num = 0;
     for (auto &item : if_then_actions_) {
         std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << index << '.';
+        oss << std::setw(2) << std::setfill('0') << prefix_num << '.';
         auto prefix = oss.str();
 
         item.first->toJson(js_children[prefix + "if"]);
         item.second->toJson(js_children[prefix + "then"]);
-        ++index;
+        ++prefix_num;
     }
+
+    js["index"] = index_;
 }
 
 int IfThenAction::addChildAs(Action *child, const std::string &role) {
@@ -130,7 +132,7 @@ void IfThenAction::onStart() {
     AssembleAction::onStart();
 
     index_ = 0;
-    tryNext();
+    doStart();
 }
 
 void IfThenAction::onStop() {
@@ -164,7 +166,7 @@ void IfThenAction::onReset() {
     }
 }
 
-void IfThenAction::tryNext() {
+void IfThenAction::doStart() {
     if (index_ >= if_then_actions_.size()) {
         finish(false, Reason(ACTION_REASON_IF_THEN_SKIP, "IfThenSkip"));
         return;
@@ -183,7 +185,7 @@ void IfThenAction::onIfActionFinished(bool is_succ) {
     } else {
         //! 跳至下一个分支
         ++index_;
-        tryNext();
+        doStart();
     }
 }
 
