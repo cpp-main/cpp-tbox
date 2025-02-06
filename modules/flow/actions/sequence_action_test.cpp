@@ -436,7 +436,7 @@ TEST(SequenceAction, FinishPause) {
 
     bool is_finished = false;
     seq_action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             is_finished = true;
         }

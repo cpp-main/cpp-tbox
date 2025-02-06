@@ -39,6 +39,7 @@ LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode)
     TBOX_ASSERT(child_ != nullptr);
     bool is_set_parent_ok = child_->setParent(this);
     TBOX_ASSERT(is_set_parent_ok);
+    UNUSED_VAR(is_set_parent_ok);
 
     child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&LoopAction::block, this, _1, _2));

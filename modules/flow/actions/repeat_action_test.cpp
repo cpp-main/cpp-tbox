@@ -241,7 +241,7 @@ TEST(RepeatAction, FinishPause) {
 
     bool is_finished = false;
     repeat_action.setFinishCallback(
-        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &t) {
+        [&] (bool is_succ, const Action::Reason &r, const Action::Trace &) {
             EXPECT_TRUE(is_succ);
             EXPECT_EQ(r.code, ACTION_REASON_REPEAT_NO_TIMES);
             EXPECT_EQ(r.message, "RepeatNoTimes");
