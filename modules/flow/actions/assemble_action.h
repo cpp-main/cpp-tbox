@@ -33,6 +33,7 @@ class AssembleAction : public Action {
   public:
     //!< 设置子动作
     virtual int  addChild(Action *child);
+    virtual int  addChildAs(Action *child, const std::string &role);
     virtual bool setChild(Action *child);
     virtual bool setChildAs(Action *child, const std::string &role);
 
@@ -45,6 +46,33 @@ class AssembleAction : public Action {
 
   private:
     FinalCallback final_cb_;
+};
+
+//! 串行执行的组装动作
+class SerialAssembleAction : public AssembleAction {
+  public:
+    using AssembleAction::AssembleAction;
+
+  protected:
+    virtual void onPause() override;
+    virtual void onResume() override;
+    virtual void onStop() override;
+    virtual void onReset() override;
+
+  protected:
+    using ChildFinishFunc = std::function<void()>;
+
+    bool startThisAction(Action *action);
+    void stopCurrAction();
+
+    //! 子动作结束事件处理
+    bool handleChildFinishEvent(ChildFinishFunc &&child_finish_func);
+    //! 最后一个动作结束的缺省处理
+    void onLastChildFinished(bool is_succ, const Reason &reason, const Trace &trace);
+
+  private:
+    Action *curr_action_ = nullptr;     //! 当前正在执行的动作
+    ChildFinishFunc child_finish_func_; //! 上一个动用缓存的finish事件
 };
 
 }

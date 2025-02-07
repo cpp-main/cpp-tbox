@@ -56,6 +56,9 @@ void Action::toJson(Json &js) const {
     js["label"] = label_;
   js["state"] = ToString(state_);
   js["result"] = ToString(result_);
+
+  if (!vars_.empty())
+    vars_.toJson(js["vars"]);
 }
 
 bool Action::start() {
@@ -322,6 +325,21 @@ void Action::cancelDispatchedCallback() {
     loop_.cancel(block_cb_run_id_);
     block_cb_run_id_ = 0;
   }
+}
+
+bool Action::setParent(Action *parent) {
+  //! 如果之前设置过了，就不能再设置
+  if (parent != nullptr && parent_ != nullptr) {
+    LogWarn("%d:%s[%s] can't set %d:%s[%s] as parent. its origin parent is %d:%s[%s]",
+            id_, type_.c_str(), label_.c_str(),
+            parent->id_, parent->type_.c_str(), parent->label_.c_str(),
+            parent_->id_, parent_->type_.c_str(), parent_->label_.c_str());
+    return false;
+  }
+
+  vars_.setParent(&(parent->vars_));
+  parent_ = parent;
+  return true;
 }
 
 Action::Reason::Reason(const Reason &other)

@@ -18,7 +18,9 @@
  * of the source tree.
  */
 #include "module.h"
+
 #include <algorithm>
+
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 
@@ -40,21 +42,51 @@ Module::~Module()
 
 bool Module::add(Module *child, bool required)
 {
-    if (state_ != State::kNone)
+    if (state_ != State::kNone) {
+        LogWarn("module %s's state is not State::kNone", name_.c_str());
         return false;
+    }
 
-    if (child == nullptr)
+    if (child == nullptr) {
+        LogWarn("child == nullptr");
         return false;
+    }
 
+    //! 防止child被重复添加到多个Module上
+    if (child->parent_ != nullptr) {
+        LogWarn("module %s can't add %s, it has parent", name_.c_str(), child->name_.c_str());
+        return false;
+    }
+
+    //! 检查名称有没有重复的
     auto iter = std::find_if(children_.begin(), children_.end(),
         [child] (const ModuleItem &item) {
-            return item.module_ptr == child;
+            return item.module_ptr->name() == child->name();
         }
     );
-    if (iter != children_.end())
+    if (iter != children_.end()) {
+        LogWarn("module %s can't add %s, name dupicated.", name_.c_str(), child->name().c_str());
         return false;
+    }
 
     children_.emplace_back(ModuleItem{ child, required });
+    child->vars_.setParent(&vars_);
+    child->parent_ = this;
+
+    return true;
+}
+
+bool Module::addAs(Module *child, const std::string &name, bool required)
+{
+    auto tmp = child->name_;
+    child->name_ = name;
+
+    if (!add(child, required)) {
+        //! 如果失败了，还原之前的名称
+        child->name_ = tmp;
+        return false;
+    }
+
     return true;
 }
 
@@ -147,6 +179,21 @@ void Module::cleanup()
     onCleanup();
 
     state_ = State::kNone;
+}
+
+void Module::toJson(Json &js) const
+{
+    if (!vars_.empty())
+        vars_.toJson(js["vars"]);
+
+    if (!children_.empty()) {
+        Json &js_children = js["children"];
+        for (auto &item : children_) {
+            Json &js_child = js_children[item.module_ptr->name()];
+            js_child["required"] = item.required;
+            item.module_ptr->toJson(js_child);
+        }
+    }
 }
 
 }

@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2025 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_FLOW_IF_ELSE_H_20221022
-#define TBOX_FLOW_IF_ELSE_H_20221022
+#ifndef TBOX_FLOW_SWITCH_H_20250202
+#define TBOX_FLOW_SWITCH_H_20250202
 
 #include "assemble_action.h"
 
@@ -26,21 +26,22 @@ namespace tbox {
 namespace flow {
 
 /**
- * bool IfElseAction(if_action, then_action, else_action) {
- *   if (if_action())
- *     return then_action();
- *   else
- *     return else_action();
+ * bool SwitchAction() {
+ *   switch (switch_action()) {
+ *     case "xxx": return xxx_action();
+ *     ...
+ *     default: return default_action();
+ *   }
  * }
  */
-class IfElseAction : public SerialAssembleAction {
+class SwitchAction : public SerialAssembleAction {
   public:
-    explicit IfElseAction(event::Loop &loop);
-    virtual ~IfElseAction();
+    explicit SwitchAction(event::Loop &loop);
+    virtual ~SwitchAction();
 
     virtual void toJson(Json &js) const override;
 
-    //! role: "if", "succ/then", "fail/else"
+    //! role: "switch", "case:xxx", "default"
     virtual bool setChildAs(Action *child, const std::string &role) override;
 
     virtual bool isReady() const override;
@@ -50,15 +51,15 @@ class IfElseAction : public SerialAssembleAction {
     virtual void onReset() override;
 
   protected:
-    void onCondActionFinished(bool is_succ, const Reason &why, const Trace &trace);
+    void onSwitchActionFinished(bool is_succ, const Reason &why);
 
   private:
-    Action *if_action_   = nullptr;
-    Action *then_action_ = nullptr;
-    Action *else_action_ = nullptr;
+    Action *switch_action_   = nullptr;
+    std::map<std::string, Action*> case_actions_;
+    Action *default_action_ = nullptr;
 };
 
 }
 }
 
-#endif //TBOX_FLOW_IF_ELSE_H_20221022
+#endif //TBOX_FLOW_SWITCH_H_20250202

@@ -167,7 +167,7 @@ bool Start(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
-    if (ctx.initialize(argv[0], js_conf)) {
+    if (ctx.initialize(argv[0], js_conf, &apps)) {
         if (apps.initialize(js_conf)) {
             if (ctx.start()) {  //! 启动所有应用
                 if (apps.start()) {

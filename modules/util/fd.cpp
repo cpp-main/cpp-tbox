@@ -87,7 +87,7 @@ void Fd::swap(Fd &other)
     std::swap(detail_, other.detail_);
 }
 
-IMP_MOVE_RESET_FUNC_BASE_ON_SWAP(Fd)
+IMPL_MOVE_RESET_FUNC(Fd)
 
 void Fd::close()
 {

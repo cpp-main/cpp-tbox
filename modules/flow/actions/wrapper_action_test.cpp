@@ -29,6 +29,17 @@
 namespace tbox {
 namespace flow {
 
+TEST(WrapperAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    WrapperAction action(*loop);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
+}
+
 TEST(WrapperAction, NormalSucc) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
@@ -244,17 +255,6 @@ TEST(WrapperAction, AlwayFailFail) {
     loop->runLoop();
 
     EXPECT_TRUE(is_callback);
-}
-
-TEST(WrapperAction, IsReady) {
-    auto loop = event::Loop::New();
-    SetScopeExitAction([loop] { delete loop; });
-
-    WrapperAction action(*loop);
-    EXPECT_FALSE(action.isReady());
-
-    action.setChild(new SuccAction(*loop));
-    EXPECT_TRUE(action.isReady());
 }
 
 }

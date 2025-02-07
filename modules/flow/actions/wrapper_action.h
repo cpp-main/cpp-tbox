@@ -26,7 +26,7 @@ namespace tbox {
 namespace flow {
 
 /// 包装动作类，对子Action的结果进行处理
-class WrapperAction : public AssembleAction {
+class WrapperAction : public SerialAssembleAction {
   public:
     enum class Mode {
         kNormal,    //!< 正常，child
@@ -51,9 +51,6 @@ class WrapperAction : public AssembleAction {
     virtual void toJson(Json &js) const override;
 
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);

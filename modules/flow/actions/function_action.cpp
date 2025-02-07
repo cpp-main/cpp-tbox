@@ -42,6 +42,20 @@ FunctionAction::FunctionAction(event::Loop &loop, FuncWithReason &&func)
     TBOX_ASSERT(func_with_reason_ != nullptr);
 }
 
+FunctionAction::FunctionAction(event::Loop &loop, FuncWithVars &&func)
+  : Action(loop, "Function")
+  , func_with_vars_(std::move(func))
+{
+    TBOX_ASSERT(func_with_vars_ != nullptr);
+}
+
+FunctionAction::FunctionAction(event::Loop &loop, FuncWithReasonVars &&func)
+  : Action(loop, "Function")
+  , func_with_reason_vars_(std::move(func))
+{
+    TBOX_ASSERT(func_with_reason_vars_ != nullptr);
+}
+
 void FunctionAction::onStart() {
     Action::onStart();
 
@@ -52,6 +66,12 @@ void FunctionAction::onStart() {
 
     } else if (func_with_reason_) {
       finish(func_with_reason_(reason), reason);
+
+    } else if (func_with_vars_) {
+      finish(func_with_vars_(vars()), reason);
+
+    } else if (func_with_reason_vars_) {
+      finish(func_with_reason_vars_(reason, vars()), reason);
 
     } else {
       TBOX_ASSERT(isReady());

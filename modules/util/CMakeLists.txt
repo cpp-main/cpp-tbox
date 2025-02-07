@@ -47,6 +47,7 @@ set(TBOX_UTIL_HEADERS
     buffer.h
     fd.h
     scalable_integer.h
+    variables.h
 )
 
 set(TBOX_UTIL_SOURCES
@@ -67,6 +68,7 @@ set(TBOX_UTIL_SOURCES
     buffer.cpp
     fd.cpp
     scalable_integer.cpp
+    variables.cpp
 )
 
 set(TBOX_UTIL_TEST_SOURCES
@@ -85,6 +87,7 @@ set(TBOX_UTIL_TEST_SOURCES
     buffer_test.cpp
     fd_test.cpp
     scalable_integer_test.cpp
+    variables_test.cpp
 )
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})

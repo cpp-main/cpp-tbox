@@ -24,36 +24,61 @@
 namespace tbox {
 namespace util {
 
-uint32_t GetCurrentSecondsFrom1970()
+uint32_t GetUtcSeconds()
 {
     struct timeval tv;
     struct timezone tz;
-    gettimeofday(&tv, &tz);
+
+    if (gettimeofday(&tv, &tz) != 0)
+        return 0;
 
     return tv.tv_sec;
 }
 
-uint64_t GetCurrentMillisecondsFrom1970()
+uint32_t GetCurrentSecondsFrom1970() { return GetUtcSeconds(); }
+
+uint64_t GetUtcMilliseconds()
 {
     struct timeval tv;
     struct timezone tz;
-    gettimeofday(&tv, &tz);
+
+    if (gettimeofday(&tv, &tz) != 0)
+        return 0;
 
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
-uint64_t GetCurrentMicrosecondsFrom1970()
+uint64_t GetCurrentMillisecondsFrom1970() { return GetUtcMilliseconds(); }
+
+uint64_t GetUtcMicroseconds()
 {
     struct timeval tv;
     struct timezone tz;
-    gettimeofday(&tv, &tz);
+
+    if (gettimeofday(&tv, &tz) != 0)
+        return 0;
 
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-std::string GetUtcTimeString(uint32_t sec)
+uint64_t GetCurrentMicrosecondsFrom1970() { return GetUtcMicroseconds(); }
+
+bool GetUtc(uint32_t &sec, uint64_t &usec)
 {
-    time_t ts_sec = sec;
+    struct timeval tv;
+    struct timezone tz;
+
+    if (gettimeofday(&tv, &tz) != 0)
+        return false;
+
+    sec = tv.tv_sec;
+    usec = tv.tv_usec;
+    return true;
+}
+
+std::string GetUtcTimeString(uint32_t utc_sec)
+{
+    time_t ts_sec = utc_sec;
     struct tm tm;
     gmtime_r(&ts_sec, &tm);
 
@@ -63,9 +88,11 @@ std::string GetUtcTimeString(uint32_t sec)
     return timestamp_str;
 }
 
-std::string GetLocalTimeString(uint32_t sec)
+std::string GetUtcTimeString() { return GetUtcTimeString(GetUtcSeconds()); }
+
+std::string GetLocalTimeString(uint32_t utc_sec)
 {
-    time_t ts_sec = sec;
+    time_t ts_sec = utc_sec;
     struct tm tm;
     localtime_r(&ts_sec, &tm);
 
@@ -74,6 +101,8 @@ std::string GetLocalTimeString(uint32_t sec)
 
     return timestamp_str;
 }
+
+std::string GetLocalTimeString() { return GetLocalTimeString(GetUtcSeconds()); }
 
 }
 }

@@ -29,6 +29,7 @@ void RegisterApps(Module &apps, Context &ctx)
 {
     apps.add(new echo_server::App(ctx));
     apps.add(new nc_client::App(ctx));
+    apps.addAs(new nc_client::App(ctx), "nc_client_2");
 }
 
 std::string GetAppDescribe()
@@ -46,7 +47,7 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     major = 1;
     minor = 0;
     rev = 0;
-    build = 0;
+    build = 1;
 }
 
 }

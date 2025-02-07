@@ -156,6 +156,22 @@ std::string ToUpper(const std::string &origin_str);
  */
 std::string ToLower(const std::string &origin_str);
 
+/**
+ * \brief   判断字串是否以指定字串开头
+ *
+ * \param origin_str    原始字串
+ * \param text          指定字串
+ */
+bool IsStartWith(const std::string &origin_str, const std::string &text);
+
+/**
+ * \brief   判断字串是否以指定字串结束
+ *
+ * \param origin_str    原始字串
+ * \param text          指定字串
+ */
+bool IsEndWith(const std::string &origin_str, const std::string &text);
+
 }
 }
 }

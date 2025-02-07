@@ -31,6 +31,17 @@
 namespace tbox {
 namespace flow {
 
+TEST(LoopAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    LoopAction action(*loop);
+    EXPECT_FALSE(action.isReady());
+
+    action.setChild(new SuccAction(*loop));
+    EXPECT_TRUE(action.isReady());
+}
+
 /**
  *  int loop_times = 0;
  *  while (true) {
@@ -104,17 +115,6 @@ TEST(LoopAction, SleepActionForever) {
     EXPECT_FALSE(is_finished);
     EXPECT_EQ(loop_times, 10);
     loop->cleanup();
-}
-
-TEST(LoopAction, IsReady) {
-    auto loop = event::Loop::New();
-    SetScopeExitAction([loop] { delete loop; });
-
-    LoopAction action(*loop);
-    EXPECT_FALSE(action.isReady());
-
-    action.setChild(new SuccAction(*loop));
-    EXPECT_TRUE(action.isReady());
 }
 
 }

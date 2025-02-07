@@ -55,8 +55,8 @@ Terminal::Impl::Impl(event::Loop *wp_loop)
 Terminal::Impl::~Impl()
 {
     sessions_.foreach(
-        [](SessionContext *p) {
-            delete p;
+        [this](SessionContext *s) {
+            session_ctx_pool_.free(s);
         }
     );
     sessions_.clear();

@@ -76,11 +76,22 @@ int ActionJsonToGraphviz(const Json &js, std::ostringstream &oss)
             auto &key = js_item.key();
             if (key == "id" || key == "type" || key == "label" ||
                 key == "child" || key == "children" ||
-                key == "state" || key == "result")
+                key == "state" || key == "result" || key == "vars")
                 continue;
+
             std::string value_str = js_item.value().dump();
             util::string::Replace(value_str, R"(")", R"(\")");
             oss << R"(\n)" << key << " = " << value_str;
+        }
+
+        if (util::json::HasObjectField(js, "vars")) {
+            auto &js_vars = js["vars"];
+            for (auto &js_item : js_vars.items()) {
+                auto &key = js_item.key();
+                std::string value_str = js_item.value().dump();
+                util::string::Replace(value_str, R"(")", R"(\")");
+                oss << R"(\n)" << key << " : " << value_str;
+            }
         }
     }
     oss << R"(")";

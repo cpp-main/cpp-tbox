@@ -19,11 +19,13 @@
  */
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
 
 #include "sequence_action.h"
 #include "function_action.h"
 #include "sleep_action.h"
+#include "dummy_action.h"
 
 namespace tbox {
 namespace flow {
@@ -399,6 +401,55 @@ TEST(SequenceAction, FinishIfAllFinish_AllSucc) {
     loop->runLoop();
     EXPECT_TRUE(action_run_2);
     EXPECT_EQ(seq_action->index(), 2);
+}
+
+//! 两个子动作，第一个子动作出现了finish与pause
+//! 观察第二个子动作有没有正常执行
+TEST(SequenceAction, FinishPause) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
+
+    SequenceAction seq_action(*loop, SequenceAction::Mode::kAnyFail);
+
+    bool is_dummy_action_run = false;
+    bool is_function_action_run = false;
+    bool do_resume = false;
+
+    auto dummy_action = new DummyAction(*loop);
+    dummy_action->setStartCallback([&] {
+        is_dummy_action_run = true;
+        timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+            //! 同时发生动作结束与动作暂停的事件
+            dummy_action->emitFinish(true);
+            seq_action.pause();
+        });
+        timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+            do_resume = true;
+            seq_action.resume();
+        });
+    });
+
+    EXPECT_EQ(seq_action.addChild(dummy_action), 0);
+    EXPECT_EQ(seq_action.addChild(new FunctionAction(*loop, [&] { is_function_action_run = true; return true; })), 1);
+    EXPECT_TRUE(seq_action.isReady());
+
+    bool is_finished = false;
+    seq_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finished = true;
+        }
+    );
+
+    seq_action.start();
+    loop->exitLoop(std::chrono::milliseconds(15));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_dummy_action_run);
+    EXPECT_TRUE(is_function_action_run);
+    EXPECT_TRUE(is_finished);
+    EXPECT_TRUE(do_resume);
 }
 
 }

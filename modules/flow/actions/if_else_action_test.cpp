@@ -19,14 +19,33 @@
  */
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
 
 #include "if_else_action.h"
 #include "function_action.h"
 #include "succ_fail_action.h"
+#include "dummy_action.h"
 
 namespace tbox {
 namespace flow {
+
+TEST(IfElseAction, IsReady) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    IfElseAction if_else_action(*loop);
+    EXPECT_FALSE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "if");
+    EXPECT_FALSE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "succ");
+    EXPECT_TRUE(if_else_action.isReady());
+
+    if_else_action.setChildAs(new SuccAction(*loop), "fail");
+    EXPECT_TRUE(if_else_action.isReady());
+}
 
 TEST(IfElseAction, CondSucc) {
     auto loop = event::Loop::New();
@@ -223,21 +242,59 @@ TEST(IfElseAction, BlockOnIf) {
     EXPECT_TRUE(succ_action_run);
 }
 
-TEST(IfElseAction, IsReady) {
+/**
+ * 模拟if动作中finish与pause同时发生的情况
+ * 观察在恢复后，是否能正常执行then的动作
+ */
+TEST(IfElseAction, FinishPauseOnIf) {
     auto loop = event::Loop::New();
     SetScopeExitAction([loop] { delete loop; });
+    eventx::TimerPool timer_pool(loop);
 
     IfElseAction if_else_action(*loop);
-    EXPECT_FALSE(if_else_action.isReady());
 
-    if_else_action.setChildAs(new SuccAction(*loop), "if");
-    EXPECT_FALSE(if_else_action.isReady());
+    bool then_action_run = false;
+    bool if_else_action_run = false;
+    bool do_resume = false;
 
-    if_else_action.setChildAs(new SuccAction(*loop), "succ");
+    auto if_action = new DummyAction(*loop);
+    auto then_action = new FunctionAction(*loop, [&] {
+        then_action_run = true;
+        return true;
+    });
+
+    EXPECT_TRUE(if_else_action.setChildAs(if_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(then_action, "then"));
     EXPECT_TRUE(if_else_action.isReady());
 
-    if_else_action.setChildAs(new SuccAction(*loop), "fail");
+    if_action->setStartCallback([&] {
+        timer_pool.doAfter(std::chrono::milliseconds(1), [&] {
+            //! 同时发生动作结束与动作暂停的事件
+            if_action->emitFinish(true);
+            if_else_action.pause();
+        });
+        timer_pool.doAfter(std::chrono::milliseconds(10), [&] {
+            do_resume = true;
+            if_else_action.resume();
+        });
+    });
+
+    if_else_action.setFinishCallback(
+        [&] (bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            if_else_action_run = true;
+            loop->exitLoop();
+        }
+    );
+
     EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(if_else_action_run);
+    EXPECT_TRUE(then_action_run);
+    EXPECT_TRUE(do_resume);
 }
 
 }

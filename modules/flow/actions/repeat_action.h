@@ -26,7 +26,7 @@
 namespace tbox {
 namespace flow {
 
-class RepeatAction : public AssembleAction {
+class RepeatAction : public SerialAssembleAction {
   public:
     enum class Mode {
       kNoBreak,     //! for (int i = 0; i < times; ++i) { action() };
@@ -48,9 +48,6 @@ class RepeatAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
     void onChildFinished(bool is_succ, const Reason &why, const Trace &trace);

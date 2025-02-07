@@ -25,7 +25,7 @@
 namespace tbox {
 namespace flow {
 
-class LoopIfAction : public AssembleAction {
+class LoopIfAction : public SerialAssembleAction {
   public:
     explicit LoopIfAction(event::Loop &loop);
     virtual ~LoopIfAction();
@@ -42,9 +42,6 @@ class LoopIfAction : public AssembleAction {
 
   protected:
     virtual void onStart() override;
-    virtual void onStop() override;
-    virtual void onPause() override;
-    virtual void onResume() override;
     virtual void onReset() override;
 
     void onIfFinished(bool is_succ, const Reason &why, const Trace &trace);

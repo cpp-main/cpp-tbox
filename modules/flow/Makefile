@@ -39,6 +39,7 @@ HEAD_FILES = \
 	actions/sequence_action.h \
 	actions/parallel_action.h \
 	actions/if_else_action.h \
+	actions/if_then_action.h \
 	actions/loop_action.h \
 	actions/loop_if_action.h \
 	actions/event_action.h \
@@ -47,6 +48,7 @@ HEAD_FILES = \
 	actions/wrapper_action.h \
 	actions/succ_fail_action.h \
 	actions/dummy_action.h \
+	actions/switch_action.h \
 	to_graphviz.h \
 
 CPP_SRC_FILES = \
@@ -60,12 +62,15 @@ CPP_SRC_FILES = \
 	actions/sequence_action.cpp \
 	actions/parallel_action.cpp \
 	actions/if_else_action.cpp \
+	actions/if_then_action.cpp \
 	actions/loop_action.cpp \
 	actions/loop_if_action.cpp \
 	actions/event_action.cpp \
 	actions/repeat_action.cpp \
 	actions/composite_action.cpp \
 	actions/wrapper_action.cpp \
+	actions/dummy_action.cpp \
+	actions/switch_action.cpp \
 	to_graphviz.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.flow"' $(CXXFLAGS)
@@ -82,15 +87,17 @@ TEST_CPP_SRC_FILES = \
 	actions/sequence_action_test.cpp \
 	actions/parallel_action_test.cpp \
 	actions/if_else_action_test.cpp \
+	actions/if_then_action_test.cpp \
 	actions/loop_action_test.cpp \
 	actions/loop_if_action_test.cpp \
 	actions/repeat_action_test.cpp \
 	actions/composite_action_test.cpp \
 	actions/wrapper_action_test.cpp \
 	actions/succ_fail_action_test.cpp \
+	actions/switch_action_test.cpp \
 	to_graphviz_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_event -ltbox_util -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
 
 include $(TOP_DIR)/mk/lib_tbox_common.mk
