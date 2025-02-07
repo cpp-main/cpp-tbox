@@ -54,6 +54,10 @@ void AssembleAction::onFinal()
         final_cb_();
 }
 
+//////////////////////////
+// SerialAssembleAction
+//////////////////////////
+
 bool SerialAssembleAction::startThisAction(Action *action)
 {
     if (action->start()) {
@@ -130,8 +134,8 @@ void SerialAssembleAction::onResume()
 
 void SerialAssembleAction::onStop()
 {
-    if (curr_action_ != nullptr)
-        curr_action_->stop();
+    stopCurrAction();
+    child_finish_func_ = nullptr;
 
     AssembleAction::onStop();
 }
@@ -140,6 +144,8 @@ void SerialAssembleAction::onReset()
 {
     curr_action_ = nullptr;
     child_finish_func_ = nullptr;
+
+    AssembleAction::onReset();
 }
 
 }
