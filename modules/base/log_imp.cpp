@@ -29,7 +29,10 @@
 #include <mutex>
 
 namespace {
-constexpr uint32_t LOG_MAX_LEN = (100 << 10);
+constexpr size_t kMaxLength = (100 << 10);   //! 限定单条日志最大长度
+constexpr const char *kTruncTipText = " (TOO LONG, TRUNCATED)";
+constexpr size_t kTruncTipLen = ::strlen(kTruncTipText);
+constexpr size_t kTruncatedLength = kMaxLength - kTruncTipLen;
 
 std::mutex _lock;
 uint32_t _id_alloc = 0;
@@ -125,25 +128,42 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
     if (fmt != nullptr) {
         if (with_args) {
             uint32_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
+            bool is_need_trunc = false;   //! 是否过长需要截断
+
             for (;;) {
                 va_list args;
                 char buffer[buff_size];
 
                 va_start(args, fmt);
-                size_t len = vsnprintf(buffer, buff_size, fmt, args);
+                size_t len = 0;
+
+                if (!is_need_trunc) {   //! 如果不需要截断
+                    len = ::vsnprintf(buffer, buff_size, fmt, args);
+
+                } else {    //! 如果需要截断处理
+                    ::vsnprintf(buffer, kTruncatedLength + 1, fmt, args);
+                    ::strcpy(buffer + kTruncatedLength, kTruncTipText);
+                    len = kTruncatedLength + kTruncTipLen;
+                }
+
                 va_end(args);
 
+                //! 如果buffer的空间够用，则正常派发日志
+                //! 否则要对buffer空间进行扩张，或是对内容进行截断
                 if (len < buff_size) {
                     content.text_len = len;
                     content.text_ptr = buffer;
                     Dispatch(content);
                     break;
                 }
-
-                buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
-                if (buff_size > LOG_MAX_LEN) {
-                    std::cerr << "WARN: log text length " << buff_size << ", too long!" << std::endl;
-                    break;
+                
+                //! 没有超过MaxLength，则进行扩张
+                if (len <= kMaxLength) {
+                    buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
+                
+                } else {    //! 否则进行截断处理
+                    is_need_trunc = true;
+                    buff_size = kTruncatedLength + kTruncTipLen + 1;
                 }
             }
         } else {
