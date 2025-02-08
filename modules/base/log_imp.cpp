@@ -29,10 +29,11 @@
 #include <mutex>
 
 namespace {
-constexpr size_t kMaxLength = (100 << 10);   //! 限定单条日志最大长度
+
+constexpr size_t kLogTextMaxLength = (100 << 10);   //! 限定单条日志最大长度为100KB
 constexpr const char *kTruncTipText = " (TOO LONG, TRUNCATED)";
 constexpr size_t kTruncTipLen = ::strlen(kTruncTipText);
-constexpr size_t kTruncatedLength = kMaxLength - kTruncTipLen;
+constexpr size_t kTruncatedLength = kLogTextMaxLength - kTruncTipLen;
 
 std::mutex _lock;
 uint32_t _id_alloc = 0;
@@ -156,11 +157,11 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
                     Dispatch(content);
                     break;
                 }
-                
+
                 //! 没有超过MaxLength，则进行扩张
-                if (len <= kMaxLength) {
+                if (len <= kLogTextMaxLength) {
                     buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
-                
+
                 } else {    //! 否则进行截断处理
                     is_need_trunc = true;
                     buff_size = kTruncatedLength + kTruncTipLen + 1;
