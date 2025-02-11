@@ -30,7 +30,7 @@
 #include <mutex>
 #include <iostream>
 
-#include "log_imp.h"
+#include "log_impl.h"
 
 #define TIMESTAMP_STRING_SIZE   27
 
@@ -64,7 +64,10 @@ namespace {
             printf("%s() ", content->func_name);
 
         if (content->text_len > 0)
-            printf("%s ", content->text_ptr);
+            printf("%.*s ", content->text_len, content->text_ptr);
+
+        if (content->text_trunc == 1)
+            printf("(TRUNCATED) ");
 
         if (content->file_name != nullptr)
             printf("-- %s:%d", content->file_name, content->line);

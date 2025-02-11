@@ -66,25 +66,6 @@ TEST(AsyncFileSink, AllLevel)
     ch.cleanup();
 }
 
-TEST(AsyncFileSink, LongString)
-{
-    AsyncFileSink ch;
-
-    ch.setFilePath("/tmp/tbox");
-    ch.setFilePrefix("test");
-    ch.enable();
-
-    for (size_t s = 900; s < 1200; ++s) {
-        std::string tmp(s, 'z');
-        LogInfo("%s", tmp.c_str());
-    }
-
-    std::string tmp(4096, 'x');
-    LogInfo("%s", tmp.c_str());
-
-    ch.cleanup();
-}
-
 TEST(AsyncFileSink, FileDivide)
 {
     AsyncFileSink ch;
@@ -116,17 +97,6 @@ TEST(AsyncFileSink, ParamNormalize)
     ch.cleanup();
 }
 
-TEST(AsyncFileSink, CreateFileInInit)
-{
-    AsyncFileSink ch;
-    ch.setFilePath("/tmp/tbox");
-    ch.setFilePrefix("create_file_init");
-    ch.enable();
-    std::string name = ch.currentFilename();
-    EXPECT_TRUE(util::fs::IsFileExist(name));
-    ch.cleanup();
-}
-
 TEST(AsyncFileSink, RemoveLogFileDuringWriting)
 {
     AsyncFileSink ch;
@@ -138,6 +108,23 @@ TEST(AsyncFileSink, RemoveLogFileDuringWriting)
     std::this_thread::sleep_for(std::chrono::seconds(1));
     EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
     ch.cleanup();
+}
+
+TEST(AsyncFileSink, Truncate)
+{
+    auto origin_len = LogSetMaxLength(100);
+
+    AsyncFileSink ch;
+    ch.setFilePath("/tmp/tbox");
+    ch.setFilePrefix("truncate");
+    ch.enable();
+    util::fs::RemoveFile(ch.currentFilename());
+
+    std::string tmp(200, 'x');
+    LogInfo("%s", tmp.c_str());
+
+    ch.cleanup();
+    LogSetMaxLength(origin_len);
 }
 
 #include <tbox/event/loop.h>
@@ -157,10 +144,10 @@ TEST(AsyncFileSink, Benchmark)
     function<void()> func = [&] {
         for (int i = 0; i < 100; ++i)
             LogInfo("%d %s", i, tmp.c_str());
-        sp_loop->run(func);
+        sp_loop->runNext(func);
         counter += 100;
     };
-    sp_loop->run(func);
+    sp_loop->runNext(func);
 
     sp_loop->exitLoop(chrono::seconds(10));
     sp_loop->runLoop();

@@ -24,8 +24,6 @@
 #include <iostream>
 #include <chrono>
 
-constexpr uint32_t LOG_MAX_LEN = (100 << 10);   //! 限定单条日志最大长度
-
 namespace tbox {
 namespace log {
 
@@ -83,7 +81,7 @@ void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
     }
 
     if (is_need_flush)
-        flushLog();
+        flush();
 
     auto time_cost = std::chrono::steady_clock::now() - start_ts;
     if (time_cost > std::chrono::milliseconds(500))
@@ -92,85 +90,61 @@ void AsyncSink::onLogBackEndReadPipe(const void *data_ptr, size_t data_size)
 
 void AsyncSink::onLogBackEnd(const LogContent &content)
 {
-    size_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
+    char buff[1024];
+    size_t len = 0;
 
     udpateTimestampStr(content.timestamp.sec);
 
-    //! 加循环为了应对缓冲不够的情况
-    for (;;) {
-        char buff[buff_size];
-        size_t pos = 0;
+    //! 开启色彩，显示日志等级
+    if (enable_color_) {
+        len = snprintf(buff, sizeof(buff), "\033[%sm", LOG_LEVEL_COLOR_CODE[content.level]);
+        append(buff, len);
+    }
 
-#define REMAIN_SIZE ((buff_size > pos) ? (buff_size - pos) : 0)
-#define WRITE_PTR   (buff + pos)
+    //! 打印等级、时间戳、线程号、模块名
+    len = snprintf(buff, sizeof(buff), "%c %s.%06u %ld %s ",
+            LOG_LEVEL_LEVEL_CODE[content.level],
+            timestamp_str_, content.timestamp.usec,
+            content.thread_id, content.module_id);
+    append(buff, len);
 
-        size_t len = 0;
+    if (content.func_name != nullptr) {
+        len = snprintf(buff, sizeof(buff), "%s() ", content.func_name);
+        append(buff, len);
+    }
 
-        //! 开启色彩，显示日志等级
-        if (enable_color_) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "\033[%sm", LOG_LEVEL_COLOR_CODE[content.level]);
-            pos += len;
-        }
+    if (content.text_len > 0) {
+        append(content.text_ptr, content.text_len);
+        append(' '); //! 追加空格
 
-        //! 打印等级、时间戳、线程号、模块名
-        len = snprintf(WRITE_PTR, REMAIN_SIZE, "%c %s.%06u %ld %s ",
-                       LOG_LEVEL_LEVEL_CODE[content.level],
-                       timestamp_str_, content.timestamp.usec,
-                       content.thread_id, content.module_id);
-        pos += len;
-
-        if (content.func_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "%s() ", content.func_name);
-            pos += len;
-        }
-
-        if (content.text_len > 0) {
-            if (REMAIN_SIZE >= content.text_len)
-                memcpy(WRITE_PTR, content.text_ptr, content.text_len);
-            pos += content.text_len;
-
-            if (REMAIN_SIZE >= 1)    //! 追加一个空格
-                *WRITE_PTR = ' ';
-            ++pos;
-        }
-
-        if (content.file_name != nullptr) {
-            len = snprintf(WRITE_PTR, REMAIN_SIZE, "-- %s:%d", content.file_name, content.line);
-            pos += len;
-        }
-
-        if (enable_color_) {
-            if (REMAIN_SIZE >= 4)
-                memcpy(WRITE_PTR, "\033[0m", 4);
-            pos += 4;
-        }
-
-        if (REMAIN_SIZE >= 2) {
-            *WRITE_PTR = '\n';  //! 追加结束符
-            ++pos;
-            *WRITE_PTR = '\0';  //! 追加结束符
-            ++pos;
-        } else {
-          pos += 2;
-        }
-
-#undef REMAIN_SIZE
-#undef WRITE_PTR
-
-        //! 如果缓冲区是够用的，就完成
-        if (pos <= buff_size) {
-            appendLog(buff, pos);
-            break;
-        }
-
-        //! 否则扩展缓冲区，重来
-        buff_size = pos;
-
-        if (buff_size > LOG_MAX_LEN) {
-            std::cerr << "WARN: log length " << buff_size << ", too long!" << std::endl;
-            break;
+        if (content.text_trunc) {
+            const char *tip = "(TRUNCATED) ";
+            append(tip, ::strlen(tip));
         }
     }
+
+    if (content.file_name != nullptr) {
+        len = snprintf(buff, sizeof(buff), "-- %s:%d",  content.file_name, content.line);
+        append(buff, len);
+    }
+
+    if (enable_color_) {
+        append("\033[0m", 4);
+    }
+
+    endline();
+}
+
+void AsyncSink::append(const char *str, size_t len)
+{
+    cache_.reserve(cache_.size() + len);
+    std::back_insert_iterator<std::vector<char>>  back_insert_iter(cache_);
+    std::copy(str, str + len, back_insert_iter);
+}
+
+void AsyncSink::append(char ch)
+{
+    cache_.push_back(ch);
 }
 
 }

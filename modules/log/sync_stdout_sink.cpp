@@ -42,13 +42,18 @@ void SyncStdoutSink::onLogFrontEnd(const LogContent *content)
         printf("%s() ", content->func_name);
 
     if (content->text_len > 0)
-        printf("%s ", content->text_ptr);
+        printf("%.*s ", content->text_len, content->text_ptr);
+
+    if (content->text_trunc)
+        printf("(TRUNCATED) ");
 
     if (content->file_name != nullptr)
         printf("-- %s:%d", content->file_name, content->line);
 
     if (enable_color_)
         puts("\033[0m");    //! 恢复色彩
+    else
+        putchar('\n');
 }
 
 }

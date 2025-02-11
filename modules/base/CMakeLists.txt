@@ -30,7 +30,7 @@ set(TBOX_LIBRARY_NAME tbox_base)
 set(TBOX_BASE_HEADERS
     version.h
     log.h
-    log_imp.h
+    log_impl.h
     log_output.h
     defines.h
     scope_exit.hpp
@@ -50,7 +50,7 @@ set(TBOX_BASE_HEADERS
 
 set(TBOX_BASE_SOURCES
     version.cpp
-    log_imp.cpp
+    log_impl.cpp
     log_output.cpp
     backtrace.cpp
     catch_throw.cpp

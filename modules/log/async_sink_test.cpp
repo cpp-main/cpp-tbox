@@ -19,6 +19,8 @@
  */
 #include <gtest/gtest.h>
 
+#include <unistd.h>
+
 #include <iostream>
 #include <chrono>
 #include <algorithm>
@@ -30,15 +32,21 @@ using namespace tbox::log;
 
 class TestAsyncSink : public AsyncSink {
   protected:
-    virtual void appendLog(const char *str, size_t len) {
-        cout << str << endl;
-        (void)len;
+    virtual void endline() {
+        cache_.push_back('\n');
+    }
+
+    virtual void flush() override {
+        auto wsize = ::write(STDOUT_FILENO, cache_.data(), cache_.size()); //! 写到终端
+        (void)wsize;  //! 消除警告用
+        cache_.clear();
     }
 };
 
 class EmptyTestAsyncSink : public AsyncSink {
   protected:
-    virtual void appendLog(const char *str, size_t len) { (void)str; (void)len; }
+    virtual void endline() { }
+    virtual void flush() override { cache_.clear(); }
 };
 
 
@@ -76,15 +84,17 @@ TEST(AsyncSink, AllLevel)
     ch.cleanup();
 }
 
-
-TEST(AsyncSink, LongString)
+TEST(AsyncSink, Truncate)
 {
-    TestAsyncSink ch;
+    auto origin_len = LogSetMaxLength(100);
 
+    TestAsyncSink ch;
     ch.enable();
-    std::string tmp(4096, 'x');
+
+    std::string tmp(200, 'x');
     LogInfo("%s", tmp.c_str());
 
+    LogSetMaxLength(origin_len);
     ch.cleanup();
 }
 
@@ -103,17 +113,17 @@ TEST(AsyncSink, Benchmark)
     function<void()> func = [&] {
         for (int i = 0; i < 100; ++i)
             LogInfo("%d %s", i, tmp.c_str());
-        sp_loop->runInLoop(func);
+        sp_loop->runNext(func);
         counter += 100;
     };
-    sp_loop->runInLoop(func);
+    sp_loop->runNext(func);
 
     sp_loop->exitLoop(chrono::seconds(10));
     sp_loop->runLoop();
 
     delete sp_loop;
-    cout << "count in sec: " << counter/10 << endl;
     ch.cleanup();
+    cout << "count in sec: " << counter/10 << endl;
 }
 
 TEST(AsyncSink, Benchmark_Empty)
@@ -128,16 +138,16 @@ TEST(AsyncSink, Benchmark_Empty)
     function<void()> func = [&] {
         for (int i = 0; i < 100; ++i)
             LogInfo("%d %s", i, tmp.c_str());
-        sp_loop->run(func);
+        sp_loop->runNext(func);
         counter += 100;
     };
-    sp_loop->run(func);
+    sp_loop->runNext(func);
 
     sp_loop->exitLoop(chrono::seconds(10));
     sp_loop->runLoop();
 
     delete sp_loop;
-    cout << "count in sec: " << counter/10 << endl;
     ch.cleanup();
+    cout << "count in sec: " << counter/10 << endl;
 }
 

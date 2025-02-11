@@ -30,7 +30,8 @@ class AsyncSyslogSink : public AsyncSink {
     AsyncSyslogSink();
 
   protected:
-    virtual void appendLog(const char *str, size_t len) override;
+    virtual void endline() override;
+    virtual void flush() override { }
 };
 
 }

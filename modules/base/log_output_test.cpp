@@ -19,6 +19,7 @@
  */
 #include <gtest/gtest.h>
 #include "log.h"
+#include "log_impl.h"
 #include "log_output.h"
 
 TEST(Log, AllLevel)
@@ -58,5 +59,23 @@ TEST(Log, error)
     LogErrno(1, "");
     LogErrno(1, "no value");
     LogErrno(1, "has value:%d", 123);
+    LogOutput_Disable();
+}
+
+TEST(Log, Truncate)
+{
+    LogOutput_Enable();
+
+    std::string long_str(1025, 'l');
+    std::string normal_str(1024, 'n');
+
+    auto origin_len = LogSetMaxLength(1024);
+
+    LogInfo(normal_str.c_str());
+    LogNotice(long_str.c_str());
+    LogInfo("%s", normal_str.c_str());
+    LogNotice("%s", long_str.c_str());
+
+    LogSetMaxLength(origin_len);
     LogOutput_Disable();
 }

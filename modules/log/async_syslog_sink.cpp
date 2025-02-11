@@ -34,10 +34,12 @@ AsyncSyslogSink::AsyncSyslogSink()
     setConfig(cfg);
 }
 
-void AsyncSyslogSink::appendLog(const char *str, size_t len)
+void AsyncSyslogSink::endline()
 {
-    syslog(LOG_INFO, "%s", str);
-    (void)len;
+    cache_.push_back('\0');
+    ::syslog(LOG_INFO, "%s", cache_.data());
+
+    cache_.clear();
 }
 
 }

@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_BASE_LOG_IMP_20180201
-#define TBOX_BASE_LOG_IMP_20180201
+#ifndef TBOX_BASE_LOG_IMPL_20180201
+#define TBOX_BASE_LOG_IMPL_20180201
 
 /**
  * 本文件只声明了函数 LogSetPrintfFunc() 该函数用于指定日志输出函数
@@ -27,6 +27,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "log.h"
 
@@ -49,6 +50,7 @@ struct LogContent {
     int         level;      //!< 日志等级
     uint32_t    text_len;   //!< 内容大小
     const char *text_ptr;   //!< 内容地址
+    bool        text_trunc; //!< 是否截断
 };
 
 //! 日志等级颜色表
@@ -58,6 +60,11 @@ extern const char*  LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX];
 //! 定义日志输出函数
 typedef void (*LogPrintfFuncType)(const LogContent *content, void *ptr);
 
+//! 设置最大长度
+size_t   LogSetMaxLength(size_t max_len);
+//! 获取最大长度
+size_t   LogGetMaxLength();
+
 //! 添加与删除日志输出函数
 uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr);
 bool     LogRemovePrintfFunc(uint32_t id);
@@ -66,4 +73,4 @@ bool     LogRemovePrintfFunc(uint32_t id);
 }
 #endif
 
-#endif //TBOX_BASE_LOG_IMP_20180201
+#endif //TBOX_BASE_LOG_IMPL_20180201

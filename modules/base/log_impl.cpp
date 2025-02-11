@@ -17,7 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "log_imp.h"
+#include "log_impl.h"
 
 #include <sys/time.h>
 #include <sys/syscall.h>
@@ -29,7 +29,8 @@
 #include <mutex>
 
 namespace {
-constexpr uint32_t LOG_MAX_LEN = (100 << 10);
+
+size_t _LogTextMaxLength = (100 << 10);     //! 限定单条日志最大长度，默认为100KB
 
 std::mutex _lock;
 uint32_t _id_alloc = 0;
@@ -76,8 +77,8 @@ const char  LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX] = {
 };
 
 const char* LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX] = {
-    "31",       //! FATAL       红
-    "7;91",     //! ERROR       文字黑，背景亮红
+    "7;91",     //! FATAL       文字黑，背景亮红
+    "31",       //! ERROR       红
     "7;93",     //! WARN        文字黑，背景亮黄
     "93",       //! NOTICE      亮黄
     "7;92",     //! IMPORTANT   文字黑，背景亮绿
@@ -85,6 +86,22 @@ const char* LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX] = {
     "36",       //! DEBUG       青
     "35",       //! TRACE       洋葱红
 };
+
+extern "C" {
+
+size_t LogSetMaxLength(size_t max_len)
+{
+    std::lock_guard<std::mutex> lg(_lock);
+    auto origin_len = _LogTextMaxLength;
+    _LogTextMaxLength = max_len;
+    return origin_len;
+}
+
+size_t LogGetMaxLength()
+{
+    std::lock_guard<std::mutex> lg(_lock);
+    return _LogTextMaxLength;
+}
 
 /**
  * \brief   日志格式化打印接口的实现
@@ -120,19 +137,29 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         .level = level,
         .text_len = 0,
         .text_ptr = nullptr,
+        .text_trunc = false,
     };
 
     if (fmt != nullptr) {
         if (with_args) {
-            uint32_t buff_size = 1024;    //! 初始大小，可应对绝大数情况
+            uint32_t buff_size = std::min(2048lu, _LogTextMaxLength) + 1;
+
             for (;;) {
                 va_list args;
                 char buffer[buff_size];
 
                 va_start(args, fmt);
-                size_t len = vsnprintf(buffer, buff_size, fmt, args);
+                size_t len = 0;
+
+                len = ::vsnprintf(buffer, buff_size, fmt, args);
+
+                if (content.text_trunc)
+                    len = _LogTextMaxLength;
+
                 va_end(args);
 
+                //! 如果buffer的空间够用，则正常派发日志
+                //! 否则要对buffer空间进行扩张，或是对内容进行截断
                 if (len < buff_size) {
                     content.text_len = len;
                     content.text_ptr = buffer;
@@ -140,20 +167,34 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
                     break;
                 }
 
-                buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
-                if (buff_size > LOG_MAX_LEN) {
-                    std::cerr << "WARN: log text length " << buff_size << ", too long!" << std::endl;
-                    break;
+                //! 没有超过MaxLength，则进行扩张
+                if (len <= _LogTextMaxLength) {
+                    buff_size = len + 1;    //! 要多留一个结束符 \0，否则 vsnprintf() 会少一个字符
+
+                } else {    //! 否则进行截断处理
+                    buff_size = _LogTextMaxLength + 1;  //! 同上
+                    content.text_trunc = true;
                 }
             }
+
         } else {
             content.text_len = ::strlen(fmt);
+
+            //! 如果超出最大长度，要限制
+            if (content.text_len > _LogTextMaxLength) {
+                content.text_len = _LogTextMaxLength;
+                content.text_trunc = true;
+            }
+
             content.text_ptr = fmt;
             Dispatch(content);
         }
+
     } else {
         Dispatch(content);
     }
+}
+
 }
 
 uint32_t LogAddPrintfFunc(LogPrintfFuncType func, void *ptr)

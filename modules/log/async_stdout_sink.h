@@ -32,8 +32,8 @@ class AsyncStdoutSink : public AsyncSink {
     AsyncStdoutSink();
 
   protected:
-    virtual void appendLog(const char *str, size_t len) override;
-    virtual void flushLog() override;
+    virtual void endline() override;
+    virtual void flush() override;
 
   private:
     std::vector<char> buffer_;

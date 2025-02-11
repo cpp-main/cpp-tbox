@@ -31,7 +31,7 @@ HAVE_EXECINFO_H ?= yes
 HEAD_FILES = \
 	version.h \
 	log.h \
-	log_imp.h \
+	log_impl.h \
 	log_output.h \
 	defines.h \
 	scope_exit.hpp \
@@ -51,7 +51,7 @@ HEAD_FILES = \
 
 CPP_SRC_FILES = \
 	version.cpp \
-	log_imp.cpp \
+	log_impl.cpp \
 	log_output.cpp \
 	backtrace.cpp \
 	catch_throw.cpp \

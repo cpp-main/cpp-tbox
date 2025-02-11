@@ -62,6 +62,12 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
 
     if (util::json::HasObjectField(cfg, "log")) {
         auto &js_log = cfg.at("log");
+
+        int max_len = 0;
+        if (util::json::GetField(js_log, "max_len", max_len) && max_len > 0) {
+            LogSetMaxLength(static_cast<size_t>(max_len));
+        }
+
         //! STDOUT
         if (util::json::HasObjectField(js_log, "stdout")) {
             auto &js_stdout = js_log.at("stdout");
@@ -151,6 +157,23 @@ void Log::initShell(TerminalNodes &term)
         term.mountNode(log_node, dir_node, "file");
         initShellForSink(async_file_sink_, term, dir_node);
         initShellForAsyncFileSink(term, dir_node);
+    }
+
+    {
+        terminal::IntegerFuncNodeProfile profile;
+        profile.set_func = \
+            [] (int max_len) {
+                if (max_len > 0) {
+                    LogSetMaxLength(static_cast<size_t>(max_len));
+                    return true;
+                }
+                return false;
+            };
+        profile.get_func = [] { return LogGetMaxLength(); };
+        profile.usage = "Usage: max_len       # get max len, unit:byte\r\n"
+                        "       max_len <len> # set max len, len>0\r\n";
+        profile.help = "get or set log maxmum length";
+        terminal::AddFuncNode(term, log_node, "max_len", profile);
     }
 }
 

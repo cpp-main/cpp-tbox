@@ -91,30 +91,28 @@ void AsyncFileSink::updateInnerValues()
     CHECK_CLOSE_RESET_FD(fd_);
 }
 
-void AsyncFileSink::appendLog(const char *str, size_t len)
+void AsyncFileSink::endline()
 {
-    buffer_.reserve(buffer_.size() + len - 1);
-    std::back_insert_iterator<std::vector<char>>  back_insert_iter(buffer_);
-    std::copy(str, str + len - 1, back_insert_iter);
+    cache_.push_back('\n');
 }
 
-void AsyncFileSink::flushLog()
+void AsyncFileSink::flush()
 {
     if (pid_ == 0 || !checkAndCreateLogFile())
         return;
 
-    auto wsize = ::write(fd_, buffer_.data(), buffer_.size());
-    if (wsize != static_cast<ssize_t>(buffer_.size())) {
+    auto wsize = ::write(fd_, cache_.data(), cache_.size());
+    if (wsize != static_cast<ssize_t>(cache_.size())) {
         cerr << "Err: write file error." << endl;
         return;
     }
 
-    total_write_size_ += buffer_.size();
-
-    buffer_.clear();
+    total_write_size_ += cache_.size();
 
     if (total_write_size_ >= file_max_size_)
         CHECK_CLOSE_RESET_FD(fd_);
+
+    cache_.clear();
 }
 
 bool AsyncFileSink::checkAndCreateLogFile()

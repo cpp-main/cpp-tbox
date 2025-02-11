@@ -24,9 +24,9 @@
 #include <string>
 #include <mutex>
 #include <tbox/base/log.h>
-#include <tbox/base/log_imp.h>
+#include <tbox/base/log_impl.h>
 
-#define TIMESTAMP_STRING_SIZE   20
+#define TIMESTAMP_STRING_SIZE 20
 
 namespace tbox {
 namespace log {

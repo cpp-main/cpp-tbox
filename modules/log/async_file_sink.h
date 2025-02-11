@@ -44,8 +44,8 @@ class AsyncFileSink : public AsyncSink {
   protected:
     void updateInnerValues();
 
-    virtual void appendLog(const char *str, size_t len) override;
-    virtual void flushLog() override;
+    virtual void endline() override;
+    virtual void flush() override;
 
     bool checkAndCreateLogFile();
 
