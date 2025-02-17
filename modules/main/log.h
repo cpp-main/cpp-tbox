@@ -20,6 +20,8 @@
 #ifndef TBOX_MAIN_LOG_H_20220414
 #define TBOX_MAIN_LOG_H_20220414
 
+#include <map>
+
 #include <tbox/base/json_fwd.h>
 
 #include <tbox/log/sync_stdout_sink.h>
@@ -40,15 +42,70 @@ class Log {
     void cleanup();
 
   protected:
-    void initSink(const Json &js, log::Sink &ch);
-    void initShell(terminal::TerminalNodes &term);
-    void initShellForSink(log::Sink &log_ch, terminal::TerminalNodes &term, terminal::NodeToken dir_node);
-    void initShellForAsyncFileSink(terminal::TerminalNodes &term, terminal::NodeToken dir_node);
+    struct SinkShellNodes {
+        terminal::NodeToken dir;
+        terminal::NodeToken set_enable;
+        terminal::NodeToken set_color_enable;
+        terminal::NodeToken set_level;
+        terminal::NodeToken unset_level;
+    };
+
+    struct FileSinkShellNodes : public SinkShellNodes {
+        terminal::NodeToken set_path;
+        terminal::NodeToken set_prefix;
+        terminal::NodeToken set_sync_enable;
+        terminal::NodeToken set_max_size;
+    };
+
+    struct StdoutSink {
+        log::SyncStdoutSink sink;
+        SinkShellNodes nodes;
+    };
+
+    struct SyslogSink {
+        log::AsyncSyslogSink sink;
+        SinkShellNodes nodes;
+    };
+
+    struct FileSink {
+        log::AsyncFileSink sink;
+        FileSinkShellNodes nodes;
+    };
+
+  protected:
+    //stdout相关
+    bool installStdoutSink();
+    bool initStdoutSinkByJson(const Json &js);
+    bool uninstallStdoutSink();
+
+    //syslog相关
+    bool installSyslogSink();
+    bool initSyslogSinkByJson(const Json &js);
+    bool uninstallSyslogSink();
+
+    //file相关
+    bool installFileSink(const std::string &name);
+    bool initFileSinkByJson(const std::string &name, const Json &js);
+    bool uninstallFileSink(const std::string &name);
+
+    //! 通过JSON初始化Sink共有的配置项
+    void initSinkByJson(log::Sink &sink, const Json &js);
+
+    void initShell();
+
+    void installShellForSink(log::Sink &sink, SinkShellNodes &nodes, const std::string &name);
+    void uninstallShellForSink(SinkShellNodes &nodes, const std::string &name);
+
+    void installShellForFileSink(log::AsyncFileSink &sink, FileSinkShellNodes &nodes, const std::string &name);
+    void uninstallShellForFileSink(FileSinkShellNodes &nodes, const std::string &name);
 
   private:
-    log::SyncStdoutSink  sync_stdout_sink_;
-    log::AsyncSyslogSink async_syslog_sink_;
-    log::AsyncFileSink   async_file_sink_;
+    terminal::TerminalNodes *shell_;
+    terminal::NodeToken sink_node_;
+
+    StdoutSink *stdout_sink_ = nullptr;
+    SyslogSink *syslog_sink_ = nullptr;
+    std::map<std::string, FileSink*> file_sinks_;
 };
 
 }
