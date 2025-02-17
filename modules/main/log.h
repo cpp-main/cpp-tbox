@@ -93,19 +93,21 @@ class Log {
 
     void initShell();
 
-    void installShellForSink(log::Sink &sink, SinkShellNodes &nodes, const std::string &name);
-    void uninstallShellForSink(SinkShellNodes &nodes, const std::string &name);
+    void installShellForSink(log::Sink &sink, terminal::NodeToken parent_node, SinkShellNodes &nodes, const std::string &name);
+    void uninstallShellForSink(terminal::NodeToken parent_node, SinkShellNodes &nodes, const std::string &name);
 
     void installShellForFileSink(log::AsyncFileSink &sink, FileSinkShellNodes &nodes, const std::string &name);
     void uninstallShellForFileSink(FileSinkShellNodes &nodes, const std::string &name);
 
   private:
     terminal::TerminalNodes *shell_;
-    terminal::NodeToken sink_node_;
 
     StdoutSink *stdout_sink_ = nullptr;
     SyslogSink *syslog_sink_ = nullptr;
     std::map<std::string, FileSink*> file_sinks_;
+
+    terminal::NodeToken sink_node_;
+    terminal::NodeToken file_sink_node_;
 };
 
 }

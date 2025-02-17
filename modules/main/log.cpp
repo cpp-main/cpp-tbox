@@ -135,7 +135,7 @@ bool Log::installStdoutSink()
         return false;
 
     stdout_sink_ = new StdoutSink;
-    installShellForSink(stdout_sink_->sink, stdout_sink_->nodes, "stdout");
+    installShellForSink(stdout_sink_->sink, sink_node_, stdout_sink_->nodes, "stdout");
 
     return true;
 }
@@ -151,7 +151,7 @@ bool Log::uninstallStdoutSink()
     if (stdout_sink_ == nullptr)
         return false;
 
-    uninstallShellForSink(stdout_sink_->nodes, "stdout");
+    uninstallShellForSink(sink_node_, stdout_sink_->nodes, "stdout");
 
     stdout_sink_->sink.disable();
     CHECK_DELETE_RESET_OBJ(stdout_sink_);
@@ -164,7 +164,7 @@ bool Log::installSyslogSink()
         return false;
 
     syslog_sink_ = new SyslogSink;
-    installShellForSink(syslog_sink_->sink, syslog_sink_->nodes, "syslog");
+    installShellForSink(syslog_sink_->sink, sink_node_, syslog_sink_->nodes, "syslog");
 
     return true;
 }
@@ -180,7 +180,7 @@ bool Log::uninstallSyslogSink()
     if (syslog_sink_ == nullptr)
         return false;
 
-    uninstallShellForSink(syslog_sink_->nodes, "syslog");
+    uninstallShellForSink(sink_node_, syslog_sink_->nodes, "syslog");
 
     syslog_sink_->sink.disable();
     syslog_sink_->sink.cleanup();
@@ -195,7 +195,7 @@ bool Log::installFileSink(const std::string &name)
         return false;
 
     auto file_sink = new FileSink;
-    installShellForFileSink(file_sink->sink, file_sink->nodes, std::string("file:") + name);
+    installShellForFileSink(file_sink->sink, file_sink->nodes, name);
     file_sinks_.emplace(name, file_sink);
     return true;
 }
@@ -234,11 +234,12 @@ bool Log::uninstallFileSink(const std::string &name)
     auto file_sink = iter->second;
     file_sinks_.erase(iter);
 
-    uninstallShellForFileSink(file_sink->nodes, std::string("file:") + name);
+    uninstallShellForFileSink(file_sink->nodes, name);
 
     file_sink->sink.disable();
     file_sink->sink.cleanup();
     CHECK_DELETE_OBJ(file_sink);
+
     return true;
 }
 
@@ -271,9 +272,9 @@ void Log::initSinkByJson(log::Sink &sink, const Json &js)
     }
 }
 
-void Log::installShellForSink(log::Sink &sink, SinkShellNodes &nodes, const std::string &name)
+void Log::installShellForSink(log::Sink &sink, terminal::NodeToken parent_node, SinkShellNodes &nodes, const std::string &name)
 {
-    nodes.dir = terminal::AddDirNode(*shell_, sink_node_, name);
+    nodes.dir = terminal::AddDirNode(*shell_, parent_node, name);
 
     {
         terminal::BooleanFuncNodeProfile profile;
@@ -360,7 +361,7 @@ void Log::installShellForSink(log::Sink &sink, SinkShellNodes &nodes, const std:
     }
 }
 
-void Log::uninstallShellForSink(SinkShellNodes &nodes, const std::string &name)
+void Log::uninstallShellForSink(terminal::NodeToken parent_node, SinkShellNodes &nodes, const std::string &name)
 {
     shell_->deleteNode(nodes.dir);
     shell_->deleteNode(nodes.set_enable);
@@ -368,12 +369,16 @@ void Log::uninstallShellForSink(SinkShellNodes &nodes, const std::string &name)
     shell_->deleteNode(nodes.set_level);
     shell_->deleteNode(nodes.unset_level);
 
-    shell_->umountNode(sink_node_, name);
+    shell_->umountNode(parent_node, name);
 }
 
 void Log::installShellForFileSink(log::AsyncFileSink &sink, FileSinkShellNodes &nodes, const std::string &name)
 {
-    installShellForSink(sink, nodes, name);
+    //! 如果之前没有FileSink，则要创建并挂载files结点
+    if (file_sinks_.empty())
+        file_sink_node_ = terminal::AddDirNode(*shell_, sink_node_, "files");
+
+    installShellForSink(sink, file_sink_node_, nodes, name);
 
     {
         terminal::StringFuncNodeProfile profile;
@@ -436,7 +441,13 @@ void Log::uninstallShellForFileSink(FileSinkShellNodes &nodes, const std::string
     shell_->deleteNode(nodes.set_sync_enable);
     shell_->deleteNode(nodes.set_max_size);
 
-    uninstallShellForSink(nodes, name);
+    uninstallShellForSink(file_sink_node_, nodes, name);
+
+    if (file_sinks_.empty()) {
+        shell_->umountNode(sink_node_, "files");
+        shell_->deleteNode(file_sink_node_);
+        file_sink_node_.reset();
+    }
 }
 
 }
