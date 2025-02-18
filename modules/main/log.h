@@ -85,8 +85,9 @@ class Log {
 
     //file相关
     bool installFileSink(const std::string &name);
-    bool initFileSinkByJson(const std::string &name, const Json &js);
+    bool initFileSinkByJson(const std::string &name, const Json &js, const char *proc_name);
     bool uninstallFileSink(const std::string &name);
+    bool uninstallFileSink(FileSink *file_sink, const std::string &name);
 
     //! 通过JSON初始化Sink共有的配置项
     void initSinkByJson(log::Sink &sink, const Json &js);

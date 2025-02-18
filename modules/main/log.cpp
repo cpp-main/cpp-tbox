@@ -70,17 +70,14 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
             initSyslogSinkByJson(js_log.at("syslog"));
         }
 
-#if 0
         //! FILELOG
         if (util::json::HasObjectField(js_log, "files")) {
             auto &js_files = js_log.at("files");
             for (auto &js_file : js_files.items()) {
-                auto async_file_sink = new log::AsyncFileSink;
-                async_file_sink_map_[js_file.key()] = async_file_sink;
-                //TODO
+                installFileSink(js_file.key());
+                initFileSinkByJson(js_file.key(), js_file.value(), proc_name);
             }
         }
-#endif
     }
     return true;
 }
@@ -200,30 +197,34 @@ bool Log::installFileSink(const std::string &name)
     return true;
 }
 
-#if 0
-bool Log::initFileSinkByJson(const std::string &name, const Json &js)
+bool Log::initFileSinkByJson(const std::string &name, const Json &js, const char *proc_name)
 {
+    auto iter = file_sinks_.find(name);
+    if (iter == file_sinks_.end())
+        return false;
+
+    auto &sink = iter->second->sink;
+
+    initSinkByJson(sink, js);
+
     std::string path;
-    if (util::json::GetField(js_file, "path", path))
-        async_file_sink->setFilePath(path);
+    if (util::json::GetField(js, "path", path))
+        sink.setFilePath(path);
 
     std::string prefix = util::fs::Basename(proc_name);
-    util::json::GetField(js_file, "prefix", prefix);
-    async_file_sink->setFilePrefix(prefix);
+    util::json::GetField(js, "prefix", prefix);
+    sink.setFilePrefix(prefix);
 
     bool enable_sync = false;
-    if (util::json::GetField(js_file, "enable_sync", enable_sync))
-        async_file_sink->setFileSyncEnable(enable_sync);
+    if (util::json::GetField(js, "enable_sync", enable_sync))
+        sink.setFileSyncEnable(enable_sync);
 
     unsigned int max_size = 0;
-    if (util::json::GetField(js_file, "max_size", max_size))
-        async_file_sink->setFileMaxSize(max_size * 1024);
-
-    initSinkByJson(*async_file_sink, js_file);
+    if (util::json::GetField(js, "max_size", max_size))
+        sink.setFileMaxSize(max_size * 1024);
 
     return true;
 }
-#endif
 
 bool Log::uninstallFileSink(const std::string &name)
 {
@@ -234,12 +235,17 @@ bool Log::uninstallFileSink(const std::string &name)
     auto file_sink = iter->second;
     file_sinks_.erase(iter);
 
+    uninstallFileSink(file_sink, name);
+    return true;
+}
+
+bool Log::uninstallFileSink(FileSink *file_sink, const std::string &name)
+{
     uninstallShellForFileSink(file_sink->nodes, name);
 
     file_sink->sink.disable();
     file_sink->sink.cleanup();
     CHECK_DELETE_OBJ(file_sink);
-
     return true;
 }
 
@@ -248,7 +254,9 @@ void Log::cleanup()
     uninstallStdoutSink();
     uninstallSyslogSink();
 
-    //TODO
+    for (auto &item: file_sinks_)
+        uninstallFileSink(item.second, item.first);
+    file_sinks_.clear();
 }
 
 void Log::initSinkByJson(log::Sink &sink, const Json &js)
