@@ -82,48 +82,14 @@ bool Log::initialize(const char *proc_name, Context &ctx, const Json &cfg)
     return true;
 }
 
-void Log::initShell()
+void Log::cleanup()
 {
-    auto log_node = terminal::AddDirNode(*shell_, shell_->rootNode(), "log", "This is log directory");
-    sink_node_ = terminal::AddDirNode(*shell_, log_node, "sinks");
+    for (auto &item: file_sinks_)
+        uninstallFileSink(item.second, item.first);
+    file_sinks_.clear();
 
-    {
-        terminal::IntegerFuncNodeProfile profile;
-        profile.set_func = \
-            [] (int max_len) {
-                if (max_len > 0) {
-                    LogSetMaxLength(static_cast<size_t>(max_len));
-                    return true;
-                }
-                return false;
-            };
-        profile.get_func = [] { return LogGetMaxLength(); };
-        profile.usage = "Usage: max_len       # get max len, unit:byte\r\n"
-                        "       max_len <len> # set max len, len>0\r\n";
-        profile.help = "get or set log maxmum length";
-        terminal::AddFuncNode(*shell_, log_node, "max_len", profile);
-    }
-
-    terminal::AddFuncNode(*shell_, log_node, "add_stdout", [this] { installStdoutSink(); });
-    terminal::AddFuncNode(*shell_, log_node, "add_syslog", [this] { installSyslogSink(); });
-    terminal::AddFuncNode(*shell_, log_node, "del_stdout", [this] { uninstallStdoutSink(); });
-    terminal::AddFuncNode(*shell_, log_node, "del_syslog", [this] { uninstallSyslogSink(); });
-
-    {
-        terminal::StringFuncNodeProfile profile;
-        profile.set_func = [this] (const std::string &name) {
-            return installFileSink(name);
-        };
-        terminal::AddFuncNode(*shell_, log_node, "add_file", profile);
-    }
-
-    {
-        terminal::StringFuncNodeProfile profile;
-        profile.set_func = [this] (const std::string &name) {
-            return uninstallFileSink(name);
-        };
-        terminal::AddFuncNode(*shell_, log_node, "del_file", profile);
-    }
+    uninstallSyslogSink();
+    uninstallStdoutSink();
 }
 
 bool Log::installStdoutSink()
@@ -148,9 +114,10 @@ bool Log::uninstallStdoutSink()
     if (stdout_sink_ == nullptr)
         return false;
 
+    stdout_sink_->sink.disable();
+
     uninstallShellForSink(sink_node_, stdout_sink_->nodes, "stdout");
 
-    stdout_sink_->sink.disable();
     CHECK_DELETE_RESET_OBJ(stdout_sink_);
     return true;
 }
@@ -177,10 +144,11 @@ bool Log::uninstallSyslogSink()
     if (syslog_sink_ == nullptr)
         return false;
 
-    uninstallShellForSink(sink_node_, syslog_sink_->nodes, "syslog");
-
     syslog_sink_->sink.disable();
     syslog_sink_->sink.cleanup();
+
+    uninstallShellForSink(sink_node_, syslog_sink_->nodes, "syslog");
+
     CHECK_DELETE_RESET_OBJ(syslog_sink_);
     return true;
 }
@@ -241,22 +209,13 @@ bool Log::uninstallFileSink(const std::string &name)
 
 bool Log::uninstallFileSink(FileSink *file_sink, const std::string &name)
 {
-    uninstallShellForFileSink(file_sink->nodes, name);
-
     file_sink->sink.disable();
     file_sink->sink.cleanup();
+
+    uninstallShellForFileSink(file_sink->nodes, name);
+
     CHECK_DELETE_OBJ(file_sink);
     return true;
-}
-
-void Log::cleanup()
-{
-    uninstallStdoutSink();
-    uninstallSyslogSink();
-
-    for (auto &item: file_sinks_)
-        uninstallFileSink(item.second, item.first);
-    file_sinks_.clear();
 }
 
 void Log::initSinkByJson(log::Sink &sink, const Json &js)
@@ -277,6 +236,115 @@ void Log::initSinkByJson(log::Sink &sink, const Json &js)
         auto &js_levels = js.at("levels");
         for (auto &item : js_levels.items())
             sink.setLevel(item.key(), item.value());
+    }
+}
+
+void Log::initShell()
+{
+    auto log_node = terminal::AddDirNode(*shell_, shell_->rootNode(), "log", "This is log directory");
+    sink_node_ = terminal::AddDirNode(*shell_, log_node, "sinks");
+
+    {
+        terminal::IntegerFuncNodeProfile profile;
+        profile.set_func = \
+            [] (int max_len) {
+                if (max_len > 0) {
+                    LogSetMaxLength(static_cast<size_t>(max_len));
+                    return true;
+                }
+                return false;
+            };
+        profile.get_func = [] { return LogGetMaxLength(); };
+        profile.usage = "Usage: max_len       # get max len, unit:byte\r\n"
+                        "       max_len <len> # set max len, len>0\r\n";
+        profile.help = "get or set log maxmum length";
+        terminal::AddFuncNode(*shell_, log_node, "max_len", profile);
+    }
+
+    {
+        auto func_node = shell_->createFuncNode(
+            [this] (const Session &s, const Args &a) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (a.size() == 2) {
+                    if (a[1] == "stdout") {
+                        print_usage = false;
+                        if (installStdoutSink())
+                            oss << "done.\r\n";
+                        else
+                            oss << "fail, already exist.\r\n";
+
+                    } else if (a[1] == "syslog") {
+                        print_usage = false;
+                        if (installSyslogSink())
+                            oss << "done.\r\n";
+                        else
+                            oss << "fail, already exist.\r\n";
+                    }
+
+                } else if (a.size() == 3 && a[1] == "file") {
+                    print_usage = false;
+                    if (installFileSink(a[2]))
+                        oss << "done\r\n";
+                    else
+                        oss << "fail, already exist.\r\n";
+                }
+
+                if (print_usage) {
+                    oss << "Install log sink.\r\n"
+                        << "Usage: " << a[0] << " stdout       # install stdout sink.\r\n"
+                        << "       " << a[0] << " syslog       # install syslog sink.\r\n"
+                        << "       " << a[0] << " file <name>  # install file sink by name.\r\n";
+                }
+
+                s.send(oss.str());
+            },
+            "install log sink"
+        );
+        shell_->mountNode(log_node, func_node, "add_sink");
+    }
+
+    {
+        auto func_node = shell_->createFuncNode(
+            [this] (const Session &s, const Args &a) {
+                std::ostringstream oss;
+                bool print_usage = true;
+                if (a.size() == 2) {
+                    if (a[1] == "stdout") {
+                        print_usage = false;
+                        if (uninstallStdoutSink())
+                            oss << "done.\r\n";
+                        else
+                            oss << "fail, not exist.\r\n";
+
+                    } else if (a[1] == "syslog") {
+                        print_usage = false;
+                        if (uninstallSyslogSink())
+                            oss << "done.\r\n";
+                        else
+                            oss << "fail, not exist.\r\n";
+                    }
+
+                } else if (a.size() == 3 && a[1] == "file") {
+                    print_usage = false;
+                    if (uninstallFileSink(a[2]))
+                        oss << "done.\r\n";
+                    else
+                        oss << "fail, not exist.\r\n";
+                }
+
+                if (print_usage) {
+                    oss << "Uninstall log sink.\r\n"
+                        << "Usage: " << a[0] << " stdout       # uninstall stdout sink.\r\n"
+                        << "       " << a[0] << " syslog       # uninstall syslog sink.\r\n"
+                        << "       " << a[0] << " file <name>  # uninstall file sink by name.\r\n";
+                }
+
+                s.send(oss.str());
+            },
+            "uninstall log sink"
+        );
+        shell_->mountNode(log_node, func_node, "del_sink");
     }
 }
 
