@@ -26,6 +26,17 @@
 namespace tbox {
 namespace terminal {
 
+NodeToken AddDirNode(TerminalNodes &terminal, NodeToken parent_node,
+                     const std::string &name, const std::string &help)
+{
+    auto dir_node = terminal.createDirNode(help);
+    if (terminal.mountNode(parent_node, dir_node, name))
+        return dir_node;
+
+    terminal.deleteNode(dir_node);
+    return NodeToken();
+}
+
 NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
                       const std::string &name, VoidFunc &&func)
 {

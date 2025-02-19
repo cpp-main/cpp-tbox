@@ -28,6 +28,10 @@
 namespace tbox {
 namespace terminal {
 
+//! 添加目标结点
+NodeToken AddDirNode(TerminalNodes &terminal, NodeToken parent_node,
+                     const std::string &name, const std::string &help = "");
+
 //! 添加Boolean变量读写结点
 NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
                       const std::string &name, bool &value);
