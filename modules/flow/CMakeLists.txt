@@ -29,33 +29,6 @@ add_definitions(-DMODULE_ID="tbox.flow")
 
 set(TBOX_LIBRARY_NAME tbox_flow)
 
-set(TBOX_FLOW_HEADERS
-    state_machine.h
-    action.h
-    action_reason.h
-    event.h
-    action_executor.h
-    event_subscriber.h
-    event_publisher.h
-    event_publisher_impl.h
-    actions/assemble_action.h
-    actions/function_action.h
-    actions/sleep_action.h
-    actions/sequence_action.h
-    actions/parallel_action.h
-    actions/if_else_action.h
-    actions/if_then_action.h
-    actions/loop_action.h
-    actions/loop_if_action.h
-    actions/event_action.h
-    actions/repeat_action.h
-    actions/composite_action.h
-    actions/wrapper_action.h
-    actions/succ_fail_action.h
-    actions/dummy_action.h
-    actions/switch_action.h
-    to_graphviz.h)
-
 set(TBOX_FLOW_SOURCES
     state_machine.cpp
     action.cpp
@@ -126,10 +99,39 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_FLOW_HEADERS}
+    FILES
+    state_machine.h
+    action.h
+    action_reason.h
+    event.h
+    action_executor.h
+    event_subscriber.h
+    event_publisher.h
+    event_publisher_impl.h
+    to_graphviz.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/flow
 )
 
+install(
+    FILES
+    actions/assemble_action.h
+    actions/function_action.h
+    actions/sleep_action.h
+    actions/sequence_action.h
+    actions/parallel_action.h
+    actions/if_else_action.h
+    actions/if_then_action.h
+    actions/loop_action.h
+    actions/loop_if_action.h
+    actions/event_action.h
+    actions/repeat_action.h
+    actions/composite_action.h
+    actions/wrapper_action.h
+    actions/succ_fail_action.h
+    actions/dummy_action.h
+    actions/switch_action.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/flow/actions
+)
 
 # generate and install export file
 install(
