@@ -29,18 +29,6 @@ add_definitions(-DMODULE_ID="tbox.http")
 
 set(TBOX_LIBRARY_NAME tbox_http)
 
-set(TBOX_HTTP_HEADERS
-    common.h
-    request.h
-    respond.h
-    url.h
-    server/types.h
-    server/server.h
-    server/context.h
-    server/middleware.h
-    server/router.h
-    client/client.h)
-
 set(TBOX_HTTP_SOURCES
     common.cpp
     request.cpp
@@ -87,10 +75,29 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_HTTP_HEADERS}
+    FILES
+    common.h
+    request.h
+    respond.h
+    url.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http
 )
 
+install(
+    FILES
+    server/types.h
+    server/server.h
+    server/context.h
+    server/middleware.h
+    server/router.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/server
+)
+
+install(
+    FILES
+    client/client.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/client
+)
 
 # generate and install export file
 install(

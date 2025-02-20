@@ -27,13 +27,6 @@ add_definitions(-DMODULE_ID="tbox.jsonrpc")
 
 set(TBOX_LIBRARY_NAME tbox_jsonrpc)
 
-set(TBOX_JSONRPC_HEADERS
-    proto.h
-    protos/raw_stream_proto.h
-    protos/header_stream_proto.h
-    protos/packet_proto.h
-    rpc.h)
-
 set(TBOX_JSONRPC_SOURCES
     proto.cpp
     protos/raw_stream_proto.cpp
@@ -76,10 +69,17 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_JSONRPC_HEADERS}
+    FILES proto.h rpc.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/jsonrpc
 )
 
+install(
+    FILES
+    protos/raw_stream_proto.h
+    protos/header_stream_proto.h
+    protos/packet_proto.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/jsonrpc/protos
+)
 
 # generate and install export file
 install(
