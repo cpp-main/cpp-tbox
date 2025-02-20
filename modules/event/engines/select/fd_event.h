@@ -20,6 +20,8 @@
 #ifndef TBOX_EVENT_SELECT_FD_EVENT_H_20240619
 #define TBOX_EVENT_SELECT_FD_EVENT_H_20240619
 
+#include <cstdint>
+
 #include "../../fd_event.h"
 #include "types.h"
 
