@@ -121,7 +121,6 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/util
 )
 
-
 # generate and install export file
 install(
     EXPORT ${TBOX_LIBRARY_NAME}_targets

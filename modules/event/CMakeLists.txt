@@ -30,34 +30,34 @@ add_definitions(-DMODULE_ID="tbox.event")
 set(TBOX_LIBRARY_NAME tbox_event)
 
 set(TBOX_EVENT_HEADERS
-            forward.h
-            loop.h
-            event.h
-            fd_event.h
-            timer_event.h
-            signal_event.h
-            stat.h)
+    forward.h
+    loop.h
+    event.h
+    fd_event.h
+    timer_event.h
+    signal_event.h
+    stat.h)
 
 set(TBOX_EVENT_SOURCES
-            loop.cpp
-            common_loop.cpp
-            common_loop_timer.cpp
-            common_loop_signal.cpp
-            common_loop_run.cpp
-            timer_event_impl.cpp
-            signal_event_impl.cpp
-            misc.cpp
-            stat.cpp
-            engines/epoll/loop.cpp
-            engines/epoll/fd_event.cpp
-            engines/select/loop.cpp
-            engines/select/fd_event.cpp)
+    loop.cpp
+    common_loop.cpp
+    common_loop_timer.cpp
+    common_loop_signal.cpp
+    common_loop_run.cpp
+    timer_event_impl.cpp
+    signal_event_impl.cpp
+    misc.cpp
+    stat.cpp
+    engines/epoll/loop.cpp
+    engines/epoll/fd_event.cpp
+    engines/select/loop.cpp
+    engines/select/fd_event.cpp)
 
 set(TBOX_EVENT_TEST_SOURCES
-            common_loop_test.cpp
-            fd_event_test.cpp
-            timer_event_test.cpp
-            signal_event_test.cpp)
+    common_loop_test.cpp
+    fd_event_test.cpp
+    timer_event_test.cpp
+    signal_event_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_EVENT_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
@@ -90,7 +90,6 @@ install(
     FILES ${TBOX_EVENT_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/event
 )
-
 
 # generate and install export file
 install(

@@ -83,7 +83,6 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/log
 )
 
-
 # generate and install export file
 install(
     EXPORT ${TBOX_LIBRARY_NAME}_targets
