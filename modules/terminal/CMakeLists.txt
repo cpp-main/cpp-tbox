@@ -29,17 +29,6 @@ add_definitions(-DMODULE_ID="tbox.terminal")
 
 set(TBOX_LIBRARY_NAME tbox_terminal)
 
-set(TBOX_TERMINAL_HEADERS
-    types.h
-    connection.h
-    terminal_interact.h
-    terminal_nodes.h
-    session.h
-    terminal.h
-	helper.h
-    service/telnetd.h
-    service/tcp_rpc.h)
-
 set(TBOX_TERMINAL_SOURCES
     terminal.cpp
     session.cpp
@@ -86,10 +75,23 @@ install(
 
 # install header file
 install(
-    FILES ${TBOX_TERMINAL_HEADERS}
+    FILES
+    types.h
+    connection.h
+    terminal_interact.h
+    terminal_nodes.h
+    session.h
+    terminal.h
+    helper.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/terminal
 )
 
+install(
+    FILES
+    service/telnetd.h
+    service/tcp_rpc.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/terminal/service
+)
 
 # generate and install export file
 install(
