@@ -64,6 +64,8 @@ CXXFLAGS += -DMODULE_ID='"tbox.base"'
 
 ifeq ($(HAVE_EXECINFO_H),yes)
 CXXFLAGS += -DHAVE_EXECINFO_H=1
+else
+CXXFLAGS += -DHAVE_EXECINFO_H=0
 endif
 
 TEST_CPP_SRC_FILES = \

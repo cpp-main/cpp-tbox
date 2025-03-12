@@ -18,6 +18,8 @@
 # of the source tree.
 #
 
+include(CheckSymbolExists)
+
 set(TBOX_BASE_VERSION_MAJOR 1)
 set(TBOX_BASE_VERSION_MINOR 0)
 set(TBOX_BASE_VERSION_PATCH 1)
@@ -67,6 +69,15 @@ set(TBOX_BASE_TEST_SOURCES
     catch_throw_test.cpp
     object_pool_test.cpp
     recorder_test.cpp)
+
+check_symbol_exists(backtrace "execinfo.h" HAVE_EXECINFO_H)
+
+if (HAVE_EXECINFO_H)
+    add_definitions(-DHAVE_EXECINFO_H=1)
+else()
+    message(WARNING "not support execinfo.h, can't use ::backtrace()")
+    add_definitions(-DHAVE_EXECINFO_H=0)
+endif()
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_BASE_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
