@@ -75,7 +75,7 @@ check_symbol_exists(backtrace "execinfo.h" HAVE_EXECINFO_H)
 if (HAVE_EXECINFO_H)
     add_definitions(-DHAVE_EXECINFO_H=1)
 else()
-    message(WARNING "not support execinfo.h, can't use ::backtrace()"
+    message(WARNING "not support execinfo.h, can't use ::backtrace()")
     add_definitions(-DHAVE_EXECINFO_H=0)
 endif()
 
