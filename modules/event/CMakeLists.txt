@@ -20,6 +20,8 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+include(CheckSymbolExists)
+
 set(TBOX_EVENT_VERSION_MAJOR 1)
 set(TBOX_EVENT_VERSION_MINOR 1)
 set(TBOX_EVENT_VERSION_PATCH 2)
@@ -36,7 +38,8 @@ set(TBOX_EVENT_HEADERS
     fd_event.h
     timer_event.h
     signal_event.h
-    stat.h)
+    stat.h
+)
 
 set(TBOX_EVENT_SOURCES
     loop.cpp
@@ -48,16 +51,37 @@ set(TBOX_EVENT_SOURCES
     signal_event_impl.cpp
     misc.cpp
     stat.cpp
-    engines/epoll/loop.cpp
-    engines/epoll/fd_event.cpp
-    engines/select/loop.cpp
-    engines/select/fd_event.cpp)
+)
 
 set(TBOX_EVENT_TEST_SOURCES
     common_loop_test.cpp
     fd_event_test.cpp
     timer_event_test.cpp
-    signal_event_test.cpp)
+    signal_event_test.cpp
+)
+
+check_symbol_exists(select "sys/select.h" HAVE_SELECT)
+check_symbol_exists(epoll_create1 "sys/epoll.h" HAVE_EPOLL)
+
+if (NOT HAVE_SELECT AND NOT HAVE_EPOLL)
+    message(FATAL_ERROR "Neither epoll nor select is supported by the system. Project cannot proceed.")
+endif()
+
+if (HAVE_SELECT)
+    add_definitions(-DHAVE_SELECT=1)
+    list(APPEND TBOX_EVENT_SOURCES
+        engines/select/loop.cpp
+        engines/select/fd_event.cpp
+    )
+endif()
+
+if (HAVE_EPOLL)
+    add_definitions(-DHAVE_EPOLL=1)
+    list(APPEND TBOX_EVENT_SOURCES
+        engines/epoll/loop.cpp
+        engines/epoll/fd_event.cpp
+    )
+endif()
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_EVENT_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
