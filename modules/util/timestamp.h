@@ -39,7 +39,7 @@ uint64_t GetUtcMicroseconds();
 uint64_t GetCurrentMicrosecondsFrom1970();
 
 //! 获取当前的时间戳，秒 + 微秒
-bool GetUtc(uint32_t &sec, uint64_t &usec);
+bool GetUtc(uint32_t &sec, uint32_t &usec);
 
 //! 获取指定时间戳的0时区时间字串
 std::string GetUtcTimeString(uint32_t utc_sec);
