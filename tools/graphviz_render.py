@@ -234,6 +234,7 @@ class GraphvizViewer(QMainWindow):
         self.pipe_name = pipe_name
         self.original_image = None
         self.current_pixmap = None
+        self.last_dot_data = ''
         self.setup_ui()
 
     def setup_ui(self):
@@ -282,27 +283,30 @@ class GraphvizViewer(QMainWindow):
         self.resize_timer.start(100)
 
     def update_graph(self, dot_data):
-        try:
-            # Render DOT data using Graphviz
-            proc = subprocess.Popen(
-                ['dot', '-Tpng'],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE
-            )
-            output, _ = proc.communicate(dot_data.encode())
+        if dot_data != self.last_dot_data:
+            self.last_dot_data = dot_data
 
-            # Convert to PIL Image
-            self.original_image = Image.open(BytesIO(output))
+            try:
+                # Render DOT data using Graphviz
+                proc = subprocess.Popen(
+                    ['dot', '-Tpng'],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE
+                )
+                output, _ = proc.communicate(dot_data.encode())
 
-            # Update timestamp
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.timestamp_label.setText(current_time)
+                # Convert to PIL Image
+                self.original_image = Image.open(BytesIO(output))
 
-            # Update image display
-            self.update_image()
+                # Update image display
+                self.update_image()
 
-        except Exception as e:
-            print(f"Error rendering graph: {e}")
+            except Exception as e:
+                print(f"Error rendering graph: {e}")
+
+        # Update timestamp
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.timestamp_label.setText(current_time)
 
     def update_image(self):
         if self.original_image is None:
