@@ -1,0 +1,4 @@
+Pillow==9.0.0
+Pillow==7.0.0
+Pillow==11.1.0
+PyQt5==5.15.11
