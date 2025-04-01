@@ -102,7 +102,7 @@ void Sink::handleLog(const LogContent *content)
     onLogFrontEnd(content);
 }
 
-void Sink::udpateTimestampStr(uint32_t sec)
+void Sink::updateTimestampStr(uint32_t sec)
 {
     if (timestamp_sec_ != sec) {
         time_t ts_sec = sec;

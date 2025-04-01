@@ -56,7 +56,7 @@ class Sink {
     static void HandleLog(const LogContent *content, void *ptr);
     bool filter(int level, const std::string &module);
 
-    void udpateTimestampStr(uint32_t sec);
+    void updateTimestampStr(uint32_t sec);
 
   protected:
     bool enable_color_ = false;
