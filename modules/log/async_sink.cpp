@@ -93,7 +93,7 @@ void AsyncSink::onLogBackEnd(const LogContent &content)
     char buff[1024];
     size_t len = 0;
 
-    udpateTimestampStr(content.timestamp.sec);
+    updateTimestampStr(content.timestamp.sec);
 
     //! 开启色彩，显示日志等级
     if (enable_color_) {

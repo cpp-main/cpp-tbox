@@ -19,6 +19,8 @@
  */
 #include "switch_action.h"
 
+#include <sstream>
+
 #include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/json.hpp>

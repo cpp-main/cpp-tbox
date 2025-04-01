@@ -27,7 +27,7 @@ namespace log {
 
 void SyncStdoutSink::onLogFrontEnd(const LogContent *content)
 {
-    udpateTimestampStr(content->timestamp.sec);
+    updateTimestampStr(content->timestamp.sec);
 
     //! 开启色彩，显示日志等级
     if (enable_color_)

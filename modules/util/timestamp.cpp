@@ -45,7 +45,7 @@ uint64_t GetUtcMilliseconds()
     if (gettimeofday(&tv, &tz) != 0)
         return 0;
 
-    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    return static_cast<uint64_t>(tv.tv_sec) * 1000 + tv.tv_usec / 1000;
 }
 
 uint64_t GetCurrentMillisecondsFrom1970() { return GetUtcMilliseconds(); }
@@ -58,12 +58,12 @@ uint64_t GetUtcMicroseconds()
     if (gettimeofday(&tv, &tz) != 0)
         return 0;
 
-    return tv.tv_sec * 1000000 + tv.tv_usec;
+    return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
 uint64_t GetCurrentMicrosecondsFrom1970() { return GetUtcMicroseconds(); }
 
-bool GetUtc(uint32_t &sec, uint64_t &usec)
+bool GetUtc(uint32_t &sec, uint32_t &usec)
 {
     struct timeval tv;
     struct timezone tz;

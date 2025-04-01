@@ -34,13 +34,15 @@ HEAD_FILES = \
 	terminal.h \
 	service/telnetd.h \
 	service/tcp_rpc.h \
+	service/stdio.h \
 
 CPP_SRC_FILES = \
 	terminal.cpp \
 	session.cpp \
 	service/telnetd.cpp \
-	helper.cpp \
 	service/tcp_rpc.cpp \
+	service/stdio.cpp \
+	helper.cpp \
 	impl/terminal.cpp \
 	impl/terminal_key_events.cpp \
 	impl/terminal_commands.cpp \
@@ -50,6 +52,7 @@ CPP_SRC_FILES = \
 	impl/func_node.cpp \
 	impl/service/telnetd.cpp \
 	impl/service/tcp_rpc.cpp \
+	impl/service/stdio.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.terminal"' $(CXXFLAGS)
 

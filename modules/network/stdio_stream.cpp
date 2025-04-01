@@ -26,8 +26,12 @@ namespace network {
 
 StdinStream::StdinStream(event::Loop *wp_loop) :
     buff_fd_(wp_loop)
+{ }
+
+bool StdinStream::initialize()
 {
     buff_fd_.initialize(STDIN_FILENO, BufferedFd::kReadOnly);
+    return true;
 }
 
 bool StdinStream::enable()
@@ -47,8 +51,12 @@ bool StdinStream::disable()
 
 StdoutStream::StdoutStream(event::Loop *wp_loop) :
     buff_fd_(wp_loop)
+{ }
+
+bool StdoutStream::initialize()
 {
     buff_fd_.initialize(STDOUT_FILENO, BufferedFd::kWriteOnly);
+    return true;
 }
 
 void StdoutStream::setSendCompleteCallback(const SendCompleteCallback &cb)
@@ -74,19 +82,23 @@ bool StdoutStream::disable()
 StdioStream::StdioStream(event::Loop *wp_loop) :
     in_buff_fd_(wp_loop),
     out_buff_fd_(wp_loop)
+{ }
+
+bool StdioStream::initialize()
 {
     in_buff_fd_.initialize(STDIN_FILENO, BufferedFd::kReadOnly);
     out_buff_fd_.initialize(STDOUT_FILENO, BufferedFd::kWriteOnly);
+    return true;
 }
 
 void StdioStream::setReceiveCallback(const ReceiveCallback &cb, size_t threshold)
 {
-    out_buff_fd_.setReceiveCallback(cb, threshold);
+    in_buff_fd_.setReceiveCallback(cb, threshold);
 }
 
 void StdioStream::setSendCompleteCallback(const SendCompleteCallback &cb)
 {
-    in_buff_fd_.setSendCompleteCallback(cb);
+    out_buff_fd_.setSendCompleteCallback(cb);
 }
 
 bool StdioStream::send(const void *data_ptr, size_t data_size)

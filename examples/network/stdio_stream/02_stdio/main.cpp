@@ -31,6 +31,8 @@ int main()
     auto sp_loop = event::Loop::New();
     auto sp_stdio = new network::StdioStream(sp_loop);
 
+    sp_stdio->initialize();
+
     sp_stdio->bind(sp_stdio);
     sp_stdio->enable();
 
@@ -53,3 +55,4 @@ int main()
     delete sp_loop;
     return 0;
 }
+

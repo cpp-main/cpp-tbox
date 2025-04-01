@@ -32,6 +32,9 @@ int main()
     auto sp_stdin = new network::StdinStream(sp_loop);
     auto sp_stdout = new network::StdoutStream(sp_loop);
 
+    sp_stdin->initialize();
+    sp_stdout->initialize();
+
     sp_stdin->bind(sp_stdout);
 
     sp_stdin->enable();

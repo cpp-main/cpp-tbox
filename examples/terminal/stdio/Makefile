@@ -18,7 +18,18 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 12
-TBOX_VERSION_REVISION := 5
+PROJECT := examples/terminal/stdio
+EXE_NAME := ${PROJECT}
+
+CPP_SRC_FILES := main.cpp ../build_nodes.cpp
+
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+LDFLAGS += \
+	-ltbox_terminal \
+	-ltbox_network \
+	-ltbox_event \
+	-ltbox_util \
+	-ltbox_base \
+	-ldl
+
+include $(TOP_DIR)/mk/exe_common.mk

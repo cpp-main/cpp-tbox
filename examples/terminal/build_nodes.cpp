@@ -137,6 +137,7 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop)
 
     term.mountNode(dir1_1_token, term.rootNode(), "root");  //! 循环引用
 
+    //! 演示使用 AddFuncNode() 函数直接添加函数结点
     auto add_func_dir_node = term.createDirNode();
     term.mountNode(term.rootNode(), add_func_dir_node, "add_func");
 
@@ -145,4 +146,44 @@ void BuildNodes(TerminalNodes &term, Loop *wp_loop)
     AddFuncNode(term, add_func_dir_node, "int_value", int_value, 0, 100);
     AddFuncNode(term, add_func_dir_node, "double_value", double_value, 0, 1);
     AddFuncNode(term, add_func_dir_node, "str_value", str_value);
+
+    //! 演示使用 XxxxxFuncNodeProfile 来添加函数结点
+    auto profile_func_dir_node = term.createDirNode();
+    term.mountNode(term.rootNode(), profile_func_dir_node, "profile_func");
+
+    {
+        BooleanFuncNodeProfile profile;
+        profile.set_func = [&] (bool value) { bool_value = value; return true; };
+        profile.get_func = [&] () { return bool_value; };
+
+        AddFuncNode(term, profile_func_dir_node, "bool_value", profile);
+    }
+
+    {
+        StringFuncNodeProfile profile;
+        profile.set_func = [&] (const std::string &value) { str_value = value; return true; };
+        profile.get_func = [&] () { return str_value; };
+
+        AddFuncNode(term, profile_func_dir_node, "str_value", profile);
+    }
+
+    {
+        IntegerFuncNodeProfile profile;
+        profile.set_func = [&] (int value) { int_value = value; return true; };
+        profile.get_func = [&] () { return int_value; };
+        profile.min_value = 1;
+        profile.max_value = 5;
+
+        AddFuncNode(term, profile_func_dir_node, "int_value", profile);
+    }
+
+    {
+        DoubleFuncNodeProfile profile;
+        profile.set_func = [&] (double value) { double_value = value; return true; };
+        profile.get_func = [&] () { return double_value; };
+        profile.min_value = -1;
+        profile.max_value = 1;
+
+        AddFuncNode(term, profile_func_dir_node, "double_value", profile);
+    }
 }

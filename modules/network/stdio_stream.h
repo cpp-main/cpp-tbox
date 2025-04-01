@@ -47,6 +47,8 @@ class StdinStream : public ByteStream {
     virtual void unbind() override { buff_fd_.unbind(); }
     virtual Buffer* getReceiveBuffer() override { return buff_fd_.getReceiveBuffer(); }
 
+    bool initialize();
+
     bool enable();
     bool disable();
 
@@ -69,6 +71,8 @@ class StdoutStream : public ByteStream {
     virtual void unbind() override { }
     virtual Buffer* getReceiveBuffer() override { return nullptr; }
 
+    bool initialize();
+
     bool enable();
     bool disable();
 
@@ -90,6 +94,8 @@ class StdioStream : public ByteStream {
     virtual void bind(ByteStream *receiver) override { in_buff_fd_.bind(receiver); }
     virtual void unbind() override { in_buff_fd_.unbind(); }
     virtual Buffer* getReceiveBuffer() override { return in_buff_fd_.getReceiveBuffer(); }
+
+    bool initialize();
 
     bool enable();
     bool disable();
