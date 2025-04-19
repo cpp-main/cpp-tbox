@@ -33,10 +33,13 @@ class Router : public Middleware {
     ~Router();
 
   public:
-    Router& get (const std::string &path, const RequestCallback &cb);
-    Router& post(const std::string &path, const RequestCallback &cb);
-    Router& put (const std::string &path, const RequestCallback &cb);
-    Router& del (const std::string &path, const RequestCallback &cb);
+    Router& get  (const std::string &path, const RequestCallback &cb);
+    Router& post (const std::string &path, const RequestCallback &cb);
+    Router& put  (const std::string &path, const RequestCallback &cb);
+    Router& del  (const std::string &path, const RequestCallback &cb);
+    Router& opt  (const std::string &path, const RequestCallback &cb);
+    Router& head (const std::string &path, const RequestCallback &cb);
+    Router& trace(const std::string &path, const RequestCallback &cb);
 
   public:
     virtual void handle(ContextSptr sp_ctx, const NextFunc &next) override;

@@ -45,6 +45,9 @@ void Router::handle(ContextSptr sp_ctx, const NextFunc &next)
         case Method::kPut:      prefix = "put:";   break;
         case Method::kPost:     prefix = "post:";  break;
         case Method::kDelete:   prefix = "del:";   break;
+        case Method::kOptions:  prefix = "opt:";   break;
+        case Method::kHead:     prefix = "head:";   break;
+        case Method::kTrace:    prefix = "trace:";   break;
         default:;
     }
 
@@ -79,6 +82,24 @@ Router& Router::put(const std::string &path, const RequestCallback &cb)
 Router& Router::del(const std::string &path, const RequestCallback &cb)
 {
     d_->cbs_[std::string("del:") + path] = cb;
+    return *this;
+}
+
+Router& Router::opt(const std::string &path, const RequestCallback &cb)
+{
+    d_->cbs_[std::string("opt:") + path] = cb;
+    return *this;
+}
+
+Router& Router::head(const std::string &path, const RequestCallback &cb)
+{
+    d_->cbs_[std::string("head:") + path] = cb;
+    return *this;
+}
+
+Router& Router::trace(const std::string &path, const RequestCallback &cb)
+{
+    d_->cbs_[std::string("trace:") + path] = cb;
     return *this;
 }
 
