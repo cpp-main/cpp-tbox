@@ -33,6 +33,7 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
 #include <tbox/event/loop.h>
+#include <tbox/eventx/work_thread.h>
 #include <tbox/network/sockaddr.h>
 #include <tbox/http/server/server.h>
 #include <tbox/http/server/middlewares/router_middleware.h>
@@ -164,6 +165,8 @@ int main(int argc, char **argv)
         }
     );
 
+    tbox::eventx::WorkThread worker(sp_loop);
+
     // 初始化信号处理
     sp_sig_event->initialize({SIGINT, SIGTERM}, Event::Mode::kPersist);
     sp_sig_event->enable();
@@ -190,9 +193,10 @@ int main(int argc, char **argv)
     });
 
     // 添加文件上传处理
-    form_data.post("/upload", [&upload_dir](ContextSptr ctx, const FormData& form_data, const NextFunc& next) {
+    form_data.post("/upload", [&upload_dir, &worker] (ContextSptr ctx, const FormData& form_data, const NextFunc& next) {
         // 获取表单字段
-        std::string name, email, description, filename, file_content;
+        std::string name, email, description, filename;
+        auto sp_file_content = std::make_shared<std::string>();
 
         if (!form_data.getField("name", name))
             name = "未提供";
@@ -204,27 +208,25 @@ int main(int argc, char **argv)
             description = "未提供";
 
         // 获取上传的文件
-        if (form_data.getFile("file", filename, file_content)) {
+        if (form_data.getFile("file", filename, *sp_file_content)) {
             // 保存文件
             if (!filename.empty()) {
-                std::string file_path = upload_dir + "/" + filename;
-                std::ofstream outfile(file_path, std::ios::binary);
-
-                if (outfile.is_open()) {
-                    outfile.write(file_content.c_str(), file_content.size());
-                    outfile.close();
-
-                    LogInfo("File saved: %s", file_path.c_str());
-
-                    // 返回成功页面
-                    ctx->res().status_code = StatusCode::k200_OK;
-                    ctx->res().headers["Content-Type"] = "text/html; charset=UTF-8";
-                    ctx->res().body = GenSuccessHtml(name, email, filename, description);
-                } else {
-                    LogWarn("Cannot create file: %s", file_path.c_str());
-                    ctx->res().status_code = StatusCode::k500_InternalServerError;
-                    ctx->res().body = "Server Error: Cannot save file";
-                }
+                worker.execute(
+                    [ctx, upload_dir, name, email, filename, description, sp_file_content] {
+                        std::string file_path = upload_dir + "/" + filename;
+                        if (tbox::util::fs::WriteBinaryToFile(file_path, *sp_file_content)) {
+                            // 返回成功页面
+                            ctx->res().status_code = StatusCode::k200_OK;
+                            ctx->res().headers["Content-Type"] = "text/html; charset=UTF-8";
+                            ctx->res().body = GenSuccessHtml(name, email, filename, description);
+                        } else {
+                            LogWarn("Cannot create file: %s", file_path.c_str());
+                            ctx->res().status_code = StatusCode::k500_InternalServerError;
+                            ctx->res().body = "Server Error: Cannot save file";
+                        }
+                    },
+                    [ctx] { }
+                );
             } else {
                 LogNotice("Filename is empty");
                 ctx->res().status_code = StatusCode::k400_BadRequest;
