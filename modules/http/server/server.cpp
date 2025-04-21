@@ -63,9 +63,9 @@ void Server::setContextLogEnable(bool enable)
     return impl_->setContextLogEnable(enable);
 }
 
-void Server::use(const RequestCallback &cb)
+void Server::use(RequestHandler &&handler)
 {
-    impl_->use(cb);
+    impl_->use(std::move(handler));
 }
 
 void Server::use(Middleware *wp_middleware)

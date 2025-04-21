@@ -39,7 +39,7 @@ char HexCharToValue(char hex_char)
     else if (('a' <= hex_char) && (hex_char <= 'f'))
         return hex_char - 'a' + 10;
     else
-        throw std::out_of_range("should be A-Z a-z 0-9");
+        throw std::runtime_error("should be A-Z a-z 0-9");
 }
 }
 
@@ -82,8 +82,13 @@ std::string UrlDecode(const std::string &url_str)
             if (c == '%') {
                 state = State::kStart;
                 tmp = 0;
-            } else
+            } else if (c == '+') {
+                local_str.push_back(' ');
+            } else if (c == '#') {
+                break; //! 结束
+            } else {
                 local_str.push_back(c);
+            }
         } else {
             if (state == State::kStart) {
                 tmp = HexCharToValue(c) << 4;
@@ -95,6 +100,10 @@ std::string UrlDecode(const std::string &url_str)
             }
         }
     }
+
+    if (state != State::kNone)
+        throw std::runtime_error("url imcomplete");
+
     return local_str;
 }
 

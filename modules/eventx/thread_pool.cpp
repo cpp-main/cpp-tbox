@@ -299,7 +299,8 @@ void ThreadPool::threadProc(ThreadToken thread_token)
             std::unique_lock<std::mutex> lk(d_->lock);
 
             /**
-             * 如果当前空闲的线程数量大于等于未被领取的任务数，且当前的线程个数已超过长驻线程数，说明线程数据已满足现有要求则退出当前线程
+             * 如果当前空闲的线程数量大于等于未被领取的任务数，且当前的线程个数已超过长驻线程数，
+             * 说明线程数据已满足现有要求则退出当前线程
              */
             if ((d_->idle_thread_num >= d_->undo_tasks_cabinet.size()) && (d_->threads_cabinet.size() > d_->min_thread_num)) {
                 LogDbg("thread %u will exit, no more work.", thread_token.id());
@@ -352,15 +353,27 @@ void ThreadPool::threadProc(ThreadToken thread_token)
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
 
-            if (item->main_cb) {
-                RECORD_SCOPE();
-                d_->wp_loop->runInLoop(item->main_cb, "ThreadPool::threadProc, invoke main_cb");
-            }
+            /**
+             * 有时在妥托给WorkThread执行动作时，会在lamda中捕获智能指针，它所指向的
+             * 对象的析构函数是有动作的，如：http的sp_ctx要在析构中发送HTTP回复，如果
+             * 析构函数在子线程中执行，则会出现不希望见到的多线程竞争。为此，我们在main_cb
+             * 中也让它持有这个智能指针，希望智能指针所指的对象只在主线程中析构。
+             *
+             * 为了保证main_cb中的持有的对象能够在main_loop线程中被析构，
+             * 所以这里要先task_pool.free()，然后再runInLoop(std::move(main_cpp))
+             */
+
+            auto main_cb = std::move(item->main_cb);
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.erase(item->token);
                 d_->task_pool.free(item);
+            }
+
+            if (main_cb) {
+                RECORD_SCOPE();
+                d_->wp_loop->runInLoop(std::move(main_cb), "ThreadPool::threadProc, invoke main_cb");
             }
         }
     }

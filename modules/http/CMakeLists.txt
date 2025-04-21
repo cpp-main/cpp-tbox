@@ -38,7 +38,10 @@ set(TBOX_HTTP_SOURCES
     server/server.cpp
     server/server_imp.cpp
     server/context.cpp
-    server/router.cpp
+    server/middlewares/router_middleware.cpp
+    server/middlewares/form_data.cpp
+    server/middlewares/form_data_middleware.cpp
+    server/middlewares/file_downloader_middleware.cpp
     client/client.cpp)
 
 set(TBOX_HTTP_TEST_SOURCES
@@ -89,8 +92,16 @@ install(
     server/server.h
     server/context.h
     server/middleware.h
-    server/router.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/server
+)
+
+install(
+    FILES
+    server/middlewares/router_middleware.h
+    server/middlewares/form_data.h
+    server/middlewares/form_data_middleware.h
+    server/middlewares/file_downloader_middleware.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/server/middlewares
 )
 
 install(

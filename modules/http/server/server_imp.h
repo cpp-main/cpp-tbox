@@ -55,7 +55,7 @@ class Server::Impl {
     void setContextLogEnable(bool enable) { context_log_enable_ = enable; }
 
   public:
-    void use(const RequestCallback &cb);
+    void use(RequestHandler &&handler);
     void use(Middleware *wp_middleware);
 
     void commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res);
@@ -84,7 +84,7 @@ class Server::Impl {
     Server *wp_parent_;
 
     TcpServer tcp_server_;
-    vector<RequestCallback> req_cb_;
+    vector<RequestHandler> req_handler_;
     set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
     bool context_log_enable_ = false;

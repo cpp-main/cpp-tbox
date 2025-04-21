@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2025 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -20,26 +20,29 @@
 #ifndef TBOX_HTTP_SERVER_ROUTER_H_20220508
 #define TBOX_HTTP_SERVER_ROUTER_H_20220508
 
-#include "middleware.h"
-#include "context.h"
+#include "../middleware.h"
+#include "../context.h"
 
 namespace tbox {
 namespace http {
 namespace server {
 
-class Router : public Middleware {
+/**
+ * 路由中间件
+ */
+class RouterMiddleware : public Middleware {
   public:
-    Router();
-    ~Router();
+    RouterMiddleware();
+    ~RouterMiddleware();
 
   public:
-    Router& get  (const std::string &path, const RequestCallback &cb);
-    Router& post (const std::string &path, const RequestCallback &cb);
-    Router& put  (const std::string &path, const RequestCallback &cb);
-    Router& del  (const std::string &path, const RequestCallback &cb);
-    Router& opt  (const std::string &path, const RequestCallback &cb);
-    Router& head (const std::string &path, const RequestCallback &cb);
-    Router& trace(const std::string &path, const RequestCallback &cb);
+    RouterMiddleware& get  (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& post (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& put  (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& del  (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& opt  (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& head (const std::string &path, RequestHandler &&handler);
+    RouterMiddleware& trace(const std::string &path, RequestHandler &&handler);
 
   public:
     virtual void handle(ContextSptr sp_ctx, const NextFunc &next) override;

@@ -18,20 +18,22 @@
 # of the source tree.
 #
 
-PROJECT := examples/http/server/router
+PROJECT := examples/http/server/file_download
 EXE_NAME := ${PROJECT}
 
-CPP_SRC_FILES := router.cpp webpage.cpp
+CPP_SRC_FILES := file_download.cpp
 
-CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' -std=c++17 $(CXXFLAGS)
 LDFLAGS += \
 	-ltbox_http \
 	-ltbox_network \
 	-ltbox_eventx \
 	-ltbox_event \
+	-ltbox_trace \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
+	-lstdc++fs \
 	-lpthread -ldl
 
 include $(TOP_DIR)/mk/exe_common.mk

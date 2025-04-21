@@ -18,10 +18,10 @@
 # of the source tree.
 #
 
-PROJECT := examples/http/server/router
+PROJECT := examples/http/server/file_upload
 EXE_NAME := ${PROJECT}
 
-CPP_SRC_FILES := router.cpp webpage.cpp
+CPP_SRC_FILES := file_upload.cpp
 
 CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
 LDFLAGS += \
