@@ -32,9 +32,17 @@ std::string Respond::toString() const
 {
     std::ostringstream oss;
     oss << HttpVerToString(http_ver) << " " << StatusCodeToString(status_code) << CRLF;
-    for (auto &head : headers)
+
+    bool has_content_length = false;
+    for (auto &head : headers) {
         oss << head.first << ": " << head.second << CRLF;
-    oss << "Content-Length: " << body.length() << CRLF;
+        if (head.first == "Content-Length")
+            has_content_length = true;
+    }
+
+    if (!has_content_length)
+        oss << "Content-Length: " << body.length() << CRLF;
+
     oss << CRLF;
     oss << body;
 

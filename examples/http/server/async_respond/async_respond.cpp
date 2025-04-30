@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     }
 
     srv.start();
-    srv.setContextLogEnable(true);
+    //srv.setContextLogEnable(true);    //! 调试时需要看详细收发数据时可以打开
 
     //! 添加请求处理
     srv.use(

@@ -39,7 +39,7 @@ class AsyncFileSink : public AsyncSink {
     void setFilePrefix(const std::string &file_path);
     void setFileMaxSize(size_t max_size) { file_max_size_ = max_size; }
     void setFileSyncEnable(bool enable);
-    std::string currentFilename() const { return log_filename_; }
+    std::string currentFilePath() const { return log_filepath_; }
 
   protected:
     void updateInnerValues();
@@ -56,9 +56,8 @@ class AsyncFileSink : public AsyncSink {
     bool file_sync_enable_ = false;
     pid_t pid_ = 0;
 
-    std::string filename_prefix_;
-    std::string sym_filename_;
-    std::string log_filename_;
+    std::string log_filepath_;
+    std::string sym_filepath_;
 
     std::vector<char> buffer_;
 

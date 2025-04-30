@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2025 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -22,12 +22,18 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
-#include <tbox/http/server/router.h>
+#include <tbox/http/server/middlewares/router_middleware.h>
 
 using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::http;
 using namespace tbox::http::server;
+
+namespace webpage {
+extern const char *kHtmlHome;
+extern const char *kHtmlPage1;
+extern const char *kHtmlPage2;
+}
 
 int main(int argc, char **argv)
 {
@@ -61,31 +67,26 @@ int main(int argc, char **argv)
     }
 
     srv.start();
-    srv.setContextLogEnable(true);
+    //srv.setContextLogEnable(true);    //! 调试时需要看详细收发数据时可以打开
 
-    Router router;
+    RouterMiddleware router;
     srv.use(&router);
 
     router
         .get("/", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = 
-R"(
-<head>
-</head>
-<body>
-    <p> <a href="/1" target="_blank">page_1</a> </p>
-    <p> <a href="/2" target="_blank">page_2</a> </p>
-</body>
-)";
+            ctx->res().headers["Content-Type"] = "text/html; charset=UTF-8";
+            ctx->res().body = webpage::kHtmlHome;
         })
         .get("/1", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "<p>page 1</p>";
+            ctx->res().headers["Content-Type"] = "text/html; charset=UTF-8";
+            ctx->res().body = webpage::kHtmlPage1;
         })
         .get("/2", [](ContextSptr ctx, const NextFunc &next) {
             ctx->res().status_code = StatusCode::k200_OK;
-            ctx->res().body = "<p>page 2</p>";
+            ctx->res().headers["Content-Type"] = "text/html; charset=UTF-8";
+            ctx->res().body = webpage::kHtmlPage2;
         });
 
     sp_sig_event->setCallback(

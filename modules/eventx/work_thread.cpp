@@ -239,15 +239,28 @@ void WorkThread::threadProc()
                    wait_time_cost.count() / 1000,
                    exec_time_cost.count() / 1000);
 
-            if (item->main_cb && item->main_loop != nullptr) {
-                RECORD_SCOPE();
-                item->main_loop->runInLoop(item->main_cb, "WorkThread::threadProc, invoke main_cb");
-            }
+            /**
+             * 有时在妥托给WorkThread执行动作时，会在lamda中捕获智能指针，它所指向的
+             * 对象的析构函数是有动作的，如：http的sp_ctx要在析构中发送HTTP回复，如果
+             * 析构函数在子线程中执行，则会出现不希望见到的多线程竞争。为此，我们在main_cb
+             * 中也让它持有这个智能指针，希望智能指针所指的对象只在主线程中析构。
+             *
+             * 为了保证main_cb中的持有的对象能够在main_loop线程中被析构，
+             * 所以这里要先task_pool.free()，然后再runInLoop(std::move(main_cpp))
+             */
+
+            auto main_cb = std::move(item->main_cb);
+            auto main_loop = item->main_loop;
 
             {
                 std::lock_guard<std::mutex> lg(d_->lock);
                 d_->doing_tasks_token.erase(item->token);
                 d_->task_pool.free(item);
+            }
+
+            if (main_cb && main_loop != nullptr) {
+                RECORD_SCOPE();
+                main_loop->runInLoop(std::move(main_cb), "WorkThread::threadProc, invoke main_cb");
             }
         }
     }

@@ -33,7 +33,10 @@ HEAD_FILES = \
 	server/server.h \
 	server/context.h \
 	server/middleware.h \
-	server/router.h \
+	server/middlewares/router_middleware.h \
+	server/middlewares/form_data.h \
+	server/middlewares/form_data_middleware.h \
+	server/middlewares/file_downloader_middleware.h \
 	client/client.h \
 
 CPP_SRC_FILES = \
@@ -45,7 +48,10 @@ CPP_SRC_FILES = \
 	server/server.cpp \
 	server/server_imp.cpp \
 	server/context.cpp \
-	server/router.cpp \
+	server/middlewares/router_middleware.cpp \
+	server/middlewares/form_data.cpp \
+	server/middlewares/form_data_middleware.cpp \
+	server/middlewares/file_downloader_middleware.cpp \
 	client/client.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.http"' $(CXXFLAGS)
@@ -58,7 +64,7 @@ TEST_CPP_SRC_FILES = \
 	url_test.cpp \
 	server/request_parser_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_event -ltbox_util -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 

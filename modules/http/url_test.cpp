@@ -27,7 +27,8 @@ TEST(Url, UrlDecode)
 {
     EXPECT_EQ(UrlDecode("hello%20world"), "hello world");
     EXPECT_EQ(UrlDecode(R"(%23%25%26%2B%2F%5C%3D%3F%20%2E%3A)"), R"(#%&+/\=? .:)");
-    EXPECT_THROW(UrlDecode("hello%2world"), std::out_of_range);
+    EXPECT_THROW(UrlDecode("hello%2world"), std::runtime_error);
+    EXPECT_THROW(UrlDecode("hello%"), std::runtime_error);
 }
 
 TEST(Url, UrlEncode)

@@ -82,7 +82,7 @@ void Server::Impl::cleanup()
     if (state_ != State::kNone) {
         stop();
 
-        req_cb_.clear();
+        req_handler_.clear();
         tcp_server_.cleanup();
 
         for (auto conn : conns_)
@@ -93,14 +93,14 @@ void Server::Impl::cleanup()
     }
 }
 
-void Server::Impl::use(const RequestCallback &cb)
+void Server::Impl::use(RequestHandler &&handler)
 {
-    req_cb_.push_back(cb);
+    req_handler_.push_back(std::move(handler));
 }
 
 void Server::Impl::use(Middleware *wp_middleware)
 {
-    req_cb_.push_back(bind(&Middleware::handle, wp_middleware, _1, _2));
+    req_handler_.push_back(bind(&Middleware::handle, wp_middleware, _1, _2));
 }
 
 void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
@@ -271,10 +271,10 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
 void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
 {
     RECORD_SCOPE();
-    if (cb_index >= req_cb_.size())
+    if (cb_index >= req_handler_.size())
         return;
 
-    auto func = req_cb_.at(cb_index);
+    auto func = req_handler_.at(cb_index);
 
     ++cb_level_;
     if (func)

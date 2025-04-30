@@ -40,15 +40,27 @@ using std::ifstream;
 using std::ofstream;
 using std::exception;
 
+FileType GetFileType(const std::string &file_path)
+{
+    struct stat st;
+
+    if (::stat(file_path.c_str(), &st) == 0) {
+        if (S_ISDIR(st.st_mode))    return FileType::kDirectory;
+        if (S_ISREG(st.st_mode))    return FileType::kRegular;
+        if (S_ISCHR(st.st_mode))    return FileType::kCharacterDevice;
+        if (S_ISBLK(st.st_mode))    return FileType::kBlockDevice;
+        if (S_ISLNK(st.st_mode))    return FileType::kSymbolLink;
+        if (S_ISSOCK(st.st_mode))   return FileType::kSocket;
+        if (S_ISFIFO(st.st_mode))   return FileType::kNamedPipe;
+    }
+
+    return FileType::kNone;
+}
+
 bool IsFileExist(const std::string &filename)
 {
-#if 1
     int ret = ::access(filename.c_str(), F_OK);
     return ret == 0;
-#else
-    ifstream ifs(filename);
-    return ifs.is_open();
-#endif
 }
 
 bool ReadStringFromTextFile(const std::string &filename, std::string &content)
@@ -239,9 +251,7 @@ bool MakeLink(const std::string &old_path, const std::string &new_path, bool all
 
 bool IsDirectoryExist(const std::string &dir)
 {
-    struct stat sb;
-    //! 如果读到dir的inode信息，且该inode是DIR，则返回true
-    return ((::stat(dir.c_str(), &sb) == 0) && S_ISDIR(sb.st_mode));
+    return GetFileType(dir) == FileType::kDirectory;
 }
 
 bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)

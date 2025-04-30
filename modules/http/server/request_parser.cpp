@@ -20,6 +20,7 @@
 #include "request_parser.h"
 #include <limits>
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 #include <tbox/util/string.h>
 
 namespace tbox {
@@ -46,6 +47,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         auto method_str = str.substr(pos, method_str_end);
         auto method = StringToMethod(method_str);
         if (method == Method::kUnset) {
+            LogNotice("method is invalid, method_str:%s", method_str.c_str());
             state_ = State::kFail;
             return pos;
         }
@@ -60,6 +62,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         //! 获取 url
         auto url_str_begin = str.find_first_not_of(' ', method_str_end);
         if (url_str_begin == std::string::npos || url_str_begin >= end_pos) {
+            LogNotice("parse url fail, url not exist.");
             state_ = State::kFail;
             return pos;
         }
@@ -67,6 +70,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         auto url_str_end = str.find_first_of(' ', url_str_begin);
         auto url_str = str.substr(url_str_begin, url_str_end - url_str_begin);
         if (!StringToUrlPath(url_str, sp_request_->url)) {
+            LogNotice("parse url fail, url_str:%s", url_str.c_str());
             state_ = State::kFail;
             return pos;
         }
@@ -74,6 +78,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         //! 获取版本
         auto ver_str_begin = str.find_first_not_of(' ', url_str_end);
         if (ver_str_begin == std::string::npos || ver_str_begin >= end_pos) {
+            LogNotice("ver not exist");
             state_ = State::kFail;
             return pos;
         }
@@ -81,12 +86,14 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
         auto ver_str_end = end_pos;
         auto ver_str = str.substr(ver_str_begin, ver_str_end - ver_str_begin);
         if (ver_str.compare(0, 5, "HTTP/") != 0) {
+            LogNotice("ver is invalid, ver_str:%s", ver_str.c_str());
             state_ = State::kFail;
             return pos;
         }
 
         auto ver = StringToHttpVer(ver_str);
         if (ver == HttpVer::kUnset) {
+            LogNotice("ver is invalid, ver_str:%s", ver_str.c_str());
             state_ = State::kFail;
             return pos;
         }
@@ -102,6 +109,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
          * 解析：
          *  Content-Length: 12\r\n
          *  Content-Type: plan/text\r\n
+         *  s-token: \r\n
          * 直接遇到空白行
          */
         for (;;) {
@@ -111,29 +119,32 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
                 state_ = State::kFinishedHeads;
                 pos += 2;
                 break;
+
             } else if (end_pos == std::string::npos) {  //! 当前的Head不完整
                 break;
             }
 
             auto colon_pos = str.find_first_of(':', pos);
             if (colon_pos == std::string::npos || colon_pos >= end_pos) {
+                LogNotice("can't find ':' in header line");
                 state_ = State::kFail;
                 return pos;
             }
 
             auto head_key = util::string::Strip(str.substr(pos, colon_pos - pos));
             auto head_value_start_pos = str.find_first_not_of(' ', colon_pos + 1);  //! 要略掉空白
-            if (head_value_start_pos == std::string::npos || head_value_start_pos >= end_pos) {
-                state_ = State::kFail;
-                return pos;
+
+            if (head_value_start_pos < end_pos) {
+                auto head_value_end_pos   = end_pos;
+                auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
+                sp_request_->headers[head_key] = head_value;
+
+                if (head_key == "Content-Length")
+                    content_length_ = std::stoi(head_value);
+
+            } else {
+                sp_request_->headers[head_key] = "";
             }
-
-            auto head_value_end_pos   = end_pos;
-            auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
-            sp_request_->headers[head_key] = head_value;
-
-            if (head_key == "Content-Length")
-                content_length_ = std::stoi(head_value);
 
             pos = end_pos + 2;
         }

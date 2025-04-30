@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2025 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -17,23 +17,29 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_HTTP_SERVER_TYPES_H_20220503
-#define TBOX_HTTP_SERVER_TYPES_H_20220503
+#ifndef TBOX_HTTP_SERVER_ROUTE_KEY_H_20250419
+#define TBOX_HTTP_SERVER_ROUTE_KEY_H_20250419
 
-#include <memory>
-#include <functional>
+#include "../../common.h"
 
 namespace tbox {
 namespace http {
 namespace server {
 
-class Context;
-using ContextSptr = std::shared_ptr<Context>;
-using NextFunc = std::function<void()>;
-using RequestHandler = std::function<void(ContextSptr, const NextFunc &)>;
+//! 用于存储处理函数的映射
+struct RouteKey {
+    Method method;
+    std::string path;
+
+    bool operator<(const RouteKey& other) const {
+        if (method != other.method)
+            return method < other.method;
+        return path < other.path;
+    }
+};
 
 }
 }
 }
 
-#endif //TBOX_HTTP_SERVER_TYPES_H_20220503
+#endif // TBOX_HTTP_SERVER_ROUTE_KEY_H_20250419

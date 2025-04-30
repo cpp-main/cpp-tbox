@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2025 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -31,6 +31,26 @@ namespace fs {
 ////////////////////////////////////////////////////////////////////
 // 文件相关
 ////////////////////////////////////////////////////////////////////
+
+//! 文件类型
+enum class FileType {
+    kNone,              //!< 未知
+    kDirectory,         //!< 目录
+    kRegular,           //!< 常规文件
+    kCharacterDevice,   //!< 字符设备
+    kBlockDevice,       //!< 块设备
+    kSymbolLink,        //!< 符号链接
+    kSocket,            //!< 套接字
+    kNamedPipe,         //!< 有名管道
+};
+
+/**
+ * 获取文件类型
+ *
+ * \param file_path  文件路径
+ * \return FileType  文件类型
+ */
+FileType GetFileType(const std::string &file_path);
 
 /**
  * 检查文件是否存在
