@@ -103,10 +103,10 @@ TEST(AsyncFileSink, RemoveLogFileDuringWriting)
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("remove_log_file_during_writing");
     ch.enable();
-    util::fs::RemoveFile(ch.currentFilename());
+    util::fs::RemoveFile(ch.currentFilePath());
     LogInfo("Hello");
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilename()));
+    EXPECT_TRUE(util::fs::IsFileExist(ch.currentFilePath()));
     ch.cleanup();
 }
 
@@ -118,7 +118,7 @@ TEST(AsyncFileSink, Truncate)
     ch.setFilePath("/tmp/tbox");
     ch.setFilePrefix("truncate");
     ch.enable();
-    util::fs::RemoveFile(ch.currentFilename());
+    util::fs::RemoveFile(ch.currentFilePath());
 
     std::string tmp(200, 'x');
     LogInfo("%s", tmp.c_str());

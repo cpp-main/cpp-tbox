@@ -85,9 +85,7 @@ void AsyncFileSink::cleanup()
 
 void AsyncFileSink::updateInnerValues()
 {
-    filename_prefix_ = file_path_ + '/' + file_prefix_ + '.';
-    sym_filename_ = filename_prefix_ + "latest.log";
-
+    sym_filepath_ = file_path_ + '/' + file_prefix_ + '.' + "latest.log";
     CHECK_CLOSE_RESET_FD(fd_);
 }
 
@@ -118,7 +116,7 @@ void AsyncFileSink::flush()
 bool AsyncFileSink::checkAndCreateLogFile()
 {
     if (fd_ >= 0) {
-        if (util::fs::IsFileExist(log_filename_))
+        if (util::fs::IsFileExist(log_filepath_))
             return true;
         CHECK_CLOSE_RESET_FD(fd_);
     }
@@ -137,31 +135,36 @@ bool AsyncFileSink::checkAndCreateLogFile()
         strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm);
     }
 
-    std::string log_filename;
+    //! 生成新的日志文件名与路径
+    std::string log_filename; //! 日志文件名称，如：demo.20250402.123.log
+    std::string log_filepath; //! 日志文件路径，如：/var/log/demo.20250402.123.log
     int postfix = 0;
+
     do {
-        log_filename = filename_prefix_ + timestamp + '.' + std::to_string(pid_) + ".log";
+        log_filename = file_prefix_ + '.' + timestamp + '.' + std::to_string(pid_) + ".log";
         if (postfix != 0) {
             log_filename += '.';
             log_filename += std::to_string(postfix);
         }
+        log_filepath = file_path_ + '/' + log_filename;
         ++postfix;
-    } while (util::fs::IsFileExist(log_filename));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
-    log_filename_ = std::move(log_filename);
+    } while (util::fs::IsFileExist(log_filepath));    //! 避免在同一秒多次创建日志文件，都指向同一日志名
+
+    log_filepath_ = std::move(log_filepath);
 
     int flags = O_CREAT | O_WRONLY | O_APPEND;
     if (file_sync_enable_)
         flags |= O_DSYNC;
 
-    fd_ = ::open(log_filename_.c_str(), flags, S_IRUSR | S_IWUSR);
+    fd_ = ::open(log_filepath_.c_str(), flags, S_IRUSR | S_IWUSR);
     if (fd_ < 0) {
-        cerr << "Err: open file " << log_filename_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
+        cerr << "Err: open file " << log_filepath_ << " fail. error:" << errno << ',' << strerror(errno) << endl;
         return false;
     }
 
     total_write_size_ = 0;
-    util::fs::RemoveFile(sym_filename_, false);
-    util::fs::MakeSymbolLink(log_filename_, sym_filename_, false);
+    util::fs::RemoveFile(sym_filepath_, false);
+    util::fs::MakeSymbolLink(log_filename, sym_filepath_, false);
 
     return true;
 }
