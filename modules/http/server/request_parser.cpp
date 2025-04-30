@@ -109,6 +109,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
          * 解析：
          *  Content-Length: 12\r\n
          *  Content-Type: plan/text\r\n
+         *  s-token: \r\n
          * 直接遇到空白行
          */
         for (;;) {
@@ -118,6 +119,7 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
                 state_ = State::kFinishedHeads;
                 pos += 2;
                 break;
+
             } else if (end_pos == std::string::npos) {  //! 当前的Head不完整
                 break;
             }
@@ -131,18 +133,18 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
 
             auto head_key = util::string::Strip(str.substr(pos, colon_pos - pos));
             auto head_value_start_pos = str.find_first_not_of(' ', colon_pos + 1);  //! 要略掉空白
-            if (head_value_start_pos == std::string::npos || head_value_start_pos >= end_pos) {
-                LogNotice("can't find header value");
-                state_ = State::kFail;
-                return pos;
+
+            if (head_value_start_pos < end_pos) {
+                auto head_value_end_pos   = end_pos;
+                auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
+                sp_request_->headers[head_key] = head_value;
+
+                if (head_key == "Content-Length")
+                    content_length_ = std::stoi(head_value);
+
+            } else {
+                sp_request_->headers[head_key] = "";
             }
-
-            auto head_value_end_pos   = end_pos;
-            auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
-            sp_request_->headers[head_key] = head_value;
-
-            if (head_key == "Content-Length")
-                content_length_ = std::stoi(head_value);
 
             pos = end_pos + 2;
         }

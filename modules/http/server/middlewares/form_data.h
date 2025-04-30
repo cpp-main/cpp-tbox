@@ -33,16 +33,16 @@ namespace server {
  */
 struct FormItem {
     enum class Type {
-        kField,  // 普通字段
-        kFile    // 文件
+        kField,  //! 普通字段
+        kFile    //! 文件
     };
 
     Type type = Type::kField;
-    std::string name;                 // 字段名称
-    std::string value;                // 字段值（对于普通字段）
-    std::string filename;             // 文件名（对于文件）
-    std::string content_type;         // 内容类型
-    std::map<std::string, std::string> headers;  // 其他头部信息
+    std::string name;                 //! 字段名称
+    std::string value;                //! 字段值（对于普通字段）
+    std::string filename;             //! 文件名（对于文件）
+    std::string content_type;         //! 内容类型
+    std::map<std::string, std::string> headers;  //! 其他头部信息
 };
 
 /**
@@ -95,7 +95,7 @@ class FormData {
 
   private:
     std::vector<FormItem> items_;
-    std::map<std::string, std::vector<size_t>> name_index_;  // 名称到索引的映射
+    std::map<std::string, std::vector<size_t>> name_index_;  //! 名称到索引的映射
 };
 
 }
