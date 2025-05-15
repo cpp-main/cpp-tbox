@@ -23,6 +23,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <atomic>
 
 #include "loop_wdog.h"
 
@@ -39,10 +40,18 @@ namespace {
 void OnLoopBlock(const std::string &name);
 void OnLoopRecover(const std::string &name);
 
-enum class State {
+//! Loop线程的状态
+enum class LoopState {
     kTobeCheck, //! 未打卡
     kChecked,   //! 已打卡
     kTimeout    //! 打卡超时
+};
+
+//! WDog自身的状态
+enum class WDogState {
+    kIdle,      //!< 未启动
+    kRunning,   //!< 运行中
+    kStoping,   //!< 停止中
 };
 
 struct LoopInfo {
@@ -50,12 +59,12 @@ struct LoopInfo {
 
     LoopInfo(event::Loop *l, const std::string &n) :
         loop(l), name(n),
-        state(State::kChecked)
+        state(LoopState::kChecked)
     { }
 
     event::Loop*  loop;
     std::string   name;
-    State         state;
+    LoopState     state;
 };
 
 using LoopInfoVec = std::vector<LoopInfo::SharedPtr>;
@@ -63,7 +72,7 @@ using LoopInfoVec = std::vector<LoopInfo::SharedPtr>;
 LoopInfoVec     _loop_info_vec; //! 线程信息表
 std::mutex      _mutex_lock;    //! 锁
 std::thread*    _sp_thread = nullptr; //! 线程对象
-bool _keep_running = false;     //! 线程是否继续工作标记
+std::atomic<WDogState> _wdog_state(WDogState::kIdle);
 
 LoopWDog::LoopBlockCallback _loop_die_cb = OnLoopBlock;  //! 回调函数
 LoopWDog::LoopBlockCallback _loop_recover_cb = OnLoopRecover;  //! 回调函数
@@ -73,16 +82,16 @@ void SendLoopFunc() {
     std::lock_guard<std::mutex> lg(_mutex_lock);
     for (auto loop_info_sptr : _loop_info_vec) {
         if (loop_info_sptr->loop->isRunning()) {
-            if (loop_info_sptr->state == State::kChecked) {
-                loop_info_sptr->state = State::kTobeCheck;
+            if (loop_info_sptr->state == LoopState::kChecked) {
+                loop_info_sptr->state = LoopState::kTobeCheck;
 
                 auto start_ts = std::chrono::steady_clock::now();
 
                 loop_info_sptr->loop->runInLoop(
                     [loop_info_sptr] {
-                        if (loop_info_sptr->state == State::kTimeout)
+                        if (loop_info_sptr->state == LoopState::kTimeout)
                             _loop_recover_cb(loop_info_sptr->name);
-                        loop_info_sptr->state = State::kChecked;
+                        loop_info_sptr->state = LoopState::kChecked;
                     },
                     "LoopWdog"
                 );
@@ -99,8 +108,8 @@ void SendLoopFunc() {
 void CheckLoopTag() {
     std::lock_guard<std::mutex> lg(_mutex_lock);
     for (auto loop_info_sptr: _loop_info_vec) {
-        if (loop_info_sptr->state == State::kTobeCheck) {
-            loop_info_sptr->state = State::kTimeout;
+        if (loop_info_sptr->state == LoopState::kTobeCheck) {
+            loop_info_sptr->state = LoopState::kTimeout;
             _loop_die_cb(loop_info_sptr->name);
             RECORD_EVENT();
         }
@@ -110,13 +119,13 @@ void CheckLoopTag() {
 //! 监控线程函数
 void ThreadProc() {
     LogDbg("LoopWDog started");
-    while (_keep_running) {
+    while (_wdog_state == WDogState::kRunning) {
         SendLoopFunc();
 
-        for (int i = 0; i < 10 && _keep_running; ++i)
+        for (int i = 0; i < 10 && _wdog_state == WDogState::kRunning; ++i)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        if (_keep_running)
+        if (_wdog_state == WDogState::kRunning)
             CheckLoopTag();
     }
     LogDbg("LoopWDog stoped");
@@ -140,20 +149,25 @@ void LoopWDog::SetLoopBlockCallback(const LoopBlockCallback &cb) {
 }
 
 void LoopWDog::Start() {
-    std::lock_guard<std::mutex> lg(_mutex_lock);
-    if (!_keep_running) {
-        _keep_running = true;
+    WDogState state = WDogState::kIdle;
+    if (_wdog_state.compare_exchange_strong(state, WDogState::kRunning)) {
         _sp_thread = new std::thread(ThreadProc);
+
+    } else {
+        LogWarn("it's not idle, state:%d", state);
     }
 }
 
 void LoopWDog::Stop() {
-    std::lock_guard<std::mutex> lg(_mutex_lock);
-    if (_keep_running) {
-        _keep_running = false;
+    WDogState state = WDogState::kRunning;
+    if (_wdog_state.compare_exchange_strong(state, WDogState::kStoping)) {
         _sp_thread->join();
         CHECK_DELETE_RESET_OBJ(_sp_thread);
         _loop_info_vec.clear();
+        _wdog_state = WDogState::kIdle;
+
+    } else {
+        LogWarn("it's not running. state:%d", state);
     }
 }
 
