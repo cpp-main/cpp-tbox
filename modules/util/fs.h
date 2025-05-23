@@ -276,6 +276,16 @@ const char* Basename(const char *full_path);
 std::string Dirname(const std::string &full_path);
 
 /**
+ * 获取文件名的主体，如："config.json" -> "config"
+ */
+std::string GetFileStem(const std::string &file_path);
+
+/**
+ * 获取文件名的后缀，如："config.json" -> "json"
+ */
+std::string GetFileSuffix(const std::string &file_path);
+
+/**
  * 重命名
  *
  * \param old_name  旧文件名
