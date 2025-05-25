@@ -448,7 +448,7 @@ std::string Dirname(const std::string &full_path)
  * "/some/a.b/c" -> "c"
  * "" -> ""
  */
-std::string GetFileStem(const std::string &filepath)
+std::string FilenameStem(const std::string &filepath)
 {
     std::string::size_type start_pos = 0;
 
@@ -471,7 +471,7 @@ std::string GetFileStem(const std::string &filepath)
  * "/w/a.b" -> "b"
  * "" -> ""
  */
-std::string GetFileSuffix(const std::string &filepath)
+std::string FilenameSuffix(const std::string &filepath)
 {
     auto last_dot_pos = filepath.find_last_of('.');
     if (last_dot_pos == std::string::npos)

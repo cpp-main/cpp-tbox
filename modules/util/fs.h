@@ -278,12 +278,12 @@ std::string Dirname(const std::string &full_path);
 /**
  * 获取文件名的主体，如："config.json" -> "config"
  */
-std::string GetFileStem(const std::string &file_path);
+std::string FilenameStem(const std::string &file_path);
 
 /**
  * 获取文件名的后缀，如："config.json" -> "json"
  */
-std::string GetFileSuffix(const std::string &file_path);
+std::string FilenameSuffix(const std::string &file_path);
 
 /**
  * 重命名
