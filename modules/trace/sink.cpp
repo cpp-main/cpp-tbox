@@ -175,7 +175,7 @@ void Sink::commitRecord(const char *name, const char *module, uint32_t line, uin
 
     auto time_cost = std::chrono::steady_clock::now() - start_ts;
     if (time_cost > std::chrono::milliseconds(100))
-        LogNotice("trace commit cost > 100 ms, %lu us", time_cost.count() / 1000);
+        LogNotice("trace commit cost > 100 ms, %lu us, %s at L%d", time_cost.count() / 1000, name, line);
 }
 
 void Sink::onBackendRecvData(const void *data, size_t size)
