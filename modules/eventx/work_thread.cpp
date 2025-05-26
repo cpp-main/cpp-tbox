@@ -89,18 +89,28 @@ WorkThread::~WorkThread()
     cleanup();
 }
 
-WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task)
+ThreadExecutor::TaskToken WorkThread::execute(NonReturnFunc &&backend_task)
 {
     return execute(std::move(backend_task), nullptr, nullptr);
 }
 
-WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
+ThreadExecutor::TaskToken WorkThread::execute(const NonReturnFunc &backend_task)
 {
     NonReturnFunc backend_task_copy(backend_task);
     return execute(std::move(backend_task_copy), nullptr, nullptr);
 }
 
-WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
+ThreadExecutor::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb) {
+    return execute(std::move(backend_task), std::move(main_cb), nullptr);
+}
+
+ThreadExecutor::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb) {
+    NonReturnFunc backend_task_copy(backend_task);
+    NonReturnFunc main_cb_copy(main_cb);
+    return execute(std::move(backend_task_copy), std::move(main_cb_copy), nullptr);
+}
+
+ThreadExecutor::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop)
 {
     RECORD_SCOPE();
     TaskToken token;
@@ -129,18 +139,18 @@ WorkThread::TaskToken WorkThread::execute(NonReturnFunc &&backend_task, NonRetur
     return token;
 }
 
-WorkThread::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
+ThreadExecutor::TaskToken WorkThread::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop)
 {
     NonReturnFunc backend_task_copy(backend_task);
     NonReturnFunc main_cb_copy(main_cb);
     return execute(std::move(backend_task_copy), std::move(main_cb_copy), main_loop);
 }
 
-WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
+ThreadExecutor::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
 {
     if (d_ == nullptr) {
         LogWarn("WorkThread has been cleanup");
-        return TaskStatus::kNotFound;
+        return TaskStatus::kCleanup;
     }
 
     std::lock_guard<std::mutex> lg(d_->lock);
@@ -154,25 +164,19 @@ WorkThread::TaskStatus WorkThread::getTaskStatus(TaskToken task_token) const
     return TaskStatus::kNotFound;
 }
 
-/**
- * 返回值如下：
- * 0: 取消成功
- * 1: 没有找到该任务
- * 2: 该任务正在执行
- */
-int WorkThread::cancel(TaskToken token)
+ThreadExecutor::CancelResult WorkThread::cancel(TaskToken token)
 {
     RECORD_SCOPE();
     if (d_ == nullptr) {
         LogWarn("WorkThread has been cleanup");
-        return 3;
+        return CancelResult::kCleanup;
     }
 
     std::lock_guard<std::mutex> lg(d_->lock);
 
     //! 如果正在执行
     if (d_->doing_tasks_token.find(token) != d_->doing_tasks_token.end())
-        return 2;   //! 返回正在执行
+        return CancelResult::kExecuting;   //! 返回正在执行
 
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     if (!d_->undo_tasks_token_deque.empty()) {
@@ -180,11 +184,11 @@ int WorkThread::cancel(TaskToken token)
         if (iter != d_->undo_tasks_token_deque.end()) {
             d_->undo_tasks_token_deque.erase(iter);
             d_->task_pool.free(d_->undo_tasks_cabinet.free(token));
-            return 0;
+            return CancelResult::kSuccess;
         }
     }
 
-    return 1;   //! 返回没有找到
+    return CancelResult::kNotFound;   //! 返回没有找到
 }
 
 void WorkThread::threadProc()

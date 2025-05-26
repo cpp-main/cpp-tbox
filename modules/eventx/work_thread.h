@@ -26,6 +26,8 @@
 #include <tbox/event/forward.h>
 #include <tbox/base/cabinet_token.h>
 
+#include "thread_executor.h"
+
 namespace tbox {
 namespace eventx {
 
@@ -34,10 +36,8 @@ namespace eventx {
  *
  * 是ThreadPool的精简版，单线程+无任务等级
  */
-class WorkThread {
+class WorkThread : public ThreadExecutor {
   public:
-    using TaskToken = cabinet::Token;
-
     /**
      * 构造函数
      *
@@ -46,48 +46,26 @@ class WorkThread {
     explicit WorkThread(event::Loop *main_loop = nullptr);
     virtual ~WorkThread();
 
-    using NonReturnFunc = std::function<void ()>;
+    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop);
+    TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop);
 
     /**
      * 使用worker线程执行某个函数
-     *
-     * \param backend_task      让worker线程执行的函数对象
-     *
-     * \return TaskToken        任务Token
-     */
-    TaskToken execute(NonReturnFunc &&backend_task);
-    TaskToken execute(const NonReturnFunc &backend_task);
-
-    /**
-     * 使用worker线程执行某个函数，并在完成之后在主线程执行指定的回调函数
      *
      * \param backend_task      让worker线程执行的函数对象
      * \param main_cb           任务完成后，由主线程执行的回调函数对象
      *
      * \return TaskToken        任务Token
      */
-    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, event::Loop *main_loop = nullptr);
-    TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, event::Loop *main_loop = nullptr);
-
-    enum class TaskStatus {
-        kWaiting,   //! 等待中
-        kExecuting, //! 执行中
-        kNotFound   //! 未找到（可能已完成）
-    };
+    virtual TaskToken execute(NonReturnFunc &&backend_task) override;
+    virtual TaskToken execute(const NonReturnFunc &backend_task) override;
+    virtual TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb) override;
+    virtual TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb) override;
 
     //! 获取任务的状态
-    TaskStatus getTaskStatus(TaskToken task_token) const;
-
-    /**
-     * 取消任务
-     *
-     * \return task_token       任务Token
-     *
-     * \return  int     0: 成功
-     *                  1: 没有找到该任务（已执行）
-     *                  2: 该任务正在执行
-     */
-    int cancel(TaskToken task_token);
+    virtual TaskStatus getTaskStatus(TaskToken task_token) const override;
+    //! 取消任务
+    virtual CancelResult cancel(TaskToken task_token) override;
 
     /**
      * 清理资源，并等待线程结束

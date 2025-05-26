@@ -30,6 +30,7 @@ add_definitions(-DMODULE_ID="tbox.eventx")
 set(TBOX_LIBRARY_NAME tbox_eventx)
 
 set(TBOX_EVENTX_HEADERS
+	thread_executor.h
     thread_pool.h
     timer_pool.h
     timeout_monitor.hpp

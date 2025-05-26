@@ -431,7 +431,8 @@ TEST(SequenceAction, FinishPause) {
     });
 
     EXPECT_EQ(seq_action.addChild(dummy_action), 0);
-    EXPECT_EQ(seq_action.addChild(new FunctionAction(*loop, [&] { is_function_action_run = true; return true; })), 1);
+    auto index = seq_action.addChild(new FunctionAction(*loop, [&] { is_function_action_run = true; return true; }));
+    EXPECT_EQ(index, 1);
     EXPECT_TRUE(seq_action.isReady());
 
     bool is_finished = false;

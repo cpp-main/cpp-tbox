@@ -126,17 +126,7 @@ bool ThreadPool::initialize(ssize_t min_thread_num, ssize_t max_thread_num)
     return true;
 }
 
-ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, int prio)
-{
-    return execute(std::move(backend_task), nullptr, prio);
-}
-
-ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int prio)
-{
-    return execute(backend_task, nullptr, prio);
-}
-
-ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
+ThreadExecutor::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio)
 {
     RECORD_SCOPE();
     TaskToken token;
@@ -180,14 +170,44 @@ ThreadPool::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonRetur
     return token;
 }
 
-ThreadPool::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
+ThreadExecutor::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio)
 {
     NonReturnFunc backend_task_copy(backend_task);
     NonReturnFunc main_cb_copy(main_cb);
     return execute(std::move(backend_task_copy), std::move(main_cb_copy), prio);
 }
 
-ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
+ThreadExecutor::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, int prio)
+{
+    return execute(std::move(backend_task), nullptr, prio);
+}
+
+ThreadExecutor::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, int prio)
+{
+    return execute(backend_task, nullptr, prio);
+}
+
+ThreadExecutor::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task)
+{
+    return execute(std::move(backend_task), 0);
+}
+
+ThreadExecutor::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task)
+{
+    return execute(backend_task, 0);
+}
+
+ThreadExecutor::TaskToken ThreadPool::execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb)
+{
+    return execute(std::move(backend_task), std::move(main_cb), 0);
+}
+
+ThreadExecutor::TaskToken ThreadPool::execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb)
+{
+    return execute(backend_task, main_cb, 0);
+}
+
+ThreadExecutor::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
 {
     std::lock_guard<std::mutex> lg(d_->lock);
 
@@ -200,20 +220,14 @@ ThreadPool::TaskStatus ThreadPool::getTaskStatus(TaskToken task_token) const
     return TaskStatus::kNotFound;
 }
 
-/**
- * 返回值如下：
- * 0: 取消成功
- * 1: 没有找到该任务
- * 2: 该任务正在执行
- */
-int ThreadPool::cancel(TaskToken token)
+ThreadExecutor::CancelResult ThreadPool::cancel(TaskToken token)
 {
     RECORD_SCOPE();
     std::lock_guard<std::mutex> lg(d_->lock);
 
     //! 如果正在执行
     if (d_->doing_tasks_token.find(token) != d_->doing_tasks_token.end())
-        return 2;   //! 返回正在执行
+        return CancelResult::kExecuting;   //! 返回正在执行
 
     //! 从高优先级向低优先级遍历，找出优先级最高的任务
     for (size_t i = 0; i < d_->undo_tasks_token.size(); ++i) {
@@ -223,12 +237,12 @@ int ThreadPool::cancel(TaskToken token)
             if (iter != tasks_token.end()) {
                 tasks_token.erase(iter);
                 d_->task_pool.free(d_->undo_tasks_cabinet.free(token));
-                return 0;
+                return CancelResult::kSuccess;
             }
         }
     }
 
-    return 1;   //! 返回没有找到
+    return CancelResult::kNotFound;   //! 返回没有找到
 }
 
 void ThreadPool::cleanup()

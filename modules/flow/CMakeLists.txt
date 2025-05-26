@@ -49,6 +49,7 @@ set(TBOX_FLOW_SOURCES
     actions/wrapper_action.cpp
     actions/dummy_action.cpp
     actions/switch_action.cpp
+	actions/execute_cmd_action.cpp
     to_graphviz.cpp)
 
 set(TBOX_FLOW_TEST_SOURCES
@@ -130,6 +131,7 @@ install(
     actions/succ_fail_action.h
     actions/dummy_action.h
     actions/switch_action.h
+	actions/execute_cmd_action.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/flow/actions
 )
 

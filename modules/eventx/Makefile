@@ -25,6 +25,7 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 2
 
 HEAD_FILES = \
+	thread_executor.h \
 	thread_pool.h \
 	timer_pool.h \
 	timeout_monitor.hpp \
