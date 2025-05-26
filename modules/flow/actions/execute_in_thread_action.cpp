@@ -18,7 +18,7 @@
  * of the source tree.
  */
 
-#include "execute_cmd_action.h"
+#include "execute_in_thread_action.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/lifetime_tag.hpp>
@@ -28,85 +28,76 @@
 namespace tbox {
 namespace flow {
 
-ExecuteCmdAction::ExecuteCmdAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor)
-  : Action(loop, "ExecuteCmd")
+ExecuteInThreadAction::ExecuteInThreadAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor)
+  : Action(loop, "ExecuteInThread")
   , thread_executor_(thread_executor)
 { }
 
-ExecuteCmdAction::ExecuteCmdAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor, const std::string &cmd)
-  : Action(loop, "ExecuteCmd")
+ExecuteInThreadAction::ExecuteInThreadAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor, Func &&func)
+  : Action(loop, "ExecuteInThread")
   , thread_executor_(thread_executor)
-  , cmd_(cmd)
+  , func_(std::move(func))
 { }
 
-void ExecuteCmdAction::onStart() {
+void ExecuteInThreadAction::onStart() {
     Action::onStart();
 
-    if (!cmd_.empty()) {
+    if (func_) {
         struct Tmp {
-            std::string cmd;
+            Func func;
             bool succ;
-            int return_code;
-            std::string std_output;
+            Reason reason;
         };
         auto tmp = std::make_shared<Tmp>();
-        tmp->cmd = cmd_;
+        tmp->func = func_;
 
         auto ltw = ltt_.get();
         task_token_ = thread_executor_.execute(
             [tmp] {
-                tmp->succ = util::ExecuteCmd(tmp->cmd, tmp->std_output, tmp->return_code);
+                tmp->succ = tmp->func(tmp->reason);
             },
             [this, tmp, ltw] {
                 if (ltw) {
-                    std_output_ = tmp->std_output;
-                    reture_code_ = tmp->return_code;
-                    finish(tmp->succ);
+                    finish(tmp->succ, tmp->reason);
                 } else {
-                    LogWarn("ExecuteCmdAction object lifetime end");
+                    LogWarn("ExecuteInThreadAction object lifetime end");
                 }
             }
         );
 
     } else {
-        LogWarn("action %d:%s[%s] cmd is empty", id(), type().c_str(), label().c_str());
+        LogWarn("cmd is empty");
         finish(false);
     }
 }
 
-void ExecuteCmdAction::onStop() {
+void ExecuteInThreadAction::onStop() {
     auto result = thread_executor_.cancel(task_token_);
     if (result != eventx::ThreadExecutor::CancelResult::kExecuting)
-        LogWarn("action %d:%s[%s] stop fail, cmd: '%s'", id(), type().c_str(), label().c_str(), cmd_.c_str());
+        LogWarn("action %d:%s[%s] stop fail", id(), type().c_str(), label().c_str());
 
     Action::onStop();
 }
 
-void ExecuteCmdAction::onPause() {
+void ExecuteInThreadAction::onPause() {
     LogWarn("action %d:%s[%s] can't pause", id(), type().c_str(), label().c_str());
     Action::onPause();
 }
 
-void ExecuteCmdAction::onResume() {
+void ExecuteInThreadAction::onResume() {
     Action::onResume();
     LogWarn("action %d:%s[%s] can't resume", id(), type().c_str(), label().c_str());
 }
 
-void ExecuteCmdAction::onReset() {
+void ExecuteInThreadAction::onReset() {
     task_token_.reset();
-    reture_code_ = 0;
-    std_output_.clear();
-
     Action::onReset();
 }
 
-void ExecuteCmdAction::toJson(Json &js) const {
+void ExecuteInThreadAction::toJson(Json &js) const {
     Action::toJson(js);
 
-    js["cmd"] = cmd_;
     js["task_token"] = task_token_.id();
-    js["reture_code"] = reture_code_;
-    js["std_output"] = std_output_;
 }
 
 }

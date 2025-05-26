@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_FLOW_EXECUTE_CMD_ACTION_H_20250526
-#define TBOX_FLOW_EXECUTE_CMD_ACTION_H_20250526
+#ifndef TBOX_FLOW_EXECUTE_IN_THREAD_ACTION_H_20250527
+#define TBOX_FLOW_EXECUTE_IN_THREAD_ACTION_H_20250527
 
 #include "../action.h"
 
@@ -28,18 +28,17 @@
 namespace tbox {
 namespace flow {
 
-//! 执行System命令的动作
-class ExecuteCmdAction : public Action {
+//! 在子线程中执行指定的动作
+class ExecuteInThreadAction : public Action {
   public:
-    explicit ExecuteCmdAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor);
-    explicit ExecuteCmdAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor, const std::string &cmd);
+    using Func = std::function<bool(Reason &)>;
 
-    inline void setCmd(const std::string &cmd) { cmd_ = cmd; }
+    explicit ExecuteInThreadAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor);
+    explicit ExecuteInThreadAction(event::Loop &loop, eventx::ThreadExecutor &thread_executor, Func &&func);
 
-    inline int getReturnCode() const { return reture_code_; }
-    inline std::string getStdOutput() const { return std_output_; }
+    inline void setFunc(Func &&func) { func_ = std::move(func); }
 
-    virtual bool isReady() const { return !cmd_.empty(); }
+    virtual bool isReady() const { return bool(func_); }
 
   protected:
     virtual void onStart() override;
@@ -53,14 +52,12 @@ class ExecuteCmdAction : public Action {
   private:
     LifetimeTag ltt_;
     eventx::ThreadExecutor &thread_executor_;
-    std::string cmd_;
+    Func func_;
 
     tbox::eventx::ThreadExecutor::TaskToken task_token_;
-    int reture_code_ = 0;
-    std::string std_output_;
 };
 
 }
 }
 
-#endif //TBOX_FLOW_EXECUTE_CMD_ACTION_H_20250526
+#endif //TBOX_FLOW_EXECUTE_IN_THREAD_ACTION_H_20250527
