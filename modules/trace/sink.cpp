@@ -156,6 +156,8 @@ void Sink::commitRecord(const char *name, const char *module, uint32_t line, uin
     if (!is_enabled_)
         return;
 
+    auto start_ts = std::chrono::steady_clock::now();
+
     RecordHeader header = {
         .thread_id = ::syscall(SYS_gettid),
         .end_ts_us = end_timepoint_us,
@@ -170,6 +172,10 @@ void Sink::commitRecord(const char *name, const char *module, uint32_t line, uin
     async_pipe_.appendLockless(name, header.name_size);
     async_pipe_.appendLockless(module, header.module_size);
     async_pipe_.appendUnlock();
+
+    auto time_cost = std::chrono::steady_clock::now() - start_ts;
+    if (time_cost > std::chrono::milliseconds(100))
+        LogNotice("trace commit cost > 100 ms, %lu us", time_cost.count() / 1000);
 }
 
 void Sink::onBackendRecvData(const void *data, size_t size)
