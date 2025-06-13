@@ -34,7 +34,7 @@ App::~App()
     LogTag();
 }
 
-void App::onFillDefaultConfig(tbox::Json &cfg)
+void App::onFillDefaultConfig(tbox::Json &cfg) const
 {
     cfg["ok"] = true;
 }

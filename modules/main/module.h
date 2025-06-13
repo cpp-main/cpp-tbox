@@ -102,7 +102,7 @@ class Module {
     bool addAs(Module *child, const std::string &name, bool required = true);
 
     //! 下面5个函数，由父Module自动调用。使用者不需要关心
-    void fillDefaultConfig(Json &js_parent);
+    void fillDefaultConfig(Json &js_parent) const;
     bool initialize(const Json &js_parent);
     bool start();
     void stop();
@@ -120,9 +120,9 @@ class Module {
     //! 下面的5个虚函数，可由使用者根据需要重写。如果没有操作，就不用重写
 
     //! 填充本模块的默认参数，可重写。注意：日志系统在该函数执行过程中尚不可用
-    virtual void onFillDefaultConfig(Json &js_this) { (void)js_this; }
+    virtual void onFillDefaultConfig(Json &) const { }
     //! 初始化本模块的操作，可重写
-    virtual bool onInit(const Json &js_this) { (void)js_this; return true; }
+    virtual bool onInit(const Json &) { return true; }
     //! 启动本模块的操作，可重写
     virtual bool onStart() { return true; }
     //! 停止本模块的操作，可重写，对应onStart()的逆操作
