@@ -440,6 +440,51 @@ std::string Dirname(const std::string &full_path)
     return full_path.substr(start_pos, end_pos - start_pos);
 }
 
+/**
+ * 目标:
+ * "a" -> "a"
+ * "a.txt" -> "a"
+ * "/some/a.txt" -> "a"
+ * "/some/a.b/c" -> "c"
+ * "" -> ""
+ */
+std::string FilenameStem(const std::string &filepath)
+{
+    std::string::size_type start_pos = 0;
+
+    auto last_backslash_pos = filepath.find_last_of('/');
+    if (last_backslash_pos != std::string::npos)
+        start_pos = last_backslash_pos + 1;
+
+    auto last_dot_pos = filepath.find_last_of('.');
+    if (last_dot_pos != std::string::npos && last_dot_pos > start_pos)
+        return filepath.substr(start_pos, last_dot_pos - start_pos);
+    else
+        return filepath.substr(start_pos);
+}
+
+/**
+ * 目标：
+ * "a.b" -> "b"
+ * "a" -> ""
+ * "a." -> ""
+ * "/w/a.b" -> "b"
+ * "" -> ""
+ */
+std::string FilenameSuffix(const std::string &filepath)
+{
+    auto last_dot_pos = filepath.find_last_of('.');
+    if (last_dot_pos == std::string::npos)
+        return "";
+
+    //! 防止 "a.b/c" -> "a/c" 的情况
+    auto last_backslash_pos = filepath.find_last_of('/');
+    if (last_backslash_pos != std::string::npos && last_backslash_pos > last_dot_pos)
+        return "";
+
+    return filepath.substr(last_dot_pos + 1);
+}
+
 bool Rename(const std::string &old_name, const std::string &new_name)
 {
     int ret = ::rename(old_name.c_str(), new_name.c_str());

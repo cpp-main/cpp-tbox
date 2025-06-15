@@ -41,7 +41,7 @@ App::~App()
     CHECK_DELETE_RESET_OBJ(client_);
 }
 
-void App::onFillDefaultConfig(Json &cfg)
+void App::onFillDefaultConfig(Json &cfg) const
 {
     cfg["server"] = "127.0.0.1:12345";
 }

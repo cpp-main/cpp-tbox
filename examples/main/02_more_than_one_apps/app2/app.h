@@ -31,7 +31,7 @@ class App : public tbox::main::Module
     ~App();
 
   protected:
-    virtual void onFillDefaultConfig(tbox::Json &cfg) override;
+    virtual void onFillDefaultConfig(tbox::Json &cfg) const override;
     virtual bool onInit(const tbox::Json &cfg) override;
     virtual bool onStart() override;
     virtual void onStop() override;

@@ -49,6 +49,8 @@ HEAD_FILES = \
 	actions/succ_fail_action.h \
 	actions/dummy_action.h \
 	actions/switch_action.h \
+	actions/execute_cmd_action.h \
+	actions/execute_in_thread_action.h \
 	to_graphviz.h \
 
 CPP_SRC_FILES = \
@@ -71,6 +73,8 @@ CPP_SRC_FILES = \
 	actions/wrapper_action.cpp \
 	actions/dummy_action.cpp \
 	actions/switch_action.cpp \
+	actions/execute_cmd_action.cpp \
+	actions/execute_in_thread_action.cpp \
 	to_graphviz.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.flow"' $(CXXFLAGS)
@@ -95,6 +99,8 @@ TEST_CPP_SRC_FILES = \
 	actions/wrapper_action_test.cpp \
 	actions/succ_fail_action_test.cpp \
 	actions/switch_action_test.cpp \
+	actions/execute_cmd_action_test.cpp \
+	actions/execute_in_thread_action_test.cpp \
 	to_graphviz_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl

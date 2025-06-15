@@ -23,8 +23,10 @@
 #include <limits>
 #include <functional>
 #include <array>
+
 #include <tbox/event/forward.h>
-#include <tbox/base/cabinet_token.h>
+
+#include "thread_executor.h"
 
 namespace tbox {
 namespace eventx {
@@ -42,10 +44,8 @@ namespace eventx {
 /**
  * 线程池类
  */
-class ThreadPool {
+class ThreadPool : public ThreadExecutor {
   public:
-    using TaskToken = cabinet::Token;
-
     /**
      * 构造函数
      *
@@ -67,17 +67,6 @@ class ThreadPool {
     using NonReturnFunc = std::function<void ()>;
 
     /**
-     * 使用worker线程执行某个函数
-     *
-     * \param backend_task      让worker线程执行的函数对象
-     * \param prio              任务优先级[-2, -1, 0, 1, 2]，越小优先级越高
-     *
-     * \return TaskToken        任务Token
-     */
-    TaskToken execute(NonReturnFunc &&backend_task, int prio = 0);
-    TaskToken execute(const NonReturnFunc &backend_task, int prio = 0);
-
-    /**
      * 使用worker线程执行某个函数，并在完成之后在主线程执行指定的回调函数
      *
      * \param backend_task      让worker线程执行的函数对象
@@ -86,28 +75,37 @@ class ThreadPool {
      *
      * \return TaskToken        任务Token
      */
-    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio = 0);
-    TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio = 0);
-
-    enum class TaskStatus {
-        kWaiting,   //! 等待中
-        kExecuting, //! 执行中
-        kNotFound   //! 未找到（可能已完成）
-    };
-
-    //! 获取任务的状态
-    TaskStatus getTaskStatus(TaskToken task_token) const;
+    TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb, int prio);
+    TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb, int prio);
 
     /**
-     * 取消任务
+     * 使用worker线程执行某个函数
      *
-     * \return task_token       任务Token
+     * \param backend_task      让worker线程执行的函数对象
+     * \param prio              任务优先级[-2, -1, 0, 1, 2]，越小优先级越高
      *
-     * \return  int     0: 成功
-     *                  1: 没有找到该任务（已执行）
-     *                  2: 该任务正在执行
+     * \return TaskToken        任务Token
      */
-    int cancel(TaskToken task_token);
+    TaskToken execute(NonReturnFunc &&backend_task, int prio);
+    TaskToken execute(const NonReturnFunc &backend_task, int prio);
+
+    /**
+     * 使用worker线程执行某个函数
+     *
+     * \param backend_task      让worker线程执行的函数对象
+     * \param main_cb           任务完成后，由主线程执行的回调函数对象
+     *
+     * \return TaskToken        任务Token
+     */
+    virtual TaskToken execute(NonReturnFunc &&backend_task) override;
+    virtual TaskToken execute(const NonReturnFunc &backend_task) override;
+    virtual TaskToken execute(NonReturnFunc &&backend_task, NonReturnFunc &&main_cb) override;
+    virtual TaskToken execute(const NonReturnFunc &backend_task, const NonReturnFunc &main_cb) override;
+
+    //! 获取任务的状态
+    virtual TaskStatus getTaskStatus(TaskToken task_token) const override;
+    //! 取消任务
+    virtual CancelResult cancel(TaskToken task_token) override;
 
     /**
      * 清理资源，并等待所有的worker线程结束

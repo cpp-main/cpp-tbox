@@ -142,7 +142,8 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
 
     if (fmt != nullptr) {
         if (with_args) {
-            uint32_t buff_size = std::min(2048lu, _LogTextMaxLength) + 1;
+            constexpr size_t kMaxBuffSize = 2048lu;
+            uint32_t buff_size = std::min(kMaxBuffSize, _LogTextMaxLength) + 1;
 
             for (;;) {
                 va_list args;

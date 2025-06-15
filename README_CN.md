@@ -18,8 +18,9 @@
 
 参考项目:  
 
-- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)；
-- [protocal-adapter](https://gitee.com/cpp-master/protocal-adapter)；
+- [cpp-socks5](https://gitee.com/cpp-master/cpp-socks5)，参考如何进行TCP通信，以及如何组织工程；
+- [protocal-adapter](https://gitee.com/cpp-master/protocal-adapter)，参考如何进行 TCP, UDP, MQTT, UART 通信；
+- [cpp-tbox-for-ros](https://gitee.com/cpp-master/cpp-tbox-for-ros)，参考如何集成到ROS2开发环境，以及如何例用 rclcpp 进行通信；
 
 # 特点
 

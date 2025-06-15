@@ -49,6 +49,8 @@ set(TBOX_FLOW_SOURCES
     actions/wrapper_action.cpp
     actions/dummy_action.cpp
     actions/switch_action.cpp
+	actions/execute_cmd_action.cpp
+	actions/execute_in_thread_action.cpp
     to_graphviz.cpp)
 
 set(TBOX_FLOW_TEST_SOURCES
@@ -70,6 +72,8 @@ set(TBOX_FLOW_TEST_SOURCES
     actions/wrapper_action_test.cpp
     actions/succ_fail_action_test.cpp
     actions/switch_action_test.cpp
+	actions/execute_cmd_action_test.cpp
+	actions/execute_in_thread_action_test.cpp
     to_graphviz_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_FLOW_SOURCES})
@@ -130,6 +134,8 @@ install(
     actions/succ_fail_action.h
     actions/dummy_action.h
     actions/switch_action.h
+	actions/execute_cmd_action.h
+	actions/execute_in_thread_action.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/flow/actions
 )
 

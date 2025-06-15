@@ -90,7 +90,7 @@ bool Module::addAs(Module *child, const std::string &name, bool required)
     return true;
 }
 
-void Module::fillDefaultConfig(Json &js_parent)
+void Module::fillDefaultConfig(Json &js_parent) const
 {
     Json &js_this = name_.empty() ? js_parent : js_parent[name_];
 

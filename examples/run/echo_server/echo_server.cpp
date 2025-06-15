@@ -39,7 +39,7 @@ App::~App()
     CHECK_DELETE_RESET_OBJ(server_);
 }
 
-void App::onFillDefaultConfig(Json &cfg)
+void App::onFillDefaultConfig(Json &cfg) const
 {
     cfg["bind"] = "127.0.0.1:12345";
 }

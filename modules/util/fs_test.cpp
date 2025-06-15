@@ -228,6 +228,24 @@ TEST(fs, Basename) {
     EXPECT_EQ(Basename(std::string()), "");
 }
 
+TEST(fs, FilenameStem) {
+    EXPECT_EQ(FilenameStem("a.b"), "a");
+    EXPECT_EQ(FilenameStem("a"), "a");
+    EXPECT_EQ(FilenameStem("a."), "a");
+    EXPECT_EQ(FilenameStem("/w/a.b"), "a");
+    EXPECT_EQ(FilenameStem("/w.x/a"), "a");
+    EXPECT_EQ(FilenameStem(""), "");
+}
+
+TEST(fs, FilenameSuffix) {
+    EXPECT_EQ(FilenameSuffix("a.b"), "b");
+    EXPECT_EQ(FilenameSuffix("a"), "");
+    EXPECT_EQ(FilenameSuffix("a."), "");
+    EXPECT_EQ(FilenameSuffix("/w/a.b"), "b");
+    EXPECT_EQ(FilenameSuffix("/w.x/a"), "");
+    EXPECT_EQ(FilenameSuffix(""), "");
+}
+
 TEST(fs, RemoveDirectory) {
     //! 绝对路径测试
     int ret = 0;

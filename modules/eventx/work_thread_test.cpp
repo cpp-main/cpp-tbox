@@ -119,11 +119,11 @@ TEST(WorkThread, cancel_task) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
-    EXPECT_EQ(tp->cancel(task_ids[0]), 1);  //! 第一个任务已完成
-    EXPECT_EQ(tp->cancel(task_ids[1]), 2);  //! 第二个任务正在执行
-    EXPECT_EQ(tp->cancel(task_ids[2]), 0);  //! 第三个任务可正常取消
+    EXPECT_EQ(tp->cancel(task_ids[0]), WorkThread::CancelResult::kNotFound);    //! 第一个任务已完成
+    EXPECT_EQ(tp->cancel(task_ids[1]), WorkThread::CancelResult::kExecuting);   //! 第二个任务正在执行
+    EXPECT_EQ(tp->cancel(task_ids[2]), WorkThread::CancelResult::kSuccess);     //! 第三个任务可正常取消
     WorkThread::TaskToken invalid_token(100, 1);
-    EXPECT_EQ(tp->cancel(invalid_token), 1);  //! 任务不存在
+    EXPECT_EQ(tp->cancel(invalid_token), WorkThread::CancelResult::kNotFound);  //! 任务不存在
 
     loop->exitLoop(std::chrono::seconds(4));
     loop->runLoop();
