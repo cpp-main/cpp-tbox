@@ -18,8 +18,9 @@
 
 See projects:
 
-- [cpp-socks5](https://github.com/cpp-main/cpp-socks5);
-- [protocal-adapter](https://github.com/cpp-main/protocal-adapter)；
+- [cpp-socks5](https://github.com/cpp-main/cpp-socks5), learn how to use TCP and how to organize the project;
+- [protocal-adapter](https://github.com/cpp-main/protocal-adapter), learn how to use TCP, UDP, MQTT, UART;
+- [cpp-tbox-for-ros](https://github.com/cpp-main/cpp-tbox-for-ros), learn how to how to integrate into the ROS 2 development environment, and how to use `rclcpp`;
 
 # Features
 
