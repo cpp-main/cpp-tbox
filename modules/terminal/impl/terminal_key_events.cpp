@@ -115,11 +115,9 @@ void Terminal::Impl::onDeleteKey(SessionContext *s)
     }
 }
 
-void Terminal::Impl::onTabKey(SessionContext *s)
+void Terminal::Impl::onTabKey(SessionContext *)
 {
     //!TODO: 实现补全功能
-    LogUndo();
-    (void)s;
 }
 
 namespace {
