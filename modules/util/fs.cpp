@@ -40,11 +40,12 @@ using std::ifstream;
 using std::ofstream;
 using std::exception;
 
-FileType GetFileType(const std::string &file_path)
+FileType GetFileType(const std::string &file_path, bool refer_to_real_file)
 {
-    struct stat st;
+    auto func = refer_to_real_file ? (::stat) : (::lstat);
 
-    if (::stat(file_path.c_str(), &st) == 0) {
+    struct stat st;
+    if (func(file_path.c_str(), &st) == 0) {
         if (S_ISDIR(st.st_mode))    return FileType::kDirectory;
         if (S_ISREG(st.st_mode))    return FileType::kRegular;
         if (S_ISCHR(st.st_mode))    return FileType::kCharacterDevice;
