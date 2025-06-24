@@ -47,10 +47,12 @@ enum class FileType {
 /**
  * 获取文件类型
  *
- * \param file_path  文件路径
+ * \param file_path             文件路径
+ * \param refer_to_real_file    如果是符号链接文件，是否指向真实的文件
+ *
  * \return FileType  文件类型
  */
-FileType GetFileType(const std::string &file_path);
+FileType GetFileType(const std::string &file_path, bool refer_to_real_file = false);
 
 /**
  * 检查文件是否存在
