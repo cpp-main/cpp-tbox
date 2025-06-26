@@ -40,7 +40,7 @@ bool ParseAs(const std::string &text, unsigned int &value, int base = 10);  //! 
 bool ParseAs(const std::string &text, unsigned long &value, int base = 10);  //! 解析unsigned long值
 bool ParseAs(const std::string &text, unsigned long long &value, int base = 10);  //! 解析unsigned long long值
 
-bool ParseAs(const std::string &text, float &value);   //! 解析double值
+bool ParseAs(const std::string &text, float &value);   //! 解析float值
 bool ParseAs(const std::string &text, double &value);  //! 解析double值
 
 }
