@@ -48,7 +48,7 @@ set(TBOX_UTIL_HEADERS
     fd.h
     scalable_integer.h
     variables.h
-    parse_as.h
+    string_to.h
 )
 
 set(TBOX_UTIL_SOURCES
@@ -70,7 +70,7 @@ set(TBOX_UTIL_SOURCES
     fd.cpp
     scalable_integer.cpp
     variables.cpp
-    parse_as.cpp
+    string_to.cpp
 )
 
 set(TBOX_UTIL_TEST_SOURCES
@@ -90,7 +90,7 @@ set(TBOX_UTIL_TEST_SOURCES
     fd_test.cpp
     scalable_integer_test.cpp
     variables_test.cpp
-    parse_as_test.cpp
+    string_to_test.cpp
 )
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_UTIL_SOURCES})

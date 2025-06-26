@@ -43,7 +43,7 @@ HEAD_FILES = \
 	fd.h \
 	scalable_integer.h \
 	variables.h \
-	parse_as.h \
+	string_to.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -64,7 +64,7 @@ CPP_SRC_FILES = \
 	fd.cpp \
 	scalable_integer.cpp \
 	variables.cpp \
-	parse_as.cpp \
+	string_to.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.util"' $(CXXFLAGS)
 
@@ -87,7 +87,7 @@ TEST_CPP_SRC_FILES = \
 	fd_test.cpp \
 	scalable_integer_test.cpp \
 	variables_test.cpp \
-	parse_as_test.cpp \
+	string_to_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 
