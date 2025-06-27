@@ -20,6 +20,7 @@
 
 /**
  * StringTo() 系列函数用于将字串解析成对应类型的值，如bool, int, double 等
+ *
  * 返回true，表示解析成功，值将存在第二个引用参数里
  * 返回false，表示解析失败，第二个引用参数将不受影响
  */
@@ -27,6 +28,7 @@
 #define TBOX_UTIL_STRING_TO_H_20250626
 
 #include <string>
+#include <tbox/base/json_fwd.h>
 
 namespace tbox {
 namespace util {
@@ -51,7 +53,9 @@ bool StringTo(const std::string &text, unsigned long long &value, int base = 10)
 bool StringTo(const std::string &text, float &value);   //! 解析float值
 bool StringTo(const std::string &text, double &value);  //! 解析double值
 
-bool StringTo(const std::string &text, std::string &value);
+bool StringTo(const std::string &text, std::string &value); //! 等效于 value = text，仅用于风格一致性
+
+bool StringTo(const std::string &text, Json &value);    //! 解析成JSON对象
 
 }
 }

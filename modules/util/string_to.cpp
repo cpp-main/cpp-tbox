@@ -22,6 +22,8 @@
 
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
+#include <tbox/base/json.hpp>
+
 #include "string.h"
 
 namespace tbox {
@@ -126,6 +128,18 @@ bool StringTo(const std::string &text, std::string &value)
 {
     value = text;
     return true;
+}
+
+bool StringTo(const std::string &text, Json &js_value)
+{
+    try {
+        js_value = Json::parse(text);
+        return true;
+
+    } catch (const std::exception &e) {
+        LogNotice("can't convert '%s' to json, what: %s", text.c_str(), e.what());
+        return false;
+    }
 }
 
 }

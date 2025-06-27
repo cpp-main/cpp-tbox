@@ -18,7 +18,9 @@
  * of the source tree.
  */
 #include <gtest/gtest.h>
+
 #include "string_to.h"
+#include <tbox/base/json.hpp>
 
 namespace tbox {
 namespace util {
@@ -115,6 +117,20 @@ TEST(StringTo, Double)
 
     EXPECT_FALSE(StringTo("", value));
     EXPECT_FALSE(StringTo("A", value));
+}
+
+TEST(StringTo, Json)
+{
+    Json js;
+    EXPECT_TRUE(StringTo(R"({})", js));
+    EXPECT_TRUE(StringTo(R"(123)", js));
+
+    EXPECT_TRUE(StringTo(R"({"a":123,"b":"test"})", js));
+    EXPECT_EQ(js["a"].get<int>(), 123);
+    EXPECT_EQ(js["b"].get<std::string>(), "test");
+
+    EXPECT_FALSE(StringTo(R"()", js));
+    EXPECT_FALSE(StringTo(R"([})", js));
 }
 
 }
