@@ -41,6 +41,10 @@ TEST(StringTo, Bool)
     EXPECT_TRUE(StringTo("On", value));
     EXPECT_TRUE(value);
 
+    value = false;
+    EXPECT_TRUE(StringTo("1", value));
+    EXPECT_TRUE(value);
+
     value = true;
     EXPECT_TRUE(StringTo("no", value));
     EXPECT_FALSE(value);
@@ -51,6 +55,10 @@ TEST(StringTo, Bool)
 
     value = true;
     EXPECT_TRUE(StringTo("False", value));
+    EXPECT_FALSE(value);
+
+    value = true;
+    EXPECT_TRUE(StringTo("0", value));
     EXPECT_FALSE(value);
 
     EXPECT_FALSE(StringTo("", value));

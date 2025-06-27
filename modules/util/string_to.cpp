@@ -21,6 +21,7 @@
 #include "string_to.h"
 
 #include <tbox/base/defines.h>
+#include <tbox/base/log.h>
 #include "string.h"
 
 namespace tbox {
@@ -29,12 +30,18 @@ namespace util {
 bool StringTo(const std::string &text, bool &value)
 {
     const char *text_tbl[] = {
-        "YES", "NO",
-        "YEP", "NOPE",
-        "Y", "N",
         "TRUE", "FALSE",
-        "T", "F",
+        "YES", "NO",
         "ON", "OFF",
+        "1", "0",
+        "ENABLE", "DISABLE",
+        "Y", "N",
+        "T", "F",
+        "YEP", "NOPE",
+        "ACTIVE", "INACTIVE",
+        "POSITIVE", "NEGATIVE",
+        "POS", "NEG",
+        "+", "-",
     };
 
     auto upper_text = string::ToUpper(text);
@@ -45,6 +52,7 @@ bool StringTo(const std::string &text, bool &value)
         }
     }
 
+    LogNotice("can't convert '%s' to bool", text.c_str());
     return false;
 }
 
@@ -56,7 +64,9 @@ bool StringTo(const std::string &text, bool &value)
             value = tmp; \
             return true; \
         } \
-    } catch (...) { } \
+    } catch (...) { \
+        LogNotice("can't convert '%s' to number", text.c_str()); \
+    } \
     return false
 
 #define TO_NUMBER_WITH_BASE(func) \
@@ -67,7 +77,9 @@ bool StringTo(const std::string &text, bool &value)
             value = tmp; \
             return true; \
         } \
-    } catch (...) { } \
+    } catch (...) { \
+        LogNotice("can't convert '%s' to integer with base %d", text.c_str(), base); \
+    } \
     return false
 
 bool StringTo(const std::string &text, int &value, int base)
@@ -108,6 +120,12 @@ bool StringTo(const std::string &text, float &value)
 bool StringTo(const std::string &text, double &value)
 {
     TO_NUMBER(std::stod);
+}
+
+bool StringTo(const std::string &text, std::string &value)
+{
+    value = text;
+    return true;
 }
 
 }

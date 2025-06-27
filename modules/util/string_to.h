@@ -31,7 +31,15 @@
 namespace tbox {
 namespace util {
 
-bool StringTo(const std::string &text, bool &value); //! 解析bool值
+/**
+ * 解析字串为bool值
+ *
+ * 真值: true,  yes, on,  1, enable,  y, t, yep,  active,   positive, pos, +
+ * 假值: false, no,  off, 0, disable, n, f, nope, inactive, negative, neg, -
+ *
+ * 大小写不敏感
+ */
+bool StringTo(const std::string &text, bool &value);
 
 bool StringTo(const std::string &text, int &value, int base = 10);  //! 解析int值
 bool StringTo(const std::string &text, long &value, int base = 10);  //! 解析long值
@@ -42,6 +50,8 @@ bool StringTo(const std::string &text, unsigned long long &value, int base = 10)
 
 bool StringTo(const std::string &text, float &value);   //! 解析float值
 bool StringTo(const std::string &text, double &value);  //! 解析double值
+
+bool StringTo(const std::string &text, std::string &value);
 
 }
 }
