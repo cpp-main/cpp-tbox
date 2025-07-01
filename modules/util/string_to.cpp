@@ -114,6 +114,56 @@ bool StringTo(const std::string &text, unsigned long long &value, int base)
     TO_NUMBER_WITH_BASE(std::stoull);
 }
 
+#if __SIZEOF_INT__ > 4
+bool StringTo(const std::string &text, uint32_t &value, int base)
+{
+    uint64_t tmp;
+
+    if (StringTo(text, tmp, base)) {
+        if (tmp < 0x100000000lu) {
+            value = static_cast<uint32_t>(tmp);
+            return true;
+        } else {
+            LogWarn("number overflow, %u > 0xffffffff", tmp);
+        }
+    }
+
+    return false;
+}
+#endif
+
+bool StringTo(const std::string &text, uint16_t &value, int base)
+{
+    uint32_t tmp;
+
+    if (StringTo(text, tmp, base)) {
+        if (tmp < 0x10000u) {
+            value = static_cast<uint16_t>(tmp);
+            return true;
+        } else {
+            LogWarn("number overflow, %u > 0xffff", tmp);
+        }
+    }
+
+    return false;
+}
+
+bool StringTo(const std::string &text, uint8_t &value, int base)
+{
+    uint16_t tmp;
+
+    if (StringTo(text, tmp, base)) {
+        if (tmp < 0x100u) {
+            value = static_cast<uint8_t>(tmp);
+            return true;
+        } else {
+            LogWarn("number overflow, %u > 0xff", tmp);
+        }
+    }
+
+    return false;
+}
+
 bool StringTo(const std::string &text, float &value)
 {
     TO_NUMBER(std::stof);

@@ -109,6 +109,32 @@ TEST(StringTo, long)
     EXPECT_FALSE(StringTo("", value));
 }
 
+TEST(StringTo, uint16_t)
+{
+    uint16_t value = 0;
+    EXPECT_TRUE(StringTo("12345", value));
+    EXPECT_EQ(value, 12345);
+
+    EXPECT_TRUE(StringTo("0xFFFF", value, 16));
+    EXPECT_EQ(value, 0xFFFF);
+
+    EXPECT_FALSE(StringTo("0x10000", value, 16));
+    EXPECT_FALSE(StringTo("65536", value));
+}
+
+TEST(StringTo, uint8_t)
+{
+    uint8_t value = 0;
+    EXPECT_TRUE(StringTo("123", value));
+    EXPECT_EQ(value, 123);
+
+    EXPECT_TRUE(StringTo("0xFF", value, 16));
+    EXPECT_EQ(value, 0xFF);
+
+    EXPECT_FALSE(StringTo("0x100", value, 16));
+    EXPECT_FALSE(StringTo("256", value));
+}
+
 TEST(StringTo, Double)
 {
     double value = -1;

@@ -22,6 +22,8 @@
 #include <arpa/inet.h>
 
 #include <tbox/base/log.h>
+#include <tbox/util/string_to.h>
+
 #include <sstream>
 
 #include "sockaddr.h"
@@ -99,10 +101,10 @@ SockAddr SockAddr::FromString(const string &addr_str)
         auto ipv4_str = addr_str.substr(0, colon_pos) ;
         auto port_str = addr_str.substr(colon_pos + 1) ;
 
-        try {
-            uint16_t port = stoi(port_str);
+        uint16_t port = 0;
+        if (util::StringTo(port_str, port)) {
             return SockAddr(IPAddress::FromString(ipv4_str), port);
-        } catch (const std::exception &e) {
+        } else {
             return SockAddr();
         }
     } else {

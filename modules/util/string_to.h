@@ -50,6 +50,12 @@ bool StringTo(const std::string &text, unsigned int &value, int base = 10);  //!
 bool StringTo(const std::string &text, unsigned long &value, int base = 10);  //! 解析unsigned long值
 bool StringTo(const std::string &text, unsigned long long &value, int base = 10);  //! 解析unsigned long long值
 
+#if __SIZEOF_INT__ > 4
+bool StringTo(const std::string &text, uint32_t &value, int base = 10);  //! 解析uint32值
+#endif
+bool StringTo(const std::string &text, uint16_t &value, int base = 10);  //! 解析uint16值
+bool StringTo(const std::string &text, uint8_t &value, int base = 10);   //! 解析uint8值
+
 bool StringTo(const std::string &text, float &value);   //! 解析float值
 bool StringTo(const std::string &text, double &value);  //! 解析double值
 

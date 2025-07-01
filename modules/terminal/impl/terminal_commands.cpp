@@ -25,6 +25,7 @@
 #include <tbox/base/log.h>
 #include <tbox/util/split_cmdline.h>
 #include <tbox/util/string.h>
+#include <tbox/util/string_to.h>
 #include <tbox/event/loop.h>
 
 #include "session_context.h"
@@ -336,8 +337,9 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
         return execute(s);
     }
 
-    try {
-        auto index = std::stoi(sub_cmd);
+    size_t index = 0;
+
+    if (util::StringTo(sub_cmd, index)) {
         bool is_index_valid = false;
         if (index >= 0) {
             if (static_cast<size_t>(index) < s->history.size()) {
@@ -356,7 +358,8 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
             return execute(s);
         } else
             s->wp_conn->send(s->token, "Error: index out of range.\r\n");
-    } catch (const invalid_argument &e) {
+
+    } else {
         s->wp_conn->send(s->token, "Error: parse index fail.\r\n");
     }
 

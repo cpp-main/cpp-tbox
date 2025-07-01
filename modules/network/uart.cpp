@@ -23,6 +23,7 @@
 #include <fcntl.h>
 
 #include <tbox/base/log.h>
+#include <tbox/util/string_to.h>
 
 namespace tbox {
 namespace network {
@@ -233,7 +234,10 @@ bool Uart::setMode(const std::string &mode_str)
     Mode mode;
 
     //! 波特率
-    mode.baudrate = stoi(baudrate_str);
+    if (!util::StringTo(baudrate_str, mode.baudrate)) {
+        LogErr("baudrate must be number");
+        return false;
+    }
 
     //! 数据位
     if (data_bits_ch == '8')

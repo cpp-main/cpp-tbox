@@ -22,6 +22,7 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/log.h>
 #include <tbox/util/string.h>
+#include <tbox/util/string_to.h>
 
 namespace tbox {
 namespace http {
@@ -139,8 +140,13 @@ size_t RequestParser::parse(const void *data_ptr, size_t data_size)
                 auto head_value = util::string::Strip(str.substr(head_value_start_pos, head_value_end_pos - head_value_start_pos));
                 sp_request_->headers[head_key] = head_value;
 
-                if (head_key == "Content-Length")
-                    content_length_ = std::stoi(head_value);
+                if (head_key == "Content-Length") {
+                    if (!util::StringTo(head_value, content_length_)) {
+                        LogNotice("Content-Length should be number");
+                        state_ = State::kFail;
+                        return pos;
+                    }
+                }
 
             } else {
                 sp_request_->headers[head_key] = "";
