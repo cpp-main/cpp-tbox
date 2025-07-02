@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <tbox/base/json.hpp>
 #include "json.h"
+#include "fs.h"
 
 namespace tbox {
 namespace util {
@@ -157,6 +158,52 @@ TEST(Json, HasField)
     EXPECT_TRUE(HasArrayField(js, "array"));
     EXPECT_FALSE(HasArrayField(js, "int"));
     EXPECT_FALSE(HasArrayField(js, "string"));
+}
+
+TEST(Json, Load) {
+    const char *filepath = "/tmp/tbox-json-test.json";
+    const char *json_text = \
+R"(
+{
+  "int": 123,
+  "string": "hello",
+  "array": [1, 2, 3]
+}
+)";
+    Json js;
+
+    fs::WriteStringToTextFile(filepath, json_text);
+    EXPECT_NO_THROW({ js = Load(filepath); } );
+
+    int i_value;
+    GetField(js, "int", i_value);
+    EXPECT_EQ(i_value, 123);
+
+    fs::RemoveFile(filepath);
+    EXPECT_ANY_THROW({ js = Load(filepath); } );
+}
+
+TEST(Json, LoadNoThrow) {
+    const char *filepath = "/tmp/tbox-json-test.json";
+    const char *json_text = \
+R"(
+{
+  "int": 123,
+  "string": "hello",
+  "array": [1, 2, 3]
+}
+)";
+    Json js;
+
+    fs::WriteStringToTextFile(filepath, json_text);
+    EXPECT_TRUE(Load(filepath, js));
+
+    int i_value;
+    GetField(js, "int", i_value);
+    EXPECT_EQ(i_value, 123);
+
+    fs::RemoveFile(filepath);
+    EXPECT_FALSE(Load(filepath, js));
 }
 
 TEST(Json, FindEndPos) {

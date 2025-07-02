@@ -124,6 +124,9 @@ class DeepLoader {
  */
 Json LoadDeeply(const std::string &filename);
 
+/// 不抛异常的，只关注成功与否，使用简单
+bool LoadDeeply(const std::string &filename, Json &js) noexcept;
+
 }
 }
 }

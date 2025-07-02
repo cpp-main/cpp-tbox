@@ -81,6 +81,7 @@ TEST_CPP_SRC_FILES = \
 	base64_test.cpp \
 	checksum_test.cpp \
 	crc_test.cpp \
+	json_deep_loader_test.cpp \
 	execute_cmd_test.cpp \
 	timestamp_test.cpp \
 	buffer_test.cpp \

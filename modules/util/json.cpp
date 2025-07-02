@@ -183,6 +183,19 @@ Json Load(const std::string &filename)
     return js;
 }
 
+bool Load(const std::string &filename, Json &js) noexcept
+{
+    try {
+        js = Load(filename);
+        return true;
+
+    } catch (const std::exception &e) {
+        LogWarn("load json fail, catch: %s", e.what());
+    }
+
+    return false;
+}
+
 /**
  * 通过数[],{},"的方式找JSON字串的结束位置
  */

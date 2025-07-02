@@ -20,6 +20,7 @@
 #include "json_deep_loader.h"
 #include <fstream>
 
+#include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 #include "json.h"
 #include "string.h"
@@ -111,6 +112,18 @@ bool DeepLoader::checkDuplicateInclude(const std::string &filename) const {
 
 Json LoadDeeply(const std::string &filename) {
     return DeepLoader().load(filename);
+}
+
+bool LoadDeeply(const std::string &filename, Json &js) noexcept {
+    try {
+        js = DeepLoader().load(filename);
+        return true;
+
+    } catch (const std::exception &e) {
+        LogWarn("load json deeply fail, catch: %s", e.what());
+    }
+
+    return false;
 }
 
 }
