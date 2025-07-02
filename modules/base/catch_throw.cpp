@@ -52,7 +52,7 @@ void CatchType()
 }
 
 bool CatchThrow(const std::function<void()> &func,
-                bool print_backtrace, bool abort_process)
+                bool print_backtrace, bool abort_process) noexcept
 {
     try {
         if (func)
@@ -93,7 +93,7 @@ bool CatchThrow(const std::function<void()> &func,
     return true;
 }
 
-bool CatchThrowQuietly(const std::function<void()> &func)
+bool CatchThrowQuietly(const std::function<void()> &func) noexcept
 {
     try {
         if (func)
