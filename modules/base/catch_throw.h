@@ -35,7 +35,7 @@ namespace tbox {
  */
 bool CatchThrow(const std::function<void()> &func,
                 bool print_backtrace = false,
-                bool abort_process = false);
+                bool abort_process = false) noexcept;
 
 /// 同 CatchThrow，但不打印日志、堆栈，也不退出进程
 /**
@@ -44,7 +44,7 @@ bool CatchThrow(const std::function<void()> &func,
  * \return false    运行过程中没有出现异常
  * \return true     运行过程中捕获到了异常
  */
-bool CatchThrowQuietly(const std::function<void()> &func);
+bool CatchThrowQuietly(const std::function<void()> &func) noexcept;
 
 }
 

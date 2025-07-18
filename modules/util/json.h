@@ -87,6 +87,9 @@ struct ParseJsonFileError : public std::runtime_error {
  */
 Json Load(const std::string &filename);
 
+/// 不抛异常的，只关注成功与否，使用简单
+bool Load(const std::string &filename, Json &js) noexcept;
+
 /// 从字串中找到JSON的结束位置
 /**
  * \param str_ptr   JSON字串地址

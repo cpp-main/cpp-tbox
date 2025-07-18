@@ -26,6 +26,7 @@
 #include <tbox/terminal/helper.h>
 #include <tbox/util/fs.h>
 #include <tbox/util/json.h>
+#include <tbox/util/string_to.h>
 
 namespace tbox {
 namespace main {
@@ -388,7 +389,7 @@ void Log::installShellForSink(log::Sink &sink, terminal::NodeToken parent_node, 
                     do {
                         auto &module_id = args[1];
                         int level = 0;
-                        if (CatchThrowQuietly([&] { level = std::stoi(args[2]); })) {
+                        if (!util::StringTo(args[2], level)) {
                             oss << "level must be number\r\n";
                             break;
                         }

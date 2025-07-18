@@ -43,6 +43,7 @@ HEAD_FILES = \
 	fd.h \
 	scalable_integer.h \
 	variables.h \
+	string_to.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -63,6 +64,7 @@ CPP_SRC_FILES = \
 	fd.cpp \
 	scalable_integer.cpp \
 	variables.cpp \
+	string_to.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.util"' $(CXXFLAGS)
 
@@ -79,12 +81,14 @@ TEST_CPP_SRC_FILES = \
 	base64_test.cpp \
 	checksum_test.cpp \
 	crc_test.cpp \
+	json_deep_loader_test.cpp \
 	execute_cmd_test.cpp \
 	timestamp_test.cpp \
 	buffer_test.cpp \
 	fd_test.cpp \
 	scalable_integer_test.cpp \
 	variables_test.cpp \
+	string_to_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_base -ldl
 

@@ -21,7 +21,7 @@
 #include "helper.h"
 
 #include <sstream>
-#include <tbox/base/catch_throw.h>
+#include <tbox/util/string_to.h>
 
 namespace tbox {
 namespace terminal {
@@ -64,16 +64,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
 
             } else if (a.size() == 2u) {
                 auto &str = a[1];
-                if (str == "true" || str == "True" || str == "TRUE" ||
-                    str == "on" || str == "On" || str == "ON") {
-                    value = true;
-                    is_ok = true;
-
-                } else if (str == "false" || str == "False" || str == "FALSE" ||
-                    str == "off" || str == "Off" || str == "OFF") {
-                    value = false;
-                    is_ok = true;
-                }
+                is_ok = util::StringTo(str, value);
             }
 
             if (is_ok) {
@@ -136,7 +127,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
             } else if (a.size() == 2u) {
                 auto &str = a[1];
                 int new_value = 0;
-                if (!CatchThrowQuietly([&] { new_value = std::stoi(str); })) {
+                if (util::StringTo(str, new_value)) {
                     if (new_value >= min_value && new_value <= max_value) {
                         value = new_value;
                         is_ok = true;
@@ -177,7 +168,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node,
             } else if (a.size() == 2u) {
                 auto &str = a[1];
                 double new_value = 0;
-                if (!CatchThrowQuietly([&] { new_value = std::stod(str); })) {
+                if (util::StringTo(str, new_value)) {
                     if (new_value >= min_value && new_value <= max_value) {
                         value = new_value;
                         is_ok = true;
@@ -264,16 +255,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std:
             } else if (a.size() == 2u && profile.set_func) {
                 auto &str = a[1];
                 bool new_value = false;
-                if (str == "true" || str == "True" || str == "TRUE" ||
-                    str == "on" || str == "On" || str == "ON") {
-                    new_value = true;
-                    is_ok = true;
-
-                } else if (str == "false" || str == "False" || str == "FALSE" ||
-                    str == "off" || str == "Off" || str == "OFF") {
-                    new_value = false;
-                    is_ok = true;
-                }
+                is_ok = util::StringTo(str, new_value);
 
                 if (is_ok) {
                     if (profile.set_func(new_value)) {
@@ -322,7 +304,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std:
             } else if (a.size() == 2u && profile.set_func) {
                 auto &str = a[1];
                 int new_value = 0;
-                CatchThrowQuietly([&] { new_value = std::stoi(str); is_ok = true; });
+                is_ok = util::StringTo(str, new_value);
                 if (is_ok) {
                     if (new_value < profile.min_value || new_value > profile.max_value) {
                       oss << "fail, out of range.\r\n";
@@ -387,7 +369,7 @@ NodeToken AddFuncNode(TerminalNodes &terminal, NodeToken parent_node, const std:
             } else if (a.size() == 2u && profile.set_func) {
                 auto &str = a[1];
                 double new_value = 0;
-                CatchThrowQuietly([&] { new_value = std::stod(str); is_ok = true; });
+                is_ok = util::StringTo(str, new_value);
                 if (is_ok) {
                     if (new_value < profile.min_value || new_value > profile.max_value) {
                       oss << "fail, out of range.\r\n";
