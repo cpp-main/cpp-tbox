@@ -52,6 +52,7 @@ One or more of the three sink can be selected in the startup parameters, and can
 The log content includes: level, time (accurate to microseconds), thread number, module name, function name, text, file name, line number.  
 It is convenient and quick to locate the problem. 
 ![log show](documents/images/0002-log-show.png)  
+As shown in the figure above, different log levels are clearly distinguished by colors. In particular, for anomalies, red and yellow are used together with highlighting, making them very eye-catching.
 
 **3) Flexible log output filter**  
 The log level can be set separately for different modules when the program is running, as follows:  
@@ -71,15 +72,17 @@ The main thread entrusts the child thread to execute:
 
 ## 7. Graceful exit process
 When receiving signals: SIGINT, SIGTERM, SIGQUIT, SIGPWR, it will execute the exit process in an orderly manner and release resources. Do a clean exit.  
-![graceful exit](documents/images/0002-exit-friendly.gif)  
+![graceful exit](documents/images/0002-exit-friendly.gif)   
+This is crucial for ensuring program integrity and conducting memory analysis.  
 
 ## 8. Comprehensive exception capture mechanism
 When various program exceptions occur in the program, such as: segment fault, assertion, bus error, exception not caught, etc., the framework will capture and print the complete call stack in the log system. Facing program crashes, no longer look blank. The effect is as follows:  
 ![stack print](documents/images/0006-error-dump.png)  
+With this mechanism in place, analyzing program crash issues of online devices becomes very simple, and there is basically no need to use gdb to analyze coredumps.  
 
 ## 9. Visualized trace module
-The trace module can record the time and duration of each execution of the marked function, and can export the flame graph for display:  
-![trace fire graph](documents/images/0011-trace-view.png)  
+The trace module can record the time and duration of each execution of the marked function, and can export the icicle diagram for display:  
+![icicle diagram](documents/images/0011-trace-view.png)  
 It is a great tool for performance analysis and event blocking problem troubleshooting. 
 
 ## 10. Simple and visualized state machine
