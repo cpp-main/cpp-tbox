@@ -27,6 +27,7 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/json.hpp>
+#include <tbox/base/backtrace.h>
 
 namespace tbox {
 namespace flow {
@@ -340,7 +341,7 @@ bool StateMachine::Impl::start()
     }
 
     if (cb_level_ != 0) {
-        LogWarn("[%s]: recursion invoke", name_.c_str());
+        LogWarn("[%s]: recursion invoke, call stack:\n%s", name_.c_str(), DumpBacktrace().c_str());
         return false;
     }
 
@@ -371,7 +372,7 @@ void StateMachine::Impl::stop()
         return;
 
     if (cb_level_ != 0) {
-        LogWarn("[%s]: recursion invoke", name_.c_str());
+        LogWarn("[%s]: recursion invoke, call stack:\n%s", name_.c_str(), DumpBacktrace().c_str());
         return;
     }
 
@@ -392,7 +393,7 @@ bool StateMachine::Impl::run(Event event)
     }
 
     if (cb_level_ != 0) {
-        LogWarn("[%s]: recursion invoke", name_.c_str());
+        LogWarn("[%s]: recursion invoke, call stack:\n%s", name_.c_str(), DumpBacktrace().c_str());
         return false;
     }
 
