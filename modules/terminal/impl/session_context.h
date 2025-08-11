@@ -35,7 +35,7 @@ struct SessionContext {
     uint32_t options = 0;
 
     std::string curr_input;
-    size_t cursor = 0;
+    size_t cursor_pos = 0;
 
     Path path;  //! 当前路径
     std::deque<std::string> history;   //! 历史命令

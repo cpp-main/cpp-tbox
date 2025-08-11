@@ -296,3 +296,18 @@ TEST(string, IsEndWith) {
   EXPECT_FALSE(IsEndWith("abc", "abcd"));
 }
 
+TEST(string, ExtractCommonPrefix) {
+  {
+      std::vector<std::string> str_vec = {"abc123", "abc113", "abd123"};
+      EXPECT_EQ(ExtractCommonPrefix(str_vec), "ab");
+  }
+  {
+      std::vector<std::string> str_vec = {"a", "abc113"};
+      EXPECT_EQ(ExtractCommonPrefix(str_vec), "a");
+  }
+  {
+      std::vector<std::string> str_vec = {"abc123", "abc1"};
+      EXPECT_EQ(ExtractCommonPrefix(str_vec), "abc1");
+  }
+}
+

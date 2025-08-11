@@ -54,7 +54,7 @@ class Terminal::Impl {
     NodeToken createDirNode(const std::string &help);
     bool deleteNode(NodeToken node_token);
     NodeToken rootNode() const { return root_token_; }
-    NodeToken findNode(const std::string &path) const;
+    NodeToken findNode(const std::string &path_str) const;
     bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name);
     bool umountNode(const NodeToken &parent, const std::string &name);
 
@@ -90,7 +90,9 @@ class Terminal::Impl {
     bool executeRunHistoryCmd(SessionContext *s, const Args &args);
     void executeUserCmd(SessionContext *s, const Args &args);
 
-    bool findNode(const std::string &path, Path &node_path) const;
+    bool findNode(const std::string &path_str, Path &node_path) const;
+    //! 从指定会话的当前路径寻找path_str对像的结点；如果不指定，则从根目录寻找
+    NodeToken findNode(const std::string &path_str, SessionContext *s) const;
 
   private:
     event::Loop *wp_loop_ = nullptr;
