@@ -172,6 +172,15 @@ bool IsStartWith(const std::string &origin_str, const std::string &text);
  */
 bool IsEndWith(const std::string &origin_str, const std::string &text);
 
+/**
+ * \brief   提取多个字串的共同前缀
+ *
+ * \param str_vec   字串数组
+ *
+ * \return  共同前缀字串
+ */
+std::string ExtractCommonPrefix(const std::vector<std::string> &str_vec);
+
 }
 }
 }

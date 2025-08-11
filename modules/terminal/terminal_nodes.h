@@ -41,7 +41,7 @@ class TerminalNodes {
     //! 获取根结点
     virtual NodeToken rootNode() const = 0;
     //! 根据路径查找结点
-    virtual NodeToken findNode(const std::string &path) const = 0;
+    virtual NodeToken findNode(const std::string &path_str) const = 0;
 
     //! 将子指定结点挂载到指定父目录结点，并指定名称
     virtual bool mountNode(const NodeToken &parent, const NodeToken &child, const std::string &name) = 0;

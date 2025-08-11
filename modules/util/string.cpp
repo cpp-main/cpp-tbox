@@ -289,6 +289,26 @@ bool IsEndWith(const std::string &origin_str, const std::string &text)
     return origin_str.find(text, (origin_str.length() - text.length())) != std::string::npos;
 }
 
+std::string ExtractCommonPrefix(const std::vector<std::string> &str_vec)
+{
+    std::string common_prefix;
+    auto &first_str = str_vec.front();
+    //! 从第一个字串中提取每一个字符，与其它字串对应位置的字符进行比对
+    //! 全对应得上，则为公共字符
+    for (size_t i = 0; i < first_str.size(); ++i) {
+        auto ch = first_str[i];
+        for (size_t j = 1; j < str_vec.size(); ++j) {
+            auto &test_str = str_vec[j];
+            //! 如果检测字串不够长或者对应不上，则终止
+            if (test_str.size() == i || test_str[i] != ch)
+                return common_prefix;
+        }
+        common_prefix.push_back(ch);
+    }
+
+    return common_prefix;
+}
+
 }
 }
 }

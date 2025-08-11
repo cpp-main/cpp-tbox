@@ -54,17 +54,10 @@ bool Terminal::Impl::deleteNode(NodeToken node_token)
     }
 }
 
+//! 从根结点开始寻找
 NodeToken Terminal::Impl::findNode(const string &path_str) const
 {
-    Path node_path;
-    if (findNode(path_str, node_path)) {
-        if (node_path.empty())
-            return root_token_;
-        else
-            return node_path.back().second;
-    } else {
-        return NodeToken();
-    }
+    return findNode(path_str, nullptr);
 }
 
 bool Terminal::Impl::mountNode(const NodeToken &parent, const NodeToken &child, const string &name)
@@ -144,6 +137,23 @@ bool Terminal::Impl::findNode(const string &path_str, Path &node_path) const
         }
     }
     return true;
+}
+
+NodeToken Terminal::Impl::findNode(const std::string &path_str, SessionContext *s) const
+{
+    Path node_path;
+
+    if (s != nullptr)
+        node_path = s->path;
+
+    if (findNode(path_str, node_path)) {
+        if (node_path.empty())
+            return root_token_;
+        else
+            return node_path.back().second;
+    } else {
+        return NodeToken();
+    }
 }
 
 }
