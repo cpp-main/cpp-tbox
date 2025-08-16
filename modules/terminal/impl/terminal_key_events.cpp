@@ -122,6 +122,10 @@ void Terminal::Impl::onDeleteKey(SessionContext *s)
  */
 void Terminal::Impl::onTabKey(SessionContext *s)
 {
+    //! 不带回显的终端不能支持补全功能
+    if ((s->options & kEnableEcho) == 0)
+        return;
+
     //! 如果当前用户没有任何输入，则不进行补全
     if (s->curr_input.empty() || s->cursor_pos == 0)
         return;
@@ -194,13 +198,28 @@ void Terminal::Impl::onTabKey(SessionContext *s)
 
     vector<string> matched_node_name_vec;
     if (auto dir_node = dynamic_cast<DirNode*>(base_node)) {
+        //! 先获取目录下的所有结点
         vector<NodeInfo> children_info_vec;
         dir_node->children(children_info_vec);
 
-        //! 遍历dir_node下有所有子结点，找出匹配得上的，加入到matched_node_name_vec中
+        //! 遍历所有子结点，找出匹配得上的，加入到matched_node_name_vec中
         for (const auto& child_info : children_info_vec) {
-            if (util::string::IsStartWith(child_info.name, prefix))
-                matched_node_name_vec.push_back(child_info.name);
+            auto node_name = child_info.name;
+            if (util::string::IsStartWith(node_name, prefix)) {
+                Node* child_node = nodes_.at(child_info.token);
+                if (child_node && child_node->type() == NodeType::kDir)
+                    node_name.push_back('/');
+                matched_node_name_vec.push_back(node_name);
+            }
+        }
+
+        if (!prefix.empty()) {
+            //! 检查是否与内建命令匹配，如何有，也加入到matched_node_name_vec中
+            for (const auto & buildin_cmd : buildin_cmd_map_) {
+                auto &cmd_name = buildin_cmd.first;
+                if (util::string::IsStartWith(cmd_name, prefix))
+                    matched_node_name_vec.push_back(cmd_name);
+            }
         }
     }
 
@@ -208,55 +227,52 @@ void Terminal::Impl::onTabKey(SessionContext *s)
     if (matched_node_name_vec.empty())
         return;
 
-    string completion;  //! 补全内容
-
     //! 如果只有一个匹配，直接补全
     if (matched_node_name_vec.size() == 1) {
         const auto &match_node_name = matched_node_name_vec.back();
-        completion = match_node_name.substr(prefix.length());    //! 需要补全的字串
+        auto completion = match_node_name.substr(prefix.length());    //! 需要补全的字串
 
         //! 如果不需要补全，则结束
         if (completion.empty())
             return;
 
-        //! 检查是否为目录，如果是则添加/
-        NodeToken child_token = findNode(dir_path + "/" + match_node_name, s);
-        if (!child_token.isNull()) {
-            Node* child_node = nodes_.at(child_token);
-            if (child_node && child_node->type() == NodeType::kDir) {
-                completion.push_back('/');
-            }
-        }
-
-    } else {
-        //! 多个匹配，显示所有可能
-        ostringstream oss;
-        oss << "\r\n";
-        for (const auto& match : matched_node_name_vec)
-            oss << match << "\t";
-        oss << "\r\n";
-
-        if (s->options & kEnableEcho) {
-            s->wp_conn->send(s->token, oss.str());
-            printPrompt(s);
-            s->wp_conn->send(s->token, s->curr_input);
-        }
-
-        //! 找出最大共同字串，设置补全内容
-        std::string common_prefix = util::string::ExtractCommonPrefix(matched_node_name_vec);
-        completion = common_prefix.substr(prefix.length()); //! 需要补全的字串
-    }
-
-    //! 如果需要补全，则进行补全
-    if (!completion.empty()) {
         s->curr_input.insert(s->cursor_pos, completion);
         s->cursor_pos += completion.length();
 
-        if (s->options & kEnableEcho) {
-            s->wp_conn->send(s->token, completion);
+        s->wp_conn->send(s->token, completion);
+
+        ostringstream oss;
+        oss << s->curr_input.substr(s->cursor_pos)
+            << string((s->curr_input.size() - s->cursor_pos), '\b');
+
+        auto refresh_str = oss.str();
+        if (!refresh_str.empty())
+            s->wp_conn->send(s->token, refresh_str);
+
+    } else {
+        {
+            //! 多个匹配，显示所有可能
+            ostringstream oss;
+            oss << "\r\n";
+            for (const auto& match : matched_node_name_vec)
+                oss << match << "  ";
+            oss << "\r\n";
+
+            s->wp_conn->send(s->token, oss.str());
+        }
+
+        printPrompt(s);
+
+        {
+            //! 找出最大共同字串，补全内容
+            auto common_prefix = util::string::ExtractCommonPrefix(matched_node_name_vec);
+            auto completion = common_prefix.substr(prefix.length()); //! 需要补全的字串
+
+            s->curr_input.insert(s->cursor_pos, completion);
+            s->cursor_pos += completion.length();
 
             ostringstream oss;
-            oss << s->curr_input.substr(s->cursor_pos)
+            oss << s->curr_input
                 << string((s->curr_input.size() - s->cursor_pos), '\b');
 
             auto refresh_str = oss.str();
