@@ -50,6 +50,8 @@ Terminal::Impl::Impl(event::Loop *wp_loop)
         "Welcome to cpp-tbox terminal.\r\n";
 
     root_token_ = nodes_.alloc(new DirNode("this is root node"));
+
+    registerBuildinCmds();
 }
 
 Terminal::Impl::~Impl()
@@ -67,6 +69,19 @@ Terminal::Impl::~Impl()
         }
     );
     nodes_.clear();
+}
+
+void Terminal::Impl::registerBuildinCmds()
+{
+    using namespace std::placeholders;
+    buildin_cmd_map_["cd"]      = std::bind(&Terminal::Impl::executeCdCmd, this, _1, _2);
+    buildin_cmd_map_["ls"]      = std::bind(&Terminal::Impl::executeLsCmd, this, _1, _2);
+    buildin_cmd_map_["tree"]    = std::bind(&Terminal::Impl::executeTreeCmd, this, _1, _2);
+    buildin_cmd_map_["exit"]    = std::bind(&Terminal::Impl::executeExitCmd, this, _1, _2);
+    buildin_cmd_map_["quit"]    = std::bind(&Terminal::Impl::executeExitCmd, this, _1, _2);
+    buildin_cmd_map_["help"]    = std::bind(&Terminal::Impl::executeHelpCmd, this, _1, _2);
+    buildin_cmd_map_["pwd"]     = std::bind(&Terminal::Impl::executePwdCmd, this, _1, _2);
+    buildin_cmd_map_["history"] = std::bind(&Terminal::Impl::executeHistoryCmd, this, _1, _2);
 }
 
 SessionToken Terminal::Impl::newSession(Connection *wp_conn)

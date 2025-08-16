@@ -212,6 +212,15 @@ void Terminal::Impl::onTabKey(SessionContext *s)
                 matched_node_name_vec.push_back(node_name);
             }
         }
+
+        if (!prefix.empty()) {
+            //! 检查是否与内建命令匹配，如何有，也加入到matched_node_name_vec中
+            for (const auto & buildin_cmd : buildin_cmd_map_) {
+                auto &cmd_name = buildin_cmd.first;
+                if (util::string::IsStartWith(cmd_name, prefix))
+                    matched_node_name_vec.push_back(cmd_name);
+            }
+        }
     }
 
     //! 如果没有找到匹配项，直接结束
