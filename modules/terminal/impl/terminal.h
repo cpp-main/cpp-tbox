@@ -20,6 +20,8 @@
 #ifndef TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 #define TBOX_TELNETD_TERMINAL_IMPL_H_20220128
 
+#include <map>
+
 #include <tbox/base/cabinet.hpp>
 #include <tbox/base/object_pool.hpp>
 #include <tbox/event/forward.h>
@@ -62,6 +64,10 @@ class Terminal::Impl {
     void setWelcomeText(const std::string &text) { welcome_text_ = text; }
 
   protected:
+    using BuildinCmdMap = std::map<std::string, std::function<bool(SessionContext*, const Args &)>>;
+
+    void registerBuildinCmds();
+
     void onChar(SessionContext *s, char ch);
     void onEnterKey(SessionContext *s);
     void onBackspaceKey(SessionContext *s);
@@ -80,15 +86,15 @@ class Terminal::Impl {
     bool execute(SessionContext *s);
     bool executeCmd(SessionContext *s, const std::string &cmdline);
 
-    void executeCdCmd(SessionContext *s, const Args &args);
-    void executeHelpCmd(SessionContext *s, const Args &args);
-    void executeLsCmd(SessionContext *s, const Args &args);
-    void executeHistoryCmd(SessionContext *s, const Args &args);
-    void executeExitCmd(SessionContext *s, const Args &args);
-    void executeTreeCmd(SessionContext *s, const Args &args);
-    void executePwdCmd(SessionContext *s, const Args &args);
+    bool executeCdCmd(SessionContext *s, const Args &args);
+    bool executeHelpCmd(SessionContext *s, const Args &args);
+    bool executeLsCmd(SessionContext *s, const Args &args);
+    bool executeHistoryCmd(SessionContext *s, const Args &args);
+    bool executeExitCmd(SessionContext *s, const Args &args);
+    bool executeTreeCmd(SessionContext *s, const Args &args);
+    bool executePwdCmd(SessionContext *s, const Args &args);
     bool executeRunHistoryCmd(SessionContext *s, const Args &args);
-    void executeUserCmd(SessionContext *s, const Args &args);
+    bool executeUserCmd(SessionContext *s, const Args &args);
 
     bool findNode(const std::string &path_str, Path &node_path) const;
     //! 从指定会话的当前路径寻找path_str对像的结点；如果不指定，则从根目录寻找
@@ -96,6 +102,7 @@ class Terminal::Impl {
 
   private:
     event::Loop *wp_loop_ = nullptr;
+    BuildinCmdMap buildin_cmd_map_;
 
     ObjectPool<SessionContext> session_ctx_pool_{1};
     cabinet::Cabinet<SessionContext> sessions_;

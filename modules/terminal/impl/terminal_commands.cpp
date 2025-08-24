@@ -64,31 +64,18 @@ bool Terminal::Impl::executeCmd(SessionContext *s, const std::string &cmdline)
         return true;
     }
 
-    const auto &cmd = args[0];
-    if (cmd == "ls") {
-        executeLsCmd(s, args);
-    } else if (cmd == "pwd") {
-        executePwdCmd(s, args);
-    } else if (cmd == "cd") {
-        executeCdCmd(s, args);
-    } else if (cmd == "help") {
-        executeHelpCmd(s, args);
-    } else if (cmd == "history") {
-        executeHistoryCmd(s, args);
-        return false;   //! 查看历史命令不要再存历史
-    } else if (cmd == "exit" || cmd == "quit") {
-        executeExitCmd(s, args);
-    } else if (cmd == "tree") {
-        executeTreeCmd(s, args);
+    auto &cmd = args[0];
+    auto iter = buildin_cmd_map_.find(cmd);
+    if (iter != buildin_cmd_map_.end()) {
+        return iter->second(s, args);
     } else if (cmd[0] == '!') {
         return executeRunHistoryCmd(s, args);
     } else {
-        executeUserCmd(s, args);
+        return executeUserCmd(s, args);
     }
-    return true;
 }
 
-void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
+bool Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
 {
     string path_str = "/";
     if (args.size() >= 2)
@@ -113,13 +100,14 @@ void Terminal::Impl::executeCdCmd(SessionContext *s, const Args &args)
     }
 
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
-void Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
+bool Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
 {
     if (args.size() < 2) {
         printHelp(s);
-        return;
+        return true;
     }
 
     ostringstream oss;
@@ -140,9 +128,10 @@ void Terminal::Impl::executeHelpCmd(SessionContext *s, const Args &args)
     }
 
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
-void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
+bool Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
     if (args.size() >= 2)
@@ -171,7 +160,6 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
                     oss << '/';
                 oss << "\r\n";
             }
-            oss << "\r\n";
         } else {
             oss << path_str << " is function" << ".\r\n";
         }
@@ -180,9 +168,10 @@ void Terminal::Impl::executeLsCmd(SessionContext *s, const Args &args)
     }
 
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
-void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &)
+bool Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &)
 {
     ostringstream oss;
     for (size_t i = 0; i < s->history.size(); ++i) {
@@ -190,9 +179,10 @@ void Terminal::Impl::executeHistoryCmd(SessionContext *s, const Args &)
         oss << setw(2) << i << "  " << cmd << "\r\n";
     }
     s->wp_conn->send(s->token, oss.str());
+    return false;
 }
 
-void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &)
+bool Terminal::Impl::executeExitCmd(SessionContext *s, const Args &)
 {
     if (!(s->options & kQuietMode))
         s->wp_conn->send(s->token, "Bye!\r\n");
@@ -204,9 +194,11 @@ void Terminal::Impl::executeExitCmd(SessionContext *s, const Args &)
         },
         __func__
     );
+
+    return false;
 }
 
-void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
+bool Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
 {
     string path_str = ".";
     if (args.size() >= 2)
@@ -314,9 +306,10 @@ void Terminal::Impl::executeTreeCmd(SessionContext *s, const Args &args)
     }
 
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
-void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &)
+bool Terminal::Impl::executePwdCmd(SessionContext *s, const Args &)
 {
     ostringstream oss;
     oss << '/';
@@ -327,6 +320,7 @@ void Terminal::Impl::executePwdCmd(SessionContext *s, const Args &)
     }
     oss << "\r\n";
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
 bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
@@ -337,7 +331,7 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
         return execute(s);
     }
 
-    size_t index = 0;
+    int index = 0;
 
     if (util::StringTo(sub_cmd, index)) {
         bool is_index_valid = false;
@@ -366,7 +360,7 @@ bool Terminal::Impl::executeRunHistoryCmd(SessionContext *s, const Args &args)
     return false;
 }
 
-void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
+bool Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
 {
     ostringstream oss;
 
@@ -391,6 +385,7 @@ void Terminal::Impl::executeUserCmd(SessionContext *s, const Args &args)
     }
 
     s->wp_conn->send(s->token, oss.str());
+    return true;
 }
 
 }

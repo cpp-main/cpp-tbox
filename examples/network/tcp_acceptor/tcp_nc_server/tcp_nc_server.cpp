@@ -62,6 +62,7 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     StdioStream stdio(sp_loop);
+    stdio.initialize();
     stdio.enable();
 
     set<TcpConnection*> conns;

@@ -55,6 +55,8 @@ bool App::onInit(const tbox::Json &cfg)
     if (!client_->initialize(SockAddr::FromString(js_server.get<std::string>())))
         return false;
 
+    stdio_->initialize();
+
     client_->bind(stdio_);
     stdio_->bind(client_);
     return true;
