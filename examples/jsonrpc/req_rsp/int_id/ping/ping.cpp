@@ -38,7 +38,7 @@
 #include <tbox/event/signal_event.h>    //! ctrl+c信号事件
 #include <tbox/network/tcp_client.h>    //! 导入TcpClient模块
 #include <tbox/jsonrpc/protos/raw_stream_proto.h>   //! 导入 jsonrpc::RawStreamProto
-#include <tbox/jsonrpc/rpc.h>   //! 导入 jsonrpc::Rpc
+#include <tbox/jsonrpc/int_id_rpc.h>    //! 导入 jsonrpc::IntIdRpc
 
 using namespace tbox;
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 
     network::TcpClient tcp_client(loop);
     jsonrpc::RawStreamProto proto;
-    jsonrpc::Rpc rpc(loop);
+    jsonrpc::IntIdRpc rpc(loop);
 
     rpc.initialize(&proto, 3);
     std::string srv_addr = "/tmp/ping_pong.sock";

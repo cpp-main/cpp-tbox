@@ -49,6 +49,7 @@ set(TBOX_UTIL_HEADERS
     scalable_integer.h
     variables.h
     string_to.h
+    uuid.h
 )
 
 set(TBOX_UTIL_SOURCES
@@ -71,6 +72,7 @@ set(TBOX_UTIL_SOURCES
     scalable_integer.cpp
     variables.cpp
     string_to.cpp
+    uuid.cpp
 )
 
 set(TBOX_UTIL_TEST_SOURCES

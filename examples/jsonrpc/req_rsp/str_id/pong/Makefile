@@ -18,7 +18,19 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 12
-TBOX_VERSION_REVISION := 24
+PROJECT := examples/jsonrpc/req_rsp/str_id/pong
+EXE_NAME := ${PROJECT}
+
+CPP_SRC_FILES := pong.cpp
+
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+LDFLAGS += \
+	-ltbox_jsonrpc \
+	-ltbox_network \
+	-ltbox_eventx \
+	-ltbox_event \
+	-ltbox_util \
+	-ltbox_base \
+	-lpthread -ldl
+
+include $(TOP_DIR)/mk/exe_common.mk
