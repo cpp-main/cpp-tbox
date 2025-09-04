@@ -61,10 +61,15 @@ int main(int argc, char **argv)
     SetScopeExitAction([sp_loop] { delete sp_loop; });
 
     StdioStream stdio(sp_loop);
+    stdio.initialize();
     stdio.enable();
 
     TcpClient client(sp_loop);
     client.initialize(bind_addr);
+    //! 设置重新延时策略，如不设置则固定延后1秒
+    client.setReconnectDelayCalcFunc(
+        [](int fail_time) { return 1 << std::min(6, fail_time - 1); }
+    );
     client.start();
 
     client.bind(&stdio);   //!< client绑定stdio

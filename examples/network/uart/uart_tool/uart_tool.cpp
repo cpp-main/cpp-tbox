@@ -54,6 +54,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    sp_stdio->initialize();
+
     //! 将终端与串口绑定到一起
     sp_stdio->bind(sp_uart);
     sp_uart->bind(sp_stdio);

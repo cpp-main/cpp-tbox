@@ -99,6 +99,11 @@ void TcpClient::setAutoReconnect(bool enable)
     d_->reconnect_enabled = enable;
 }
 
+void TcpClient::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
+{
+    d_->sp_connector->setReconnectDelayCalcFunc(func);
+}
+
 bool TcpClient::start()
 {
     if (d_->state != State::kInited) {

@@ -47,6 +47,7 @@ class TcpClient : public ByteStream {
 
     using ConnectedCallback    = std::function<void()>;
     using DisconnectedCallback = std::function<void()>;
+    using ReconnectDelayCalc   = std::function<int(int)>;
 
     //!< 状态
     enum class State {
@@ -61,6 +62,7 @@ class TcpClient : public ByteStream {
     void setConnectedCallback(const ConnectedCallback &cb);
     void setDisconnectedCallback(const DisconnectedCallback &cb);
     void setAutoReconnect(bool enable);
+    void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func);
 
     bool start();   //!< 开始连接服务端
     void stop();    //!< 如果没有连接则成，则停止连接；否则断开连接
