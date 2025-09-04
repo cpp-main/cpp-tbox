@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "proto.h"
+#include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
 #include <tbox/base/assert.h>
 #include <tbox/util/json.h>
@@ -41,7 +42,28 @@ void Proto::sendRequest(int id, const std::string &method, const Json &js_params
     sendJson(js);
 }
 
+void Proto::sendRequest(const std::string &id, const std::string &method, const Json &js_params)
+{
+    Json js = {
+        {"jsonrpc", "2.0"},
+        {"method", method}
+    };
+
+    if (!id.empty())
+        js["id"] = id;
+
+    if (!js_params.is_null())
+        js["params"] = js_params;
+
+    sendJson(js);
+}
+
 void Proto::sendRequest(int id, const std::string &method)
+{
+    sendRequest(id, method, Json());
+}
+
+void Proto::sendRequest(const std::string &id, const std::string &method)
 {
     sendRequest(id, method, Json());
 }
@@ -50,9 +72,24 @@ void Proto::sendResult(int id, const Json &js_result)
 {
     Json js = {
         {"jsonrpc", "2.0"},
-        {"id", id},
         {"result", js_result}
     };
+
+    if (id != 0)
+        js["id"] = id;
+
+    sendJson(js);
+}
+
+void Proto::sendResult(const std::string &id, const Json &js_result)
+{
+    Json js = {
+        {"jsonrpc", "2.0"},
+        {"result", js_result}
+    };
+
+    if (!id.empty())
+        js["id"] = id;
 
     sendJson(js);
 }
@@ -61,9 +98,11 @@ void Proto::sendError(int id, int errcode, const std::string &message)
 {
     Json js = {
         {"jsonrpc", "2.0"},
-        {"id", id},
         {"error", { {"code", errcode } } }
     };
+
+    if (id != 0)
+        js["id"] = id;
 
     if (!message.empty())
         js["error"]["message"] = message;
@@ -71,10 +110,44 @@ void Proto::sendError(int id, int errcode, const std::string &message)
     sendJson(js);
 }
 
-void Proto::setRecvCallback(RecvRequestCallback &&req_cb, RecvRespondCallback &&rsp_cb)
+void Proto::sendError(const std::string &id, int errcode, const std::string &message)
 {
-    recv_request_cb_ = std::move(req_cb);
-    recv_respond_cb_ = std::move(rsp_cb);
+    Json js = {
+        {"jsonrpc", "2.0"},
+        {"error", { {"code", errcode } } }
+    };
+
+    if (!id.empty())
+        js["id"] = id;
+
+    if (!message.empty())
+        js["error"]["message"] = message;
+
+    sendJson(js);
+}
+
+void Proto::setRecvCallback(RecvRequestIntCallback &&req_cb, RecvRespondIntCallback &&rsp_cb)
+{
+    if (req_cb && rsp_cb) {
+        id_type_ = IdType::kInt;
+        recv_request_int_cb_ = std::move(req_cb);
+        recv_respond_int_cb_ = std::move(rsp_cb);
+
+    } else {
+        LogWarn("int req_cb or rsp_cb is nullptr");
+    }
+}
+
+void Proto::setRecvCallback(RecvRequestStrCallback &&req_cb, RecvRespondStrCallback &&rsp_cb)
+{
+    if (req_cb && rsp_cb) {
+        id_type_ = IdType::kString;
+        recv_request_str_cb_ = std::move(req_cb);
+        recv_respond_str_cb_ = std::move(rsp_cb);
+
+    } else {
+        LogWarn("str req_cb or rsp_cb is nullptr");
+    }
 }
 
 void Proto::setSendCallback(SendDataCallback &&cb)
@@ -82,7 +155,16 @@ void Proto::setSendCallback(SendDataCallback &&cb)
     send_data_cb_ = std::move(cb);
 }
 
-void Proto::onRecvJson(const Json &js)
+void Proto::cleanup()
+{
+    recv_request_int_cb_ = nullptr;
+    recv_respond_int_cb_ = nullptr;
+    recv_request_str_cb_ = nullptr;
+    recv_respond_str_cb_ = nullptr;
+    send_data_cb_ = nullptr;
+}
+
+void Proto::onRecvJson(const Json &js) const
 {
     if (js.is_object()) {
 
@@ -93,48 +175,11 @@ void Proto::onRecvJson(const Json &js)
         }
 
         if (js.contains("method")) {
-            if (!recv_request_cb_)
-                return;
-
-            //! 按请求进行处理
-            std::string method;
-            int id = 0;
-            if (!util::json::GetField(js, "method", method)) {
-                LogNotice("method type not string");
-                return;
-            }
-            util::json::GetField(js, "id", id);
-            recv_request_cb_(id, method, js.contains("params") ? js["params"] : Json());
-
+            handleAsMethod(js);     //! 按请求进行处理
         } else if (js.contains("result")) {
-            //! 按结果回复进行处理
-            if (!recv_respond_cb_)
-                return;
-
-            int id = 0; 
-            if (!util::json::GetField(js, "id", id)) {
-                LogNotice("no method field in respond");
-                return;
-            }
-            recv_respond_cb_(id, 0, js["result"]);
-
+            handleAsResult(js);     //! 按结果回复进行处理，必须要有id字段
         } else if (js.contains("error")) {
-            //! 按错误回复进行处理
-            if (!recv_respond_cb_)
-                return;
-
-            int id = 0; 
-            util::json::GetField(js, "id", id);
-
-            auto &js_error = js["error"];
-            int errcode = 0;
-            if (!util::json::GetField(js_error, "code", errcode)) {
-                LogNotice("no code field in error");
-                return;
-            }
-
-            recv_respond_cb_(id, errcode, Json());
-
+            handleAsError(js);      //! 按错误回复进行处理
         } else {
             LogNotice("not jsonrpc format");
         }
@@ -143,6 +188,97 @@ void Proto::onRecvJson(const Json &js)
         for (auto &js_item : js) {
             onRecvJson(js_item);
         }
+    }
+}
+
+void Proto::handleAsMethod(const Json &js) const
+{
+    std::string method;
+    if (!util::json::GetField(js, "method", method)) {
+        LogNotice("method type not string");
+        return;
+    }
+
+    auto &js_params = js.contains("params") ? js["params"] : Json();
+
+    if (id_type_ == IdType::kInt) {
+        int id = 0;
+        if (js.contains("id") && !util::json::GetField(js, "id", id)) {
+            LogNotice("id type not int");
+            return;
+        }
+        recv_request_int_cb_(id, method, js_params);
+
+    } else if (id_type_ == IdType::kString) {
+        std::string id;
+        if (js.contains("id") && !util::json::GetField(js, "id", id)) {
+            LogNotice("id type not string");
+            return;
+        }
+        recv_request_str_cb_(id, method, js_params);
+
+    } else {
+        LogWarn("please invoke setRecvCallback() first.");
+    }
+}
+
+void Proto::handleAsResult(const Json &js) const
+{
+    if (!js.contains("id")) {
+        LogNotice("no id in respond");
+        return;
+    }
+
+    auto &js_result = js["result"];
+
+    if (id_type_ == IdType::kInt) {
+        int id = 0;
+        if (!util::json::GetField(js, "id", id)) {
+            LogNotice("id type not int in respond");
+            return;
+        }
+        recv_respond_int_cb_(id, 0, js_result);
+
+    } else if (id_type_ == IdType::kString) {
+        std::string id;
+        if (!util::json::GetField(js, "id", id)) {
+            LogNotice("id type not string in respond");
+            return;
+        }
+        recv_respond_str_cb_(id, 0, js_result);
+
+    } else {
+        LogWarn("please invoke setRecvCallback() first.");
+    }
+}
+
+void Proto::handleAsError(const Json &js) const
+{
+    auto &js_error = js["error"];
+    int errcode = 0;
+    if (!util::json::GetField(js_error, "code", errcode)) {
+        LogNotice("no code field in error");
+        return;
+    }
+
+    if (id_type_ == IdType::kInt) {
+        int id = 0;
+        if (js.contains("id") && !util::json::GetField(js, "id", id)) {
+            LogNotice("id type not int in error");
+            return;
+        }
+        recv_respond_int_cb_(id, errcode, Json());
+
+    } else if (id_type_ == IdType::kString) {
+        std::string id;
+        if (js.contains("id") && !util::json::GetField(js, "id", id)) {
+            LogNotice("id type not string in error");
+            return;
+        }
+        recv_respond_str_cb_(id, errcode, Json());
+
+    } else {
+        LogWarn("please invoke setRecvCallback() first.");
     }
 }
 

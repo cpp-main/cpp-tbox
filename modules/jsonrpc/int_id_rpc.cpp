@@ -17,7 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "rpc.h"
+#include "int_id_rpc.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/json.hpp>
@@ -28,22 +28,22 @@
 namespace tbox {
 namespace jsonrpc {
 
-Rpc::Rpc(event::Loop *loop)
+IntIdRpc::IntIdRpc(event::Loop *loop)
     : request_timeout_(loop)
     , respond_timeout_(loop)
 {
     using namespace std::placeholders;
-    request_timeout_.setCallback(std::bind(&Rpc::onRequestTimeout, this, _1));
-    respond_timeout_.setCallback(std::bind(&Rpc::onRespondTimeout, this, _1));
+    request_timeout_.setCallback(std::bind(&IntIdRpc::onRequestTimeout, this, _1));
+    respond_timeout_.setCallback(std::bind(&IntIdRpc::onRespondTimeout, this, _1));
 }
 
-Rpc::~Rpc()
+IntIdRpc::~IntIdRpc()
 {
     respond_timeout_.cleanup();
     request_timeout_.cleanup();
 }
 
-bool Rpc::initialize(Proto *proto, int timeout_sec)
+bool IntIdRpc::initialize(Proto *proto, int timeout_sec)
 {
     using namespace std::placeholders;
 
@@ -51,15 +51,15 @@ bool Rpc::initialize(Proto *proto, int timeout_sec)
     respond_timeout_.initialize(std::chrono::seconds(1), timeout_sec);
 
     proto->setRecvCallback(
-        std::bind(&Rpc::onRecvRequest, this, _1, _2, _3),
-        std::bind(&Rpc::onRecvRespond, this, _1, _2, _3)
+        std::bind(&IntIdRpc::onRecvRequest, this, _1, _2, _3),
+        std::bind(&IntIdRpc::onRecvRespond, this, _1, _2, _3)
     );
     proto_ = proto;
 
     return true;
 }
 
-void Rpc::cleanup()
+void IntIdRpc::cleanup()
 {
     respond_timeout_.cleanup();
     request_timeout_.cleanup();
@@ -69,11 +69,11 @@ void Rpc::cleanup()
 
     method_services_.clear();
 
-    proto_->setRecvCallback(nullptr, nullptr);
+    proto_->cleanup();
     proto_ = nullptr;
 }
 
-void Rpc::request(const std::string &method, const Json &js_params, RequestCallback &&cb)
+void IntIdRpc::request(const std::string &method, const Json &js_params, RequestCallback &&cb)
 {
     RECORD_SCOPE();
     int id = 0;
@@ -85,27 +85,27 @@ void Rpc::request(const std::string &method, const Json &js_params, RequestCallb
     proto_->sendRequest(id, method, js_params);
 }
 
-void Rpc::request(const std::string &method, RequestCallback &&cb)
+void IntIdRpc::request(const std::string &method, RequestCallback &&cb)
 {
     request(method, Json(), std::move(cb));
 }
 
-void Rpc::notify(const std::string &method, const Json &js_params)
+void IntIdRpc::notify(const std::string &method, const Json &js_params)
 {
     request(method, js_params, nullptr);
 }
 
-void Rpc::notify(const std::string &method)
+void IntIdRpc::notify(const std::string &method)
 {
     request(method, Json(), nullptr);
 }
 
-void Rpc::addService(const std::string &method, ServiceCallback &&cb)
+void IntIdRpc::addService(const std::string &method, ServiceCallback &&cb)
 {
     method_services_[method] = std::move(cb);
 }
 
-void Rpc::respond(int id, int errcode, const Json &js_result)
+void IntIdRpc::respond(IdTypeConstRef id, int errcode, const Json &js_result)
 {
     RECORD_SCOPE();
     if (id == 0) {
@@ -122,7 +122,7 @@ void Rpc::respond(int id, int errcode, const Json &js_result)
     tobe_respond_.erase(id);
 }
 
-void Rpc::respond(int id, const Json &js_result)
+void IntIdRpc::respond(IdTypeConstRef id, const Json &js_result)
 {
     RECORD_SCOPE();
     if (id == 0) {
@@ -134,7 +134,7 @@ void Rpc::respond(int id, const Json &js_result)
     tobe_respond_.erase(id);
 }
 
-void Rpc::respond(int id, int errcode)
+void IntIdRpc::respond(IdTypeConstRef id, int errcode)
 {
     RECORD_SCOPE();
     if (id == 0) {
@@ -146,7 +146,7 @@ void Rpc::respond(int id, int errcode)
     tobe_respond_.erase(id);
 }
 
-void Rpc::onRecvRequest(int id, const std::string &method, const Json &js_params)
+void IntIdRpc::onRecvRequest(IdTypeConstRef id, const std::string &method, const Json &js_params)
 {
     RECORD_SCOPE();
     auto iter = method_services_.find(method);
@@ -168,7 +168,7 @@ void Rpc::onRecvRequest(int id, const std::string &method, const Json &js_params
     }
 }
 
-void Rpc::onRecvRespond(int id, int errcode, const Json &js_result)
+void IntIdRpc::onRecvRespond(IdTypeConstRef id, int errcode, const Json &js_result)
 {
     RECORD_SCOPE();
     auto iter = request_callback_.find(id);
@@ -179,7 +179,7 @@ void Rpc::onRecvRespond(int id, int errcode, const Json &js_result)
     }
 }
 
-void Rpc::onRequestTimeout(int id)
+void IntIdRpc::onRequestTimeout(IdTypeConstRef id)
 {
     auto iter = request_callback_.find(id);
     if (iter != request_callback_.end()) {
@@ -189,7 +189,7 @@ void Rpc::onRequestTimeout(int id)
     }
 }
 
-void Rpc::onRespondTimeout(int id)
+void IntIdRpc::onRespondTimeout(IdTypeConstRef id)
 {
     auto iter = tobe_respond_.find(id);
     if (iter != tobe_respond_.end()) {

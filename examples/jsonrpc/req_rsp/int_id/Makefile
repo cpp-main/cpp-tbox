@@ -18,19 +18,9 @@
 # of the source tree.
 #
 
-PROJECT := examples/jsonrpc/req_rsp/pong
-EXE_NAME := ${PROJECT}
-
-CPP_SRC_FILES := pong.cpp
-
-CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
-LDFLAGS += \
-	-ltbox_jsonrpc \
-	-ltbox_network \
-	-ltbox_eventx \
-	-ltbox_event \
-	-ltbox_util \
-	-ltbox_base \
-	-lpthread -ldl
-
-include $(TOP_DIR)/mk/exe_common.mk
+all test clean distclean:
+	@for i in $(shell ls) ; do \
+		if [ -d $$i ]; then  \
+			$(MAKE) -C $$i $@ || exit $$? ; \
+		fi \
+	done

@@ -29,13 +29,13 @@
 #include <tbox/base/log_output.h>   //! LogOutput_Enable()
 #include <tbox/base/scope_exit.hpp> //! SetScopeExitAction()
 #include <tbox/base/json.hpp>   //! 操作JSON对象用
-#include <tbox/util/buffer.h>   //! 对Buffer的操作
+#include <tbox/util/buffer.h>   //! 对Buffer进行操作
 #include <tbox/util/json.h>     //! util::json::GetField()
 #include <tbox/event/loop.h>    //! 事件循环
 #include <tbox/event/signal_event.h>    //! ctrl+c信号事件
 #include <tbox/network/tcp_server.h>    //! TcpServer
 #include <tbox/jsonrpc/protos/raw_stream_proto.h> //! jsonrpc::RawStreamProto
-#include <tbox/jsonrpc/rpc.h>   //! jsonrpc::Rpc
+#include <tbox/jsonrpc/int_id_rpc.h>    //! jsonrpc::IntIdRpc
 
 using namespace tbox;
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     network::TcpServer tcp_server(loop);
     jsonrpc::RawStreamProto proto;
-    jsonrpc::Rpc rpc(loop);
+    jsonrpc::IntIdRpc rpc(loop);
 
     rpc.initialize(&proto, 3);
     std::string srv_addr = "/tmp/ping_pong.sock";
@@ -98,12 +98,12 @@ int main(int argc, char **argv)
     tcp_server.start(); //! 启动tcp服务
 
     //! 注册ping的服务处理函数
-    rpc.addService("ping", [&] (int id, const Json &js_params, int &errcode, Json &js_result) {
+    rpc.addService("ping", [&] (int id, const Json &js_params, int &, Json &) {
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
-        LogDbg("got ping_count: %d", ping_count);
-        js_result = js_params;
-        return true;    //! 表示在函数返回后立即发送回复
+        LogDbg("id: %d, got ping_count: %d", id, ping_count);
+        rpc.notify("pong", js_params);
+        return false;    //! 表示不回复
     });
 
     //! 设置程序安全退出条件

@@ -160,7 +160,7 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        nullptr
+        [] (int id, int errcode, const Json &result) { }
     );
 
     const char *str_1 = "\xEA\x53\x00\x00\x00\x28{\"id\":1,\"meth";

@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#ifndef TBOX_JSONRPC_RPC_H
-#define TBOX_JSONRPC_RPC_H
+#ifndef TBOX_JSONRPC_STR_RPC_H
+#define TBOX_JSONRPC_STR_RPC_H
 
 #include <functional>
 #include <unordered_map>
@@ -32,8 +32,12 @@ namespace jsonrpc {
 
 class Proto;
 
-class Rpc {
+class StrIdRpc {
   public:
+    //! ID类型为std::string
+    using IdType = std::string;
+    using IdTypeConstRef = const std::string&;
+
     /**
      * 收到对端回复的回调函数
      *
@@ -53,11 +57,14 @@ class Rpc {
      * \return  true        同步回复：在函数返回后自动回复，根据errcode与js_result进行回复
      * \return  false       异步回复：不在函数返回后自动回复，而是在稍候通过调respond()进行回复
      */
-    using ServiceCallback = std::function<bool(int id, const Json &js_params, int &errcode, Json &js_result)>;
+    using ServiceCallback = std::function<bool(IdTypeConstRef id, const Json &js_params, int &errcode, Json &js_result)>;
+
+    //! 生成ID的函数
+    using IdGenFunc = std::function<std::string()>;
 
   public:
-    explicit Rpc(event::Loop *loop);
-    virtual ~Rpc();
+    explicit StrIdRpc(event::Loop *loop);
+    virtual ~StrIdRpc();
 
     bool initialize(Proto *proto, int timeout_sec = 30);
     void cleanup();
@@ -74,29 +81,28 @@ class Rpc {
     void notify(const std::string &method);
 
     //! 发送异步回复
-    void respond(int id, int errcode, const Json &js_result);
-    void respond(int id, const Json &js_result);
-    void respond(int id, int errcode);
+    void respond(IdTypeConstRef id, int errcode, const Json &js_result);
+    void respond(IdTypeConstRef id, const Json &js_result);
+    void respond(IdTypeConstRef id, int errcode);
 
   protected:
-    void onRecvRequest(int id, const std::string &method, const Json &params);
-    void onRecvRespond(int id, int errcode, const Json &result);
-    void onRequestTimeout(int id);
-    void onRespondTimeout(int id);
+    void onRecvRequest(IdTypeConstRef id, const std::string &method, const Json &params);
+    void onRecvRespond(IdTypeConstRef id, int errcode, const Json &result);
+    void onRequestTimeout(IdTypeConstRef id);
+    void onRespondTimeout(IdTypeConstRef id);
 
   private:
     Proto *proto_ = nullptr;
 
-    std::unordered_map<std::string, ServiceCallback> method_services_;
-
-    int id_alloc_ = 0;
-    std::unordered_map<int, RequestCallback> request_callback_;
-    std::unordered_set<int> tobe_respond_;
-    eventx::TimeoutMonitor<int> request_timeout_;   //! 请求超时监测
-    eventx::TimeoutMonitor<int> respond_timeout_;   //! 回复超时监测
+    IdGenFunc id_gen_func_;
+    std::unordered_map<IdType, ServiceCallback> method_services_;
+    std::unordered_map<IdType, RequestCallback> request_callback_;
+    std::unordered_set<IdType> tobe_respond_;
+    eventx::TimeoutMonitor<IdType> request_timeout_;   //! 请求超时监测
+    eventx::TimeoutMonitor<IdType> respond_timeout_;   //! 回复超时监测
 };
 
 }
 }
 
-#endif //TBOX_JSONRPC_RPC_H
+#endif //TBOX_JSONRPC_STR_RPC_H

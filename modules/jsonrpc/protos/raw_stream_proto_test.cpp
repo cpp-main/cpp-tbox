@@ -160,7 +160,7 @@ TEST(RawStreamProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        nullptr
+        [] (int id, int errcode, const Json &result) { }
     );
 
     const char *str_1 = R"({"id":1,"meth)";

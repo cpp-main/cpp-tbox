@@ -32,14 +32,18 @@ set(TBOX_JSONRPC_SOURCES
     protos/raw_stream_proto.cpp
     protos/header_stream_proto.cpp
     protos/packet_proto.cpp
-    rpc.cpp)
+    int_id_rpc.cpp
+    str_id_rpc.cpp
+)
 
 set(TBOX_JSONRPC_TEST_SOURCES
     ${TBOX_JSONRPC_SOURCES}
     protos/raw_stream_proto_test.cpp
     protos/header_stream_proto_test.cpp
     protos/packet_proto_test.cpp
-    rpc_test.cpp)
+    int_id_rpc_test.cpp
+    str_id_rpc_test.cpp
+)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_JSONRPC_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
@@ -69,7 +73,7 @@ install(
 
 # install header file
 install(
-    FILES proto.h rpc.h
+    FILES proto.h int_id_rpc.h str_id_rpc.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/jsonrpc
 )
 
