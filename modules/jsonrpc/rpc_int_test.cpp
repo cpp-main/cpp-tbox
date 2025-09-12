@@ -30,7 +30,7 @@
 namespace tbox {
 namespace jsonrpc {
 
-class RpcTest : public testing::Test {
+class RpcIntTest : public testing::Test {
   protected:
     event::Loop *loop;
     //! 生成两个端，让它们通信
@@ -38,7 +38,7 @@ class RpcTest : public testing::Test {
     RawStreamProto proto_a, proto_b;
 
   public:
-    RpcTest()
+    RpcIntTest()
         : loop(event::Loop::New())
         , rpc_a(loop)
         , rpc_b(loop)
@@ -46,7 +46,7 @@ class RpcTest : public testing::Test {
         LogOutput_Enable();
     }
 
-    ~RpcTest() {
+    ~RpcIntTest() {
         delete loop;
         LogOutput_Disable();
     }
@@ -54,7 +54,9 @@ class RpcTest : public testing::Test {
     void SetUp() override {
         rpc_a.initialize(&proto_a);
         rpc_b.initialize(&proto_b);
-
+        //proto_a.setLogEnable(true);
+        //proto_b.setLogEnable(true);
+        
         //! a发的b收
         proto_a.setSendCallback(
             [&](const void *data_ptr, size_t data_size) {
@@ -76,7 +78,7 @@ class RpcTest : public testing::Test {
     }
 };
 
-TEST_F(RpcTest, SendRequestNormally) {
+TEST_F(RpcIntTest, SendRequestNormally) {
     Json js_req_params = { {"a", 12}, {"b", "test jsonrpc"} };
     Json js_rsp_result = { {"r", "aabbcc"} };
 
@@ -111,7 +113,7 @@ TEST_F(RpcTest, SendRequestNormally) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
-TEST_F(RpcTest, SendMessageNormally) {
+TEST_F(RpcIntTest, SendMessageNormally) {
     Json js_req_params = { {"a", 12}, {"b", "test jsonrpc"} };
 
     bool is_service_invoke = false;
@@ -135,7 +137,7 @@ TEST_F(RpcTest, SendMessageNormally) {
     EXPECT_TRUE(is_service_invoke);
 }
 
-TEST_F(RpcTest, SendMessageNoService) {
+TEST_F(RpcIntTest, SendMessageNoService) {
     bool is_service_invoke = false;
     rpc_b.addService("B",
         [&] (int id, const Json &, int &, Json &) {
@@ -156,7 +158,7 @@ TEST_F(RpcTest, SendMessageNoService) {
     EXPECT_FALSE(is_service_invoke);
 }
 
-TEST_F(RpcTest, SendRequestNoMethod) {
+TEST_F(RpcIntTest, SendRequestNoMethod) {
     bool is_method_cb_invoke = false;
     loop->run(
         [&] {
@@ -175,7 +177,7 @@ TEST_F(RpcTest, SendRequestNoMethod) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
-TEST(Rpc, RequestTimeout) {
+TEST(RpcInt, RequestTimeout) {
     auto loop = event::Loop::New();
     SetScopeExitAction([=] { delete loop; });
 

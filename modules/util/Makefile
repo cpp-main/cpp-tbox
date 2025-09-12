@@ -44,6 +44,7 @@ HEAD_FILES = \
 	scalable_integer.h \
 	variables.h \
 	string_to.h \
+	uuid.h \
 
 CPP_SRC_FILES = \
 	pid_file.cpp \
@@ -65,6 +66,7 @@ CPP_SRC_FILES = \
 	scalable_integer.cpp \
 	variables.cpp \
 	string_to.cpp \
+	uuid.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.util"' $(CXXFLAGS)
 

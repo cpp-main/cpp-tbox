@@ -28,6 +28,7 @@
  * 如此周而复始，直至与pong端断开，或者接收到了SIGINT停止信号
  */
 
+#include <iostream>
 #include <tbox/base/log.h>  //! 打印日志
 #include <tbox/base/log_output.h>   //! 使能日志输出
 #include <tbox/base/scope_exit.hpp> //! 使用 SetScopeExitAction()
@@ -38,12 +39,24 @@
 #include <tbox/network/tcp_client.h>    //! 导入TcpClient模块
 #include <tbox/util/json.h>     //! 使用JSON操作的辅助函数 GetField()
 #include <tbox/jsonrpc/protos/raw_stream_proto.h>   //! 导入 jsonrpc::RawStreamProto
-#include <tbox/jsonrpc/rpc.h>   //! 导入 jsonrpc::Rpc
+#include <tbox/jsonrpc/rpc.h>    //! 导入 jsonrpc::Rpc
 
 using namespace tbox;
 
 int main(int argc, char **argv)
 {
+    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    if (argc >= 2) {
+        std::string type_str(argv[1]);
+        if (type_str == "str") {
+            id_type = jsonrpc::Rpc::IdType::kString;
+        } else if (type_str != "int") {
+            std::cout << "id_type invalid!" << std::endl
+                << "Usage: " << argv[0] << " int|str" << std::endl;
+            return 0;
+        }
+    }
+
     LogOutput_Enable();
 
     LogInfo("enter");
@@ -61,7 +74,7 @@ int main(int argc, char **argv)
 
     network::TcpClient tcp_client(loop);
     jsonrpc::RawStreamProto proto;
-    jsonrpc::Rpc rpc(loop);
+    jsonrpc::Rpc rpc(loop, id_type);
 
     rpc.initialize(&proto, 3);
     std::string srv_addr = "/tmp/ping_pong.sock";

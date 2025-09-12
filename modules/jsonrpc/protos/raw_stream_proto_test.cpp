@@ -31,7 +31,7 @@ TEST(RawStreamProto, sendRequest) {
     LogOutput_Enable();
 
     RawStreamProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -63,7 +63,7 @@ TEST(RawStreamProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     RawStreamProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -95,7 +95,7 @@ TEST(RawStreamProto, sendResult) {
     LogOutput_Enable();
 
     RawStreamProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -123,7 +123,7 @@ TEST(RawStreamProto, sendError) {
     LogOutput_Enable();
 
     RawStreamProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -150,7 +150,7 @@ TEST(RawStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     RawStreamProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -160,7 +160,7 @@ TEST(RawStreamProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        nullptr
+        [] (int, int, const Json &) { }
     );
 
     const char *str_1 = R"({"id":1,"meth)";

@@ -45,7 +45,8 @@ TEST_CPP_SRC_FILES = \
 	protos/raw_stream_proto_test.cpp \
 	protos/header_stream_proto_test.cpp \
 	protos/packet_proto_test.cpp \
-	rpc_test.cpp \
+	rpc_int_test.cpp \
+	rpc_str_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_event -ltbox_util -ltbox_base -ldl
 ENABLE_SHARED_LIB = no
