@@ -25,28 +25,28 @@
 #include <tbox/base/defines.h>
 
 #include "protos/raw_stream_proto.h"
-#include "str_id_rpc.h"
+#include "rpc.h"
 
 namespace tbox {
 namespace jsonrpc {
 
-class StrIdRpcTest : public testing::Test {
+class RpcStrTest : public testing::Test {
   protected:
     event::Loop *loop;
     //! 生成两个端，让它们通信
-    StrIdRpc rpc_a, rpc_b;
+    Rpc rpc_a, rpc_b;
     RawStreamProto proto_a, proto_b;
 
   public:
-    StrIdRpcTest()
+    RpcStrTest()
         : loop(event::Loop::New())
-        , rpc_a(loop)
-        , rpc_b(loop)
+        , rpc_a(loop, Rpc::IdType::kString)
+        , rpc_b(loop, Rpc::IdType::kString)
     {
         LogOutput_Enable();
     }
 
-    ~StrIdRpcTest() {
+    ~RpcStrTest() {
         delete loop;
         LogOutput_Disable();
     }
@@ -54,6 +54,8 @@ class StrIdRpcTest : public testing::Test {
     void SetUp() override {
         rpc_a.initialize(&proto_a);
         rpc_b.initialize(&proto_b);
+        //proto_a.setLogEnable(true);
+        //proto_b.setLogEnable(true);
 
         //! a发的b收
         proto_a.setSendCallback(
@@ -76,13 +78,13 @@ class StrIdRpcTest : public testing::Test {
     }
 };
 
-TEST_F(StrIdRpcTest, SendRequestNormally) {
+TEST_F(RpcStrTest, SendRequestNormally) {
     Json js_req_params = { {"a", 12}, {"b", "test jsonrpc"} };
     Json js_rsp_result = { {"r", "aabbcc"} };
 
     bool is_service_invoke = false;
     rpc_b.addService("A",
-        [&] (const std::string &id, const Json &js_params, int &errcode, Json &js_result) {
+        [&] (int id, const Json &js_params, int &errcode, Json &js_result) {
             EXPECT_EQ(js_params, js_req_params);
             errcode = 0;
             js_result = js_rsp_result;
@@ -111,13 +113,13 @@ TEST_F(StrIdRpcTest, SendRequestNormally) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
-TEST_F(StrIdRpcTest, SendMessageNormally) {
+TEST_F(RpcStrTest, SendMessageNormally) {
     Json js_req_params = { {"a", 12}, {"b", "test jsonrpc"} };
 
     bool is_service_invoke = false;
     rpc_b.addService("B",
-        [&] (const std::string &id, const Json &js_params, int &, Json &) {
-            EXPECT_TRUE(id.empty());
+        [&] (int id, const Json &js_params, int &, Json &) {
+            EXPECT_EQ(id, 0);
             EXPECT_EQ(js_params, js_req_params);
             is_service_invoke = true;
             return true;
@@ -135,11 +137,12 @@ TEST_F(StrIdRpcTest, SendMessageNormally) {
     EXPECT_TRUE(is_service_invoke);
 }
 
-TEST_F(StrIdRpcTest, SendMessageNoService) {
+TEST_F(RpcStrTest, SendMessageNoService) {
     bool is_service_invoke = false;
     rpc_b.addService("B",
-        [&] (const std::string &, const Json &, int &, Json &) {
+        [&] (int id, const Json &, int &, Json &) {
             is_service_invoke = true;
+            UNUSED_VAR(id);
             return true;
         }
     );
@@ -155,7 +158,7 @@ TEST_F(StrIdRpcTest, SendMessageNoService) {
     EXPECT_FALSE(is_service_invoke);
 }
 
-TEST_F(StrIdRpcTest, SendRequestNoMethod) {
+TEST_F(RpcStrTest, SendRequestNoMethod) {
     bool is_method_cb_invoke = false;
     loop->run(
         [&] {
@@ -174,11 +177,11 @@ TEST_F(StrIdRpcTest, SendRequestNoMethod) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
-TEST(StrIdRpc, RequestTimeout) {
+TEST(RpcStr, RequestTimeout) {
     auto loop = event::Loop::New();
     SetScopeExitAction([=] { delete loop; });
 
-    StrIdRpc rpc(loop);
+    Rpc rpc(loop, Rpc::IdType::kString);
     RawStreamProto proto;
     rpc.initialize(&proto, 1);
 

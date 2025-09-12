@@ -32,8 +32,7 @@ set(TBOX_JSONRPC_SOURCES
     protos/raw_stream_proto.cpp
     protos/header_stream_proto.cpp
     protos/packet_proto.cpp
-    int_id_rpc.cpp
-    str_id_rpc.cpp
+    rpc.cpp
 )
 
 set(TBOX_JSONRPC_TEST_SOURCES
@@ -41,8 +40,8 @@ set(TBOX_JSONRPC_TEST_SOURCES
     protos/raw_stream_proto_test.cpp
     protos/header_stream_proto_test.cpp
     protos/packet_proto_test.cpp
-    int_id_rpc_test.cpp
-    str_id_rpc_test.cpp
+    rpc_int_test.cpp
+    rpc_str_test.cpp
 )
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_JSONRPC_SOURCES})
@@ -73,7 +72,7 @@ install(
 
 # install header file
 install(
-    FILES proto.h int_id_rpc.h str_id_rpc.h
+    FILES proto.h rpc.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/jsonrpc
 )
 

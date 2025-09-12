@@ -31,7 +31,7 @@ TEST(HeaderStreamProto, sendRequest) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x3e5a);
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -63,7 +63,7 @@ TEST(HeaderStreamProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x35ae);
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -95,7 +95,7 @@ TEST(HeaderStreamProto, sendResult) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x35ae);
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -123,7 +123,7 @@ TEST(HeaderStreamProto, sendError) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0x53ea);
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -150,7 +150,7 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     HeaderStreamProto proto(0xea53);
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -160,7 +160,7 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        [] (int id, int errcode, const Json &result) { }
+        [] (int, int, const Json &) { }
     );
 
     const char *str_1 = "\xEA\x53\x00\x00\x00\x28{\"id\":1,\"meth";

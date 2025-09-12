@@ -25,6 +25,7 @@
  * 当收到ping请求后，将参数中的count提取出来作为结果直接回复。
  */
 
+#include <iostream>
 #include <tbox/base/log.h>  //! 打印日志
 #include <tbox/base/log_output.h>   //! LogOutput_Enable()
 #include <tbox/base/scope_exit.hpp> //! SetScopeExitAction()
@@ -35,12 +36,24 @@
 #include <tbox/event/signal_event.h>    //! ctrl+c信号事件
 #include <tbox/network/tcp_server.h>    //! TcpServer
 #include <tbox/jsonrpc/protos/raw_stream_proto.h> //! jsonrpc::RawStreamProto
-#include <tbox/jsonrpc/str_id_rpc.h>    //! jsonrpc::StrIdRpc
+#include <tbox/jsonrpc/rpc.h>   //! jsonrpc::Rpc
 
 using namespace tbox;
 
 int main(int argc, char **argv)
 {
+    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    if (argc >= 2) {
+        std::string type_str(argv[1]);
+        if (type_str == "str") {
+            id_type = jsonrpc::Rpc::IdType::kString;
+        } else if (type_str != "int") {
+            std::cout << "id_type invalid!" << std::endl
+                << "Usage: " << argv[0] << " int|str" << std::endl;
+            return 0;
+        }
+    }
+
     LogOutput_Enable();
 
     LogInfo("enter");
@@ -58,7 +71,7 @@ int main(int argc, char **argv)
 
     network::TcpServer tcp_server(loop);
     jsonrpc::RawStreamProto proto;
-    jsonrpc::StrIdRpc rpc(loop);
+    jsonrpc::Rpc rpc(loop, id_type);
 
     rpc.initialize(&proto, 3);
     std::string srv_addr = "/tmp/ping_pong.sock";
@@ -98,10 +111,10 @@ int main(int argc, char **argv)
     tcp_server.start(); //! 启动tcp服务
 
     //! 注册ping的服务处理函数
-    rpc.addService("ping", [&] (const std::string &id, const Json &js_params, int &, Json &) {
+    rpc.addService("ping", [&] (int id, const Json &js_params, int &, Json &) {
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
-        LogDbg("id: %s, got ping_count: %d", id.c_str(), ping_count);
+        LogDbg("id: %d, got ping_count: %d", id, ping_count);
         rpc.notify("pong", js_params);
         return false;    //! 表示不回复
     });

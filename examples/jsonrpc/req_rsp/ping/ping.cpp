@@ -28,22 +28,35 @@
  * 如此周而复始，直至与pong端断开，或者接收到了SIGINT停止信号
  */
 
+#include <iostream>
 #include <tbox/base/log.h>  //! 打印日志
 #include <tbox/base/log_output.h>   //! 使能日志输出
 #include <tbox/base/scope_exit.hpp> //! 使用 SetScopeExitAction()
 #include <tbox/base/json.hpp>   //! 操作JSON对象用
 #include <tbox/util/buffer.h>   //! 对Buffer进行操作
+#include <tbox/util/json.h>     //! 使用JSON操作的辅助函数 GetField()
 #include <tbox/event/loop.h>    //! 事件循环
 #include <tbox/event/signal_event.h>    //! ctrl+c信号事件
 #include <tbox/network/tcp_client.h>    //! 导入TcpClient模块
-#include <tbox/util/json.h>     //! 使用JSON操作的辅助函数 GetField()
 #include <tbox/jsonrpc/protos/raw_stream_proto.h>   //! 导入 jsonrpc::RawStreamProto
-#include <tbox/jsonrpc/int_id_rpc.h>    //! 导入 jsonrpc::IntIdRpc
+#include <tbox/jsonrpc/rpc.h>   //! 导入 jsonrpc::Rpc
 
 using namespace tbox;
 
 int main(int argc, char **argv)
 {
+    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    if (argc >= 2) {
+        std::string type_str(argv[1]);
+        if (type_str == "str") {
+            id_type = jsonrpc::Rpc::IdType::kString;
+        } else if (type_str != "int") {
+            std::cout << "id_type invalid!" << std::endl
+                << "Usage: " << argv[0] << " int|str" << std::endl;
+            return 0;
+        }
+    }
+
     LogOutput_Enable();
 
     LogInfo("enter");
@@ -61,7 +74,7 @@ int main(int argc, char **argv)
 
     network::TcpClient tcp_client(loop);
     jsonrpc::RawStreamProto proto;
-    jsonrpc::IntIdRpc rpc(loop);
+    jsonrpc::Rpc rpc(loop, id_type);
 
     rpc.initialize(&proto, 3);
     std::string srv_addr = "/tmp/ping_pong.sock";
@@ -91,23 +104,24 @@ int main(int argc, char **argv)
 
     int ping_count = 0;
     std::function<void()> send_ping;
-    //! 定义ping的动作
+    //! 定义ping动作
     send_ping = [&] {
         ++ping_count;
         Json js_params = {{"count", ping_count}};   //! 组装请求参数
 
-        //! 发送ping消息
-        rpc.notify("ping", js_params);
+        //! 发送ping请求，并在收到回复后，进行下一个ping动作
+        rpc.request("ping", js_params,
+            [&] (int errcode, const Json &js_result) {
+                int pong_count = 0;
+                util::json::GetField(js_result, "count", pong_count);
+                if (errcode == 0) {
+                    LogDbg("got pong: %d", pong_count);
+                    send_ping();
+                } else
+                    LogNotice("got erro: %d", errcode);
+            });
         LogDbg("send ping: %d", ping_count);
     };
-
-    //! 定义收到pong的动作
-    rpc.addService("pong", [&] (int id, const Json &js_params, int &, Json &) {
-        int pong_count = 0;
-        util::json::GetField(js_params, "count", pong_count);
-        send_ping();
-        return false;
-    });
 
     //! 设置一旦tcp_client连接上就进行ping动作
     tcp_client.setConnectedCallback(send_ping);

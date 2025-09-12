@@ -31,7 +31,7 @@ TEST(PacketProto, sendRequest) {
     LogOutput_Enable();
 
     PacketProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -63,7 +63,7 @@ TEST(PacketProto, sendRequestWithParams) {
     LogOutput_Enable();
 
     PacketProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -95,7 +95,7 @@ TEST(PacketProto, sendResult) {
     LogOutput_Enable();
 
     PacketProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -123,7 +123,7 @@ TEST(PacketProto, sendError) {
     LogOutput_Enable();
 
     PacketProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -150,7 +150,7 @@ TEST(PacketProto, RecvUncompleteData) {
     LogOutput_Enable();
 
     PacketProto proto;
-    proto.setLogEnable(true);
+    //proto.setLogEnable(true);
 
     int count = 0;
     proto.setRecvCallback(
@@ -160,7 +160,7 @@ TEST(PacketProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        [] (int id, int errcode, const Json &result) { }
+        [] (int, int, const Json &) { }
     );
 
     const char *str_1 = R"({"id":1,"meth)";
