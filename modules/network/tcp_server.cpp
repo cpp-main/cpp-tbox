@@ -29,6 +29,9 @@
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.tcp"
+
 namespace tbox {
 namespace network {
 

@@ -37,6 +37,9 @@
 #include <tbox/base/wrapped_recorder.h>
 #include <tbox/event/loop.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.work_thread"
+
 namespace tbox {
 namespace eventx {
 

@@ -24,6 +24,9 @@
 #include <tbox/util/fs.h>
 #include <tbox/util/execute_cmd.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.async"
+
 namespace tbox {
 namespace eventx {
 

@@ -32,6 +32,9 @@
 #include <tbox/base/defines.h>
 #include <tbox/base/wrapped_recorder.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.loop_wdog"
+
 namespace tbox {
 namespace eventx {
 

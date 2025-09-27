@@ -22,6 +22,9 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.tcp"
+
 namespace tbox {
 namespace network {
 

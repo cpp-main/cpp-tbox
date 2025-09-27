@@ -30,6 +30,9 @@
 #include <tbox/util/string.h>
 #include <tbox/util/fs.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.dns"
+
 namespace tbox {
 namespace network {
 

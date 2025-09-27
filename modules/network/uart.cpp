@@ -25,6 +25,9 @@
 #include <tbox/base/log.h>
 #include <tbox/util/string_to.h>
 
+#undef MODULE_ID
+#define MODULE_ID "tbox.uart"
+
 namespace tbox {
 namespace network {
 
