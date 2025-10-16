@@ -43,7 +43,9 @@ int main(int argc, char **argv)
     mqtt::Client::Config conf;
     conf.auto_reconnect_enable = true;
     //conf.auto_reconnect_wait_sec = 5;
-    conf.auto_reconnect_wait_sec_gen_func = [](int fail_count) { return 1 << fail_count; };
+    conf.auto_reconnect_wait_sec_gen_func = [](int fail_count) {
+        return 1 << std::min(fail_count, 4);
+    };
 #if 0
     conf.base.broker.domain = "cppmain.cpp";
     conf.base.broker.port = 1883;
