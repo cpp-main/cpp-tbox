@@ -51,6 +51,7 @@ set(TBOX_FLOW_SOURCES
     actions/switch_action.cpp
 	actions/execute_cmd_action.cpp
 	actions/execute_in_thread_action.cpp
+	actions/random_select_action.cpp
     to_graphviz.cpp)
 
 set(TBOX_FLOW_TEST_SOURCES
@@ -74,6 +75,7 @@ set(TBOX_FLOW_TEST_SOURCES
     actions/switch_action_test.cpp
 	actions/execute_cmd_action_test.cpp
 	actions/execute_in_thread_action_test.cpp
+	actions/random_select_action_test.cpp
     to_graphviz_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_FLOW_SOURCES})
@@ -136,6 +138,7 @@ install(
     actions/switch_action.h
 	actions/execute_cmd_action.h
 	actions/execute_in_thread_action.h
+	actions/random_select_action.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/flow/actions
 )
 

@@ -51,6 +51,7 @@ HEAD_FILES = \
 	actions/switch_action.h \
 	actions/execute_cmd_action.h \
 	actions/execute_in_thread_action.h \
+	actions/random_select_action.h \
 	to_graphviz.h \
 
 CPP_SRC_FILES = \
@@ -75,6 +76,7 @@ CPP_SRC_FILES = \
 	actions/switch_action.cpp \
 	actions/execute_cmd_action.cpp \
 	actions/execute_in_thread_action.cpp \
+	actions/random_select_action.cpp \
 	to_graphviz.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.flow"' $(CXXFLAGS)
@@ -101,6 +103,7 @@ TEST_CPP_SRC_FILES = \
 	actions/switch_action_test.cpp \
 	actions/execute_cmd_action_test.cpp \
 	actions/execute_in_thread_action_test.cpp \
+	actions/random_select_action_test.cpp \
 	to_graphviz_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_flow -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
