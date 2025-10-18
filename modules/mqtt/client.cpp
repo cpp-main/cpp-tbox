@@ -82,6 +82,8 @@ struct Client::Data {
     /// 在回调函数执行之前，检查一下这个 std::weak_ptr 是否过期就可以得知 this 指针是否有效。
     /// 进而避免继续访问到无效 this 指向的内容。
 
+    int connect_fail_count = 0; //!< 单次连接失败
+
     static int _instance_count;
 };
 
@@ -289,6 +291,7 @@ bool Client::start()
 
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
     auto is_alive = d_->alive_tag.get();  //! 原理见Q1
+    d_->connect_fail_count = 0;
 
     //! 由于 mosquitto_connect() 是阻塞函数，为了避免阻塞其它事件，特交给子线程去做
     d_->sp_thread = new thread(
@@ -609,13 +612,17 @@ void Client::onTcpConnectDone(int ret)
     CHECK_DELETE_RESET_OBJ(d_->sp_thread);
 
     if (ret == MOSQ_ERR_SUCCESS) {
+        d_->connect_fail_count = 0;
         LogDbg("connect success");
         enableSocketRead();
         enableSocketWriteIfNeed();
         updateStateTo(State::kTcpConnected);
 
     } else {
-        LogNotice("connect fail, rc:%d, %s", ret, mosquitto_strerror(ret));
+        ++d_->connect_fail_count;
+        LogNotice("connect fail, rc:%d, %s, fail_count:%d",
+                  ret, mosquitto_strerror(ret), d_->connect_fail_count);
+
         tryReconnect();
 
         ++d_->cb_level;
@@ -679,16 +686,23 @@ void Client::tryReconnect()
 {
     //! 如果开启了自动重连
     if (d_->config.auto_reconnect_enable) {
-        if (d_->config.auto_reconnect_wait_sec > 0) {
-            LogDbg("reconnect after %d sec", d_->config.auto_reconnect_wait_sec);
-            d_->reconnect_wait_remain_sec = d_->config.auto_reconnect_wait_sec;
+        auto wait_remain_sec = d_->config.auto_reconnect_wait_sec;
+
+        //! 如果设置了 auto_reconnect_wait_sec_gen_func 函数
+        //! 就则使用 auto_reconnect_wait_sec_gen_func 函数生成 wait_remain_sec
+        if (d_->config.auto_reconnect_wait_sec_gen_func)
+            wait_remain_sec = d_->config.auto_reconnect_wait_sec_gen_func(d_->connect_fail_count);
+
+        if (wait_remain_sec > 0) {
+            LogDbg("reconnect after %d sec", wait_remain_sec);
             updateStateTo(State::kReconnWaiting);
 
         } else {
             LogDbg("reconnect now");
-            d_->reconnect_wait_remain_sec = 0;
             updateStateTo(State::kConnecting);
         }
+
+        d_->reconnect_wait_remain_sec = wait_remain_sec;
 
     } else {  //! 如果不需要自动重连
         LogDbg("no need reconnect, end");

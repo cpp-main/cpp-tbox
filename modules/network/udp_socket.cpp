@@ -24,6 +24,9 @@
 #include <tbox/base/wrapped_recorder.h>
 #include <errno.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.udp"
+
 #define RECV_BUFF_SIZE  4096
 
 namespace tbox {

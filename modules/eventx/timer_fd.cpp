@@ -30,6 +30,9 @@
 #include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.timer_fd"
+
 namespace tbox {
 namespace eventx {
 

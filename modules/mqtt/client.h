@@ -87,6 +87,8 @@ class Client {
 
         bool auto_reconnect_enable = true;   //! 是否自动重连
         int  auto_reconnect_wait_sec = 0;    //! 自动重连等待时长，秒
+        //! 根据失败次数动态生成自动重连等待时长，秒
+        std::function<int(int)> auto_reconnect_wait_sec_gen_func;
 
         bool isValid() const;
     };

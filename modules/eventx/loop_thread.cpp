@@ -20,6 +20,9 @@
 #include "loop_thread.h"
 #include "loop_wdog.h"
 
+#undef  MODULE_ID
+#define MODULE_ID "tbox.loop_thread"
+
 namespace tbox {
 namespace eventx {
 
