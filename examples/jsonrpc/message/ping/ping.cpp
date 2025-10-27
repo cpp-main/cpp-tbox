@@ -45,11 +45,11 @@ using namespace tbox;
 
 int main(int argc, char **argv)
 {
-    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    jsonrpc::IdType id_type = jsonrpc::IdType::kInt;
     if (argc >= 2) {
         std::string type_str(argv[1]);
         if (type_str == "str") {
-            id_type = jsonrpc::Rpc::IdType::kString;
+            id_type = jsonrpc::IdType::kString;
         } else if (type_str != "int") {
             std::cout << "id_type invalid!" << std::endl
                 << "Usage: " << argv[0] << " int|str" << std::endl;
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     };
 
     //! 定义收到pong的动作
-    rpc.addService("pong", [&] (int id, const Json &js_params, int &, Json &) {
+    rpc.addService("pong", [&] (int id, const Json &js_params, tbox::jsonrpc::Response &) {
         int pong_count = 0;
         util::json::GetField(js_params, "count", pong_count);
         send_ping();

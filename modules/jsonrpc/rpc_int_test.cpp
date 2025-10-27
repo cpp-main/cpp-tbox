@@ -84,10 +84,10 @@ TEST_F(RpcIntTest, SendRequestNormally) {
 
     bool is_service_invoke = false;
     rpc_b.addService("A",
-        [&] (int id, const Json &js_params, int &errcode, Json &js_result) {
+        [&] (int id, const Json &js_params, Response &r) {
             EXPECT_EQ(js_params, js_req_params);
-            errcode = 0;
-            js_result = js_rsp_result;
+            r.error.code = 0;
+            r.js_result = js_rsp_result;
             is_service_invoke = true;
             UNUSED_VAR(id);
             return true;
@@ -98,9 +98,9 @@ TEST_F(RpcIntTest, SendRequestNormally) {
     loop->run(
         [&] {
             rpc_a.request("A", js_req_params,
-                [&] (int errcode, const Json &js_result) {
-                    EXPECT_EQ(errcode, 0);
-                    EXPECT_EQ(js_result, js_rsp_result);
+                [&] (const Response &r) {
+                    EXPECT_EQ(r.error.code, 0);
+                    EXPECT_EQ(r.js_result, js_rsp_result);
                     is_method_cb_invoke = true;
                 }
             );
@@ -118,7 +118,7 @@ TEST_F(RpcIntTest, SendMessageNormally) {
 
     bool is_service_invoke = false;
     rpc_b.addService("B",
-        [&] (int id, const Json &js_params, int &, Json &) {
+        [&] (int id, const Json &js_params, Response &) {
             EXPECT_EQ(id, 0);
             EXPECT_EQ(js_params, js_req_params);
             is_service_invoke = true;
@@ -140,7 +140,7 @@ TEST_F(RpcIntTest, SendMessageNormally) {
 TEST_F(RpcIntTest, SendMessageNoService) {
     bool is_service_invoke = false;
     rpc_b.addService("B",
-        [&] (int id, const Json &, int &, Json &) {
+        [&] (int id, const Json &, Response &) {
             is_service_invoke = true;
             UNUSED_VAR(id);
             return true;
@@ -163,9 +163,10 @@ TEST_F(RpcIntTest, SendRequestNoMethod) {
     loop->run(
         [&] {
             rpc_a.request("A", Json(),
-                [&] (int errcode, const Json &js_result) {
-                    EXPECT_EQ(errcode, -32601);
-                    EXPECT_EQ(js_result, Json());
+                [&] (const Response &r) {
+                    EXPECT_EQ(r.error.code, -32601);
+                    EXPECT_EQ(r.error.message, "method not found");
+                    EXPECT_EQ(r.js_result, Json());
                     is_method_cb_invoke = true;
                 }
             );
@@ -189,9 +190,10 @@ TEST(RpcInt, RequestTimeout) {
     loop->run(
         [&] {
             rpc.request("A", Json(),
-                [&] (int errcode, const Json &js_result) {
-                    EXPECT_EQ(errcode, -32000);
-                    UNUSED_VAR(js_result);
+                [&] (const Response &r) {
+                    EXPECT_EQ(r.error.code, -32000);
+                    EXPECT_EQ(r.error.message , "request timeout");
+                    UNUSED_VAR(r.js_result);
                     is_method_cb_invoke = true;
                 }
             );

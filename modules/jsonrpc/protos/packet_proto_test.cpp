@@ -41,7 +41,7 @@ TEST(PacketProto, sendRequest) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        [&] (int id, int errcode, const Json &js_result) { ++count; UNUSED_VAR(id); UNUSED_VAR(errcode); UNUSED_VAR(js_result); }
+        [&] (int, const Response &) { ++count; }
     );
     proto.setSendCallback(
         [&] (const void *data_ptr, size_t data_size) {
@@ -73,7 +73,7 @@ TEST(PacketProto, sendRequestWithParams) {
             EXPECT_EQ(js_params, js_send_params);
             ++count;
         },
-        [&] (int id, int errcode, const Json &js_result) { ++count; UNUSED_VAR(id); UNUSED_VAR(errcode); UNUSED_VAR(js_result); }
+        [&] (int, const Response &) { ++count; }
     );
     proto.setSendCallback(
         [&] (const void *data_ptr, size_t data_size) {
@@ -100,11 +100,10 @@ TEST(PacketProto, sendResult) {
     int count = 0;
     proto.setRecvCallback(
         [&] (int id, const std::string &method, const Json &js_params) { ++count; UNUSED_VAR(id); UNUSED_VAR(method); UNUSED_VAR(js_params); },
-        [&] (int id, int errcode, const Json &js_result) {
+        [&] (int id, const Response &r) {
             EXPECT_EQ(id, 1);
-            EXPECT_EQ(js_result, js_send_result);
+            EXPECT_EQ(r.js_result, js_send_result);
             ++count;
-            UNUSED_VAR(errcode);
         }
     );
     proto.setSendCallback(
@@ -128,9 +127,10 @@ TEST(PacketProto, sendError) {
     int count = 0;
     proto.setRecvCallback(
         [&] (int id, const std::string &method, const Json &js_params) { ++count; UNUSED_VAR(id); UNUSED_VAR(method); UNUSED_VAR(js_params); },
-        [&] (int id, int errcode, const Json &) {
+        [&] (int id, const Response &r) {
             EXPECT_EQ(id, 1);
-            EXPECT_EQ(errcode, -1000);
+            EXPECT_EQ(r.error.code, -1000);
+            EXPECT_EQ(r.error.message, "-1000");
             ++count;
         }
     );
@@ -140,7 +140,7 @@ TEST(PacketProto, sendError) {
         }
     );
 
-    proto.sendError(1, -1000);
+    proto.sendError(1, -1000, "-1000");
     EXPECT_EQ(count, 1);
 
     LogOutput_Disable();
@@ -160,7 +160,7 @@ TEST(PacketProto, RecvUncompleteData) {
             EXPECT_EQ(js_params, Json());
             ++count;
         },
-        [] (int, int, const Json &) { }
+        [] (int, const Response &) { }
     );
 
     const char *str_1 = R"({"id":1,"meth)";

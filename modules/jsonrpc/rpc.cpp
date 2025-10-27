@@ -57,13 +57,13 @@ bool Rpc::initialize(Proto *proto, int timeout_sec)
     if (id_type_ == IdType::kInt) {
         proto->setRecvCallback(
             std::bind(&Rpc::onRecvRequestInt, this, _1, _2, _3),
-            std::bind(&Rpc::onRecvRespondInt, this, _1, _2, _3)
+            std::bind(&Rpc::onRecvRespondInt, this, _1, _2)
         );
     } else {
         str_id_gen_func_ = [] { return util::GenUUID(); };
         proto->setRecvCallback(
             std::bind(&Rpc::onRecvRequestStr, this, _1, _2, _3),
-            std::bind(&Rpc::onRecvRespondStr, this, _1, _2, _3)
+            std::bind(&Rpc::onRecvRespondStr, this, _1, _2)
         );
     }
 
@@ -134,16 +134,6 @@ void Rpc::notify(const std::string &method)
     request(method, Json(), nullptr);
 }
 
-void Rpc::respond(int int_id, int errcode, const Json &js_result)
-{
-    RECORD_SCOPE();
-    if (errcode == 0) {
-        respondResult(int_id, js_result);
-    } else {
-        respondError(int_id, errcode);
-    }
-}
-
 void Rpc::respondResult(int int_id, const Json &js_result)
 {
     RECORD_SCOPE();
@@ -168,7 +158,7 @@ void Rpc::respondResult(int int_id, const Json &js_result)
     tobe_respond_.erase(int_id);
 }
 
-void Rpc::respondError(int int_id, int errcode)
+void Rpc::respondError(int int_id, int errcode, const std::string &message)
 {
     RECORD_SCOPE();
     if (int_id == 0) {
@@ -177,13 +167,13 @@ void Rpc::respondError(int int_id, int errcode)
     }
 
     if (id_type_ == IdType::kInt) {
-        proto_->sendError(int_id, errcode);
+        proto_->sendError(int_id, errcode, message);
 
     } else {
         auto iter = int_to_str_map_.find(int_id);
         if (iter != int_to_str_map_.end()) {
             std::string str_id = iter->second;
-            proto_->sendError(str_id, errcode);
+            proto_->sendError(str_id, errcode, message);
             int_to_str_map_.erase(iter);
             str_to_int_map_.erase(str_id);
         }
@@ -214,20 +204,24 @@ void Rpc::onRecvRequestInt(int int_id, const std::string &method, const Json &js
     RECORD_SCOPE();
     auto iter = method_services_.find(method);
     if (iter != method_services_.end() && iter->second) {
-        int errcode = 0;
-        Json js_result;
+        Response response;
         if (int_id != 0) {
             tobe_respond_.insert(int_id);
-            if (iter->second(int_id, js_params, errcode, js_result)) {
-                respond(int_id, errcode, js_result);
+            if (iter->second(int_id, js_params, response)) {
+                if (response.error.code == 0) {
+                    respondResult(int_id, response.js_result);
+                } else {
+                    auto &error = response.error;
+                    respondError(int_id, error.code, error.message);
+                }
             } else {
                 respond_timeout_.add(int_id);
             }
         } else {
-            iter->second(int_id, js_params, errcode, js_result);
+            iter->second(int_id, js_params, response);
         }
     } else {
-        respondError(int_id, ErrorCode::kMethodNotFound);
+        respondError(int_id, ErrorCode::kMethodNotFound, "method not found");
     }
 }
 
@@ -245,25 +239,25 @@ void Rpc::onRecvRequestStr(const std::string &str_id, const std::string &method,
 }
 
 
-void Rpc::onRecvRespondInt(int int_id, int errcode, const Json &js_result)
+void Rpc::onRecvRespondInt(int int_id, const Response &response)
 {
     RECORD_SCOPE();
     auto iter = request_callback_.find(int_id);
     if (iter != request_callback_.end()) {
         if (iter->second)
-            iter->second(errcode, js_result);
+            iter->second(response);
         request_callback_.erase(iter);
     }
 }
 
-void Rpc::onRecvRespondStr(const std::string &str_id, int errcode, const Json &js_result)
+void Rpc::onRecvRespondStr(const std::string &str_id, const Response &response)
 {
     //! 收到string的回复，要先转换成int
     RECORD_SCOPE();
     auto iter = str_to_int_map_.find(str_id);
     if (iter != str_to_int_map_.end()) {
         int int_id = iter->second;
-        onRecvRespondInt(int_id, errcode, js_result);
+        onRecvRespondInt(int_id, response);
 
         //! 最后要将map中的记录删除
         str_to_int_map_.erase(iter);
@@ -273,10 +267,14 @@ void Rpc::onRecvRespondStr(const std::string &str_id, int errcode, const Json &j
 
 void Rpc::onRequestTimeout(int int_id)
 {
+    Response response;
+    response.error.code = ErrorCode::kRequestTimeout;
+    response.error.message = "request timeout";
+
     auto iter = request_callback_.find(int_id);
     if (iter != request_callback_.end()) {
         if (iter->second)
-            iter->second(ErrorCode::kRequestTimeout, Json());
+            iter->second(response);
         request_callback_.erase(iter);
 
         //! 如果是string类的，还要将map中的记录删除

@@ -25,6 +25,7 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
+	types.h \
 	proto.h \
 	protos/raw_stream_proto.h \
 	protos/header_stream_proto.h \
