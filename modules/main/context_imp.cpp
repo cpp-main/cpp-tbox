@@ -115,6 +115,7 @@ bool ContextImp::initialize(const char* proc_name, const Json &cfg, Module *modu
 {
     TBOX_ASSERT(module != nullptr);
     module_ = module;
+    js_conf_ = &cfg;
 
     if (util::json::HasObjectField(cfg, "loop")) {
         auto &js_loop = cfg["loop"];
@@ -344,8 +345,9 @@ void ContextImp::initShell()
                     util::string::Replace(txt, "\n", "\r\n");
                     s.send(txt);
                     (void)args;
-                }
-            , "print Loop's stat data");
+                },
+                "print Loop's stat data"
+            );
             wp_nodes->mountNode(loop_stat_node, loop_stat_print_node, "print");
 
             auto loop_stat_reset_node = wp_nodes->createFuncNode(
@@ -355,8 +357,9 @@ void ContextImp::initShell()
                     ss << "done\r\n";
                     s.send(ss.str());
                     (void)args;
-                }
-            , "reset Loop's stat data");
+                },
+                "reset Loop's stat data"
+            );
             wp_nodes->mountNode(loop_stat_node, loop_stat_reset_node, "reset");
 
             {
@@ -365,8 +368,9 @@ void ContextImp::initShell()
                         s.send(ToString(running_time()));
                         s.send("\r\n");
                         (void)args;
-                    }
-                , "Print running times");
+                    },
+                    "Print running times"
+                );
                 wp_nodes->mountNode(ctx_node, func_node, "running_time");
             }
         }
@@ -387,8 +391,9 @@ void ContextImp::initShell()
 
                     s.send(ss.str());
                     (void)args;
-                }
-            , "Print start time point");
+                },
+                "Print start time point"
+            );
             wp_nodes->mountNode(ctx_node, func_node, "start_time");
         }
 
@@ -414,8 +419,9 @@ void ContextImp::initShell()
                     oss << "undo_task_peak_num: " << snapshot.undo_task_peak_num << "\r\n";
                     s.send(oss.str());
                     (void)args;
-                }
-            , "Print thread pool's snapshot");
+                },
+                "Print thread pool's snapshot"
+            );
             wp_nodes->mountNode(threadpool_node, func_node, "snapshot");
         }
     }
@@ -433,8 +439,9 @@ void ContextImp::initShell()
                     ss << 'v' << major << '.' << minor << '.' << rev << '_' << build << "\r\n";
                     s.send(ss.str());
                     (void)args;
-                }
-            , "Print app version");
+                },
+                "Print app version"
+            );
             wp_nodes->mountNode(info_node, func_node, "app_ver");
         }
         {
@@ -446,8 +453,9 @@ void ContextImp::initShell()
                     ss << 'v' << major << '.' << minor << '.' << rev << "\r\n";
                     s.send(ss.str());
                     (void)args;
-                }
-            , "Print tbox version");
+                },
+                "Print tbox version"
+            );
             wp_nodes->mountNode(info_node, func_node, "tbox_ver");
         }
         {
@@ -457,8 +465,9 @@ void ContextImp::initShell()
                     ss << GetAppBuildTime() << "\r\n";
                     s.send(ss.str());
                     (void)args;
-                }
-            , "Print buildtime");
+                },
+                "Print buildtime"
+            );
             wp_nodes->mountNode(info_node, func_node, "build_time");
         }
         {
@@ -468,27 +477,34 @@ void ContextImp::initShell()
                     ss << GetAppDescribe() << "\r\n";
                     s.send(ss.str());
                     (void)args;
-                }
-            , "Print app describe");
+                },
+                "Print app describe"
+            );
             wp_nodes->mountNode(info_node, func_node, "what");
         }
     }
 
     {
-        auto apps_node = wp_nodes->createDirNode("Applications directory");
-        wp_nodes->mountNode(wp_nodes->rootNode(), apps_node, "apps");
-
+        auto dump_node = wp_nodes->createDirNode("dump directory");
+        wp_nodes->mountNode(wp_nodes->rootNode(), dump_node, "dump");
         auto func_node = wp_nodes->createFuncNode(
-            [this] (const Session &s, const Args &) {
+            [this] (const Session &s, const Args &a) {
                 Json js;
-                module_->toJson(js);
+                if (util::string::IsEndWith(a[0], "apps")) {
+                    module_->toJson(js);
+                } else if (util::string::IsEndWith(a[0], "conf")){
+                    js = *js_conf_;
+                }
                 auto json_str = js.dump(2);
                 util::string::Replace(json_str, "\n", "\r\n");
                 s.send(json_str);
                 s.send("\r\n");
-            }
-            , "Dump apps as JSON");
-        wp_nodes->mountNode(apps_node, func_node, "dump");
+            },
+            "Dump as JSON"
+        );
+
+        wp_nodes->mountNode(dump_node, func_node, "apps");
+        wp_nodes->mountNode(dump_node, func_node, "conf");
     }
 }
 
