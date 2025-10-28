@@ -81,7 +81,7 @@ void GetAppVersion(int &major, int &minor, int &rev, int &build)
     major = minor = rev = build = 0;
 }
 
-__attribute__((weak)) void FillDefaultConfig(Json &) { }
+__attribute__((weak)) void FillAppDefaultConfig(Json &) { }
 
 __attribute__((weak)) void OnAbnormalExit() { }
 
