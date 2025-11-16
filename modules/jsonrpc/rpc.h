@@ -89,6 +89,9 @@ class Rpc {
     //! 设置string id生成函数，默认为UUIDv4
     void setStrIdGenFunc(StrIdGenFunc &&func);
 
+    //! 清除缓存数据，恢复到没有收发数据之前的状态
+    void clear();
+
   protected:
     void onRecvRequestInt(int int_id, const std::string &method, const Json &params);
     void onRecvRespondInt(int int_id, const Response &response);

@@ -199,6 +199,17 @@ void Rpc::setStrIdGenFunc(StrIdGenFunc &&func)
     }
 }
 
+void Rpc::clear()
+{
+    int_id_alloc_ = 0;
+    request_callback_.clear();
+    tobe_respond_.clear();
+    request_timeout_.clear();
+    respond_timeout_.clear();
+    int_to_str_map_.clear();
+    str_to_int_map_.clear();
+}
+
 void Rpc::onRecvRequestInt(int int_id, const std::string &method, const Json &js_params)
 {
     RECORD_SCOPE();

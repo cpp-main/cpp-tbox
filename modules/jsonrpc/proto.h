@@ -36,6 +36,8 @@ class Proto {
     using RecvRespondStrCallback = std::function<void(const std::string &id, const Response &response)>;
     using SendDataCallback = std::function<void(const void* data_ptr, size_t data_size)>;
 
+    virtual ~Proto() {}
+
     void setRecvCallback(RecvRequestIntCallback &&req_cb, RecvRespondIntCallback &&rsp_cb);
     void setRecvCallback(RecvRequestStrCallback &&req_cb, RecvRespondStrCallback &&rsp_cb);
     void setSendCallback(SendDataCallback &&cb);

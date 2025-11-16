@@ -205,5 +205,41 @@ TEST(RpcInt, RequestTimeout) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
+//! 发了一个请求，在回复之前被clear
+TEST(RpcInt, Clear) {
+    auto loop = event::Loop::New();
+    auto timer = loop->newTimerEvent();
+    SetScopeExitAction(
+      [=] {
+        delete loop;
+        delete timer;
+      }
+    );
+
+    timer->initialize(std::chrono::milliseconds(50), event::Event::Mode::kOneshot);
+
+    Rpc rpc(loop);
+    RawStreamProto proto;
+    rpc.initialize(&proto, 1);
+
+    timer->setCallback([&] { rpc.clear(); });
+    timer->enable();
+
+    bool is_method_cb_invoke = false;
+    loop->run(
+        [&] {
+            rpc.request("A", Json(),
+                [&] (const Response &r) {
+                    is_method_cb_invoke = true;
+                }
+            );
+        }
+    );
+    loop->exitLoop(std::chrono::milliseconds(1001));
+    loop->runLoop();
+
+    EXPECT_FALSE(is_method_cb_invoke);
+}
+
 }
 }
