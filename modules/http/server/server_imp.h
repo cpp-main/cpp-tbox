@@ -63,7 +63,6 @@ class Server::Impl {
   private:
 
     void onTcpConnected(const TcpServer::ConnToken &ct);
-    void onTcpDisconnected(const TcpServer::ConnToken &ct);
     void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
     void onTcpSendCompleted(const TcpServer::ConnToken &ct);
 
@@ -85,7 +84,6 @@ class Server::Impl {
 
     TcpServer tcp_server_;
     vector<RequestHandler> req_handler_;
-    set<Connection*> conns_;    //! 仅用于保存Connection指针，用于释放
     State state_ = State::kNone;
     bool context_log_enable_ = false;
 

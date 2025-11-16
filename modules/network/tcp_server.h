@@ -94,6 +94,9 @@ class TcpServer {
 
     State state() const;
 
+    //! 分离指定的连接，用于实现WebSocket
+    TcpConnection* detachConnection(const ConnToken &client);
+
   protected:
     void onTcpConnected(TcpConnection *new_conn);
     void onTcpDisconnected(const ConnToken &client);

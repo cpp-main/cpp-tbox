@@ -52,7 +52,6 @@ bool Server::Impl::initialize(const network::SockAddr &bind_addr, int listen_bac
         return false;
 
     tcp_server_.setConnectedCallback(bind(&Impl::onTcpConnected, this, _1));
-    tcp_server_.setDisconnectedCallback(bind(&Impl::onTcpDisconnected, this, _1));
     tcp_server_.setReceiveCallback(bind(&Impl::onTcpReceived, this, _1, _2), 0);
     tcp_server_.setSendCompleteCallback(bind(&Impl::onTcpSendCompleted, this, _1));
 
@@ -85,10 +84,6 @@ void Server::Impl::cleanup()
         req_handler_.clear();
         tcp_server_.cleanup();
 
-        for (auto conn : conns_)
-            delete conn;
-        conns_.clear();
-
         state_ = State::kNone;
     }
 }
@@ -107,18 +102,12 @@ void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 {
     RECORD_SCOPE();
     auto conn = new Connection;
-    tcp_server_.setContext(ct, conn);
-    conns_.insert(conn);
-}
-
-void Server::Impl::onTcpDisconnected(const TcpServer::ConnToken &ct)
-{
-    RECORD_SCOPE();
-    Connection *conn = static_cast<Connection*>(tcp_server_.getContext(ct));
-    TBOX_ASSERT(conn != nullptr);
-
-    conns_.erase(conn);
-    delete conn;
+    tcp_server_.setContext(ct, conn,
+        [](void* ptr) {
+            auto conn = static_cast<Connection*>(ptr);
+            CHECK_DELETE_OBJ(conn);
+        }
+    );
 }
 
 namespace {
@@ -180,8 +169,6 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
         } else if (conn->req_parser.state() == RequestParser::State::kFail) {
             LogNotice("parse http from %s fail", tcp_server_.getClientAddress(ct).toString().c_str());
             tcp_server_.disconnect(ct);
-            conns_.erase(conn);
-            delete conn;
             break;
 
         } else {
@@ -200,11 +187,8 @@ void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
     TBOX_ASSERT(conn != nullptr);
 
     //! 如果最后一个已完成发送，则断开连接
-    if (conn->res_index > conn->close_index) {
+    if (conn->res_index > conn->close_index)
         tcp_server_.disconnect(ct);
-        conns_.erase(conn);
-        delete conn;
-    }
 }
 
 /**
