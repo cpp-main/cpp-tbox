@@ -57,6 +57,7 @@ class TimeoutMonitor {
     void setCallback(const Callback &cb) { cb_ = cb; }
 
     void add(const T &value);
+    void clear();
 
     void cleanup();
 

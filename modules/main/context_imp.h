@@ -79,7 +79,8 @@ class ContextImp : public Context {
 
     std::chrono::steady_clock::time_point start_time_point_;
 
-    Module *module_ = nullptr;
+    const Module *module_ = nullptr;
+    const Json *js_conf_ = nullptr;
 };
 
 }

@@ -45,6 +45,7 @@ extern void UninstallErrorSignals();
 extern void InstallTerminate();
 
 extern void RegisterApps(Module &root, Context &ctx);
+extern void FillAppDefaultConfig(Json &js_conf);
 
 extern void SayHi();
 extern void SayBye();
@@ -116,6 +117,8 @@ int Main(int argc, char **argv)
     log.fillDefaultConfig(js_conf);
     ctx.fillDefaultConfig(js_conf);
     trace.fillDefaultConfig(js_conf);
+
+    FillAppDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
     if (!args.parse(argc, argv))

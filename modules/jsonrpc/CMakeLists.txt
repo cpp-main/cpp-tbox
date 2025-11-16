@@ -72,7 +72,7 @@ install(
 
 # install header file
 install(
-    FILES proto.h rpc.h
+    FILES types.h proto.h rpc.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/jsonrpc
 )
 

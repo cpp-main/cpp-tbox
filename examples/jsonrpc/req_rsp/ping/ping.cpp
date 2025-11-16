@@ -45,11 +45,11 @@ using namespace tbox;
 
 int main(int argc, char **argv)
 {
-    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    jsonrpc::IdType id_type = jsonrpc::IdType::kInt;
     if (argc >= 2) {
         std::string type_str(argv[1]);
         if (type_str == "str") {
-            id_type = jsonrpc::Rpc::IdType::kString;
+            id_type = jsonrpc::IdType::kString;
         } else if (type_str != "int") {
             std::cout << "id_type invalid!" << std::endl
                 << "Usage: " << argv[0] << " int|str" << std::endl;
@@ -111,14 +111,15 @@ int main(int argc, char **argv)
 
         //! 发送ping请求，并在收到回复后，进行下一个ping动作
         rpc.request("ping", js_params,
-            [&] (int errcode, const Json &js_result) {
-                int pong_count = 0;
-                util::json::GetField(js_result, "count", pong_count);
-                if (errcode == 0) {
+            [&] (const tbox::jsonrpc::Response &r) {
+                if (r.error.code == 0) {
+                    int pong_count = 0;
+                    util::json::GetField(r.js_result, "count", pong_count);
                     LogDbg("got pong: %d", pong_count);
                     send_ping();
-                } else
-                    LogNotice("got erro: %d", errcode);
+                } else {
+                    LogNotice("got erro: %d", r.error.code);
+                }
             });
         LogDbg("send ping: %d", ping_count);
     };

@@ -72,6 +72,11 @@ int SequenceAction::addChild(Action *child) {
 }
 
 bool SequenceAction::isReady() const {
+    if (children_.empty()) {
+        LogWarn("%d:%s[%s], no child, not ready");
+        return false;
+    }
+
     for (auto child : children_) {
         if (!child->isReady())
             return false;

@@ -45,6 +45,7 @@ extern void UninstallErrorSignals();
 extern void InstallTerminate();
 
 extern void RegisterApps(Module &root, Context &ctx);
+extern void FillAppDefaultConfig(Json &js_conf);
 
 extern void SayHi();
 extern void SayBye();
@@ -56,6 +57,7 @@ struct Runtime {
     Log log;
     ContextImp ctx;
     Module apps;
+    Json js_conf;
 
     util::PidFile pid_file;
     int exit_wait_sec = 1;
@@ -124,14 +126,16 @@ bool Start(int argc, char **argv)
     auto &log = _runtime->log;
     auto &ctx = _runtime->ctx;
     auto &apps = _runtime->apps;
+    auto &js_conf = _runtime->js_conf;
 
-    Json js_conf;
     Args args(js_conf);
     Trace trace;
 
     log.fillDefaultConfig(js_conf);
     ctx.fillDefaultConfig(js_conf);
     trace.fillDefaultConfig(js_conf);
+
+    FillAppDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
     if (!args.parse(argc, argv))

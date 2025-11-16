@@ -27,6 +27,8 @@
 #include <tbox/event/forward.h>
 #include <tbox/eventx/timeout_monitor.hpp>
 
+#include "types.h"
+
 namespace tbox {
 namespace jsonrpc {
 
@@ -34,16 +36,13 @@ class Proto;
 
 class Rpc {
   public:
-    //! id 类型：整数、字串
-    enum class IdType { kInt, kString };
-
     /**
      * 收到对端回复的回调函数
      *
      * \param   errcode     错误码，= 0 表示没有错误
      * \param   js_result   回复的结果
      */
-    using RequestCallback = std::function<void(int errcode, const Json &js_result)>;
+    using RequestCallback = std::function<void(const Response &)>;
 
     /**
      * 收到对端请求时的回调函数
@@ -51,13 +50,12 @@ class Rpc {
      * \param   int_id      请求的id（用于异步回复使用）
      *                      如果是string类的id，那么可用getStrId()获取真实字串ID
      * \param   js_params   请求的参数
-     * \param   errcode     将要回复的错误码，= 0 表示没有错误（仅同步回复有效）
-     * \param   js_result   将要回复的结果，只有在 errcode == 0 时才会有效（仅同步回复有效）
+     * \param   response    将要回复的数据，见Response定义
      *
      * \return  true        同步回复：在函数返回后自动回复，根据errcode与js_result进行回复
      * \return  false       异步回复：不在函数返回后自动回复，而是在稍候通过调respond()进行回复
      */
-    using ServiceCallback = std::function<bool(int int_id, const Json &js_params, int &errcode, Json &js_result)>;
+    using ServiceCallback = std::function<bool(int int_id, const Json &js_params, Response &response)>;
 
     //! 生成std::string类型ID的函数
     using StrIdGenFunc = std::function<std::string()>;
@@ -79,10 +77,9 @@ class Rpc {
     void notify(const std::string &method, const Json &js_params);
     void notify(const std::string &method);
 
-    //! 发送异步回复
-    void respond(int int_id, int errcode, const Json &js_result);
+    //! 异步回复
     void respondResult(int int_id, const Json &js_result);
-    void respondError(int int_id, int errcode);
+    void respondError(int int_id, int errcode, const std::string &message = "");
 
     //! 仅在IdType::kString时有效的函数
 
@@ -92,11 +89,14 @@ class Rpc {
     //! 设置string id生成函数，默认为UUIDv4
     void setStrIdGenFunc(StrIdGenFunc &&func);
 
+    //! 清除缓存数据，恢复到没有收发数据之前的状态
+    void clear();
+
   protected:
     void onRecvRequestInt(int int_id, const std::string &method, const Json &params);
-    void onRecvRespondInt(int int_id, int errcode, const Json &result);
+    void onRecvRespondInt(int int_id, const Response &response);
     void onRecvRequestStr(const std::string &str_id, const std::string &method, const Json &params);
-    void onRecvRespondStr(const std::string &str_id, int errcode, const Json &result);
+    void onRecvRespondStr(const std::string &str_id, const Response &response);
 
     void onRequestTimeout(int int_id);
     void onRespondTimeout(int int_id);

@@ -77,6 +77,16 @@ struct ParseJsonFileError : public std::runtime_error {
         std::runtime_error("parse json file " + filename + " fail, detail:" + detail) { }
 };
 
+/// 解析JSON字串
+/**
+ * \param text    JSON字串
+ * \param js      JSON对象
+ *
+ * \return true   成功
+ * \return false  失败
+ */
+bool Parse(const std::string &text, Json &js) noexcept;
+
 /// 加载JSON文件
 /**
  * \param filename  JSON文件名

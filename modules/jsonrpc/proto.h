@@ -23,16 +23,20 @@
 #include <functional>
 #include <tbox/base/json_fwd.h>
 
+#include "types.h"
+
 namespace tbox {
 namespace jsonrpc {
 
 class Proto {
   public:
     using RecvRequestIntCallback = std::function<void(int id, const std::string &method, const Json &params)>;
-    using RecvRespondIntCallback = std::function<void(int id, int errcode, const Json &result)>;
+    using RecvRespondIntCallback = std::function<void(int id, const Response &response)>;
     using RecvRequestStrCallback = std::function<void(const std::string &id, const std::string &method, const Json &params)>;
-    using RecvRespondStrCallback = std::function<void(const std::string &id, int errcode, const Json &result)>;
+    using RecvRespondStrCallback = std::function<void(const std::string &id, const Response &response)>;
     using SendDataCallback = std::function<void(const void* data_ptr, size_t data_size)>;
+
+    virtual ~Proto() {}
 
     void setRecvCallback(RecvRequestIntCallback &&req_cb, RecvRespondIntCallback &&rsp_cb);
     void setRecvCallback(RecvRequestStrCallback &&req_cb, RecvRespondStrCallback &&rsp_cb);
@@ -46,12 +50,12 @@ class Proto {
     void sendRequest(int id, const std::string &method);
     void sendRequest(int id, const std::string &method, const Json &js_params);
     void sendResult(int id, const Json &js_result);
-    void sendError(int id, int errcode, const std::string &message = "");
+    void sendError(int id, int errcode, const std::string &message);
 
     void sendRequest(const std::string &id, const std::string &method);
     void sendRequest(const std::string &id, const std::string &method, const Json &js_params);
     void sendResult(const std::string &id, const Json &js_result);
-    void sendError(const std::string &id, int errcode, const std::string &message = "");
+    void sendError(const std::string &id, int errcode, const std::string &message);
 
   public:
     /**
@@ -60,8 +64,6 @@ class Proto {
     virtual ssize_t onRecvData(const void *data_ptr, size_t data_size) = 0;
 
   protected:
-    enum class IdType { kNone, kInt, kString };
-
     virtual void sendJson(const Json &js) = 0;
 
     void onRecvJson(const Json &js) const;

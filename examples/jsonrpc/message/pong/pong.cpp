@@ -42,11 +42,11 @@ using namespace tbox;
 
 int main(int argc, char **argv)
 {
-    jsonrpc::Rpc::IdType id_type = jsonrpc::Rpc::IdType::kInt;
+    jsonrpc::IdType id_type = jsonrpc::IdType::kInt;
     if (argc >= 2) {
         std::string type_str(argv[1]);
         if (type_str == "str") {
-            id_type = jsonrpc::Rpc::IdType::kString;
+            id_type = jsonrpc::IdType::kString;
         } else if (type_str != "int") {
             std::cout << "id_type invalid!" << std::endl
                 << "Usage: " << argv[0] << " int|str" << std::endl;
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     tcp_server.start(); //! 启动tcp服务
 
     //! 注册ping的服务处理函数
-    rpc.addService("ping", [&] (int id, const Json &js_params, int &, Json &) {
+    rpc.addService("ping", [&] (int id, const Json &js_params, tbox::jsonrpc::Response &) {
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
         LogDbg("id: %d, got ping_count: %d", id, ping_count);

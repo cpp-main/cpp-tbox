@@ -74,14 +74,30 @@ void TimeoutMonitor<T>::add(const T &value)
 }
 
 template <typename T>
+void TimeoutMonitor<T>::clear()
+{
+    if (value_number_ > 0) {
+        value_number_ = 0;
+        sp_timer_->disable();
+
+        PollItem *item = curr_item_;
+        do {
+            item->items.clear();
+            item = item->next;
+        } while (item != curr_item_);
+    }
+}
+
+template <typename T>
 void TimeoutMonitor<T>::cleanup()
 {
     if (curr_item_ == nullptr)
         return;
 
-    if (value_number_ > 0)
+    if (value_number_ > 0) {
         sp_timer_->disable();
-    value_number_ = 0;
+        value_number_ = 0;
+    }
 
     PollItem *item = curr_item_->next;
     curr_item_->next = nullptr;

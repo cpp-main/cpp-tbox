@@ -71,7 +71,10 @@ modules 3rd-party:
 test: modules
 	$(MAKE) -C modules test
 
-tools examples: modules
+examples: modules
+	$(MAKE) -C $@
+
+tools:
 	$(MAKE) -C $@
 
 run_test : test

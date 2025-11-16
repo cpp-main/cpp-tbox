@@ -55,6 +55,39 @@ TEST(TimeoutMonitor, Basic)
     EXPECT_TRUE(run);
 }
 
+//! 测试中途clear()的操作，观察有没有被误触发
+TEST(TimeoutMonitor, Clear)
+{
+    auto sp_loop = Loop::New();
+    auto sp_timer = sp_loop->newTimerEvent();
+    SetScopeExitAction(
+      [=] {
+        delete sp_loop;
+        delete sp_timer;
+      }
+    );
+    sp_timer->initialize(std::chrono::milliseconds(25), Event::Mode::kOneshot);
+
+    TimeoutMonitor<int> tm(sp_loop);
+    tm.initialize(milliseconds(10), 3);
+
+    sp_timer->setCallback([&] { tm.clear(); });
+    sp_timer->enable();
+
+    bool run = false;
+    tm.setCallback([&] (int value) {
+        run = true;
+    });
+
+    tm.add(100);
+    tm.add(101);
+
+    sp_loop->exitLoop(milliseconds(120));
+    sp_loop->runLoop();
+
+    EXPECT_FALSE(run);
+}
+
 }
 }
 }

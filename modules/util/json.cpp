@@ -22,6 +22,7 @@
 #include <fstream>
 
 #include <tbox/base/json.hpp>
+#include <tbox/base/catch_throw.h>
 #include <tbox/base/assert.h>
 
 namespace tbox {
@@ -164,6 +165,13 @@ bool HasStringField(const Json &js, const std::string &field_name)
         return false;
     auto &js_field = js.at(field_name);
     return js_field.is_string();
+}
+
+bool Parse(const std::string &text, Json &js) noexcept
+{
+    return !CatchThrow([&] {
+        js = Json::parse(text);
+    });
 }
 
 Json Load(const std::string &filename)

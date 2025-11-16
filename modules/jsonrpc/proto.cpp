@@ -229,7 +229,8 @@ void Proto::handleAsResult(const Json &js) const
         return;
     }
 
-    auto &js_result = js["result"];
+    Response response;
+    response.js_result = std::move(js["result"]);
 
     if (id_type_ == IdType::kInt) {
         int id = 0;
@@ -237,7 +238,7 @@ void Proto::handleAsResult(const Json &js) const
             LogNotice("id type not int in respond");
             return;
         }
-        recv_respond_int_cb_(id, 0, js_result);
+        recv_respond_int_cb_(id, response);
 
     } else if (id_type_ == IdType::kString) {
         std::string id;
@@ -245,7 +246,7 @@ void Proto::handleAsResult(const Json &js) const
             LogNotice("id type not string in respond");
             return;
         }
-        recv_respond_str_cb_(id, 0, js_result);
+        recv_respond_str_cb_(id, response);
 
     } else {
         LogWarn("please invoke setRecvCallback() first.");
@@ -254,12 +255,14 @@ void Proto::handleAsResult(const Json &js) const
 
 void Proto::handleAsError(const Json &js) const
 {
+    Response response;
+
     auto &js_error = js["error"];
-    int errcode = 0;
-    if (!util::json::GetField(js_error, "code", errcode)) {
+    if (!util::json::GetField(js_error, "code", response.error.code)) {
         LogNotice("no code field in error");
         return;
     }
+    util::json::GetField(js_error, "message", response.error.message);
 
     if (id_type_ == IdType::kInt) {
         int id = 0;
@@ -267,7 +270,7 @@ void Proto::handleAsError(const Json &js) const
             LogNotice("id type not int in error");
             return;
         }
-        recv_respond_int_cb_(id, errcode, Json());
+        recv_respond_int_cb_(id, response);
 
     } else if (id_type_ == IdType::kString) {
         std::string id;
@@ -275,7 +278,7 @@ void Proto::handleAsError(const Json &js) const
             LogNotice("id type not string in error");
             return;
         }
-        recv_respond_str_cb_(id, errcode, Json());
+        recv_respond_str_cb_(id, response);
 
     } else {
         LogWarn("please invoke setRecvCallback() first.");
