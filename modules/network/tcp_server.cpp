@@ -225,6 +225,17 @@ TcpServer::State TcpServer::state() const
     return d_->state;
 }
 
+TcpConnection* TcpServer::detachConnection(const ConnToken &client)
+{
+    auto conn = d_->conns.free(client);
+    if (conn != nullptr) {
+        conn->setReceiveCallback(nullptr, 0);
+        conn->setDisconnectedCallback(nullptr);
+        conn->setSendCompleteCallback(nullptr);
+    }
+    return conn;
+}
+
 void TcpServer::onTcpConnected(TcpConnection *new_conn)
 {
     RECORD_SCOPE();

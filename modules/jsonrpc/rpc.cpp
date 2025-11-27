@@ -92,6 +92,11 @@ void Rpc::addService(const std::string &method, ServiceCallback &&cb)
     method_services_[method] = std::move(cb);
 }
 
+void Rpc::removeService(const std::string &method)
+{
+    method_services_.erase(method);
+}
+
 void Rpc::request(const std::string &method, const Json &js_params, RequestCallback &&cb)
 {
     RECORD_SCOPE();

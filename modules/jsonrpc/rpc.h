@@ -69,6 +69,8 @@ class Rpc {
 
     //! 添加方法被调用时的回调函数
     void addService(const std::string &method, ServiceCallback &&cb);
+    //! 删除方法
+    void removeService(const std::string &method);
 
     //! 发送请求（需要回复的）
     void request(const std::string &method, const Json &js_params, RequestCallback &&cb);
