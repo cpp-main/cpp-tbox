@@ -144,6 +144,7 @@ void ArgsParser::printHelp(const std::string &proc_name)
         << "  -s KEY=VALUE      set config field" << endl
         << "  -p                display config" << endl
         << "  -n                don't run" << endl
+        << "  --args            start application's arguments" << endl
         << endl
         << "EXAMPLE" << endl
         << "  " << proc_name << endl
@@ -153,6 +154,7 @@ void ArgsParser::printHelp(const std::string &proc_name)
         << "  " << proc_name << R"( -s 'log.filelog.enable=true' -s 'log.filelog.path="/tmp/"')" << endl
         << "  " << proc_name << R"( -s 'log.filelog={"enable":true,"path":"/tmp/"}')" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -s 'thread_pool.min=2')" << endl
+        << "  " << proc_name << R"( -c xxx.json --args abc 123)" << endl
         << endl;
 }
 
