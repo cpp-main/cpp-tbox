@@ -111,11 +111,12 @@ void ContextImp::fillDefaultConfig(Json &cfg) const
     cfg["thread_pool"] = R"({"min":0, "max":1})"_json;
 }
 
-bool ContextImp::initialize(const char* proc_name, const Json &cfg, Module *module)
+bool ContextImp::initialize(const char* proc_name, const Json &cfg, const Args &args, Module *module)
 {
     TBOX_ASSERT(module != nullptr);
     module_ = module;
     js_conf_ = &cfg;
+    wp_args_ = &args;
 
     if (util::json::HasObjectField(cfg, "loop")) {
         auto &js_loop = cfg["loop"];
@@ -484,9 +485,9 @@ void ContextImp::initShell()
         }
     }
 
+    auto dump_node = wp_nodes->createDirNode("dump directory");
+    wp_nodes->mountNode(wp_nodes->rootNode(), dump_node, "dump");
     {
-        auto dump_node = wp_nodes->createDirNode("dump directory");
-        wp_nodes->mountNode(wp_nodes->rootNode(), dump_node, "dump");
         auto func_node = wp_nodes->createFuncNode(
             [this] (const Session &s, const Args &a) {
                 Json js;
@@ -505,6 +506,21 @@ void ContextImp::initShell()
 
         wp_nodes->mountNode(dump_node, func_node, "apps");
         wp_nodes->mountNode(dump_node, func_node, "conf");
+    }
+    {
+        auto func_node = wp_nodes->createFuncNode(
+            [this] (const Session &s, const Args &) {
+                std::ostringstream oss;
+                auto &args = *wp_args_;
+                for (size_t i = 0; i < args.size(); ++i)
+                    oss << '[' << i << "]:" << args.at(i) << "\r\n";
+                oss << "\r\n";
+                s.send(oss.str());
+            },
+            "Dump args"
+        );
+
+        wp_nodes->mountNode(dump_node, func_node, "args");
     }
 }
 
