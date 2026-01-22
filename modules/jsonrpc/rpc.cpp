@@ -25,7 +25,6 @@
 #include <tbox/util/uuid.h>
 
 #include "proto.h"
-#include "inner_types.h"
 
 namespace tbox {
 namespace jsonrpc {
@@ -237,7 +236,8 @@ void Rpc::onRecvRequestInt(int int_id, const std::string &method, const Json &js
             iter->second(int_id, js_params, response);
         }
     } else {
-        respondError(int_id, ErrorCode::kMethodNotFound, "method not found");
+        if (int_id != 0)
+            respondError(int_id, ErrorCode::kMethodNotFound, "method not found");
     }
 }
 
