@@ -110,8 +110,8 @@ include(GNUInstallDirs)
 #
 # Compiler args
 #
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Werror -Wno-missing-field-initializers)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)

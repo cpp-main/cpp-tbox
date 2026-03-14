@@ -29,8 +29,8 @@ export INSTALL_LIB := $(INSTALL_DIR)/lib
 
 CCFLAGS := -I$(STAGING_INCLUDE)
 
-export CFLAGS := $(CCFLAGS) -std=c99
-export CXXFLAGS := $(CCFLAGS) -std=c++11
+export CFLAGS := $(CCFLAGS) -std=c17
+export CXXFLAGS := $(CCFLAGS) -std=c++17
 export LDFLAGS := -L$(STAGING_LIB) -L$(INSTALL_LIB)
 
 export AR := $(TOOLCHAIN_BIN_PREFIX)ar

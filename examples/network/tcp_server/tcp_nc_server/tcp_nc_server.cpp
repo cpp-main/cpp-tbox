@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     //! 定义TcpServer::Client的less函数子，以实现set<T>容器
     struct ClientLess {
         bool operator () (const TcpServer::ConnToken &lhs,
-                          const TcpServer::ConnToken &rhs) {
+                          const TcpServer::ConnToken &rhs) const {
             return lhs.less(rhs);
         }
     };

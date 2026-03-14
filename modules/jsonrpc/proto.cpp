@@ -230,7 +230,7 @@ void Proto::handleAsResult(const Json &js) const
     }
 
     Response response;
-    response.js_result = std::move(js["result"]);
+    response.js_result = js["result"];
 
     if (id_type_ == IdType::kInt) {
         int id = 0;

@@ -22,11 +22,19 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/timer_event.h>
 #include <algorithm>
+#include <random>
 
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
 using namespace tbox::coroutine;
+
+template<typename T>
+void random_shuffle_vector(std::vector<T>& vec) {
+    static std::random_device rd;
+    static std::mt19937 g(rd());
+    std::shuffle(vec.begin(), vec.end(), g);
+}
 
 /**
  * 生产者 -- 消费者测试
@@ -46,7 +54,7 @@ TEST(Channel, TwoRoutines_ProduceAndConsumer)
     int times = 200;
     for (int i = 0; i < times; ++i)
         send_vec.push_back(i);
-    random_shuffle(send_vec.begin(), send_vec.end());
+    random_shuffle_vector(send_vec);
 
     //! 生产者，将 send_vec 中的数据逐一发送到 ch
     auto routine1_entry = [&] (Scheduler &sch) {
@@ -98,7 +106,7 @@ TEST(Channel, ThreeRoutines_OneProduceAndTwoConsumer)
     int times = 200;
     for (int i = 0; i < times; ++i)
         send_vec.push_back(i);
-    random_shuffle(send_vec.begin(), send_vec.end());
+    random_shuffle_vector(send_vec);
 
     //! 生产者，将 send_vec 中的数据逐一发送到 ch
     auto routine1_entry = [&] (Scheduler &sch) {
@@ -153,7 +161,7 @@ TEST(Channel, TimerProduceAndConsumer)
     int times = 10;
     for (int i = 0; i < times; ++i)
         send_vec.push_back(i);
-    random_shuffle(send_vec.begin(), send_vec.end());
+    random_shuffle_vector(send_vec);
 
     size_t index = 0;
     auto timer = sp_loop->newTimerEvent();

@@ -76,6 +76,7 @@ TEST(TimeoutMonitor, Clear)
 
     bool run = false;
     tm.setCallback([&] (int value) {
+        (void) value;
         run = true;
     });
 
