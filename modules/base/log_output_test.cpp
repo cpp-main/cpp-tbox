@@ -49,7 +49,7 @@ TEST(Log, Format)
 TEST(Log, LogPuts)
 {
     LogOutput_Enable();
-    LogPuts(LOG_LEVEL_INFO, "should be raw: %s, %d, %f");
+    LogPuts(TBOX_LOG_LEVEL_INFO, "should be raw: %s, %d, %f");
     LogOutput_Disable();
 }
 

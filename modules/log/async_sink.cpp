@@ -97,13 +97,13 @@ void AsyncSink::onLogBackEnd(const LogContent &content)
 
     //! 开启色彩，显示日志等级
     if (enable_color_) {
-        len = snprintf(buff, sizeof(buff), "\033[%sm", LOG_LEVEL_COLOR_CODE[content.level]);
+        len = snprintf(buff, sizeof(buff), "\033[%sm", TBOX_LOG_LEVEL_COLOR_CODE[content.level]);
         append(buff, len);
     }
 
     //! 打印等级、时间戳、线程号、模块名
     len = snprintf(buff, sizeof(buff), "%c %s.%06u %ld %s ",
-            LOG_LEVEL_LEVEL_CODE[content.level],
+            TBOX_LOG_LEVEL_LEVEL_CODE[content.level],
             timestamp_str_, content.timestamp.usec,
             content.thread_id, content.module_id);
     append(buff, len);

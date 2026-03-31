@@ -49,7 +49,7 @@ TEST(AsyncSyslogSink, TraceLevel)
 {
     AsyncSyslogSink ch;
     ch.enable();
-    ch.setLevel("test.log", LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", TBOX_LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
 
     LogFatal("fatal");

@@ -47,7 +47,7 @@ TEST(SyncStdoutSink, TraceLevel)
 {
     SyncStdoutSink ch;
     ch.enable();
-    ch.setLevel("test.log", LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", TBOX_LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
 
     LogFatal("fatal");
@@ -67,7 +67,7 @@ TEST(SyncStdoutSink, AllLevel)
 
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel("", LOG_LEVEL_TRACE);
+    ch.setLevel("", TBOX_LOG_LEVEL_TRACE);
 
     LogFatal("fatal");
     LogErr("err");
@@ -87,7 +87,7 @@ TEST(SyncStdoutSink, NullString)
     ch.enable();
 
     LogInfo(nullptr);
-    LogPuts(LOG_LEVEL_INFO, nullptr);
+    LogPuts(TBOX_LOG_LEVEL_INFO, nullptr);
 }
 
 TEST(SyncStdoutSink, WillNotPrint)
@@ -111,7 +111,7 @@ TEST(SyncStdoutSink, EnableColor)
     SyncStdoutSink ch;
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel("test.log", LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", TBOX_LOG_LEVEL_TRACE);
     cout << "Should with color" << endl;
 
     LogFatal("fatal");

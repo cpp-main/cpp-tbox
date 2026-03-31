@@ -49,7 +49,7 @@ TEST(AsyncStdoutSink, TraceLevel)
 {
     AsyncStdoutSink ch;
     ch.enable();
-    ch.setLevel("test.log", LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", TBOX_LOG_LEVEL_TRACE);
     cout << "Should print all level" << endl;
 
     LogFatal("fatal");
@@ -71,7 +71,7 @@ TEST(AsyncStdoutSink, AllLevel)
 
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel("", LOG_LEVEL_TRACE);
+    ch.setLevel("", TBOX_LOG_LEVEL_TRACE);
 
     LogFatal("fatal");
     LogErr("err");
@@ -93,7 +93,7 @@ TEST(AsyncStdoutSink, NullString)
     ch.enable();
 
     LogInfo(nullptr);
-    LogPuts(LOG_LEVEL_INFO, nullptr);
+    LogPuts(TBOX_LOG_LEVEL_INFO, nullptr);
 
     ch.cleanup();
 }
@@ -121,7 +121,7 @@ TEST(AsyncStdoutSink, EnableColor)
     AsyncStdoutSink ch;
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel("test.log", LOG_LEVEL_TRACE);
+    ch.setLevel("test.log", TBOX_LOG_LEVEL_TRACE);
     cout << "Should with color" << endl;
 
     LogFatal("fatal");

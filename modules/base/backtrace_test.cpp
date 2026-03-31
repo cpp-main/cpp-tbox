@@ -27,7 +27,7 @@ namespace tbox {
 TEST(Backtrace, _)
 {
     LogOutput_Enable();
-    LogBacktrace(LOG_LEVEL_TRACE);
+    LogBacktrace(TBOX_LOG_LEVEL_TRACE);
     LogOutput_Disable();
 }
 
