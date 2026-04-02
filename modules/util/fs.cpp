@@ -73,10 +73,10 @@ bool ReadStringFromTextFile(const std::string &filename, std::string &content)
                                    std::istreambuf_iterator<char>());
             return true;
         } else {
-            LogWarn("open failed, %s", filename.c_str());
+            LogNotice("open failed, %s", filename.c_str());
         }
     } catch (const exception &e) {
-        LogWarn("catch exception: %s", e.what());
+        LogNotice("catch exception: %s", e.what());
     }
     return false;
 }
@@ -94,10 +94,10 @@ bool ReadEachLineFromTextFile(const std::string &filename, const std::function<v
             }
             return true;
         } else {
-            LogWarn("open failed, %s", filename.c_str());
+            LogNotice("open failed, %s", filename.c_str());
         }
     } catch (const exception &e) {
-        LogWarn("catch exception: %s", e.what());
+        LogNotice("catch exception: %s", e.what());
     }
     return false;
 }
@@ -115,10 +115,10 @@ bool ReadAllLinesFromTextFile(const std::string &filename, std::vector<std::stri
             }
             return true;
         } else {
-            LogWarn("open failed, %s", filename.c_str());
+            LogNotice("open failed, %s", filename.c_str());
         }
     } catch (const exception &e) {
-        LogWarn("catch exception: %s", e.what());
+        LogNotice("catch exception: %s", e.what());
     }
     return false;
 }
@@ -133,10 +133,10 @@ bool ReadFirstLineFromTextFile(const std::string &filename, std::string &text)
                 text.pop_back();
             return true;
         } else {
-            LogWarn("open failed, %s", filename.c_str());
+            LogNotice("open failed, %s", filename.c_str());
         }
     } catch (const exception &e) {
-        LogWarn("catch exception: %s", e.what());
+        LogNotice("catch exception: %s", e.what());
     }
     return false;
 }
@@ -181,12 +181,12 @@ bool WriteFile(const char *filename, const void *data_ptr, size_t data_size, boo
             return true;
 
         if (wsize == -1)
-            LogWarn("write errno:%d, %s", errno, strerror(errno));
+            LogNotice("write errno:%d, %s", errno, strerror(errno));
         else
-            LogWarn("wsize:%d, size:%d", wsize, data_size);
+            LogNotice("wsize:%d, size:%d", wsize, data_size);
 
     } else
-        LogWarn("open %s failed, %d, %s", filename, errno, strerror(errno));
+        LogNotice("open %s failed, %d, %s", filename, errno, strerror(errno));
 
     return false;
 }
@@ -206,12 +206,12 @@ bool AppendFile(const char *filename, const void *data_ptr, size_t data_size, bo
             return true;
 
         if (wsize == -1)
-            LogWarn("write errno:%d, %s", errno, strerror(errno));
+            LogNotice("write errno:%d, %s", errno, strerror(errno));
         else
-            LogWarn("wsize:%d, size:%d", wsize, data_size);
+            LogNotice("wsize:%d, size:%d", wsize, data_size);
 
     } else
-        LogWarn("open %s failed, %d, %s", filename, errno, strerror(errno));
+        LogNotice("open %s failed, %d, %s", filename, errno, strerror(errno));
 
     return false;
 }
@@ -223,7 +223,7 @@ bool RemoveFile(const std::string &filename, bool allow_log_print)
         return true;
 
     if (errno != ENOENT && allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+        LogNotice("errno:%d (%s)", errno, strerror(errno));
 
     return false;
 }
@@ -235,7 +235,7 @@ bool MakeSymbolLink(const std::string &old_path, const std::string &new_path, bo
         return true;
 
     if (allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+        LogNotice("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
@@ -246,7 +246,7 @@ bool MakeLink(const std::string &old_path, const std::string &new_path, bool all
         return true;
 
     if (allow_log_print)
-        LogWarn("errno:%d (%s)", errno, strerror(errno));
+        LogNotice("errno:%d (%s)", errno, strerror(errno));
     return false;
 }
 
@@ -259,7 +259,7 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
 {
     if (origin_dir_path.empty()) {
         if (allow_log_print)
-            LogWarn("origin_dir_path is empty");
+            LogNotice("origin_dir_path is empty");
         return false;
     }
 
@@ -286,18 +286,18 @@ bool MakeDirectory(const std::string &origin_dir_path, bool allow_log_print)
                 if (errno == ENOENT) {  //! 如果trimmed_dir_path指定的inode不存在，则创建目录
                     if (::mkdir(trimmed_dir_path.c_str(), 0775) != 0) {
                         if (allow_log_print)
-                            LogWarn("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                            LogNotice("mkdir(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                         return false;
                     }
                 } else {    //! 如果是其它的错误
                     if (allow_log_print)
-                        LogWarn("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
+                        LogNotice("stat(%s) fail, errno:%d, %s", trimmed_dir_path.c_str(), errno, strerror(errno));
                     return false;
                 }
             } else {    //! 如果 trimmed_dir_path 指定的inode存在
                 if (!S_ISDIR(sb.st_mode)) {  //! 该inode并不是一个目录
                     if (allow_log_print)
-                        LogWarn("inode %s is not directory", trimmed_dir_path.c_str());
+                        LogNotice("inode %s is not directory", trimmed_dir_path.c_str());
                     return false;
                 }
                 //! 存在，且是目录，则不做任何事件
@@ -315,9 +315,9 @@ bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
     if (dp == nullptr) {
         // 无法打开目录，直接结束
         if (errno == ENOENT) {
-            LogWarn("directory %s does not exist", dir.c_str());
+            LogNotice("directory %s does not exist", dir.c_str());
         } else {
-            LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+            LogNotice("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
         }
         return false;
     }
@@ -346,13 +346,13 @@ bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
             } else {
                 // 属性为文件，直接删除文件
                 if (::remove(full_path.c_str())) {
-                    LogWarn("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
+                    LogNotice("removing file %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
                     is_all_removed = false;
                 }
             }
         } else {
             // 无法获取属性，直接结束
-            LogWarn("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
+            LogNotice("getting state of %s fail, errno:%d, %s", full_path.c_str(), errno, strerror(errno));
             is_all_removed = false;
         }
     }
@@ -360,7 +360,7 @@ bool RemoveDirectory(const std::string &dir, bool is_remove_file_only)
     if (!is_remove_file_only) {
        // 最后删除目录
        if (::rmdir(dir.c_str())) {
-            LogWarn("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+            LogNotice("removing directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
             is_all_removed = false;
         }
     }
@@ -374,9 +374,9 @@ bool ListDirectory(const std::string &dir, std::vector<std::string> &names)
     if (dp == nullptr) {
         // 无法打开目录，直接结束
         if (errno == ENOENT) {
-            LogWarn("directory %s does not exist", dir.c_str());
+            LogNotice("directory %s does not exist", dir.c_str());
         } else {
-            LogWarn("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
+            LogNotice("open directory %s fail, errno:%d, %s", dir.c_str(), errno, strerror(errno));
         }
         return false;
     }
@@ -492,7 +492,7 @@ bool Rename(const std::string &old_name, const std::string &new_name)
     if (ret == 0)
         return true;
 
-    LogWarn("rename '%s' to '%s' fail, errno:%d (%s)",
+    LogNotice("rename '%s' to '%s' fail, errno:%d (%s)",
             old_name.c_str(), new_name.c_str(), errno, strerror(errno));
     return false;
 }

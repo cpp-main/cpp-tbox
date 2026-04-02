@@ -116,5 +116,11 @@ void AbnormalExit()
     std::abort();
 }
 
+void RaiseStopSignal()
+{
+    LogImportant("App want to stop process");
+    ::raise(SIGTERM);
+}
+
 }
 }
