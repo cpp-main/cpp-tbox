@@ -118,7 +118,7 @@ void AbnormalExit()
 
 void RaiseStopSignal()
 {
-    LogImportant("App want to stop process");
+    LogInfo("App requires stop process");
     ::raise(SIGTERM);
 }
 

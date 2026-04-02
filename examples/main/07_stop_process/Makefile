@@ -18,7 +18,26 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 13
-TBOX_VERSION_REVISION := 9
+PROJECT := examples/main/07_stop_process
+EXE_NAME := ${PROJECT}
+
+CPP_SRC_FILES = app.cpp main.cpp
+
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+LDFLAGS += \
+	-ltbox_main \
+	-ltbox_coroutine \
+	-ltbox_trace \
+	-ltbox_terminal \
+	-ltbox_network \
+	-ltbox_eventx \
+	-ltbox_eventx \
+	-ltbox_event \
+	-ltbox_log \
+	-ltbox_util \
+	-ltbox_base \
+	-lpthread \
+	-ldl \
+	-rdynamic
+
+include $(TOP_DIR)/mk/exe_common.mk

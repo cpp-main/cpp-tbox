@@ -171,7 +171,7 @@ bool Parse(const std::string &text, Json &js) noexcept
 {
     return !CatchThrow([&] {
         js = Json::parse(text);
-    });
+    }, "tbox::util::json::Parse");
 }
 
 Json Load(const std::string &filename)

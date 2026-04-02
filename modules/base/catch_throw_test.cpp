@@ -114,7 +114,7 @@ TEST(CatchThrow, ThrowPrintStack)
 
     bool has_catch = CatchThrow([&]{
         throw 10;
-    }, true);
+    }, "ThrowPrintStack", true);
 
     EXPECT_TRUE(has_catch);
 

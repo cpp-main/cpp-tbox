@@ -34,6 +34,7 @@ namespace tbox {
  * \return true     运行过程中捕获到了异常
  */
 bool CatchThrow(const std::function<void()> &func,
+                const char *tag = "?",
                 bool print_backtrace = false,
                 bool abort_process = false) noexcept;
 

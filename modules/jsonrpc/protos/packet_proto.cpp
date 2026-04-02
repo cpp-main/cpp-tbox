@@ -58,7 +58,7 @@ ssize_t PacketProto::onRecvData(const void *data_ptr, size_t data_size)
         LogTrace("%s recv: %s", log_label_.c_str(), json_text.c_str());
 
     Json js;
-    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); });
+    bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); }, "tbox::jsonrpc::PacketProto");
     if (is_throw) {
         LogNotice("parse json fail");
         return -1;
