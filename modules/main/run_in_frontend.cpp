@@ -32,7 +32,7 @@
 
 #include "module.h"
 #include "context_imp.h"
-#include "args.h"
+#include "args_parser.h"
 #include "log.h"
 #include "trace.h"
 
@@ -110,8 +110,10 @@ int Main(int argc, char **argv)
     Module apps("", ctx);
     RegisterApps(apps, ctx);
 
+    Args args;
     Json js_conf;
-    Args args(js_conf);
+    ArgsParser args_parser(js_conf, args);
+
     Trace trace;
 
     log.fillDefaultConfig(js_conf);
@@ -121,7 +123,7 @@ int Main(int argc, char **argv)
     FillAppDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
-    if (!args.parse(argc, argv))
+    if (!args_parser.parse(argc, argv))
         return 0;
 
     std::string pid_filename;
@@ -158,7 +160,7 @@ int Main(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
-    if (ctx.initialize(argv[0], js_conf, &apps)) {
+    if (ctx.initialize(argv[0], js_conf, args, &apps)) {
         if (apps.initialize(js_conf)) {
             if (ctx.start() && apps.start()) {  //! 启动所有应用
                 RunInFrontend(ctx, apps, exit_wait_sec);

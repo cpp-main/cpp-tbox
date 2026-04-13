@@ -54,8 +54,8 @@ struct LogContent {
 };
 
 //! 日志等级颜色表
-extern const char   LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX];
-extern const char*  LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX];
+extern const char   TBOX_LOG_LEVEL_LEVEL_CODE[TBOX_LOG_LEVEL_MAX];
+extern const char*  TBOX_LOG_LEVEL_COLOR_CODE[TBOX_LOG_LEVEL_MAX];
 
 //! 定义日志输出函数
 typedef void (*LogPrintfFuncType)(const LogContent *content, void *ptr);

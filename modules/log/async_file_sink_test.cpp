@@ -50,7 +50,7 @@ TEST(AsyncFileSink, AllLevel)
     ch.setFilePrefix("test");
     ch.enable();
     ch.enableColor(true);
-    ch.setLevel("", LOG_LEVEL_TRACE);
+    ch.setLevel("", TBOX_LOG_LEVEL_TRACE);
 
     LogFatal("fatal");
     LogErr("err");

@@ -17,18 +17,16 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "backtrace.h"
-#include <gtest/gtest.h>
-
-#include "log_output.h"
+#include <tbox/main/main.h>
+#include "app.h"
 
 namespace tbox {
+namespace main {
 
-TEST(Backtrace, _)
+void RegisterApps(Module &apps, Context &ctx)
 {
-    LogOutput_Enable();
-    LogBacktrace(TBOX_LOG_LEVEL_TRACE);
-    LogOutput_Disable();
+    apps.add(new ::App(ctx));
 }
 
+}
 }

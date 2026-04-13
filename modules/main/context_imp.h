@@ -40,7 +40,7 @@ class ContextImp : public Context {
 
     void fillDefaultConfig(Json &cfg) const;
 
-    bool initialize(const char *proc_name, const Json &cfg, Module *module);
+    bool initialize(const char *proc_name, const Json &cfg, const Args &args, Module *module);
     bool start();
     void stop();
     void cleanup();
@@ -55,6 +55,8 @@ class ContextImp : public Context {
 
     virtual std::chrono::milliseconds running_time() const override;
     virtual std::chrono::system_clock::time_point start_time_point() const override;
+
+    virtual const Args& args() const override { return *wp_args_; }
 
   protected:
     bool initLoop(const Json &js);
@@ -81,6 +83,7 @@ class ContextImp : public Context {
 
     const Module *module_ = nullptr;
     const Json *js_conf_ = nullptr;
+    const Args *wp_args_ = nullptr;
 };
 
 }

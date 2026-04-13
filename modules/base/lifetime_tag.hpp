@@ -20,6 +20,8 @@
 #ifndef TBOX_LIFETIME_TAG_H_20221215
 #define TBOX_LIFETIME_TAG_H_20221215
 
+#include <utility>
+
 namespace tbox {
 
 /**

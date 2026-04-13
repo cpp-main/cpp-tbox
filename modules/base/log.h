@@ -22,15 +22,15 @@
 #define TBOX_LOG_H_20170512
 
 //! Define log levels
-#define LOG_LEVEL_FATAL     0   //!< Program will crash
-#define LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle
-#define LOG_LEVEL_WARN      2   //!< Got inner abnormal situation, but program can handle it
-#define LOG_LEVEL_NOTICE    3   //!< It not big problem, but we should notice it, such as invalid data input
-#define LOG_LEVEL_IMPORTANT 4   //!< Important message
-#define LOG_LEVEL_INFO      5   //!< Normal message exchange with other program
-#define LOG_LEVEL_DEBUG     6   //!< Normal process inside program
-#define LOG_LEVEL_TRACE     7   //!< Temporary debugging log
-#define LOG_LEVEL_MAX       8   //!< MAX
+#define TBOX_LOG_LEVEL_FATAL     0   //!< Program will crash
+#define TBOX_LOG_LEVEL_ERROR     1   //!< Got serious problem, program can't handle
+#define TBOX_LOG_LEVEL_WARN      2   //!< Got inner abnormal situation, but program can handle it
+#define TBOX_LOG_LEVEL_NOTICE    3   //!< It not big problem, but we should notice it, such as invalid data input
+#define TBOX_LOG_LEVEL_IMPORTANT 4   //!< Important message
+#define TBOX_LOG_LEVEL_INFO      5   //!< Normal message exchange with other program
+#define TBOX_LOG_LEVEL_DEBUG     6   //!< Normal process inside program
+#define TBOX_LOG_LEVEL_TRACE     7   //!< Temporary debugging log
+#define TBOX_LOG_LEVEL_MAX       8   //!< MAX
 
 //! Module ID
 #ifndef LOG_MODULE_ID
@@ -49,28 +49,28 @@
 #define LogPuts(level, text) \
     LogPrintfFunc(LOG_MODULE_ID, __func__, __FILE__, __LINE__, level, 0, text)
 
-#define LogFatal(fmt, ...)      LogPrintf(LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
-#define LogErr(fmt, ...)        LogPrintf(LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
-#define LogWarn(fmt, ...)       LogPrintf(LOG_LEVEL_WARN,   fmt, ## __VA_ARGS__)
-#define LogNotice(fmt, ...)     LogPrintf(LOG_LEVEL_NOTICE, fmt, ## __VA_ARGS__)
-#define LogImportant(fmt, ...)  LogPrintf(LOG_LEVEL_IMPORTANT, fmt, ## __VA_ARGS__)
-#define LogInfo(fmt, ...)       LogPrintf(LOG_LEVEL_INFO,   fmt, ## __VA_ARGS__)
+#define LogFatal(fmt, ...)      LogPrintf(TBOX_LOG_LEVEL_FATAL,  fmt, ## __VA_ARGS__)
+#define LogErr(fmt, ...)        LogPrintf(TBOX_LOG_LEVEL_ERROR,  fmt, ## __VA_ARGS__)
+#define LogWarn(fmt, ...)       LogPrintf(TBOX_LOG_LEVEL_WARN,   fmt, ## __VA_ARGS__)
+#define LogNotice(fmt, ...)     LogPrintf(TBOX_LOG_LEVEL_NOTICE, fmt, ## __VA_ARGS__)
+#define LogImportant(fmt, ...)  LogPrintf(TBOX_LOG_LEVEL_IMPORTANT, fmt, ## __VA_ARGS__)
+#define LogInfo(fmt, ...)       LogPrintf(TBOX_LOG_LEVEL_INFO,   fmt, ## __VA_ARGS__)
 
-#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= LOG_LEVEL_DEBUG)
-    #define LogDbg(fmt, ...)    LogPrintf(LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__)
+#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= TBOX_LOG_LEVEL_DEBUG)
+    #define LogDbg(fmt, ...)    LogPrintf(TBOX_LOG_LEVEL_DEBUG, fmt, ## __VA_ARGS__)
 #else
     #define LogDbg(fmt, ...)
 #endif
 
-#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= LOG_LEVEL_TRACE)
-    #define LogTrace(fmt, ...)  LogPrintf(LOG_LEVEL_TRACE, fmt, ## __VA_ARGS__)
-    #define LogTag()            LogPuts(LOG_LEVEL_TRACE, "==> Run Here <==")
+#if !defined(STATIC_LOG_LEVEL) || (STATIC_LOG_LEVEL >= TBOX_LOG_LEVEL_TRACE)
+    #define LogTrace(fmt, ...)  LogPrintf(TBOX_LOG_LEVEL_TRACE, fmt, ## __VA_ARGS__)
+    #define LogTag()            LogPuts(TBOX_LOG_LEVEL_TRACE, "==> Run Here <==")
 #else
     #define LogTrace(fmt, ...)
     #define LogTag()
 #endif
 
-#define LogUndo() LogPuts(LOG_LEVEL_NOTICE, "!!! Undo !!!")
+#define LogUndo() LogPuts(TBOX_LOG_LEVEL_NOTICE, "!!! Undo !!!")
 
 //! 打印错误码，需要 #include <string.h>
 #define LogErrno(err, fmt, ...) LogErr("Errno:%d(%s) " fmt, (err), strerror(err), ## __VA_ARGS__)

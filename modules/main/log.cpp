@@ -393,8 +393,8 @@ void Log::installShellForSink(log::Sink &sink, terminal::NodeToken parent_node, 
                             oss << "level must be number\r\n";
                             break;
                         }
-                        if (level < 0 || level > LOG_LEVEL_TRACE) {
-                            oss << "level range: [0-" << LOG_LEVEL_TRACE << "]\r\n";
+                        if (level < 0 || level > TBOX_LOG_LEVEL_TRACE) {
+                            oss << "level range: [0-" << TBOX_LOG_LEVEL_TRACE << "]\r\n";
                             break;
                         }
 

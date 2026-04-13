@@ -32,6 +32,8 @@
 namespace tbox {
 namespace main {
 
+using Args = std::vector<std::string>;
+
 //! 进程上下文
 class Context {
   public:
@@ -44,6 +46,8 @@ class Context {
 
     virtual std::chrono::milliseconds running_time() const = 0;
     virtual std::chrono::system_clock::time_point start_time_point() const = 0;
+
+    virtual const Args& args() const = 0;
 };
 
 }

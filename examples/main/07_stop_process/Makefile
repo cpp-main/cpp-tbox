@@ -18,43 +18,26 @@
 # of the source tree.
 #
 
-PROJECT = main
-LIB_NAME = main
-LIB_VERSION_X = 0
-LIB_VERSION_Y = 0
-LIB_VERSION_Z = 4
+PROJECT := examples/main/07_stop_process
+EXE_NAME := ${PROJECT}
 
-HEAD_FILES = \
-	context.h \
-	main.h \
-	module.h \
+CPP_SRC_FILES = app.cpp main.cpp
 
-CPP_SRC_FILES = \
-	context_imp.cpp \
-	run_in_frontend.cpp \
-	run_in_backend.cpp \
-	error_signals.cpp \
-	terminate.cpp \
-	misc.cpp \
-	args_parser.cpp \
-	module.cpp \
-	log.cpp \
-	trace.cpp \
-
-CXXFLAGS := -DMODULE_ID='"tbox.main"' $(CXXFLAGS)
-
-TEST_CPP_SRC_FILES = \
-
-TEST_LDFLAGS := $(LDFLAGS) \
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+LDFLAGS += \
+	-ltbox_main \
+	-ltbox_coroutine \
+	-ltbox_trace \
 	-ltbox_terminal \
 	-ltbox_network \
+	-ltbox_eventx \
 	-ltbox_eventx \
 	-ltbox_event \
 	-ltbox_log \
 	-ltbox_util \
 	-ltbox_base \
-	-lpthread -ldl
+	-lpthread \
+	-ldl \
+	-rdynamic
 
-ENABLE_SHARED_LIB = no
-
-include $(TOP_DIR)/mk/lib_tbox_common.mk
+include $(TOP_DIR)/mk/exe_common.mk

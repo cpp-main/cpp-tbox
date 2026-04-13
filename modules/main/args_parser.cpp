@@ -17,7 +17,7 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "args.h"
+#include "args_parser.h"
 
 #include <iostream>
 #include <fstream>
@@ -38,11 +38,12 @@ string GetAppDescribe();
 string GetAppBuildTime();
 void GetAppVersion(int &major, int &minor, int &rev, int &build);
 
-Args::Args(Json &conf) :
-    conf_(conf)
+ArgsParser::ArgsParser(Json &conf, Args &args)
+    : conf_(conf)
+    , args_(args)
 { }
 
-bool Args::parse(int argc, const char * const * const argv)
+bool ArgsParser::parse(int argc, const char * const * const argv)
 {
     bool run = true;    //!< 是否需要正常运行
     bool print_help = false;    //!< 是否需要打印帮助
@@ -97,7 +98,20 @@ bool Args::parse(int argc, const char * const * const argv)
         }
     );
 
-    parser.parse(argc, argv);
+    //! 将 --args 后面的参数全部复制到 args_ 中去
+    int args_pos = 0;
+    for (int i = 1; i < argc; ++i) {
+        const char* str = argv[i];
+        if (args_pos != 0) {
+            args_.push_back(str);
+        } else if (::strcmp(str, "--args") == 0) {
+            args_pos = i;
+            args_.push_back(proc_name);
+        }
+    }
+
+    auto tbox_argc = (args_pos != 0) ? args_pos : argc;
+    parser.parse(tbox_argc, argv);
 
     if (print_tips)
         printTips(proc_name);
@@ -114,12 +128,12 @@ bool Args::parse(int argc, const char * const * const argv)
     return run;
 }
 
-void Args::printTips(const std::string &proc_name)
+void ArgsParser::printTips(const std::string &proc_name)
 {
     cout << "Try '" << proc_name << " --help' for more information." << endl;
 }
 
-void Args::printHelp(const std::string &proc_name)
+void ArgsParser::printHelp(const std::string &proc_name)
 {
     cout << "Usage: " << proc_name << " [OPTION]" << endl
         << GetAppDescribe() << endl << endl
@@ -130,6 +144,7 @@ void Args::printHelp(const std::string &proc_name)
         << "  -s KEY=VALUE      set config field" << endl
         << "  -p                display config" << endl
         << "  -n                don't run" << endl
+        << "  --args            start application's arguments" << endl
         << endl
         << "EXAMPLE" << endl
         << "  " << proc_name << endl
@@ -139,10 +154,11 @@ void Args::printHelp(const std::string &proc_name)
         << "  " << proc_name << R"( -s 'log.filelog.enable=true' -s 'log.filelog.path="/tmp/"')" << endl
         << "  " << proc_name << R"( -s 'log.filelog={"enable":true,"path":"/tmp/"}')" << endl
         << "  " << proc_name << R"( -c somewhere/conf.json -s 'thread_pool.min=2')" << endl
+        << "  " << proc_name << R"( -c xxx.json --args abc 123)" << endl
         << endl;
 }
 
-void Args::printVersion()
+void ArgsParser::printVersion()
 {
     int major, minor, rev, build;
     GetTboxVersion(major, minor, rev);
@@ -154,7 +170,7 @@ void Args::printVersion()
 
 }
 
-bool Args::load(const std::string &config_filename)
+bool ArgsParser::load(const std::string &config_filename)
 {
     try {
         auto js_patch = util::json::LoadDeeply(config_filename);
@@ -195,7 +211,7 @@ Json& BuildJsonByKey(const std::string &key, Json &js_root)
     return *p_node;
 }
 
-bool Args::set(const std::string &set_string)
+bool ArgsParser::set(const std::string &set_string)
 {
     vector<string> str_vec;
     if (util::string::Split(set_string, "=", str_vec) != 2) {

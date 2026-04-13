@@ -42,29 +42,36 @@ void RawStreamProto::sendJson(const Json &js)
 ssize_t RawStreamProto::onRecvData(const void *data_ptr, size_t data_size)
 {
     TBOX_ASSERT(data_ptr != nullptr);
-
-    if (data_size < 2)
-        return 0;
-
     const char *str_ptr = static_cast<const char*>(data_ptr);
-    auto str_len = util::json::FindEndPos(str_ptr, data_size);
-    if (str_len > 0) {
-        std::string json_text(str_ptr, str_len);
+    size_t str_size = data_size;
+
+    for (;;) {
+        if (str_size < 2)
+            break;
+
+        auto json_len = util::json::FindEndPos(str_ptr, str_size);
+        if (json_len <= 0)
+            break;
+
+        std::string json_text(str_ptr, json_len);
 
         if (is_log_enabled_)
             LogTrace("%s recv: %s", log_label_.c_str(), json_text.c_str());
 
         Json js;
-        bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); });
+        bool is_throw = tbox::CatchThrow([&] { js = Json::parse(json_text); }, "tbox::jsonrpc::RawStreamProto");
         if (is_throw) {
             LogNotice("parse json fail");
             return -1;
         }
 
         onRecvJson(js);
-        return str_len;
+
+        str_ptr += json_len;
+        str_size -= json_len;
     }
-    return 0;
+
+    return data_size - str_size;
 }
 
 }

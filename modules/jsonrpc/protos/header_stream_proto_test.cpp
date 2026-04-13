@@ -172,5 +172,37 @@ TEST(HeaderStreamProto, RecvUncompleteData) {
     LogOutput_Disable();
 }
 
+//! 测试粘包与不完整包问题
+TEST(HeaderStreamProto, MultiPackages) {
+    LogOutput_Enable();
+
+    HeaderStreamProto proto(0xea53);
+    //proto.setLogEnable(true);
+
+    int count = 0;
+    proto.setRecvCallback(
+        [&] (int id, const std::string &method, const Json &js_params) {
+            if (count == 0) {
+                EXPECT_EQ(method, "test1");
+            } else if (count == 1) {
+                EXPECT_EQ(method, "test2");
+            }
+            ++count;
+        },
+        [] (int, const Response &) { }
+    );
+
+    std::string str_1 = std::string("\xEA\x53\x00\x00\x00\x29", 6) + R"({"id":1,"method":"test1","jsonrpc":"2.0"})";
+    std::string str_2 = std::string("\xEA\x53\x00\x00\x00\x35", 6) + R"({"id":2,"method":"test2","jsonrpc":"2.0","params":{}})";
+    std::string str_3 = std::string("\xEA\x53\x00\x00\x00\x20", 6) + R"({"jsonrpc":"2.0)";
+    std::string str = str_1 + str_2 + str_3;
+
+    EXPECT_EQ(proto.onRecvData(str.c_str(), str.size()), (str_1.size() + str_2.size()));
+
+    EXPECT_EQ(count, 2);
+    LogOutput_Disable();
+}
+
+
 }
 }

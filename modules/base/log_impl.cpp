@@ -72,11 +72,11 @@ void Dispatch(const LogContent &content)
 
 }
 
-const char  LOG_LEVEL_LEVEL_CODE[LOG_LEVEL_MAX] = {
+const char  TBOX_LOG_LEVEL_LEVEL_CODE[TBOX_LOG_LEVEL_MAX] = {
     'F', 'E', 'W', 'N', 'I', 'I', 'D', 'T'
 };
 
-const char* LOG_LEVEL_COLOR_CODE[LOG_LEVEL_MAX] = {
+const char* TBOX_LOG_LEVEL_COLOR_CODE[TBOX_LOG_LEVEL_MAX] = {
     "7;91",     //! FATAL       文字黑，背景亮红
     "31",       //! ERROR       红
     "7;93",     //! WARN        文字黑，背景亮黄
@@ -116,7 +116,7 @@ void LogPrintfFunc(const char *module_id, const char *func_name, const char *fil
         return;
 
     if (level < 0) level = 0;
-    if (level >= LOG_LEVEL_MAX) level = (LOG_LEVEL_MAX - 1);
+    if (level >= TBOX_LOG_LEVEL_MAX) level = (TBOX_LOG_LEVEL_MAX - 1);
 
     const char *module_id_be_print = (module_id != nullptr) ? module_id : "???";
 

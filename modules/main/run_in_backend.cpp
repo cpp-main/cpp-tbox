@@ -32,7 +32,7 @@
 
 #include "module.h"
 #include "context_imp.h"
-#include "args.h"
+#include "args_parser.h"
 #include "log.h"
 #include "trace.h"
 
@@ -58,6 +58,7 @@ struct Runtime {
     ContextImp ctx;
     Module apps;
     Json js_conf;
+    Args args;
 
     util::PidFile pid_file;
     int exit_wait_sec = 1;
@@ -127,8 +128,9 @@ bool Start(int argc, char **argv)
     auto &ctx = _runtime->ctx;
     auto &apps = _runtime->apps;
     auto &js_conf = _runtime->js_conf;
+    auto &args = _runtime->args;
 
-    Args args(js_conf);
+    ArgsParser args_parser(js_conf, args);
     Trace trace;
 
     log.fillDefaultConfig(js_conf);
@@ -138,7 +140,7 @@ bool Start(int argc, char **argv)
     FillAppDefaultConfig(js_conf);
     apps.fillDefaultConfig(js_conf);
 
-    if (!args.parse(argc, argv))
+    if (!args_parser.parse(argc, argv))
         return false;
 
     std::string pid_filename;
@@ -171,7 +173,7 @@ bool Start(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::seconds(1));
     };
 
-    if (ctx.initialize(argv[0], js_conf, &apps)) {
+    if (ctx.initialize(argv[0], js_conf, args, &apps)) {
         if (apps.initialize(js_conf)) {
             if (ctx.start()) {  //! 启动所有应用
                 if (apps.start()) {

@@ -18,9 +18,9 @@
  * of the source tree.
  */
 /**
- * 本文件定义 Args 类
+ * 本文件定义 ArgsParser 类
  *
- * Args 类用于解释程序的命令参数，输出程序运行的配置Json数据。
+ * ArgsParser 类用于解释程序的命令参数，输出程序运行的配置Json数据。
  *
  * 参数：
  *
@@ -41,17 +41,18 @@
  * myproc -v
  * myproc --version
  */
-#ifndef TBOX_MAIN_ARGS_H_20211229
-#define TBOX_MAIN_ARGS_H_20211229
+#ifndef TBOX_MAIN_ARGS_PARSER_H_20211229
+#define TBOX_MAIN_ARGS_PARSER_H_20211229
 
 #include <tbox/base/json_fwd.h>
+#include "context.h"
 
 namespace tbox {
 namespace main {
 
-class Args {
+class ArgsParser {
   public:
-    Args(Json &conf);
+    ArgsParser(Json &conf, Args &args);
 
     /**
      * 解析参数
@@ -74,9 +75,10 @@ class Args {
 
   private:
     Json &conf_;
+    Args &args_;
 };
 
 }
 }
 
-#endif //TBOX_MAIN_ARGS_H_20211229
+#endif //TBOX_MAIN_ARGS_PARSER_H_20211229

@@ -51,7 +51,7 @@ void CatchType()
 
 }
 
-bool CatchThrow(const std::function<void()> &func,
+bool CatchThrow(const std::function<void()> &func, const char *tag,
                 bool print_backtrace, bool abort_process) noexcept
 {
     try {
@@ -61,22 +61,22 @@ bool CatchThrow(const std::function<void()> &func,
 
     } catch (const std::exception &e) {
         CatchType();
-        LogWarn("what(): %s", e.what());
+        LogWarn("'%s' what(): %s", tag, e.what());
     } catch (const char *e) {
         CatchType();
-        LogWarn("value: %s", e);
+        LogWarn("'%s' value: %s", tag, e);
     } catch (int e) {
         CatchType();
-        LogWarn("value: %d", e);
+        LogWarn("'%s' value: %d", tag, e);
     } catch (double e) {
         CatchType();
-        LogWarn("value: %f", e);
+        LogWarn("'%s' value: %f", tag, e);
     } catch (const std::string &e) {
         CatchType();
-        LogWarn("value: %s", e.c_str());
+        LogWarn("'%s' value: %s", tag, e.c_str());
     } catch (...) {
         CatchType();
-        LogWarn("can't print value");
+        LogWarn("'%s' can't print value", tag);
     }
 
     if (print_backtrace) {

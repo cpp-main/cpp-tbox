@@ -584,18 +584,18 @@ void Client::onMessage(const struct mosquitto_message *msg)
 
 void Client::onLog(int level, const char *str)
 {
-    auto new_level = LOG_LEVEL_DEBUG;
+    auto new_level = TBOX_LOG_LEVEL_DEBUG;
     switch (level & 0x1F) {
         case MOSQ_LOG_ERR:
-            new_level = LOG_LEVEL_ERROR;
+            new_level = TBOX_LOG_LEVEL_ERROR;
             break;
         case MOSQ_LOG_WARNING:
-            new_level = LOG_LEVEL_WARN;
+            new_level = TBOX_LOG_LEVEL_WARN;
             break;
         case MOSQ_LOG_NOTICE:
-            new_level = LOG_LEVEL_NOTICE;
+            new_level = TBOX_LOG_LEVEL_NOTICE;
             break;
-        default:; //! regard MOSQ_LOG_INFO as LOG_LEVEL_DEBUG
+        default:; //! regard MOSQ_LOG_INFO as TBOX_LOG_LEVEL_DEBUG
     }
     LogPrintfFunc("mosq", nullptr, nullptr, 0, new_level, 0, str);
 }

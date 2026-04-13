@@ -41,7 +41,7 @@ set(TBOX_MAIN_SOURCES
     error_signals.cpp
     terminate.cpp
     misc.cpp
-    args.cpp
+    args_parser.cpp
     module.cpp
     log.cpp
     trace.cpp)

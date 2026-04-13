@@ -17,18 +17,21 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "backtrace.h"
-#include <gtest/gtest.h>
+#include "app.h"
+#include <tbox/base/log.h>
+#include <tbox/main/main.h>
 
-#include "log_output.h"
+App::App(tbox::main::Context &ctx) :
+    Module("app", ctx)
+{ }
 
-namespace tbox {
-
-TEST(Backtrace, _)
+bool App::onStart()
 {
-    LogOutput_Enable();
-    LogBacktrace(TBOX_LOG_LEVEL_TRACE);
-    LogOutput_Disable();
-}
-
+    LogInfo("process will exit after 5 sec");
+    ctx().timer_pool()->doAfter(std::chrono::seconds(5),
+        [this] {
+            tbox::main::RaiseStopSignal();
+        }
+    );
+    return true;
 }

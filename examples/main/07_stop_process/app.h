@@ -17,18 +17,18 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "backtrace.h"
-#include <gtest/gtest.h>
+#ifndef TBOX_MAIN_EXAMPLE_SAMPLE_H_20211226
+#define TBOX_MAIN_EXAMPLE_SAMPLE_H_20211226
 
-#include "log_output.h"
+#include <tbox/main/main.h>
 
-namespace tbox {
-
-TEST(Backtrace, _)
+class App : public tbox::main::Module
 {
-    LogOutput_Enable();
-    LogBacktrace(TBOX_LOG_LEVEL_TRACE);
-    LogOutput_Disable();
-}
+  public:
+    App(tbox::main::Context &ctx);
 
-}
+  protected:
+    virtual bool onStart() override;
+};
+
+#endif //TBOX_MAIN_EXAMPLE_SAMPLE_H_20211226

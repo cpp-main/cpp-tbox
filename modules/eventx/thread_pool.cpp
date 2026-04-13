@@ -360,7 +360,7 @@ void ThreadPool::threadProc(ThreadToken thread_token)
 
             {
                 RECORD_SCOPE();
-                CatchThrow(item->backend_task, true);
+                CatchThrow(item->backend_task, "tbox::eventx::ThreadPool", true);
             }
 
             auto exec_time_cost = Clock::now() - exec_time_point;
