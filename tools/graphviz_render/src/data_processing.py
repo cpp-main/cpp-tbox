@@ -28,7 +28,7 @@ from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import QThread, pyqtSignal
 
 class DataProcessing(QThread):
-    data_received = pyqtSignal(QPixmap)
+    data_received = pyqtSignal(QPixmap, bytes)
 
     def __init__(self):
         super().__init__()
@@ -37,9 +37,10 @@ class DataProcessing(QThread):
         self._cond = threading.Condition(self._lock)   # 数据变更条件变量
 
         # 共享状态变量
-        self._last_dot_data = ''             # 最后接收的DOT数据 
+        self._last_dot_data = ''             # 最后接收的DOT数据
         self._running = True                 # 线程运行标志
         self._original_image = None          # 原始图像缓存
+        self._svg_bytes = b''                # SVG字节数据缓存（用于高清光栅化）
         self._pending_update = False         # 更新标记
 
     def run(self):
@@ -62,28 +63,38 @@ class DataProcessing(QThread):
 
         try:
             # 生成图像（耗时操作）
-            image = self._render_dot(current_data)
+            image, svg_bytes = self._render_dot(current_data)
             if image:
                 self._original_image = image
+                self._svg_bytes = svg_bytes
                 self._update_display()
         except Exception as e:
             print(f"Render error: {e}")
 
-    def _render_dot(self, dot_data: str) -> Image.Image:
-        """DOT数据渲染方法"""
-        proc = subprocess.Popen(
+    def _render_dot(self, dot_data: str):
+        """DOT数据渲染方法，同时生成 PNG（预览）和 SVG（高清光栅化用）"""
+        # 渲染 SVG（矢量格式，用于缩放后高清重绘）
+        proc_svg = subprocess.Popen(
+            ['dot', '-Tsvg'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        svg_out, _ = proc_svg.communicate(dot_data.encode())
+
+        # 渲染 PNG（用于初始快速预览）
+        proc_png = subprocess.Popen(
             ['dot', '-Tpng'],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        stdout, stderr = proc.communicate(dot_data.encode())
+        png_out, stderr = proc_png.communicate(dot_data.encode())
 
-        if proc.returncode != 0:
+        if proc_png.returncode != 0:
             raise RuntimeError(f"Graphviz error: {stderr.decode()}")
 
-        return Image.open(BytesIO(stdout))
-
+        return Image.open(BytesIO(png_out)), svg_out
 
     def _update_display(self):
         """图像显示更新"""
@@ -95,8 +106,8 @@ class DataProcessing(QThread):
             qimg = self._pil_to_qimage(self._original_image)
             pixmap = QPixmap.fromImage(qimg)
 
-            # 发射信号（跨线程安全）
-            self.data_received.emit(pixmap)
+            # 发射信号（跨线程安全），同时携带 SVG 数据供高清光栅化
+            self.data_received.emit(pixmap, self._svg_bytes)
         except Exception as e:
             print(f"Display error: {e}")
 

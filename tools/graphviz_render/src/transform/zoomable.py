@@ -27,13 +27,13 @@ from PyQt5.QtWidgets import (QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
 class ZoomableGraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         # 初始化视图设置
         self._setup_view()
         self._setup_scene()
         self._setup_interaction()
         self._setup_indicators()
-        
+
         # 初始化参数
         self._zoom_factor = 1.0
         self.min_zoom = 0.1
@@ -67,7 +67,7 @@ class ZoomableGraphicsView(QGraphicsView):
         self.scene = QGraphicsScene(self)
         self.scene.setSceneRect(-1e6, -1e6, 2e6, 2e6)  # 超大场景范围
         self.setScene(self.scene)
-        
+
         self.pixmap_item = QGraphicsPixmapItem()
         self.pixmap_item.setTransformationMode(Qt.SmoothTransformation)
         self.pixmap_item.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
@@ -92,14 +92,14 @@ class ZoomableGraphicsView(QGraphicsView):
         self.center_indicator.setVisible(False)
         self.scene.addItem(self.center_indicator)
 
-    def update_image(self, pixmap: QPixmap):
-        """更新图像并自适应视图"""
+    def update_image(self, pixmap: QPixmap, svg_bytes: bytes = b''):
+        """更新图像并自适应视图（svg_bytes 参数由方案B使用，此处忽略）"""
         self.pixmap_item.setPixmap(pixmap)
         self._center_pixmap(pixmap)
         if self.fisrt_refresh:
             self.fisrt_refresh = False
             self.fit_to_view()
-        
+
     def _center_pixmap(self, pixmap: QPixmap):
         """居中放置图元"""
         self.pixmap_item.setPos(-pixmap.width()/2, -pixmap.height()/2)
@@ -120,7 +120,7 @@ class ZoomableGraphicsView(QGraphicsView):
         zoom_in = event.angleDelta().y() > 0
         factor = 1.25 if zoom_in else 0.8
         new_zoom = self._zoom_factor * factor
-        
+
         # 应用缩放限制
         if self.min_zoom <= new_zoom <= self.max_zoom:
             self.scale(factor, factor)
@@ -142,7 +142,7 @@ class ZoomableGraphicsView(QGraphicsView):
                 new_zoom = self._zoom_factor * factor
 
             # 应用缩放限制
-            if  self.min_zoom <= new_zoom <= self.max_zoom:
+            if self.min_zoom <= new_zoom <= self.max_zoom:
                 self.scale(factor, factor)
                 self._zoom_factor = new_zoom
                 return
@@ -156,9 +156,9 @@ class ZoomableGraphicsView(QGraphicsView):
             self.dragging = True
             self.last_mouse_pos = event.pos()
             self.setCursor(Qt.ClosedHandCursor)
-            
+
         super().mousePressEvent(event)
-    
+
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         """鼠标双击事件处理（增强版）"""
         if event.button() == Qt.RightButton:
@@ -167,7 +167,7 @@ class ZoomableGraphicsView(QGraphicsView):
             return
         elif event.button() == Qt.LeftButton:
             event.accept()
-            factor = 2
+            factor = 1.25
             new_zoom = self._zoom_factor * factor
 
             # 应用缩放限制
@@ -183,13 +183,13 @@ class ZoomableGraphicsView(QGraphicsView):
         if self.dragging:
             delta = event.pos() - self.last_mouse_pos
             self.last_mouse_pos = event.pos()
-            
+
             # 更新滚动条实现拖拽
             self.horizontalScrollBar().setValue(
                 self.horizontalScrollBar().value() - delta.x())
             self.verticalScrollBar().setValue(
                 self.verticalScrollBar().value() - delta.y())
-            
+
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -206,10 +206,10 @@ class ZoomableGraphicsView(QGraphicsView):
 
         # 先执行自适应调整
         self.fit_to_view()
-        
+
         # 获取最终场景中心坐标
         final_center = self.pixmap_item.sceneBoundingRect().center()
-        
+
         # 创建组合动画
         self._create_center_animation(final_center)
 
@@ -218,14 +218,14 @@ class ZoomableGraphicsView(QGraphicsView):
         # 平移动画
         anim_h = QPropertyAnimation(self.horizontalScrollBar(), b"value")
         anim_v = QPropertyAnimation(self.verticalScrollBar(), b"value")
-        
+
         # 缩放动画
         current_zoom = self._zoom_factor
         anim_zoom = QPropertyAnimation(self, b"zoom_factor")
         anim_zoom.setDuration(400)
         anim_zoom.setStartValue(current_zoom)
         anim_zoom.setEndValue(1.0)  # 自适应后的标准缩放值
-        
+
         # 配置动画参数
         for anim in [anim_h, anim_v]:
             anim.setDuration(400)
@@ -234,19 +234,19 @@ class ZoomableGraphicsView(QGraphicsView):
         # 计算目标滚动值
         view_center = self.mapToScene(self.viewport().rect().center())
         delta = target_center - view_center
-        
+
         # 设置动画参数
         anim_h.setStartValue(self.horizontalScrollBar().value())
         anim_h.setEndValue(self.horizontalScrollBar().value() + delta.x())
-        
+
         anim_v.setStartValue(self.verticalScrollBar().value())
         anim_v.setEndValue(self.verticalScrollBar().value() + delta.y())
-        
+
         # 启动动画
         anim_zoom.start()
         anim_h.start()
         anim_v.start()
-        
+
         # 显示指示器
         self.center_indicator.setPos(target_center)
         self.center_indicator.setVisible(True)

@@ -19,3 +19,4 @@
 #
 
 from .zoomable import ZoomableGraphicsView
+from .zoomable_svg import ZoomableSvgGraphicsView

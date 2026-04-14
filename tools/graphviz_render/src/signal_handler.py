@@ -19,7 +19,7 @@
 #
 
 import signal
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal
 
 class SignalHandler(QObject):
     sig_interrupt = pyqtSignal()
