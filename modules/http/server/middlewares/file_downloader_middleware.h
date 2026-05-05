@@ -26,6 +26,7 @@
 
 #include <tbox/base/defines.h>
 #include <tbox/event/forward.h>
+#include <tbox/eventx/thread_executor.h>
 
 #include "../middleware.h"
 #include "../context.h"
@@ -45,7 +46,8 @@ class FileDownloaderMiddleware : public Middleware {
     /**
      * 构造函数
      */
-    explicit FileDownloaderMiddleware(event::Loop *wp_loop);
+    explicit FileDownloaderMiddleware(event::Loop *wp_loop,
+                                      eventx::ThreadExecutor *wp_thread_executor = nullptr);
     virtual ~FileDownloaderMiddleware();
 
     NONCOPYABLE(FileDownloaderMiddleware);

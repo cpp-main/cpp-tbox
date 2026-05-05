@@ -58,7 +58,8 @@ struct DirectoryConfig {
 
 //! 中间件私有数据结构
 struct FileDownloaderMiddleware::Data {
-    eventx::WorkThread worker;
+    eventx::ThreadExecutor *worker = nullptr;
+    eventx::WorkThread *inner_worker = nullptr;
     std::vector<DirectoryConfig> directories;        //! 目录配置列表
     std::map<std::string, std::string> path_mappings;//! 特定路径映射
     std::map<std::string, std::string> mime_types;   //! MIME类型映射
@@ -66,12 +67,17 @@ struct FileDownloaderMiddleware::Data {
     bool directory_listing_enabled;                  //! 是否允许目录列表
     size_t switch_to_worker_filesize_threshold;
 
-    Data(event::Loop *wp_loop)
-        : worker(wp_loop)
+    Data(event::Loop *wp_loop, eventx::ThreadExecutor *wp_thread_executor)
+        : worker(wp_thread_executor)
         , default_mime_type("application/octet-stream")
         , directory_listing_enabled(false)
         , switch_to_worker_filesize_threshold(100 << 10)
     {
+        if (worker == nullptr) {
+            inner_worker = new tbox::eventx::WorkThread(wp_loop);
+            worker = inner_worker;
+        }
+
         //! 初始化常见MIME类型
         mime_types["html"] = "text/html";
         mime_types["htm"] = "text/html";
@@ -98,13 +104,17 @@ struct FileDownloaderMiddleware::Data {
         mime_types["ttf"] = "font/ttf";
         mime_types["otf"] = "font/otf";
     }
+    ~Data() {
+        CHECK_DELETE_RESET_OBJ(inner_worker);
+    }
 };
 
-FileDownloaderMiddleware::FileDownloaderMiddleware(event::Loop *wp_loop)
-    : d_(new Data(wp_loop))
+FileDownloaderMiddleware::FileDownloaderMiddleware(event::Loop *wp_loop, eventx::ThreadExecutor *wp_thread_executor)
+    : d_(new Data(wp_loop, wp_thread_executor))
 { }
 
-FileDownloaderMiddleware::~FileDownloaderMiddleware() { delete d_; }
+FileDownloaderMiddleware::~FileDownloaderMiddleware()
+{ delete d_; }
 
 bool FileDownloaderMiddleware::addDirectory(const std::string& url_prefix,
                                             const std::string& local_path,
@@ -173,7 +183,7 @@ void FileDownloaderMiddleware::handle(ContextSptr sp_ctx, const NextFunc& next) 
     //! 查找匹配的目录配置
     for (const auto& dir : d_->directories) {
         //! 检查URL是否以该目录前缀开头
-        if (request_path.find(dir.url_prefix) == 0) {
+        if (tbox::util::string::IsStartWith(request_path, dir.url_prefix)) {
             //! 获取相对路径部分
             std::string rel_path = request_path.substr(dir.url_prefix.length());
 
@@ -280,7 +290,7 @@ bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string
 
     } else {
         //! 文件太大就采用子线程去读
-        d_->worker.execute(
+        d_->worker->execute(
             [sp_ctx, file_path] {
                 auto& res = sp_ctx->res();
                 if (util::fs::ReadBinaryFromFile(file_path, res.body)) {
@@ -303,31 +313,32 @@ bool FileDownloaderMiddleware::respondDirectory(ContextSptr sp_ctx,
                                                 const std::string& url_path) {
     try {
         //! 生成HTML目录列表
-        std::stringstream html;
-        html << "<!DOCTYPE html>\n"
-             << "<html>\n"
-             << "<head>\n"
-             << "  <title>Directory listing for " << url_path << "</title>\n"
-             << "  <style>\n"
-             << "    body { font-family: Arial, sans-serif; margin: 20px; }\n"
-             << "    h1 { color: #333; }\n"
-             << "    ul { list-style-type: none; padding: 0; }\n"
-             << "    li { margin: 5px 0; }\n"
-             << "    a { color: #0066cc; text-decoration: none; }\n"
-             << "    a:hover { text-decoration: underline; }\n"
-             << "    .dir { font-weight: bold; }\n"
-             << "  </style>\n"
-             << "</head>\n"
-             << "<body>\n"
-             << "  <h1>Directory listing for " << url_path << "</h1>\n"
-             << "  <ul>\n";
+        std::ostringstream html_oss;
+        html_oss
+            << "<!DOCTYPE html>\n"
+            << "<html>\n"
+            << "<head>\n"
+            << "  <title>Directory listing for " << url_path << "</title>\n"
+            << "  <style>\n"
+            << "    body { font-family: Arial, sans-serif; margin: 20px; }\n"
+            << "    h1 { color: #333; }\n"
+            << "    ul { list-style-type: none; padding: 0; }\n"
+            << "    li { margin: 5px 0; }\n"
+            << "    a { color: #0066cc; text-decoration: none; }\n"
+            << "    a:hover { text-decoration: underline; }\n"
+            << "    .dir { font-weight: bold; }\n"
+            << "  </style>\n"
+            << "</head>\n"
+            << "<body>\n"
+            << "  <h1>Directory listing for " << url_path << "</h1>\n"
+            << "  <ul>\n";
 
         //! 如果不是根目录，添加返回上级目录的链接
         if (url_path != "/") {
             size_t last_slash = url_path.find_last_of('/', url_path.size() - 2);
             if (last_slash != std::string::npos) {
                 std::string parent_url = url_path.substr(0, last_slash + 1);
-                html << "    <li><a href=\"" << parent_url << "\">..</a></li>\n";
+                html_oss << "    <li><a href=\"" << parent_url << "\">..</a></li>\n";
             }
         }
 
@@ -345,21 +356,22 @@ bool FileDownloaderMiddleware::respondDirectory(ContextSptr sp_ctx,
             auto entry_type = util::fs::GetFileType(entry_path);
             if (entry_type == util::fs::FileType::kDirectory) {
                 href += "/";
-                html << "    <li><a class=\"dir\" href=\"" << href << "\">" << name << "/</a></li>\n";
+                html_oss << "    <li><a class=\"dir\" href=\"" << href << "\">" << name << "/</a></li>\n";
             } else {
-                html << "    <li><a href=\"" << href << "\">" << name << "</a></li>\n";
+                html_oss << "    <li><a href=\"" << href << "\">" << name << "</a></li>\n";
             }
         }
 
-        html << "  </ul>\n"
-             << "</body>\n"
-             << "</html>";
+        html_oss
+            << "  </ul>\n"
+            << "</body>\n"
+            << "</html>";
 
         //! 设置响应
         auto& res = sp_ctx->res();
         res.status_code = StatusCode::k200_OK;
         res.headers["Content-Type"] = "text/html; charset=utf-8";
-        res.body = html.str();
+        res.body = html_oss.str();
 
         LogInfo("Served directory listing for: %s", dir_path.c_str());
         return true;
