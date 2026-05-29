@@ -188,6 +188,8 @@ TEST(RawStreamProto, MultiPackages) {
                 EXPECT_EQ(method, "test2");
             }
             ++count;
+            UNUSED_VAR(id);
+            UNUSED_VAR(js_params);
         },
         [] (int, const Response &) { }
     );

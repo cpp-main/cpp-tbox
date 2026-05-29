@@ -230,6 +230,7 @@ TEST(RpcInt, Clear) {
         [&] {
             rpc.request("A", Json(),
                 [&] (const Response &r) {
+                    UNUSED_VAR(r);
                     is_method_cb_invoke = true;
                 }
             );
