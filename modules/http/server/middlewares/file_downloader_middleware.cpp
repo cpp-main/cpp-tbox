@@ -22,12 +22,16 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <sys/stat.h>
+#include <ctime>
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/util/string.h>
 #include <tbox/util/fs.h>
+#include <tbox/util/string_to.h>
 #include <tbox/eventx/work_thread.h>
+#include <tbox/base/defines.h>
 #include <tbox/base/recorder.h>
 
 namespace tbox {
@@ -35,7 +39,9 @@ namespace http {
 namespace server {
 
 namespace {
-bool IsPathSafe(const std::string& path) {
+
+bool IsPathSafe(const std::string& path)
+{
     //! 检查是否有".."路径组件，这可能导致目录遍历
     std::istringstream path_stream(path);
     std::string component;
@@ -47,6 +53,79 @@ bool IsPathSafe(const std::string& path) {
 
     return true;
 }
+
+std::string GenerateETag(time_t mtime, off_t size)
+{
+    return "\"" + std::to_string(static_cast<long long>(mtime))
+        + "-" + std::to_string(static_cast<long long>(size)) + "\"";
+}
+
+std::string HttpDateToString(time_t t)
+{
+    struct tm tm_buf;
+    gmtime_r(&t, &tm_buf);
+    char buf[64];
+    strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &tm_buf);
+    return buf;
+}
+
+time_t StringToHttpDate(const std::string& s)
+{
+    struct tm t = {};
+    if (strptime(s.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &t) == nullptr)
+        return -1;
+    return timegm(&t);
+}
+
+std::string GetHeader(const tbox::http::Headers& headers, const std::string& lower_name)
+{
+    for (const auto& h : headers) {
+        if (tbox::util::string::ToLower(h.first) == lower_name)
+            return h.second;
+    }
+    return "";
+}
+
+//! 解析
+bool ParseRangeString(const std::string &range_str, size_t file_size, size_t &range_begin, size_t &range_end)
+{
+    std::string range_val = range_str.substr(6);
+    auto dash_pos = range_val.find('-');
+    if (dash_pos == std::string::npos)
+        return false;
+
+    //!FIXME: 暂不支持 1000-1999, 3000-3555, 多段返回的情况
+    auto comma_pos = range_val.find(',', dash_pos);
+    if (comma_pos != std::string::npos) {
+        return false;
+    }
+
+    std::string begin_str = range_val.substr(0, dash_pos);
+    std::string end_str   = range_val.substr(dash_pos + 1);
+
+    if (begin_str.empty()) {    //! 出现：-500
+        size_t suffix_size = 0;
+        if (!util::StringTo(end_str, suffix_size))
+            return false;
+
+        range_begin = (suffix_size >= file_size) ? 0 : file_size - suffix_size;
+        range_end   = file_size - 1;
+
+    } else {    //! 出现：1000-1999 或 1000-
+        if (!util::StringTo(begin_str, range_begin))
+            return false;
+
+        if (!end_str.empty()) {
+            if (!util::StringTo(end_str, range_end))
+                return false;
+        } else {
+            range_end = file_size - 1;
+        }
+    }
+
+    return true;
+}
+
 }
 
 //! 目录配置项
@@ -58,8 +137,8 @@ struct DirectoryConfig {
 
 //! 中间件私有数据结构
 struct FileDownloaderMiddleware::Data {
-    eventx::ThreadExecutor *worker = nullptr;
-    eventx::WorkThread *inner_worker = nullptr;
+    eventx::ThreadExecutor *worker      = nullptr;
+    eventx::WorkThread     *inner_worker = nullptr;
     std::vector<DirectoryConfig> directories;        //! 目录配置列表
     std::map<std::string, std::string> path_mappings;//! 特定路径映射
     std::map<std::string, std::string> mime_types;   //! MIME类型映射
@@ -74,10 +153,9 @@ struct FileDownloaderMiddleware::Data {
         , switch_to_worker_filesize_threshold(100 << 10)
     {
         if (worker == nullptr) {
-            inner_worker = new tbox::eventx::WorkThread(wp_loop);
+            inner_worker = new eventx::WorkThread(wp_loop);
             worker = inner_worker;
         }
-
         //! 初始化常见MIME类型
         mime_types["html"] = "text/html";
         mime_types["htm"] = "text/html";
@@ -104,13 +182,15 @@ struct FileDownloaderMiddleware::Data {
         mime_types["ttf"] = "font/ttf";
         mime_types["otf"] = "font/otf";
     }
-    ~Data() {
+
+    ~Data()
+    {
         CHECK_DELETE_RESET_OBJ(inner_worker);
     }
 };
 
 FileDownloaderMiddleware::FileDownloaderMiddleware(event::Loop *wp_loop, eventx::ThreadExecutor *wp_thread_executor)
-    : d_(new Data(wp_loop, wp_thread_executor))
+  : d_(new Data(wp_loop, wp_thread_executor))
 { }
 
 FileDownloaderMiddleware::~FileDownloaderMiddleware()
@@ -118,7 +198,8 @@ FileDownloaderMiddleware::~FileDownloaderMiddleware()
 
 bool FileDownloaderMiddleware::addDirectory(const std::string& url_prefix,
                                             const std::string& local_path,
-                                            const std::string& default_file) {
+                                            const std::string& default_file)
+{
     //! 验证URL前缀是否以'/'开头
     if (url_prefix.empty() || url_prefix[0] != '/') {
         LogErr("Invalid URL prefix: %s. Must start with '/'", url_prefix.c_str());
@@ -146,24 +227,41 @@ bool FileDownloaderMiddleware::addDirectory(const std::string& url_prefix,
     return true;
 }
 
-void FileDownloaderMiddleware::setDirectoryListingEnabled(bool enable) {
+void FileDownloaderMiddleware::setDirectoryListingEnabled(bool enable)
+{
     d_->directory_listing_enabled = enable;
 }
 
-void FileDownloaderMiddleware::setPathMapping(const std::string& url, const std::string& file) {
+void FileDownloaderMiddleware::setPathMapping(const std::string& url, const std::string& file)
+{
     d_->path_mappings[url] = file;
 }
 
-void FileDownloaderMiddleware::setDefaultMimeType(const std::string& mime_type) {
+void FileDownloaderMiddleware::setDefaultMimeType(const std::string& mime_type)
+{
     d_->default_mime_type = mime_type;
 }
 
-void FileDownloaderMiddleware::setMimeType(const std::string& ext, const std::string& mime_type) {
+void FileDownloaderMiddleware::setMimeType(const std::string& ext, const std::string& mime_type)
+{
     d_->mime_types[ext] = mime_type;
 }
 
-void FileDownloaderMiddleware::handle(ContextSptr sp_ctx, const NextFunc& next) {
+void FileDownloaderMiddleware::handle(ContextSptr sp_ctx, const NextFunc& next)
+{
     const auto& request = sp_ctx->req();
+
+    //! 处理 OPTIONS 预检请求（浏览器跨域访问）
+    if (request.method == Method::kOptions) {
+        auto& res = sp_ctx->res();
+        res.status_code = StatusCode::k200_OK;
+        res.headers["Access-Control-Allow-Origin"]          = "*";
+        res.headers["Access-Control-Allow-Methods"]         = "GET, HEAD, OPTIONS";
+        res.headers["Access-Control-Allow-Headers"]         = "Auth, Range, If-Range, If-None-Match, If-Modified-Since";
+        res.headers["Access-Control-Allow-Private-Network"] = "true";
+        res.headers["Access-Control-Max-Age"]               = "86400";
+        return;
+    }
 
     //! 只处理GET和HEAD请求
     if (request.method != Method::kGet && request.method != Method::kHead) {
@@ -241,7 +339,8 @@ void FileDownloaderMiddleware::handle(ContextSptr sp_ctx, const NextFunc& next) 
     next();
 }
 
-std::string FileDownloaderMiddleware::getMimeType(const std::string& filename) const {
+std::string FileDownloaderMiddleware::getMimeType(const std::string& filename) const
+{
     //! 查找最后一个点的位置
     size_t dot_pos = filename.find_last_of('.');
     if (dot_pos != std::string::npos) {
@@ -256,53 +355,124 @@ std::string FileDownloaderMiddleware::getMimeType(const std::string& filename) c
     return d_->default_mime_type;
 }
 
-bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string& file_path) {
+bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string& file_path)
+{
     auto& res = sp_ctx->res();
 
-    //! 打开文件
-    std::ifstream file(file_path, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
+    //! 用 stat() 获取文件元信息，同时验证文件是否存在
+    struct stat file_stat;
+    if (::stat(file_path.c_str(), &file_stat) != 0) {
         res.status_code = StatusCode::k404_NotFound;
         return true;
     }
 
-    res.headers["Content-Type"] = getMimeType(file_path);
+    size_t file_size  = static_cast<size_t>(file_stat.st_size);
+    time_t file_mtime = file_stat.st_mtime;
+    std::string etag          = GenerateETag(file_mtime, file_stat.st_size);
+    std::string last_modified = HttpDateToString(file_mtime);
 
-    //! 获取文件大小
-    size_t file_size = static_cast<size_t>(file.tellg());
-    file.seekg(0, std::ios::beg);
+    res.headers["Content-Type"]  = getMimeType(file_path);
+    res.headers["Accept-Ranges"] = "bytes";
+    res.headers["ETag"]          = etag;
+    res.headers["Last-Modified"] = last_modified;
+    res.headers["Cache-Control"] = "public, max-age=0, must-revalidate";
+    res.headers["Access-Control-Allow-Origin"]   = "*";
+    res.headers["Access-Control-Expose-Headers"] = "Content-Range, Content-Length, ETag, Last-Modified";
 
-    //! 如果是HEAD请求，不返回内容
-    if (sp_ctx->req().method == Method::kHead) {
-        res.status_code = StatusCode::k200_OK;
-        res.headers["Content-Length"] = std::to_string(file_size);
-        return true;
+    //! 条件请求：If-None-Match 优先于 If-Modified-Since（RFC 7232 §6）
+    std::string if_none_match = GetHeader(sp_ctx->req().headers, "if-none-match");
+    if (!if_none_match.empty()) {
+        if (if_none_match == etag) {
+            res.status_code = StatusCode::k304_NotModified;
+            return true;
+        }
+    } else {
+        std::string if_modified_since = GetHeader(sp_ctx->req().headers, "if-modified-since");
+        if (!if_modified_since.empty()) {
+            time_t since = StringToHttpDate(if_modified_since);
+            if (since != -1 && file_mtime <= since) {
+                res.status_code = StatusCode::k304_NotModified;
+                return true;
+            }
+        }
     }
 
-    //! 文件是否大于100KB
-    if (file_size < d_->switch_to_worker_filesize_threshold) {
-        //! 小文件就直接读了
-        res.status_code = StatusCode::k200_OK;
-        res.headers["Content-Length"] = std::to_string(file_size);
-        //! 将文件内容读到body中去
-        res.body = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        LogInfo("Served file: %s (%zu bytes)", file_path.c_str(), file_size);
+    //! 解析 Range 请求头（需在 HEAD 判断之前，确保非法 Range 返回 416）
+    size_t range_begin = 0;
+    size_t range_end   = file_size > 0 ? file_size - 1 : 0;
+    bool   has_range   = false;
 
+    if (file_size > 0) {
+        auto range_str = GetHeader(sp_ctx->req().headers, "range");
+        if (util::string::IsStartWith(range_str, "bytes=")) {
+            has_range = ParseRangeString(range_str, file_size, range_begin, range_end);
+        }
+
+        //! If-Range：ETag 不匹配时降级为全量响应，保证数据一致性
+        if (has_range) {
+            std::string if_range = GetHeader(sp_ctx->req().headers, "if-range");
+            if (!if_range.empty() && if_range != etag) {
+                has_range   = false;
+                range_begin = 0;
+                range_end   = file_size - 1;
+            }
+        }
+
+        //! 校验范围合法性
+        if (has_range && (range_begin >= file_size || range_end >= file_size || range_begin > range_end)) {
+            res.status_code = StatusCode::k416_RequestedRangeNotSatisfiable;
+            res.headers["Content-Range"] = "bytes */" + std::to_string(file_size);
+            return true;
+        }
+    }
+
+    size_t content_length = file_size > 0 ? range_end - range_begin + 1 : 0;
+    res.headers["Content-Length"] = std::to_string(content_length);
+
+    if (has_range) {
+        res.status_code = StatusCode::k206_PartialContent;
+        res.headers["Content-Range"] = "bytes " + std::to_string(range_begin) + "-" +
+            std::to_string(range_end) + "/" + std::to_string(file_size);
     } else {
-        //! 文件太大就采用子线程去读
+        res.status_code = StatusCode::k200_OK;
+    }
+
+    //! HEAD 请求不返回 body
+    if (sp_ctx->req().method == Method::kHead)
+        return true;
+
+    //! 空文件直接返回
+    if (file_size == 0)
+        return true;
+
+    if (content_length < d_->switch_to_worker_filesize_threshold) {
+        std::ifstream file(file_path, std::ios::binary);
+        if (!file.is_open()) {
+            res.status_code = StatusCode::k500_InternalServerError;
+            return true;
+        }
+        file.seekg(static_cast<std::streamoff>(range_begin));
+        res.body.resize(content_length);
+        file.read(&res.body[0], static_cast<std::streamsize>(content_length));
+        LogInfo("Served file: %s (bytes %zu-%zu/%zu)",
+                file_path.c_str(), range_begin, range_end, file_size);
+    } else {
         d_->worker->execute(
-            [sp_ctx, file_path] {
+            [sp_ctx, file_path, range_begin, content_length] {
                 auto& res = sp_ctx->res();
-                if (util::fs::ReadBinaryFromFile(file_path, res.body)) {
-                    res.status_code = StatusCode::k200_OK;
-                    res.headers["Content-Length"] = std::to_string(res.body.size());
-                    LogInfo("Served file: %s (%zu bytes)", file_path.c_str(), res.body.size());
+                std::ifstream f(file_path, std::ios::binary);
+                if (f.is_open()) {
+                    f.seekg(static_cast<std::streamoff>(range_begin));
+                    res.body.resize(content_length);
+                    f.read(&res.body[0], static_cast<std::streamsize>(content_length));
+                    LogInfo("Served file(worker): %s (%zu bytes from %zu)",
+                            file_path.c_str(), content_length, range_begin);
                 } else {
-                    res.status_code = StatusCode::k404_NotFound;
+                    res.status_code = StatusCode::k500_InternalServerError;
                 }
             },
-            [sp_ctx] { } //! 这是为了确保sp_ctx在主线程上析构
-        );
+            [sp_ctx] { } //! 确保 sp_ctx 在主线程上析构
+         );
     }
 
     return true;
@@ -310,7 +480,8 @@ bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string
 
 bool FileDownloaderMiddleware::respondDirectory(ContextSptr sp_ctx,
                                                 const std::string& dir_path,
-                                                const std::string& url_path) {
+                                                const std::string& url_path)
+{
     try {
         //! 生成HTML目录列表
         std::ostringstream html_oss;
