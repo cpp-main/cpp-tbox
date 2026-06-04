@@ -75,7 +75,7 @@ TEST(TimeoutMonitor, Clear)
     sp_timer->enable();
 
     bool run = false;
-    tm.setCallback([&] (int value) {
+    tm.setCallback([&] (int /*value*/) {
         run = true;
     });
 

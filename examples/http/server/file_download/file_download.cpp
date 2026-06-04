@@ -40,6 +40,13 @@
 #include <tbox/util/fs.h>
 #include <tbox/trace/sink.h>
 
+//! 是否采用外部线程池，不需要则屏蔽之
+#define USE_THREAD_POOL 1
+
+#if USE_THREAD_POOL
+#include <tbox/eventx/thread_pool.h>
+#endif
+
 using namespace std;
 using namespace tbox;
 using namespace tbox::event;
@@ -120,6 +127,13 @@ int main(int argc, char **argv)
         }
     );
 
+#if USE_THREAD_POOL
+    tbox::eventx::ThreadPool thread_pool(sp_loop);
+    thread_pool.initialize(2);
+#endif
+
+    ::signal(SIGPIPE, SIG_IGN);
+
     // 初始化信号处理
     sp_sig_event->initialize({SIGINT, SIGTERM}, Event::Mode::kPersist);
     sp_sig_event->enable();
@@ -136,7 +150,12 @@ int main(int argc, char **argv)
 
     // 创建路由器和文件下载中间件
     RouterMiddleware router;
+
+#if USE_THREAD_POOL
+    FileDownloaderMiddleware file_downloader(sp_loop, &thread_pool);
+#else
     FileDownloaderMiddleware file_downloader(sp_loop);
+#endif
 
     // 添加状态页面路由
     router.get("/api/status", [](ContextSptr ctx, const NextFunc& next) {

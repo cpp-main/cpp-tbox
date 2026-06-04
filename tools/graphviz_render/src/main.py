@@ -22,7 +22,6 @@
 
 import os
 import sys
-import signal
 
 from ui.viewer import GraphvizViewer
 from signal_handler import SignalHandler
