@@ -13,18 +13,18 @@ cpp-tbox (C++ Treasure Box) is a Reactor-based service development framework and
 # Build everything (3rd-party + all modules in config.mk)
 make 3rd-party modules RELEASE=1
 
-# Build debug version with ASAN
+# Build with ASAN (recommended, enables memory leak checking)
 make 3rd-party modules ENABLE_ASAN=1
 
 # Build and run tests for all enabled modules
-make test
-make run_test   # executes each module's test binary
+make test ENABLE_ASAN=1
+make run_test ENABLE_ASAN=1   # executes each module's test binary
 
 # Build single module only
-make -C modules/base
+make -C modules/base ENABLE_ASAN=1
 
 # Build and test single module
-make -C modules/base test
+make -C modules/base test ENABLE_ASAN=1
 
 # Clean
 make clean          # rm .build
@@ -33,6 +33,8 @@ make distclean      # rm .build .staging .install
 # Custom staging directory
 make 3rd-party modules RELEASE=1 STAGING_DIR=$HOME/.tbox
 ```
+
+> **Note:** Always add `ENABLE_ASAN=1` when building with make to enable AddressSanitizer for memory leak detection.
 
 ### CMake (alternative)
 ```bash
@@ -52,7 +54,7 @@ Edit `config.mk` to enable/disable modules. Add `MODULES += xxx` or comment it o
 
 Each module has a `xxx_test.cpp` alongside `xxx.cpp`. Tests use gmock/gtest framework. Test binaries are built into `.build/<module>/test`.
 
-Run a single module's test: `make -C modules/<name> test && .build/<name>/test`
+Run a single module's test: `make -C modules/<name> test ENABLE_ASAN=1 && .build/<name>/test`
 
 ## Architecture
 

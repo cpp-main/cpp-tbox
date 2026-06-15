@@ -32,11 +32,13 @@ set(TBOX_LIBRARY_NAME tbox_websocket)
 set(TBOX_WEBSOCKET_SOURCES
     ws_frame_parser.cpp
     ws_frame_builder.cpp
-    ws_connection.cpp
-    ws_server_impl.cpp)
+    server/ws_connection.cpp
+    server/ws_server_impl.cpp
+    client/client.cpp
+    client/client_impl.cpp)
 
 set(TBOX_WEBSOCKET_TEST_SOURCES
-    ws_server_test.cpp
+    server/ws_server_test.cpp
     ws_frame_parser_test.cpp
     ws_frame_builder_test.cpp)
 
@@ -68,9 +70,21 @@ install(
 # install header files
 install(
     FILES
-    ws_server.h
     ws_frame.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/websocket
+)
+
+install(
+    FILES
+    server/ws_server.h
+    server/ws_connection.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/websocket/server
+)
+
+install(
+    FILES
+    client/client.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/websocket/client
 )
 
 # generate and install export file

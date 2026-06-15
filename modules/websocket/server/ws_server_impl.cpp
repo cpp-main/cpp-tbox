@@ -27,12 +27,14 @@
 #include <tbox/network/tcp_connection.h>
 #include <tbox/crypto/sha1.h>
 #include <tbox/util/base64.h>
+#include <tbox/util/string.h>
 
 #undef  MODULE_ID
 #define MODULE_ID "tbox.ws"
 
 namespace tbox {
 namespace websocket {
+namespace server {
 
 using namespace std::placeholders;
 
@@ -118,11 +120,24 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
     auto &req = sp_ctx->req();
 
     if (IsWsUpgradeRequest(req)) {
-        //! URL 路径匹配（精确匹配）
-        if (!url_path_.empty() && req.url.path != url_path_) {
-            //! 不是本服务关心的 URL，传递给下一个中间件
-            next();
-            return;
+        //! URL 路径匹配规则：
+        //! - url_path_ 以 '/' 结尾：前缀匹配，如 "/api/" 匹配 "/api/aa"、" /api/bb/cc"
+        //! - url_path_ 不以 '/' 结尾：全量匹配，如 "/api" 仅匹配 "/api"
+        //! - url_path_ 为空字符串：匹配所有 WebSocket 升级请求
+        if (!url_path_.empty()) {
+            bool matched = false;
+            if (url_path_.back() == '/') {
+                //! 前缀匹配
+                matched = util::string::IsStartWith(req.url.path, url_path_);
+            } else {
+                //! 全量匹配
+                matched = (req.url.path == url_path_);
+            }
+            if (!matched) {
+                //! 不是本服务关心的 URL，传递给下一个中间件
+                next();
+                return;
+            }
         }
 
         LogDbg("ws upgrade request: %s", req.url.path.c_str());
@@ -152,7 +167,7 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
             res.headers["Sec-WebSocket-Accept"] = ComputeWsAcceptKey(key_iter->second);
 
         //! 注册升级回调：HTTP 服务器发送 101 响应后，将 TcpConnection 交给 WsServer
-        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1);
+        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1, req.url.path);
 
         //! 升级请求已处理，不再调用 next()
         return;
@@ -164,13 +179,16 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
 
 //! === 升级与连接管理 ===
 
-void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn)
+void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path)
 {
     RECORD_SCOPE();
     LogDbg("ws upgrade: new connection from %s", tcp_conn->peerAddr().toString().c_str());
 
     //! 创建 WsConnection，并存入 Cabinet（直接 alloc 并存入指针）
-    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn);
+    //! 传入升级时的 URL 路径，供用户后续通过 getUrl() 查询
+    //! 注意：这里需要获取升级请求的 URL，但 onWsUpgrade 只拿到 TcpConnection
+    //! URL 已在 handle() 中记录到 upgrade_cb 的绑定参数中
+    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path);
     ConnToken ws_token = ws_conns_.alloc(ws_conn);
 
     //! 设置 WsConnection 的回调（bind 捕获 ConnToken，不传递 WsConnection*）
@@ -279,6 +297,29 @@ network::SockAddr WsServer::Impl::peerAddr(const ConnToken &client) const
     if (ws_conn != nullptr)
         return ws_conn->peerAddr();
     return network::SockAddr();
+}
+
+std::string WsServer::Impl::getUrl(const ConnToken &client) const
+{
+    auto ws_conn = ws_conns_.at(client);
+    if (ws_conn != nullptr)
+        return ws_conn->getUrl();
+    return "";
+}
+
+void WsServer::Impl::setContext(const ConnToken &client, void *context, ContextDeleter &&deleter)
+{
+    auto ws_conn = ws_conns_.at(client);
+    if (ws_conn != nullptr)
+        ws_conn->setContext(context, std::move(deleter));
+}
+
+void* WsServer::Impl::getContext(const ConnToken &client) const
+{
+    auto ws_conn = ws_conns_.at(client);
+    if (ws_conn != nullptr)
+        return ws_conn->getContext();
+    return nullptr;
 }
 
 //! === 静态辅助方法 ===
@@ -426,6 +467,21 @@ network::SockAddr WsServer::peerAddr(const ConnToken &client) const
     return impl_->peerAddr(client);
 }
 
+std::string WsServer::getUrl(const ConnToken &client) const
+{
+    return impl_->getUrl(client);
+}
+
+void WsServer::setContext(const ConnToken &client, void *context, ContextDeleter &&deleter)
+{
+    impl_->setContext(client, context, std::move(deleter));
+}
+
+void* WsServer::getContext(const ConnToken &client) const
+{
+    return impl_->getContext(client);
+}
+
 bool WsServer::IsWsUpgradeRequest(const http::Request &req)
 {
     return Impl::IsWsUpgradeRequest(req);
@@ -436,5 +492,6 @@ std::string WsServer::ComputeWsAcceptKey(const std::string &sec_ws_key)
     return Impl::ComputeWsAcceptKey(sec_ws_key);
 }
 
+}
 }
 }

@@ -26,20 +26,24 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	ws_server.h \
 	ws_frame.h \
+	server/ws_server.h \
+	server/ws_connection.h \
+	client/client.h \
 
 CPP_SRC_FILES = \
 	ws_frame_parser.cpp \
 	ws_frame_builder.cpp \
-	ws_connection.cpp \
-	ws_server_impl.cpp \
+	server/ws_connection.cpp \
+	server/ws_server_impl.cpp \
+	client/client.cpp \
+	client/client_impl.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.ws"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
-	ws_server_test.cpp \
+	server/ws_server_test.cpp \
 	ws_frame_parser_test.cpp \
 	ws_frame_builder_test.cpp \
 

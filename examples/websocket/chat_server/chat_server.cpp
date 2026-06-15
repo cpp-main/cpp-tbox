@@ -22,7 +22,7 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
 #include <tbox/http/server/server.h>
-#include <tbox/websocket/ws_server.h>
+#include <tbox/websocket/server/ws_server.h>
 
 #include <set>
 #include <string>
@@ -34,6 +34,7 @@ using namespace tbox::event;
 using namespace tbox::http;
 using namespace tbox::http::server;
 using namespace tbox::websocket;
+using namespace tbox::websocket::server;
 
 //! 群聊聊天室
 //! 内含 WsServer，统一管理 WebSocket 连接与聊天逻辑
@@ -78,6 +79,9 @@ class ChatRoom {
     //! 连接建立：暂不广播，等收到用户名后再广播上线
     void onConnected(const WsServer::ConnToken &token)
     {
+        auto url_path = ws_srv_.getUrl(token);
+        LogInfo("url_path:%s", url_path.c_str());
+
         conns_.insert(token);
     }
 

@@ -23,11 +23,12 @@
 #include <tbox/event/loop.h>
 #include <tbox/network/tcp_connection.h>
 
-#include "ws_frame.h"
-#include "ws_frame_parser.h"
+#include "../ws_frame.h"
+#include "../ws_frame_parser.h"
 
 namespace tbox {
 namespace websocket {
+namespace server {
 
 //! WebSocket 连接
 //! 包装从 HTTP 升级后分离出来的 TcpConnection，解析/构建 WebSocket 帧
@@ -74,12 +75,20 @@ class WsConnection {
     //! 获取客户端地址
     network::SockAddr peerAddr() const;
 
+    //! 获取客户端连接的 URL 路径
+    std::string getUrl() const;
+
     //! 连接是否已失效
     bool isExpired() const;
 
+    //! 设置/获取上下文数据（直接委托给底层 TcpConnection）
+    using ContextDeleter = network::TcpConnection::ContextDeleter;
+    void  setContext(void *context, ContextDeleter &&deleter = nullptr);
+    void* getContext() const;
+
   private:
     //! 仅由 WsServer 创建（生命期由 Cabinet 管理）
-    WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn);
+    WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url);
 
     void onTcpReceived(network::Buffer &buff);
     void onTcpDisconnected();
@@ -91,6 +100,7 @@ class WsConnection {
   private:
     event::Loop *wp_loop_;
     network::TcpConnection *sp_tcp_conn_;
+    std::string url_;
 
     WsFrameParser frame_parser_;
 
@@ -106,6 +116,7 @@ class WsConnection {
     friend class WsServer;
 };
 
+}
 }
 }
 

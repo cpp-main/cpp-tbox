@@ -40,7 +40,7 @@
 #include <tbox/event/signal_event.h>
 #include <tbox/event/timer_event.h>
 #include <tbox/http/server/server.h>
-#include <tbox/websocket/ws_server.h>
+#include <tbox/websocket/server/ws_server.h>
 
 #include <set>
 #include <string>
@@ -54,6 +54,7 @@ using namespace tbox::event;
 using namespace tbox::http;
 using namespace tbox::http::server;
 using namespace tbox::websocket;
+using namespace tbox::websocket::server;
 
 //! 统计帧的头部标识：0x53 0x54 0x41 0x54 = "STAT"
 static const uint8_t kStatHeader[4] = {0x53, 0x54, 0x41, 0x54};

@@ -22,17 +22,19 @@
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 
-#include "ws_frame_parser.h"
-#include "ws_frame_builder.h"
+#include "../ws_frame_parser.h"
+#include "../ws_frame_builder.h"
 
 namespace tbox {
 namespace websocket {
+namespace server {
 
 using namespace std::placeholders;
 
-WsConnection::WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn)
+WsConnection::WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url)
   : wp_loop_(wp_loop)
   , sp_tcp_conn_(tcp_conn)
+  , url_(url)
 {
     TBOX_ASSERT(wp_loop != nullptr);
     TBOX_ASSERT(tcp_conn != nullptr);
@@ -127,9 +129,27 @@ network::SockAddr WsConnection::peerAddr() const
     return network::SockAddr();
 }
 
+std::string WsConnection::getUrl() const
+{
+    return url_;
+}
+
 bool WsConnection::isExpired() const
 {
     return sp_tcp_conn_ == nullptr || sp_tcp_conn_->isExpired();
+}
+
+void WsConnection::setContext(void *context, ContextDeleter &&deleter)
+{
+    if (sp_tcp_conn_ != nullptr)
+        sp_tcp_conn_->setContext(context, std::move(deleter));
+}
+
+void* WsConnection::getContext() const
+{
+    if (sp_tcp_conn_ != nullptr)
+        return sp_tcp_conn_->getContext();
+    return nullptr;
 }
 
 bool WsConnection::sendFrame(WsFrame::OpCode opcode, bool fin,
@@ -231,5 +251,6 @@ void WsConnection::onTcpSendCompleted()
         send_complete_cb_();
 }
 
+}
 }
 }

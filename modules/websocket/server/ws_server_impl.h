@@ -35,6 +35,7 @@
 
 namespace tbox {
 namespace websocket {
+namespace server {
 
 //! WsServer::Impl 同时充当 HTTP 中间件
 //! 检测 WebSocket 升级请求，设置 101 响应，注册 upgrade_cb
@@ -68,6 +69,12 @@ class WsServer::Impl : public http::server::Middleware {
     bool pong(const ConnToken &client, const std::string &data);
     bool isClientValid(const ConnToken &client) const;
     network::SockAddr peerAddr(const ConnToken &client) const;
+    std::string getUrl(const ConnToken &client) const;
+
+    //! 上下文数据操作（委托到 WsConnection → TcpConnection）
+    using ContextDeleter = network::TcpConnection::ContextDeleter;
+    void  setContext(const ConnToken &client, void *context, ContextDeleter &&deleter = nullptr);
+    void* getContext(const ConnToken &client) const;
 
   public:
     //! Middleware 接口：处理 HTTP 请求，检测 WebSocket 升级
@@ -79,7 +86,7 @@ class WsServer::Impl : public http::server::Middleware {
 
   private:
     //! 当 HTTP 服务器发送 101 响应后回调此函数
-    void onWsUpgrade(network::TcpConnection *tcp_conn);
+    void onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path);
 
     //! 当 WsConnection 断开时回调（参数为 ConnToken）
     void onWsDisconnected(const ConnToken &client);
@@ -95,7 +102,11 @@ class WsServer::Impl : public http::server::Middleware {
     event::Loop *wp_loop_;
 
     http::server::Server *wp_http_server_ = nullptr;
-    std::string url_path_;  //! URL 路径（精确匹配），空字符串表示匹配所有
+    //! URL 路径匹配规则：
+    //! - url_path_ 以 '/' 结尾：前缀匹配，如 "/api/" 匹配 "/api/aa"
+    //! - url_path_ 不以 '/' 结尾：全量匹配，如 "/api" 仅匹配 "/api"
+    //! - url_path_ 为空字符串：匹配所有 WebSocket 升级请求
+    std::string url_path_;
 
     //! 中间件 token（由 HTTP Server 的 use() 返回，用于 unuse() 反注册）
     http::server::MiddlewareToken mw_token_;
@@ -111,6 +122,7 @@ class WsServer::Impl : public http::server::Middleware {
     WsServer::ErrorCallback        error_cb_;
 };
 
+}
 }
 }
 #endif //TBOX_WS_SERVER_IMPLH_20260612

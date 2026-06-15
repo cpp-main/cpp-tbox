@@ -24,10 +24,11 @@
 #include <tbox/base/cabinet_token.h>
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
+#include <tbox/network/tcp_connection.h>
 
 #include <tbox/http/request.h>
 
-#include "ws_frame.h"
+#include "../ws_frame.h"
 
 namespace tbox {
 namespace http {
@@ -37,10 +38,11 @@ class Server;
 }
 
 namespace websocket {
+namespace server {
 
 //! WebSocket 服务器
 //! 基于 HTTP 服务器运行，本身即为 HTTP 中间件
-//! 支持指定 URL 路径（精确匹配），实现多个 WebSocket 服务挂载于同一 HTTP 服务器
+//! 支持指定 URL 路径（前缀匹配），实现多个 WebSocket 服务挂载于同一 HTTP 服务器
 //! 升级后接管 TcpConnection，提供 WebSocket 通信功能
 //! 通过 Cabinet 管理 WsConnection 生命期，用户通过 ConnToken 操作连接
 class WsServer {
@@ -55,8 +57,10 @@ class WsServer {
 
   public:
     //! 初始化：关联到 HTTP 服务器
-    //! url_path 为 WebSocket 服务挂载的 URL 路径（精确匹配）
-    //! 空字符串表示匹配所有 WebSocket 升级请求
+    //! URL 路径匹配规则：
+    //! - url_path_ 以 '/' 结尾：前缀匹配，如 "/api/" 匹配 "/api/aa"、" /api/bb/cc"
+    //! - url_path_ 不以 '/' 结尾：全量匹配，如 "/api" 仅匹配 "/api"
+    //! - url_path_ 为空字符串：匹配所有 WebSocket 升级请求
     bool initialize(http::server::Server *http_server, const std::string &url_path = "");
     bool start();
     void stop();
@@ -95,8 +99,15 @@ class WsServer {
 
     //! 检查客户端连接是否有效
     bool isClientValid(const ConnToken &client) const;
-    //! 获取客户端地址
+    //! 获取客户端地址（含 IP 与端口，toString() 可得 "ip:port" 格式）
     network::SockAddr peerAddr(const ConnToken &client) const;
+    //! 获取客户端连接的 URL 路径
+    std::string getUrl(const ConnToken &client) const;
+
+    //! 设置/获取客户端连接的上下文数据（委托给底层 TcpConnection）
+    using ContextDeleter = network::TcpConnection::ContextDeleter;
+    void  setContext(const ConnToken &client, void *context, ContextDeleter &&deleter = nullptr);
+    void* getContext(const ConnToken &client) const;
 
   public:
     //! 检查请求是否为有效的 WebSocket 升级请求
@@ -110,6 +121,7 @@ class WsServer {
     Impl *impl_;
 };
 
+}
 }
 }
 

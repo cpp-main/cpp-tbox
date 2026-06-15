@@ -24,6 +24,7 @@
 
 namespace tbox {
 namespace websocket {
+namespace server {
 namespace {
 
 //! RFC 6455 Section 4.2.2 示例：
@@ -95,5 +96,6 @@ TEST(WsServer, DetectWrongVersion)
     EXPECT_FALSE(WsServer::IsWsUpgradeRequest(req));
 }
 
+}
 }
 }
