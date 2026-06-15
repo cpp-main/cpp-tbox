@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2026 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -18,31 +18,32 @@
 # of the source tree.
 #
 
-PROJECT = crypto
-LIB_NAME = crypto
+PROJECT = websocket
+LIB_NAME = websocket
+
 LIB_VERSION_X = 0
 LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	md5.h \
-	aes.h \
-	sha1.h \
+	ws_server.h \
+	ws_frame.h \
 
 CPP_SRC_FILES = \
-	md5.cpp \
-	aes.cpp \
-	sha1.cpp \
+	ws_frame_parser.cpp \
+	ws_frame_builder.cpp \
+	ws_connection.cpp \
+	ws_server_impl.cpp \
 
-CXXFLAGS := -DMODULE_ID='"tbox.crypto"' $(CXXFLAGS)
+CXXFLAGS := -DMODULE_ID='"tbox.ws"' $(CXXFLAGS)
 
 TEST_CPP_SRC_FILES = \
 	$(CPP_SRC_FILES) \
-	md5_test.cpp \
-	aes_test.cpp \
-	sha1_test.cpp \
+	ws_server_test.cpp \
+	ws_frame_parser_test.cpp \
+	ws_frame_builder_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_util -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_crypto -ltbox_http -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
 
 ENABLE_SHARED_LIB = no
 

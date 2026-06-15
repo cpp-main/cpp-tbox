@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2026 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -18,7 +18,22 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 14
-TBOX_VERSION_REVISION := 0
+PROJECT := examples/websocket/chat
+EXE_NAME := ${PROJECT}
+
+CPP_SRC_FILES := chat.cpp html_text.cpp
+
+CXXFLAGS := -DMODULE_ID='"$(EXE_NAME)"' $(CXXFLAGS)
+LDFLAGS += \
+	-ltbox_websocket \
+	-ltbox_crypto \
+	-ltbox_http \
+	-ltbox_network \
+	-ltbox_eventx \
+	-ltbox_event \
+	-ltbox_log \
+	-ltbox_util \
+	-ltbox_base \
+	-lpthread -ldl
+
+include $(TOP_DIR)/mk/exe_common.mk

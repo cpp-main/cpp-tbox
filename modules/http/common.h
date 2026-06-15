@@ -62,6 +62,7 @@ enum class StatusCode {
     kUnset,
 
     //! 正常
+    k101_SwitchingProtocols = 101,
     k200_OK = 200,
     k201_Created = 201,
     k202_Accepted = 202,

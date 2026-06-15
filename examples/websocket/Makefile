@@ -9,7 +9,7 @@
 #    \\     \     \ /
 #     -============'
 #
-# Copyright (c) 2018 Hevake and contributors, all rights reserved.
+# Copyright (c) 2025 Hevake and contributors, all rights reserved.
 #
 # This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
 # Use of this source code is governed by MIT license that can be found
@@ -18,7 +18,9 @@
 # of the source tree.
 #
 
-# TBOX版本号
-TBOX_VERSION_MAJOR := 1
-TBOX_VERSION_MINOR := 14
-TBOX_VERSION_REVISION := 0
+all test clean distclean:
+	@for i in $(shell ls) ; do \
+		if [ -d $$i ]; then  \
+			$(MAKE) -C $$i $@ || exit $$? ; \
+		fi \
+	done

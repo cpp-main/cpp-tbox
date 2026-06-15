@@ -25,6 +25,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
 #include <tbox/util/buffer.h>
+#include <tbox/network/tcp_connection.h>
 
 #include "middleware.h"
 
@@ -37,9 +38,10 @@ using namespace std::placeholders;
 using namespace event;
 using namespace network;
 
-Server::Impl::Impl(Server *wp_parent, Loop *wp_loop) :
-    wp_parent_(wp_parent),
-    tcp_server_(wp_loop)
+Server::Impl::Impl(Server *wp_parent, Loop *wp_loop)
+  : wp_parent_(wp_parent)
+  , wp_loop_(wp_loop)
+  , tcp_server_(wp_loop)
 { }
 
 Server::Impl::~Impl()
@@ -184,6 +186,12 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
         return;
     }
 
+    //! 如果已被标记为升级请求，停止解析 HTTP 数据
+    if (conn->is_upgrade) {
+        //! 不消费剩余数据，留给升级后的协议处理
+        return;
+    }
+
     while (buff.readableSize() > 0) {
         size_t rsize = conn->req_parser.parse(buff.readableBegin(), buff.readableSize());
         buff.hasRead(rsize);
@@ -194,16 +202,24 @@ void Server::Impl::onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff)
             if (context_log_enable_)
                 LogDbg("REQ: [%s]", req->toString().c_str());
 
+            auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);
+            handle(sp_ctx, 0);
+
+            //! 检查是否有协议升级回调（WebSocket、SSE 等）
+            //! 如果有，标记连接为升级模式，停止继续解析 HTTP 数据
+            if (sp_ctx->res().upgrade_cb) {
+                conn->is_upgrade = true;
+                //! 升级请求：保留 buffer 中未消费的数据，留给升级后的协议
+                break;
+            }
+
+            //! 非升级请求：检查是否为最后一个请求
             if (IsLastRequest(req)) {
-                //! 标记当前请求为close请求
                 conn->close_index = conn->req_index;
                 LogDbg("mark close at %d", conn->close_index);
 
                 tcp_server_.shutdown(ct, SHUT_RD);
             }
-
-            auto sp_ctx = make_shared<Context>(wp_parent_, ct, conn->req_index++, req);
-            handle(sp_ctx, 0);
 
         } else if (conn->req_parser.state() == RequestParser::State::kFail) {
             LogNotice("parse http from %s fail", tcp_server_.getClientAddress(ct).toString().c_str());
@@ -234,12 +250,41 @@ void Server::Impl::onTcpSendCompleted(const TcpServer::ConnToken &ct)
  * 为了保证管道化连接中Respond与Request的顺序一致性，要做特殊处理。
  * 如果所提交的index不是当前需要回复的res_index，那么就先暂存起来，等前面的发送完成后再发送；
  * 如果是，则可以直接回复。然后再将暂存中的未发送的其它数据也一同发送。
+ *
+ * 对于协议升级请求（WebSocket 101、SSE 200 等），发送完响应后，
+ * 将从HTTP服务器分离TcpConnection，并通过Respond::upgrade_cb回调交给升级协议。
  */
 void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res)
 {
     RECORD_SCOPE();
     if (!tcp_server_.isClientValid(ct)) {
         delete res;
+        return;
+    }
+
+    //! 处理协议升级请求（WebSocket 101、SSE 200 等）
+    //! 触发条件：res->upgrade_cb 已设置（中间件负责设置）
+    if (res->upgrade_cb) {
+        //! 发送响应后，将 TcpConnection 从 HTTP 服务器分离，交给升级协议
+        auto upgrade_cb = std::move(res->upgrade_cb);
+        {
+            const string &content = res->toString();
+            tcp_server_.send(ct, content.data(), content.size());
+            delete res;
+            if (context_log_enable_)
+                LogDbg("RES: [%s]", content.c_str());
+        }
+
+        //! 当前回调结束后立即执行 detach（使用 runNext，更高效）
+        //! 因为 commitRespond() 是在 Loop 线程中执行的
+        wp_loop_->runNext([this, ct, upgrade_cb] {
+            TcpConnection *tcp_conn = tcp_server_.detachConnection(ct);
+            if (tcp_conn != nullptr)
+                upgrade_cb(tcp_conn);
+            else
+                LogWarn("tcp_conn == nullptr");
+        }, "HttpUpgrade: detach connection");
+
         return;
     }
 

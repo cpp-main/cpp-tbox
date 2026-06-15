@@ -63,7 +63,6 @@ class Server::Impl {
     void commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res);
 
   private:
-
     void onTcpConnected(const TcpServer::ConnToken &ct);
     void onTcpReceived(const TcpServer::ConnToken &ct, Buffer &buff);
     void onTcpSendCompleted(const TcpServer::ConnToken &ct);
@@ -75,6 +74,7 @@ class Server::Impl {
         int res_index = 0;  //!< 下一个要求回复的index，用于实现按顺序回复
         int close_index = numeric_limits<int>::max();   //!< 需要关闭连接的index
         map<int, Respond*> res_buff;  //!< 暂存器
+        bool is_upgrade = false;  //!< 是否为升级请求（WebSocket等）
 
         ~Connection();
     };
@@ -83,6 +83,7 @@ class Server::Impl {
 
   private:
     Server *wp_parent_;
+    event::Loop *wp_loop_;
 
     TcpServer tcp_server_;
     cabinet::Cabinet<RequestHandler> mw_cabinet_;   //!< 中间件存储

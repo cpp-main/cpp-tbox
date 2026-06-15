@@ -229,6 +229,7 @@ TcpConnection* TcpServer::detachConnection(const ConnToken &client)
 {
     auto conn = d_->conns.free(client);
     if (conn != nullptr) {
+        conn->setContext(nullptr);
         conn->setReceiveCallback(nullptr, 0);
         conn->setDisconnectedCallback(nullptr);
         conn->setSendCompleteCallback(nullptr);

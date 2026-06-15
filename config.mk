@@ -32,11 +32,12 @@ MODULES += main
 MODULES += run
 
 ## 非核心模块，请根据需要选择
+MODULES += crypto
 MODULES += http
+MODULES += websocket
 MODULES += mqtt
 MODULES += flow
 MODULES += alarm
-MODULES += crypto
 MODULES += dbus
 MODULES += jsonrpc
 

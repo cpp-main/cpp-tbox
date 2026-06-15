@@ -107,6 +107,7 @@ Method StringToMethod(const std::string &str)
 namespace {
 using StatusCodePair = std::pair<StatusCode, std::string>;
 StatusCodePair _status_code_map[] = {
+    { StatusCode::k101_SwitchingProtocols, "101 Switching Protocols"},
     { StatusCode::k200_OK, "200 OK"},
     { StatusCode::k201_Created, "201 Created"},
     { StatusCode::k202_Accepted, "202 Accepted"},

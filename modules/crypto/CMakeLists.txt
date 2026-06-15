@@ -31,15 +31,18 @@ set(TBOX_LIBRARY_NAME tbox_crypto)
 
 set(TBOX_CRYPTO_HEADERS
     md5.h
-    aes.h)
+    aes.h
+    sha1.h)
 
 set(TBOX_CRYPTO_SOURCES
     md5.cpp
-    aes.cpp)
+    aes.cpp
+    sha1.cpp)
 
 set(TBOX_CRYPTO_TEST_SOURCES
     md5_test.cpp
-    aes_test.cpp)
+    aes_test.cpp
+    sha1_test.cpp)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_CRYPTO_SOURCES})
 
