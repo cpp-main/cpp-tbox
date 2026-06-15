@@ -161,6 +161,8 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 For details on how to use cpp-tbox to develop your own programs, see the tutorial:  
 [cpp-tbox-tutorials](https://github.com/cpp-main/cpp-tbox-tutorials/blob/master/README.md)  
 
+For module usage documentation, see: [Module Documentation](documents/modules/README.md)
+
 For example to use `find_package`:
 ```
 cmake_minimum_required(VERSION 3.10)

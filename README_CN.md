@@ -163,6 +163,8 @@ cmake -B build -DCMAKE_INSTALL_PREFIX=$HOME/.tbox
 关于如何使用 cpp-tbox 开发自己的程序，详见教程：
 [cpp-tbox-tutorials](https://gitee.com/cpp-master/cpp-tbox-tutorials/blob/master/README.md)  
 
+各模块使用文档，详见：[模块使用文档](documents/modules/README_CN.md)
+
 使用`find_package`的例子:
 
 ```

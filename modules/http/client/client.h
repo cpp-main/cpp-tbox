@@ -9,7 +9,7 @@
  *    \\     \     \ /
  *     -============'
  *
- * Copyright (c) 2018 Hevake and contributors, all rights reserved.
+ * Copyright (c) 2026 Hevake and contributors, all rights reserved.
  *
  * This file is part of cpp-tbox (https://github.com/cpp-main/cpp-tbox)
  * Use of this source code is governed by MIT license that can be found
@@ -22,7 +22,9 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
+#include <tbox/base/defines.h>
 
+#include "../common.h"
 #include "../request.h"
 #include "../respond.h"
 
@@ -35,22 +37,59 @@ class Client {
     explicit Client(event::Loop *wp_loop);
     virtual ~Client();
 
+    NONCOPYABLE(Client);
+    IMMOVABLE(Client);
+
   public:
-    //! 初始化，设置目标服务器
+    //! 状态
+    enum class State {
+        kNone,          //!< 未初始化
+        kInited,        //!< 已初始化
+        kConnecting,    //!< 连接中
+        kConnected,     //!< 已连接
+        kReconnWaiting, //!< 断连等待重连中
+    };
+
+    //! 初始化，设置目标服务器地址
     bool initialize(const network::SockAddr &server_addr);
 
+    bool start();       //!< 开始连接
+    void stop();        //!< 停止/断开连接
+    void cleanup();     //!< 清理，与 initialize() 是逆操作
+
+    State state() const;
+
+  public:
     //! 收到回复时的回调
     using RespondCallback = std::function<void(const Respond &res)>;
 
-    /**
-     * \brief   发送请求
-     * \param   req     请求数据
-     * \param   cb      回复的回调
-     */
+    //! 发送请求（完整 Request 对象）
     void request(const Request &req, const RespondCallback &cb);
 
-    //! 清理，与initialize()是逆操作
-    void cleanup();
+    //! 发送请求（便捷方法：指定 Method 和 path）
+    void request(Method method, const std::string &path, const RespondCallback &cb);
+
+    //! 发送请求（便捷方法：指定 Method、path、body、headers）
+    void request(Method method, const std::string &path,
+                 const std::string &body, const Headers &headers,
+                 const RespondCallback &cb);
+
+  public:
+    //! 连接相关回调
+    using ConnectedCallback    = std::function<void()>;
+    using ConnectFailCallback  = std::function<void()>;
+    using DisconnectedCallback = std::function<void()>;
+    using ReconnectDelayCalc   = std::function<int(int)>;
+
+    void setConnectedCallback(const ConnectedCallback &cb);
+    void setConnectFailCallback(const ConnectFailCallback &cb);
+    void setDisconnectedCallback(const DisconnectedCallback &cb);
+
+    //! 配置
+    void setAutoReconnect(bool enable);
+    void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func);
+    void setRequestTimeout(std::chrono::milliseconds ms);
+    void setContextLogEnable(bool enable);
 
   private:
     class Impl;
@@ -60,5 +99,4 @@ class Client {
 }
 }
 }
-
 #endif //TBOX_HTTP_CLIENT_H_20220504

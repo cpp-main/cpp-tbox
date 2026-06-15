@@ -42,7 +42,9 @@ set(TBOX_HTTP_SOURCES
     server/middlewares/form_data.cpp
     server/middlewares/form_data_middleware.cpp
     server/middlewares/file_downloader_middleware.cpp
-    client/client.cpp)
+    client/client.cpp
+    client/client_impl.cpp
+    client/respond_parser.cpp)
 
 set(TBOX_HTTP_TEST_SOURCES
     common_test.cpp

@@ -53,6 +53,8 @@ CPP_SRC_FILES = \
 	server/middlewares/form_data_middleware.cpp \
 	server/middlewares/file_downloader_middleware.cpp \
 	client/client.cpp \
+	client/client_impl.cpp \
+	client/respond_parser.cpp \
 
 CXXFLAGS := -DMODULE_ID='"tbox.http"' $(CXXFLAGS)
 
