@@ -19,6 +19,8 @@
  */
 #include "server_imp.h"
 
+#include <algorithm>
+
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
@@ -81,21 +83,58 @@ void Server::Impl::cleanup()
     if (state_ != State::kNone) {
         stop();
 
-        req_handler_.clear();
+        mw_cabinet_.foreach([](RequestHandler *ptr) { delete ptr; });
+        mw_cabinet_.clear();
+        mw_order_.clear();
         tcp_server_.cleanup();
 
         state_ = State::kNone;
     }
 }
 
-void Server::Impl::use(RequestHandler &&handler)
+MiddlewareToken Server::Impl::use(RequestHandler &&handler)
 {
-    req_handler_.push_back(std::move(handler));
+    if (cb_level_ > 0) {
+        LogWarn("不能在 next 链中调用 use()，请使用 Loop 的 runNext() 来处理");
+        return MiddlewareToken();
+    }
+
+    auto token = mw_cabinet_.alloc(new RequestHandler(std::move(handler)));
+    mw_order_.push_back(token);
+    return token;
 }
 
-void Server::Impl::use(Middleware *wp_middleware)
+MiddlewareToken Server::Impl::use(Middleware *wp_middleware)
 {
-    req_handler_.push_back(bind(&Middleware::handle, wp_middleware, _1, _2));
+    if (cb_level_ > 0) {
+        LogWarn("不能在 next 链中调用 use()，请使用 Loop 的 runNext() 来处理");
+        return MiddlewareToken();
+    }
+
+    auto token = mw_cabinet_.alloc(new RequestHandler(bind(&Middleware::handle, wp_middleware, _1, _2)));
+    mw_order_.push_back(token);
+    return token;
+}
+
+bool Server::Impl::unuse(const MiddlewareToken &token)
+{
+    if (cb_level_ > 0) {
+        LogWarn("不能在 next 链中调用 unuse()，请使用 Loop 的 runNext() 来处理");
+        return false;
+    }
+
+    //! 从 Cabinet 中释放
+    RequestHandler *handler = mw_cabinet_.free(token);
+    if (handler == nullptr)
+        return false;     //! token 无效或已释放
+    delete handler;
+
+    //! 从 order 中删除该 token（低频 O(n) 操作）
+    auto iter = find(mw_order_.begin(), mw_order_.end(), token);
+    if (iter != mw_order_.end())
+        mw_order_.erase(iter);
+
+    return true;
 }
 
 void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
@@ -252,18 +291,23 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
     }
 }
 
-void Server::Impl::handle(ContextSptr sp_ctx, size_t cb_index)
+void Server::Impl::handle(ContextSptr sp_ctx, size_t index)
 {
     RECORD_SCOPE();
-    if (cb_index >= req_handler_.size())
+    if (index >= mw_order_.size())
         return;
 
-    auto func = req_handler_.at(cb_index);
+    auto token = mw_order_.at(index);
+    RequestHandler *handler_ptr = mw_cabinet_.at(token);
 
-    ++cb_level_;
-    if (func)
-        func(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, cb_index + 1));
-    --cb_level_;
+    if (handler_ptr && *handler_ptr) {
+        ++cb_level_;
+        (*handler_ptr)(sp_ctx, std::bind(&Impl::handle, this, sp_ctx, index + 1));
+        --cb_level_;
+    } else {
+        //! handler 已被移除或为空，跳过，执行下一个
+        handle(sp_ctx, index + 1);
+    }
 }
 
 Server::Impl::Connection::~Connection()

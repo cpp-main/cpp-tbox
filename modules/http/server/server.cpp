@@ -63,14 +63,19 @@ void Server::setContextLogEnable(bool enable)
     return impl_->setContextLogEnable(enable);
 }
 
-void Server::use(RequestHandler &&handler)
+MiddlewareToken Server::use(RequestHandler &&handler)
 {
-    impl_->use(std::move(handler));
+    return impl_->use(std::move(handler));
 }
 
-void Server::use(Middleware *wp_middleware)
+MiddlewareToken Server::use(Middleware *wp_middleware)
 {
-    impl_->use(wp_middleware);
+    return impl_->use(wp_middleware);
+}
+
+bool Server::unuse(const MiddlewareToken &token)
+{
+    return impl_->unuse(token);
 }
 
 }

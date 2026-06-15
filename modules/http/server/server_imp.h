@@ -25,6 +25,7 @@
 #include <set>
 #include <limits>
 #include <tbox/network/tcp_server.h>
+#include <tbox/base/cabinet.hpp>
 
 #include "server.h"
 #include "request_parser.h"
@@ -55,8 +56,9 @@ class Server::Impl {
     void setContextLogEnable(bool enable) { context_log_enable_ = enable; }
 
   public:
-    void use(RequestHandler &&handler);
-    void use(Middleware *wp_middleware);
+    MiddlewareToken use(RequestHandler &&handler);
+    MiddlewareToken use(Middleware *wp_middleware);
+    bool unuse(const MiddlewareToken &token);
 
     void commitRespond(const TcpServer::ConnToken &ct, int index, Respond *res);
 
@@ -77,13 +79,14 @@ class Server::Impl {
         ~Connection();
     };
 
-    void handle(ContextSptr ctx, size_t cb_index);
+    void handle(ContextSptr ctx, size_t index);
 
   private:
     Server *wp_parent_;
 
     TcpServer tcp_server_;
-    vector<RequestHandler> req_handler_;
+    cabinet::Cabinet<RequestHandler> mw_cabinet_;   //!< 中间件存储
+    vector<MiddlewareToken> mw_order_;              //!< 调用顺序
     State state_ = State::kNone;
     bool context_log_enable_ = false;
 

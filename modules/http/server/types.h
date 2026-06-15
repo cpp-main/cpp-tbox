@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <functional>
+#include <tbox/base/cabinet_token.h>
 
 namespace tbox {
 namespace http {
@@ -31,6 +32,7 @@ class Context;
 using ContextSptr = std::shared_ptr<Context>;
 using NextFunc = std::function<void()>;
 using RequestHandler = std::function<void(ContextSptr, const NextFunc &)>;
+using MiddlewareToken = cabinet::Token;
 
 }
 }

@@ -54,8 +54,9 @@ class Server {
     void setContextLogEnable(bool enable);
 
   public:
-    void use(RequestHandler &&handler);
-    void use(Middleware *wp_middleware);
+    MiddlewareToken use(RequestHandler &&handler);
+    MiddlewareToken use(Middleware *wp_middleware);
+    bool unuse(const MiddlewareToken &token);
 
   private:
     class Impl;
