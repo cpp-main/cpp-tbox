@@ -47,6 +47,8 @@ WsConnection::WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_con
 
 WsConnection::~WsConnection()
 {
+    TBOX_ASSERT(cb_level_ == 0);
+
     if (sp_tcp_conn_ == nullptr)
       return;
 
@@ -176,8 +178,11 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                     case WsFrame::OpCode::kText:
                     case WsFrame::OpCode::kBinary:
                     case WsFrame::OpCode::kContinue:
-                        if (message_cb_)
+                        if (message_cb_) {
+                            ++cb_level_;
                             message_cb_(*frame);
+                            --cb_level_;
+                        }
                         break;
 
                     case WsFrame::OpCode::kClose:
@@ -190,28 +195,41 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                         //! 不再处理后续数据
                         buff.hasReadAll();
                         delete frame;
-                        if (close_cb_)
+                        if (close_cb_) {
+                            ++cb_level_;
                             close_cb_();
+                            --cb_level_;
+                        }
                         return;
 
                     case WsFrame::OpCode::kPing:
                         //! 自动回复 Pong
                         pong(frame->payload);
-                        if (ping_cb_)
+                        if (ping_cb_) {
+                            ++cb_level_;
                             ping_cb_(frame->payload);
+                            --cb_level_;
+                        }
                         break;
 
                     case WsFrame::OpCode::kPong:
-                        if (pong_cb_)
+                        if (pong_cb_) {
+                            ++cb_level_;
                             pong_cb_(frame->payload);
+                            --cb_level_;
+                        }
                         break;
 
                     default:
                         LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
                         delete frame;
                         buff.hasReadAll();
-                        if (error_cb_)
+                        if (error_cb_) {
+                            ++cb_level_;
                             error_cb_();
+                            --cb_level_;
+                        }
+
                         return;
                 }
                 delete frame;
@@ -219,8 +237,11 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
         } else if (frame_parser_.state() == WsFrameParser::State::kError) {
             LogNotice("ws frame parse error");
             buff.hasReadAll();
-            if (error_cb_)
+            if (error_cb_) {
+                ++cb_level_;
                 error_cb_();
+                --cb_level_;
+            }
             return;
         } else {
             //! 需要更多数据
@@ -233,22 +254,28 @@ void WsConnection::onTcpDisconnected()
 {
     LogInfo("ws disconnected");
 
+    if (close_cb_) {
+        ++cb_level_;
+        close_cb_();
+        --cb_level_;
+    }
+
     //! 清理 TcpConnection：先断开再延后删除
     //! 断空指针，防止析构函数重复操作已删除的对象
+    //! 必须要 close_cb_() 之后才能清理，否则回调中 getContext() 拿到是空的
     auto tcp_conn = sp_tcp_conn_;
     sp_tcp_conn_ = nullptr;
-
     wp_loop_->runNext([tcp_conn] { CHECK_DELETE_OBJ(tcp_conn); },
         "WsConnection::onTcpDisconnected, delete tcp_conn");
-
-    if (close_cb_)
-        close_cb_();
 }
 
 void WsConnection::onTcpSendCompleted()
 {
-    if (send_complete_cb_)
+    if (send_complete_cb_) {
+        ++cb_level_;
         send_complete_cb_();
+        --cb_level_;
+    }
 }
 
 }

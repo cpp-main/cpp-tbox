@@ -21,6 +21,7 @@
 #include "ws_server_impl.h"
 
 #include <tbox/base/log.h>
+#include <tbox/base/assert.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/wrapped_recorder.h>
 
@@ -45,6 +46,7 @@ WsServer::Impl::Impl(WsServer *wp_parent, event::Loop *wp_loop) :
 
 WsServer::Impl::~Impl()
 {
+    TBOX_ASSERT(cb_level_ == 0);
     cleanup();
 }
 
@@ -197,8 +199,11 @@ void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::st
     ws_conn->setErrorCallback(std::bind(&WsServer::Impl::onWsError, this, ws_token));
 
     //! 通知用户（传递 ConnToken）
-    if (connected_cb_)
+    if (connected_cb_) {
+        ++cb_level_;
         connected_cb_(ws_token);
+        --cb_level_;
+    }
 }
 
 void WsServer::Impl::onWsDisconnected(const ConnToken &client)
@@ -208,8 +213,11 @@ void WsServer::Impl::onWsDisconnected(const ConnToken &client)
 
     //! 先通知用户（此时 ConnToken 在 Cabinet 中仍有效）
     //! 用户可通过 ConnToken 调用 WsServer 方法获取连接信息
-    if (disconnected_cb_)
+    if (disconnected_cb_) {
+        ++cb_level_;
         disconnected_cb_(client);
+        --cb_level_;
+    }
 
     //! 从 Cabinet 中移除并获取指针
     WsConnection *ws_conn = ws_conns_.free(client);
@@ -221,14 +229,20 @@ void WsServer::Impl::onWsDisconnected(const ConnToken &client)
 
 void WsServer::Impl::onWsMessage(const ConnToken &client, const WsFrame &frame)
 {
-    if (message_cb_)
+    if (message_cb_) {
+        ++cb_level_;
         message_cb_(client, frame);
+        --cb_level_;
+    }
 }
 
 void WsServer::Impl::onWsError(const ConnToken &client)
 {
-    if (error_cb_)
+    if (error_cb_) {
+        ++cb_level_;
         error_cb_(client);
+        --cb_level_;
+    }
 
     //! 出错后关闭连接
     auto ws_conn = ws_conns_.at(client);
@@ -375,7 +389,9 @@ std::string WsServer::Impl::ComputeWsAcceptKey(const std::string &sec_ws_key)
 
 WsServer::WsServer(event::Loop *wp_loop)
   : impl_(new Impl(this, wp_loop))
-{ }
+{
+    TBOX_ASSERT(wp_loop != nullptr);
+}
 
 WsServer::~WsServer()
 {
@@ -384,6 +400,7 @@ WsServer::~WsServer()
 
 bool WsServer::initialize(http::server::Server *http_server, const std::string &url_path)
 {
+    TBOX_ASSERT(http_server != nullptr);
     return impl_->initialize(http_server, url_path);
 }
 

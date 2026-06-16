@@ -120,6 +120,8 @@ class WsServer::Impl : public http::server::Middleware {
     WsServer::DisconnectedCallback disconnected_cb_;
     WsServer::MessageCallback      message_cb_;
     WsServer::ErrorCallback        error_cb_;
+
+    int cb_level_ = 0;
 };
 
 }

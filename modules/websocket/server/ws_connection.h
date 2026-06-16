@@ -113,6 +113,8 @@ class WsConnection {
 
     bool is_closing_ = false;
 
+    int cb_level_ = 0;
+
     friend class WsServer;
 };
 

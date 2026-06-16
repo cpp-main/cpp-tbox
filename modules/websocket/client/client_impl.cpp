@@ -188,6 +188,14 @@ void Client::Impl::onTcpDisconnected()
     RECORD_SCOPE();
     LogInfo("ws client disconnected");
 
+    //! 通知用户
+    if (disconnected_cb_) {
+        RECORD_SCOPE();
+        ++cb_level_;
+        disconnected_cb_();
+        --cb_level_;
+    }
+
     //! 延后删除 TcpConnection（本函数是 sp_tcp_conn_ 自己调用的）
     auto tobe_delete = sp_tcp_conn_;
     sp_tcp_conn_ = nullptr;
@@ -199,14 +207,6 @@ void Client::Impl::onTcpDisconnected()
     //! 自动重连（与 TcpClient 一致：先重连再通知用户）
     if (reconnect_enabled_)
         start();
-
-    //! 通知用户
-    if (disconnected_cb_) {
-        RECORD_SCOPE();
-        ++cb_level_;
-        disconnected_cb_();
-        --cb_level_;
-    }
 }
 
 //! === 握手阶段 ===

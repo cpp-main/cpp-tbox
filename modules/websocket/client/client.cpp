@@ -19,6 +19,7 @@
  */
 #include "client.h"
 #include "client_impl.h"
+#include <tbox/base/assert.h>
 
 namespace tbox {
 namespace websocket {
@@ -26,7 +27,9 @@ namespace client {
 
 Client::Client(event::Loop *wp_loop)
   : impl_(new Impl(this, wp_loop))
-{ }
+{
+    TBOX_ASSERT(wp_loop != nullptr);
+}
 
 Client::~Client()
 {
