@@ -79,6 +79,12 @@ class FileDownloaderMiddleware : public Middleware {
      * \param file  文件路径
      */
     void setPathMapping(const std::string& url, const std::string& file);
+    /**
+     * 取消路径映射
+     *
+     * \param url   URL路径
+     */
+    void unsetPathMapping(const std::string& url);
 
     /**
      * 设置默认的MIME类型

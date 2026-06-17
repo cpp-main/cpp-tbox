@@ -237,6 +237,11 @@ void FileDownloaderMiddleware::setPathMapping(const std::string& url, const std:
     d_->path_mappings[url] = file;
 }
 
+void FileDownloaderMiddleware::unsetPathMapping(const std::string& url)
+{
+    d_->path_mappings.erase(url);
+}
+
 void FileDownloaderMiddleware::setDefaultMimeType(const std::string& mime_type)
 {
     d_->default_mime_type = mime_type;
