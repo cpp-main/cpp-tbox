@@ -136,8 +136,8 @@ std::vector<uint8_t> WsFrameBuilder::BuildMaskedPongFrame(const std::string &dat
 }
 
 std::vector<uint8_t> WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode opcode, bool fin,
-                                                       const void *payload_ptr, size_t payload_len,
-                                                       const uint8_t *mask_key)
+                                                      const void *payload_ptr, size_t payload_len,
+                                                      const uint8_t *mask_key)
 {
     std::vector<uint8_t> frame;
 

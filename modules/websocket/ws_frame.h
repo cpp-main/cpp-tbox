@@ -22,7 +22,6 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 
 namespace tbox {
 namespace websocket {

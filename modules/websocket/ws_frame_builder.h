@@ -75,8 +75,8 @@ class WsFrameBuilder {
     //! 通用帧构建（客户端，掩码）
     //! mask_key 为 4 字节掩码密钥，若为 nullptr 则自动随机生成
     static std::vector<uint8_t> BuildMaskedFrame(WsFrame::OpCode opcode, bool fin,
-                                                  const void *payload, size_t payload_len,
-                                                  const uint8_t *mask_key = nullptr);
+                                                 const void *payload, size_t payload_len,
+                                                 const uint8_t *mask_key = nullptr);
 };
 
 }
