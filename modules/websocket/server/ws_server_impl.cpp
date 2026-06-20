@@ -39,9 +39,9 @@ namespace server {
 
 using namespace std::placeholders;
 
-WsServer::Impl::Impl(WsServer *wp_parent, event::Loop *wp_loop) :
-    wp_parent_(wp_parent),
-    wp_loop_(wp_loop)
+WsServer::Impl::Impl(WsServer *wp_parent, event::Loop *wp_loop)
+  : wp_parent_(wp_parent)
+  , wp_loop_(wp_loop)
 { }
 
 WsServer::Impl::~Impl()
@@ -95,7 +95,7 @@ void WsServer::Impl::stop()
 
     //! 删除所有 WsConnection（析构时会断开并延后删除 TcpConnection）
     ws_conns_.foreach([](WsConnection *conn) {
-        delete conn;
+        CHECK_DELETE_OBJ(conn);
     });
     ws_conns_.clear();
 
@@ -497,16 +497,6 @@ void WsServer::setContext(const ConnToken &client, void *context, ContextDeleter
 void* WsServer::getContext(const ConnToken &client) const
 {
     return impl_->getContext(client);
-}
-
-bool WsServer::IsWsUpgradeRequest(const http::Request &req)
-{
-    return Impl::IsWsUpgradeRequest(req);
-}
-
-std::string WsServer::ComputeWsAcceptKey(const std::string &sec_ws_key)
-{
-    return Impl::ComputeWsAcceptKey(sec_ws_key);
 }
 
 }

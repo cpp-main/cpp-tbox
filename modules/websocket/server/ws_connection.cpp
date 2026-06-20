@@ -229,7 +229,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             error_cb_();
                             --cb_level_;
                         }
-
                         return;
                 }
                 delete frame;

@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 
 #include <tbox/http/request.h>
-#include "ws_server.h"
+#include "ws_server_impl.h"
 
 namespace tbox {
 namespace websocket {
@@ -38,7 +38,7 @@ const char *kTestAccept = "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
 TEST(WsHandshake, ComputeAcceptKey)
 {
     //! RFC 6455 示例
-    std::string accept = WsServer::ComputeWsAcceptKey(kTestKey);
+    std::string accept = WsServer::Impl::ComputeWsAcceptKey(kTestKey);
     EXPECT_EQ(kTestAccept, accept);
 }
 
@@ -52,7 +52,7 @@ TEST(WsServer, DetectUpgradeRequest)
     req.headers["Sec-WebSocket-Key"] = "dGhlIHNhbXBsZSBub25jZQ==";
     req.headers["Sec-WebSocket-Version"] = "13";
 
-    EXPECT_TRUE(WsServer::IsWsUpgradeRequest(req));
+    EXPECT_TRUE(WsServer::Impl::IsWsUpgradeRequest(req));
 }
 
 TEST(WsServer, DetectNonUpgradeRequest)
@@ -61,7 +61,7 @@ TEST(WsServer, DetectNonUpgradeRequest)
     req.method = http::Method::kGet;
     req.http_ver = http::HttpVer::k1_1;
 
-    EXPECT_FALSE(WsServer::IsWsUpgradeRequest(req));
+    EXPECT_FALSE(WsServer::Impl::IsWsUpgradeRequest(req));
 }
 
 TEST(WsServer, DetectPostNotUpgrade)
@@ -70,7 +70,7 @@ TEST(WsServer, DetectPostNotUpgrade)
     req.method = http::Method::kPost;
     req.headers["Upgrade"] = "websocket";
 
-    EXPECT_FALSE(WsServer::IsWsUpgradeRequest(req));
+    EXPECT_FALSE(WsServer::Impl::IsWsUpgradeRequest(req));
 }
 
 TEST(WsServer, DetectMissingKey)
@@ -81,7 +81,7 @@ TEST(WsServer, DetectMissingKey)
     req.headers["Connection"] = "Upgrade";
     //! 缺少 Sec-WebSocket-Key
 
-    EXPECT_FALSE(WsServer::IsWsUpgradeRequest(req));
+    EXPECT_FALSE(WsServer::Impl::IsWsUpgradeRequest(req));
 }
 
 TEST(WsServer, DetectWrongVersion)
@@ -93,7 +93,7 @@ TEST(WsServer, DetectWrongVersion)
     req.headers["Sec-WebSocket-Key"] = "dGhlIHNhbXBsZSBub25jZQ==";
     req.headers["Sec-WebSocket-Version"] = "8";  //! 不是 13
 
-    EXPECT_FALSE(WsServer::IsWsUpgradeRequest(req));
+    EXPECT_FALSE(WsServer::Impl::IsWsUpgradeRequest(req));
 }
 
 }

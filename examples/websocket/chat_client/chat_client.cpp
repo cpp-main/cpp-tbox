@@ -31,20 +31,17 @@
  *   ./chat_client <server_addr> <url_path>
  *   示例: ./chat_client 127.0.0.1:8080 /ws/chat-1
  */
+#include <unistd.h>
+#include <iostream>
 
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/event/signal_event.h>
+#include <tbox/event/loop.h>
 #include <tbox/event/fd_event.h>
 #include <tbox/network/sockaddr.h>
-#include <tbox/websocket/client/client.h>
-
-#include <string>
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+#include <tbox/websocket/client/ws_client.h>
 
 using namespace tbox;
 using namespace tbox::event;
@@ -81,7 +78,7 @@ int main(int argc, char **argv)
     );
 
     //! 创建 WebSocket 客户端
-    Client ws_client(sp_loop);
+    WsClient ws_client(sp_loop);
     if (!ws_client.initialize(SockAddr::FromString(server_addr), url_path)) {
         LogErr("init ws client fail");
         return 0;

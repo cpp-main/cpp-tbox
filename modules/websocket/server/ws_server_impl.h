@@ -29,6 +29,7 @@
 #include <tbox/http/server/server.h>
 #include <tbox/http/server/middleware.h>
 #include <tbox/http/server/context.h>
+#include <tbox/http/request.h>
 
 #include "ws_server.h"
 #include "ws_connection.h"

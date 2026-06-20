@@ -34,11 +34,11 @@ set(TBOX_WEBSOCKET_SOURCES
     ws_frame_builder.cpp
     server/ws_connection.cpp
     server/ws_server_impl.cpp
-    client/client.cpp
-    client/client_impl.cpp)
+    client/ws_client.cpp
+    client/ws_client_impl.cpp)
 
 set(TBOX_WEBSOCKET_TEST_SOURCES
-    server/ws_server_test.cpp
+    server/ws_server_impl_test.cpp
     ws_frame_parser_test.cpp
     ws_frame_builder_test.cpp)
 
@@ -83,7 +83,7 @@ install(
 
 install(
     FILES
-    client/client.h
+    client/ws_client.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/websocket/client
 )
 

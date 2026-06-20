@@ -26,7 +26,7 @@
 #include <tbox/network/tcp_connector.h>
 #include <tbox/network/tcp_connection.h>
 
-#include "client.h"
+#include "ws_client.h"
 #include "../ws_frame.h"
 #include "../ws_frame_parser.h"
 
@@ -34,11 +34,11 @@ namespace tbox {
 namespace websocket {
 namespace client {
 
-//! Client::Impl 实现完整的 WebSocket 客户端
+//! WsClient::Impl 实现完整的 WebSocket 客户端
 //! 流程：TcpConnector 建立 TCP → 发送 HTTP Upgrade → 验证 101 → 帧通信
-class Client::Impl {
+class WsClient::Impl {
   public:
-    Impl(Client *wp_parent, event::Loop *wp_loop);
+    Impl(WsClient *wp_parent, event::Loop *wp_loop);
     ~Impl();
 
   public:
@@ -47,15 +47,15 @@ class Client::Impl {
     void stop();
     void cleanup();
 
-    Client::State state() const { return state_; }
+    WsClient::State state() const { return state_; }
 
   public:
-    void setConnectedCallback(const Client::ConnectedCallback &cb)    { connected_cb_ = cb; }
-    void setDisconnectedCallback(const Client::DisconnectedCallback &cb) { disconnected_cb_ = cb; }
-    void setMessageCallback(const Client::MessageCallback &cb)        { message_cb_ = cb; }
-    void setErrorCallback(const Client::ErrorCallback &cb)            { error_cb_ = cb; }
+    void setConnectedCallback(const WsClient::ConnectedCallback &cb)    { connected_cb_ = cb; }
+    void setDisconnectedCallback(const WsClient::DisconnectedCallback &cb) { disconnected_cb_ = cb; }
+    void setMessageCallback(const WsClient::MessageCallback &cb)        { message_cb_ = cb; }
+    void setErrorCallback(const WsClient::ErrorCallback &cb)            { error_cb_ = cb; }
     void setAutoReconnect(bool enable) { reconnect_enabled_ = enable; }
-    void setReconnectDelayCalcFunc(const Client::ReconnectDelayCalc &func);
+    void setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func);
 
   public:
     bool send(const std::string &text);
@@ -107,7 +107,7 @@ class Client::Impl {
     void onError();
 
   private:
-    Client *wp_parent_;
+    WsClient *wp_parent_;
     event::Loop *wp_loop_;
 
     network::TcpConnector *sp_connector_ = nullptr;
@@ -122,12 +122,12 @@ class Client::Impl {
     //! 帧解析器
     WsFrameParser frame_parser_;
 
-    Client::State state_ = Client::State::kNone;
+    WsClient::State state_ = WsClient::State::kNone;
 
-    Client::ConnectedCallback    connected_cb_;
-    Client::DisconnectedCallback disconnected_cb_;
-    Client::MessageCallback      message_cb_;
-    Client::ErrorCallback        error_cb_;
+    WsClient::ConnectedCallback    connected_cb_;
+    WsClient::DisconnectedCallback disconnected_cb_;
+    WsClient::MessageCallback      message_cb_;
+    WsClient::ErrorCallback        error_cb_;
 
     bool is_closing_ = false;
     bool reconnect_enabled_ = true;

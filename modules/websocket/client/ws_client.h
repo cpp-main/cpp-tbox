@@ -22,7 +22,6 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
-#include <tbox/network/tcp_connection.h>
 #include <tbox/base/defines.h>
 
 #include "../ws_frame.h"
@@ -35,13 +34,13 @@ namespace client {
 //! 通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手
 //! 握手成功后进入 WebSocket 帧通信模式（客户端帧必须掩码）
 //! 断连后支持自动重连（默认开启），重连延迟策略委托给 TcpConnector
-class Client {
+class WsClient {
   public:
-    explicit Client(event::Loop *wp_loop);
-    ~Client();
+    explicit WsClient(event::Loop *wp_loop);
+    ~WsClient();
 
-    NONCOPYABLE(Client);
-    IMMOVABLE(Client);
+    NONCOPYABLE(WsClient);
+    IMMOVABLE(WsClient);
 
   public:
     //! 初始化：设置目标服务器地址与 URL 路径
@@ -97,8 +96,8 @@ class Client {
     //! 获取服务器地址
     network::SockAddr peerAddr() const;
 
-    //! 设置/获取上下文数据（委托给底层 TcpConnection）
-    using ContextDeleter = network::TcpConnection::ContextDeleter;
+    //! 设置/获取上下文数据
+    using ContextDeleter = std::function<void(void*)>;
     void  setContext(void *context, ContextDeleter &&deleter = nullptr);
     void* getContext() const;
 

@@ -24,9 +24,6 @@
 #include <tbox/base/cabinet_token.h>
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
-#include <tbox/network/tcp_connection.h>
-
-#include <tbox/http/request.h>
 
 #include "../ws_frame.h"
 
@@ -104,20 +101,13 @@ class WsServer {
     //! 获取客户端连接的 URL 路径
     std::string getUrl(const ConnToken &client) const;
 
-    //! 设置/获取客户端连接的上下文数据（委托给底层 TcpConnection）
-    using ContextDeleter = network::TcpConnection::ContextDeleter;
+    //! 设置/获取客户端连接的上下文数据
+    using ContextDeleter = std::function<void(void*)>;
     void  setContext(const ConnToken &client, void *context, ContextDeleter &&deleter = nullptr);
     void* getContext(const ConnToken &client) const;
 
-  public:
-    //! 检查请求是否为有效的 WebSocket 升级请求
-    static bool IsWsUpgradeRequest(const http::Request &req);
-
-    //! 计算 Sec-WebSocket-Accept 响应值
-    static std::string ComputeWsAcceptKey(const std::string &sec_ws_key);
-
-  private:
     class Impl;
+  private:
     Impl *impl_;
 };
 

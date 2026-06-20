@@ -17,8 +17,8 @@
  * project authors may be found in the CONTRIBUTORS.md file in the root
  * of the source tree.
  */
-#include "client.h"
-#include "client_impl.h"
+#include "ws_client.h"
+#include "ws_client_impl.h"
 
 #include <tbox/base/log.h>
 #include <tbox/base/defines.h>
@@ -69,19 +69,19 @@ static std::string ComputeWsAcceptKey(const std::string &sec_ws_key)
 
 //! === 生命周期 ===
 
-Client::Impl::Impl(Client *wp_parent, event::Loop *wp_loop)
+WsClient::Impl::Impl(WsClient *wp_parent, event::Loop *wp_loop)
   : wp_parent_(wp_parent)
   , wp_loop_(wp_loop)
 { }
 
-Client::Impl::~Impl()
+WsClient::Impl::~Impl()
 {
     cleanup();
 }
 
-bool Client::Impl::initialize(const network::SockAddr &server_addr, const std::string &url_path)
+bool WsClient::Impl::initialize(const network::SockAddr &server_addr, const std::string &url_path)
 {
-    if (state_ != Client::State::kNone)
+    if (state_ != WsClient::State::kNone)
         return false;
 
     server_addr_ = server_addr;
@@ -90,21 +90,21 @@ bool Client::Impl::initialize(const network::SockAddr &server_addr, const std::s
     //! 创建 TcpConnector（保持存活，供重连使用）
     sp_connector_ = new network::TcpConnector(wp_loop_);
     sp_connector_->initialize(server_addr_);
-    sp_connector_->setConnectedCallback(std::bind(&Client::Impl::onTcpConnected, this, _1));
+    sp_connector_->setConnectedCallback(std::bind(&WsClient::Impl::onTcpConnected, this, _1));
 
-    state_ = Client::State::kInited;
+    state_ = WsClient::State::kInited;
     return true;
 }
 
-void Client::Impl::setReconnectDelayCalcFunc(const Client::ReconnectDelayCalc &func)
+void WsClient::Impl::setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func)
 {
     if (sp_connector_ != nullptr)
         sp_connector_->setReconnectDelayCalcFunc(func);
 }
 
-bool Client::Impl::start()
+bool WsClient::Impl::start()
 {
-    if (state_ != Client::State::kInited)
+    if (state_ != WsClient::State::kInited)
         return false;
 
     //! 每次连接（含重连）都需要生成新的 Sec-WebSocket-Key
@@ -114,13 +114,13 @@ bool Client::Impl::start()
 
     //! 开始 TCP 连接（TcpConnector 内部处理重连延迟）
     sp_connector_->start();
-    state_ = Client::State::kConnecting;
+    state_ = WsClient::State::kConnecting;
     return true;
 }
 
-void Client::Impl::stop()
+void WsClient::Impl::stop()
 {
-    if (state_ == Client::State::kNone || state_ == Client::State::kInited)
+    if (state_ == WsClient::State::kNone || state_ == WsClient::State::kInited)
         return;
 
     //! 清除 TcpConnection 内部回调，防止断开时回调到 Impl
@@ -139,15 +139,15 @@ void Client::Impl::stop()
     if (sp_connector_ != nullptr)
         sp_connector_->stop();
 
-    state_ = Client::State::kInited;
+    state_ = WsClient::State::kInited;
 }
 
-void Client::Impl::cleanup()
+void WsClient::Impl::cleanup()
 {
-    if (state_ == Client::State::kNone)
+    if (state_ == WsClient::State::kNone)
         return;
 
-    if (state_ != Client::State::kInited)
+    if (state_ != WsClient::State::kInited)
         stop();
 
     CHECK_DELETE_RESET_OBJ(sp_connector_);
@@ -158,12 +158,12 @@ void Client::Impl::cleanup()
     error_cb_ = nullptr;
     reconnect_enabled_ = true;
 
-    state_ = Client::State::kNone;
+    state_ = WsClient::State::kNone;
 }
 
 //! === TCP 连接回调 ===
 
-void Client::Impl::onTcpConnected(network::TcpConnection *tcp_conn)
+void WsClient::Impl::onTcpConnected(network::TcpConnection *tcp_conn)
 {
     RECORD_SCOPE();
     LogInfo("tcp connected to %s", tcp_conn->peerAddr().toString().c_str());
@@ -173,17 +173,17 @@ void Client::Impl::onTcpConnected(network::TcpConnection *tcp_conn)
 
     //! 保存 TcpConnection，进入握手阶段
     sp_tcp_conn_ = tcp_conn;
-    state_ = Client::State::kHandshaking;
+    state_ = WsClient::State::kHandshaking;
 
     //! 设置 TcpConnection 回调（握手阶段：阈值=0，立即触发）
-    sp_tcp_conn_->setReceiveCallback(std::bind(&Client::Impl::onTcpReceived, this, _1), 0);
-    sp_tcp_conn_->setDisconnectedCallback(std::bind(&Client::Impl::onTcpDisconnected, this));
+    sp_tcp_conn_->setReceiveCallback(std::bind(&WsClient::Impl::onTcpReceived, this, _1), 0);
+    sp_tcp_conn_->setDisconnectedCallback(std::bind(&WsClient::Impl::onTcpDisconnected, this));
 
     //! 发送握手请求
     sendHandshakeRequest();
 }
 
-void Client::Impl::onTcpDisconnected()
+void WsClient::Impl::onTcpDisconnected()
 {
     RECORD_SCOPE();
     LogInfo("ws client disconnected");
@@ -202,7 +202,7 @@ void Client::Impl::onTcpDisconnected()
     wp_loop_->runNext([tobe_delete] { CHECK_DELETE_OBJ(tobe_delete); },
         "WsClient::onTcpDisconnected, delete tobe_delete");
 
-    state_ = Client::State::kInited;
+    state_ = WsClient::State::kInited;
 
     //! 自动重连（与 TcpClient 一致：先重连再通知用户）
     if (reconnect_enabled_)
@@ -211,7 +211,7 @@ void Client::Impl::onTcpDisconnected()
 
 //! === 握手阶段 ===
 
-void Client::Impl::sendHandshakeRequest()
+void WsClient::Impl::sendHandshakeRequest()
 {
     //! RFC 6455 Section 4.1：客户端握手请求
     //! GET /path HTTP/1.1\r\n
@@ -235,7 +235,7 @@ void Client::Impl::sendHandshakeRequest()
     sp_tcp_conn_->send(request.data(), request.size());
 }
 
-bool Client::Impl::parseHandshakeResponse(network::Buffer &buff)
+bool WsClient::Impl::parseHandshakeResponse(network::Buffer &buff)
 {
     //! 查找 \r\n\r\n 分隔符（HTTP 响应头结束标志）
     const char *data = reinterpret_cast<const char*>(buff.readableBegin());
@@ -299,9 +299,9 @@ bool Client::Impl::parseHandshakeResponse(network::Buffer &buff)
     return true;
 }
 
-void Client::Impl::onHandshakeSuccess()
+void WsClient::Impl::onHandshakeSuccess()
 {
-    state_ = Client::State::kConnected;
+    state_ = WsClient::State::kConnected;
     frame_parser_.reset();
 
     //! 通知用户
@@ -313,7 +313,7 @@ void Client::Impl::onHandshakeSuccess()
     }
 }
 
-void Client::Impl::onHandshakeFail()
+void WsClient::Impl::onHandshakeFail()
 {
     //! 握手失败，断开连接，若启用重连则自动重连
     auto tobe_delete = sp_tcp_conn_;
@@ -326,7 +326,7 @@ void Client::Impl::onHandshakeFail()
     //! 清除 TcpConnection 回调（防止延后删除期间回调到 Impl）
     //! tobe_delete 已 disconnect，延后删除时不会再回调
 
-    state_ = Client::State::kInited;
+    state_ = WsClient::State::kInited;
 
     //! 自动重连（与 onTcpDisconnected 一致）
     if (reconnect_enabled_)
@@ -335,7 +335,7 @@ void Client::Impl::onHandshakeFail()
 
 //! === 帧通信阶段 ===
 
-void Client::Impl::onWsFrameReceived(network::Buffer &buff)
+void WsClient::Impl::onWsFrameReceived(network::Buffer &buff)
 {
     //! 与 server::WsConnection 的帧解析逻辑相同
     while (buff.readableSize() > 0) {
@@ -397,15 +397,15 @@ void Client::Impl::onWsFrameReceived(network::Buffer &buff)
 
 //! === TCP 收到数据（握手/帧共用） ===
 
-void Client::Impl::onTcpReceived(network::Buffer &buff)
+void WsClient::Impl::onTcpReceived(network::Buffer &buff)
 {
     RECORD_SCOPE();
 
-    if (state_ == Client::State::kHandshaking) {
+    if (state_ == WsClient::State::kHandshaking) {
         //! 握手阶段：解析 HTTP 响应
         bool parsed = parseHandshakeResponse(buff);
         if (parsed) {
-            if (state_ == Client::State::kHandshaking) {
+            if (state_ == WsClient::State::kHandshaking) {
                 //! parseHandshakeResponse 没有改变 state，说明验证失败
                 onHandshakeFail();
             } else {
@@ -416,13 +416,13 @@ void Client::Impl::onTcpReceived(network::Buffer &buff)
             }
         }
         //! parsed == false：响应不完整，等待更多数据
-    } else if (state_ == Client::State::kConnected) {
+    } else if (state_ == WsClient::State::kConnected) {
         //! 帧通信阶段
         onWsFrameReceived(buff);
     }
 }
 
-void Client::Impl::onError()
+void WsClient::Impl::onError()
 {
     //! 出错后断开连接，由 onTcpDisconnected 处理重连
     if (sp_tcp_conn_ != nullptr)
@@ -431,32 +431,32 @@ void Client::Impl::onError()
 
 //! === 通过 ConnToken 操作连接 ===
 
-bool Client::Impl::send(const std::string &text)
+bool WsClient::Impl::send(const std::string &text)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != Client::State::kConnected)
+    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
     auto frame = WsFrameBuilder::BuildMaskedTextFrame(text);
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool Client::Impl::send(const void *data, size_t len)
+bool WsClient::Impl::send(const void *data, size_t len)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != Client::State::kConnected)
+    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
     auto frame = WsFrameBuilder::BuildMaskedBinaryFrame(data, len);
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool Client::Impl::sendBinary(const std::vector<uint8_t> &data)
+bool WsClient::Impl::sendBinary(const std::vector<uint8_t> &data)
 {
     return send(data.data(), data.size());
 }
 
-bool Client::Impl::close(uint16_t code, const std::string &reason)
+bool WsClient::Impl::close(uint16_t code, const std::string &reason)
 {
-    if (sp_tcp_conn_ == nullptr || state_ != Client::State::kConnected)
+    if (sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
     is_closing_ = true;
@@ -473,25 +473,25 @@ bool Client::Impl::close(uint16_t code, const std::string &reason)
     return true;
 }
 
-bool Client::Impl::ping(const std::string &data)
+bool WsClient::Impl::ping(const std::string &data)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != Client::State::kConnected)
+    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
     auto frame = WsFrameBuilder::BuildMaskedPingFrame(data);
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool Client::Impl::pong(const std::string &data)
+bool WsClient::Impl::pong(const std::string &data)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != Client::State::kConnected)
+    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
     auto frame = WsFrameBuilder::BuildMaskedPongFrame(data);
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool Client::Impl::sendMaskedFrame(WsFrame::OpCode opcode, bool fin, const void *payload, size_t payload_len)
+bool WsClient::Impl::sendMaskedFrame(WsFrame::OpCode opcode, bool fin, const void *payload, size_t payload_len)
 {
     if (sp_tcp_conn_ == nullptr)
         return false;
@@ -500,25 +500,25 @@ bool Client::Impl::sendMaskedFrame(WsFrame::OpCode opcode, bool fin, const void 
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool Client::Impl::isExpired() const
+bool WsClient::Impl::isExpired() const
 {
     return sp_tcp_conn_ == nullptr || sp_tcp_conn_->isExpired();
 }
 
-network::SockAddr Client::Impl::peerAddr() const
+network::SockAddr WsClient::Impl::peerAddr() const
 {
     if (sp_tcp_conn_ != nullptr)
         return sp_tcp_conn_->peerAddr();
     return server_addr_;
 }
 
-void Client::Impl::setContext(void *context, ContextDeleter &&deleter)
+void WsClient::Impl::setContext(void *context, ContextDeleter &&deleter)
 {
     if (sp_tcp_conn_ != nullptr)
         sp_tcp_conn_->setContext(context, std::move(deleter));
 }
 
-void* Client::Impl::getContext() const
+void* WsClient::Impl::getContext() const
 {
     if (sp_tcp_conn_ != nullptr)
         return sp_tcp_conn_->getContext();
