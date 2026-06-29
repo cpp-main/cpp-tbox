@@ -351,6 +351,101 @@ http_client.setReconnectDelayCalcFunc(
 6. **Calling external APIs**: Use Client to make HTTP requests to other services
 7. **Service-to-service communication**: Client with auto-reconnect for reliable inter-service HTTP calls
 
+## SSE — Server-Sent Events
+
+The http module also includes an SSE (Server-Sent Events) sub-package, implementing server-side event push based on the W3C/WHATWG EventSource specification. SSE uses standard HTTP long-lived responses (200 OK) to stream events to the browser, requiring no protocol upgrade like WebSocket.
+
+### Header Files
+
+```cpp
+#include <tbox/http/server/sse/sse_event.h>    //! SSE event data structure
+#include <tbox/http/server/sse/sse_server.h>    //! SSE server
+#include <tbox/http/server/sse/sse_connection.h> //! SSE connection (internal)
+```
+
+### SseServer — SSE Server
+
+SseServer runs on top of an HTTP server as a middleware. It detects SSE requests (Accept: text/event-stream), sets 200 OK response headers, and takes over the TcpConnection via the `upgrade_cb` mechanism to provide continuous event streaming.
+
+| Method | Description |
+|------|------|
+| `SseServer(loop)` | Constructor |
+| `initialize(http_server, url_path)` | Initialize: associate with an HTTP server; `url_path` controls URL matching |
+| `start()` | Start (registers as HTTP middleware) |
+| `stop()` | Stop (unregisters middleware, closes all SSE connections) |
+| `cleanup()` | Cleanup |
+| `state()` | Get current state (None/Inited/Running) |
+| `send(client, data)` | Send data to a client (simple text, event type "message") |
+| `send(client, event)` | Send SseEvent to a client |
+| `sendToAll(data)` | Broadcast data to all clients |
+| `sendToAll(event)` | Broadcast SseEvent to all clients |
+| `close(client)` | Close a client connection |
+| `sendHeartbeat(client, comment)` | Send heartbeat comment line |
+| `setHeartbeatInterval(ms)` | Set auto-heartbeat interval (default: 0 = disabled) |
+| `isClientValid(client)` | Check if a client connection is still valid |
+| `peerAddr(client)` | Get client address (IP:port) |
+| `getLastEventId(client)` | Get the Last-Event-ID from browser reconnect |
+| `getUrl(client)` | Get the URL path the client connected to |
+| `setContext(client, ctx, deleter)` | Set context data for a client |
+| `getContext(client)` | Get context data for a client |
+| `setConnectedCallback(cb)` | Set callback: new client connected |
+| `setDisconnectedCallback(cb)` | Set callback: client disconnected |
+| `IsSseRequest(req)` | Static: check if an HTTP request is a valid SSE request |
+
+**URL path matching rules:** Same as WsServer — prefix match if url_path ends with `/`, exact match otherwise, empty string matches all.
+
+**SSE vs WebSocket:**
+
+| Feature | WebSocket | SSE |
+|---------|-----------|------|
+| HTTP status code | 101 Switching Protocols | 200 OK |
+| Data direction | Bidirectional | Server→Client only |
+| Data format | Binary frames | Plain text (`data:`/`event:`/`id:` fields) |
+| Client message callback | Yes | No (unidirectional) |
+| Heartbeat | Ping/Pong frames | Comment lines + timer |
+| Reconnection | Manual implementation | Browser auto-reconnect + Last-Event-ID |
+| Module | Separate `websocket` module | Inside `http` module |
+
+### SseEvent — SSE Event Data Structure
+
+```cpp
+struct SseEvent {
+    std::string id;      //! Event ID (optional), for Last-Event-ID reconnection
+    std::string event;   //! Event type (optional, default "message")
+    std::string data;    //! Data (required, supports multiline)
+    int retry = 0;       //! Reconnect interval in ms (optional)
+
+    //! Format event as SSE text protocol
+    //! Multiline data auto-splits into multiple `data:` lines
+    std::string toString() const;
+};
+```
+
+### SSE Example: Event Push
+
+> Full example in `examples/http/server/sse/`
+
+```cpp
+#include <tbox/http/server/server.h>
+#include <tbox/http/server/sse/sse_server.h>
+
+SseServer sse_srv(sp_loop);
+sse_srv.initialize(&http_srv, "/sse/events");
+sse_srv.setHeartbeatInterval(std::chrono::seconds(15));
+
+sse_srv.setConnectedCallback([](const SseServer::ConnToken &token) {
+    LogInfo("sse client connected");
+    sse_srv.send(token, "Welcome!");
+});
+
+//! Push events every 5 seconds
+SseEvent evt;
+evt.id = "42";
+evt.event = "tick";
+evt.data = "{\"time\":\"2026-06-16 10:30:00\"}";
+sse_srv.sendToAll(evt);
+```
+
 ## Important Notes
 
 1. **Middleware invocation order**: Middleware added via `use()` executes in the order it was added

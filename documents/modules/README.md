@@ -17,7 +17,7 @@ cpp-tbox is an event-driven C++ service application development library that pro
 | **network** | Network communication | TCP/UDP/UART communication and byte stream abstraction | [network.md](network.md) |
 | **terminal** | Interactive terminal | Runtime command interaction, similar to Bash shell | [terminal.md](terminal.md) |
 | **log** | Log channels | File/stdout/syslog and other log outputs | [log.md](log.md) |
-| **http** | HTTP service | Express-style HTTP server/client and middleware | [http.md](http.md) |
+| **http** | HTTP service | Express-style HTTP server/client, middleware, and SSE (Server-Sent Events) | [http.md](http.md) |
 | **websocket** | WebSocket service | WebSocket server/client, RFC 6455, HTTP middleware-based | [websocket.md](websocket.md) |
 | **coroutine** | Coroutine | Coroutine scheduler and Channel/Mutex helper components | [coroutine.md](coroutine.md) |
 | **alarm** | Timer alarm | Cron/Oneshot/Weekly/Workday timers | [alarm.md](alarm.md) |

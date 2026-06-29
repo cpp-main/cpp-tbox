@@ -17,7 +17,7 @@ cpp-tbox 是一个基于事件驱动的 C++ 服务应用开发库，提供完整
 | **network** | 网络通信 | TCP/UDP/UART 通信与字节流抽象 | [network_CN.md](network_CN.md) |
 | **terminal** | 交互终端 | 运行时命令交互，类似 Bash shell | [terminal_CN.md](terminal_CN.md) |
 | **log** | 日志通道 | 文件/stdout/syslog 等日志输出 | [log_CN.md](log_CN.md) |
-| **http** | HTTP 服务 | Express 式 HTTP 服务端与客户端、中间件 | [http_CN.md](http_CN.md) |
+| **http** | HTTP 服务 | Express 式 HTTP 服务端与客户端、中间件、SSE（服务端推送事件） | [http_CN.md](http_CN.md) |
 | **websocket** | WebSocket 服务 | WebSocket 服务端与客户端，RFC 6455，基于 HTTP 中间件 | [websocket_CN.md](websocket_CN.md) |
 | **coroutine** | 协程 | 协程调度器与 Channel/Mutex 等辅助组件 | [coroutine_CN.md](coroutine_CN.md) |
 | **alarm** | 定时闹钟 | Cron/Oneshot/Weekly/Workday 定时器 | [alarm_CN.md](alarm_CN.md) |

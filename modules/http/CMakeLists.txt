@@ -42,6 +42,9 @@ set(TBOX_HTTP_SOURCES
     server/middlewares/form_data.cpp
     server/middlewares/form_data_middleware.cpp
     server/middlewares/file_downloader_middleware.cpp
+    server/sse/sse_event.cpp
+    server/sse/sse_connection.cpp
+    server/sse/sse_server_impl.cpp
     client/client.cpp
     client/client_impl.cpp
     client/respond_parser.cpp)
@@ -51,7 +54,9 @@ set(TBOX_HTTP_TEST_SOURCES
     respond_test.cpp
     request_test.cpp
     url_test.cpp
-    server/request_parser_test.cpp)
+    server/request_parser_test.cpp
+    server/sse/sse_event_test.cpp
+    server/sse/sse_server_impl_test.cpp
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_HTTP_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
@@ -110,6 +115,14 @@ install(
     FILES
     client/client.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/client
+)
+
+install(
+    FILES
+    server/sse/sse_event.h
+    server/sse/sse_server.h
+    server/sse/sse_connection.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/http/server/sse
 )
 
 # generate and install export file

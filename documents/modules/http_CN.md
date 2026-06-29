@@ -353,6 +353,101 @@ http_client.setReconnectDelayCalcFunc(
 6. **调用外部 API**：使用 Client 向其它服务发起 HTTP 请求
 7. **服务间通信**：使用 Client 配合自动重连，实现可靠的服务间 HTTP 调用
 
+## SSE — Server-Sent Events（服务端推送事件）
+
+http 模块还包含 SSE（Server-Sent Events）子包，实现基于 W3C/WHATWG EventSource 规范的服务端事件推送。SSE 使用标准 HTTP 长响应（200 OK）向浏览器流式推送事件，不像 WebSocket 需要协议升级。
+
+### 头文件
+
+```cpp
+#include <tbox/http/server/sse/sse_event.h>    //! SSE 事件数据结构
+#include <tbox/http/server/sse/sse_server.h>    //! SSE 服务端
+#include <tbox/http/server/sse/sse_connection.h> //! SSE 连接（内部类）
+```
+
+### SseServer — SSE 服务端
+
+SseServer 运行在 HTTP 服务器之上，作为中间件存在。它检测 SSE 请求（Accept 头包含 text/event-stream），设置 200 OK 响应头，通过 `upgrade_cb` 机制接管 TcpConnection，提供持续的事件推送。
+
+| 方法 | 说明 |
+|------|------|
+| `SseServer(loop)` | 构造 |
+| `initialize(http_server, url_path)` | 初始化：关联到 HTTP 服务器；`url_path` 控制 URL 匹配规则 |
+| `start()` | 启动（注册为 HTTP 中间件） |
+| `stop()` | 停止（反注册中间件，关闭所有 SSE 连接） |
+| `cleanup()` | 清理 |
+| `state()` | 获取当前状态 (None/Inited/Running) |
+| `send(client, data)` | 向指定客户端发送数据（简单文本） |
+| `send(client, event)` | 向指定客户端发送 SseEvent |
+| `sendToAll(data)` | 向所有客户端广播数据 |
+| `sendToAll(event)` | 向所有客户端广播 SseEvent |
+| `close(client)` | 关闭指定客户端连接 |
+| `sendHeartbeat(client, comment)` | 发送心跳注释行 |
+| `setHeartbeatInterval(ms)` | 设置自动心跳间隔（默认 0 = 禁用） |
+| `isClientValid(client)` | 检查客户端连接是否有效 |
+| `peerAddr(client)` | 获取客户端地址 |
+| `getLastEventId(client)` | 获取浏览器重连时的 Last-Event-ID |
+| `getUrl(client)` | 获取客户端连接的 URL 路径 |
+| `setContext(client, ctx, deleter)` | 设置上下文数据 |
+| `getContext(client)` | 获取上下文数据 |
+| `setConnectedCallback(cb)` | 设置回调：客户端连接 |
+| `setDisconnectedCallback(cb)` | 设置回调：客户端断开 |
+| `IsSseRequest(req)` | 静态方法：检查是否为 SSE 请求 |
+
+**URL 路径匹配规则：** 与 WsServer 一致——url_path 以 `/` 结尾为前缀匹配，不以 `/` 结尾为全量匹配，空字符串匹配所有。
+
+**SSE 与 WebSocket 对比：**
+
+| 特性 | WebSocket | SSE |
+|------|-----------|------|
+| HTTP 状态码 | 101 Switching Protocols | 200 OK |
+| 数据方向 | 双向 | 仅服务端→客户端 |
+| 数据格式 | 二进制帧 | 纯文本（data:/event:/id: 字段） |
+| 客户端消息回调 | 有 | 无（单向） |
+| 心跳 | Ping/Pong 帧 | 注释行 + 定时器 |
+| 重连机制 | 自行实现 | 浏览器自动重连 + Last-Event-ID |
+| 模块位置 | 独立 `websocket` 模块 | `http` 模块内 |
+
+### SseEvent — SSE 事件数据结构
+
+```cpp
+struct SseEvent {
+    std::string id;      //! 事件ID（可选），用于 Last-Event-ID 断线续传
+    std::string event;   //! 事件类型（可选，默认 "message"）
+    std::string data;    //! 数据（必须，支持多行）
+    int retry = 0;       //! 重连间隔毫秒数（可选）
+
+    //! 将事件格式化为 SSE 文本协议格式
+    //! 多行 data 自动拆分为多个 `data:` 行
+    std::string toString() const;
+};
+```
+
+### SSE 示例：事件推送
+
+> 完整示例见 `examples/http/server/sse/`
+
+```cpp
+#include <tbox/http/server/server.h>
+#include <tbox/http/server/sse/sse_server.h>
+
+SseServer sse_srv(sp_loop);
+sse_srv.initialize(&http_srv, "/sse/events");
+sse_srv.setHeartbeatInterval(std::chrono::seconds(15));
+
+sse_srv.setConnectedCallback([](const SseServer::ConnToken &token) {
+    LogInfo("sse 客户端已连接");
+    sse_srv.send(token, "欢迎！");
+});
+
+//! 每 5 秒推送事件
+SseEvent evt;
+evt.id = "42";
+evt.event = "tick";
+evt.data = "{\"time\":\"2026-06-16 10:30:00\"}";
+sse_srv.sendToAll(evt);
+```
+
 ## 注意事项
 
 1. **中间件调用顺序**：`use()` 添加的中间件按添加顺序执行

@@ -109,8 +109,7 @@ It contains an event-driven behavior tree that can realize sequential, branching
 | run | It's an ELF. It loads one or more lib\*.so file which specified by parameter `-l xxx`, then run Modules in side |
 | mqtt | MQTT Client |
 | coroutine | coroutine function |
-| http | Implemented HTTP Server and Client modules on the basis of network |
-| websocket | Implemented WebSocket Server and Client modules based on HTTP middleware, RFC 6455 |
+| http | Implemented HTTP Server and Client, middleware, and SSE (Server-Sent Events) modules on the basis of network |
 | alarm | Realized 4 commonly used alarm clocks: CRON alarm clock, single alarm clock, weekly cycle alarm clock, weekday alarm clock |
 | flow | Contains multi-level state machine and behavior tree to solve the problem of action flow in asynchronous mode |
 | crypto | Implemented the commonly used AES and MD5 encryption and decryption calculations |

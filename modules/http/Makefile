@@ -37,6 +37,8 @@ HEAD_FILES = \
 	server/middlewares/form_data.h \
 	server/middlewares/form_data_middleware.h \
 	server/middlewares/file_downloader_middleware.h \
+	server/sse/sse_event.h \
+	server/sse/sse_server.h \
 	client/client.h \
 
 CPP_SRC_FILES = \
@@ -52,6 +54,9 @@ CPP_SRC_FILES = \
 	server/middlewares/form_data.cpp \
 	server/middlewares/form_data_middleware.cpp \
 	server/middlewares/file_downloader_middleware.cpp \
+	server/sse/sse_event.cpp \
+	server/sse/sse_connection.cpp \
+	server/sse/sse_server_impl.cpp \
 	client/client.cpp \
 	client/client_impl.cpp \
 	client/respond_parser.cpp \
@@ -65,6 +70,8 @@ TEST_CPP_SRC_FILES = \
 	request_test.cpp \
 	url_test.cpp \
 	server/request_parser_test.cpp \
+	server/sse/sse_event_test.cpp \
+	server/sse/sse_server_impl_test.cpp \
 
 TEST_LDFLAGS := $(LDFLAGS) -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
 

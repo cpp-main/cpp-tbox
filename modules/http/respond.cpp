@@ -40,7 +40,10 @@ std::string Respond::toString() const
             has_content_length = true;
     }
 
-    if (!has_content_length)
+    //! 当 upgrade_cb 已设置时（WebSocket 101、SSE 200 等），不自动添加 Content-Length
+    //! 原因：升级/流式响应后面是持续的数据流（WebSocket 帧、SSE 事件），不是定长 body
+    //! Content-Length 会误导浏览器认为响应已完成，阻止流式数据接收
+    if (!has_content_length && !upgrade_cb)
         oss << "Content-Length: " << body.length() << CRLF;
 
     oss << CRLF;

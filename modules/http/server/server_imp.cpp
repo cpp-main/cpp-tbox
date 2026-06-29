@@ -270,15 +270,18 @@ void Server::Impl::commitRespond(const TcpServer::ConnToken &ct, int index, Resp
     //! 处理协议升级请求（WebSocket 101、SSE 200 等）
     //! 触发条件：res->upgrade_cb 已设置（中间件负责设置）
     if (res->upgrade_cb) {
+        //! 注意：必须在 std::move(upgrade_cb) 之前调用 toString()
+        //! 否则 move 后 upgrade_cb 为空，toString() 会误判为普通响应而添加 Content-Length
+        //! SSE 响应添加 Content-Length:0 会导致浏览器认为响应已完成并断开重连
+        const string content = res->toString();
+
         //! 发送响应后，将 TcpConnection 从 HTTP 服务器分离，交给升级协议
         auto upgrade_cb = std::move(res->upgrade_cb);
-        {
-            const string &content = res->toString();
-            tcp_server_.send(ct, content.data(), content.size());
-            delete res;
-            if (context_log_enable_)
-                LogDbg("RES: [%s]", content.c_str());
-        }
+        delete res;
+
+        tcp_server_.send(ct, content.data(), content.size());
+        if (context_log_enable_)
+            LogDbg("RES: [%s]", content.c_str());
 
         //! 当前回调结束后立即执行 detach（使用 runNext，更高效）
         //! 因为 commitRespond() 是在 Loop 线程中执行的
