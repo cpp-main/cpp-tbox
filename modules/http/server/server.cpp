@@ -38,6 +38,11 @@ bool Server::initialize(const network::SockAddr &bind_addr, int listen_backlog)
     return impl_->initialize(bind_addr, listen_backlog);
 }
 
+bool Server::setTlsConfig(const network::TlsConfig &config)
+{
+    return impl_->setTlsConfig(config);
+}
+
 bool Server::start()
 {
     return impl_->start();

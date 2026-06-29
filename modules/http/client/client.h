@@ -22,6 +22,7 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
+#include <tbox/network/tls_config.h>
 #include <tbox/base/defines.h>
 
 #include "../common.h"
@@ -52,6 +53,10 @@ class Client {
 
     //! 初始化，设置目标服务器地址
     bool initialize(const network::SockAddr &server_addr);
+
+    //! 设置 TLS 配置（必须在 initialize() 之前调用）
+    //! 需要 network_tls 模块支持，未链接时调用无效
+    void setTlsConfig(const network::TlsConfig &config);
 
     bool start();       //!< 开始连接
     void stop();        //!< 停止/断开连接

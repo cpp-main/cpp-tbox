@@ -24,8 +24,8 @@
 namespace tbox {
 namespace network {
 
-StdinStream::StdinStream(event::Loop *wp_loop) :
-    buff_fd_(wp_loop)
+StdinStream::StdinStream(event::Loop *wp_loop)
+  : buff_fd_(wp_loop)
 { }
 
 bool StdinStream::initialize()

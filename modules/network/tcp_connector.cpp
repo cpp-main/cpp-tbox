@@ -25,17 +25,15 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
 
-#include "tcp_connection.h"
-
 #undef  MODULE_ID
 #define MODULE_ID "tbox.tcp"
 
 namespace tbox {
 namespace network {
 
-TcpConnector::TcpConnector(event::Loop *wp_loop) :
-    wp_loop_(wp_loop),
-    reconn_delay_calc_func_([](int) {return 1;})
+TcpConnector::TcpConnector(event::Loop *wp_loop)
+  : wp_loop_(wp_loop)
+  , reconn_delay_calc_func_([](int) {return 1;})
 { }
 
 TcpConnector::~TcpConnector()
@@ -170,8 +168,9 @@ void TcpConnector::enterConnectingState()
     int conn_errno = conn_ret == 0 ? 0 : errno;
 
     //! 检查错误码
-    if ((conn_errno == 0) || (conn_errno == EINPROGRESS)
-        || (conn_errno == EINTR) || (conn_errno == EISCONN)) {
+    if ((conn_errno == 0) || (conn_errno == EINPROGRESS) ||
+        (conn_errno == EINTR) || (conn_errno == EISCONN))
+    {
         //! 正常情况
         sock_fd_ = std::move(new_sock_fd);
 
@@ -286,14 +285,9 @@ void TcpConnector::onSocketWritable()
             state_ = State::kInited;
 
             LogInfo("connect to %s success", server_addr_.toString().c_str());
-            if (connected_cb_) {
-                auto sp_conn = new TcpConnection(wp_loop_, conn_sock_fd, server_addr_);
-                sp_conn->enable();
-                ++cb_level_;
-                connected_cb_(sp_conn);
-                --cb_level_;
-            } else
-                LogWarn("connected callback is not set");
+
+            //! 调用子类方法处理连接成功
+            onTcpConnected(conn_sock_fd, server_addr_);
 
         } else {    //! 连接失败
             LogNotice("connect fail, errno:%d, %s", sock_errno, strerror(sock_errno));

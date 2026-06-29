@@ -25,6 +25,7 @@
 #include <limits>
 
 #include <tbox/network/tcp_client.h>
+#include <tbox/network/tls_config.h>
 #include <tbox/base/defines.h>
 
 #include "client.h"
@@ -48,6 +49,7 @@ class Client::Impl {
 
   public:
     bool initialize(const SockAddr &server_addr);
+    void setTlsConfig(const TlsConfig &config);
     bool start();
     void stop();
     void cleanup();

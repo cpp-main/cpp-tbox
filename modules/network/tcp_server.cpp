@@ -28,6 +28,9 @@
 
 #include "tcp_acceptor.h"
 #include "tcp_connection.h"
+#include "tcp_factory.h"
+#include "tcp_raw_factory.h"
+#include "tls_factory_entry.h"
 
 #undef  MODULE_ID
 #define MODULE_ID "tbox.tcp"
@@ -49,6 +52,7 @@ struct TcpServer::Data {
     size_t                  receive_threshold = 0;
     SendCompleteCallback    send_complete_cb;
 
+    TcpFactory  *sp_factory = nullptr;
     TcpAcceptor *sp_acceptor = nullptr;
     TcpConns conns;     //!< TcpConnection 容器
 
@@ -62,7 +66,8 @@ TcpServer::TcpServer(event::Loop *wp_loop) :
     TBOX_ASSERT(d_ != nullptr);
 
     d_->wp_loop = wp_loop;
-    d_->sp_acceptor = new TcpAcceptor(wp_loop);
+    d_->sp_factory = new TcpRawFactory;
+    d_->sp_acceptor = d_->sp_factory->createAcceptor(wp_loop);
 }
 
 TcpServer::~TcpServer()
@@ -71,8 +76,42 @@ TcpServer::~TcpServer()
 
     cleanup();
     CHECK_DELETE_RESET_OBJ(d_->sp_acceptor);
+    CHECK_DELETE_RESET_OBJ(d_->sp_factory);
 
     delete d_;
+}
+
+bool TcpServer::setTlsConfig(const TlsConfig &config)
+{
+    if (d_->state != State::kNone) {
+        LogWarn("cannot set TLS config after initialization");
+        return false;
+    }
+
+    if (!config.isValid()) {
+        LogWarn("invalid TLS config");
+        return false;
+    }
+
+    //! 替换 factory 和 acceptor
+    TcpFactory *tls_factory = CreateTlsFactory(TlsRole::kServer, config);
+    if (tls_factory == nullptr) {
+        LogWarn("failed to create TLS factory, TLS module may not be linked");
+        return false;
+    }
+
+    if (!tls_factory->initialize()) {
+        LogWarn("failed init TLS factory, config may invalid");
+        delete tls_factory;
+        return false;
+    }
+
+    CHECK_DELETE_RESET_OBJ(d_->sp_acceptor);
+    CHECK_DELETE_RESET_OBJ(d_->sp_factory);
+    d_->sp_factory = tls_factory;
+    d_->sp_acceptor = d_->sp_factory->createAcceptor(d_->wp_loop);
+
+    return true;
 }
 
 bool TcpServer::initialize(const SockAddr &bind_addr, int listen_backlog)

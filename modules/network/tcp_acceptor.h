@@ -56,10 +56,19 @@ class TcpAcceptor {
     virtual SocketFd createSocket(SockAddr::Type addr_type);
     virtual int bindAddress(SocketFd sock_fd, const SockAddr &bind_addr);
 
+    //! 子类覆写：创建对应类型的 TcpConnection
+    virtual TcpConnection* createConnection(event::Loop *wp_loop, SocketFd fd,
+                                             const SockAddr &peer_addr) = 0;
+
+    //! 子类覆写：接受新连接后的处理
+    //! TcpRawAcceptor: 立即 enable + 触发 new_conn_cb_
+    //! TcpTlsAcceptor: 开始 SSL 握手，握手成功后才触发 new_conn_cb_
+    virtual void onClientAccepted(SocketFd fd, const SockAddr &peer_addr) = 0;
+
     void onSocketRead(short events);    //! 处理新的连接请求
     void onClientConnected();
 
-  private:
+  protected:
     event::Loop *wp_loop_ = nullptr;
     SockAddr bind_addr_;
 
@@ -73,5 +82,4 @@ class TcpAcceptor {
 
 }
 }
-
 #endif //TBOX_NETWORK_TCP_ACCEPTOR_20180114

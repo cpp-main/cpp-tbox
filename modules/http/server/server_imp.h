@@ -25,6 +25,7 @@
 #include <set>
 #include <limits>
 #include <tbox/network/tcp_server.h>
+#include <tbox/network/tls_config.h>
 #include <tbox/base/cabinet.hpp>
 
 #include "server.h"
@@ -48,6 +49,7 @@ class Server::Impl {
 
   public:
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
+    bool setTlsConfig(const network::TlsConfig &config);
     bool start();
     void stop();
     void cleanup();

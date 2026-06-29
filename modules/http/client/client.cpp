@@ -38,6 +38,11 @@ bool Client::initialize(const network::SockAddr &server_addr)
     return impl_->initialize(server_addr);
 }
 
+void Client::setTlsConfig(const network::TlsConfig &config)
+{
+    impl_->setTlsConfig(config);
+}
+
 bool Client::start()
 {
     return impl_->start();

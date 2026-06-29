@@ -22,6 +22,7 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
+#include <tbox/network/tls_config.h>
 #include <tbox/base/defines.h>
 
 #include "../ws_frame.h"
@@ -74,6 +75,10 @@ class WsClient {
     void setAutoReconnect(bool enable);
     //! 设置自定义重连延迟策略（委托给底层 TcpConnector）
     void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func);
+
+    //! 设置 TLS 配置（必须在 initialize() 之前调用）
+    //! 需要 network_tls 模块支持，未链接时调用无效
+    void setTlsConfig(const network::TlsConfig &config);
 
   public:
     //! 发送文本帧

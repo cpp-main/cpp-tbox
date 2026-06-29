@@ -26,6 +26,7 @@
 #include <tbox/util/buffer.h>
 
 #include "sockaddr.h"
+#include "tls_config.h"
 
 namespace tbox {
 namespace network {
@@ -34,6 +35,7 @@ using Buffer = util::Buffer;
 
 class TcpAcceptor;
 class TcpConnection;
+class TcpFactory;
 
 class TcpServer {
   public:
@@ -54,6 +56,9 @@ class TcpServer {
 
     //! 设置绑定地址与backlog
     bool initialize(const SockAddr &bind_addr, int listen_backlog);
+
+    //! 设置 TLS 配置（必须在 initialize() 之前调用）
+    bool setTlsConfig(const TlsConfig &config);
 
     using ConnectedCallback     = std::function<void(const ConnToken &)>;
     using DisconnectedCallback  = std::function<void(const ConnToken &)>;

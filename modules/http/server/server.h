@@ -22,6 +22,7 @@
 
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
+#include <tbox/network/tls_config.h>
 
 #include "../common.h"
 #include "../request.h"
@@ -45,6 +46,9 @@ class Server {
 
   public:
     bool initialize(const network::SockAddr &bind_addr, int listen_backlog);
+    //! 设置 TLS 配置（必须在 initialize() 之前调用）
+    //! 需要 network_tls 模块支持，未链接时调用无效
+    bool setTlsConfig(const network::TlsConfig &config);
     bool start();
     void stop();
     void cleanup();

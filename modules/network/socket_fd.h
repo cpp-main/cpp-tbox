@@ -37,6 +37,10 @@ class SocketFd : public util::Fd {
     using Fd::operator=;
     using Fd::swap;
 
+    //! 显式声明拷贝构造与拷贝赋值，消除 GCC -Wdeprecated-copy 警告
+    SocketFd(const SocketFd &other) : Fd(other) { }
+    SocketFd& operator=(const SocketFd &other) { return static_cast<SocketFd&>(Fd::operator=(other)); }
+
   public:
     static SocketFd CreateSocket(int domain, int type, int protocal);
     static SocketFd CreateUdpSocket();

@@ -91,6 +91,11 @@ void WsClient::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
     impl_->setReconnectDelayCalcFunc(func);
 }
 
+void WsClient::setTlsConfig(const network::TlsConfig &config)
+{
+    impl_->setTlsConfig(config);
+}
+
 bool WsClient::send(const std::string &text)
 {
     return impl_->send(text);

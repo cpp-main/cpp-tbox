@@ -3,7 +3,7 @@
  *    //  M A K E  / \
  *   //  C++ DEV  /   \
  *  //  E A S Y  /  \/ \
- * ++ ----------.  \/\  .
+6 * ++ ----------.  \/\  .
  *  \\     \     \ /\  /
  *   \\     \     \   /
  *    \\     \     \ /
@@ -33,6 +33,7 @@ namespace network {
 class TcpConnection : public ByteStream {
     friend class TcpAcceptor;
     friend class TcpConnector;
+    friend class TcpFactory;
 
   public:
     virtual ~TcpConnection();
@@ -43,7 +44,7 @@ class TcpConnection : public ByteStream {
   public:
     using DisconnectedCallback = std::function<void ()>;
     void setDisconnectedCallback(const DisconnectedCallback &cb) { disconnected_cb_ = cb; }
-    bool disconnect();  //! 主动断开
+    bool disconnect();
     bool shutdown(int howto);
 
     SockAddr peerAddr() const { return peer_addr_; }
@@ -56,6 +57,10 @@ class TcpConnection : public ByteStream {
     void  setContext(void *context, ContextDeleter &&deleter = nullptr);
     void* getContext() const { return sp_context_; }
 
+    //! 启用连接（开始 I/O 事件驱动）
+    //! 由 TcpAcceptor/TcpConnector 在创建后调用
+    void enable();
+
   public:
     //! 实现ByteStream的接口
     virtual void setReceiveCallback(const ReceiveCallback &cb, size_t threshold) override;
@@ -66,16 +71,22 @@ class TcpConnection : public ByteStream {
     virtual Buffer* getReceiveBuffer() override;
 
   protected:
-    void onSocketClosed();
-    void onReadError(int errnum);
+    //! 基类构造函数，子类需在构造后自行创建 sp_buffered_fd_ 并调用 setupBufferedFd()
+    explicit TcpConnection(event::Loop *wp_loop, const SockAddr &peer_addr);
 
-  private:
-    explicit TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr);
-    void enable();
+    //! 初始化 BufferedFd 的回调（在子类创建 sp_buffered_fd_ 后调用）
+    void setupBufferedFd();
 
-  private:
+    //! 断开连接的具体操作
+    //! 子类可覆写此方法以在断开前执行额外操作（如 SSL_shutdown）
+    virtual bool doDisconnect() = 0;
+
+    //! 子类可覆写此方法以在 shutdown 时执行额外操作
+    virtual bool doShutdown(int howto) = 0;
+
+  protected:
     event::Loop *wp_loop_;
-    BufferedFd  *sp_buffered_fd_;
+    BufferedFd  *sp_buffered_fd_ = nullptr;
     SockAddr    peer_addr_;
 
     DisconnectedCallback disconnected_cb_;
@@ -83,9 +94,12 @@ class TcpConnection : public ByteStream {
     ContextDeleter context_deleter_;
 
     int cb_level_ = 0;
+
+  private:
+    void onSocketClosed();
+    void onReadError(int errnum);
 };
 
 }
 }
-
 #endif //TBOX_NETWORK_TCP_CONNECTION_H_20180113

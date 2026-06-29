@@ -24,6 +24,8 @@
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
 #include <tbox/network/tcp_connector.h>
+#include <tbox/network/tcp_factory.h>
+#include <tbox/network/tls_factory_entry.h>
 #include <tbox/network/tcp_connection.h>
 
 #include "ws_client.h"
@@ -56,6 +58,7 @@ class WsClient::Impl {
     void setErrorCallback(const WsClient::ErrorCallback &cb)            { error_cb_ = cb; }
     void setAutoReconnect(bool enable) { reconnect_enabled_ = enable; }
     void setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func);
+    void setTlsConfig(const network::TlsConfig &config);
 
   public:
     bool send(const std::string &text);
@@ -110,6 +113,7 @@ class WsClient::Impl {
     WsClient *wp_parent_;
     event::Loop *wp_loop_;
 
+    network::TcpFactory *sp_factory_ = nullptr;
     network::TcpConnector *sp_connector_ = nullptr;
     network::TcpConnection *sp_tcp_conn_ = nullptr;
 

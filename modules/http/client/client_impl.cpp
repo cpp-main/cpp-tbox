@@ -64,6 +64,11 @@ bool Client::Impl::initialize(const SockAddr &server_addr)
     return true;
 }
 
+void Client::Impl::setTlsConfig(const TlsConfig &config)
+{
+    tcp_client_.setTlsConfig(config);
+}
+
 bool Client::Impl::start()
 {
     if (state_ != State::kInited) {

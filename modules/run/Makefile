@@ -39,4 +39,8 @@ LDFLAGS += \
 	-ldl \
 	-rdynamic
 
+ifeq ($(findstring network_tls,$(MODULES)),network_tls)
+LDFLAGS += -Wl,--whole-archive -ltbox_network_tls -Wl,--no-whole-archive -lssl -lcrypto
+endif
+
 include $(TOP_DIR)/mk/exe_common.mk

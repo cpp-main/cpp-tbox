@@ -34,10 +34,17 @@ HEAD_FILES = \
 	sockaddr.h \
 	udp_socket.h \
 	tcp_connection.h \
+	tcp_raw_connection.h \
 	tcp_acceptor.h \
+	tcp_raw_acceptor.h \
 	tcp_connector.h \
+	tcp_raw_connector.h \
 	tcp_client.h \
 	tcp_server.h \
+	tcp_factory.h \
+	tcp_raw_factory.h \
+	tls_config.h \
+	tls_factory_entry.h \
 	net_if.h \
 	domain_name.h \
 	dns_request.h \
@@ -51,10 +58,16 @@ CPP_SRC_FILES = \
 	sockaddr.cpp \
 	udp_socket.cpp \
 	tcp_connection.cpp \
+	tcp_raw_connection.cpp \
 	tcp_acceptor.cpp \
+	tcp_raw_acceptor.cpp \
 	tcp_connector.cpp \
+	tcp_raw_connector.cpp \
 	tcp_client.cpp \
 	tcp_server.cpp \
+	tcp_raw_factory.cpp \
+	tls_config.cpp \
+	tls_factory_entry.cpp \
 	net_if.cpp \
 	dns_request.cpp \
 

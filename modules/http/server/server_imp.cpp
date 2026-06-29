@@ -63,6 +63,11 @@ bool Server::Impl::initialize(const network::SockAddr &bind_addr, int listen_bac
     return true;
 }
 
+bool Server::Impl::setTlsConfig(const network::TlsConfig &config)
+{
+    return tcp_server_.setTlsConfig(config);
+}
+
 bool Server::Impl::start()
 {
     if (tcp_server_.start()) {

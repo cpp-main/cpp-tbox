@@ -25,6 +25,7 @@
 #include <tbox/base/wrapped_recorder.h>
 
 #include <tbox/network/tcp_connection.h>
+#include <tbox/network/tcp_raw_factory.h>
 #include <tbox/crypto/sha1.h>
 #include <tbox/util/base64.h>
 
@@ -87,13 +88,44 @@ bool WsClient::Impl::initialize(const network::SockAddr &server_addr, const std:
     server_addr_ = server_addr;
     url_path_ = url_path;
 
-    //! 创建 TcpConnector（保持存活，供重连使用）
-    sp_connector_ = new network::TcpConnector(wp_loop_);
+    //! 创建 TcpFactory（默认使用 Raw）和 Connector
+    sp_factory_ = new network::TcpRawFactory;
+    sp_connector_ = sp_factory_->createConnector(wp_loop_);
     sp_connector_->initialize(server_addr_);
     sp_connector_->setConnectedCallback(std::bind(&WsClient::Impl::onTcpConnected, this, _1));
 
     state_ = WsClient::State::kInited;
     return true;
+}
+
+void WsClient::Impl::setTlsConfig(const network::TlsConfig &config)
+{
+    if (state_ != WsClient::State::kNone) {
+        LogWarn("cannot set TLS config after initialization");
+        return;
+    }
+
+    if (!config.isValid()) {
+        LogWarn("invalid TLS config");
+        return;
+    }
+
+    //! 替换 factory 和 connector
+    CHECK_DELETE_RESET_OBJ(sp_connector_);
+    CHECK_DELETE_RESET_OBJ(sp_factory_);
+
+    network::TcpFactory *tls_factory = network::CreateTlsFactory(network::TlsRole::kClient, config);
+    if (tls_factory == nullptr) {
+        LogWarn("failed to create TLS factory, TLS module may not be linked");
+        //! 回退到 Raw Factory
+        sp_factory_ = new network::TcpRawFactory;
+    } else {
+        sp_factory_ = tls_factory;
+    }
+
+    sp_connector_ = sp_factory_->createConnector(wp_loop_);
+    sp_connector_->initialize(server_addr_);
+    sp_connector_->setConnectedCallback(std::bind(&WsClient::Impl::onTcpConnected, this, _1));
 }
 
 void WsClient::Impl::setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func)
@@ -151,6 +183,7 @@ void WsClient::Impl::cleanup()
         stop();
 
     CHECK_DELETE_RESET_OBJ(sp_connector_);
+    CHECK_DELETE_RESET_OBJ(sp_factory_);
 
     connected_cb_ = nullptr;
     disconnected_cb_ = nullptr;

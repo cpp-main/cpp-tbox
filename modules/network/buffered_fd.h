@@ -87,12 +87,17 @@ class BufferedFd : public ByteStream {
     inline Fd fd() const { return fd_; }
     inline State state() const { return state_; }
 
+  protected:
+    //! 可被子类覆写的底层I/O方法（如 BufferedSslFd 使用 SSL_read/SSL_write）
+    virtual ssize_t doReadv(const struct iovec *iov, int iovcnt);
+    virtual ssize_t doWrite(const void *data, size_t size);
+
   private:
     void onReadCallback(short);
     void onWriteCallback(short);
 
   private:
-    event::Loop *wp_loop_ = nullptr;    //! 事件驱动
+    event::Loop *wp_loop_ = nullptr;
 
     Fd fd_;
     State state_ = State::kEmpty;

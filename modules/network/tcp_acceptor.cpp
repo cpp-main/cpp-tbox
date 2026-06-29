@@ -29,16 +29,14 @@
 #include <tbox/base/wrapped_recorder.h>
 #include <tbox/util/fs.h>
 
-#include "tcp_connection.h"
-
 #undef  MODULE_ID
 #define MODULE_ID "tbox.tcp"
 
 namespace tbox {
 namespace network {
 
-TcpAcceptor::TcpAcceptor(event::Loop *wp_loop) :
-    wp_loop_(wp_loop)
+TcpAcceptor::TcpAcceptor(event::Loop *wp_loop)
+  : wp_loop_(wp_loop)
 { }
 
 TcpAcceptor::~TcpAcceptor()
@@ -162,15 +160,8 @@ void TcpAcceptor::onClientConnected()
     SockAddr peer_addr(addr, addr_len);
     LogInfo("%s accepted new connection: %s", bind_addr_.toString().c_str(), peer_addr.toString().c_str());
 
-    if (new_conn_cb_) {
-        auto sp_connection = new TcpConnection(wp_loop_, peer_sock, peer_addr);
-        sp_connection->enable();
-        ++cb_level_;
-        new_conn_cb_(sp_connection);
-        --cb_level_;
-    } else {
-        LogWarn("%s need connect cb", bind_addr_.toString().c_str());
-    }
+    //! 调用子类方法处理新连接
+    onClientAccepted(peer_sock, peer_addr);
 }
 
 }

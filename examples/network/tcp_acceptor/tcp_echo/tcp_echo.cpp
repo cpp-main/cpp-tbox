@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#include <tbox/network/tcp_acceptor.h>
+#include <tbox/network/tcp_raw_acceptor.h>
 #include <tbox/network/tcp_connection.h>
 
 #include <tbox/base/log.h>
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     set<TcpConnection*> conns;
 
-    TcpAcceptor acceptor(sp_loop);
+    TcpRawAcceptor acceptor(sp_loop);
     acceptor.initialize(bind_addr, 1);
     //! 指定有Client连接上了该做的事务
     acceptor.setNewConnectionCallback(

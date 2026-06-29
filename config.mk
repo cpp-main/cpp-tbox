@@ -25,6 +25,7 @@ MODULES += event
 MODULES += eventx
 MODULES += log
 MODULES += network
+MODULES += network_tls    ## 需要 TLS 时取消注释，不需要时注释掉即可，不链接 libssl/libcrypto
 MODULES += terminal
 MODULES += trace
 MODULES += coroutine

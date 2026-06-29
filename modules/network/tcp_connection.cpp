@@ -30,16 +30,17 @@ namespace network {
 
 using namespace std::placeholders;
 
-TcpConnection::TcpConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr) :
-    wp_loop_(wp_loop),
-    sp_buffered_fd_(new BufferedFd(wp_loop)),
-    peer_addr_(peer_addr)
+TcpConnection::TcpConnection(event::Loop *wp_loop, const SockAddr &peer_addr)
+  : wp_loop_(wp_loop)
+  , peer_addr_(peer_addr)
 {
-    sp_buffered_fd_->initialize(fd);
+    //! sp_buffered_fd_ 由子类在构造函数中创建，然后调用 setupBufferedFd()
+}
+
+void TcpConnection::setupBufferedFd()
+{
     sp_buffered_fd_->setReadZeroCallback(std::bind(&TcpConnection::onSocketClosed, this));
     sp_buffered_fd_->setReadErrorCallback(std::bind(&TcpConnection::onReadError, this, _1));
-
-    sp_buffered_fd_->enable();
 }
 
 TcpConnection::~TcpConnection()
@@ -62,17 +63,7 @@ bool TcpConnection::disconnect()
     if (sp_buffered_fd_ == nullptr)
         return false;
 
-    sp_buffered_fd_->disable();
-
-    BufferedFd *tmp = nullptr;
-    std::swap(tmp, sp_buffered_fd_);
-
-    wp_loop_->runNext(
-        [tmp] { CHECK_DELETE_OBJ(tmp); },
-        "TcpConnection::disconnect, delete tmp"
-    );
-
-    return true;
+    return doDisconnect();
 }
 
 bool TcpConnection::shutdown(int howto)
@@ -81,8 +72,7 @@ bool TcpConnection::shutdown(int howto)
     if (sp_buffered_fd_ == nullptr)
         return false;
 
-    SocketFd socket_fd(sp_buffered_fd_->fd());
-    return socket_fd.shutdown(howto) == 0;
+    return doShutdown(howto);
 }
 
 SocketFd TcpConnection::socketFd() const

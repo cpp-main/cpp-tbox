@@ -145,7 +145,7 @@ bool BufferedFd::send(const void *data_ptr, size_t data_size)
         send_buff_.append(data_ptr, data_size);
     } else {
         //! 否则尝试发送
-        ssize_t wsize = fd_.write(data_ptr, data_size);
+        ssize_t wsize = doWrite(data_ptr, data_size);
         if (wsize >= 0) {   //! 如果发送正常
             //! 如果没有发送完，还有剩余的数据
             if (static_cast<size_t>(wsize) < data_size) {
@@ -179,6 +179,16 @@ void BufferedFd::shrinkSendBuffer()
     send_buff_.shrink();
 }
 
+ssize_t BufferedFd::doReadv(const struct iovec *iov, int iovcnt)
+{
+    return fd_.readv(iov, iovcnt);
+}
+
+ssize_t BufferedFd::doWrite(const void *data, size_t size)
+{
+    return fd_.write(data, size);
+}
+
 void BufferedFd::onReadCallback(short)
 {
     RECORD_SCOPE();
@@ -193,7 +203,7 @@ void BufferedFd::onReadCallback(short)
     rbuf[1].iov_base = extbuf;
     rbuf[1].iov_len  = sizeof(extbuf);
 
-    ssize_t rsize = fd_.readv(rbuf, 2);
+    ssize_t rsize = doReadv(rbuf, 2);
     if (rsize > 0) {    //! 读到了数据
         do {
             if (static_cast<size_t>(rsize) > writable_size) {
@@ -209,7 +219,7 @@ void BufferedFd::onReadCallback(short)
             writable_size = recv_buff_.writableSize();
             rbuf[0].iov_base = recv_buff_.writableBegin();
             rbuf[0].iov_len  = writable_size;
-        } while ((rsize = fd_.readv(rbuf, 2)) > 0);
+        } while ((rsize = doReadv(rbuf, 2)) > 0);
 
         //! 如果有绑定接收者，则应将数据直接转发给接收者
         if (wp_receiver_ != nullptr) {
@@ -261,7 +271,7 @@ void BufferedFd::onWriteCallback(short)
     }
 
     //! 下面是有数据要发送的
-    ssize_t wsize = fd_.write(send_buff_.readableBegin(), send_buff_.readableSize());
+    ssize_t wsize = doWrite(send_buff_.readableBegin(), send_buff_.readableSize());
     if (wsize >= 0) {
         send_buff_.hasRead(wsize);
     } else {
@@ -276,3 +286,4 @@ void BufferedFd::onWriteCallback(short)
 
 }
 }
+

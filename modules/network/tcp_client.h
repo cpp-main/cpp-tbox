@@ -27,6 +27,7 @@
 
 #include "byte_stream.h"
 #include "sockaddr.h"
+#include "tls_config.h"
 
 #include <tbox/base/defines.h>
 #include <tbox/event/loop.h>
@@ -36,6 +37,7 @@ namespace network {
 
 class TcpConnector;
 class TcpConnection;
+class TcpFactory;
 
 class TcpClient : public ByteStream {
   public:
@@ -63,6 +65,9 @@ class TcpClient : public ByteStream {
     void setDisconnectedCallback(const DisconnectedCallback &cb);
     void setAutoReconnect(bool enable);
     void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func);
+
+    //! 设置 TLS 配置（必须在 initialize() 之前调用）
+    bool setTlsConfig(const TlsConfig &config);
 
     bool start();   //!< 开始连接服务端
     void stop();    //!< 如果没有连接则成，则停止连接；否则断开连接

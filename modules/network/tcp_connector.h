@@ -74,6 +74,14 @@ class TcpConnector {
     virtual SocketFd createSocket(SockAddr::Type addr_type) const;
     virtual int connect(SocketFd sock_fd, const SockAddr &addr) const;
 
+    //! 子类覆写：创建对应类型的 TcpConnection
+    virtual TcpConnection* createConnection(event::Loop *wp_loop, SocketFd fd, const SockAddr &peer_addr) = 0;
+
+    //! 子类覆写：TCP 连接成功后的处理
+    //! TcpRawConnector: 立即 enable + 触发 connected_cb_
+    //! TcpTlsConnector: 开始 SSL 握手，握手成功后才触发 connected_cb_
+    virtual void onTcpConnected(SocketFd fd, const SockAddr &peer_addr) = 0;
+
     void checkSettingAndTryEnterIdleState();
 
     void enterConnectingState();        //!< 进入连接状态的操作
@@ -85,7 +93,7 @@ class TcpConnector {
     void onSocketWritable();    //!< 当连接成功时的处理
     void onDelayTimeout();      //!< 当等待延时到期后的处理
 
-  private:
+  protected:
     event::Loop *wp_loop_ = nullptr;
 
     State state_ = State::kNone;    //! 当前状态
@@ -108,5 +116,4 @@ class TcpConnector {
 
 }
 }
-
 #endif //TBOX_NETWORK_TCP_CONNECTOR_H_20180115

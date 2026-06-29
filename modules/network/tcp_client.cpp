@@ -26,6 +26,9 @@
 
 #include "tcp_connector.h"
 #include "tcp_connection.h"
+#include "tcp_factory.h"
+#include "tcp_raw_factory.h"
+#include "tls_factory_entry.h"
 
 #undef  MODULE_ID
 #define MODULE_ID "tbox.tcp"
@@ -45,19 +48,21 @@ struct TcpClient::Data {
     ByteStream          *wp_receiver = nullptr;
     bool reconnect_enabled = true;
 
-    TcpConnector  *sp_connector  = nullptr;
+    TcpFactory   *sp_factory    = nullptr;
+    TcpConnector *sp_connector  = nullptr;
     TcpConnection *sp_connection = nullptr;
 
     int cb_level = 0;
 };
 
-TcpClient::TcpClient(event::Loop *wp_loop) :
-    d_(new Data)
+TcpClient::TcpClient(event::Loop *wp_loop)
+  : d_(new Data)
 {
     TBOX_ASSERT(d_ != nullptr);
 
     d_->wp_loop = wp_loop;
-    d_->sp_connector = new TcpConnector(wp_loop);
+    d_->sp_factory = new TcpRawFactory;
+    d_->sp_connector = d_->sp_factory->createConnector(wp_loop);
 }
 
 TcpClient::~TcpClient()
@@ -68,8 +73,42 @@ TcpClient::~TcpClient()
 
     CHECK_DELETE_RESET_OBJ(d_->sp_connection);
     CHECK_DELETE_RESET_OBJ(d_->sp_connector);
+    CHECK_DELETE_RESET_OBJ(d_->sp_factory);
 
     delete d_;
+}
+
+bool TcpClient::setTlsConfig(const TlsConfig &config)
+{
+    if (d_->state != State::kNone) {
+        LogWarn("cannot set TLS config after initialization");
+        return false;
+    }
+
+    if (!config.isValid()) {
+        LogWarn("invalid TLS config");
+        return false;
+    }
+
+    //! 替换 factory 和 connector
+    TcpFactory *tls_factory = CreateTlsFactory(TlsRole::kClient, config);
+    if (tls_factory == nullptr) {
+        LogWarn("failed to create TLS factory, TLS module may not be linked");
+        return false;
+    }
+
+    if (!tls_factory->initialize()) {
+        LogWarn("failed init TLS factory, config may invalid");
+        delete tls_factory;
+        return false;
+    }
+
+    CHECK_DELETE_RESET_OBJ(d_->sp_connector);
+    CHECK_DELETE_RESET_OBJ(d_->sp_factory);
+    d_->sp_factory = tls_factory;
+    d_->sp_connector = d_->sp_factory->createConnector(d_->wp_loop);
+
+    return true;
 }
 
 bool TcpClient::initialize(const SockAddr &server_addr)

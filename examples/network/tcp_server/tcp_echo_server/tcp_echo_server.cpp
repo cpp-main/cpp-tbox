@@ -61,6 +61,8 @@ int main(int argc, char **argv)
     //! 当收到数据时，直接往client指定对象发回去
     server.setReceiveCallback(
         [&server] (const TcpServer::ConnToken &client, Buffer &buff) {
+            std::string text((const char*)buff.readableBegin(), buff.readableSize());
+            LogInfo("len:%u, text:%s", text.size(), text.c_str());
             server.send(client, buff.readableBegin(), buff.readableSize());
             buff.hasReadAll();
         }, 0

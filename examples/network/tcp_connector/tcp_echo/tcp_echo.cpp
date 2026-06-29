@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-#include <tbox/network/tcp_connector.h>
+#include <tbox/network/tcp_raw_connector.h>
 #include <tbox/network/tcp_connection.h>
 
 #include <tbox/base/log.h>
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     TcpConnection *sp_curr = nullptr;
 
-    TcpConnector connector(sp_loop);
+    TcpRawConnector connector(sp_loop);
     connector.initialize(bind_addr);
     //! 指定有Client连接上后该做的事务
     connector.setConnectedCallback(
