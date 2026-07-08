@@ -19,6 +19,7 @@
  */
 #include "ws_compressor.h"
 
+#include <cstdint>
 #include <cstring>
 #include <zlib.h>
 
