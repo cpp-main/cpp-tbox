@@ -20,6 +20,7 @@
 #ifndef TBOX_WS_COMPRESSOR_H_20260708
 #define TBOX_WS_COMPRESSOR_H_20260708
 
+#include <cstdint>
 #include <string>
 
 namespace tbox {
