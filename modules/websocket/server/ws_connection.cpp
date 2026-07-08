@@ -103,8 +103,7 @@ bool WsConnection::send(const void *data, size_t len)
 
     //! 压缩协商达成时，压缩二进制数据帧
     if (compression_config_.enabled && compressor_.isInitialized()) {
-        std::string input(reinterpret_cast<const char*>(data), len);
-        std::string compressed = compressor_.compress(input);
+        std::string compressed = compressor_.compress(data, len);
         if (!compressed.empty()) {
             auto frame = WsFrameBuilder::BuildFrame(WsFrame::OpCode::kBinary, true,
                                                     compressed.data(), compressed.size(), true);

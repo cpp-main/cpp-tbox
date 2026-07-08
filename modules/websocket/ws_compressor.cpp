@@ -57,7 +57,14 @@ void WsCompressor::reset()
     initialized_ = false;
 }
 
+//! === compress ===
+
 std::string WsCompressor::compress(const std::string &data)
+{
+    return compress(data.data(), data.size());
+}
+
+std::string WsCompressor::compress(const void *data_ptr, size_t data_size)
 {
     if (!initialized_ || !config_.enabled)
         return "";
@@ -76,12 +83,12 @@ std::string WsCompressor::compress(const std::string &data)
     }
 
     //! 设置输入数据
-    strm.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(data.data()));
-    strm.avail_in = static_cast<uInt>(data.size());
+    strm.next_in = reinterpret_cast<Bytef*>(const_cast<void*>(data_ptr));
+    strm.avail_in = static_cast<uInt>(data_size);
 
     //! 输出缓冲区：压缩后可能比原始数据更大（如随机数据），预留足够空间
     //! deflateBound 返回压缩后的最大可能大小
-    size_t max_out = deflateBound(&strm, static_cast<uInt>(data.size()));
+    size_t max_out = deflateBound(&strm, static_cast<uInt>(data_size));
     std::string output;
     output.resize(max_out);
 
@@ -112,7 +119,14 @@ std::string WsCompressor::compress(const std::string &data)
     return output;
 }
 
+//! === decompress ===
+
 std::string WsCompressor::decompress(const std::string &data)
+{
+    return decompress(data.data(), data.size());
+}
+
+std::string WsCompressor::decompress(const void *data_ptr, size_t data_size)
 {
     if (!initialized_ || !config_.enabled)
         return "";
@@ -130,18 +144,23 @@ std::string WsCompressor::decompress(const std::string &data)
     }
 
     //! RFC 7692 Section 7.2.2：解压前须在数据末尾加回 4 字节尾部
-    std::string input = data + std::string(reinterpret_cast<const char*>(kDeflateTail), 4);
+    //! 将原始数据 + 4字节尾部拼入一个临时缓冲区，避免修改原始数据
+    size_t input_len = data_size + 4;
+    std::string input;
+    input.resize(input_len);
+    memcpy(&input[0], data_ptr, data_size);
+    memcpy(&input[data_size], kDeflateTail, 4);
 
     //! 输出缓冲区：预估解压后大小
     //! 解压后通常比压缩数据大，预估为输入的 4 倍，不够时动态扩容
     std::string output;
-    size_t out_capacity = input.size() * 4;
+    size_t out_capacity = input_len * 4;
     if (out_capacity < 256)
         out_capacity = 256;
     output.resize(out_capacity);
 
-    strm.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(input.data()));
-    strm.avail_in = static_cast<uInt>(input.size());
+    strm.next_in = reinterpret_cast<Bytef*>(&input[0]);
+    strm.avail_in = static_cast<uInt>(input_len);
 
     size_t total_out = 0;
 

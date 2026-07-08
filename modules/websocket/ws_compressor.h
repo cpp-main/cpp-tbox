@@ -63,11 +63,15 @@ class WsCompressor {
     //! 成功返回压缩后数据，失败返回空字符串
     //! 控制帧不应调用此方法
     std::string compress(const std::string &data);
+    //! 直接接受原始指针与长度，避免二进制数据构造 std::string 的额外拷贝
+    std::string compress(const void *data_ptr, size_t data_size);
 
     //! 解压数据（先加回 4 字节尾再解压）
     //! 成功返回解压后数据，失败返回空字符串
     //! 仅对 RSV1=1 的数据帧调用此方法
     std::string decompress(const std::string &data);
+    //! 直接接受原始指针与长度，避免二进制数据构造 std::string 的额外拷贝
+    std::string decompress(const void *data_ptr, size_t data_size);
 
     //! 是否已初始化
     bool isInitialized() const { return initialized_; }

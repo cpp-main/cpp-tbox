@@ -90,6 +90,7 @@ class EchoService {
         ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
             onMessage(token, frame);
         });
+        ws_srv_.setCompressionEnable(true);
 
         //! 初始化定时器：每 5 秒推送统计帧
         stat_timer_->initialize(std::chrono::milliseconds(5000), Event::Mode::kPersist);
