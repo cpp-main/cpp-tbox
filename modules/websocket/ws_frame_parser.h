@@ -62,6 +62,7 @@ class WsFrameParser {
 
     //! 当前帧的头部信息
     bool    fin_;
+    bool    rsv1_;          //!< RSV1 位（permessage-deflate 压缩帧标记）
     uint8_t opcode_;
     bool    masked_;
     uint64_t payload_len_;

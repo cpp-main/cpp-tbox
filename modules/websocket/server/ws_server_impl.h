@@ -33,6 +33,7 @@
 
 #include "ws_server.h"
 #include "ws_connection.h"
+#include "../ws_compressor.h"
 
 namespace tbox {
 namespace websocket {
@@ -59,6 +60,9 @@ class WsServer::Impl : public http::server::Middleware {
     void setDisconnectedCallback(const WsServer::DisconnectedCallback &cb) { disconnected_cb_ = cb; }
     void setMessageCallback(const WsServer::MessageCallback &cb)        { message_cb_ = cb; }
     void setErrorCallback(const WsServer::ErrorCallback &cb)            { error_cb_ = cb; }
+
+    //! 压缩配置
+    void setCompressionEnable(bool enable);
 
   public:
     //! 通过 ConnToken 操作连接（转发到 WsConnection）
@@ -87,7 +91,8 @@ class WsServer::Impl : public http::server::Middleware {
 
   private:
     //! 当 HTTP 服务器发送 101 响应后回调此函数
-    void onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path);
+    void onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path,
+                     const WsCompressionConfig &compress_config);
 
     //! 当 WsConnection 断开时回调（参数为 ConnToken）
     void onWsDisconnected(const ConnToken &client);
@@ -111,6 +116,9 @@ class WsServer::Impl : public http::server::Middleware {
 
     //! 中间件 token（由 HTTP Server 的 use() 返回，用于 unuse() 反注册）
     http::server::MiddlewareToken mw_token_;
+
+    //! 压缩配置
+    WsCompressionConfig compression_config_;
 
     //! WsConnection 容器（生命期管理）
     cabinet::Cabinet<WsConnection> ws_conns_;

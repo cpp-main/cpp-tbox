@@ -52,6 +52,9 @@ class ChatRoom {
         if (!ws_srv_.initialize(http_srv, url_path))
             return false;
 
+        //! 启用压缩（RFC 7692 permessage-deflate）
+        ws_srv_.setCompressionEnable(true);
+
         ws_srv_.setConnectedCallback([this](const WsServer::ConnToken &token) {
             onConnected(token);
         });

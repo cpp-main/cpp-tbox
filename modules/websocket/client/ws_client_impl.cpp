@@ -229,7 +229,16 @@ void WsClient::Impl::sendHandshakeRequest()
         "Upgrade: websocket\r\n" +
         "Connection: Upgrade\r\n" +
         "Sec-WebSocket-Key: " + sec_ws_key_ + "\r\n" +
-        "Sec-WebSocket-Version: 13\r\n\r\n";
+        "Sec-WebSocket-Version: 13\r\n";
+
+    //! RFC 7692：若 prefer_compression_=true，请求压缩扩展
+    //! 必须声明 client_no_context_takeover 和 server_no_context_takeover
+    //! 与我们的实现一致（每条消息独立压缩）
+    if (prefer_compression_) {
+        request += "Sec-WebSocket-Extensions: permessage-deflate; client_no_context_takeover; server_no_context_takeover\r\n";
+    }
+
+    request += "\r\n";
 
     LogDbg("ws client handshake request sent");
     sp_tcp_conn_->send(request.data(), request.size());
@@ -295,6 +304,21 @@ bool WsClient::Impl::parseHandshakeResponse(network::Buffer &buff)
     //! 握手成功！消耗响应头，切换到帧通信模式
     buff.hasRead(header_len);
     LogInfo("ws client handshake success");
+
+    //! RFC 7692：检查压缩协商结果
+    //! 若客户端请求了压缩且服务器同意了 permessage-deflate
+    if (prefer_compression_ &&
+        header.find("Sec-WebSocket-Extensions: permessage-deflate") != std::string::npos) {
+        //! 服务器同意压缩
+        compression_config_.enabled = true;
+        compression_config_.no_context_takeover = true;
+        compression_config_.max_window_bits = 15;
+        LogInfo("ws client compression agreed: permessage-deflate");
+    } else {
+        //! 服务器不同意压缩，或客户端未请求
+        compression_config_.enabled = false;
+    }
+
     onHandshakeSuccess();
     return true;
 }
@@ -303,6 +327,14 @@ void WsClient::Impl::onHandshakeSuccess()
 {
     state_ = WsClient::State::kConnected;
     frame_parser_.reset();
+
+    //! 初始化压缩器
+    if (compression_config_.enabled) {
+        if (!compressor_.initialize(compression_config_)) {
+            LogErr("WsClient compressor init fail, fallback to no compression");
+            compression_config_.enabled = false;
+        }
+    }
 
     //! 通知用户
     if (connected_cb_) {
@@ -345,6 +377,26 @@ void WsClient::Impl::onWsFrameReceived(network::Buffer &buff)
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
             WsFrame *frame = frame_parser_.getFrame();
             if (frame != nullptr) {
+                //! 解压缩：RSV1=1 的数据帧需要解压
+                if (frame->rsv1 && compression_config_.enabled &&
+                    compressor_.isInitialized() &&
+                    (frame->opcode == WsFrame::OpCode::kText ||
+                     frame->opcode == WsFrame::OpCode::kBinary ||
+                     frame->opcode == WsFrame::OpCode::kContinue)) {
+                    std::string decompressed = compressor_.decompress(frame->payload);
+                    if (!decompressed.empty()) {
+                        frame->payload = decompressed;
+                        frame->rsv1 = false;
+                    } else {
+                        //! 解压失败
+                        LogNotice("ws client decompress fail");
+                        delete frame;
+                        buff.hasReadAll();
+                        onError();
+                        return;
+                    }
+                }
+
                 switch (frame->opcode) {
                     case WsFrame::OpCode::kText:
                     case WsFrame::OpCode::kBinary:
@@ -436,6 +488,19 @@ bool WsClient::Impl::send(const std::string &text)
     if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
 
+    //! 压缩协商达成时，压缩文本数据帧
+    if (compression_config_.enabled && compressor_.isInitialized()) {
+        std::string compressed = compressor_.compress(text);
+        if (!compressed.empty()) {
+            auto frame = WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode::kText, true,
+                                                          compressed.data(), compressed.size(),
+                                                          nullptr, true);
+            return sp_tcp_conn_->send(frame.data(), frame.size());
+        }
+        //! 压缩失败，回退到不压缩
+        LogNotice("ws client compress fail, fallback to uncompressed");
+    }
+
     auto frame = WsFrameBuilder::BuildMaskedTextFrame(text);
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
@@ -444,6 +509,20 @@ bool WsClient::Impl::send(const void *data, size_t len)
 {
     if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
         return false;
+
+    //! 压缩协商达成时，压缩二进制数据帧
+    if (compression_config_.enabled && compressor_.isInitialized()) {
+        std::string input(reinterpret_cast<const char*>(data), len);
+        std::string compressed = compressor_.compress(input);
+        if (!compressed.empty()) {
+            auto frame = WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode::kBinary, true,
+                                                          compressed.data(), compressed.size(),
+                                                          nullptr, true);
+            return sp_tcp_conn_->send(frame.data(), frame.size());
+        }
+        //! 压缩失败，回退到不压缩
+        LogNotice("ws client compress fail, fallback to uncompressed");
+    }
 
     auto frame = WsFrameBuilder::BuildMaskedBinaryFrame(data, len);
     return sp_tcp_conn_->send(frame.data(), frame.size());

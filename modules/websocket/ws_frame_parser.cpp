@@ -46,13 +46,15 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
             case State::kInit: {
                 //! 第1字节：FIN + RSV1-3 + Opcode
                 fin_ = (p[0] >> 7) & 1;
-                opcode_ = p[0] & 0x0F;
+                rsv1_ = (p[0] >> 6) & 1;
 
-                //! 检查：RSV1-3 必须为0（除非扩展协商）
-                if ((p[0] & 0x70) != 0) {
+                //! 检查：RSV2/RSV3 必须为0（目前仅支持 RSV1 用于 permessage-deflate）
+                if ((p[0] & 0x30) != 0) {
                     state_ = State::kError;
                     return consumed;
                 }
+
+                opcode_ = p[0] & 0x0F;
 
                 ++p; --remaining; ++consumed;
                 state_ = State::kHeader2Bytes;
@@ -167,6 +169,7 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
                     //! 帧完整，创建 WsFrame
                     sp_frame_ = new WsFrame;
                     sp_frame_->fin = fin_;
+                    sp_frame_->rsv1 = rsv1_;
                     sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
                     sp_frame_->payload = std::move(payload_);
                     state_ = State::kFinished;

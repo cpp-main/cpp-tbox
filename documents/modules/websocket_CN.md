@@ -18,6 +18,7 @@ websocket 模块提供了 WebSocket 服务器与客户端实现，遵循 RFC 645
 #include <tbox/websocket/ws_frame.h>               //! WebSocket 帧定义
 #include <tbox/websocket/ws_frame_parser.h>        //! 帧解析器（增量式）
 #include <tbox/websocket/ws_frame_builder.h>       //! 帧构建器（服务端/掩码）
+#include <tbox/websocket/ws_compressor.h>          //! 压缩（RFC 7692）
 #include <tbox/websocket/server/ws_server.h>        //! WebSocket 服务端
 #include <tbox/websocket/server/ws_connection.h>    //! WebSocket 连接（内部类）
 #include <tbox/websocket/client/client.h>           //! WebSocket 客户端
@@ -52,6 +53,7 @@ WsServer 运行在 HTTP 服务器之上，作为中间件存在。它检测 WebS
 | `setDisconnectedCallback(cb)` | 设置回调：客户端断开 |
 | `setMessageCallback(cb)` | 设置回调：客户端发送消息 |
 | `setErrorCallback(cb)` | 设置回调：客户端连接出错 |
+| `setCompressionEnable(enable)` | 启用/禁用压缩支持（必须在 initialize 之前调用） |
 | `IsWsUpgradeRequest(req)` | 静态方法：检查 HTTP 请求是否为有效的 WebSocket 升级请求 |
 | `ComputeWsAcceptKey(key)` | 静态方法：计算 Sec-WebSocket-Accept 响应值 |
 
@@ -110,6 +112,7 @@ Client 类通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手请�
 | `setErrorCallback(cb)` | 设置回调：连接出错 |
 | `setAutoReconnect(enable)` | 启用/禁用自动重连（默认启用） |
 | `setReconnectDelayCalcFunc(func)` | 设置自定义重连延迟计算函数 |
+| `setCompressionPrefer(enable)` | 启用/禁用压缩偏好（必须在 initialize 之前调用） |
 
 **State 状态枚举：**
 
@@ -136,6 +139,7 @@ struct WsFrame {
 
     OpCode  opcode;         //! 帧操作码
     bool    fin = true;     //! 是否为最后一帧
+    bool    rsv1 = false;   //! RSV1 位（压缩帧首帧为 true，RFC 7692）
     std::string payload;    //! 负载数据
 
     bool isControlFrame() const;   //! Close/Ping/Pong 为控制帧
@@ -414,6 +418,68 @@ ws_client.setReconnectDelayCalcFunc([](int fail_count) {
 ws_client.setAutoReconnect(false);
 ```
 
+## 压缩（RFC 7692 permessage-deflate）
+
+websocket 模块支持 RFC 7692 定义的 `permessage-deflate` 压缩扩展。启用后，WebSocket 文本帧和二进制帧使用 DEFLATE (zlib) 压缩，显著减少带宽占用，尤其适用于重复性或大数据量的消息。
+
+### 工作原理
+
+1. **服务端**：在 `initialize()` 之前调用 `setCompressionEnable(true)`。若客户端在握手中请求了 `permessage-deflate`（通过 `Sec-WebSocket-Extensions: permessage-deflate` 头部），服务端在 101 响应中同意压缩。否则不使用压缩。
+
+2. **客户端**：在 `initialize()` 之前调用 `setCompressionPrefer(true)`。客户端在握手中请求压缩扩展。若服务端同意，帧将压缩/解压；若服务端拒绝，通信继续不压缩。
+
+3. **帧格式**：压缩数据帧的首帧设置 RSV1 位。控制帧（Close/Ping/Pong）永远不压缩。
+
+4. **实现方式**：使用 raw DEFLATE，按 RFC 7692 Section 7.2.2 规则去除 4 字节尾部。每条消息独立压缩（no_context_takeover 模式），简化实现并确保兼容性。
+
+### WsCompressionConfig — 压缩配置
+
+```cpp
+#include <tbox/websocket/ws_compressor.h>
+
+struct WsCompressionConfig {
+    bool enabled = false;                  //!< 是否启用压缩
+    bool no_context_takeover = true;       //!< 不跨消息保留 zlib 上下文
+    int  max_window_bits = 15;             //!< 最大窗口位数 (8~15)
+};
+```
+
+### 服务端：启用压缩
+
+```cpp
+WsServer ws_srv(sp_loop);
+ws_srv.setCompressionEnable(true);  //! 允许压缩（在 initialize 之前调用）
+ws_srv.initialize(&http_srv, "/ws/chat");
+```
+
+### 客户端：偏好压缩
+
+```cpp
+WsClient ws_client(sp_loop);
+ws_client.setCompressionPrefer(true);  //! 请求压缩（在 initialize 之前调用）
+ws_client.initialize(SockAddr::FromString("127.0.0.1:8080"), "/ws/chat");
+```
+
+### 混合服务（部分路由压缩，部分不压缩）
+
+```cpp
+//! 聊天室启用压缩
+WsServer ws_srv_compressed(sp_loop);
+ws_srv_compressed.setCompressionEnable(true);
+ws_srv_compressed.initialize(&http_srv, "/ws/chat");
+
+//! Echo 服务不压缩
+WsServer ws_srv_plain(sp_loop);
+ws_srv_plain.initialize(&http_srv, "/ws/echo");
+```
+
+### 重要：压缩协商
+
+- 压缩是**可选的**，在 HTTP Upgrade 握手阶段按连接协商。
+- 若任一方不支持或拒绝压缩，帧将不压缩发送——对功能无任何影响。
+- `WsFrame` 的 `rsv1` 字段标识接收到的帧是否被压缩。解压后 `rsv1` 被清除，用户回调中收到的 payload 是原始数据，透明无感。
+- 压缩失败时优雅回退：若压缩或解压失败，系统回退到不压缩模式或报告错误。
+
 ## 常见场景
 
 1. **实时推送**：将 WsServer 挂载到 HTTP 服务器上，向浏览器客户端推送实时数据
@@ -423,6 +489,7 @@ ws_client.setAutoReconnect(false);
 5. **服务端心跳**：服务端发送 Ping 帧，客户端自动回复 Pong
 6. **客户端自动重连**：断线后按指数退避策略自动重连
 7. **HTTP + WebSocket 混合**：HTTP 提供 REST API 和静态页面；WebSocket 处理实时通信
+8. **压缩通信**：启用 permessage-deflate 减少文本/二进制数据的带宽占用
 
 ## 注意事项
 
@@ -437,6 +504,8 @@ ws_client.setAutoReconnect(false);
 9. **生命周期顺序**：WsServer 和 Client 均须遵循 initialize → start → stop → cleanup 顺序。
 10. **线程安全**：所有回调在 Loop 线程中执行，跨线程操作须通过 `runInLoop()` 回到主线程。
 11. **上下文数据**：WsServer 的 `setContext()/getContext()` 委托给底层 TcpConnection。在回调中可访问上下文数据，但连接断开后 `getContext()` 返回 `nullptr`。
+12. **压缩**：在 WsServer 上调用 `setCompressionEnable(true)` 或在 WsClient 上调用 `setCompressionPrefer(true)` **必须在 `initialize()` 之前**。压缩按连接协商；若对方不支持，帧将不压缩发送，不影响功能。
+13. **压缩回退**：若压缩/解压失败，系统打印警告并回退到不压缩发送。解压失败会触发错误回调。
 
 ## 相关模块
 

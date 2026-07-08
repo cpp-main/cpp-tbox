@@ -29,6 +29,7 @@
 #include "ws_client.h"
 #include "../ws_frame.h"
 #include "../ws_frame_parser.h"
+#include "../ws_compressor.h"
 
 namespace tbox {
 namespace websocket {
@@ -56,6 +57,7 @@ class WsClient::Impl {
     void setErrorCallback(const WsClient::ErrorCallback &cb)            { error_cb_ = cb; }
     void setAutoReconnect(bool enable) { reconnect_enabled_ = enable; }
     void setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func);
+    void setCompressionPrefer(bool enable) { prefer_compression_ = enable; }
 
   public:
     bool send(const std::string &text);
@@ -121,6 +123,11 @@ class WsClient::Impl {
 
     //! 帧解析器
     WsFrameParser frame_parser_;
+
+    //! 压缩相关
+    bool prefer_compression_ = false;
+    WsCompressionConfig compression_config_;  //! 握手成功后确认的压缩配置
+    WsCompressor compressor_;
 
     WsClient::State state_ = WsClient::State::kNone;
 

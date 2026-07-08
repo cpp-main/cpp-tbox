@@ -18,6 +18,7 @@ On the client side, C++ programs may need to connect to WebSocket servers to rec
 #include <tbox/websocket/ws_frame.h>               //! WebSocket frame definition
 #include <tbox/websocket/ws_frame_parser.h>        //! Frame parser (incremental)
 #include <tbox/websocket/ws_frame_builder.h>       //! Frame builder (server/masked)
+#include <tbox/websocket/ws_compressor.h>          //! Compression (RFC 7692)
 #include <tbox/websocket/server/ws_server.h>        //! WebSocket server
 #include <tbox/websocket/server/ws_connection.h>    //! WebSocket connection (internal)
 #include <tbox/websocket/client/client.h>           //! WebSocket client
@@ -52,6 +53,7 @@ WsServer runs on top of an HTTP server as a middleware. It detects WebSocket upg
 | `setDisconnectedCallback(cb)` | Set callback: client disconnected |
 | `setMessageCallback(cb)` | Set callback: client sent a message |
 | `setErrorCallback(cb)` | Set callback: client connection error |
+| `setCompressionEnable(enable)` | Enable/disable compression support (must call before initialize) |
 | `IsWsUpgradeRequest(req)` | Static: check if an HTTP request is a valid WebSocket upgrade |
 | `ComputeWsAcceptKey(key)` | Static: compute Sec-WebSocket-Accept value |
 
@@ -110,6 +112,7 @@ The Client class connects to a WebSocket server via TcpConnector, performs the H
 | `setErrorCallback(cb)` | Set callback: connection error |
 | `setAutoReconnect(enable)` | Enable/disable auto-reconnect (default: enabled) |
 | `setReconnectDelayCalcFunc(func)` | Set custom reconnect delay calculation |
+| `setCompressionPrefer(enable)` | Enable/disable compression preference (must call before initialize) |
 
 **State enum:**
 
@@ -136,6 +139,7 @@ struct WsFrame {
 
     OpCode  opcode;         //! Frame opcode
     bool    fin = true;     //! Is this the final frame?
+    bool    rsv1 = false;   //! RSV1 bit (true for compressed frame, RFC 7692)
     std::string payload;    //! Payload data
 
     bool isControlFrame() const;  //! Close/Ping/Pong are control frames
@@ -414,6 +418,68 @@ ws_client.setReconnectDelayCalcFunc([](int fail_count) {
 ws_client.setAutoReconnect(false);
 ```
 
+## Compression (RFC 7692 permessage-deflate)
+
+The websocket module supports the `permessage-deflate` compression extension defined in RFC 7692. When enabled, WebSocket text and binary frames are compressed using DEFLATE (zlib), significantly reducing bandwidth for repetitive or large messages.
+
+### How it works
+
+1. **Server side**: Call `setCompressionEnable(true)` before `initialize()`. If a client requests `permessage-deflate` in its handshake (`Sec-WebSocket-Extensions: permessage-deflate`), the server agrees by responding with the same header. Otherwise, compression is not used.
+
+2. **Client side**: Call `setCompressionPrefer(true)` before `initialize()`. The client requests `permessage-deflate` in its handshake. If the server agrees, frames are compressed/decompressed; if the server declines, communication proceeds without compression.
+
+3. **Frame format**: Compressed data frames set the RSV1 bit in the first frame header. Control frames (Close/Ping/Pong) are never compressed.
+
+4. **Implementation**: Uses raw DEFLATE with 4-byte tail stripping (RFC 7692 Section 7.2.2). Each message is independently compressed (no_context_takeover mode), simplifying implementation and ensuring compatibility.
+
+### WsCompressionConfig — Compression Configuration
+
+```cpp
+#include <tbox/websocket/ws_compressor.h>
+
+struct WsCompressionConfig {
+    bool enabled = false;                  //! Whether compression is enabled
+    bool no_context_takeover = true;       //! Don't retain zlib context across messages
+    int  max_window_bits = 15;             //! Maximum window bits (8~15)
+};
+```
+
+### Server: Enable Compression
+
+```cpp
+WsServer ws_srv(sp_loop);
+ws_srv.setCompressionEnable(true);  //! Allow compression (before initialize)
+ws_srv.initialize(&http_srv, "/ws/chat");
+```
+
+### Client: Prefer Compression
+
+```cpp
+WsClient ws_client(sp_loop);
+ws_client.setCompressionPrefer(true);  //! Request compression (before initialize)
+ws_client.initialize(SockAddr::FromString("127.0.0.1:8080"), "/ws/chat");
+```
+
+### Mixed Server (Some Routes Compressed, Some Not)
+
+```cpp
+//! Chat room with compression
+WsServer ws_srv_compressed(sp_loop);
+ws_srv_compressed.setCompressionEnable(true);
+ws_srv_compressed.initialize(&http_srv, "/ws/chat");
+
+//! Echo service without compression
+WsServer ws_srv_plain(sp_loop);
+ws_srv_plain.initialize(&http_srv, "/ws/echo");
+```
+
+### Important: Compression Negotiation
+
+- Compression is **optional** and negotiated per connection during the HTTP Upgrade handshake.
+- If either side does not support or declines compression, frames are sent uncompressed — no impact on functionality.
+- The `rsv1` field on `WsFrame` indicates whether a received frame was compressed. After decompression, `rsv1` is cleared, so user callbacks receive the original payload data transparently.
+- Compression fails gracefully: if compression or decompression fails, the system falls back to uncompressed mode or reports an error.
+
 ## Common Scenarios
 
 1. **Real-time push**: Mount WsServer on HTTP server, push live data to browser clients
@@ -423,6 +489,7 @@ ws_client.setAutoReconnect(false);
 5. **Server-to-client heartbeat**: Server sends Ping frames, client auto-replies Pong
 6. **Client auto-reconnect**: Client reconnects with exponential backoff after disconnection
 7. **Mixed HTTP + WebSocket**: HTTP serves REST APIs and static pages; WebSocket handles real-time communication
+8. **Compressed communication**: Enable permessage-deflate to reduce bandwidth for text/binary data
 
 ## Important Notes
 
@@ -437,6 +504,8 @@ ws_client.setAutoReconnect(false);
 9. **Lifecycle order**: Must follow initialize → start → stop → cleanup for both WsServer and Client.
 10. **Thread safety**: All callbacks run in the Loop thread. Cross-thread operations must use `runInLoop()`.
 11. **Context data**: `setContext()/getContext()` on WsServer delegates to the underlying TcpConnection. Context data is accessible in callbacks but becomes `nullptr` after the connection is destroyed.
+12. **Compression**: Call `setCompressionEnable(true)` on WsServer or `setCompressionPrefer(true)` on WsClient **before** `initialize()`. Compression is negotiated per connection; if the other side doesn't support it, frames are sent uncompressed without impact.
+13. **Compression fallback**: If compression/decompression fails, the system logs a warning and falls back to sending the frame uncompressed. Decompression failure causes an error callback.
 
 ## Related Modules
 

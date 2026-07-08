@@ -84,6 +84,9 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    //! 启用压缩（RFC 7692 permessage-deflate）
+    ws_client.setCompressionPrefer(true);
+
     //! 设置回调
     ws_client.setConnectedCallback([&] {
         LogInfo("connected to %s%s", server_addr.c_str(), url_path.c_str());

@@ -64,14 +64,16 @@ std::vector<uint8_t> WsFrameBuilder::BuildPongFrame(const std::string &data)
     return BuildFrame(WsFrame::OpCode::kPong, true, data.data(), data.size());
 }
 
-std::vector<uint8_t> WsFrameBuilder::BuildFrame(WsFrame::OpCode opcode, bool fin, const void *payload_ptr, size_t payload_len)
+std::vector<uint8_t> WsFrameBuilder::BuildFrame(WsFrame::OpCode opcode, bool fin, const void *payload_ptr, size_t payload_len, bool rsv1)
 {
     std::vector<uint8_t> frame;
 
-    //! 第1字节：FIN + RSV1-3(0) + Opcode
+    //! 第1字节：FIN + RSV1(permessage-deflate) + RSV2-3(0) + Opcode
     uint8_t byte0 = static_cast<uint8_t>(opcode);
     if (fin)
         byte0 |= 0x80;
+    if (rsv1)
+        byte0 |= 0x40;
     frame.push_back(byte0);
 
     //! 第2字节：MASK=0(服务端不掩码) + Payload length
@@ -137,7 +139,7 @@ std::vector<uint8_t> WsFrameBuilder::BuildMaskedPongFrame(const std::string &dat
 
 std::vector<uint8_t> WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode opcode, bool fin,
                                                       const void *payload_ptr, size_t payload_len,
-                                                      const uint8_t *mask_key)
+                                                      const uint8_t *mask_key, bool rsv1)
 {
     std::vector<uint8_t> frame;
 
@@ -153,10 +155,12 @@ std::vector<uint8_t> WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode opcode, bo
         mk[3] = static_cast<uint8_t>(rand() & 0xFF);
     }
 
-    //! 第1字节：FIN + RSV1-3(0) + Opcode
+    //! 第1字节：FIN + RSV1(permessage-deflate) + RSV2-3(0) + Opcode
     uint8_t byte0 = static_cast<uint8_t>(opcode);
     if (fin)
         byte0 |= 0x80;
+    if (rsv1)
+        byte0 |= 0x40;
     frame.push_back(byte0);
 
     //! 第2字节：MASK=1(客户端必须掩码) + Payload length

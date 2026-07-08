@@ -59,6 +59,11 @@ class WsServer {
     //! - url_path_ 不以 '/' 结尾：全量匹配，如 "/api" 仅匹配 "/api"
     //! - url_path_ 为空字符串：匹配所有 WebSocket 升级请求
     bool initialize(http::server::Server *http_server, const std::string &url_path = "");
+
+    //! 设置是否允许压缩（必须在 initialize 之前调用）
+    //! 启用后，若客户端请求 permessage-deflate，将在握手响应中同意压缩
+    void setCompressionEnable(bool enable);
+
     bool start();
     void stop();
     void cleanup();

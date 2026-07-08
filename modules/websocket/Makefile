@@ -27,12 +27,14 @@ LIB_VERSION_Z = 1
 
 HEAD_FILES = \
 	ws_frame.h \
+	ws_compressor.h \
 	server/ws_server.h \
 	client/ws_client.h \
 
 CPP_SRC_FILES = \
 	ws_frame_parser.cpp \
 	ws_frame_builder.cpp \
+	ws_compressor.cpp \
 	server/ws_connection.cpp \
 	server/ws_server_impl.cpp \
 	client/ws_client.cpp \
@@ -45,8 +47,9 @@ TEST_CPP_SRC_FILES = \
 	server/ws_server_impl_test.cpp \
 	ws_frame_parser_test.cpp \
 	ws_frame_builder_test.cpp \
+	ws_compressor_test.cpp \
 
-TEST_LDFLAGS := $(LDFLAGS) -ltbox_crypto -ltbox_http -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -ldl
+TEST_LDFLAGS := $(LDFLAGS) -ltbox_crypto -ltbox_http -ltbox_network -ltbox_log -ltbox_eventx -ltbox_event -ltbox_util -ltbox_base -lz -ldl
 
 ENABLE_SHARED_LIB = no
 

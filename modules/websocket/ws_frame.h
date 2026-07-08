@@ -40,6 +40,7 @@ struct WsFrame {
 
     OpCode  opcode = OpCode::kContinue;
     bool    fin    = true;         //!< 是否为最后一帧
+    bool    rsv1   = false;        //!< RSV1 位（压缩帧首帧为 true，RFC 7692）
     std::string payload;           //!< 负载数据
 
     //! 是否为控制帧（Close/Ping/Pong）

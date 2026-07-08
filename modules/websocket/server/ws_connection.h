@@ -25,6 +25,7 @@
 
 #include "../ws_frame.h"
 #include "../ws_frame_parser.h"
+#include "../ws_compressor.h"
 
 namespace tbox {
 namespace websocket {
@@ -88,7 +89,9 @@ class WsConnection {
 
   private:
     //! 仅由 WsServer 创建（生命期由 Cabinet 管理）
-    WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url);
+    //! compress_config 为握手时协商的压缩配置
+    WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url,
+                 const WsCompressionConfig &compress_config);
 
     void onTcpReceived(network::Buffer &buff);
     void onTcpDisconnected();
@@ -103,6 +106,10 @@ class WsConnection {
     std::string url_;
 
     WsFrameParser frame_parser_;
+
+    //! 压缩相关
+    WsCompressionConfig compression_config_;
+    WsCompressor compressor_;
 
     CloseCallback    close_cb_;
     MessageCallback  message_cb_;

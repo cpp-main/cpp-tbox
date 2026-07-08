@@ -91,6 +91,11 @@ void WsClient::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
     impl_->setReconnectDelayCalcFunc(func);
 }
 
+void WsClient::setCompressionPrefer(bool enable)
+{
+    impl_->setCompressionPrefer(enable);
+}
+
 bool WsClient::send(const std::string &text)
 {
     return impl_->send(text);

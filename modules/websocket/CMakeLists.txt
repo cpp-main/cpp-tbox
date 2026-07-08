@@ -32,6 +32,7 @@ set(TBOX_LIBRARY_NAME tbox_websocket)
 set(TBOX_WEBSOCKET_SOURCES
     ws_frame_parser.cpp
     ws_frame_builder.cpp
+    ws_compressor.cpp
     server/ws_connection.cpp
     server/ws_server_impl.cpp
     client/ws_client.cpp
@@ -40,10 +41,15 @@ set(TBOX_WEBSOCKET_SOURCES
 set(TBOX_WEBSOCKET_TEST_SOURCES
     server/ws_server_impl_test.cpp
     ws_frame_parser_test.cpp
-    ws_frame_builder_test.cpp)
+    ws_frame_builder_test.cpp
+    ws_compressor_test.cpp)
+
+find_package(ZLIB REQUIRED)
 
 add_library(${TBOX_LIBRARY_NAME} ${TBOX_BUILD_LIB_TYPE} ${TBOX_WEBSOCKET_SOURCES})
 add_library(tbox::${TBOX_LIBRARY_NAME} ALIAS ${TBOX_LIBRARY_NAME})
+
+target_link_libraries(${TBOX_LIBRARY_NAME} ZLIB::ZLIB)
 
 set_target_properties(
     ${TBOX_LIBRARY_NAME} PROPERTIES
@@ -71,6 +77,7 @@ install(
 install(
     FILES
     ws_frame.h
+    ws_compressor.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tbox/websocket
 )
 

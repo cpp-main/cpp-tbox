@@ -168,8 +168,33 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
         if (key_iter != req.headers.end())
             res.headers["Sec-WebSocket-Accept"] = ComputeWsAcceptKey(key_iter->second);
 
+        //! RFC 7692：压缩扩展协商
+        //! 若 server 允许压缩且客户端请求了 permessage-deflate，同意压缩
+        bool compression_agreed = false;
+        if (compression_config_.enabled) {
+            auto ext_iter = req.headers.find("Sec-WebSocket-Extensions");
+            if (ext_iter != req.headers.end() &&
+                ext_iter->second.find("permessage-deflate") != std::string::npos) {
+                //! 同意压缩，响应中添加 Sec-WebSocket-Extensions
+                //! 必须显式声明 server_no_context_takeover 和 client_no_context_takeover
+                //! RFC 7692 规则：若不声明这些参数，默认保留压缩上下文
+                //! 我们的实现每条消息独立压缩（no_context_takeover），必须声明以与实现一致
+                //! 否则对端（如 Chrome）会跨消息保持 deflate 上下文，导致后续消息解压失败
+                res.headers["Sec-WebSocket-Extensions"] = "permessage-deflate; server_no_context_takeover; client_no_context_takeover";
+                compression_agreed = true;
+                LogDbg("ws compression agreed: permessage-deflate; server_no_context_takeover; client_no_context_takeover");
+            }
+        }
+
         //! 注册升级回调：HTTP 服务器发送 101 响应后，将 TcpConnection 交给 WsServer
-        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1, req.url.path);
+        //! 同时传递压缩协商结果
+        WsCompressionConfig conn_compress_config;
+        if (compression_agreed) {
+            conn_compress_config.enabled = true;
+            conn_compress_config.no_context_takeover = compression_config_.no_context_takeover;
+            conn_compress_config.max_window_bits = compression_config_.max_window_bits;
+        }
+        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1, req.url.path, conn_compress_config);
 
         //! 升级请求已处理，不再调用 next()
         return;
@@ -181,16 +206,15 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
 
 //! === 升级与连接管理 ===
 
-void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path)
+void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path,
+                                 const WsCompressionConfig &compress_config)
 {
     RECORD_SCOPE();
     LogDbg("ws upgrade: new connection from %s", tcp_conn->peerAddr().toString().c_str());
 
     //! 创建 WsConnection，并存入 Cabinet（直接 alloc 并存入指针）
-    //! 传入升级时的 URL 路径，供用户后续通过 getUrl() 查询
-    //! 注意：这里需要获取升级请求的 URL，但 onWsUpgrade 只拿到 TcpConnection
-    //! URL 已在 handle() 中记录到 upgrade_cb 的绑定参数中
-    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path);
+    //! 传入升级时的 URL 路径和压缩配置
+    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path, compress_config);
     ConnToken ws_token = ws_conns_.alloc(ws_conn);
 
     //! 设置 WsConnection 的回调（bind 捕获 ConnToken，不传递 WsConnection*）
@@ -385,7 +409,10 @@ std::string WsServer::Impl::ComputeWsAcceptKey(const std::string &sec_ws_key)
     return util::base64::Encode(digest, 20);
 }
 
-//! === WsServer 外部接口 ===
+void WsServer::Impl::setCompressionEnable(bool enable)
+{
+    compression_config_.enabled = enable;
+}
 
 WsServer::WsServer(event::Loop *wp_loop)
   : impl_(new Impl(this, wp_loop))
@@ -396,6 +423,11 @@ WsServer::WsServer(event::Loop *wp_loop)
 WsServer::~WsServer()
 {
     CHECK_DELETE_RESET_OBJ(impl_);
+}
+
+void WsServer::setCompressionEnable(bool enable)
+{
+    impl_->setCompressionEnable(enable);
 }
 
 bool WsServer::initialize(http::server::Server *http_server, const std::string &url_path)
