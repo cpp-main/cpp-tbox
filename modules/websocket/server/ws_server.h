@@ -20,6 +20,9 @@
 #ifndef TBOX_WS_SERVER_H_20260612
 #define TBOX_WS_SERVER_H_20260612
 
+#include <vector>
+#include <functional>
+
 #include <tbox/event/loop.h>
 #include <tbox/base/cabinet_token.h>
 #include <tbox/base/defines.h>
@@ -42,6 +45,7 @@ namespace server {
 //! 支持指定 URL 路径（前缀匹配），实现多个 WebSocket 服务挂载于同一 HTTP 服务器
 //! 升级后接管 TcpConnection，提供 WebSocket 通信功能
 //! 通过 Cabinet 管理 WsConnection 生命期，用户通过 ConnToken 操作连接
+//! 分片消息接收完整后统一解压再回调，使用右值引用提升效率
 class WsServer {
   public:
     using ConnToken = cabinet::Token;
@@ -73,14 +77,16 @@ class WsServer {
 
   public:
     //! 设置回调（所有回调均使用 ConnToken，不暴露 WsConnection 指针）
-    using ConnectedCallback    = std::function<void(const ConnToken &)>;
-    using DisconnectedCallback = std::function<void(const ConnToken &)>;
-    using MessageCallback      = std::function<void(const ConnToken &, const WsFrame&)>;
-    using ErrorCallback        = std::function<void(const ConnToken &)>;
+    using ConnectedCallback     = std::function<void(const ConnToken &)>;
+    using DisconnectedCallback  = std::function<void(const ConnToken &)>;
+    using TextMessageCallback   = std::function<void(const ConnToken &, std::string &&)>;
+    using BinaryMessageCallback = std::function<void(const ConnToken &, std::vector<uint8_t> &&)>;
+    using ErrorCallback         = std::function<void(const ConnToken &)>;
 
     void setConnectedCallback(const ConnectedCallback &cb);
     void setDisconnectedCallback(const DisconnectedCallback &cb);
-    void setMessageCallback(const MessageCallback &cb);
+    void setTextMessageCallback(const TextMessageCallback &cb);
+    void setBinaryMessageCallback(const BinaryMessageCallback &cb);
     void setErrorCallback(const ErrorCallback &cb);
 
   public:
@@ -89,7 +95,7 @@ class WsServer {
     //! 向指定客户端发送二进制数据
     bool send(const ConnToken &client, const void *data, size_t len);
     //! 向指定客户端发送二进制数据（vector 版本）
-    bool sendBinary(const ConnToken &client, const std::vector<uint8_t> &data);
+    bool send(const ConnToken &client, const std::vector<uint8_t> &data);
 
     //! 关闭指定客户端连接（发送 Close 帧）
     bool close(const ConnToken &client, uint16_t code = 1000, const std::string &reason = "");

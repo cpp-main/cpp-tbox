@@ -81,15 +81,11 @@ class EchoService {
             return false;
 
         //! 设置回调
-        ws_srv_.setConnectedCallback([this](const WsServer::ConnToken &token) {
-            onConnected(token);
-        });
-        ws_srv_.setDisconnectedCallback([this](const WsServer::ConnToken &token) {
-            onDisconnected(token);
-        });
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
-        });
+        using namespace std::placeholders;
+        ws_srv_.setConnectedCallback(std::bind(&EchoService::onConnected, this, _1));
+        ws_srv_.setDisconnectedCallback(std::bind(&EchoService::onDisconnected, this, _1));
+        ws_srv_.setTextMessageCallback(std::bind(&EchoService::onTextMessage, this, _1, _2));
+        ws_srv_.setBinaryMessageCallback(std::bind(&EchoService::onBinaryMessage, this, _1, _2));
         ws_srv_.setCompressionEnable(true);
 
         //! 初始化定时器：每 5 秒推送统计帧
@@ -137,26 +133,21 @@ class EchoService {
     }
 
     //! 收到消息：区分文本帧与二进制帧
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onBinaryMessage(const WsServer::ConnToken &token, std::vector<uint8_t> &&data)
     {
-        if (frame.opcode == WsFrame::OpCode::kBinary) {
-            //! 二进制帧：echo 回传原数据
-            //! 演示 WsServer::send() 的 void* + len 版本
-            ws_srv_.send(token, frame.payload.data(), frame.payload.size());
+        //! 二进制帧：echo 回传原数据
+        //! 演示 WsServer::send() 的 void* + len 版本
+        //! 更新统计
+        recv_frames_++;
+        recv_bytes_ += data.size();
+        sent_frames_++;
+        sent_bytes_ += data.size();
+        ws_srv_.send(token, data);
+    }
 
-            //! 更新统计
-            recv_frames_++;
-            recv_bytes_ += frame.payload.size();
-            sent_frames_++;
-            sent_bytes_ += frame.payload.size();
-
-        } else if (frame.opcode == WsFrame::OpCode::kText) {
-            //! 文本帧：回复提示，仅接收二进制数据
-            ws_srv_.send(token, "此服务仅接收二进制帧，请发送 ArrayBuffer");
-
-        } else {
-            //! 其他帧（Ping/Pong/Close 等）：忽略
-        }
+    void onTextMessage(const WsServer::ConnToken &token, std::string &&text)
+    {
+        ws_srv_.send(token, "此服务仅接收二进制帧，请发送 ArrayBuffer");
     }
 
     //! 定时器回调：构建统计帧，推送给所有客户端
@@ -180,7 +171,7 @@ class EchoService {
 
         //! 向所有客户端推送统计帧
         for (const auto &token : conns_)
-            ws_srv_.sendBinary(token, stat_data);
+            ws_srv_.send(token, stat_data);
     }
 
   private:

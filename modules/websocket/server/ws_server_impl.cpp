@@ -89,7 +89,8 @@ void WsServer::Impl::stop()
     //! 清除 WsConnection 内部回调，防止断开时回调到 Impl
     ws_conns_.foreach([](WsConnection *conn) {
         conn->setCloseCallback(nullptr);
-        conn->setMessageCallback(nullptr);
+        conn->setTextMessageCallback(nullptr);
+        conn->setBinaryMessageCallback(nullptr);
         conn->setErrorCallback(nullptr);
     });
 
@@ -375,7 +376,8 @@ void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::st
 
     //! 设置 WsConnection 的回调（bind 捕获 ConnToken，不传递 WsConnection*）
     ws_conn->setCloseCallback(std::bind(&WsServer::Impl::onWsDisconnected, this, ws_token));
-    ws_conn->setMessageCallback(std::bind(&WsServer::Impl::onWsMessage, this, ws_token, _1));
+    ws_conn->setTextMessageCallback(std::bind(&WsServer::Impl::onWsTextMessage, this, ws_token, _1));
+    ws_conn->setBinaryMessageCallback(std::bind(&WsServer::Impl::onWsBinaryMessage, this, ws_token, _1));
     ws_conn->setErrorCallback(std::bind(&WsServer::Impl::onWsError, this, ws_token));
 
     //! 通知用户（传递 ConnToken）
@@ -407,11 +409,20 @@ void WsServer::Impl::onWsDisconnected(const ConnToken &client)
         "WsServer::onWsDisconnected, delete ws_conn");
 }
 
-void WsServer::Impl::onWsMessage(const ConnToken &client, const WsFrame &frame)
+void WsServer::Impl::onWsTextMessage(const ConnToken &client, std::string &&data)
 {
-    if (message_cb_) {
+    if (text_message_cb_) {
         ++cb_level_;
-        message_cb_(client, frame);
+        text_message_cb_(client, std::move(data));
+        --cb_level_;
+    }
+}
+
+void WsServer::Impl::onWsBinaryMessage(const ConnToken &client, std::vector<uint8_t> &&data)
+{
+    if (binary_message_cb_) {
+        ++cb_level_;
+        binary_message_cb_(client, std::move(data));
         --cb_level_;
     }
 }
@@ -448,11 +459,11 @@ bool WsServer::Impl::send(const ConnToken &client, const void *data, size_t len)
     return false;
 }
 
-bool WsServer::Impl::sendBinary(const ConnToken &client, const std::vector<uint8_t> &data)
+bool WsServer::Impl::send(const ConnToken &client, const std::vector<uint8_t> &data)
 {
     auto ws_conn = ws_conns_.at(client);
     if (ws_conn != nullptr)
-        return ws_conn->sendBinary(data);
+        return ws_conn->send(data);
     return false;
 }
 
@@ -622,9 +633,14 @@ void WsServer::setDisconnectedCallback(const DisconnectedCallback &cb)
     impl_->setDisconnectedCallback(cb);
 }
 
-void WsServer::setMessageCallback(const MessageCallback &cb)
+void WsServer::setTextMessageCallback(const TextMessageCallback &cb)
 {
-    impl_->setMessageCallback(cb);
+    impl_->setTextMessageCallback(cb);
+}
+
+void WsServer::setBinaryMessageCallback(const BinaryMessageCallback &cb)
+{
+    impl_->setBinaryMessageCallback(cb);
 }
 
 void WsServer::setErrorCallback(const ErrorCallback &cb)
@@ -642,9 +658,9 @@ bool WsServer::send(const ConnToken &client, const void *data, size_t len)
     return impl_->send(client, data, len);
 }
 
-bool WsServer::sendBinary(const ConnToken &client, const std::vector<uint8_t> &data)
+bool WsServer::send(const ConnToken &client, const std::vector<uint8_t> &data)
 {
-    return impl_->sendBinary(client, data);
+    return impl_->send(client, data);
 }
 
 bool WsServer::close(const ConnToken &client, uint16_t code, const std::string &reason)

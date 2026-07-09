@@ -56,10 +56,11 @@ class WsServer::Impl : public http::server::Middleware {
     WsServer::State state() const { return state_; }
 
   public:
-    void setConnectedCallback(const WsServer::ConnectedCallback &cb)    { connected_cb_ = cb; }
+    void setConnectedCallback(const WsServer::ConnectedCallback &cb)       { connected_cb_ = cb; }
     void setDisconnectedCallback(const WsServer::DisconnectedCallback &cb) { disconnected_cb_ = cb; }
-    void setMessageCallback(const WsServer::MessageCallback &cb)        { message_cb_ = cb; }
-    void setErrorCallback(const WsServer::ErrorCallback &cb)            { error_cb_ = cb; }
+    void setTextMessageCallback(const WsServer::TextMessageCallback &cb)   { text_message_cb_ = cb; }
+    void setBinaryMessageCallback(const WsServer::BinaryMessageCallback &cb) { binary_message_cb_ = cb; }
+    void setErrorCallback(const WsServer::ErrorCallback &cb)               { error_cb_ = cb; }
 
     //! 压缩配置
     void setCompressionEnable(bool enable);
@@ -68,7 +69,7 @@ class WsServer::Impl : public http::server::Middleware {
     //! 通过 ConnToken 操作连接（转发到 WsConnection）
     bool send(const ConnToken &client, const std::string &text);
     bool send(const ConnToken &client, const void *data, size_t len);
-    bool sendBinary(const ConnToken &client, const std::vector<uint8_t> &data);
+    bool send(const ConnToken &client, const std::vector<uint8_t> &data);
     bool close(const ConnToken &client, uint16_t code, const std::string &reason);
     bool ping(const ConnToken &client, const std::string &data);
     bool pong(const ConnToken &client, const std::string &data);
@@ -97,8 +98,11 @@ class WsServer::Impl : public http::server::Middleware {
     //! 当 WsConnection 断开时回调（参数为 ConnToken）
     void onWsDisconnected(const ConnToken &client);
 
-    //! 当 WsConnection 收到消息时回调
-    void onWsMessage(const ConnToken &client, const WsFrame &frame);
+    //! 当 WsConnection 收到完整文本消息时回调
+    void onWsTextMessage(const ConnToken &client, std::string &&data);
+
+    //! 当 WsConnection 收到完整二进制消息时回调
+    void onWsBinaryMessage(const ConnToken &client, std::vector<uint8_t> &&data);
 
     //! 当 WsConnection 出错时回调
     void onWsError(const ConnToken &client);
@@ -127,7 +131,8 @@ class WsServer::Impl : public http::server::Middleware {
 
     WsServer::ConnectedCallback    connected_cb_;
     WsServer::DisconnectedCallback disconnected_cb_;
-    WsServer::MessageCallback      message_cb_;
+    WsServer::TextMessageCallback  text_message_cb_;
+    WsServer::BinaryMessageCallback binary_message_cb_;
     WsServer::ErrorCallback        error_cb_;
 
     int cb_level_ = 0;

@@ -117,7 +117,7 @@ bool WsConnection::send(const void *data, size_t len)
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
-bool WsConnection::sendBinary(const std::vector<uint8_t> &data)
+bool WsConnection::send(const std::vector<uint8_t> &data)
 {
     return send(data.data(), data.size());
 }
@@ -199,6 +199,28 @@ bool WsConnection::sendFrame(WsFrame::OpCode opcode, bool fin,
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
+//! 将完整数据交付给业务层
+//! data 为解压后的完整数据（若不需要解压则为原始 payload）
+//! opcode 为消息类型（kText 或 kBinary）
+void WsConnection::deliverMessage(WsFrame::OpCode opcode, std::string &data)
+{
+    if (opcode == WsFrame::OpCode::kText) {
+        if (text_message_cb_) {
+            ++cb_level_;
+            text_message_cb_(std::move(data));
+            --cb_level_;
+        }
+    } else if (opcode == WsFrame::OpCode::kBinary) {
+        //! 将 std::string 转换为 std::vector<uint8_t>
+        std::vector<uint8_t> vec(data.begin(), data.end());
+        if (binary_message_cb_) {
+            ++cb_level_;
+            binary_message_cb_(std::move(vec));
+            --cb_level_;
+        }
+    }
+}
+
 void WsConnection::onTcpReceived(network::Buffer &buff)
 {
     //! 从缓冲区中逐步解析 WebSocket 帧
@@ -209,18 +231,126 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
             WsFrame *frame = frame_parser_.getFrame();
             if (frame != nullptr) {
-                //! 解压缩：RSV1=1 的数据帧需要解压
-                if (frame->rsv1 && compression_config_.enabled &&
-                    (frame->opcode == WsFrame::OpCode::kText ||
-                     frame->opcode == WsFrame::OpCode::kBinary ||
-                     frame->opcode == WsFrame::OpCode::kContinue)) {
-                    std::string decompressed = compressor_.decompress(frame->payload);
-                    if (!decompressed.empty()) {
-                        frame->payload = decompressed;
-                        frame->rsv1 = false;  //! 解压后清除 RSV1 标记
+                //! ===== 控制帧处理（Close/Ping/Pong 不受分片状态影响） =====
+                if (frame->isControlFrame()) {
+                    switch (frame->opcode) {
+                        case WsFrame::OpCode::kClose:
+                            //! 收到关闭帧，自动回复关闭帧
+                            if (!is_closing_) {
+                                auto close_frame = WsFrameBuilder::BuildCloseFrame(frame->closeCode(), frame->closeReason());
+                                sp_tcp_conn_->send(close_frame.data(), close_frame.size());
+                                is_closing_ = true;
+                            }
+                            //! 不再处理后续数据
+                            buff.hasReadAll();
+                            //! 清理分片缓存
+                            fragment_buffer_.clear();
+                            is_fragmenting_ = false;
+                            delete frame;
+                            if (close_cb_) {
+                                ++cb_level_;
+                                close_cb_();
+                                --cb_level_;
+                            }
+                            return;
+
+                        case WsFrame::OpCode::kPing:
+                            //! 自动回复 Pong
+                            pong(frame->payload);
+                            if (ping_cb_) {
+                                ++cb_level_;
+                                ping_cb_(frame->payload);
+                                --cb_level_;
+                            }
+                            break;
+
+                        case WsFrame::OpCode::kPong:
+                            if (pong_cb_) {
+                                ++cb_level_;
+                                pong_cb_(frame->payload);
+                                --cb_level_;
+                            }
+                            break;
+
+                        default:
+                            LogNotice("unknown ws control opcode: 0x%02x", static_cast<int>(frame->opcode));
+                            delete frame;
+                            buff.hasReadAll();
+                            fragment_buffer_.clear();
+                            is_fragmenting_ = false;
+                            if (error_cb_) {
+                                ++cb_level_;
+                                error_cb_();
+                                --cb_level_;
+                            }
+                            return;
+                    }
+                    delete frame;
+                    continue;   //! 控制帧处理完毕，继续解析下一个帧
+                }
+
+                //! ===== 数据帧处理（TEXT / BINARY / CONTINUE） =====
+                //! 核心逻辑：分片数据先缓存，接收完整后统一解压再回调
+                //! 原因：压缩数据不能逐片解压，必须拼接完整后才能解压
+
+                if (frame->opcode == WsFrame::OpCode::kText ||
+                    frame->opcode == WsFrame::OpCode::kBinary) {
+                    //! 新消息的首帧
+                    if (is_fragmenting_) {
+                        //! 正在接收分片消息时又收到新消息首帧，协议违规
+                        LogNotice("ws protocol error: new data frame while fragmenting");
+                        delete frame;
+                        buff.hasReadAll();
+                        fragment_buffer_.clear();
+                        is_fragmenting_ = false;
+                        if (error_cb_) {
+                            ++cb_level_;
+                            error_cb_();
+                            --cb_level_;
+                        }
+                        return;
+                    }
+
+                    if (frame->fin) {
+                        //! 单帧完整消息（无分片）
+                        bool is_need_decompress = frame->rsv1 && compression_config_.enabled;
+                        if (is_need_decompress) {
+                            std::string decompressed = compressor_.decompress(frame->payload);
+                            if (!decompressed.empty()) {
+                                frame->payload = std::move(decompressed);
+                            } else {
+                                //! 解压失败
+                                LogNotice("ws decompress fail");
+                                delete frame;
+                                buff.hasReadAll();
+                                if (error_cb_) {
+                                    ++cb_level_;
+                                    error_cb_();
+                                    --cb_level_;
+                                }
+                                return;
+                            }
+                        }
+
+                        //! 交付完整消息给业务层
+                        deliverMessage(frame->opcode, frame->payload);
+                        delete frame;
+
                     } else {
-                        //! 解压失败
-                        LogNotice("ws decompress fail");
+                        //! 分片消息的首帧（fin=false）
+                        //! 记录原始 opcode 和是否需要解压，缓存 payload
+                        is_fragmenting_ = true;
+                        fragment_opcode_ = frame->opcode;
+                        fragment_need_decompress_ = frame->rsv1 && compression_config_.enabled;
+                        fragment_buffer_ = std::move(frame->payload);
+                        delete frame;
+                    }
+
+                } else if (frame->opcode == WsFrame::OpCode::kContinue) {
+                    //! 分片消息的后续帧
+                    if (!is_fragmenting_) {
+                        //! 没有首帧却收到续帧，协议违规
+                        LogNotice("ws protocol error: continue frame without fragment start");
                         delete frame;
                         buff.hasReadAll();
                         if (error_cb_) {
@@ -230,70 +360,64 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                         }
                         return;
                     }
+
+                    //! 将本片 payload 追加到缓存区
+                    fragment_buffer_.append(frame->payload);
+
+                    if (frame->fin) {
+                        //! 最后一帧（fin=true），消息完整
+                        //! 对完整数据统一解压，然后回调业务层
+                        if (fragment_need_decompress_) {
+                            std::string decompressed = compressor_.decompress(fragment_buffer_);
+                            if (!decompressed.empty()) {
+                                fragment_buffer_ = std::move(decompressed);
+                            } else {
+                                //! 解压失败
+                                LogNotice("ws decompress fail");
+                                delete frame;
+                                buff.hasReadAll();
+                                fragment_buffer_.clear();
+                                is_fragmenting_ = false;
+                                if (error_cb_) {
+                                    ++cb_level_;
+                                    error_cb_();
+                                    --cb_level_;
+                                }
+                                return;
+                            }
+                        }
+
+                        //! 交付完整消息给业务层
+                        deliverMessage(fragment_opcode_, fragment_buffer_);
+
+                        //! 重置分片状态
+                        fragment_buffer_.clear();
+                        is_fragmenting_ = false;
+                    }
+                    //! fin=false: 继续缓存，不回调
+
+                    delete frame;
+
+                } else {
+                    //! 未知数据帧 opcode
+                    LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
+                    delete frame;
+                    buff.hasReadAll();
+                    fragment_buffer_.clear();
+                    is_fragmenting_ = false;
+                    if (error_cb_) {
+                        ++cb_level_;
+                        error_cb_();
+                        --cb_level_;
+                    }
+                    return;
                 }
-
-                switch (frame->opcode) {
-                    case WsFrame::OpCode::kText:
-                    case WsFrame::OpCode::kBinary:
-                    case WsFrame::OpCode::kContinue:
-                        if (message_cb_) {
-                            ++cb_level_;
-                            message_cb_(*frame);
-                            --cb_level_;
-                        }
-                        break;
-
-                    case WsFrame::OpCode::kClose:
-                        //! 收到关闭帧，自动回复关闭帧
-                        if (!is_closing_) {
-                            auto close_frame = WsFrameBuilder::BuildCloseFrame(frame->closeCode(), frame->closeReason());
-                            sp_tcp_conn_->send(close_frame.data(), close_frame.size());
-                            is_closing_ = true;
-                        }
-                        //! 不再处理后续数据
-                        buff.hasReadAll();
-                        delete frame;
-                        if (close_cb_) {
-                            ++cb_level_;
-                            close_cb_();
-                            --cb_level_;
-                        }
-                        return;
-
-                    case WsFrame::OpCode::kPing:
-                        //! 自动回复 Pong
-                        pong(frame->payload);
-                        if (ping_cb_) {
-                            ++cb_level_;
-                            ping_cb_(frame->payload);
-                            --cb_level_;
-                        }
-                        break;
-
-                    case WsFrame::OpCode::kPong:
-                        if (pong_cb_) {
-                            ++cb_level_;
-                            pong_cb_(frame->payload);
-                            --cb_level_;
-                        }
-                        break;
-
-                    default:
-                        LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
-                        delete frame;
-                        buff.hasReadAll();
-                        if (error_cb_) {
-                            ++cb_level_;
-                            error_cb_();
-                            --cb_level_;
-                        }
-                        return;
-                }
-                delete frame;
             }
         } else if (frame_parser_.state() == WsFrameParser::State::kError) {
             LogNotice("ws frame parse error");
             buff.hasReadAll();
+            fragment_buffer_.clear();
+            is_fragmenting_ = false;
             if (error_cb_) {
                 ++cb_level_;
                 error_cb_();
@@ -310,6 +434,10 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
 void WsConnection::onTcpDisconnected()
 {
     LogInfo("ws disconnected");
+
+    //! 清理分片缓存
+    fragment_buffer_.clear();
+    is_fragmenting_ = false;
 
     if (close_cb_) {
         ++cb_level_;
