@@ -63,10 +63,11 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
 
             case State::kHeader2Bytes: {
                 //! 第2字节：MASK + Payload length (7 bits)
+                //! RFC 6455 Section 5.2：len7 0~125 为 7-bit 长度，126 为 16-bit，127 为 64-bit
                 masked_ = (p[0] >> 7) & 1;
                 uint8_t len7 = p[0] & 0x7F;
 
-                if (len7 < 125) {
+                if (len7 <= 125) {
                     payload_len_ = len7;
                     ++p; --remaining; ++consumed;
                     state_ = masked_ ? State::kMaskKey : State::kPayload;
@@ -93,8 +94,8 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
                               | static_cast<uint64_t>(p[1]);
                 p += 2; remaining -= 2; consumed += 2;
 
-                //! 16位长度必须 >= 125
-                if (payload_len_ < 125) {
+                //! RFC 6455 Section 5.2：16位扩展长度必须 >= 126
+                if (payload_len_ <= 125) {
                     state_ = State::kError;
                     return consumed;
                 }

@@ -115,6 +115,127 @@ void WsServer::Impl::cleanup()
     state_ = WsServer::State::kNone;
 }
 
+//! === permessage-deflate 扩展协商解析 ===
+
+//! 客户端 Sec-WebSocket-Extensions 头部中 permessage-deflate 扩展的解析结果
+//! RFC 7692 Section 4.1: 扩展参数定义
+struct WsExtOfferParams {
+    bool found = false;                              //!< 是否找到 permessage-deflate 扩展
+    bool server_no_context_takeover = false;         //!< 服务器不保持压缩上下文
+    bool client_no_context_takeover = false;         //!< 客户端不保持压缩上下文
+    bool server_max_window_bits_present = false;     //!< 是否包含 server_max_window_bits
+    int  server_max_window_bits = 15;                //!< 服务器滑动窗口位数（默认15）
+    bool client_max_window_bits_present = false;     //!< 是否包含 client_max_window_bits
+    int  client_max_window_bits = 0;                 //!< 客户端滑动窗口位数，0=不带值(支持8~15)
+};
+
+//! 解析 Sec-WebSocket-Extensions 头部中的 permessage-deflate 扩展参数
+//! 格式示例: "permessage-deflate; client_max_window_bits; server_max_window_bits=15"
+//! 多个扩展以逗号分隔: "permessage-deflate; client_max_window_bits, x-other-ext"
+static WsExtOfferParams ParseWsExtOffer(const std::string &ext_header)
+{
+    WsExtOfferParams params;
+
+    //! 找到 permessage-deflate 扩展的起始位置（需完整匹配，非子串）
+    static const std::string kExtName = "permessage-deflate";
+    size_t pos = 0;
+    while (pos < ext_header.size()) {
+        size_t found_pos = ext_header.find(kExtName, pos);
+        if (found_pos == std::string::npos)
+            break;
+
+        //! 前面应为逗号、空格或字符串开头；后面应为分号、逗号、空格或结尾
+        bool valid_prefix = (found_pos == 0) ||
+            (ext_header[found_pos - 1] == ',') ||
+            (ext_header[found_pos - 1] == ' ');
+        size_t name_end = found_pos + kExtName.size();
+        bool valid_suffix = (name_end >= ext_header.size()) ||
+            (ext_header[name_end] == ';') ||
+            (ext_header[name_end] == ',') ||
+            (ext_header[name_end] == ' ');
+        if (valid_prefix && valid_suffix) {
+            pos = found_pos;
+            break;
+        }
+        pos = name_end;
+    }
+
+    if (pos >= ext_header.size())
+        return params;
+
+    params.found = true;
+
+    //! 确定参数区域：扩展名之后到下一个扩展（逗号）或字符串结尾
+    size_t param_start = pos + kExtName.size();
+    size_t comma_pos = ext_header.find(',', param_start);
+    size_t param_end = (comma_pos != std::string::npos) ? comma_pos : ext_header.size();
+
+    //! 在参数区域内逐个解析分号分隔的参数
+    std::string section = ext_header.substr(param_start, param_end - param_start);
+    size_t search_pos = 0;
+    while (search_pos < section.size()) {
+        size_t semi_pos = section.find(';', search_pos);
+        if (semi_pos == std::string::npos)
+            break;
+
+        //! 提取参数文本（跳过分号和空格）
+        size_t text_start = semi_pos + 1;
+        while (text_start < section.size() && section[text_start] == ' ')
+            text_start++;
+
+        //! 找到参数结束位置（下一个分号或区域结尾）
+        size_t text_end = section.find(';', text_start);
+        if (text_end == std::string::npos)
+            text_end = section.size();
+
+        //! 去掉尾部空格
+        while (text_end > text_start && section[text_end - 1] == ' ')
+            text_end--;
+
+        std::string param_text = section.substr(text_start, text_end - text_start);
+        if (param_text.empty()) {
+            search_pos = text_end;
+            continue;
+        }
+
+        //! 解析参数名=值
+        size_t eq_pos = param_text.find('=');
+        std::string param_name = (eq_pos != std::string::npos)
+            ? param_text.substr(0, eq_pos) : param_text;
+        std::string param_value = (eq_pos != std::string::npos)
+            ? param_text.substr(eq_pos + 1) : "";
+
+        //! 去掉参数名尾部空格和参数值首尾空格
+        while (!param_name.empty() && param_name.back() == ' ')
+            param_name.pop_back();
+        while (!param_value.empty() && param_value.front() == ' ')
+            param_value.erase(param_value.begin());
+        while (!param_value.empty() && param_value.back() == ' ')
+            param_value.pop_back();
+
+        //! 匹配已知参数（RFC 7692 Section 4.1）
+        if (param_name == "server_no_context_takeover") {
+            params.server_no_context_takeover = true;
+        } else if (param_name == "client_no_context_takeover") {
+            params.client_no_context_takeover = true;
+        } else if (param_name == "server_max_window_bits") {
+            params.server_max_window_bits_present = true;
+            if (!param_value.empty())
+                params.server_max_window_bits = std::stoi(param_value);
+        } else if (param_name == "client_max_window_bits") {
+            params.client_max_window_bits_present = true;
+            if (!param_value.empty())
+                params.client_max_window_bits = std::stoi(param_value);
+            else
+                params.client_max_window_bits = 0; //!< 不带值，表示客户端支持 8~15
+        }
+
+        search_pos = text_end;
+    }
+
+    return params;
+}
+
 //! === Middleware 接口实现 ===
 
 void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server::NextFunc &next)
@@ -173,16 +294,51 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
         bool compression_agreed = false;
         if (compression_config_.enabled) {
             auto ext_iter = req.headers.find("Sec-WebSocket-Extensions");
-            if (ext_iter != req.headers.end() &&
-                ext_iter->second.find("permessage-deflate") != std::string::npos) {
-                //! 同意压缩，响应中添加 Sec-WebSocket-Extensions
-                //! 必须显式声明 server_no_context_takeover 和 client_no_context_takeover
-                //! RFC 7692 规则：若不声明这些参数，默认保留压缩上下文
-                //! 我们的实现每条消息独立压缩（no_context_takeover），必须声明以与实现一致
-                //! 否则对端（如 Chrome）会跨消息保持 deflate 上下文，导致后续消息解压失败
-                res.headers["Sec-WebSocket-Extensions"] = "permessage-deflate; server_no_context_takeover; client_no_context_takeover";
-                compression_agreed = true;
-                LogDbg("ws compression agreed: permessage-deflate; server_no_context_takeover; client_no_context_takeover");
+            if (ext_iter != req.headers.end()) {
+                //! 解析客户端的 permessage-deflate 扩展参数
+                WsExtOfferParams offer_params = ParseWsExtOffer(ext_iter->second);
+                std::string resp_value;
+                if (offer_params.found) {
+                    //! 构建响应参数：
+                    //! 1) server_no_context_takeover: 服务器每条消息独立压缩，必须声明
+                    //! 2) client_no_context_takeover: 要求客户端每条消息独立压缩
+                    //! 3) client_max_window_bits: 若客户端 offered，RFC 7692 MUST 包含
+                    //!    否则 Chrome 等浏览器会关闭连接（RFC 7692 Section 4.3）
+                    //! 4) server_max_window_bits: 若客户端 offered，可选包含（MAY）
+                    resp_value = "permessage-deflate; server_no_context_takeover; client_no_context_takeover";
+
+                    //! RFC 7692 Section 4.2.2:
+                    //! "If a server received an extension offer containing the client_max_window_bits
+                    //!  parameter, the server MUST include the client_max_window_bits parameter
+                    //!  in the corresponding extension response."
+                    if (offer_params.client_max_window_bits_present) {
+                        //! 不带值(client_max_window_bits=0)表示客户端支持 8~15
+                        //! 带值时须 ≤ 客户端 offered 值
+                        //! 响应值同时须 ≤ 服务器 max_window_bits
+                        int respond_bits = (offer_params.client_max_window_bits == 0)
+                            ? compression_config_.max_window_bits
+                            : std::min(offer_params.client_max_window_bits, compression_config_.max_window_bits);
+                        if (respond_bits < 8)  respond_bits = 8;
+                        if (respond_bits > 15) respond_bits = 15;
+                        resp_value += "; client_max_window_bits=" + std::to_string(respond_bits);
+                    }
+
+                    //! RFC 7692 Section 4.2.2:
+                    //! server_max_window_bits 为 MAY，非 MUST
+                    //! 此处显式声明，方便客户端明确知道服务器使用的窗口位数
+                    if (offer_params.server_max_window_bits_present) {
+                        //! 响应值须 ≤ 客户端 offered 值，同时须 ≤ 服务器 max_window_bits
+                        int respond_bits = std::min(offer_params.server_max_window_bits, compression_config_.max_window_bits);
+                        if (respond_bits < 8)  respond_bits = 8;
+                        if (respond_bits > 15) respond_bits = 15;
+                        resp_value += "; server_max_window_bits=" + std::to_string(respond_bits);
+                    }
+
+                    compression_agreed = true;
+                    LogDbg("ws compression agreed: %s", resp_value.c_str());
+                }
+                if (!resp_value.empty())
+                    res.headers["Sec-WebSocket-Extensions"] = resp_value;
             }
         }
 

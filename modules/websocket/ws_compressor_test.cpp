@@ -112,6 +112,51 @@ TEST(WsCompressor, NoContextTakeover)
     EXPECT_EQ(msg3, compressor.decompress(c3));
 }
 
+TEST(WsCompressor, CompressDecompressRecompressSymmetry)
+{
+    //! 验证：compress(data) → decompress → compress 应产生相同结果
+    //! 这是 echo 服务器的核心场景：收到客户端压缩数据 → 解压 → 再压缩发回
+    //! 如果 compress 输出不一致，客户端将无法正确解压服务端的回传数据
+
+    WsCompressionConfig config;
+    config.enabled = true;
+    config.no_context_takeover = true;
+    config.max_window_bits = 15;
+
+    WsCompressor compressor;
+    ASSERT_TRUE(compressor.initialize(config));
+
+    //! 测试多种数据长度，特别覆盖 16、256、1024 等典型 WebSocket 帧大小
+    std::vector<size_t> test_sizes = {16, 32, 64, 128, 256, 512, 1024};
+
+    for (size_t size : test_sizes) {
+        //! 生成随机二进制数据（模拟浏览器发送的随机 payload）
+        std::string original(size, '\0');
+        for (size_t i = 0; i < size; i++)
+            original[i] = static_cast<char>(rand() % 256);
+
+        //! 第1步：压缩原始数据，得 data1
+        std::string data1 = compressor.compress(original);
+        ASSERT_FALSE(data1.empty()) << "compress failed for size=" << size;
+
+        //! 第2步：解压 data1，还原原始数据
+        std::string decompressed = compressor.decompress(data1);
+        ASSERT_EQ(original.size(), decompressed.size()) << "decompress size mismatch for size=" << size;
+        ASSERT_EQ(original, decompressed) << "decompress content mismatch for size=" << size;
+
+        //! 第3步：将解压后的数据再次压缩，得 data2
+        std::string data2 = compressor.compress(decompressed);
+        ASSERT_FALSE(data2.empty()) << "recompress failed for size=" << size;
+
+        //! 第4步：data1 与 data2 应完全一致（相同输入 + 相同参数 = 相同输出）
+        EXPECT_EQ(data1.size(), data2.size())
+            << "compressed size mismatch: data1=" << data1.size() << ", data2=" << data2.size()
+            << " for original size=" << size;
+        EXPECT_EQ(data1, data2)
+            << "compressed content mismatch for original size=" << size;
+    }
+}
+
 TEST(WsCompressor, DisabledCompression)
 {
     WsCompressionConfig config;

@@ -194,15 +194,39 @@ function connect() {
     document.querySelectorAll('.btn-group button').forEach(function(b) { b.disabled = false; });
   };
 
-  ws.onclose = function() {
+  //! Close 代码描述映射（RFC 6455 Section 7.4）
+  function closeCodeDesc(code) {
+    var desc = {
+      1000: '正常关闭',
+      1001: '终端离开',
+      1002: '协议错误',
+      1003: '不支持的数据类型',
+      1005: '无状态码（保留）',
+      1006: '异常关闭（连接意外断开）',
+      1007: '无效帧负载数据',
+      1008: '策略违规',
+      1009: '消息过大',
+      1010: '缺少必要扩展',
+      1011: '内部服务器错误',
+      1012: '服务重启',
+      1013: '稍后重试',
+      1015: 'TLS握手失败'
+    };
+    return desc[code] || ('未知代码: ' + code);
+  }
+
+  ws.onclose = function(e) {
+    //! CloseEvent 包含 code 和 reason，这是诊断问题的关键信息
+    //! code 1010 = 缺少必要扩展；1006 = 异常关闭；1007 = 帧数据无效
+    addLog('✗ 连接断开，代码: ' + e.code + ' (' + closeCodeDesc(e.code) + ')，原因: "' + e.reason + '"，wasClean: ' + e.wasClean, 'warn');
     statusEl.textContent = '已断开';
     statusEl.className = 'disconnected';
-    addLog('✗ 连接断开', 'warn');
     document.querySelectorAll('.btn-group button').forEach(function(b) { b.disabled = true; });
   };
 
-  ws.onerror = function() {
-    addLog('✗ 连接出错', 'warn');
+  ws.onerror = function(e) {
+    //! onerror 事件本身不携带太多信息，记录事件类型和 readyState
+    addLog('✗ 连接出错，事件类型: ' + e.type + '，readyState: ' + ws.readyState, 'warn');
   };
 
   ws.onmessage = function(e) {

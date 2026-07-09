@@ -87,8 +87,9 @@ std::string WsCompressor::compress(const void *data_ptr, size_t data_size)
     strm.avail_in = static_cast<uInt>(data_size);
 
     //! 输出缓冲区：压缩后可能比原始数据更大（如随机数据），预留足够空间
-    //! deflateBound 返回压缩后的最大可能大小
-    size_t max_out = deflateBound(&strm, static_cast<uInt>(data_size));
+    //! 注意：deflateBound 不包含 Z_SYNC_FLUSH 的空存储块开销（5字节）
+    //! 实测 deflateBound 比 Z_SYNC_FLUSH 完整输出少约3字节，须额外预留
+    size_t max_out = deflateBound(&strm, static_cast<uInt>(data_size)) + 6;
     std::string output;
     output.resize(max_out);
 
@@ -97,7 +98,7 @@ std::string WsCompressor::compress(const void *data_ptr, size_t data_size)
 
     //! 执行压缩
     ret = deflate(&strm, Z_SYNC_FLUSH);
-    if (ret != Z_OK && ret != Z_STREAM_END) {
+    if (ret != Z_OK) {
         LogErr("deflate fail, ret=%d", ret);
         deflateEnd(&strm);
         return "";
@@ -107,7 +108,9 @@ std::string WsCompressor::compress(const void *data_ptr, size_t data_size)
     size_t out_len = max_out - strm.avail_out;
 
     //! 去掉 4 字节尾部 0x00 0x00 0xFF 0xFF（RFC 7692 Section 7.2.2）
-    //! 只有尾部刚好是这 4 字节时才去掉
+    //! Z_SYNC_FLUSH 在末尾追加空存储块：头部(0x00) + LEN(0x00 0x00) + NLEN(0xFF 0xFF)
+    //! 此处仅去掉 LEN+NLEN 共4字节，保留头部字节0x00——与浏览器实现一致
+    //! 解压时追加回这4字节即可还原完整空存储块
     if (out_len >= 4 &&
         memcmp(reinterpret_cast<const uint8_t*>(&output[out_len - 4]), kDeflateTail, 4) == 0) {
         out_len -= 4;
