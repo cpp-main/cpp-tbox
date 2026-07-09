@@ -26,8 +26,6 @@ LIB_VERSION_Y = 0
 LIB_VERSION_Z = 1
 
 HEAD_FILES = \
-	ws_frame.h \
-	ws_compressor.h \
 	server/ws_server.h \
 	client/ws_client.h \
 
