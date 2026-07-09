@@ -112,7 +112,7 @@ trace模块能记录被标记的函数每次执行的时间点与时长，可导
 | mqtt | MQTT客户端库 | |
 | coroutine | 协程库 | 众所周知,异步框架不方便处理顺序性业务,协程弥补之 |
 | http | HTTP库 | 在network的基础上实现了HTTP的Server与Client模块 |
-| websocket | WebSocket库 | 在http的基础上实现了WebSocket的Server与Client模块，遵循RFC 6455 |
+| websocket | WebSocket库 | 在http的基础上实现了WebSocket的Server与Client模块，遵循RFC 6455与RFC 7692(permessage-deflate压缩)。支持：Text/Binary分类型回调(右值引用)、分片发送(可配置分片大小)、分片接收完整后统一解压再回调 |
 | alarm | 闹钟库 | 实现了4种常用的闹钟:CRON闹钟、单次闹钟、星期循环闹钟、工作日闹钟 |
 | flow | 流程库| 含多层级状态机与行为树,解决异步模式下动行流程问题 |
 | crypto | 加密工具库 | 实现了常用的AES、MD5运算 |

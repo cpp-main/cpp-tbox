@@ -21,7 +21,7 @@ On the client side, C++ programs may need to connect to WebSocket servers to rec
 #include <tbox/websocket/ws_compressor.h>          //! Compression (RFC 7692)
 #include <tbox/websocket/server/ws_server.h>        //! WebSocket server
 #include <tbox/websocket/server/ws_connection.h>    //! WebSocket connection (internal)
-#include <tbox/websocket/client/client.h>           //! WebSocket client
+#include <tbox/websocket/client/ws_client.h>         //! WebSocket client
 ```
 
 ## Core Classes and Interfaces
@@ -39,8 +39,9 @@ WsServer runs on top of an HTTP server as a middleware. It detects WebSocket upg
 | `cleanup()` | Cleanup (inverse of initialize) |
 | `state()` | Get current state (None/Inited/Running) |
 | `send(client, text)` | Send text frame to a client |
+| `send(client, str)` | Send text frame to a client (const char* version, no std::string construction) |
 | `send(client, data, len)` | Send binary frame to a client (raw pointer version) |
-| `sendBinary(client, data)` | Send binary frame to a client (vector version) |
+| `send(client, data)` | Send binary frame to a client (vector version) |
 | `close(client, code, reason)` | Close a client connection (sends Close frame) |
 | `ping(client, data)` | Send Ping frame to a client |
 | `pong(client, data)` | Send Pong frame to a client |
@@ -51,9 +52,11 @@ WsServer runs on top of an HTTP server as a middleware. It detects WebSocket upg
 | `getContext(client)` | Get context data for a client connection |
 | `setConnectedCallback(cb)` | Set callback: new client connected |
 | `setDisconnectedCallback(cb)` | Set callback: client disconnected |
-| `setMessageCallback(cb)` | Set callback: client sent a message |
+| `setTextMessageCallback(cb)` | Set callback: received complete text message (rvalue ref, after buffered decompression) |
+| `setBinaryMessageCallback(cb)` | Set callback: received complete binary message (rvalue ref, after buffered decompression) |
 | `setErrorCallback(cb)` | Set callback: client connection error |
 | `setCompressionEnable(enable)` | Enable/disable compression support (must call before initialize) |
+| `setFragmentSize(size)` | Set max fragment size for sending (default 65535, 0=no fragmentation; must call before initialize) |
 | `IsWsUpgradeRequest(req)` | Static: check if an HTTP request is a valid WebSocket upgrade |
 | `ComputeWsAcceptKey(key)` | Static: compute Sec-WebSocket-Accept value |
 
@@ -80,25 +83,29 @@ using ConnToken = cabinet::Token;
 
 ConnectedCallback    = std::function<void(const ConnToken&)>;
 DisconnectedCallback = std::function<void(const ConnToken&)>;
-MessageCallback      = std::function<void(const ConnToken&, const WsFrame&)>;
+TextMessageCallback  = std::function<void(const ConnToken&, std::string &&)>;
+BinaryMessageCallback = std::function<void(const ConnToken&, std::vector<uint8_t> &&)>;
 ErrorCallback        = std::function<void(const ConnToken&)>;
 ```
 
-### Client — WebSocket Client
+> **Note:** `TextMessageCallback` and `BinaryMessageCallback` use rvalue references for efficiency. Fragmented messages are buffered internally and only delivered to the callback after the complete message is received and decompressed. This means the callback never receives partial fragments — only complete, decompressed messages.
 
-The Client class connects to a WebSocket server via TcpConnector, performs the HTTP Upgrade handshake, and then enters WebSocket frame communication mode. All client-to-server frames are masked per RFC 6455. It supports auto-reconnect with configurable delay strategies.
+### WsClient — WebSocket Client
+
+The WsClient class connects to a WebSocket server via TcpConnector, performs the HTTP Upgrade handshake, and then enters WebSocket frame communication mode. All client-to-server frames are masked per RFC 6455. It supports auto-reconnect with configurable delay strategies. Fragmented messages are buffered and only delivered after complete receipt and decompression.
 
 | Method | Description |
 |------|------|
-| `Client(loop)` | Constructor |
+| `WsClient(loop)` | Constructor |
 | `initialize(server_addr, url_path)` | Initialize: set target server address and URL path |
 | `start()` | Start connecting to server |
 | `stop()` | Stop/disconnect |
 | `cleanup()` | Cleanup (inverse of initialize) |
 | `state()` | Get current state |
 | `send(text)` | Send text frame |
+| `send(str)` | Send text frame (const char* version, no std::string construction) |
 | `send(data, len)` | Send binary frame (raw pointer version) |
-| `sendBinary(data)` | Send binary frame (vector version) |
+| `send(data)` | Send binary frame (vector version) |
 | `close(code, reason)` | Send Close frame and disconnect |
 | `ping(data)` | Send Ping frame |
 | `pong(data)` | Send Pong frame |
@@ -108,11 +115,13 @@ The Client class connects to a WebSocket server via TcpConnector, performs the H
 | `getContext()` | Get context data |
 | `setConnectedCallback(cb)` | Set callback: connected to server |
 | `setDisconnectedCallback(cb)` | Set callback: disconnected from server |
-| `setMessageCallback(cb)` | Set callback: received a message |
+| `setTextMessageCallback(cb)` | Set callback: received complete text message (rvalue ref) |
+| `setBinaryMessageCallback(cb)` | Set callback: received complete binary message (rvalue ref) |
 | `setErrorCallback(cb)` | Set callback: connection error |
 | `setAutoReconnect(enable)` | Enable/disable auto-reconnect (default: enabled) |
 | `setReconnectDelayCalcFunc(func)` | Set custom reconnect delay calculation |
 | `setCompressionPrefer(enable)` | Enable/disable compression preference (must call before initialize) |
+| `setFragmentSize(size)` | Set max fragment size for sending (default 65535, 0=no fragmentation; must call before initialize) |
 
 **State enum:**
 
@@ -209,8 +218,8 @@ class ChatRoom {
         ws_srv_.setDisconnectedCallback([this](const WsServer::ConnToken &token) {
             onDisconnected(token);
         });
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
+        ws_srv_.setTextMessageCallback([this](const WsServer::ConnToken &token, std::string &&text) {
+            onTextMessage(token, std::move(text));
         });
 
         return true;
@@ -221,18 +230,15 @@ class ChatRoom {
     void cleanup() { ws_srv_.cleanup(); }
 
   private:
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onTextMessage(const WsServer::ConnToken &token, std::string &&text)
     {
-        if (frame.opcode != WsFrame::OpCode::kText)
-            return;
-
         //! First message is the username
         auto it = conn_to_name_.find(token);
         if (it == conn_to_name_.end()) {
-            conn_to_name_[token] = frame.payload;
-            broadcast(frame.payload + " online");
+            conn_to_name_[token] = text;
+            broadcast(text + " online");
         } else {
-            broadcast(it->second + ": " + frame.payload);
+            broadcast(it->second + ": " + text);
         }
     }
 
@@ -284,7 +290,7 @@ int main()
 
 > Full example in `examples/websocket/echo_bin/`
 
-Demonstrates binary WebSocket frame handling. The server echoes binary data back to the client and periodically pushes statistics frames (4-byte header "STAT" + JSON payload) using `sendBinary()` with `vector<uint8_t>`.
+Demonstrates binary WebSocket frame handling. The server echoes binary data back to the client and periodically pushes statistics frames (4-byte header "STAT" + JSON payload) using `send()` with `vector<uint8_t>`.
 
 ```cpp
 class EchoService {
@@ -299,8 +305,12 @@ class EchoService {
         if (!ws_srv_.initialize(http_srv, url_path))
             return false;
 
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
+        ws_srv_.setBinaryMessageCallback([this](const WsServer::ConnToken &token, std::vector<uint8_t> &&data) {
+            onBinaryMessage(token, std::move(data));
+        });
+        ws_srv_.setTextMessageCallback([this](const WsServer::ConnToken &token, std::string &&text) {
+            //! This service only accepts binary frames
+            ws_srv_.send(token, "This service only accepts binary frames");
         });
 
         //! Timer: push stats every 5 seconds
@@ -311,14 +321,10 @@ class EchoService {
     }
 
   private:
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onBinaryMessage(const WsServer::ConnToken &token, std::vector<uint8_t> &&data)
     {
-        if (frame.opcode == WsFrame::OpCode::kBinary) {
-            //! Echo binary data back
-            ws_srv_.send(token, frame.payload.data(), frame.payload.size());
-        } else if (frame.opcode == WsFrame::OpCode::kText) {
-            ws_srv_.send(token, "This service only accepts binary frames");
-        }
+        //! Echo binary data back
+        ws_srv_.send(token, data);
     }
 
     void onStatTimer()
@@ -329,7 +335,7 @@ class EchoService {
         stat_data.insert(stat_data.end(), json.begin(), json.end());
 
         for (const auto &token : conns_)
-            ws_srv_.sendBinary(token, stat_data);
+            ws_srv_.send(token, stat_data);
     }
 };
 ```
@@ -341,13 +347,13 @@ class EchoService {
 Demonstrates a WebSocket client connecting to a chat server, reading from stdin, and sending/receiving messages.
 
 ```cpp
-#include <tbox/websocket/client/client.h>
+#include <tbox/websocket/client/ws_client.h>
 
 int main()
 {
     auto sp_loop = Loop::New();
 
-    Client ws_client(sp_loop);
+    WsClient ws_client(sp_loop);
     ws_client.initialize(SockAddr::FromString("127.0.0.1:8080"), "/ws/chat-1");
 
     ws_client.setConnectedCallback([&] {
@@ -356,10 +362,8 @@ int main()
         sp_stdin_event->enable();
     });
 
-    ws_client.setMessageCallback([&](const WsFrame &frame) {
-        if (frame.opcode == WsFrame::OpCode::kText) {
-            std::cout << frame.payload << std::endl;
-        }
+    ws_client.setTextMessageCallback([&](std::string &&text) {
+        std::cout << text << std::endl;
     });
 
     //! Custom reconnect delay: exponential backoff
@@ -397,7 +401,7 @@ ws_srv.setConnectedCallback([](const WsServer::ConnToken &token) {
     ws_srv.setContext(token, session, [](void *p) { delete static_cast<UserSession*>(p); });
 });
 
-ws_srv.setMessageCallback([](const WsServer::ConnToken &token, const WsFrame &frame) {
+ws_srv.setTextMessageCallback([](const WsServer::ConnToken &token, std::string &&text) {
     //! Retrieve the session
     auto session = static_cast<UserSession*>(ws_srv.getContext(token));
     if (session != nullptr) {
@@ -506,6 +510,9 @@ ws_srv_plain.initialize(&http_srv, "/ws/echo");
 11. **Context data**: `setContext()/getContext()` on WsServer delegates to the underlying TcpConnection. Context data is accessible in callbacks but becomes `nullptr` after the connection is destroyed.
 12. **Compression**: Call `setCompressionEnable(true)` on WsServer or `setCompressionPrefer(true)` on WsClient **before** `initialize()`. Compression is negotiated per connection; if the other side doesn't support it, frames are sent uncompressed without impact.
 13. **Compression fallback**: If compression/decompression fails, the system logs a warning and falls back to sending the frame uncompressed. Decompression failure causes an error callback.
+14. **Fragmented receive**: Both WsServer and WsClient buffer fragmented messages internally. Only after the complete message is received (all fragments, fin=true) does it decompress (if needed) and deliver the message to the callback. The callback never receives partial fragments.
+15. **Fragmented send**: When sending data larger than `fragment_size`, it is automatically split into WebSocket fragments. The first fragment carries the original opcode and rsv1 (if compressed); continuation fragments use opcode kContinue. Call `setFragmentSize(size)` before `initialize()` to configure the fragment size (default 65535, set to 0 to disable fragmentation).
+16. **send(const char\*)**: Both WsServer and WsClient provide a `send(const char *str)` overload that sends text without constructing a temporary `std::string`. It correctly uses kText opcode.
 
 ## Related Modules
 

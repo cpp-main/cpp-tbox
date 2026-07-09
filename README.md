@@ -110,7 +110,7 @@ It contains an event-driven behavior tree that can realize sequential, branching
 | mqtt | MQTT Client |
 | coroutine | coroutine function |
 | http | Implemented HTTP Server and Client modules on the basis of network |
-| websocket | Implemented WebSocket Server and Client modules based on HTTP middleware, RFC 6455 |
+| websocket | WebSocket Server & Client modules based on HTTP middleware, RFC 6455 & RFC 7692 (permessage-deflate). Features: split Text/Binary callbacks with rvalue refs, fragmented send with configurable chunk size, fragmented receive with buffered decompression |
 | alarm | Realized 4 commonly used alarm clocks: CRON alarm clock, single alarm clock, weekly cycle alarm clock, weekday alarm clock |
 | flow | Contains multi-level state machine and behavior tree to solve the problem of action flow in asynchronous mode |
 | crypto | Implemented the commonly used AES and MD5 encryption and decryption calculations |
