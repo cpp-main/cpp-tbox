@@ -65,9 +65,13 @@ class WsServer::Impl : public http::server::Middleware {
     //! 压缩配置
     void setCompressionEnable(bool enable);
 
+    //! 分片大小配置
+    void setFragmentSize(size_t size) { fragment_size_ = size; }
+
   public:
     //! 通过 ConnToken 操作连接（转发到 WsConnection）
     bool send(const ConnToken &client, const std::string &text);
+    bool send(const ConnToken &client, const char *str);
     bool send(const ConnToken &client, const void *data, size_t len);
     bool send(const ConnToken &client, const std::vector<uint8_t> &data);
     bool close(const ConnToken &client, uint16_t code, const std::string &reason);
@@ -123,6 +127,9 @@ class WsServer::Impl : public http::server::Middleware {
 
     //! 压缩配置
     WsCompressionConfig compression_config_;
+
+    //! 分片发送的最大帧 payload 大小（可配置，默认 kDefaultFragmentSize）
+    size_t fragment_size_ = WsServer::kDefaultFragmentSize;
 
     //! WsConnection 容器（生命期管理）
     cabinet::Cabinet<WsConnection> ws_conns_;

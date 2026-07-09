@@ -28,10 +28,12 @@
  *
  * 演示要点：
  * - WsServer::send() 的 void* + len 版本：发送原始二进制
- * - WsServer::sendBinary() 的 vector<uint8_t> 版本：发送 vector 二进制
+ * - WsServer::send() 的 vector<uint8_t> 版本：发送 vector 二进制
+ * - WsServer::send() 的 const char* 版本：发送文本字符串
  * - WsFrame::OpCode::kBinary：区分文本帧与二进制帧
  * - event::TimerEvent：定时推送统计数据
  * - WsServer 的 start()/stop() 生命周期
+ * - WsServer::setFragmentSize()：可配置分片大小
  */
 
 #include <tbox/base/log.h>
@@ -41,6 +43,7 @@
 #include <tbox/event/timer_event.h>
 #include <tbox/http/server/server.h>
 #include <tbox/websocket/server/ws_server.h>
+#include <tbox/util/string.h>
 
 #include <set>
 #include <string>
@@ -87,6 +90,7 @@ class EchoService {
         ws_srv_.setTextMessageCallback(std::bind(&EchoService::onTextMessage, this, _1, _2));
         ws_srv_.setBinaryMessageCallback(std::bind(&EchoService::onBinaryMessage, this, _1, _2));
         ws_srv_.setCompressionEnable(true);
+        ws_srv_.setFragmentSize(65535);
 
         //! 初始化定时器：每 5 秒推送统计帧
         stat_timer_->initialize(std::chrono::milliseconds(5000), Event::Mode::kPersist);
@@ -135,6 +139,9 @@ class EchoService {
     //! 收到消息：区分文本帧与二进制帧
     void onBinaryMessage(const WsServer::ConnToken &token, std::vector<uint8_t> &&data)
     {
+        auto hex_str = util::string::RawDataToHexStr(data.data(), data.size());
+        LogTrace("hex: %s", hex_str.c_str());
+
         //! 二进制帧：echo 回传原数据
         //! 演示 WsServer::send() 的 void* + len 版本
         //! 更新统计
@@ -147,6 +154,8 @@ class EchoService {
 
     void onTextMessage(const WsServer::ConnToken &token, std::string &&text)
     {
+        LogTrace("text: %s", text.c_str());
+
         ws_srv_.send(token, "此服务仅接收二进制帧，请发送 ArrayBuffer");
     }
 
@@ -162,7 +171,7 @@ class EchoService {
             "\"clients\":" + std::to_string(conns_.size()) +
         "}";
 
-        //! 演示 WsServer::sendBinary() 的 vector<uint8_t> 版本
+        //! 演示 WsServer::send() 的 vector<uint8_t> 版本
         //! 格式：4字节头 "STAT" + JSON 字符串字节
         std::vector<uint8_t> stat_data;
         stat_data.reserve(4 + json.size());

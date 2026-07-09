@@ -370,8 +370,8 @@ void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::st
     LogDbg("ws upgrade: new connection from %s", tcp_conn->peerAddr().toString().c_str());
 
     //! 创建 WsConnection，并存入 Cabinet（直接 alloc 并存入指针）
-    //! 传入升级时的 URL 路径和压缩配置
-    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path, compress_config);
+    //! 传入升级时的 URL 路径、压缩配置和分片大小
+    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path, compress_config, fragment_size_);
     ConnToken ws_token = ws_conns_.alloc(ws_conn);
 
     //! 设置 WsConnection 的回调（bind 捕获 ConnToken，不传递 WsConnection*）
@@ -448,6 +448,14 @@ bool WsServer::Impl::send(const ConnToken &client, const std::string &text)
     auto ws_conn = ws_conns_.at(client);
     if (ws_conn != nullptr)
         return ws_conn->send(text);
+    return false;
+}
+
+bool WsServer::Impl::send(const ConnToken &client, const char *str)
+{
+    auto ws_conn = ws_conns_.at(client);
+    if (ws_conn != nullptr)
+        return ws_conn->send(str);
     return false;
 }
 
@@ -597,6 +605,11 @@ void WsServer::setCompressionEnable(bool enable)
     impl_->setCompressionEnable(enable);
 }
 
+void WsServer::setFragmentSize(size_t size)
+{
+    impl_->setFragmentSize(size);
+}
+
 bool WsServer::initialize(http::server::Server *http_server, const std::string &url_path)
 {
     TBOX_ASSERT(http_server != nullptr);
@@ -651,6 +664,11 @@ void WsServer::setErrorCallback(const ErrorCallback &cb)
 bool WsServer::send(const ConnToken &client, const std::string &text)
 {
     return impl_->send(client, text);
+}
+
+bool WsServer::send(const ConnToken &client, const char *str)
+{
+    return impl_->send(client, str);
 }
 
 bool WsServer::send(const ConnToken &client, const void *data, size_t len)

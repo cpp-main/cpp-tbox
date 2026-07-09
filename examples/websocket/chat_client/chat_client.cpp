@@ -86,6 +86,7 @@ int main(int argc, char **argv)
 
     //! 启用压缩（RFC 7692 permessage-deflate）
     ws_client.setCompressionPrefer(true);
+    ws_client.setFragmentSize(65535);
 
     //! 设置回调
     ws_client.setConnectedCallback([&] {
@@ -115,10 +116,12 @@ int main(int argc, char **argv)
         std::cout << "== 已断开连接 ==" << std::endl;
     });
 
-    ws_client.setMessageCallback([&](const WsFrame &frame) {
-        if (frame.opcode == WsFrame::OpCode::kText) {
-            std::cout << frame.payload << std::endl;
-        }
+    ws_client.setTextMessageCallback([&](std::string &&text) {
+        std::cout << text << std::endl;
+    });
+
+    ws_client.setBinaryMessageCallback([&](std::vector<uint8_t> &&data) {
+        //! 此示例不处理二进制帧
     });
 
     ws_client.setErrorCallback([&] {

@@ -38,8 +38,13 @@ namespace server {
 //! 包装从 HTTP 升级后分离出来的 TcpConnection，解析/构建 WebSocket 帧
 //! 生命期由 WsServer 通过 Cabinet 管理，用户通过 ConnToken 访问
 //! 支持分片消息的完整接收：缓存分片数据，接收完整后再解压并回调
+//! 发送大数据时先压缩再分片发送，避免单帧过大
 class WsConnection {
   public:
+    //! 默认分片发送的最大帧 payload 大小（64KB）
+    //! 选择 65535 是因为：不超过 16-bit payload length 编码范围，避免 64-bit 编码开销
+    static constexpr size_t kDefaultFragmentSize = 65535;
+
     //! 内部回调：WsServer::Impl 绑定 ConnToken，不传递 WsConnection*
     using CloseCallback        = std::function<void()>;
     using TextMessageCallback  = std::function<void(std::string &&)>;
@@ -67,6 +72,8 @@ class WsConnection {
   public:
     //! 发送文本帧
     bool send(const std::string &text);
+    //! 发送文本帧（const char* 版本，方便直接传字符串字面量）
+    bool send(const char *str);
     //! 发送二进制帧
     bool send(const void *data, size_t len);
     bool send(const std::vector<uint8_t> &data);
@@ -93,11 +100,16 @@ class WsConnection {
     void  setContext(void *context, ContextDeleter &&deleter = nullptr);
     void* getContext() const;
 
+    //! 设置/获取分片大小（仅影响发送，接收时自动组装）
+    void setFragmentSize(size_t size) { fragment_size_ = size; }
+    size_t fragmentSize() const { return fragment_size_; }
+
   private:
     //! 仅由 WsServer 创建（生命期由 Cabinet 管理）
     //! compress_config 为握手时协商的压缩配置
+    //! fragment_size 为分片发送的最大帧 payload 大小
     WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url,
-                 const WsCompressionConfig &compress_config);
+                 const WsCompressionConfig &compress_config, size_t fragment_size);
 
     void onTcpReceived(network::Buffer &buff);
     void onTcpDisconnected();
@@ -105,6 +117,18 @@ class WsConnection {
 
     //! 发送 WebSocket 帧（内部使用）
     bool sendFrame(WsFrame::OpCode opcode, bool fin, const void *payload, size_t payload_len);
+
+    //! 分片发送 payload（内部使用）
+    //! opcode: 首帧 opcode（kText 或 kBinary）
+    //! payload/payload_len: 完整的 payload 数据（可能为压缩后数据）
+    //! is_compressed: 是否为压缩数据（首帧设置 rsv1=true）
+    bool sendFragmented(WsFrame::OpCode opcode, const void *payload, size_t payload_len, bool is_compressed);
+
+    //! 统一发送数据（内部使用）
+    //! opcode: kText 或 kBinary
+    //! data_ptr/data_len: 原始数据指针与长度
+    //! 流程：前置检查 → 压缩(如需要) → sendFragmented
+    bool sendData(WsFrame::OpCode opcode, const void *data_ptr, size_t data_len);
 
     //! 将完整消息交付给业务层（opcode 为 kText 或 kBinary）
     void deliverMessage(WsFrame::OpCode opcode, std::string &data);
@@ -119,6 +143,9 @@ class WsConnection {
     //! 压缩相关
     WsCompressionConfig compression_config_;
     WsCompressor compressor_;
+
+    //! 分片发送的最大帧 payload 大小（可配置，默认 kDefaultFragmentSize）
+    size_t fragment_size_ = kDefaultFragmentSize;
 
     CloseCallback        close_cb_;
     TextMessageCallback  text_message_cb_;

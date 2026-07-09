@@ -28,8 +28,6 @@
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
 
-#include "../ws_frame.h"
-
 namespace tbox {
 namespace http {
 namespace server {
@@ -50,6 +48,9 @@ class WsServer {
   public:
     using ConnToken = cabinet::Token;
 
+    //! 默认分片发送的最大帧 payload 大小
+    static constexpr size_t kDefaultFragmentSize = 65535;
+
     explicit WsServer(event::Loop *wp_loop);
     ~WsServer();
 
@@ -67,6 +68,11 @@ class WsServer {
     //! 设置是否允许压缩（必须在 initialize 之前调用）
     //! 启用后，若客户端请求 permessage-deflate，将在握手响应中同意压缩
     void setCompressionEnable(bool enable);
+
+    //! 设置分片大小（仅影响发送，接收时自动组装；必须在 initialize 之前调用）
+    //! 默认为 kDefaultFragmentSize (65535)
+    //! 值为 0 表示不分片（所有数据单帧发送）
+    void setFragmentSize(size_t size);
 
     bool start();
     void stop();
@@ -92,6 +98,8 @@ class WsServer {
   public:
     //! 向指定客户端发送文本数据
     bool send(const ConnToken &client, const std::string &text);
+    //! 向指定客户端发送文本数据（const char* 版本，方便直接传字符串字面量）
+    bool send(const ConnToken &client, const char *str);
     //! 向指定客户端发送二进制数据
     bool send(const ConnToken &client, const void *data, size_t len);
     //! 向指定客户端发送二进制数据（vector 版本）
