@@ -91,6 +91,14 @@ class WsClient {
     //! 值为 0 表示不分片（所有数据单帧发送）
     void setFragmentSize(size_t size);
 
+    //! 设置 Ping 发送间隔（秒），0=不自动 Ping（默认；必须在 initialize 之前调用）
+    //! 启用后，每隔指定秒数向服务器发送 Ping 帧
+    void setPingInterval(int seconds);
+
+    //! 设置 Pong 超时时间（秒），0=不检测超时（默认；必须在 initialize 之前调用）
+    //! 发送 Ping 后若在此时间内未收到 Pong，则判定连接断开并关闭
+    void setPingTimeout(int seconds);
+
   public:
     //! 发送文本帧
     bool send(const std::string &text);

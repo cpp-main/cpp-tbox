@@ -27,6 +27,7 @@
 #include <tbox/network/tcp_connection.h>
 #include <tbox/crypto/sha1.h>
 #include <tbox/util/base64.h>
+#include <tbox/util/string.h>
 
 #include "../ws_frame_parser.h"
 #include "../ws_frame_builder.h"
@@ -159,6 +160,9 @@ void WsClient::Impl::cleanup()
 
     CHECK_DELETE_RESET_OBJ(sp_connector_);
 
+    CHECK_DELETE_RESET_OBJ(sp_ping_timer_);
+    CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
+
     connected_cb_ = nullptr;
     disconnected_cb_ = nullptr;
     text_message_cb_ = nullptr;
@@ -203,6 +207,13 @@ void WsClient::Impl::onTcpDisconnected()
     //! 清理分片缓存
     fragment_buffer_.clear();
     is_fragmenting_ = false;
+
+    //! 禁用心跳定时器
+    if (sp_ping_timer_ != nullptr)
+        sp_ping_timer_->disable();
+    if (sp_pong_timer_ != nullptr)
+        sp_pong_timer_->disable();
+    is_pong_pending_ = false;
 
     //! 通知用户
     if (disconnected_cb_) {
@@ -352,6 +363,25 @@ void WsClient::Impl::onHandshakeSuccess()
         }
     }
 
+    //! 初始化 Ping/Pong 心跳定时器
+    //! 每次连接（含重连）都重新创建定时器
+    CHECK_DELETE_RESET_OBJ(sp_ping_timer_);
+    CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
+    is_pong_pending_ = false;
+
+    if (ping_interval_ > 0) {
+        sp_ping_timer_ = wp_loop_->newTimerEvent();
+        sp_ping_timer_->initialize(std::chrono::seconds(ping_interval_), event::Event::Mode::kPersist);
+        sp_ping_timer_->setCallback(std::bind(&WsClient::Impl::onPingTimerFired, this));
+        sp_ping_timer_->enable();
+
+        if (ping_timeout_ > 0) {
+            sp_pong_timer_ = wp_loop_->newTimerEvent();
+            sp_pong_timer_->initialize(std::chrono::seconds(ping_timeout_), event::Event::Mode::kOneshot);
+            sp_pong_timer_->setCallback(std::bind(&WsClient::Impl::onPongTimeoutFired, this));
+        }
+    }
+
     //! 通知用户
     if (connected_cb_) {
         RECORD_SCOPE();
@@ -410,6 +440,10 @@ void WsClient::Impl::onWsFrameReceived(network::Buffer &buff)
     //! 与 server::WsConnection 的帧解析逻辑相同：分片数据先缓存，接收完整后统一解压再回调
     while (buff.readableSize() > 0) {
         size_t consumed = frame_parser_.parse(buff.readableBegin(), buff.readableSize());
+#if 1
+        auto hex_str = util::string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
+        LogTrace("hex: %s, consumed:%u", hex_str.c_str(), consumed);
+#endif
         buff.hasRead(consumed);
 
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
@@ -439,7 +473,12 @@ void WsClient::Impl::onWsFrameReceived(network::Buffer &buff)
                             break;
 
                         case WsFrame::OpCode::kPong:
-                            //! 收到 Pong，不做特殊处理
+                            //! 心跳：收到 Pong，取消超时定时器
+                            if (is_pong_pending_) {
+                                is_pong_pending_ = false;
+                                if (sp_pong_timer_ != nullptr)
+                                    sp_pong_timer_->disable();
+                            }
                             break;
 
                         default:
@@ -768,6 +807,33 @@ void* WsClient::Impl::getContext() const
     if (sp_tcp_conn_ != nullptr)
         return sp_tcp_conn_->getContext();
     return nullptr;
+}
+
+//! Ping 定时器触发：发送 Ping，启动 Pong 超时检测
+void WsClient::Impl::onPingTimerFired()
+{
+    if (is_closing_ || sp_tcp_conn_ == nullptr || state_ != WsClient::State::kConnected)
+        return;
+
+    //! 发送 Ping 帧
+    ping("");
+
+    //! 如果有超时检测，标记等待 Pong 并启动超时定时器
+    if (ping_timeout_ > 0 && sp_pong_timer_ != nullptr) {
+        is_pong_pending_ = true;
+        sp_pong_timer_->enable();
+    }
+}
+
+//! Pong 超时触发：未收到 Pong 回复，判定连接已断开
+void WsClient::Impl::onPongTimeoutFired()
+{
+    if (is_closing_)
+        return;
+
+    LogNotice("ws client pong timeout, closing connection");
+    is_pong_pending_ = false;
+    close(1006, "pong timeout");
 }
 
 }

@@ -21,6 +21,7 @@
 #define TBOX_WS_CLIENT_IMPL_H_20260615
 
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
 #include <tbox/network/tcp_connector.h>
@@ -64,6 +65,8 @@ class WsClient::Impl {
     void setReconnectDelayCalcFunc(const WsClient::ReconnectDelayCalc &func);
     void setCompressionPrefer(bool enable) { prefer_compression_ = enable; }
     void setFragmentSize(size_t size) { fragment_size_ = size; }
+    void setPingInterval(int seconds) { ping_interval_ = seconds; }
+    void setPingTimeout(int seconds) { ping_timeout_ = seconds; }
 
   public:
     bool send(const std::string &text);
@@ -130,6 +133,10 @@ class WsClient::Impl {
     //! 出错处理
     void onError();
 
+    //! Ping/Pong 心跳定时器回调
+    void onPingTimerFired();
+    void onPongTimeoutFired();
+
   private:
     WsClient *wp_parent_;
     event::Loop *wp_loop_;
@@ -153,6 +160,13 @@ class WsClient::Impl {
 
     //! 分片发送的最大帧 payload 大小（可配置，默认 kDefaultFragmentSize）
     size_t fragment_size_ = WsClient::kDefaultFragmentSize;
+
+    //! Ping/Pong 心跳参数
+    int ping_interval_ = 0;
+    int ping_timeout_ = 0;
+    event::TimerEvent *sp_ping_timer_ = nullptr;
+    event::TimerEvent *sp_pong_timer_ = nullptr;
+    bool is_pong_pending_ = false;
 
     WsClient::State state_ = WsClient::State::kNone;
 

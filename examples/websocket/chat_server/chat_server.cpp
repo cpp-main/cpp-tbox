@@ -57,7 +57,9 @@ class ChatRoom {
         ws_srv_.setDisconnectedCallback(std::bind(&ChatRoom::onDisconnected, this, _1));
         ws_srv_.setTextMessageCallback(std::bind(&ChatRoom::onTextMessage, this, _1, _2));
         ws_srv_.setCompressionEnable(true);
-        ws_srv_.setFragmentSize(65535);
+        ws_srv_.setFragmentSize(256);
+        ws_srv_.setPingInterval(10);
+        ws_srv_.setPingTimeout(2);
 
         LogInfo("chat room '%s' mounted at %s", name_.c_str(), url_path.c_str());
         return true;

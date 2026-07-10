@@ -106,6 +106,16 @@ void WsClient::setFragmentSize(size_t size)
     impl_->setFragmentSize(size);
 }
 
+void WsClient::setPingInterval(int seconds)
+{
+    impl_->setPingInterval(seconds);
+}
+
+void WsClient::setPingTimeout(int seconds)
+{
+    impl_->setPingTimeout(seconds);
+}
+
 bool WsClient::send(const std::string &text)
 {
     return impl_->send(text);

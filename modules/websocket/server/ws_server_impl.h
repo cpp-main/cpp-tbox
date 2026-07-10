@@ -68,6 +68,10 @@ class WsServer::Impl : public http::server::Middleware {
     //! 分片大小配置
     void setFragmentSize(size_t size) { fragment_size_ = size; }
 
+    //! Ping/Pong 心跳配置
+    void setPingInterval(int seconds) { ping_interval_ = seconds; }
+    void setPingTimeout(int seconds) { ping_timeout_ = seconds; }
+
   public:
     //! 通过 ConnToken 操作连接（转发到 WsConnection）
     bool send(const ConnToken &client, const std::string &text);
@@ -130,6 +134,10 @@ class WsServer::Impl : public http::server::Middleware {
 
     //! 分片发送的最大帧 payload 大小（可配置，默认 kDefaultFragmentSize）
     size_t fragment_size_ = WsServer::kDefaultFragmentSize;
+
+    //! Ping/Pong 心跳参数
+    int ping_interval_ = 0;
+    int ping_timeout_ = 0;
 
     //! WsConnection 容器（生命期管理）
     cabinet::Cabinet<WsConnection> ws_conns_;

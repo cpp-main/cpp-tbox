@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/util/string.h>
 
 #include "../ws_frame_parser.h"
 #include "../ws_frame_builder.h"
@@ -38,12 +39,16 @@ WsConnection::WsConnection(event::Loop *wp_loop,
                            network::TcpConnection *tcp_conn,
                            const std::string &url,
                            const WsCompressionConfig &compress_config,
-                           size_t fragment_size)
+                           size_t fragment_size,
+                           int ping_interval,
+                           int ping_timeout)
   : wp_loop_(wp_loop)
   , sp_tcp_conn_(tcp_conn)
   , url_(url)
   , compression_config_(compress_config)
   , fragment_size_(fragment_size)
+  , ping_interval_(ping_interval)
+  , ping_timeout_(ping_timeout)
 {
     TBOX_ASSERT(wp_loop != nullptr);
     TBOX_ASSERT(tcp_conn != nullptr);
@@ -59,11 +64,29 @@ WsConnection::WsConnection(event::Loop *wp_loop,
     sp_tcp_conn_->setReceiveCallback(std::bind(&WsConnection::onTcpReceived, this, _1), 0);
     sp_tcp_conn_->setDisconnectedCallback(std::bind(&WsConnection::onTcpDisconnected, this));
     sp_tcp_conn_->setSendCompleteCallback(std::bind(&WsConnection::onTcpSendCompleted, this));
+
+    //! 初始化 Ping/Pong 心跳定时器
+    if (ping_interval_ > 0) {
+        sp_ping_timer_ = wp_loop_->newTimerEvent();
+        sp_ping_timer_->initialize(std::chrono::seconds(ping_interval_), event::Event::Mode::kPersist);
+        sp_ping_timer_->setCallback(std::bind(&WsConnection::onPingTimerFired, this));
+        sp_ping_timer_->enable();
+
+        if (ping_timeout_ > 0) {
+            sp_pong_timer_ = wp_loop_->newTimerEvent();
+            sp_pong_timer_->initialize(std::chrono::seconds(ping_timeout_), event::Event::Mode::kOneshot);
+            sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+        }
+    }
 }
 
 WsConnection::~WsConnection()
 {
     TBOX_ASSERT(cb_level_ == 0);
+
+    //! 清理心跳定时器
+    CHECK_DELETE_RESET_OBJ(sp_ping_timer_);
+    CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
 
     if (sp_tcp_conn_ == nullptr)
       return;
@@ -270,6 +293,10 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
     //! 从缓冲区中逐步解析 WebSocket 帧
     while (buff.readableSize() > 0) {
         size_t consumed = frame_parser_.parse(buff.readableBegin(), buff.readableSize());
+#if 1
+        auto hex_str = util::string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
+        LogTrace("hex: %s, consumed:%u", hex_str.c_str(), consumed);
+#endif
         buff.hasRead(consumed);
 
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
@@ -309,6 +336,12 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             break;
 
                         case WsFrame::OpCode::kPong:
+                            //! 心跳：收到 Pong，取消超时定时器
+                            if (is_pong_pending_) {
+                                is_pong_pending_ = false;
+                                if (sp_pong_timer_ != nullptr)
+                                    sp_pong_timer_->disable();
+                            }
                             if (pong_cb_) {
                                 ++cb_level_;
                                 pong_cb_(frame->payload);
@@ -483,6 +516,13 @@ void WsConnection::onTcpDisconnected()
     fragment_buffer_.clear();
     is_fragmenting_ = false;
 
+    //! 禁用心跳定时器
+    if (sp_ping_timer_ != nullptr)
+        sp_ping_timer_->disable();
+    if (sp_pong_timer_ != nullptr)
+        sp_pong_timer_->disable();
+    is_pong_pending_ = false;
+
     if (close_cb_) {
         ++cb_level_;
         close_cb_();
@@ -505,6 +545,81 @@ void WsConnection::onTcpSendCompleted()
         send_complete_cb_();
         --cb_level_;
     }
+}
+
+void WsConnection::setPingInterval(int seconds)
+{
+    ping_interval_ = seconds;
+
+    if (sp_ping_timer_ != nullptr) {
+        if (seconds > 0) {
+            sp_ping_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kPersist);
+            sp_ping_timer_->enable();
+        } else {
+            sp_ping_timer_->disable();
+            is_pong_pending_ = false;
+            if (sp_pong_timer_ != nullptr)
+                sp_pong_timer_->disable();
+        }
+    } else if (seconds > 0) {
+        //! 之前没有创建过定时器，现在需要创建
+        sp_ping_timer_ = wp_loop_->newTimerEvent();
+        sp_ping_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kPersist);
+        sp_ping_timer_->setCallback(std::bind(&WsConnection::onPingTimerFired, this));
+        sp_ping_timer_->enable();
+
+        if (ping_timeout_ > 0) {
+            sp_pong_timer_ = wp_loop_->newTimerEvent();
+            sp_pong_timer_->initialize(std::chrono::seconds(ping_timeout_), event::Event::Mode::kOneshot);
+            sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+        }
+    }
+}
+
+void WsConnection::setPingTimeout(int seconds)
+{
+    ping_timeout_ = seconds;
+
+    if (sp_pong_timer_ != nullptr) {
+        if (seconds > 0) {
+            sp_pong_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kOneshot);
+        } else {
+            sp_pong_timer_->disable();
+            CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
+        }
+    } else if (seconds > 0 && sp_ping_timer_ != nullptr) {
+        //! ping 已启用但 pong_timer 未创建，现在创建
+        sp_pong_timer_ = wp_loop_->newTimerEvent();
+        sp_pong_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kOneshot);
+        sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+    }
+}
+
+//! Ping 定时器触发：发送 Ping，启动 Pong 超时检测
+void WsConnection::onPingTimerFired()
+{
+    if (is_closing_ || sp_tcp_conn_ == nullptr)
+        return;
+
+    //! 发送 Ping 帧
+    ping();
+
+    //! 如果有超时检测，标记等待 Pong 并启动超时定时器
+    if (ping_timeout_ > 0 && sp_pong_timer_ != nullptr) {
+        is_pong_pending_ = true;
+        sp_pong_timer_->enable();
+    }
+}
+
+//! Pong 超时触发：未收到 Pong 回复，判定连接已断开
+void WsConnection::onPongTimeoutFired()
+{
+    if (is_closing_)
+        return;
+
+    LogNotice("ws pong timeout, closing connection");
+    is_pong_pending_ = false;
+    close();
 }
 
 }

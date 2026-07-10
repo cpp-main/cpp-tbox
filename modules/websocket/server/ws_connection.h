@@ -24,6 +24,7 @@
 #include <functional>
 
 #include <tbox/event/loop.h>
+#include <tbox/event/timer_event.h>
 #include <tbox/network/tcp_connection.h>
 
 #include "../ws_frame.h"
@@ -104,12 +105,18 @@ class WsConnection {
     void setFragmentSize(size_t size) { fragment_size_ = size; }
     size_t fragmentSize() const { return fragment_size_; }
 
+    //! 设置 Ping/Pong 心跳参数
+    void setPingInterval(int seconds);
+    void setPingTimeout(int seconds);
+
   private:
     //! 仅由 WsServer 创建（生命期由 Cabinet 管理）
     //! compress_config 为握手时协商的压缩配置
     //! fragment_size 为分片发送的最大帧 payload 大小
+    //! ping_interval/ping_timeout 为心跳参数（0=不自动 Ping/不检测超时）
     WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url,
-                 const WsCompressionConfig &compress_config, size_t fragment_size);
+                 const WsCompressionConfig &compress_config, size_t fragment_size,
+                 int ping_interval, int ping_timeout);
 
     void onTcpReceived(network::Buffer &buff);
     void onTcpDisconnected();
@@ -132,6 +139,10 @@ class WsConnection {
 
     //! 将完整消息交付给业务层（opcode 为 kText 或 kBinary）
     void deliverMessage(WsFrame::OpCode opcode, std::string &data);
+
+    //! Ping/Pong 心跳定时器回调
+    void onPingTimerFired();
+    void onPongTimeoutFired();
 
   private:
     event::Loop *wp_loop_;
@@ -156,6 +167,13 @@ class WsConnection {
     SendCompleteCallback send_complete_cb_;
 
     bool is_closing_ = false;
+
+    //! Ping/Pong 心跳相关
+    int ping_interval_ = 0;         //! Ping 发送间隔（秒，0=不自动 Ping）
+    int ping_timeout_ = 0;          //! Pong 超时时间（秒，0=不检测超时）
+    event::TimerEvent *sp_ping_timer_ = nullptr;  //! Ping 定时器（周期触发）
+    event::TimerEvent *sp_pong_timer_ = nullptr;  //! Pong 超时定时器（单次触发）
+    bool is_pong_pending_ = false;   //! 发送 Ping 后是否在等待 Pong 回复
 
     //! 分片组装相关
     //! 只有接收完整数据帧（fin=true）并进行解压后，才回调业务层

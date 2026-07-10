@@ -70,9 +70,20 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
                 if (len7 <= 125) {
                     payload_len_ = len7;
                     ++p; --remaining; ++consumed;
-                    state_ = masked_ ? State::kMaskKey : State::kPayload;
                     payload_.clear();
                     payload_received_ = 0;
+
+                    if (payload_len_ == 0 && !masked_) {
+                        //! 无负载，也无mask，创建 WsFrame
+                        sp_frame_ = new WsFrame;
+                        sp_frame_->fin = fin_;
+                        sp_frame_->rsv1 = rsv1_;
+                        sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
+                        sp_frame_->payload = std::move(payload_);
+                        state_ = State::kFinished;
+                        return consumed;
+                    }
+                    state_ = masked_ ? State::kMaskKey : State::kPayload;
                 } else if (len7 == 126) {
                     payload_len_ = 0;  //! 待读取16位长度
                     ++p; --remaining; ++consumed;
@@ -144,6 +155,18 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
 
                 memcpy(mask_key_, p, 4);
                 p += 4; remaining -= 4; consumed += 4;
+
+                if (payload_len_ == 0) {
+                    //! 无负载，创建 WsFrame
+                    sp_frame_ = new WsFrame;
+                    sp_frame_->fin = fin_;
+                    sp_frame_->rsv1 = rsv1_;
+                    sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
+                    sp_frame_->payload = std::move(payload_);
+                    state_ = State::kFinished;
+                    return consumed;
+                }
+
                 state_ = State::kPayload;
                 break;
             }

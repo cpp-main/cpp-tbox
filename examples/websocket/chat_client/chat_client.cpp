@@ -87,6 +87,8 @@ int main(int argc, char **argv)
     //! 启用压缩（RFC 7692 permessage-deflate）
     ws_client.setCompressionPrefer(true);
     ws_client.setFragmentSize(65535);
+    ws_client.setPingInterval(10);
+    ws_client.setPingTimeout(2);
 
     //! 设置回调
     ws_client.setConnectedCallback([&] {

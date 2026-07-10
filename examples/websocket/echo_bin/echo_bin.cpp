@@ -90,7 +90,9 @@ class EchoService {
         ws_srv_.setTextMessageCallback(std::bind(&EchoService::onTextMessage, this, _1, _2));
         ws_srv_.setBinaryMessageCallback(std::bind(&EchoService::onBinaryMessage, this, _1, _2));
         ws_srv_.setCompressionEnable(true);
-        ws_srv_.setFragmentSize(65535);
+        ws_srv_.setFragmentSize(256);
+        ws_srv_.setPingInterval(10);
+        ws_srv_.setPingTimeout(2);
 
         //! 初始化定时器：每 5 秒推送统计帧
         stat_timer_->initialize(std::chrono::milliseconds(5000), Event::Mode::kPersist);
