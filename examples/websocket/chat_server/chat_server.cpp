@@ -52,15 +52,14 @@ class ChatRoom {
         if (!ws_srv_.initialize(http_srv, url_path))
             return false;
 
-        ws_srv_.setConnectedCallback([this](const WsServer::ConnToken &token) {
-            onConnected(token);
-        });
-        ws_srv_.setDisconnectedCallback([this](const WsServer::ConnToken &token) {
-            onDisconnected(token);
-        });
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
-        });
+        using namespace std::placeholders;
+        ws_srv_.setConnectedCallback(std::bind(&ChatRoom::onConnected, this, _1));
+        ws_srv_.setDisconnectedCallback(std::bind(&ChatRoom::onDisconnected, this, _1));
+        ws_srv_.setTextMessageCallback(std::bind(&ChatRoom::onTextMessage, this, _1, _2));
+        ws_srv_.setCompressionEnable(true);
+        ws_srv_.setFragmentSize(256);
+        ws_srv_.setPingInterval(10);
+        ws_srv_.setPingTimeout(2);
 
         LogInfo("chat room '%s' mounted at %s", name_.c_str(), url_path.c_str());
         return true;
@@ -101,19 +100,17 @@ class ChatRoom {
     }
 
     //! 收到消息：第一条为用户名（登录），后续为聊天消息
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onTextMessage(const WsServer::ConnToken &token, std::string &&text)
     {
-        if (frame.opcode != WsFrame::OpCode::kText)
-            return;
-
         auto it = conn_to_name_.find(token);
         if (it == conn_to_name_.end()) {
             //! 第一条消息作为用户名
-            conn_to_name_[token] = frame.payload;
-            LogInfo("[%s] user '%s' online", name_.c_str(), frame.payload.c_str());
-            broadcast(frame.payload + " 上线");
+            conn_to_name_[token] = text;
+            LogInfo("[%s] user '%s' online", name_.c_str(), text.c_str());
+            broadcast(text + " 上线");
         } else {
-            broadcast(it->second + ": " + frame.payload);
+            LogInfo("[%s] user: %s", it->second.c_str(), text.c_str());
+            broadcast(it->second + ": " + text);
         }
     }
 

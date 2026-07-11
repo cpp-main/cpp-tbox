@@ -64,19 +64,22 @@ std::vector<uint8_t> WsFrameBuilder::BuildPongFrame(const std::string &data)
     return BuildFrame(WsFrame::OpCode::kPong, true, data.data(), data.size());
 }
 
-std::vector<uint8_t> WsFrameBuilder::BuildFrame(WsFrame::OpCode opcode, bool fin, const void *payload_ptr, size_t payload_len)
+std::vector<uint8_t> WsFrameBuilder::BuildFrame(WsFrame::OpCode opcode, bool fin, const void *payload_ptr, size_t payload_len, bool rsv1)
 {
     std::vector<uint8_t> frame;
 
-    //! 第1字节：FIN + RSV1-3(0) + Opcode
+    //! 第1字节：FIN + RSV1(permessage-deflate) + RSV2-3(0) + Opcode
     uint8_t byte0 = static_cast<uint8_t>(opcode);
     if (fin)
         byte0 |= 0x80;
+    if (rsv1)
+        byte0 |= 0x40;
     frame.push_back(byte0);
 
     //! 第2字节：MASK=0(服务端不掩码) + Payload length
     //! 服务端发送的帧不使用掩码（RFC 6455 Section 5.3）
-    if (payload_len < 125) {
+    //! RFC 6455 Section 5.2：payload_len 0~125 用 7-bit，126~65535 用 16-bit，>65535 用 64-bit
+    if (payload_len <= 125) {
         frame.push_back(static_cast<uint8_t>(payload_len));
     } else if (payload_len <= 65535) {
         frame.push_back(126);
@@ -137,7 +140,7 @@ std::vector<uint8_t> WsFrameBuilder::BuildMaskedPongFrame(const std::string &dat
 
 std::vector<uint8_t> WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode opcode, bool fin,
                                                       const void *payload_ptr, size_t payload_len,
-                                                      const uint8_t *mask_key)
+                                                      const uint8_t *mask_key, bool rsv1)
 {
     std::vector<uint8_t> frame;
 
@@ -153,14 +156,17 @@ std::vector<uint8_t> WsFrameBuilder::BuildMaskedFrame(WsFrame::OpCode opcode, bo
         mk[3] = static_cast<uint8_t>(rand() & 0xFF);
     }
 
-    //! 第1字节：FIN + RSV1-3(0) + Opcode
+    //! 第1字节：FIN + RSV1(permessage-deflate) + RSV2-3(0) + Opcode
     uint8_t byte0 = static_cast<uint8_t>(opcode);
     if (fin)
         byte0 |= 0x80;
+    if (rsv1)
+        byte0 |= 0x40;
     frame.push_back(byte0);
 
     //! 第2字节：MASK=1(客户端必须掩码) + Payload length
-    if (payload_len < 125) {
+    //! RFC 6455 Section 5.2：payload_len 0~125 用 7-bit，126~65535 用 16-bit，>65535 用 64-bit
+    if (payload_len <= 125) {
         frame.push_back(static_cast<uint8_t>(0x80 | payload_len));
     } else if (payload_len <= 65535) {
         frame.push_back(0x80 | 126);

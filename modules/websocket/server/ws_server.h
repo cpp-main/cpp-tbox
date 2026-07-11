@@ -20,12 +20,13 @@
 #ifndef TBOX_WS_SERVER_H_20260612
 #define TBOX_WS_SERVER_H_20260612
 
+#include <vector>
+#include <functional>
+
 #include <tbox/event/loop.h>
 #include <tbox/base/cabinet_token.h>
 #include <tbox/base/defines.h>
 #include <tbox/network/sockaddr.h>
-
-#include "../ws_frame.h"
 
 namespace tbox {
 namespace http {
@@ -42,9 +43,13 @@ namespace server {
 //! 支持指定 URL 路径（前缀匹配），实现多个 WebSocket 服务挂载于同一 HTTP 服务器
 //! 升级后接管 TcpConnection，提供 WebSocket 通信功能
 //! 通过 Cabinet 管理 WsConnection 生命期，用户通过 ConnToken 操作连接
+//! 分片消息接收完整后统一解压再回调，使用右值引用提升效率
 class WsServer {
   public:
     using ConnToken = cabinet::Token;
+
+    //! 默认分片发送的最大帧 payload 大小
+    static constexpr size_t kDefaultFragmentSize = 65535;
 
     explicit WsServer(event::Loop *wp_loop);
     ~WsServer();
@@ -59,6 +64,24 @@ class WsServer {
     //! - url_path_ 不以 '/' 结尾：全量匹配，如 "/api" 仅匹配 "/api"
     //! - url_path_ 为空字符串：匹配所有 WebSocket 升级请求
     bool initialize(http::server::Server *http_server, const std::string &url_path = "");
+
+    //! 设置是否允许压缩（必须在 initialize 之前调用）
+    //! 启用后，若客户端请求 permessage-deflate，将在握手响应中同意压缩
+    void setCompressionEnable(bool enable);
+
+    //! 设置分片大小（仅影响发送，接收时自动组装；必须在 initialize 之前调用）
+    //! 默认为 kDefaultFragmentSize (65535)
+    //! 值为 0 表示不分片（所有数据单帧发送）
+    void setFragmentSize(size_t size);
+
+    //! 设置 Ping 发送间隔（秒），0=不自动 Ping（默认；必须在 initialize 之前调用）
+    //! 启用后，每隔指定秒数向客户端发送 Ping 帧
+    void setPingInterval(int seconds);
+
+    //! 设置 Pong 超时时间（秒），0=不检测超时（默认；必须在 initialize 之前调用）
+    //! 发送 Ping 后若在此时间内未收到 Pong，则判定连接断开并关闭
+    void setPingTimeout(int seconds);
+
     bool start();
     void stop();
     void cleanup();
@@ -68,23 +91,27 @@ class WsServer {
 
   public:
     //! 设置回调（所有回调均使用 ConnToken，不暴露 WsConnection 指针）
-    using ConnectedCallback    = std::function<void(const ConnToken &)>;
-    using DisconnectedCallback = std::function<void(const ConnToken &)>;
-    using MessageCallback      = std::function<void(const ConnToken &, const WsFrame&)>;
-    using ErrorCallback        = std::function<void(const ConnToken &)>;
+    using ConnectedCallback     = std::function<void(const ConnToken &)>;
+    using DisconnectedCallback  = std::function<void(const ConnToken &)>;
+    using TextMessageCallback   = std::function<void(const ConnToken &, std::string &&)>;
+    using BinaryMessageCallback = std::function<void(const ConnToken &, std::vector<uint8_t> &&)>;
+    using ErrorCallback         = std::function<void(const ConnToken &)>;
 
     void setConnectedCallback(const ConnectedCallback &cb);
     void setDisconnectedCallback(const DisconnectedCallback &cb);
-    void setMessageCallback(const MessageCallback &cb);
+    void setTextMessageCallback(const TextMessageCallback &cb);
+    void setBinaryMessageCallback(const BinaryMessageCallback &cb);
     void setErrorCallback(const ErrorCallback &cb);
 
   public:
     //! 向指定客户端发送文本数据
     bool send(const ConnToken &client, const std::string &text);
+    //! 向指定客户端发送文本数据（const char* 版本，方便直接传字符串字面量）
+    bool send(const ConnToken &client, const char *str);
     //! 向指定客户端发送二进制数据
     bool send(const ConnToken &client, const void *data, size_t len);
     //! 向指定客户端发送二进制数据（vector 版本）
-    bool sendBinary(const ConnToken &client, const std::vector<uint8_t> &data);
+    bool send(const ConnToken &client, const std::vector<uint8_t> &data);
 
     //! 关闭指定客户端连接（发送 Close 帧）
     bool close(const ConnToken &client, uint16_t code = 1000, const std::string &reason = "");

@@ -89,7 +89,8 @@ void WsServer::Impl::stop()
     //! 清除 WsConnection 内部回调，防止断开时回调到 Impl
     ws_conns_.foreach([](WsConnection *conn) {
         conn->setCloseCallback(nullptr);
-        conn->setMessageCallback(nullptr);
+        conn->setTextMessageCallback(nullptr);
+        conn->setBinaryMessageCallback(nullptr);
         conn->setErrorCallback(nullptr);
     });
 
@@ -113,6 +114,127 @@ void WsServer::Impl::cleanup()
     wp_http_server_ = nullptr;
 
     state_ = WsServer::State::kNone;
+}
+
+//! === permessage-deflate 扩展协商解析 ===
+
+//! 客户端 Sec-WebSocket-Extensions 头部中 permessage-deflate 扩展的解析结果
+//! RFC 7692 Section 4.1: 扩展参数定义
+struct WsExtOfferParams {
+    bool found = false;                              //!< 是否找到 permessage-deflate 扩展
+    bool server_no_context_takeover = false;         //!< 服务器不保持压缩上下文
+    bool client_no_context_takeover = false;         //!< 客户端不保持压缩上下文
+    bool server_max_window_bits_present = false;     //!< 是否包含 server_max_window_bits
+    int  server_max_window_bits = 15;                //!< 服务器滑动窗口位数（默认15）
+    bool client_max_window_bits_present = false;     //!< 是否包含 client_max_window_bits
+    int  client_max_window_bits = 0;                 //!< 客户端滑动窗口位数，0=不带值(支持8~15)
+};
+
+//! 解析 Sec-WebSocket-Extensions 头部中的 permessage-deflate 扩展参数
+//! 格式示例: "permessage-deflate; client_max_window_bits; server_max_window_bits=15"
+//! 多个扩展以逗号分隔: "permessage-deflate; client_max_window_bits, x-other-ext"
+static WsExtOfferParams ParseWsExtOffer(const std::string &ext_header)
+{
+    WsExtOfferParams params;
+
+    //! 找到 permessage-deflate 扩展的起始位置（需完整匹配，非子串）
+    static const std::string kExtName = "permessage-deflate";
+    size_t pos = 0;
+    while (pos < ext_header.size()) {
+        size_t found_pos = ext_header.find(kExtName, pos);
+        if (found_pos == std::string::npos)
+            break;
+
+        //! 前面应为逗号、空格或字符串开头；后面应为分号、逗号、空格或结尾
+        bool valid_prefix = (found_pos == 0) ||
+            (ext_header[found_pos - 1] == ',') ||
+            (ext_header[found_pos - 1] == ' ');
+        size_t name_end = found_pos + kExtName.size();
+        bool valid_suffix = (name_end >= ext_header.size()) ||
+            (ext_header[name_end] == ';') ||
+            (ext_header[name_end] == ',') ||
+            (ext_header[name_end] == ' ');
+        if (valid_prefix && valid_suffix) {
+            pos = found_pos;
+            break;
+        }
+        pos = name_end;
+    }
+
+    if (pos >= ext_header.size())
+        return params;
+
+    params.found = true;
+
+    //! 确定参数区域：扩展名之后到下一个扩展（逗号）或字符串结尾
+    size_t param_start = pos + kExtName.size();
+    size_t comma_pos = ext_header.find(',', param_start);
+    size_t param_end = (comma_pos != std::string::npos) ? comma_pos : ext_header.size();
+
+    //! 在参数区域内逐个解析分号分隔的参数
+    std::string section = ext_header.substr(param_start, param_end - param_start);
+    size_t search_pos = 0;
+    while (search_pos < section.size()) {
+        size_t semi_pos = section.find(';', search_pos);
+        if (semi_pos == std::string::npos)
+            break;
+
+        //! 提取参数文本（跳过分号和空格）
+        size_t text_start = semi_pos + 1;
+        while (text_start < section.size() && section[text_start] == ' ')
+            text_start++;
+
+        //! 找到参数结束位置（下一个分号或区域结尾）
+        size_t text_end = section.find(';', text_start);
+        if (text_end == std::string::npos)
+            text_end = section.size();
+
+        //! 去掉尾部空格
+        while (text_end > text_start && section[text_end - 1] == ' ')
+            text_end--;
+
+        std::string param_text = section.substr(text_start, text_end - text_start);
+        if (param_text.empty()) {
+            search_pos = text_end;
+            continue;
+        }
+
+        //! 解析参数名=值
+        size_t eq_pos = param_text.find('=');
+        std::string param_name = (eq_pos != std::string::npos)
+            ? param_text.substr(0, eq_pos) : param_text;
+        std::string param_value = (eq_pos != std::string::npos)
+            ? param_text.substr(eq_pos + 1) : "";
+
+        //! 去掉参数名尾部空格和参数值首尾空格
+        while (!param_name.empty() && param_name.back() == ' ')
+            param_name.pop_back();
+        while (!param_value.empty() && param_value.front() == ' ')
+            param_value.erase(param_value.begin());
+        while (!param_value.empty() && param_value.back() == ' ')
+            param_value.pop_back();
+
+        //! 匹配已知参数（RFC 7692 Section 4.1）
+        if (param_name == "server_no_context_takeover") {
+            params.server_no_context_takeover = true;
+        } else if (param_name == "client_no_context_takeover") {
+            params.client_no_context_takeover = true;
+        } else if (param_name == "server_max_window_bits") {
+            params.server_max_window_bits_present = true;
+            if (!param_value.empty())
+                params.server_max_window_bits = std::stoi(param_value);
+        } else if (param_name == "client_max_window_bits") {
+            params.client_max_window_bits_present = true;
+            if (!param_value.empty())
+                params.client_max_window_bits = std::stoi(param_value);
+            else
+                params.client_max_window_bits = 0; //!< 不带值，表示客户端支持 8~15
+        }
+
+        search_pos = text_end;
+    }
+
+    return params;
 }
 
 //! === Middleware 接口实现 ===
@@ -168,8 +290,68 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
         if (key_iter != req.headers.end())
             res.headers["Sec-WebSocket-Accept"] = ComputeWsAcceptKey(key_iter->second);
 
+        //! RFC 7692：压缩扩展协商
+        //! 若 server 允许压缩且客户端请求了 permessage-deflate，同意压缩
+        bool compression_agreed = false;
+        if (compression_config_.enabled) {
+            auto ext_iter = req.headers.find("Sec-WebSocket-Extensions");
+            if (ext_iter != req.headers.end()) {
+                //! 解析客户端的 permessage-deflate 扩展参数
+                WsExtOfferParams offer_params = ParseWsExtOffer(ext_iter->second);
+                std::string resp_value;
+                if (offer_params.found) {
+                    //! 构建响应参数：
+                    //! 1) server_no_context_takeover: 服务器每条消息独立压缩，必须声明
+                    //! 2) client_no_context_takeover: 要求客户端每条消息独立压缩
+                    //! 3) client_max_window_bits: 若客户端 offered，RFC 7692 MUST 包含
+                    //!    否则 Chrome 等浏览器会关闭连接（RFC 7692 Section 4.3）
+                    //! 4) server_max_window_bits: 若客户端 offered，可选包含（MAY）
+                    resp_value = "permessage-deflate; server_no_context_takeover; client_no_context_takeover";
+
+                    //! RFC 7692 Section 4.2.2:
+                    //! "If a server received an extension offer containing the client_max_window_bits
+                    //!  parameter, the server MUST include the client_max_window_bits parameter
+                    //!  in the corresponding extension response."
+                    if (offer_params.client_max_window_bits_present) {
+                        //! 不带值(client_max_window_bits=0)表示客户端支持 8~15
+                        //! 带值时须 ≤ 客户端 offered 值
+                        //! 响应值同时须 ≤ 服务器 max_window_bits
+                        int respond_bits = (offer_params.client_max_window_bits == 0)
+                            ? compression_config_.max_window_bits
+                            : std::min(offer_params.client_max_window_bits, compression_config_.max_window_bits);
+                        if (respond_bits < 8)  respond_bits = 8;
+                        if (respond_bits > 15) respond_bits = 15;
+                        resp_value += "; client_max_window_bits=" + std::to_string(respond_bits);
+                    }
+
+                    //! RFC 7692 Section 4.2.2:
+                    //! server_max_window_bits 为 MAY，非 MUST
+                    //! 此处显式声明，方便客户端明确知道服务器使用的窗口位数
+                    if (offer_params.server_max_window_bits_present) {
+                        //! 响应值须 ≤ 客户端 offered 值，同时须 ≤ 服务器 max_window_bits
+                        int respond_bits = std::min(offer_params.server_max_window_bits, compression_config_.max_window_bits);
+                        if (respond_bits < 8)  respond_bits = 8;
+                        if (respond_bits > 15) respond_bits = 15;
+                        resp_value += "; server_max_window_bits=" + std::to_string(respond_bits);
+                    }
+
+                    compression_agreed = true;
+                    LogDbg("ws compression agreed: %s", resp_value.c_str());
+                }
+                if (!resp_value.empty())
+                    res.headers["Sec-WebSocket-Extensions"] = resp_value;
+            }
+        }
+
         //! 注册升级回调：HTTP 服务器发送 101 响应后，将 TcpConnection 交给 WsServer
-        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1, req.url.path);
+        //! 同时传递压缩协商结果
+        WsCompressionConfig conn_compress_config;
+        if (compression_agreed) {
+            conn_compress_config.enabled = true;
+            conn_compress_config.no_context_takeover = compression_config_.no_context_takeover;
+            conn_compress_config.max_window_bits = compression_config_.max_window_bits;
+        }
+        res.upgrade_cb = std::bind(&WsServer::Impl::onWsUpgrade, this, _1, req.url.path, conn_compress_config);
 
         //! 升级请求已处理，不再调用 next()
         return;
@@ -181,21 +363,22 @@ void WsServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::server
 
 //! === 升级与连接管理 ===
 
-void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path)
+void WsServer::Impl::onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path,
+                                 const WsCompressionConfig &compress_config)
 {
     RECORD_SCOPE();
     LogDbg("ws upgrade: new connection from %s", tcp_conn->peerAddr().toString().c_str());
 
     //! 创建 WsConnection，并存入 Cabinet（直接 alloc 并存入指针）
-    //! 传入升级时的 URL 路径，供用户后续通过 getUrl() 查询
-    //! 注意：这里需要获取升级请求的 URL，但 onWsUpgrade 只拿到 TcpConnection
-    //! URL 已在 handle() 中记录到 upgrade_cb 的绑定参数中
-    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path);
+    //! 传入升级时的 URL 路径、压缩配置、分片大小、心跳参数
+    WsConnection *ws_conn = new WsConnection(wp_loop_, tcp_conn, url_path, compress_config,
+                                             fragment_size_, ping_interval_, ping_timeout_);
     ConnToken ws_token = ws_conns_.alloc(ws_conn);
 
     //! 设置 WsConnection 的回调（bind 捕获 ConnToken，不传递 WsConnection*）
     ws_conn->setCloseCallback(std::bind(&WsServer::Impl::onWsDisconnected, this, ws_token));
-    ws_conn->setMessageCallback(std::bind(&WsServer::Impl::onWsMessage, this, ws_token, _1));
+    ws_conn->setTextMessageCallback(std::bind(&WsServer::Impl::onWsTextMessage, this, ws_token, _1));
+    ws_conn->setBinaryMessageCallback(std::bind(&WsServer::Impl::onWsBinaryMessage, this, ws_token, _1));
     ws_conn->setErrorCallback(std::bind(&WsServer::Impl::onWsError, this, ws_token));
 
     //! 通知用户（传递 ConnToken）
@@ -227,11 +410,20 @@ void WsServer::Impl::onWsDisconnected(const ConnToken &client)
         "WsServer::onWsDisconnected, delete ws_conn");
 }
 
-void WsServer::Impl::onWsMessage(const ConnToken &client, const WsFrame &frame)
+void WsServer::Impl::onWsTextMessage(const ConnToken &client, std::string &&data)
 {
-    if (message_cb_) {
+    if (text_message_cb_) {
         ++cb_level_;
-        message_cb_(client, frame);
+        text_message_cb_(client, std::move(data));
+        --cb_level_;
+    }
+}
+
+void WsServer::Impl::onWsBinaryMessage(const ConnToken &client, std::vector<uint8_t> &&data)
+{
+    if (binary_message_cb_) {
+        ++cb_level_;
+        binary_message_cb_(client, std::move(data));
         --cb_level_;
     }
 }
@@ -260,6 +452,14 @@ bool WsServer::Impl::send(const ConnToken &client, const std::string &text)
     return false;
 }
 
+bool WsServer::Impl::send(const ConnToken &client, const char *str)
+{
+    auto ws_conn = ws_conns_.at(client);
+    if (ws_conn != nullptr)
+        return ws_conn->send(str);
+    return false;
+}
+
 bool WsServer::Impl::send(const ConnToken &client, const void *data, size_t len)
 {
     auto ws_conn = ws_conns_.at(client);
@@ -268,11 +468,11 @@ bool WsServer::Impl::send(const ConnToken &client, const void *data, size_t len)
     return false;
 }
 
-bool WsServer::Impl::sendBinary(const ConnToken &client, const std::vector<uint8_t> &data)
+bool WsServer::Impl::send(const ConnToken &client, const std::vector<uint8_t> &data)
 {
     auto ws_conn = ws_conns_.at(client);
     if (ws_conn != nullptr)
-        return ws_conn->sendBinary(data);
+        return ws_conn->send(data);
     return false;
 }
 
@@ -385,7 +585,10 @@ std::string WsServer::Impl::ComputeWsAcceptKey(const std::string &sec_ws_key)
     return util::base64::Encode(digest, 20);
 }
 
-//! === WsServer 外部接口 ===
+void WsServer::Impl::setCompressionEnable(bool enable)
+{
+    compression_config_.enabled = enable;
+}
 
 WsServer::WsServer(event::Loop *wp_loop)
   : impl_(new Impl(this, wp_loop))
@@ -396,6 +599,26 @@ WsServer::WsServer(event::Loop *wp_loop)
 WsServer::~WsServer()
 {
     CHECK_DELETE_RESET_OBJ(impl_);
+}
+
+void WsServer::setCompressionEnable(bool enable)
+{
+    impl_->setCompressionEnable(enable);
+}
+
+void WsServer::setFragmentSize(size_t size)
+{
+    impl_->setFragmentSize(size);
+}
+
+void WsServer::setPingInterval(int seconds)
+{
+    impl_->setPingInterval(seconds);
+}
+
+void WsServer::setPingTimeout(int seconds)
+{
+    impl_->setPingTimeout(seconds);
 }
 
 bool WsServer::initialize(http::server::Server *http_server, const std::string &url_path)
@@ -434,9 +657,14 @@ void WsServer::setDisconnectedCallback(const DisconnectedCallback &cb)
     impl_->setDisconnectedCallback(cb);
 }
 
-void WsServer::setMessageCallback(const MessageCallback &cb)
+void WsServer::setTextMessageCallback(const TextMessageCallback &cb)
 {
-    impl_->setMessageCallback(cb);
+    impl_->setTextMessageCallback(cb);
+}
+
+void WsServer::setBinaryMessageCallback(const BinaryMessageCallback &cb)
+{
+    impl_->setBinaryMessageCallback(cb);
 }
 
 void WsServer::setErrorCallback(const ErrorCallback &cb)
@@ -449,14 +677,19 @@ bool WsServer::send(const ConnToken &client, const std::string &text)
     return impl_->send(client, text);
 }
 
+bool WsServer::send(const ConnToken &client, const char *str)
+{
+    return impl_->send(client, str);
+}
+
 bool WsServer::send(const ConnToken &client, const void *data, size_t len)
 {
     return impl_->send(client, data, len);
 }
 
-bool WsServer::sendBinary(const ConnToken &client, const std::vector<uint8_t> &data)
+bool WsServer::send(const ConnToken &client, const std::vector<uint8_t> &data)
 {
-    return impl_->sendBinary(client, data);
+    return impl_->send(client, data);
 }
 
 bool WsServer::close(const ConnToken &client, uint16_t code, const std::string &reason)

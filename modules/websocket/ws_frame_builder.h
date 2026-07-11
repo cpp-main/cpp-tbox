@@ -51,7 +51,10 @@ class WsFrameBuilder {
     static std::vector<uint8_t> BuildPongFrame(const std::string &data = "");
 
     //! 通用帧构建（服务端，不掩码）
-    static std::vector<uint8_t> BuildFrame(WsFrame::OpCode opcode, bool fin, const void *payload, size_t payload_len);
+    //! rsv1 为 true 时设置 RSV1 位（用于 permessage-deflate 压缩帧）
+    static std::vector<uint8_t> BuildFrame(WsFrame::OpCode opcode, bool fin,
+                                           const void *payload, size_t payload_len,
+                                           bool rsv1 = false);
 
     //! === 客户端帧（掩码） ===
     //! RFC 6455 Section 5.3：客户端发送的帧必须使用掩码
@@ -74,9 +77,11 @@ class WsFrameBuilder {
 
     //! 通用帧构建（客户端，掩码）
     //! mask_key 为 4 字节掩码密钥，若为 nullptr 则自动随机生成
+    //! rsv1 为 true 时设置 RSV1 位（用于 permessage-deflate 压缩帧）
     static std::vector<uint8_t> BuildMaskedFrame(WsFrame::OpCode opcode, bool fin,
                                                  const void *payload, size_t payload_len,
-                                                 const uint8_t *mask_key = nullptr);
+                                                 const uint8_t *mask_key = nullptr,
+                                                 bool rsv1 = false);
 };
 
 }

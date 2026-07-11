@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/util/string.h>
 
 #include "../ws_frame_parser.h"
 #include "../ws_frame_builder.h"
@@ -29,25 +30,63 @@ namespace tbox {
 namespace websocket {
 namespace server {
 
+//! ODR-used static constexpr 成员须在类外定义（C++11）
+constexpr size_t WsConnection::kDefaultFragmentSize;
+
 using namespace std::placeholders;
 
-WsConnection::WsConnection(event::Loop *wp_loop, network::TcpConnection *tcp_conn, const std::string &url)
+WsConnection::WsConnection(event::Loop *wp_loop,
+                           network::TcpConnection *tcp_conn,
+                           const std::string &url,
+                           const WsCompressionConfig &compress_config,
+                           size_t fragment_size,
+                           int ping_interval,
+                           int ping_timeout)
   : wp_loop_(wp_loop)
   , sp_tcp_conn_(tcp_conn)
   , url_(url)
+  , compression_config_(compress_config)
+  , fragment_size_(fragment_size)
+  , ping_interval_(ping_interval)
+  , ping_timeout_(ping_timeout)
 {
     TBOX_ASSERT(wp_loop != nullptr);
     TBOX_ASSERT(tcp_conn != nullptr);
+
+    //! 初始化压缩器
+    if (compression_config_.enabled) {
+        if (!compressor_.initialize(compression_config_)) {
+            LogErr("WsConnection compressor init fail");
+        }
+    }
 
     //! 设置 TcpConnection 的回调
     sp_tcp_conn_->setReceiveCallback(std::bind(&WsConnection::onTcpReceived, this, _1), 0);
     sp_tcp_conn_->setDisconnectedCallback(std::bind(&WsConnection::onTcpDisconnected, this));
     sp_tcp_conn_->setSendCompleteCallback(std::bind(&WsConnection::onTcpSendCompleted, this));
+
+    //! 初始化 Ping/Pong 心跳定时器
+    if (ping_interval_ > 0) {
+        sp_ping_timer_ = wp_loop_->newTimerEvent();
+        sp_ping_timer_->initialize(std::chrono::seconds(ping_interval_), event::Event::Mode::kPersist);
+        sp_ping_timer_->setCallback(std::bind(&WsConnection::onPingTimerFired, this));
+        sp_ping_timer_->enable();
+
+        if (ping_timeout_ > 0) {
+            sp_pong_timer_ = wp_loop_->newTimerEvent();
+            sp_pong_timer_->initialize(std::chrono::seconds(ping_timeout_), event::Event::Mode::kOneshot);
+            sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+        }
+    }
 }
 
 WsConnection::~WsConnection()
 {
     TBOX_ASSERT(cb_level_ == 0);
+
+    //! 清理心跳定时器
+    CHECK_DELETE_RESET_OBJ(sp_ping_timer_);
+    CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
 
     if (sp_tcp_conn_ == nullptr)
       return;
@@ -66,25 +105,22 @@ WsConnection::~WsConnection()
 
 bool WsConnection::send(const std::string &text)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr)
-        return false;
+    return sendData(WsFrame::OpCode::kText, text.data(), text.size());
+}
 
-    auto frame = WsFrameBuilder::BuildTextFrame(text);
-    return sp_tcp_conn_->send(frame.data(), frame.size());
+bool WsConnection::send(const char *str)
+{
+    return sendData(WsFrame::OpCode::kText, str, strlen(str));
 }
 
 bool WsConnection::send(const void *data, size_t len)
 {
-    if (is_closing_ || sp_tcp_conn_ == nullptr)
-        return false;
-
-    auto frame = WsFrameBuilder::BuildBinaryFrame(data, len);
-    return sp_tcp_conn_->send(frame.data(), frame.size());
+    return sendData(WsFrame::OpCode::kBinary, data, len);
 }
 
-bool WsConnection::sendBinary(const std::vector<uint8_t> &data)
+bool WsConnection::send(const std::vector<uint8_t> &data)
 {
-    return send(data.data(), data.size());
+    return sendData(WsFrame::OpCode::kBinary, data.data(), data.size());
 }
 
 bool WsConnection::close(uint16_t code, const std::string &reason)
@@ -164,64 +200,234 @@ bool WsConnection::sendFrame(WsFrame::OpCode opcode, bool fin,
     return sp_tcp_conn_->send(frame.data(), frame.size());
 }
 
+//! 统一发送数据：前置检查 → 压缩(如需要) → sendFragmented
+//! opcode 为 kText 或 kBinary
+bool WsConnection::sendData(WsFrame::OpCode opcode, const void *data_ptr, size_t data_len)
+{
+    if (is_closing_ || sp_tcp_conn_ == nullptr)
+        return false;
+
+    //! 压缩协商达成时，压缩数据
+    if (compression_config_.enabled && compressor_.isInitialized()) {
+        std::string compressed = compressor_.compress(data_ptr, data_len);
+        if (!compressed.empty()) {
+            return sendFragmented(opcode, compressed.data(), compressed.size(), true);
+        }
+        //! 压缩失败，回退到不压缩
+        LogNotice("ws compress fail, fallback to uncompressed");
+    }
+
+    return sendFragmented(opcode, data_ptr, data_len, false);
+}
+
+//! 分片发送 payload
+//! 若 payload 大小超过 fragment_size_，则分片发送：
+//! - 首帧：原始 opcode，fin=false，rsv1=is_compressed
+//! - 中间帧：kContinue，fin=false
+//! - 末帧：kContinue，fin=true
+//! 若 payload 大小不超过 fragment_size_，则单帧发送
+bool WsConnection::sendFragmented(WsFrame::OpCode opcode, const void *payload, size_t payload_len, bool is_compressed)
+{
+    if (sp_tcp_conn_ == nullptr)
+        return false;
+
+    //! 单帧即可发送（fragment_size_ 为 0 时表示不分片）
+    if (fragment_size_ == 0 || payload_len <= fragment_size_) {
+        auto frame = WsFrameBuilder::BuildFrame(opcode, true, payload, payload_len, is_compressed);
+        return sp_tcp_conn_->send(frame.data(), frame.size());
+    }
+
+    //! 分片发送
+    const uint8_t *data = static_cast<const uint8_t*>(payload);
+    size_t offset = 0;
+
+    //! 首帧：原始 opcode，fin=false，rsv1=is_compressed
+    size_t first_chunk = fragment_size_;
+    auto frame = WsFrameBuilder::BuildFrame(opcode, false, data, first_chunk, is_compressed);
+    if (!sp_tcp_conn_->send(frame.data(), frame.size()))
+        return false;
+
+    offset += first_chunk;
+
+    //! 中间帧与末帧：opcode=kContinue，rsv1=false
+    while (offset < payload_len) {
+        size_t remaining = payload_len - offset;
+        size_t chunk_size = std::min(remaining, fragment_size_);
+        bool is_last = (offset + chunk_size == payload_len);
+
+        auto cont_frame = WsFrameBuilder::BuildFrame(WsFrame::OpCode::kContinue, is_last,
+                                                     data + offset, chunk_size, false);
+        if (!sp_tcp_conn_->send(cont_frame.data(), cont_frame.size()))
+            return false;
+
+        offset += chunk_size;
+    }
+
+    return true;
+}
+
+//! 将完整数据交付给业务层
+//! data 为解压后的完整数据（若不需要解压则为原始 payload）
+//! opcode 为消息类型（kText 或 kBinary）
+void WsConnection::deliverMessage(WsFrame::OpCode opcode, std::string &data)
+{
+    if (opcode == WsFrame::OpCode::kText) {
+        if (text_message_cb_) {
+            ++cb_level_;
+            text_message_cb_(std::move(data));
+            --cb_level_;
+        }
+    } else if (opcode == WsFrame::OpCode::kBinary) {
+        //! 将 std::string 转换为 std::vector<uint8_t>
+        std::vector<uint8_t> vec(data.begin(), data.end());
+        if (binary_message_cb_) {
+            ++cb_level_;
+            binary_message_cb_(std::move(vec));
+            --cb_level_;
+        }
+    }
+}
+
 void WsConnection::onTcpReceived(network::Buffer &buff)
 {
     //! 从缓冲区中逐步解析 WebSocket 帧
     while (buff.readableSize() > 0) {
         size_t consumed = frame_parser_.parse(buff.readableBegin(), buff.readableSize());
+#if 1
+        auto hex_str = util::string::RawDataToHexStr(buff.readableBegin(), buff.readableSize());
+        LogTrace("hex: %s, consumed:%u", hex_str.c_str(), consumed);
+#endif
         buff.hasRead(consumed);
 
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
             WsFrame *frame = frame_parser_.getFrame();
             if (frame != nullptr) {
-                switch (frame->opcode) {
-                    case WsFrame::OpCode::kText:
-                    case WsFrame::OpCode::kBinary:
-                    case WsFrame::OpCode::kContinue:
-                        if (message_cb_) {
-                            ++cb_level_;
-                            message_cb_(*frame);
-                            --cb_level_;
-                        }
-                        break;
+                //! ===== 控制帧处理（Close/Ping/Pong 不受分片状态影响） =====
+                if (frame->isControlFrame()) {
+                    switch (frame->opcode) {
+                        case WsFrame::OpCode::kClose:
+                            //! 收到关闭帧，自动回复关闭帧
+                            if (!is_closing_) {
+                                auto close_frame = WsFrameBuilder::BuildCloseFrame(frame->closeCode(), frame->closeReason());
+                                sp_tcp_conn_->send(close_frame.data(), close_frame.size());
+                                is_closing_ = true;
+                            }
+                            //! 不再处理后续数据
+                            buff.hasReadAll();
+                            //! 清理分片缓存
+                            fragment_buffer_.clear();
+                            is_fragmenting_ = false;
+                            delete frame;
+                            if (close_cb_) {
+                                ++cb_level_;
+                                close_cb_();
+                                --cb_level_;
+                            }
+                            return;
 
-                    case WsFrame::OpCode::kClose:
-                        //! 收到关闭帧，自动回复关闭帧
-                        if (!is_closing_) {
-                            auto close_frame = WsFrameBuilder::BuildCloseFrame(frame->closeCode(), frame->closeReason());
-                            sp_tcp_conn_->send(close_frame.data(), close_frame.size());
-                            is_closing_ = true;
-                        }
-                        //! 不再处理后续数据
-                        buff.hasReadAll();
+                        case WsFrame::OpCode::kPing:
+                            //! 自动回复 Pong
+                            pong(frame->payload);
+                            if (ping_cb_) {
+                                ++cb_level_;
+                                ping_cb_(frame->payload);
+                                --cb_level_;
+                            }
+                            break;
+
+                        case WsFrame::OpCode::kPong:
+                            //! 心跳：收到 Pong，取消超时定时器
+                            if (is_pong_pending_) {
+                                is_pong_pending_ = false;
+                                if (sp_pong_timer_ != nullptr)
+                                    sp_pong_timer_->disable();
+                            }
+                            if (pong_cb_) {
+                                ++cb_level_;
+                                pong_cb_(frame->payload);
+                                --cb_level_;
+                            }
+                            break;
+
+                        default:
+                            LogNotice("unknown ws control opcode: 0x%02x", static_cast<int>(frame->opcode));
+                            delete frame;
+                            buff.hasReadAll();
+                            fragment_buffer_.clear();
+                            is_fragmenting_ = false;
+                            if (error_cb_) {
+                                ++cb_level_;
+                                error_cb_();
+                                --cb_level_;
+                            }
+                            return;
+                    }
+                    delete frame;
+                    continue;   //! 控制帧处理完毕，继续解析下一个帧
+                }
+
+                //! ===== 数据帧处理（TEXT / BINARY / CONTINUE） =====
+                //! 核心逻辑：分片数据先缓存，接收完整后统一解压再回调
+                //! 原因：压缩数据不能逐片解压，必须拼接完整后才能解压
+
+                if (frame->opcode == WsFrame::OpCode::kText ||
+                    frame->opcode == WsFrame::OpCode::kBinary) {
+                    //! 新消息的首帧
+                    if (is_fragmenting_) {
+                        //! 正在接收分片消息时又收到新消息首帧，协议违规
+                        LogNotice("ws protocol error: new data frame while fragmenting");
                         delete frame;
-                        if (close_cb_) {
+                        buff.hasReadAll();
+                        fragment_buffer_.clear();
+                        is_fragmenting_ = false;
+                        if (error_cb_) {
                             ++cb_level_;
-                            close_cb_();
+                            error_cb_();
                             --cb_level_;
                         }
                         return;
+                    }
 
-                    case WsFrame::OpCode::kPing:
-                        //! 自动回复 Pong
-                        pong(frame->payload);
-                        if (ping_cb_) {
-                            ++cb_level_;
-                            ping_cb_(frame->payload);
-                            --cb_level_;
+                    if (frame->fin) {
+                        //! 单帧完整消息（无分片）
+                        bool is_need_decompress = frame->rsv1 && compression_config_.enabled;
+                        if (is_need_decompress) {
+                            std::string decompressed = compressor_.decompress(frame->payload);
+                            if (!decompressed.empty()) {
+                                frame->payload = std::move(decompressed);
+                            } else {
+                                //! 解压失败
+                                LogNotice("ws decompress fail");
+                                delete frame;
+                                buff.hasReadAll();
+                                if (error_cb_) {
+                                    ++cb_level_;
+                                    error_cb_();
+                                    --cb_level_;
+                                }
+                                return;
+                            }
                         }
-                        break;
 
-                    case WsFrame::OpCode::kPong:
-                        if (pong_cb_) {
-                            ++cb_level_;
-                            pong_cb_(frame->payload);
-                            --cb_level_;
-                        }
-                        break;
+                        //! 交付完整消息给业务层
+                        deliverMessage(frame->opcode, frame->payload);
+                        delete frame;
 
-                    default:
-                        LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
+                    } else {
+                        //! 分片消息的首帧（fin=false）
+                        //! 记录原始 opcode 和是否需要解压，缓存 payload
+                        is_fragmenting_ = true;
+                        fragment_opcode_ = frame->opcode;
+                        fragment_need_decompress_ = frame->rsv1 && compression_config_.enabled;
+                        fragment_buffer_ = std::move(frame->payload);
+                        delete frame;
+                    }
+
+                } else if (frame->opcode == WsFrame::OpCode::kContinue) {
+                    //! 分片消息的后续帧
+                    if (!is_fragmenting_) {
+                        //! 没有首帧却收到续帧，协议违规
+                        LogNotice("ws protocol error: continue frame without fragment start");
                         delete frame;
                         buff.hasReadAll();
                         if (error_cb_) {
@@ -230,12 +436,65 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             --cb_level_;
                         }
                         return;
+                    }
+
+                    //! 将本片 payload 追加到缓存区
+                    fragment_buffer_.append(frame->payload);
+
+                    if (frame->fin) {
+                        //! 最后一帧（fin=true），消息完整
+                        //! 对完整数据统一解压，然后回调业务层
+                        if (fragment_need_decompress_) {
+                            std::string decompressed = compressor_.decompress(fragment_buffer_);
+                            if (!decompressed.empty()) {
+                                fragment_buffer_ = std::move(decompressed);
+                            } else {
+                                //! 解压失败
+                                LogNotice("ws decompress fail");
+                                delete frame;
+                                buff.hasReadAll();
+                                fragment_buffer_.clear();
+                                is_fragmenting_ = false;
+                                if (error_cb_) {
+                                    ++cb_level_;
+                                    error_cb_();
+                                    --cb_level_;
+                                }
+                                return;
+                            }
+                        }
+
+                        //! 交付完整消息给业务层
+                        deliverMessage(fragment_opcode_, fragment_buffer_);
+
+                        //! 重置分片状态
+                        fragment_buffer_.clear();
+                        is_fragmenting_ = false;
+                    }
+                    //! fin=false: 继续缓存，不回调
+
+                    delete frame;
+
+                } else {
+                    //! 未知数据帧 opcode
+                    LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
+                    delete frame;
+                    buff.hasReadAll();
+                    fragment_buffer_.clear();
+                    is_fragmenting_ = false;
+                    if (error_cb_) {
+                        ++cb_level_;
+                        error_cb_();
+                        --cb_level_;
+                    }
+                    return;
                 }
-                delete frame;
             }
         } else if (frame_parser_.state() == WsFrameParser::State::kError) {
             LogNotice("ws frame parse error");
             buff.hasReadAll();
+            fragment_buffer_.clear();
+            is_fragmenting_ = false;
             if (error_cb_) {
                 ++cb_level_;
                 error_cb_();
@@ -252,6 +511,17 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
 void WsConnection::onTcpDisconnected()
 {
     LogInfo("ws disconnected");
+
+    //! 清理分片缓存
+    fragment_buffer_.clear();
+    is_fragmenting_ = false;
+
+    //! 禁用心跳定时器
+    if (sp_ping_timer_ != nullptr)
+        sp_ping_timer_->disable();
+    if (sp_pong_timer_ != nullptr)
+        sp_pong_timer_->disable();
+    is_pong_pending_ = false;
 
     if (close_cb_) {
         ++cb_level_;
@@ -275,6 +545,81 @@ void WsConnection::onTcpSendCompleted()
         send_complete_cb_();
         --cb_level_;
     }
+}
+
+void WsConnection::setPingInterval(int seconds)
+{
+    ping_interval_ = seconds;
+
+    if (sp_ping_timer_ != nullptr) {
+        if (seconds > 0) {
+            sp_ping_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kPersist);
+            sp_ping_timer_->enable();
+        } else {
+            sp_ping_timer_->disable();
+            is_pong_pending_ = false;
+            if (sp_pong_timer_ != nullptr)
+                sp_pong_timer_->disable();
+        }
+    } else if (seconds > 0) {
+        //! 之前没有创建过定时器，现在需要创建
+        sp_ping_timer_ = wp_loop_->newTimerEvent();
+        sp_ping_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kPersist);
+        sp_ping_timer_->setCallback(std::bind(&WsConnection::onPingTimerFired, this));
+        sp_ping_timer_->enable();
+
+        if (ping_timeout_ > 0) {
+            sp_pong_timer_ = wp_loop_->newTimerEvent();
+            sp_pong_timer_->initialize(std::chrono::seconds(ping_timeout_), event::Event::Mode::kOneshot);
+            sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+        }
+    }
+}
+
+void WsConnection::setPingTimeout(int seconds)
+{
+    ping_timeout_ = seconds;
+
+    if (sp_pong_timer_ != nullptr) {
+        if (seconds > 0) {
+            sp_pong_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kOneshot);
+        } else {
+            sp_pong_timer_->disable();
+            CHECK_DELETE_RESET_OBJ(sp_pong_timer_);
+        }
+    } else if (seconds > 0 && sp_ping_timer_ != nullptr) {
+        //! ping 已启用但 pong_timer 未创建，现在创建
+        sp_pong_timer_ = wp_loop_->newTimerEvent();
+        sp_pong_timer_->initialize(std::chrono::seconds(seconds), event::Event::Mode::kOneshot);
+        sp_pong_timer_->setCallback(std::bind(&WsConnection::onPongTimeoutFired, this));
+    }
+}
+
+//! Ping 定时器触发：发送 Ping，启动 Pong 超时检测
+void WsConnection::onPingTimerFired()
+{
+    if (is_closing_ || sp_tcp_conn_ == nullptr)
+        return;
+
+    //! 发送 Ping 帧
+    ping();
+
+    //! 如果有超时检测，标记等待 Pong 并启动超时定时器
+    if (ping_timeout_ > 0 && sp_pong_timer_ != nullptr) {
+        is_pong_pending_ = true;
+        sp_pong_timer_->enable();
+    }
+}
+
+//! Pong 超时触发：未收到 Pong 回复，判定连接已断开
+void WsConnection::onPongTimeoutFired()
+{
+    if (is_closing_)
+        return;
+
+    LogNotice("ws pong timeout, closing connection");
+    is_pong_pending_ = false;
+    close();
 }
 
 }

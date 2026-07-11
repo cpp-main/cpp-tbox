@@ -33,6 +33,7 @@
 
 #include "ws_server.h"
 #include "ws_connection.h"
+#include "../ws_compressor.h"
 
 namespace tbox {
 namespace websocket {
@@ -55,16 +56,28 @@ class WsServer::Impl : public http::server::Middleware {
     WsServer::State state() const { return state_; }
 
   public:
-    void setConnectedCallback(const WsServer::ConnectedCallback &cb)    { connected_cb_ = cb; }
+    void setConnectedCallback(const WsServer::ConnectedCallback &cb)       { connected_cb_ = cb; }
     void setDisconnectedCallback(const WsServer::DisconnectedCallback &cb) { disconnected_cb_ = cb; }
-    void setMessageCallback(const WsServer::MessageCallback &cb)        { message_cb_ = cb; }
-    void setErrorCallback(const WsServer::ErrorCallback &cb)            { error_cb_ = cb; }
+    void setTextMessageCallback(const WsServer::TextMessageCallback &cb)   { text_message_cb_ = cb; }
+    void setBinaryMessageCallback(const WsServer::BinaryMessageCallback &cb) { binary_message_cb_ = cb; }
+    void setErrorCallback(const WsServer::ErrorCallback &cb)               { error_cb_ = cb; }
+
+    //! 压缩配置
+    void setCompressionEnable(bool enable);
+
+    //! 分片大小配置
+    void setFragmentSize(size_t size) { fragment_size_ = size; }
+
+    //! Ping/Pong 心跳配置
+    void setPingInterval(int seconds) { ping_interval_ = seconds; }
+    void setPingTimeout(int seconds) { ping_timeout_ = seconds; }
 
   public:
     //! 通过 ConnToken 操作连接（转发到 WsConnection）
     bool send(const ConnToken &client, const std::string &text);
+    bool send(const ConnToken &client, const char *str);
     bool send(const ConnToken &client, const void *data, size_t len);
-    bool sendBinary(const ConnToken &client, const std::vector<uint8_t> &data);
+    bool send(const ConnToken &client, const std::vector<uint8_t> &data);
     bool close(const ConnToken &client, uint16_t code, const std::string &reason);
     bool ping(const ConnToken &client, const std::string &data);
     bool pong(const ConnToken &client, const std::string &data);
@@ -87,13 +100,17 @@ class WsServer::Impl : public http::server::Middleware {
 
   private:
     //! 当 HTTP 服务器发送 101 响应后回调此函数
-    void onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path);
+    void onWsUpgrade(network::TcpConnection *tcp_conn, const std::string &url_path,
+                     const WsCompressionConfig &compress_config);
 
     //! 当 WsConnection 断开时回调（参数为 ConnToken）
     void onWsDisconnected(const ConnToken &client);
 
-    //! 当 WsConnection 收到消息时回调
-    void onWsMessage(const ConnToken &client, const WsFrame &frame);
+    //! 当 WsConnection 收到完整文本消息时回调
+    void onWsTextMessage(const ConnToken &client, std::string &&data);
+
+    //! 当 WsConnection 收到完整二进制消息时回调
+    void onWsBinaryMessage(const ConnToken &client, std::vector<uint8_t> &&data);
 
     //! 当 WsConnection 出错时回调
     void onWsError(const ConnToken &client);
@@ -112,6 +129,16 @@ class WsServer::Impl : public http::server::Middleware {
     //! 中间件 token（由 HTTP Server 的 use() 返回，用于 unuse() 反注册）
     http::server::MiddlewareToken mw_token_;
 
+    //! 压缩配置
+    WsCompressionConfig compression_config_;
+
+    //! 分片发送的最大帧 payload 大小（可配置，默认 kDefaultFragmentSize）
+    size_t fragment_size_ = WsServer::kDefaultFragmentSize;
+
+    //! Ping/Pong 心跳参数
+    int ping_interval_ = 0;
+    int ping_timeout_ = 0;
+
     //! WsConnection 容器（生命期管理）
     cabinet::Cabinet<WsConnection> ws_conns_;
 
@@ -119,7 +146,8 @@ class WsServer::Impl : public http::server::Middleware {
 
     WsServer::ConnectedCallback    connected_cb_;
     WsServer::DisconnectedCallback disconnected_cb_;
-    WsServer::MessageCallback      message_cb_;
+    WsServer::TextMessageCallback  text_message_cb_;
+    WsServer::BinaryMessageCallback binary_message_cb_;
     WsServer::ErrorCallback        error_cb_;
 
     int cb_level_ = 0;

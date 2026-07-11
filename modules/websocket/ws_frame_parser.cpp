@@ -46,13 +46,15 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
             case State::kInit: {
                 //! 第1字节：FIN + RSV1-3 + Opcode
                 fin_ = (p[0] >> 7) & 1;
-                opcode_ = p[0] & 0x0F;
+                rsv1_ = (p[0] >> 6) & 1;
 
-                //! 检查：RSV1-3 必须为0（除非扩展协商）
-                if ((p[0] & 0x70) != 0) {
+                //! 检查：RSV2/RSV3 必须为0（目前仅支持 RSV1 用于 permessage-deflate）
+                if ((p[0] & 0x30) != 0) {
                     state_ = State::kError;
                     return consumed;
                 }
+
+                opcode_ = p[0] & 0x0F;
 
                 ++p; --remaining; ++consumed;
                 state_ = State::kHeader2Bytes;
@@ -61,15 +63,27 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
 
             case State::kHeader2Bytes: {
                 //! 第2字节：MASK + Payload length (7 bits)
+                //! RFC 6455 Section 5.2：len7 0~125 为 7-bit 长度，126 为 16-bit，127 为 64-bit
                 masked_ = (p[0] >> 7) & 1;
                 uint8_t len7 = p[0] & 0x7F;
 
-                if (len7 < 125) {
+                if (len7 <= 125) {
                     payload_len_ = len7;
                     ++p; --remaining; ++consumed;
-                    state_ = masked_ ? State::kMaskKey : State::kPayload;
                     payload_.clear();
                     payload_received_ = 0;
+
+                    if (payload_len_ == 0 && !masked_) {
+                        //! 无负载，也无mask，创建 WsFrame
+                        sp_frame_ = new WsFrame;
+                        sp_frame_->fin = fin_;
+                        sp_frame_->rsv1 = rsv1_;
+                        sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
+                        sp_frame_->payload = std::move(payload_);
+                        state_ = State::kFinished;
+                        return consumed;
+                    }
+                    state_ = masked_ ? State::kMaskKey : State::kPayload;
                 } else if (len7 == 126) {
                     payload_len_ = 0;  //! 待读取16位长度
                     ++p; --remaining; ++consumed;
@@ -91,8 +105,8 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
                               | static_cast<uint64_t>(p[1]);
                 p += 2; remaining -= 2; consumed += 2;
 
-                //! 16位长度必须 >= 125
-                if (payload_len_ < 125) {
+                //! RFC 6455 Section 5.2：16位扩展长度必须 >= 126
+                if (payload_len_ <= 125) {
                     state_ = State::kError;
                     return consumed;
                 }
@@ -141,6 +155,18 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
 
                 memcpy(mask_key_, p, 4);
                 p += 4; remaining -= 4; consumed += 4;
+
+                if (payload_len_ == 0) {
+                    //! 无负载，创建 WsFrame
+                    sp_frame_ = new WsFrame;
+                    sp_frame_->fin = fin_;
+                    sp_frame_->rsv1 = rsv1_;
+                    sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
+                    sp_frame_->payload = std::move(payload_);
+                    state_ = State::kFinished;
+                    return consumed;
+                }
+
                 state_ = State::kPayload;
                 break;
             }
@@ -167,6 +193,7 @@ size_t WsFrameParser::parse(const void *data_ptr, size_t data_size)
                     //! 帧完整，创建 WsFrame
                     sp_frame_ = new WsFrame;
                     sp_frame_->fin = fin_;
+                    sp_frame_->rsv1 = rsv1_;
                     sp_frame_->opcode = static_cast<WsFrame::OpCode>(opcode_);
                     sp_frame_->payload = std::move(payload_);
                     state_ = State::kFinished;

@@ -20,12 +20,13 @@
 #ifndef TBOX_WS_CLIENT_H_20260615
 #define TBOX_WS_CLIENT_H_20260615
 
+#include <vector>
+#include <functional>
+
 #include <tbox/event/loop.h>
 #include <tbox/network/sockaddr.h>
 #include <tbox/network/tls_config.h>
 #include <tbox/base/defines.h>
-
-#include "../ws_frame.h"
 
 namespace tbox {
 namespace websocket {
@@ -35,8 +36,12 @@ namespace client {
 //! 通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手
 //! 握手成功后进入 WebSocket 帧通信模式（客户端帧必须掩码）
 //! 断连后支持自动重连（默认开启），重连延迟策略委托给 TcpConnector
+//! 分片消息接收完整后统一解压再回调，使用右值引用提升效率
 class WsClient {
   public:
+    //! 默认分片发送的最大帧 payload 大小
+    static constexpr size_t kDefaultFragmentSize = 65535;
+
     explicit WsClient(event::Loop *wp_loop);
     ~WsClient();
 
@@ -57,24 +62,43 @@ class WsClient {
     State state() const;
 
   public:
-    //! 设置回调
-    using ConnectedCallback    = std::function<void()>;
-    using DisconnectedCallback = std::function<void()>;
-    using MessageCallback      = std::function<void(const WsFrame&)>;
-    using ErrorCallback        = std::function<void()>;
+    //! 设置回调（分片消息接收完整后统一解压再回调，使用右值引用提升效率）
+    using ConnectedCallback     = std::function<void()>;
+    using DisconnectedCallback  = std::function<void()>;
+    using TextMessageCallback   = std::function<void(std::string &&)>;
+    using BinaryMessageCallback = std::function<void(std::vector<uint8_t> &&)>;
+    using ErrorCallback         = std::function<void()>;
 
     //! 重连延迟策略（与 TcpClient 一致，委托给 TcpConnector）
     using ReconnectDelayCalc   = std::function<int(int)>;
 
     void setConnectedCallback(const ConnectedCallback &cb);
     void setDisconnectedCallback(const DisconnectedCallback &cb);
-    void setMessageCallback(const MessageCallback &cb);
+    void setTextMessageCallback(const TextMessageCallback &cb);
+    void setBinaryMessageCallback(const BinaryMessageCallback &cb);
     void setErrorCallback(const ErrorCallback &cb);
 
     //! 是否启用自动重连（默认开启）
     void setAutoReconnect(bool enable);
     //! 设置自定义重连延迟策略（委托给底层 TcpConnector）
     void setReconnectDelayCalcFunc(const ReconnectDelayCalc &func);
+
+    //! 设置是否尽可能使用压缩（必须在 initialize 之前调用）
+    //! 启用后，将在握手请求中请求 permessage-deflate 扩展
+    void setCompressionPrefer(bool enable);
+
+    //! 设置分片大小（仅影响发送，接收时自动组装；必须在 initialize 之前调用）
+    //! 默认为 kDefaultFragmentSize (65535)
+    //! 值为 0 表示不分片（所有数据单帧发送）
+    void setFragmentSize(size_t size);
+
+    //! 设置 Ping 发送间隔（秒），0=不自动 Ping（默认；必须在 initialize 之前调用）
+    //! 启用后，每隔指定秒数向服务器发送 Ping 帧
+    void setPingInterval(int seconds);
+
+    //! 设置 Pong 超时时间（秒），0=不检测超时（默认；必须在 initialize 之前调用）
+    //! 发送 Ping 后若在此时间内未收到 Pong，则判定连接断开并关闭
+    void setPingTimeout(int seconds);
 
     //! 设置 TLS 配置（必须在 initialize() 之前调用）
     //! 需要 network_tls 模块支持，未链接时调用无效
@@ -83,9 +107,12 @@ class WsClient {
   public:
     //! 发送文本帧
     bool send(const std::string &text);
+    //! 发送文本帧（const char* 版本，方便直接传字符串字面量）
+    bool send(const char *str);
     //! 发送二进制帧
     bool send(const void *data, size_t len);
-    bool sendBinary(const std::vector<uint8_t> &data);
+    //! 发送二进制帧（vector 版本）
+    bool send(const std::vector<uint8_t> &data);
 
     //! 发送关闭帧并关闭连接
     bool close(uint16_t code = 1000, const std::string &reason = "");

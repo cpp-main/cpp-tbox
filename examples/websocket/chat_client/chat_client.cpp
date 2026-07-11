@@ -84,6 +84,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    //! 启用压缩（RFC 7692 permessage-deflate）
+    ws_client.setCompressionPrefer(true);
+    ws_client.setFragmentSize(65535);
+    ws_client.setPingInterval(10);
+    ws_client.setPingTimeout(2);
+
     //! 设置回调
     ws_client.setConnectedCallback([&] {
         LogInfo("connected to %s%s", server_addr.c_str(), url_path.c_str());
@@ -112,10 +118,12 @@ int main(int argc, char **argv)
         std::cout << "== 已断开连接 ==" << std::endl;
     });
 
-    ws_client.setMessageCallback([&](const WsFrame &frame) {
-        if (frame.opcode == WsFrame::OpCode::kText) {
-            std::cout << frame.payload << std::endl;
-        }
+    ws_client.setTextMessageCallback([&](std::string &&text) {
+        std::cout << text << std::endl;
+    });
+
+    ws_client.setBinaryMessageCallback([&](std::vector<uint8_t> &&data) {
+        //! 此示例不处理二进制帧
     });
 
     ws_client.setErrorCallback([&] {

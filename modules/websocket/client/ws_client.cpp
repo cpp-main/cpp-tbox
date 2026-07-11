@@ -71,9 +71,14 @@ void WsClient::setDisconnectedCallback(const DisconnectedCallback &cb)
     impl_->setDisconnectedCallback(cb);
 }
 
-void WsClient::setMessageCallback(const MessageCallback &cb)
+void WsClient::setTextMessageCallback(const TextMessageCallback &cb)
 {
-    impl_->setMessageCallback(cb);
+    impl_->setTextMessageCallback(cb);
+}
+
+void WsClient::setBinaryMessageCallback(const BinaryMessageCallback &cb)
+{
+    impl_->setBinaryMessageCallback(cb);
 }
 
 void WsClient::setErrorCallback(const ErrorCallback &cb)
@@ -91,6 +96,26 @@ void WsClient::setReconnectDelayCalcFunc(const ReconnectDelayCalc &func)
     impl_->setReconnectDelayCalcFunc(func);
 }
 
+void WsClient::setCompressionPrefer(bool enable)
+{
+    impl_->setCompressionPrefer(enable);
+}
+
+void WsClient::setFragmentSize(size_t size)
+{
+    impl_->setFragmentSize(size);
+}
+
+void WsClient::setPingInterval(int seconds)
+{
+    impl_->setPingInterval(seconds);
+}
+
+void WsClient::setPingTimeout(int seconds)
+{
+    impl_->setPingTimeout(seconds);
+}
+
 void WsClient::setTlsConfig(const network::TlsConfig &config)
 {
     impl_->setTlsConfig(config);
@@ -101,14 +126,19 @@ bool WsClient::send(const std::string &text)
     return impl_->send(text);
 }
 
+bool WsClient::send(const char *str)
+{
+    return impl_->send(str);
+}
+
 bool WsClient::send(const void *data, size_t len)
 {
     return impl_->send(data, len);
 }
 
-bool WsClient::sendBinary(const std::vector<uint8_t> &data)
+bool WsClient::send(const std::vector<uint8_t> &data)
 {
-    return impl_->sendBinary(data);
+    return impl_->send(data);
 }
 
 bool WsClient::close(uint16_t code, const std::string &reason)

@@ -18,9 +18,10 @@ websocket 模块提供了 WebSocket 服务器与客户端实现，遵循 RFC 645
 #include <tbox/websocket/ws_frame.h>               //! WebSocket 帧定义
 #include <tbox/websocket/ws_frame_parser.h>        //! 帧解析器（增量式）
 #include <tbox/websocket/ws_frame_builder.h>       //! 帧构建器（服务端/掩码）
+#include <tbox/websocket/ws_compressor.h>          //! 压缩（RFC 7692）
 #include <tbox/websocket/server/ws_server.h>        //! WebSocket 服务端
 #include <tbox/websocket/server/ws_connection.h>    //! WebSocket 连接（内部类）
-#include <tbox/websocket/client/client.h>           //! WebSocket 客户端
+#include <tbox/websocket/client/ws_client.h>         //! WebSocket 客户端
 ```
 
 ## 核心类与接口
@@ -38,8 +39,9 @@ WsServer 运行在 HTTP 服务器之上，作为中间件存在。它检测 WebS
 | `cleanup()` | 清理（与 initialize 逆操作） |
 | `state()` | 获取当前状态 (None/Inited/Running) |
 | `send(client, text)` | 向指定客户端发送文本帧 |
+| `send(client, str)` | 向指定客户端发送文本帧（const char* 版本，不构造 std::string） |
 | `send(client, data, len)` | 向指定客户端发送二进制帧（原始指针版本） |
-| `sendBinary(client, data)` | 向指定客户端发送二进制帧（vector 版本） |
+| `send(client, data)` | 向指定客户端发送二进制帧（vector 版本） |
 | `close(client, code, reason)` | 关闭指定客户端连接（发送 Close 帧） |
 | `ping(client, data)` | 向指定客户端发送 Ping 帧 |
 | `pong(client, data)` | 向指定客户端发送 Pong 帧 |
@@ -50,8 +52,11 @@ WsServer 运行在 HTTP 服务器之上，作为中间件存在。它检测 WebS
 | `getContext(client)` | 获取客户端连接的上下文数据 |
 | `setConnectedCallback(cb)` | 设置回调：新客户端连接 |
 | `setDisconnectedCallback(cb)` | 设置回调：客户端断开 |
-| `setMessageCallback(cb)` | 设置回调：客户端发送消息 |
+| `setTextMessageCallback(cb)` | 设置回调：收到完整文本消息（右值引用，分片数据缓存后统一解压再回调） |
+| `setBinaryMessageCallback(cb)` | 设置回调：收到完整二进制消息（右值引用，分片数据缓存后统一解压再回调） |
 | `setErrorCallback(cb)` | 设置回调：客户端连接出错 |
+| `setCompressionEnable(enable)` | 启用/禁用压缩支持（必须在 initialize 之前调用） |
+| `setFragmentSize(size)` | 设置发送分片大小（默认65535，0=不分片；必须在 initialize 之前调用） |
 | `IsWsUpgradeRequest(req)` | 静态方法：检查 HTTP 请求是否为有效的 WebSocket 升级请求 |
 | `ComputeWsAcceptKey(key)` | 静态方法：计算 Sec-WebSocket-Accept 响应值 |
 
@@ -76,27 +81,31 @@ WsServer 运行在 HTTP 服务器之上，作为中间件存在。它检测 WebS
 ```cpp
 using ConnToken = cabinet::Token;
 
-ConnectedCallback    = std::function<void(const ConnToken&)>;
-DisconnectedCallback = std::function<void(const ConnToken&)>;
-MessageCallback      = std::function<void(const ConnToken&, const WsFrame&)>;
-ErrorCallback        = std::function<void(const ConnToken&)>;
+ConnectedCallback     = std::function<void(const ConnToken&)>;
+DisconnectedCallback  = std::function<void(const ConnToken&)>;
+TextMessageCallback   = std::function<void(const ConnToken&, std::string &&)>;
+BinaryMessageCallback = std::function<void(const ConnToken&, std::vector<uint8_t> &&)>;
+ErrorCallback         = std::function<void(const ConnToken&)>;
 ```
 
-### Client — WebSocket 客户端
+> **注意：** `TextMessageCallback` 和 `BinaryMessageCallback` 使用右值引用提升效率。分片消息在内部缓存，只有接收完整（fin=true）并解压后才回调业务层，回调中永远不会收到部分分片数据。
 
-Client 类通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手请求，验证 101 响应后进入 WebSocket 帧通信模式。所有客户端帧必须掩码（RFC 6455）。支持自动重连与可配置的重连延迟策略。
+### WsClient — WebSocket 客户端
+
+WsClient 类通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手请求，验证 101 响应后进入 WebSocket 帧通信模式。所有客户端帧必须掩码（RFC 6455）。支持自动重连与可配置的重连延迟策略。分片消息在内部缓存，接收完整后再解压回调。
 
 | 方法 | 说明 |
 |------|------|
-| `Client(loop)` | 构造 |
+| `WsClient(loop)` | 构造 |
 | `initialize(server_addr, url_path)` | 初始化：设置目标服务器地址与 URL 路径 |
 | `start()` | 开始连接服务器 |
 | `stop()` | 停止/断开连接 |
 | `cleanup()` | 清理（与 initialize 逆操作） |
 | `state()` | 获取当前状态 |
 | `send(text)` | 发送文本帧 |
+| `send(str)` | 发送文本帧（const char* 版本，不构造 std::string） |
 | `send(data, len)` | 发送二进制帧（原始指针版本） |
-| `sendBinary(data)` | 发送二进制帧（vector 版本） |
+| `send(data)` | 发送二进制帧（vector 版本） |
 | `close(code, reason)` | 发送 Close 帧并断开连接 |
 | `ping(data)` | 发送 Ping 帧 |
 | `pong(data)` | 发送 Pong 帧 |
@@ -106,10 +115,13 @@ Client 类通过 TcpConnector 建立 TCP 连接，发送 HTTP Upgrade 握手请�
 | `getContext()` | 获取上下文数据 |
 | `setConnectedCallback(cb)` | 设置回调：连接成功 |
 | `setDisconnectedCallback(cb)` | 设置回调：连接断开 |
-| `setMessageCallback(cb)` | 设置回调：收到消息 |
+| `setTextMessageCallback(cb)` | 设置回调：收到完整文本消息（右值引用） |
+| `setBinaryMessageCallback(cb)` | 设置回调：收到完整二进制消息（右值引用） |
 | `setErrorCallback(cb)` | 设置回调：连接出错 |
 | `setAutoReconnect(enable)` | 启用/禁用自动重连（默认启用） |
 | `setReconnectDelayCalcFunc(func)` | 设置自定义重连延迟计算函数 |
+| `setCompressionPrefer(enable)` | 启用/禁用压缩偏好（必须在 initialize 之前调用） |
+| `setFragmentSize(size)` | 设置发送分片大小（默认65535，0=不分片；必须在 initialize 之前调用） |
 
 **State 状态枚举：**
 
@@ -136,6 +148,7 @@ struct WsFrame {
 
     OpCode  opcode;         //! 帧操作码
     bool    fin = true;     //! 是否为最后一帧
+    bool    rsv1 = false;   //! RSV1 位（压缩帧首帧为 true，RFC 7692）
     std::string payload;    //! 负载数据
 
     bool isControlFrame() const;   //! Close/Ping/Pong 为控制帧
@@ -205,8 +218,8 @@ class ChatRoom {
         ws_srv_.setDisconnectedCallback([this](const WsServer::ConnToken &token) {
             onDisconnected(token);
         });
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
+        ws_srv_.setTextMessageCallback([this](const WsServer::ConnToken &token, std::string &&text) {
+            onTextMessage(token, std::move(text));
         });
 
         return true;
@@ -217,18 +230,15 @@ class ChatRoom {
     void cleanup() { ws_srv_.cleanup(); }
 
   private:
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onTextMessage(const WsServer::ConnToken &token, std::string &&text)
     {
-        if (frame.opcode != WsFrame::OpCode::kText)
-            return;
-
         //! 第一条消息作为用户名
         auto it = conn_to_name_.find(token);
         if (it == conn_to_name_.end()) {
-            conn_to_name_[token] = frame.payload;
-            broadcast(frame.payload + " 上线");
+            conn_to_name_[token] = text;
+            broadcast(text + " 上线");
         } else {
-            broadcast(it->second + ": " + frame.payload);
+            broadcast(it->second + ": " + text);
         }
     }
 
@@ -280,7 +290,7 @@ int main()
 
 > 完整示例见 `examples/websocket/echo_bin/`
 
-演示二进制 WebSocket 帧的处理。服务器将收到的二进制数据原样回传（echo），并每 5 秒通过 `sendBinary()` 的 `vector<uint8_t>` 版本向所有客户端推送统计帧（4字节头"STAT" + JSON字符串）。
+演示二进制 WebSocket 帧的处理。服务器将收到的二进制数据原样回传（echo），并每 5 秒通过 `send()` 的 `vector<uint8_t>` 版本向所有客户端推送统计帧（4字节头"STAT" + JSON字符串）。
 
 ```cpp
 class EchoService {
@@ -295,8 +305,12 @@ class EchoService {
         if (!ws_srv_.initialize(http_srv, url_path))
             return false;
 
-        ws_srv_.setMessageCallback([this](const WsServer::ConnToken &token, const WsFrame &frame) {
-            onMessage(token, frame);
+        ws_srv_.setBinaryMessageCallback([this](const WsServer::ConnToken &token, std::vector<uint8_t> &&data) {
+            onBinaryMessage(token, std::move(data));
+        });
+        ws_srv_.setTextMessageCallback([this](const WsServer::ConnToken &token, std::string &&text) {
+            //! 此服务仅接收二进制帧
+            ws_srv_.send(token, "此服务仅接收二进制帧");
         });
 
         //! 定时器：每 5 秒推送统计帧
@@ -307,14 +321,10 @@ class EchoService {
     }
 
   private:
-    void onMessage(const WsServer::ConnToken &token, const WsFrame &frame)
+    void onBinaryMessage(const WsServer::ConnToken &token, std::vector<uint8_t> &&data)
     {
-        if (frame.opcode == WsFrame::OpCode::kBinary) {
-            //! 二进制帧：原样回传
-            ws_srv_.send(token, frame.payload.data(), frame.payload.size());
-        } else if (frame.opcode == WsFrame::OpCode::kText) {
-            ws_srv_.send(token, "此服务仅接收二进制帧");
-        }
+        //! 二进制帧：原样回传
+        ws_srv_.send(token, data);
     }
 
     void onStatTimer()
@@ -325,7 +335,7 @@ class EchoService {
         stat_data.insert(stat_data.end(), json.begin(), json.end());
 
         for (const auto &token : conns_)
-            ws_srv_.sendBinary(token, stat_data);
+            ws_srv_.send(token, stat_data);
     }
 };
 ```
@@ -337,13 +347,13 @@ class EchoService {
 演示 WebSocket 客户端连接到聊天服务器，从标准输入读取文本发送，并接收服务器推送的消息。
 
 ```cpp
-#include <tbox/websocket/client/client.h>
+#include <tbox/websocket/client/ws_client.h>
 
 int main()
 {
     auto sp_loop = Loop::New();
 
-    Client ws_client(sp_loop);
+    WsClient ws_client(sp_loop);
     ws_client.initialize(SockAddr::FromString("127.0.0.1:8080"), "/ws/chat-1");
 
     ws_client.setConnectedCallback([&] {
@@ -352,10 +362,8 @@ int main()
         sp_stdin_event->enable();
     });
 
-    ws_client.setMessageCallback([&](const WsFrame &frame) {
-        if (frame.opcode == WsFrame::OpCode::kText) {
-            std::cout << frame.payload << std::endl;
-        }
+    ws_client.setTextMessageCallback([&](std::string &&text) {
+        std::cout << text << std::endl;
     });
 
     //! 设置二次退避重连策略
@@ -393,7 +401,7 @@ ws_srv.setConnectedCallback([](const WsServer::ConnToken &token) {
     ws_srv.setContext(token, session, [](void *p) { delete static_cast<UserSession*>(p); });
 });
 
-ws_srv.setMessageCallback([](const WsServer::ConnToken &token, const WsFrame &frame) {
+ws_srv.setTextMessageCallback([](const WsServer::ConnToken &token, std::string &&text) {
     //! 获取会话数据
     auto session = static_cast<UserSession*>(ws_srv.getContext(token));
     if (session != nullptr) {
@@ -414,6 +422,68 @@ ws_client.setReconnectDelayCalcFunc([](int fail_count) {
 ws_client.setAutoReconnect(false);
 ```
 
+## 压缩（RFC 7692 permessage-deflate）
+
+websocket 模块支持 RFC 7692 定义的 `permessage-deflate` 压缩扩展。启用后，WebSocket 文本帧和二进制帧使用 DEFLATE (zlib) 压缩，显著减少带宽占用，尤其适用于重复性或大数据量的消息。
+
+### 工作原理
+
+1. **服务端**：在 `initialize()` 之前调用 `setCompressionEnable(true)`。若客户端在握手中请求了 `permessage-deflate`（通过 `Sec-WebSocket-Extensions: permessage-deflate` 头部），服务端在 101 响应中同意压缩。否则不使用压缩。
+
+2. **客户端**：在 `initialize()` 之前调用 `setCompressionPrefer(true)`。客户端在握手中请求压缩扩展。若服务端同意，帧将压缩/解压；若服务端拒绝，通信继续不压缩。
+
+3. **帧格式**：压缩数据帧的首帧设置 RSV1 位。控制帧（Close/Ping/Pong）永远不压缩。
+
+4. **实现方式**：使用 raw DEFLATE，按 RFC 7692 Section 7.2.2 规则去除 4 字节尾部。每条消息独立压缩（no_context_takeover 模式），简化实现并确保兼容性。
+
+### WsCompressionConfig — 压缩配置
+
+```cpp
+#include <tbox/websocket/ws_compressor.h>
+
+struct WsCompressionConfig {
+    bool enabled = false;                  //!< 是否启用压缩
+    bool no_context_takeover = true;       //!< 不跨消息保留 zlib 上下文
+    int  max_window_bits = 15;             //!< 最大窗口位数 (8~15)
+};
+```
+
+### 服务端：启用压缩
+
+```cpp
+WsServer ws_srv(sp_loop);
+ws_srv.setCompressionEnable(true);  //! 允许压缩（在 initialize 之前调用）
+ws_srv.initialize(&http_srv, "/ws/chat");
+```
+
+### 客户端：偏好压缩
+
+```cpp
+WsClient ws_client(sp_loop);
+ws_client.setCompressionPrefer(true);  //! 请求压缩（在 initialize 之前调用）
+ws_client.initialize(SockAddr::FromString("127.0.0.1:8080"), "/ws/chat");
+```
+
+### 混合服务（部分路由压缩，部分不压缩）
+
+```cpp
+//! 聊天室启用压缩
+WsServer ws_srv_compressed(sp_loop);
+ws_srv_compressed.setCompressionEnable(true);
+ws_srv_compressed.initialize(&http_srv, "/ws/chat");
+
+//! Echo 服务不压缩
+WsServer ws_srv_plain(sp_loop);
+ws_srv_plain.initialize(&http_srv, "/ws/echo");
+```
+
+### 重要：压缩协商
+
+- 压缩是**可选的**，在 HTTP Upgrade 握手阶段按连接协商。
+- 若任一方不支持或拒绝压缩，帧将不压缩发送——对功能无任何影响。
+- `WsFrame` 的 `rsv1` 字段标识接收到的帧是否被压缩。解压后 `rsv1` 被清除，用户回调中收到的 payload 是原始数据，透明无感。
+- 压缩失败时优雅回退：若压缩或解压失败，系统回退到不压缩模式或报告错误。
+
 ## 常见场景
 
 1. **实时推送**：将 WsServer 挂载到 HTTP 服务器上，向浏览器客户端推送实时数据
@@ -423,6 +493,7 @@ ws_client.setAutoReconnect(false);
 5. **服务端心跳**：服务端发送 Ping 帧，客户端自动回复 Pong
 6. **客户端自动重连**：断线后按指数退避策略自动重连
 7. **HTTP + WebSocket 混合**：HTTP 提供 REST API 和静态页面；WebSocket 处理实时通信
+8. **压缩通信**：启用 permessage-deflate 减少文本/二进制数据的带宽占用
 
 ## 注意事项
 
@@ -437,6 +508,11 @@ ws_client.setAutoReconnect(false);
 9. **生命周期顺序**：WsServer 和 Client 均须遵循 initialize → start → stop → cleanup 顺序。
 10. **线程安全**：所有回调在 Loop 线程中执行，跨线程操作须通过 `runInLoop()` 回到主线程。
 11. **上下文数据**：WsServer 的 `setContext()/getContext()` 委托给底层 TcpConnection。在回调中可访问上下文数据，但连接断开后 `getContext()` 返回 `nullptr`。
+12. **压缩**：在 WsServer 上调用 `setCompressionEnable(true)` 或在 WsClient 上调用 `setCompressionPrefer(true)` **必须在 `initialize()` 之前**。压缩按连接协商；若对方不支持，帧将不压缩发送，不影响功能。
+13. **压缩回退**：若压缩/解压失败，系统打印警告并回退到不压缩发送。解压失败会触发错误回调。
+14. **分片接收**：WsServer 和 WsClient 在内部缓存分片数据。只有接收完整消息（所有分片、fin=true）并解压后才回调业务层，回调中永远不会收到部分分片数据。
+15. **分片发送**：当发送数据大于 `fragment_size` 时，自动分片发送。首帧携带原始 opcode 与 rsv1（如压缩），后续帧为 kContinue。调用 `setFragmentSize(size)` 配置分片大小（默认65535，设为0禁用分片），必须在 `initialize()` 之前。
+16. **send(const char\*)**：WsServer 和 WsClient 都提供 `send(const char *str)` 重载，发送文本帧时不构造 std::string 中间对象，正确使用 kText opcode。
 
 ## 相关模块
 
