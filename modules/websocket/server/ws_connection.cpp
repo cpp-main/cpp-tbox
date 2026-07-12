@@ -21,6 +21,7 @@
 
 #include <tbox/base/log.h>
 #include <tbox/base/assert.h>
+#include <tbox/base/scope_exit.hpp>
 #include <tbox/util/string.h>
 
 #include "../ws_frame_parser.h"
@@ -302,6 +303,8 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
         if (frame_parser_.state() == WsFrameParser::State::kFinished) {
             WsFrame *frame = frame_parser_.getFrame();
             if (frame != nullptr) {
+                SetScopeExitAction([&]{ delete frame; });
+
                 //! ===== 控制帧处理（Close/Ping/Pong 不受分片状态影响） =====
                 if (frame->isControlFrame()) {
                     switch (frame->opcode) {
@@ -317,7 +320,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             //! 清理分片缓存
                             fragment_buffer_.clear();
                             is_fragmenting_ = false;
-                            delete frame;
                             if (close_cb_) {
                                 ++cb_level_;
                                 close_cb_();
@@ -351,7 +353,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
 
                         default:
                             LogNotice("unknown ws control opcode: 0x%02x", static_cast<int>(frame->opcode));
-                            delete frame;
                             buff.hasReadAll();
                             fragment_buffer_.clear();
                             is_fragmenting_ = false;
@@ -362,7 +363,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             }
                             return;
                     }
-                    delete frame;
                     continue;   //! 控制帧处理完毕，继续解析下一个帧
                 }
 
@@ -376,7 +376,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                     if (is_fragmenting_) {
                         //! 正在接收分片消息时又收到新消息首帧，协议违规
                         LogNotice("ws protocol error: new data frame while fragmenting");
-                        delete frame;
                         buff.hasReadAll();
                         fragment_buffer_.clear();
                         is_fragmenting_ = false;
@@ -398,7 +397,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             } else {
                                 //! 解压失败
                                 LogNotice("ws decompress fail");
-                                delete frame;
                                 buff.hasReadAll();
                                 if (error_cb_) {
                                     ++cb_level_;
@@ -411,7 +409,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
 
                         //! 交付完整消息给业务层
                         deliverMessage(frame->opcode, frame->payload);
-                        delete frame;
 
                     } else {
                         //! 分片消息的首帧（fin=false）
@@ -420,7 +417,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                         fragment_opcode_ = frame->opcode;
                         fragment_need_decompress_ = frame->rsv1 && compression_config_.enabled;
                         fragment_buffer_ = std::move(frame->payload);
-                        delete frame;
                     }
 
                 } else if (frame->opcode == WsFrame::OpCode::kContinue) {
@@ -428,7 +424,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                     if (!is_fragmenting_) {
                         //! 没有首帧却收到续帧，协议违规
                         LogNotice("ws protocol error: continue frame without fragment start");
-                        delete frame;
                         buff.hasReadAll();
                         if (error_cb_) {
                             ++cb_level_;
@@ -451,7 +446,6 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                             } else {
                                 //! 解压失败
                                 LogNotice("ws decompress fail");
-                                delete frame;
                                 buff.hasReadAll();
                                 fragment_buffer_.clear();
                                 is_fragmenting_ = false;
@@ -473,12 +467,9 @@ void WsConnection::onTcpReceived(network::Buffer &buff)
                     }
                     //! fin=false: 继续缓存，不回调
 
-                    delete frame;
-
                 } else {
                     //! 未知数据帧 opcode
                     LogNotice("unknown ws opcode: 0x%02x", static_cast<int>(frame->opcode));
-                    delete frame;
                     buff.hasReadAll();
                     fragment_buffer_.clear();
                     is_fragmenting_ = false;
