@@ -51,6 +51,109 @@ TEST(common, StateCodeToStream)
     EXPECT_EQ(StatusCodeToString(StatusCode::k505_HTTPVersionNotSupported), "505 HTTP Version Not Supported");
 }
 
+//! FindHeader: 大小写不敏感查找 header，返回迭代器
+TEST(common, FindHeader_ExactCase)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+    headers["Content-Length"] = "100";
+
+    auto it = FindHeader(headers, "Content-Type");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "text/plain");
+
+    it = FindHeader(headers, "Content-Length");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "100");
+}
+
+TEST(common, FindHeader_LowerCase)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+    headers["Content-Length"] = "100";
+
+    auto it = FindHeader(headers, "content-type");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "text/plain");
+
+    it = FindHeader(headers, "content-length");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "100");
+}
+
+TEST(common, FindHeader_UpperCase)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+
+    auto it = FindHeader(headers, "CONTENT-TYPE");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "text/plain");
+}
+
+TEST(common, FindHeader_MixedCase)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+
+    auto it = FindHeader(headers, "cOnTeNt-TyPe");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "text/plain");
+}
+
+TEST(common, FindHeader_NotFound)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+
+    auto it = FindHeader(headers, "Authorization");
+    EXPECT_EQ(it, headers.end());
+}
+
+TEST(common, FindHeader_EmptyHeaders)
+{
+    Headers headers;
+    auto it = FindHeader(headers, "Content-Type");
+    EXPECT_EQ(it, headers.end());
+}
+
+TEST(common, FindHeader_KeyStoredAsLowerCase)
+{
+    //! headers 中存储的 key 是小写，用标准大小写查找
+    Headers headers;
+    headers["content-type"] = "text/plain";
+
+    auto it = FindHeader(headers, "Content-Type");
+    ASSERT_NE(it, headers.end());
+    EXPECT_EQ(it->second, "text/plain");
+}
+
+//! GetHeader: 大小写不敏感查找 header，返回值
+TEST(common, GetHeader_Found)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+
+    EXPECT_EQ(GetHeader(headers, "Content-Type"), "text/plain");
+    EXPECT_EQ(GetHeader(headers, "content-type"), "text/plain");
+    EXPECT_EQ(GetHeader(headers, "CONTENT-TYPE"), "text/plain");
+}
+
+TEST(common, GetHeader_NotFound)
+{
+    Headers headers;
+    headers["Content-Type"] = "text/plain";
+
+    EXPECT_EQ(GetHeader(headers, "Authorization"), "");
+}
+
+TEST(common, GetHeader_EmptyHeaders)
+{
+    Headers headers;
+    EXPECT_EQ(GetHeader(headers, "Content-Type"), "");
+}
+
 }
 }
 }

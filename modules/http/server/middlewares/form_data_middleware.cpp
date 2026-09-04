@@ -317,7 +317,8 @@ void FormDataMiddleware::handle(ContextSptr sp_ctx, const NextFunc& next) {
     bool parsed = false;
 
     //! 获取Content-Type
-    auto content_type_it = req.headers.find("Content-Type");
+    //! 获取Content-Type（大小写不敏感）
+    auto content_type_it = http::FindHeader(req.headers, "content-type");
     if (content_type_it != req.headers.end()) {
         const std::string& content_type = content_type_it->second;
         //! 处理multipart/form-data

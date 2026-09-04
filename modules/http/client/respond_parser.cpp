@@ -133,7 +133,7 @@ size_t RespondParser::parse(const void *data_ptr, size_t data_size)
                 auto head_value = util::string::Strip(str.substr(head_value_start_pos, end_pos - head_value_start_pos));
                 sp_respond_->headers[head_key] = head_value;
 
-                if (head_key == "Content-Length") {
+                if (util::string::ToLower(head_key) == "content-length") {
                     if (!util::StringTo(head_value, content_length_)) {
                         LogNotice("Content-Length should be number");
                         state_ = State::kFail;

@@ -85,6 +85,36 @@ TEST(SseServerImpl, DetectNonSsePutRequest)
     EXPECT_FALSE(SseServer::Impl::IsSseRequest(req));
 }
 
+//! 测试小写 accept 头仍能被识别为 SSE 请求
+TEST(SseServerImpl, DetectSseRequest_LowerCaseAccept)
+{
+    http::Request req;
+    req.method = http::Method::kGet;
+    req.headers["accept"] = "text/event-stream";
+
+    EXPECT_TRUE(SseServer::Impl::IsSseRequest(req));
+}
+
+//! 测试大写 ACCEPT 头仍能被识别为 SSE 请求
+TEST(SseServerImpl, DetectSseRequest_UpperCaseAccept)
+{
+    http::Request req;
+    req.method = http::Method::kGet;
+    req.headers["ACCEPT"] = "text/event-stream";
+
+    EXPECT_TRUE(SseServer::Impl::IsSseRequest(req));
+}
+
+//! 测试混合大小写 AcCePt 头仍能被识别为 SSE 请求
+TEST(SseServerImpl, DetectSseRequest_MixedCaseAccept)
+{
+    http::Request req;
+    req.method = http::Method::kGet;
+    req.headers["AcCePt"] = "text/event-stream";
+
+    EXPECT_TRUE(SseServer::Impl::IsSseRequest(req));
+}
+
 }
 }
 }

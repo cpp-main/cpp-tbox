@@ -114,6 +114,12 @@ enum class StatusCode {
 std::string StatusCodeToString(StatusCode ver);
 StatusCode  StringToStatusCode(const std::string &str);
 
+//! 大小写不敏感地查找 header，返回迭代器（未找到则返回 headers.end()）
+Headers::const_iterator FindHeader(const Headers &headers, const std::string &key);
+
+//! 大小写不敏感地查找 header，返回值（空字符串表示未找到）
+std::string GetHeader(const Headers &headers, const std::string &key);
+
 }
 }
 

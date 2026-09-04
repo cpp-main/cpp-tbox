@@ -394,6 +394,75 @@ TEST(RequestParser, HeaderError_Empty)
     EXPECT_EQ(pp.state(), RequestParser::State::kFail);
 }
 
+//! 测试 header 名为小写 content-length 时能正确解析 body 长度
+TEST(RequestParser, LowerCaseContentLength)
+{
+    const char *text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "content-type: plain/text\r\n"
+        "content-length: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text, text_len), text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url.path, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试 header 名为大写 CONTENT-LENGTH 时能正确解析 body 长度
+TEST(RequestParser, UpperCaseContentLength)
+{
+    const char *text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "CONTENT-TYPE: plain/text\r\n"
+        "CONTENT-LENGTH: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text, text_len), text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url.path, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
+    delete req;
+}
+
+//! 测试 header 名为混合大小写 Content-LengtH 时能正确解析 body 长度
+TEST(RequestParser, MixedCaseContentLength)
+{
+    const char *text = \
+        "POST /login.php HTTP/1.1\r\n"
+        "Content-Type: plain/text\r\n"
+        "Content-LengtH: 26\r\n"
+        "\r\n"
+        "username=hevake&pwd=abc123"
+        ;
+    size_t text_len = ::strlen(text);
+    RequestParser pp;
+    EXPECT_EQ(pp.parse(text, text_len), text_len);
+    ASSERT_EQ(pp.state(), RequestParser::State::kFinishedAll);
+    auto req = pp.getRequest();
+    ASSERT_NE(req, nullptr);
+    EXPECT_EQ(req->method, Method::kPost);
+    EXPECT_EQ(req->url.path, "/login.php");
+    EXPECT_EQ(req->http_ver, HttpVer::k1_1);
+    EXPECT_EQ(req->body, "username=hevake&pwd=abc123");
+    delete req;
+}
+
 }
 }
 }

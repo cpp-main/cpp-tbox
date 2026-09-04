@@ -46,6 +46,45 @@ TEST(Respond, ToString)
     EXPECT_EQ(rsp.toString(), target_str);
 }
 
+//! 当 headers 中已有 Content-Length（不同大小写）时，toString() 不应重复添加
+TEST(Respond, ToString_LowerCaseContentLengthNoDup)
+{
+    Respond rsp;
+    rsp.status_code = StatusCode::k200_OK;
+    rsp.http_ver = HttpVer::k1_1;
+    rsp.body = "hello";
+    rsp.headers["content-length"] = "5";
+
+    EXPECT_TRUE(rsp.isValid());
+
+    const char *target_str = \
+        "HTTP/1.1 200 OK\r\n"
+        "content-length: 5\r\n"
+        "\r\n"
+        "hello";
+
+    EXPECT_EQ(rsp.toString(), target_str);
+}
+
+TEST(Respond, ToString_UpperCaseContentLengthNoDup)
+{
+    Respond rsp;
+    rsp.status_code = StatusCode::k200_OK;
+    rsp.http_ver = HttpVer::k1_1;
+    rsp.body = "hello";
+    rsp.headers["CONTENT-LENGTH"] = "5";
+
+    EXPECT_TRUE(rsp.isValid());
+
+    const char *target_str = \
+        "HTTP/1.1 200 OK\r\n"
+        "CONTENT-LENGTH: 5\r\n"
+        "\r\n"
+        "hello";
+
+    EXPECT_EQ(rsp.toString(), target_str);
+}
+
 }
 }
 }

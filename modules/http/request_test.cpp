@@ -70,6 +70,49 @@ TEST(Request, ToString_Post)
     EXPECT_EQ(req.toString(), target_str);
 }
 
+//! 当 headers 中已有 Content-Length（不同大小写）时，toString() 不应重复添加
+TEST(Request, ToString_LowerCaseContentLengthNoDup)
+{
+    Request req;
+    req.method = Method::kPost;
+    req.http_ver = HttpVer::k1_1;
+    req.url.path = "/test";
+    req.headers["content-length"] = "5";
+    req.body = "hello";
+
+    EXPECT_TRUE(req.isValid());
+
+    const char *target_str = \
+        "POST /test HTTP/1.1\r\n"
+        "content-length: 5\r\n"
+        "\r\n"
+        "hello"
+        ;
+
+    EXPECT_EQ(req.toString(), target_str);
+}
+
+TEST(Request, ToString_UpperCaseContentLengthNoDup)
+{
+    Request req;
+    req.method = Method::kPost;
+    req.http_ver = HttpVer::k1_1;
+    req.url.path = "/test";
+    req.headers["CONTENT-LENGTH"] = "5";
+    req.body = "hello";
+
+    EXPECT_TRUE(req.isValid());
+
+    const char *target_str = \
+        "POST /test HTTP/1.1\r\n"
+        "CONTENT-LENGTH: 5\r\n"
+        "\r\n"
+        "hello"
+        ;
+
+    EXPECT_EQ(req.toString(), target_str);
+}
+
 }
 }
 }

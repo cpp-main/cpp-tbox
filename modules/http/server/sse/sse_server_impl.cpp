@@ -173,7 +173,7 @@ void SseServer::Impl::handle(http::server::ContextSptr sp_ctx, const http::serve
 
     //! 从请求中提取 Last-Event-ID（浏览器重连时携带）
     std::string last_event_id;
-    auto id_iter = req.headers.find("Last-Event-ID");
+    auto id_iter = http::FindHeader(req.headers, "last-event-id");
     if (id_iter != req.headers.end())
         last_event_id = id_iter->second;
 
@@ -370,7 +370,7 @@ bool SseServer::Impl::IsSseRequest(const http::Request &req)
     if (req.method != http::Method::kGet)
         return false;
 
-    auto accept_iter = req.headers.find("Accept");
+    auto accept_iter = http::FindHeader(req.headers, "accept");
     if (accept_iter == req.headers.end())
         return false;
 

@@ -25,6 +25,7 @@
 #include <tbox/base/assert.h>
 #include <tbox/base/wrapped_recorder.h>
 #include <tbox/util/buffer.h>
+#include <tbox/util/string.h>
 #include <tbox/network/tcp_connection.h>
 
 #include "middleware.h"
@@ -159,20 +160,20 @@ void Server::Impl::onTcpConnected(const TcpServer::ConnToken &ct)
 namespace {
 bool IsLastRequest(const Request *req)
 {
-    auto iter = req->headers.find("Connection");
+    auto iter = http::FindHeader(req->headers, "connection");
     if (req->http_ver == HttpVer::k1_0) {
         //! 1.0 版本默认为一连接一请求，需要特定的 Connection: Keep-Alive 才能持处
         if (iter == req->headers.end()) {
             return true;
         } else {
-            return iter->second.find("keep-alive") == std::string::npos;
+            return util::string::ToLower(iter->second).find("keep-alive") == std::string::npos;
         }
     } else {
         //! 否则为 1.1 及以上的版本，默认为持久连接；除非出现 Connection: close
         if (iter == req->headers.end()) {
             return false;
         } else {
-            return iter->second.find("close") != std::string::npos;
+            return util::string::ToLower(iter->second).find("close") != std::string::npos;
         }
     }
 }

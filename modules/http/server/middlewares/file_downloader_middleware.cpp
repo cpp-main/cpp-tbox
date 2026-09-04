@@ -33,6 +33,7 @@
 #include <tbox/eventx/work_thread.h>
 #include <tbox/base/defines.h>
 #include <tbox/base/recorder.h>
+#include "../../common.h"
 
 namespace tbox {
 namespace http {
@@ -75,15 +76,6 @@ time_t StringToHttpDate(const std::string& s)
     if (strptime(s.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &t) == nullptr)
         return -1;
     return timegm(&t);
-}
-
-std::string GetHeader(const tbox::http::Headers& headers, const std::string& lower_name)
-{
-    for (const auto& h : headers) {
-        if (tbox::util::string::ToLower(h.first) == lower_name)
-            return h.second;
-    }
-    return "";
 }
 
 //! 解析
@@ -385,14 +377,14 @@ bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string
     res.headers["Access-Control-Expose-Headers"] = "Content-Range, Content-Length, ETag, Last-Modified";
 
     //! 条件请求：If-None-Match 优先于 If-Modified-Since（RFC 7232 §6）
-    std::string if_none_match = GetHeader(sp_ctx->req().headers, "if-none-match");
+    std::string if_none_match = http::GetHeader(sp_ctx->req().headers, "if-none-match");
     if (!if_none_match.empty()) {
         if (if_none_match == etag) {
             res.status_code = StatusCode::k304_NotModified;
             return true;
         }
     } else {
-        std::string if_modified_since = GetHeader(sp_ctx->req().headers, "if-modified-since");
+        std::string if_modified_since = http::GetHeader(sp_ctx->req().headers, "if-modified-since");
         if (!if_modified_since.empty()) {
             time_t since = StringToHttpDate(if_modified_since);
             if (since != -1 && file_mtime <= since) {
@@ -408,14 +400,14 @@ bool FileDownloaderMiddleware::respondFile(ContextSptr sp_ctx, const std::string
     bool   has_range   = false;
 
     if (file_size > 0) {
-        auto range_str = GetHeader(sp_ctx->req().headers, "range");
+        auto range_str = http::GetHeader(sp_ctx->req().headers, "range");
         if (util::string::IsStartWith(range_str, "bytes=")) {
             has_range = ParseRangeString(range_str, file_size, range_begin, range_end);
         }
 
         //! If-Range：ETag 不匹配时降级为全量响应，保证数据一致性
         if (has_range) {
-            std::string if_range = GetHeader(sp_ctx->req().headers, "if-range");
+            std::string if_range = http::GetHeader(sp_ctx->req().headers, "if-range");
             if (!if_range.empty() && if_range != etag) {
                 has_range   = false;
                 range_begin = 0;

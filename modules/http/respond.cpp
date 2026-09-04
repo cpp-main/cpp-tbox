@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include "respond.h"
+#include <tbox/util/string.h>
 #include <sstream>
 
 namespace tbox {
@@ -36,7 +37,7 @@ std::string Respond::toString() const
     bool has_content_length = false;
     for (auto &head : headers) {
         oss << head.first << ": " << head.second << CRLF;
-        if (head.first == "Content-Length")
+        if (util::string::ToLower(head.first) == "content-length")
             has_content_length = true;
     }
 

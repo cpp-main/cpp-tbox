@@ -20,6 +20,7 @@
 #include "common.h"
 #include <algorithm>
 #include <tbox/base/defines.h>
+#include <tbox/util/string.h>
 
 namespace tbox {
 namespace http {
@@ -176,6 +177,24 @@ StatusCode StringToStatusCode(const std::string &str)
         return iter->first;
     else
         return StatusCode::kUnset;
+}
+
+Headers::const_iterator FindHeader(const Headers &headers, const std::string &key)
+{
+    auto lower_key = util::string::ToLower(key);
+    for (auto it = headers.begin(); it != headers.end(); ++it) {
+        if (util::string::ToLower(it->first) == lower_key)
+            return it;
+    }
+    return headers.end();
+}
+
+std::string GetHeader(const Headers &headers, const std::string &key)
+{
+    auto it = FindHeader(headers, key);
+    if (it != headers.end())
+        return it->second;
+    return "";
 }
 
 }
