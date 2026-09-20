@@ -177,6 +177,45 @@ TEST_F(RpcStrTest, SendRequestNoMethod) {
     EXPECT_TRUE(is_method_cb_invoke);
 }
 
+TEST_F(RpcStrTest, SendErrorWithExtra) {
+    bool is_service_invoke = false;
+    rpc_b.addService("A",
+        [&] (int id, const Json &js_params, Response &r) {
+            UNUSED_VAR(id);
+            UNUSED_VAR(js_params);
+            r.error.code = -32010;
+            r.error.message = "custom error";
+            r.error.extra = {
+                {"hint", "some hint"},
+                {"detail", 12345}
+            };
+            is_service_invoke = true;
+            return true;
+        }
+    );
+
+    bool is_method_cb_invoke = false;
+    loop->run(
+        [&] {
+            rpc_a.request("A", Json(),
+                [&] (const Response &r) {
+                    EXPECT_EQ(r.error.code, -32010);
+                    EXPECT_EQ(r.error.message, "custom error");
+                    ASSERT_EQ(r.error.extra.size(), 2u);
+                    EXPECT_EQ(r.error.extra.at("hint"), "some hint");
+                    EXPECT_EQ(r.error.extra.at("detail"), 12345);
+                    is_method_cb_invoke = true;
+                }
+            );
+        }
+    );
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_service_invoke);
+    EXPECT_TRUE(is_method_cb_invoke);
+}
+
 TEST(RpcStr, RequestTimeout) {
     auto loop = event::Loop::New();
     SetScopeExitAction([=] { delete loop; });

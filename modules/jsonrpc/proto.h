@@ -21,6 +21,7 @@
 #define TBOX_JSONRPC_PROTO_H_20230812
 
 #include <functional>
+#include <map>
 #include <tbox/base/json_fwd.h>
 
 #include "types.h"
@@ -50,12 +51,12 @@ class Proto {
     void sendRequest(int id, const std::string &method);
     void sendRequest(int id, const std::string &method, const Json &js_params);
     void sendResult(int id, const Json &js_result);
-    void sendError(int id, int errcode, const std::string &message);
+    void sendError(int id, int errcode, const std::string &message, const ExtraFields &extra = {});
 
     void sendRequest(const std::string &id, const std::string &method);
     void sendRequest(const std::string &id, const std::string &method, const Json &js_params);
     void sendResult(const std::string &id, const Json &js_result);
-    void sendError(const std::string &id, int errcode, const std::string &message);
+    void sendError(const std::string &id, int errcode, const std::string &message, const ExtraFields &extra = {});
 
   public:
     /**

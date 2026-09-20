@@ -94,7 +94,7 @@ void Proto::sendResult(const std::string &id, const Json &js_result)
     sendJson(js);
 }
 
-void Proto::sendError(int id, int errcode, const std::string &message)
+void Proto::sendError(int id, int errcode, const std::string &message, const ExtraFields &extra)
 {
     Json js = {
         {"jsonrpc", "2.0"},
@@ -107,10 +107,13 @@ void Proto::sendError(int id, int errcode, const std::string &message)
     if (!message.empty())
         js["error"]["message"] = message;
 
+    for (const auto &item : extra)
+        js["error"][item.first] = item.second;
+
     sendJson(js);
 }
 
-void Proto::sendError(const std::string &id, int errcode, const std::string &message)
+void Proto::sendError(const std::string &id, int errcode, const std::string &message, const ExtraFields &extra)
 {
     Json js = {
         {"jsonrpc", "2.0"},
@@ -122,6 +125,9 @@ void Proto::sendError(const std::string &id, int errcode, const std::string &mes
 
     if (!message.empty())
         js["error"]["message"] = message;
+
+    for (const auto &item : extra)
+        js["error"][item.first] = item.second;
 
     sendJson(js);
 }
@@ -263,6 +269,13 @@ void Proto::handleAsError(const Json &js) const
         return;
     }
     util::json::GetField(js_error, "message", response.error.message);
+
+    //! 将 code、message 之外的字段放入 extra
+    for (auto it = js_error.begin(); it != js_error.end(); ++it) {
+        const std::string &key = it.key();
+        if (key != "code" && key != "message")
+            response.error.extra[key] = it.value();
+    }
 
     if (id_type_ == IdType::kInt) {
         int id = 0;

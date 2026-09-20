@@ -116,10 +116,13 @@ int main(int argc, char **argv)
                     int pong_count = 0;
                     util::json::GetField(r.js_result, "count", pong_count);
                     LogDbg("got pong: %d", pong_count);
-                    send_ping();
                 } else {
-                    LogNotice("got erro: %d", r.error.code);
+                    LogNotice("got error: code=%d, message=%s", r.error.code, r.error.message.c_str());
+                    //! 演示 error 对象中 code、message 之外的附加字段
+                    for (const auto &item : r.error.extra)
+                        LogNotice("  extra: %s = %s", item.first.c_str(), item.second.dump().c_str());
                 }
+                send_ping();
             });
         LogDbg("send ping: %d", ping_count);
     };

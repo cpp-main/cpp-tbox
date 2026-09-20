@@ -21,6 +21,7 @@
 #define TBOX_JSONRPC_PRC_H
 
 #include <functional>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <tbox/base/json_fwd.h>
@@ -81,7 +82,7 @@ class Rpc {
 
     //! 异步回复
     void respondResult(int int_id, const Json &js_result);
-    void respondError(int int_id, int errcode, const std::string &message = "");
+    void respondError(int int_id, int errcode, const std::string &message = "", const ExtraFields &extra = {});
 
     //! 仅在IdType::kString时有效的函数
 

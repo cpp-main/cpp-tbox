@@ -18,6 +18,7 @@
  * of the source tree.
  */
 #include <string>
+#include <map>
 #include <tbox/base/json.hpp>
 
 #ifndef TBOX_JSONRPC_TYPES_H_20251026
@@ -43,6 +44,9 @@ enum class IdType {
     kString     //!< 字串uuid
 };
 
+//! 附加字段：error 对象中 code、message 之外的其它 key-value 字段
+using ExtraFields = std::map<std::string, Json>;
+
 //! 回复
 struct Response {
     Json js_result; //! 结果
@@ -51,6 +55,7 @@ struct Response {
     struct {
         int code = 0;         //! 错误码
         std::string message;  //! 错误描述
+        ExtraFields extra;    //! 附加字段（code、message 之外的其它字段）
     } error;
 };
 

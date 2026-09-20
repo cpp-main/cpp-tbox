@@ -162,7 +162,7 @@ void Rpc::respondResult(int int_id, const Json &js_result)
     tobe_respond_.erase(int_id);
 }
 
-void Rpc::respondError(int int_id, int errcode, const std::string &message)
+void Rpc::respondError(int int_id, int errcode, const std::string &message, const ExtraFields &extra)
 {
     RECORD_SCOPE();
     if (int_id == 0) {
@@ -171,13 +171,13 @@ void Rpc::respondError(int int_id, int errcode, const std::string &message)
     }
 
     if (id_type_ == IdType::kInt) {
-        proto_->sendError(int_id, errcode, message);
+        proto_->sendError(int_id, errcode, message, extra);
 
     } else {
         auto iter = int_to_str_map_.find(int_id);
         if (iter != int_to_str_map_.end()) {
             std::string str_id = iter->second;
-            proto_->sendError(str_id, errcode, message);
+            proto_->sendError(str_id, errcode, message, extra);
             int_to_str_map_.erase(iter);
             str_to_int_map_.erase(str_id);
         }
@@ -227,7 +227,7 @@ void Rpc::onRecvRequestInt(int int_id, const std::string &method, const Json &js
                     respondResult(int_id, response.js_result);
                 } else {
                     auto &error = response.error;
-                    respondError(int_id, error.code, error.message);
+                    respondError(int_id, error.code, error.message, error.extra);
                 }
             } else {
                 respond_timeout_.add(int_id);

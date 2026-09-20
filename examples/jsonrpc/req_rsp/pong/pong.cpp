@@ -115,7 +115,17 @@ int main(int argc, char **argv)
         int ping_count = 0;
         util::json::GetField(js_params, "count", ping_count);
         LogDbg("id:%d, got ping_count: %d", id, ping_count);
-        r.js_result = js_params;
+
+        if (ping_count % 5 == 0) {  //! 每5次，返回一次错误，演示 error 对象中的附加字段
+            r.error.code = -32010;
+            r.error.message = "ping_count is too big";
+            r.error.extra = {
+                {"hint", "try a smaller count"},
+                {"max_allowed", 4}
+            };
+        } else {
+            r.js_result = js_params;
+        }
         return true;    //! 表示在函数返回后立即发送回复
     });
 
