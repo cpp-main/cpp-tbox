@@ -21,6 +21,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 
 #include "loop_if_action.h"
 #include "function_action.h"
@@ -167,6 +168,59 @@ TEST(LoopIfAction, FinishPauseOnIf) {
     EXPECT_TRUE(loop_if_action_run);
     EXPECT_EQ(exec_action_count, 1);
     EXPECT_TRUE(do_resume);
+}
+
+TEST(LoopIfAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop, const std::string &type)
+            : Action(loop, type) { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            nlohmann::json progress;
+            progress["stage"] = type();
+            progress["status"] = "executing";
+            process(progress);
+
+            // 立即完成
+            finish(false); // 返回false，这样循环只会执行一次
+        }
+    };
+
+    LoopIfAction loop_if_action(*loop);
+
+    bool is_process_callback = false;
+
+    auto if_action = new TestAction(*loop, "IfTest");
+    auto exec_action = new TestAction(*loop, "ExecTest");
+
+    EXPECT_TRUE(loop_if_action.setChildAs(if_action, "if"));
+    EXPECT_TRUE(loop_if_action.setChildAs(exec_action, "exec"));
+
+    loop_if_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("status"), "executing");
+
+            // Trace应该包含TestAction -> LoopIfAction
+            ASSERT_GE(t.size(), 2);
+            EXPECT_EQ(t[t.size()-1].type, "LoopIf");
+            is_process_callback = true;
+        }
+    );
+
+    EXPECT_TRUE(loop_if_action.isReady());
+    loop_if_action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(100)); // 设置超时防止无限循环
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
 }
 
 }

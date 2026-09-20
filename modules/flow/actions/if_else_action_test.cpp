@@ -21,6 +21,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 
 #include "if_else_action.h"
 #include "function_action.h"
@@ -220,7 +221,7 @@ TEST(IfElseAction, BlockOnIf) {
     if_else_action.setBlockCallback([&] (const Action::Reason &why, const Action::Trace &) {
         is_blocked = true;
         EXPECT_EQ(why.code, 1);
-        EXPECT_EQ(if_else_action.state(), Action::State::kPause);
+        EXPECT_EQ(if_else_action.state(), Action::State::kPaused);
         if_else_action.resume();
     });
 
@@ -295,6 +296,68 @@ TEST(IfElseAction, FinishPauseOnIf) {
     EXPECT_TRUE(if_else_action_run);
     EXPECT_TRUE(then_action_run);
     EXPECT_TRUE(do_resume);
+}
+
+TEST(IfElseAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop, const std::string &type) : Action(loop, type) { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            nlohmann::json progress;
+            progress["phase"] = "evaluating";
+            progress["result"] = "success";
+            process(progress);
+
+            // 完成动作
+            finish(true);
+        }
+    };
+
+    IfElseAction if_else_action(*loop);
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    auto if_action = new TestAction(*loop, "IfTest");
+    auto then_action = new TestAction(*loop, "ThenTest");
+
+    EXPECT_TRUE(if_else_action.setChildAs(if_action, "if"));
+    EXPECT_TRUE(if_else_action.setChildAs(then_action, "then"));
+
+    if_else_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("phase"), "evaluating");
+            EXPECT_EQ(js_process.at("result"), "success");
+            // Trace应该包含TestAction -> IfElseAction
+            ASSERT_GE(t.size(), 2);
+            // 最后一个是IfElseAction
+            EXPECT_EQ(t[t.size()-1].type, "IfElse");
+            is_process_callback = true;
+        }
+    );
+
+    if_else_action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(if_else_action.isReady());
+    if_else_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
 }
 
 }

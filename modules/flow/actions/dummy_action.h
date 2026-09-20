@@ -26,7 +26,7 @@ namespace tbox {
 namespace flow {
 
 //! 木偶动作
-//! 其自身不会主动发起结束动作，也不会触发阻塞。由外部通过调用emitFinish()与emitBlock()来实现
+//! 其自身不会主动发起结束动作，也不会触发阻塞。由外部通过调用emitFinish()、emitBlock()与emitProcess()来实现
 class DummyAction : public Action {
   public:
     explicit DummyAction(event::Loop &loop) : Action(loop, "Dummy") {}
@@ -43,6 +43,7 @@ class DummyAction : public Action {
 
     inline void emitFinish(bool is_succ, const Reason &reason = Reason()) { finish(is_succ, reason); }
     inline void emitBlock(const Reason &reason) { block(reason); }
+    inline void emitProcess(const Json &js_process) { process(js_process); }
 
   protected:
     virtual void onStart() override;

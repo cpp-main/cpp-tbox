@@ -43,6 +43,7 @@ LoopAction::LoopAction(event::Loop &loop, Action *child, Mode mode)
 
     child_->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&LoopAction::block, this, _1, _2));
+    child_->setProcessCallback(std::bind(&LoopAction::process, this, _1, _2));
 }
 
 LoopAction::~LoopAction() {
@@ -66,6 +67,7 @@ bool LoopAction::setChild(Action *child) {
 
     child->setFinishCallback(std::bind(&LoopAction::onChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&LoopAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&LoopAction::process, this, _1, _2));
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;

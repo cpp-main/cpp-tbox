@@ -85,7 +85,7 @@ bool SerialAssembleAction::handleChildFinishEvent(ChildFinishFunc &&child_finish
         return false;
 
     //! 如果处于暂停状态，则暂存结果
-    if (state() == State::kPause)
+    if (state() == State::kPaused)
         child_finish_func_ = std::move(child_finish_func);
 
     //! 其它状态，如已结束或停止，则不处理
@@ -103,7 +103,7 @@ void SerialAssembleAction::onLastChildFinished(bool is_succ, const Reason &reaso
     }
 
     //! 如果处于暂停状态，则暂存结果
-    if (state() == State::kPause)
+    if (state() == State::kPaused)
         child_finish_func_ = [this, is_succ, reason, trace] { finish(is_succ, reason, trace); };
 
     //! 其它状态，如已结束或停止，则不处理

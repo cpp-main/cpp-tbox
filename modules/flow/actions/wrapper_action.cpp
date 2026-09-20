@@ -44,6 +44,7 @@ WrapperAction::WrapperAction(event::Loop &loop, Action *child, Mode mode)
 
     child_->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
+    child_->setProcessCallback(std::bind(&WrapperAction::process, this, _1, _2));
 }
 
 WrapperAction::~WrapperAction() {
@@ -69,6 +70,7 @@ bool WrapperAction::setChild(Action *child) {
 
     child->setFinishCallback(std::bind(&WrapperAction::onChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&WrapperAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&WrapperAction::process, this, _1, _2));
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;

@@ -73,6 +73,7 @@ bool SwitchAction::setChildAs(Action *child, const std::string &role) {
     if (role == "switch") {
         child->setFinishCallback(std::bind(&SwitchAction::onSwitchActionFinished, this, _1, _2));
         child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&SwitchAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(switch_action_);
         switch_action_ = child;
         return true;
@@ -80,6 +81,7 @@ bool SwitchAction::setChildAs(Action *child, const std::string &role) {
     } else if (role == "default") {
         child->setFinishCallback(std::bind(&SwitchAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&SwitchAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(default_action_);
         default_action_ = child;
         return true;
@@ -89,6 +91,7 @@ bool SwitchAction::setChildAs(Action *child, const std::string &role) {
         if (result.second) {
             child->setFinishCallback(std::bind(&SwitchAction::onLastChildFinished, this, _1, _2, _3));
             child->setBlockCallback(std::bind(&SwitchAction::block, this, _1, _2));
+            child->setProcessCallback(std::bind(&SwitchAction::process, this, _1, _2));
             return true;
         }
     }

@@ -152,7 +152,7 @@ void ActionExecutor::schedule() {
         }
 
       //! 被暂停了的，要恢复
-      } else if (item.action->state() == Action::State::kPause) {
+      } else if (item.action->state() == Action::State::kPaused) {
         curr_action_deque_index_ = ready_deque_index;
         item.action->resume();
 

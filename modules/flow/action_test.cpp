@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 #include "action.h"
 
 namespace tbox {
@@ -89,7 +90,7 @@ TEST(Action, StartBlock) {
   loop->runLoop();
 
   EXPECT_TRUE(is_block);
-  EXPECT_EQ(action.state(), Action::State::kPause);
+  EXPECT_EQ(action.state(), Action::State::kPaused);
 
   action.stop();
   EXPECT_EQ(action.state(), Action::State::kStoped);
@@ -134,6 +135,59 @@ TEST(Action, Timeout) {
   auto cout_50 = std::chrono::duration_cast<std::chrono::milliseconds>(ts_timeout - ts_start).count();
   EXPECT_LE(cout_50, 51);
   EXPECT_GE(cout_50, 49);
+}
+
+TEST(Action, Process) {
+  auto loop = event::Loop::New();
+  SetScopeExitAction([loop] { delete loop; });
+
+  class TestAction : public Action {
+    public:
+      explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+      virtual bool isReady() const override { return true; }
+      virtual void onStart() override {
+        Action::onStart();
+
+        // 上报进度
+        auto progress = Json::object();
+        progress["step"] = "initializing";
+        progress["progress"] = 10;
+        process(progress);
+
+        // 完成动作
+        finish(true);
+      }
+  };
+
+  TestAction action(*loop);
+
+  bool is_process_callback = false;
+  bool is_finish_callback = false;
+
+  action.setProcessCallback(
+    [&](const Json &js_process, const Action::Trace &t) {
+      EXPECT_EQ(js_process.at("step"), "initializing");
+      EXPECT_EQ(js_process.at("progress"), 10);
+      ASSERT_EQ(t.size(), 1);
+      EXPECT_EQ(t[0].type, "Test");
+      is_process_callback = true;
+    }
+  );
+
+  action.setFinishCallback(
+    [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+      EXPECT_TRUE(is_succ);
+      is_finish_callback = true;
+    }
+  );
+
+  action.start();
+
+  loop->exitLoop(std::chrono::milliseconds(10));
+  loop->runLoop();
+
+  EXPECT_TRUE(is_process_callback);
+  EXPECT_TRUE(is_finish_callback);
 }
 
 }

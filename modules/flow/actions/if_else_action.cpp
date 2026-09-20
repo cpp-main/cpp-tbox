@@ -61,6 +61,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
     if (role == "if") {
         child->setFinishCallback(std::bind(&IfElseAction::onCondActionFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&IfElseAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
         return true;
@@ -68,6 +69,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
     } else if (role == "succ" || role == "then") {
         child->setFinishCallback(std::bind(&IfElseAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&IfElseAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(then_action_);
         then_action_ = child;
         return true;
@@ -75,6 +77,7 @@ bool IfElseAction::setChildAs(Action *child, const std::string &role) {
     } else if (role == "fail" || role == "else") {
         child->setFinishCallback(std::bind(&IfElseAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&IfElseAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&IfElseAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(else_action_);
         else_action_ = child;
         return true;

@@ -91,7 +91,7 @@ bool Action::start() {
 }
 
 bool Action::pause() {
-  if (state_ == State::kPause)
+  if (state_ == State::kPaused)
     return true;
 
   if (state_ != State::kRunning) {
@@ -114,7 +114,7 @@ bool Action::pause() {
     if (timer_ev_ != nullptr)
       timer_ev_->disable();
 
-    state_ = State::kPause;
+    state_ = State::kPaused;
   }
   return true;
 }
@@ -123,7 +123,7 @@ bool Action::resume() {
   if (state_ == State::kRunning)
     return true;
 
-  if (state_ != State::kPause) {
+  if (state_ != State::kPaused) {
     LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
     return false;
   }
@@ -201,7 +201,7 @@ bool Action::block(const Reason &why, const Trace &trace) {
   if (state_ != State::kFinished && state_ != State::kStoped) {
     LogDbg("action %d:%s[%s] blocked", id_, type_.c_str(), label_.c_str());
 
-    state_ = State::kPause;
+    state_ = State::kPaused;
 
     is_base_func_invoked_ = false;
 
@@ -215,6 +215,14 @@ bool Action::block(const Reason &why, const Trace &trace) {
   } else {
     LogWarn("not allow %d:%s[%s]", id_, type_.c_str(), label_.c_str());
     return false;
+  }
+}
+
+void Action::process(const Json &js_process, const Trace &trace) {
+  if (process_cb_) {
+    Trace new_trace(trace);
+    new_trace.emplace_back(id_, type_, label_);
+    process_cb_(js_process, new_trace);
   }
 }
 
@@ -371,7 +379,7 @@ Action::Who& Action::Who::operator = (const Who &other) {
 }
 
 std::string ToString(Action::State state) {
-  const char *tbl[] = { "idle", "running", "pause", "finished", "stoped" };
+  const char *tbl[] = { "idle", "running", "pausing", "paused", "finished", "stoping", "stoped" };
   auto index = static_cast<size_t>(state);
   if (index < NUMBER_OF_ARRAY(tbl))
     return tbl[index];

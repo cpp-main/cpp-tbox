@@ -22,6 +22,7 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/base/json.hpp>
 
 #include "wrapper_action.h"
 #include "succ_fail_action.h"
@@ -255,6 +256,66 @@ TEST(WrapperAction, AlwayFailFail) {
     loop->runLoop();
 
     EXPECT_TRUE(is_callback);
+}
+
+TEST(WrapperAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            nlohmann::json progress;
+            progress["transformation"] = "applying";
+            progress["result"] = "wrapped";
+            process(progress);
+
+            // 完成动作
+            finish(true);
+        }
+    };
+
+    WrapperAction wrapper_action(*loop, WrapperAction::Mode::kNormal);
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    auto child_action = new TestAction(*loop);
+    wrapper_action.setChild(child_action);
+
+    wrapper_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("transformation"), "applying");
+            EXPECT_EQ(js_process.at("result"), "wrapped");
+
+            // Trace应该包含TestAction -> WrapperAction
+            ASSERT_GE(t.size(), 2);
+            EXPECT_EQ(t[t.size()-2].type, "Test");
+            EXPECT_EQ(t[t.size()-1].type, "Wrapper");
+            is_process_callback = true;
+        }
+    );
+
+    wrapper_action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(wrapper_action.isReady());
+    wrapper_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
 }
 
 }

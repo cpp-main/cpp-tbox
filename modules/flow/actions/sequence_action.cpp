@@ -66,6 +66,7 @@ int SequenceAction::addChild(Action *child) {
     int index = children_.size();
     child->setFinishCallback(std::bind(&SequenceAction::onChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&SequenceAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&SequenceAction::process, this, _1, _2));
     children_.push_back(child);
 
     return index;

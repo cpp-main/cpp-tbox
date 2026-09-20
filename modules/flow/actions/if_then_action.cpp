@@ -86,6 +86,7 @@ int IfThenAction::addChildAs(Action *child, const std::string &role) {
 
         child->setFinishCallback(std::bind(&IfThenAction::onIfActionFinished, this, _1));
         child->setBlockCallback(std::bind(&IfThenAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&IfThenAction::process, this, _1, _2));
         tmp_.first = child;
 
         //! 先不处理，等到了then之后再加到if_then_actions_
@@ -105,6 +106,7 @@ int IfThenAction::addChildAs(Action *child, const std::string &role) {
 
         child->setFinishCallback(std::bind(&IfThenAction::onLastChildFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&IfThenAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&IfThenAction::process, this, _1, _2));
         tmp_.second = child;
 
         auto index = if_then_actions_.size();

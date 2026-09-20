@@ -21,6 +21,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 
 #include "if_then_action.h"
 #include "function_action.h"
@@ -278,6 +279,67 @@ TEST(IfThenAction, FinishPauseOnIf) {
     EXPECT_TRUE(if_then_action_run);
     EXPECT_TRUE(then_action_run);
     EXPECT_TRUE(do_resume);
+}
+
+TEST(IfThenAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop, const std::string &type) : Action(loop, type) { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            nlohmann::json progress;
+            progress["module"] = type();
+            progress["activity"] = "evaluating";
+            process(progress);
+
+            // 完成动作
+            finish(true);
+        }
+    };
+
+    IfThenAction if_then_action(*loop);
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    auto if_action = new TestAction(*loop, "IfTest");
+    auto then_action = new TestAction(*loop, "ThenTest");
+
+    EXPECT_EQ(if_then_action.addChildAs(if_action, "if"), 0);
+    EXPECT_EQ(if_then_action.addChildAs(then_action, "then"), 0);
+
+    if_then_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("activity"), "evaluating");
+
+            // Trace应该包含TestAction -> IfThenAction
+            ASSERT_GE(t.size(), 2);
+            EXPECT_EQ(t[t.size()-1].type, "IfThen");
+            is_process_callback = true;
+        }
+    );
+
+    if_then_action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(if_then_action.isReady());
+    if_then_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
 }
 
 }

@@ -43,6 +43,7 @@ bool CompositeAction::setChild(Action *child) {
 
     child->setFinishCallback(std::bind(&CompositeAction::onLastChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&CompositeAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&CompositeAction::process, this, _1, _2));
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;

@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <tbox/event/loop.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 
 #include "parallel_action.h"
 #include "function_action.h"
@@ -228,8 +229,73 @@ TEST(ParallelAction, Block) {
 
     EXPECT_EQ(ta1->state(), Action::State::kFinished);
     EXPECT_EQ(ta1->result(), Action::Result::kFail);
-    EXPECT_EQ(ta2->state(), Action::State::kPause);
-    EXPECT_EQ(ta3->state(), Action::State::kPause);
+    EXPECT_EQ(ta2->state(), Action::State::kPaused);
+    EXPECT_EQ(ta3->state(), Action::State::kPaused);
+}
+
+TEST(ParallelAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop, const std::string &name) : Action(loop, "Test"), name_(name) { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            nlohmann::json progress;
+            progress["task"] = name_;
+            progress["status"] = "completed";
+            process(progress);
+
+            // 完成动作
+            finish(true);
+        }
+      private:
+        std::string name_;
+    };
+
+    ParallelAction para_action(*loop, ParallelAction::Mode::kAllFinish);
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    auto ta1 = new TestAction(*loop, "Task1");
+    auto ta2 = new TestAction(*loop, "Task2");
+    para_action.addChild(ta1);
+    para_action.addChild(ta2);
+
+    int process_count = 0;
+    para_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            process_count++;
+            EXPECT_EQ(js_process.at("status"), "completed");
+
+            // Trace应该包含TestAction -> ParallelAction
+            ASSERT_GE(t.size(), 2);
+            EXPECT_EQ(t[t.size()-1].type, "Parallel");
+            is_process_callback = true;
+        }
+    );
+
+    para_action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+            loop->exitLoop();
+        }
+    );
+
+    EXPECT_TRUE(para_action.isReady());
+    para_action.start();
+
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
+    EXPECT_EQ(process_count, 2);  // 两个子Action都应该上报进度
 }
 
 }

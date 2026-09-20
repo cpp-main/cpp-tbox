@@ -61,6 +61,7 @@ int ParallelAction::addChild(Action *action) {
         int index = children_.size();
         action->setFinishCallback(std::bind(&ParallelAction::onChildFinished, this, index, _1));
         action->setBlockCallback(std::bind(&ParallelAction::onChildBlocked, this, index, _1, _2));
+        action->setProcessCallback(std::bind(&ParallelAction::process, this, _1, _2));
         children_.push_back(action);
         return index;
 
@@ -113,7 +114,7 @@ void ParallelAction::onResume() {
     AssembleAction::onResume();
 
     for (Action *action : children_) {
-        if (action->state() == State::kPause)
+        if (action->state() == State::kPaused)
             action->resume();
     }
 }

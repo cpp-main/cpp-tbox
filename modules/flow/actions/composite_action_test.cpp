@@ -24,6 +24,7 @@
 #include <tbox/base/scope_exit.hpp>
 #include <tbox/base/log.h>
 #include <tbox/base/log_output.h>
+#include <tbox/base/json.hpp>
 
 #include "composite_action.h"
 #include "sleep_action.h"
@@ -132,7 +133,7 @@ TEST(CompositeAction, ChildBlock) {
             is_blocked = true;
             EXPECT_EQ(why.code, 1);
             EXPECT_FALSE(is_finished);
-            EXPECT_EQ(action.state(), Action::State::kPause);
+            EXPECT_EQ(action.state(), Action::State::kPaused);
             action.resume();
         }
     );
@@ -200,6 +201,73 @@ TEST(CompositeAction, ReasonAndTrace) {
     loop->runLoop();
 
     EXPECT_TRUE(is_finished);
+}
+
+TEST(CompositeAction, ProcessForwarding) {
+    class TestAction : public CompositeAction {
+      public:
+        explicit TestAction(event::Loop &loop)
+          : CompositeAction(loop, "Test") {
+
+          class InnerAction : public Action {
+            public:
+              explicit InnerAction(event::Loop &loop) : Action(loop, "Inner") { }
+              virtual bool isReady() const override { return true; }
+              virtual void onStart() override {
+                  Action::onStart();
+
+                  // 上报进度
+                  nlohmann::json progress;
+                  progress["layer"] = "inner";
+                  progress["operation"] = "initializing";
+                  process(progress);
+
+                  // 完成动作
+                  finish(true);
+              }
+          };
+
+          setChild(new InnerAction(loop));
+        }
+    };
+
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    TestAction action(*loop);
+    action.set_label("process_test");
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("layer"), "inner");
+            EXPECT_EQ(js_process.at("operation"), "initializing");
+
+            // Trace应该包含InnerAction -> TestAction(CompositeAction)
+            ASSERT_GE(t.size(), 2);
+            EXPECT_EQ(t[t.size()-2].type, "Inner");
+            EXPECT_EQ(t[t.size()-1].type, "Test");
+            is_process_callback = true;
+        }
+    );
+
+    action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+            loop->exitLoop();
+        }
+    );
+
+    action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
 }
 
 }

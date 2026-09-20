@@ -21,6 +21,7 @@
 #include <tbox/event/loop.h>
 #include <tbox/eventx/timer_pool.h>
 #include <tbox/base/scope_exit.hpp>
+#include <tbox/base/json.hpp>
 
 #include "sequence_action.h"
 #include "function_action.h"
@@ -451,6 +452,63 @@ TEST(SequenceAction, FinishPause) {
     EXPECT_TRUE(is_function_action_run);
     EXPECT_TRUE(is_finished);
     EXPECT_TRUE(do_resume);
+}
+
+TEST(SequenceAction, ProcessForwarding) {
+    auto loop = event::Loop::New();
+    SetScopeExitAction([loop] { delete loop; });
+
+    class TestAction : public Action {
+      public:
+        explicit TestAction(event::Loop &loop) : Action(loop, "Test") { }
+        virtual bool isReady() const override { return true; }
+        virtual void onStart() override {
+            Action::onStart();
+
+            // 上报进度
+            auto progress = Json::object();
+            progress["step"] = "working";
+            progress["value"] = 42;
+            process(progress);
+
+            // 完成动作
+            finish(true);
+        }
+    };
+
+    SequenceAction seq_action(*loop);
+    auto child_action = new TestAction(*loop);
+    seq_action.addChild(child_action);
+
+    bool is_process_callback = false;
+    bool is_finish_callback = false;
+
+    seq_action.setProcessCallback(
+        [&](const Json &js_process, const Action::Trace &t) {
+            EXPECT_EQ(js_process.at("step"), "working");
+            EXPECT_EQ(js_process.at("value"), 42);
+            ASSERT_EQ(t.size(), 2);  // TestAction -> SequenceAction
+            EXPECT_EQ(t[0].type, "Test");
+            EXPECT_EQ(t[1].type, "Sequence");
+            is_process_callback = true;
+        }
+    );
+
+    seq_action.setFinishCallback(
+        [&](bool is_succ, const Action::Reason &, const Action::Trace &) {
+            EXPECT_TRUE(is_succ);
+            is_finish_callback = true;
+        }
+    );
+
+    EXPECT_TRUE(seq_action.isReady());
+    seq_action.start();
+
+    loop->exitLoop(std::chrono::milliseconds(10));
+    loop->runLoop();
+
+    EXPECT_TRUE(is_process_callback);
+    EXPECT_TRUE(is_finish_callback);
 }
 
 }

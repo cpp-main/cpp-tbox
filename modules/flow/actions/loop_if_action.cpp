@@ -56,6 +56,7 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
     if (role == "if") {
         child->setFinishCallback(std::bind(&LoopIfAction::onIfFinished, this, _1, _2, _3));
         child->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&LoopIfAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(if_action_);
         if_action_ = child;
         return true;
@@ -63,6 +64,7 @@ bool LoopIfAction::setChildAs(Action *child, const std::string &role) {
     } else if (role == "exec") {
         child->setFinishCallback(std::bind(&LoopIfAction::onExecFinished, this, _2, _3));
         child->setBlockCallback(std::bind(&LoopIfAction::block, this, _1, _2));
+        child->setProcessCallback(std::bind(&LoopIfAction::process, this, _1, _2));
         CHECK_DELETE_RESET_OBJ(exec_action_);
         exec_action_ = child;
         return true;

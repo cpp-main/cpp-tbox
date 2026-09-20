@@ -49,6 +49,7 @@ RepeatAction::RepeatAction(event::Loop &loop, Action *child, size_t times, Mode 
 
     child_->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
     child_->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
+    child_->setProcessCallback(std::bind(&RepeatAction::process, this, _1, _2));
 }
 
 RepeatAction::~RepeatAction() {
@@ -75,6 +76,7 @@ bool RepeatAction::setChild(Action *child) {
 
     child->setFinishCallback(std::bind(&RepeatAction::onChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&RepeatAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&RepeatAction::process, this, _1, _2));
 
     CHECK_DELETE_RESET_OBJ(child_);
     child_ = child;

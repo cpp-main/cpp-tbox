@@ -61,6 +61,7 @@ int RandomSelectAction::addChild(Action *child) {
     int index = children_.size();
     child->setFinishCallback(std::bind(&RandomSelectAction::onLastChildFinished, this, _1, _2, _3));
     child->setBlockCallback(std::bind(&RandomSelectAction::block, this, _1, _2));
+    child->setProcessCallback(std::bind(&RandomSelectAction::process, this, _1, _2));
     children_.push_back(child);
 
     return index;

@@ -49,9 +49,11 @@ class Action {
     enum class State {
       kIdle,      //!< 未启动状态
       kRunning,   //!< 正在运行状态
-      kPause,     //!< 暂停状态
+      kPausing,   //!< 暂停中，外部通过 pause() 触发
+      kPaused,    //!< 暂停状态
       kFinished,  //!< 结束状态，自主通过 finish() 结束
-      kStoped     //!< 停止状态，外部通过 stop() 结束
+      kStoping,   //!< 停止中，外部通过 stop() 触发
+      kStoped     //!< 已停止
     };
 
     //! 结果
@@ -97,7 +99,7 @@ class Action {
     inline bool isRunning() const { return state_ == State::kRunning; }
 
     /// 表示已启动，但还没有结束或终止的状态
-    inline bool isUnderway() const { return state_ == State::kRunning || state_ == State::kPause; }
+    inline bool isUnderway() const { return state_ == State::kRunning || state_ == State::kPaused; }
 
     inline void set_label(const std::string &label) { label_ = label; }
     inline const std::string& label() const { return label_; }
@@ -109,6 +111,9 @@ class Action {
     //!< 设置阻塞回调
     using BlockCallback = std::function<void(const Reason &, const Trace &trace)>;
     inline void setBlockCallback(BlockCallback &&cb) { block_cb_ = std::move(cb); }
+
+    using ProcessCallback = std::function<void(const Json &js_process, const Trace &trace)>;
+    inline void setProcessCallback(ProcessCallback &&cb) { process_cb_ = std::move(cb); }
 
     //!< 设置与取消超时
     void setTimeout(std::chrono::milliseconds ms);
@@ -138,6 +143,10 @@ class Action {
                 const Reason &why = Reason(),   //!< 结束原因
                 const Trace &trace = Trace());  //!< 谁结束的
 
+    //! 上报进度
+    void process(const Json &js_process,        //!< 进度或状态
+                 const Trace &trace = Trace()); //!< 谁上报的
+
     virtual void onStart();
     virtual void onPause();
     virtual void onBlock(const Reason &why, const Trace &trace);
@@ -161,6 +170,7 @@ class Action {
     std::string label_;
     FinishCallback  finish_cb_;
     BlockCallback   block_cb_;
+    ProcessCallback process_cb_;
 
     State state_ = State::kIdle;      //!< 状态
     Result result_ = Result::kUnsure; //!< 运行结果
