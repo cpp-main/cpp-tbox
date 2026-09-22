@@ -6,12 +6,13 @@
 
 理解各动作前，先掌握 `Action` 的核心概念：
 
-- **状态 `State`**：`kIdle → kRunning / kPause → kFinished / kStoped`
+- **状态 `State`**：`kIdle → kRunning / kPausing / kPaused → kFinished / kStoped`
 - **结果 `Result`**：`kUnsure / kSuccess / kFail`
 - **结束原因 `Reason`**：`{ code, message }`，用于传递失败/阻塞信息
 - **执行轨迹 `Trace`**：`std::vector<Who>`，记录「谁」结束的
 - **主动结束/阻塞**：子类通过 `finish(is_succ, reason, trace)` 结束，通过 `block(reason, trace)` 挂起等待唤醒
-- **回调**：`setFinishCallback()` 结束回调、`setBlockCallback()` 阻塞回调
+- **进度上报**：子类通过 `process(js_process, trace)` 上报进度，枝干 Action 会自动向上转发
+- **回调**：`setFinishCallback()` 结束回调、`setBlockCallback()` 阻塞回调、`setProcessCallback()` 进度回调
 - **超时**：`setTimeout()` 给动作加超时，超时触发 `onTimeout()`
 - **变量**：`vars()` 返回 `util::Variables`，供动作间共享数据
 - **序列化**：`toJson()` 导出配置（便于可视化与调试）
@@ -69,13 +70,14 @@ new FailAction(loop);  // 立即 finish(false)
 
 ### 4. DummyAction — 木偶动作
 
-自身不会主动结束，由外部通过 `emitFinish()` / `emitBlock()` 控制其结束/阻塞，可监听 start/stop/pause/resume/reset 生命周期。
+自身不会主动结束，由外部通过 `emitFinish()` / `emitBlock()` / `emitProcess()` 控制其结束/阻塞/进度上报，可监听 start/stop/pause/resume/reset 生命周期。
 
 ```c++
 auto dummy = new DummyAction(loop);
 dummy->setStartCallback([] { LogInfo("started"); });
 // 外部在某个时机：
-dummy->emitFinish(true);   // 让它成功结束
+dummy->emitProcess({{"progress", 50}});  // 上报进度
+dummy->emitFinish(true);                 // 让它成功结束
 ```
 
 **运用场景**：作为「可控占位符」挂在组合动作中，由外部事件决定其结束时机；调试与单元测试。

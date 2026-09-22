@@ -68,11 +68,15 @@ Action is the base node of the behavior tree, providing unified lifecycle manage
 | `isReady()` | Whether it is ready (needs subclass implementation) |
 | `setFinishCallback(cb)` | Set finish callback |
 | `setBlockCallback(cb)` | Set block callback |
+| `setProcessCallback(cb)` | Set progress report callback |
 | `setTimeout(ms)` | Set timeout duration |
 | `finish(is_succ, why, trace)` | Manually finish |
 | `block(why, trace)` | Manually pause |
+| `process(js_process, trace)` | Report progress |
 
-Action states: kIdle (idle) → kRunning (running) → kFinished (finished)/kStoped (stopped)/kPause (paused)
+Action states: kIdle (idle) → kRunning (running) → kPaused (paused)/kFinished (finished)/kStoped (stopped)
+
+Branch actions (Sequence/Parallel/Loop/IfElse, etc.) automatically forward the `process()` report from child actions upward, with `Trace` recording the complete reporting path.
 
 Action results: kUnsure (unknown) → kSuccess (success)/kFail (failure)
 
@@ -179,7 +183,7 @@ sm.toJson(js);  //! Export state machine as JSON, can be used for visualization
 
 1. **StateID 0 is the terminated state**: The state machine automatically terminates upon reaching state 0, no additional handling needed
 2. **Sub state machine lifetime**: The sub state machine passed to setSubStateMachine() must have a longer lifetime than the parent state machine
-3. **Action finish/block**: finish() indicates normal completion (success or failure), block() indicates pausing to wait for an external condition
+3. **Action finish/block/process**: finish() indicates normal completion (success or failure), block() indicates pausing to wait for an external condition, process() reports progress upward
 4. **Event.extra pointer**: The data pointed to by the extra pointer must remain valid during event handling
 5. **toJson export**: The state machine can be exported as JSON for debugging and visualization
 

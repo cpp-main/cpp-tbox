@@ -68,11 +68,15 @@ Action 是行为树的基础节点，提供统一的生命周期管理：
 | `isReady()` | 是否准备就绪（需子类实现） |
 | `setFinishCallback(cb)` | 设置完成回调 |
 | `setBlockCallback(cb)` | 设置阻塞回调 |
+| `setProcessCallback(cb)` | 设置进度上报回调 |
 | `setTimeout(ms)` | 设置超时时间 |
 | `finish(is_succ, why, trace)` | 主动结束 |
 | `block(why, trace)` | 主动暂停 |
+| `process(js_process, trace)` | 上报进度 |
 
-Action 状态：kIdle（空闲）→ kRunning（运行）→ kFinished（完成）/kStoped（停止）/kPause（暂停）
+Action 状态：kIdle（空闲）→ kRunning（运行）→ kPaused（暂停）/kFinished（完成）/kStoped（停止）
+
+枝干动作（Sequence/Parallel/Loop/IfElse 等）会自动将子动作的 `process()` 上报向上转发，`Trace` 记录了完整的上报路径。
 
 Action 结果：kUnsure（未知）→ kSuccess（成功）/kFail（失败）
 
@@ -179,7 +183,7 @@ sm.toJson(js);  //! 导出状态机为 JSON，可用于可视化
 
 1. **StateID 0 是终止状态**：状态机到达 0 号状态自动终止，不需要额外处理
 2. **子状态机生命期**：setSubStateMachine() 传入的子状态机生命期需比父状态机长
-3. **Action 的 finish/block**：finish() 表示正常结束（成功或失败），block() 表示暂停等待外部条件
+3. **Action 的 finish/block/process**：finish() 表示正常结束（成功或失败），block() 表示暂停等待外部条件，process() 表示向上上报进度
 4. **Event.extra 指针**：extra 指针指向的数据生命期需在事件处理期间有效
 5. **toJson 导出**：状态机可导出为 JSON 用于调试和可视化
 

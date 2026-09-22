@@ -14,7 +14,7 @@
 | 文件 | 说明 |
 |------|------|
 | `state_machine.h` | `StateMachine` 多层级有限状态机（`newState`/`addRoute`/`addEvent`，enter/exit 动作、guard/event 函数） |
-| `action.h` | `Action` 动作基类（状态 `State`、结果 `Result`、原因 `Reason`，可配置 `Variables`） |
+| `action.h` | `Action` 动作基类（状态 `State`、结果 `Result`、原因 `Reason`，支持进度上报 `process()`，可配置 `Variables`） |
 | `action_executor.h` | `ActionExecutor` 动作执行器（`append()` 按优先级排队执行） |
 | `event.h` | `Event` 事件结构（`id` + `extra` 指针） |
 | `event_publisher.h` / `event_subscriber.h` | 事件发布/订阅接口 |
@@ -32,6 +32,7 @@
 ## 注意事项
 
 - `Action` 通过 `toJson()`/`fromJson()` 支持配置化，`to_graphviz` 可将 Action/StateMachine 导出为 Graphviz 图。
+- `Action` 支持进度上报机制：子动作调用 `process()` 上报进度，枝干 Action 会自动向上转发，最终通过 `setProcessCallback()` 的回调获取，`Trace` 记录了完整的上报路径。
 - `ActionExecutor` 暂不支持 `Action::block()` 功能（源码有 FIXME 注释）。
 
 ## 测试
